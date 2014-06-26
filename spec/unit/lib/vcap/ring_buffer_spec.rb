@@ -8,7 +8,7 @@ module VCAP
 
     context "empty" do
       it ".empty? should be true" do
-        rb.empty?.should be true
+        expect(rb.empty?).to be true
       end
     end
 
@@ -20,27 +20,27 @@ module VCAP
       end
 
       it ".empty? should be false" do
-        rb.empty?.should be false
+        expect(rb.empty?).to be false
       end
 
       it ".size should return MAX_ENTRIES" do
-        rb.size.should == MAX_ENTRIES
+        expect(rb.size).to eq(MAX_ENTRIES)
       end
 
       it "should be in the correct order" do
         a = []
         MAX_ENTRIES.times { |i| a.push i }
-        rb.should == a
+        expect(rb).to eq(a)
       end
 
       it ".push should add a new entry and drop the old one" do
         rb.push "a"
-        rb.should == [1, 2, 3, 4, "a"]
+        expect(rb).to eq([1, 2, 3, 4, "a"])
       end
 
       it ".<< should add a new entry and drop the old one" do
         rb << "a"
-        rb.should == [1, 2, 3, 4, "a"]
+        expect(rb).to eq([1, 2, 3, 4, "a"])
       end
     end
   end

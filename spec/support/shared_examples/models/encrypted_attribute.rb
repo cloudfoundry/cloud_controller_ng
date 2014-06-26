@@ -3,7 +3,7 @@ require "cloud_controller/encryptor"
 module VCAP::CloudController
   shared_examples "a model with an encrypted attribute" do
     before do
-      Encryptor.stub(:db_encryption_key).and_return("correct-key")
+      allow(Encryptor).to receive(:db_encryption_key).and_return("correct-key")
     end
 
     def new_model
@@ -22,11 +22,11 @@ module VCAP::CloudController
 
     it "is encrypted before being written to the database" do
       saved_attribute = last_row[encrypted_attr]
-      saved_attribute.should_not include value_to_encrypt
+      expect(saved_attribute).not_to include value_to_encrypt
     end
 
     it "is decrypted when it is read from the database" do
-      model_class.last.refresh.send(encrypted_attr).should == value_to_encrypt
+      expect(model_class.last.refresh.send(encrypted_attr)).to eq(value_to_encrypt)
     end
 
     it "uses the db_encryption_key from the config file" do
@@ -39,7 +39,7 @@ module VCAP::CloudController
       saved_attribute = last_row[encrypted_attr]
       expect(saved_attribute).not_to be_nil
 
-      Encryptor.stub(:db_encryption_key).and_return("a-totally-different-key")
+      allow(Encryptor).to receive(:db_encryption_key).and_return("a-totally-different-key")
 
       decrypted_value = nil
       errored = false

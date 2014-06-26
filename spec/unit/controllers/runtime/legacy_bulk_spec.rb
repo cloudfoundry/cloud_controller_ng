@@ -16,15 +16,15 @@ module VCAP::CloudController
       it "should be able to discover credentials through message bus" do
         LegacyBulk.configure(TestConfig.config, mbus)
 
-        mbus.should_receive(:subscribe)
+        expect(mbus).to receive(:subscribe)
           .with("cloudcontroller.bulk.credentials.ng")
           .and_yield("xxx", "inbox")
 
-        mbus.should_receive(:publish).with("inbox", anything) do |_, msg|
-          msg.should == {
+        expect(mbus).to receive(:publish).with("inbox", anything) do |_, msg|
+          expect(msg).to eq({
             "user"      => @bulk_user,
             "password"  => @bulk_password,
-          }
+          })
         end
 
         LegacyBulk.register_subscription
@@ -36,11 +36,11 @@ module VCAP::CloudController
 
       it "requires authentication" do
         get "/bulk/apps"
-        last_response.status.should == 401
+        expect(last_response.status).to eq(401)
 
         authorize "bar", "foo"
         get "/bulk/apps"
-        last_response.status.should == 401
+        expect(last_response.status).to eq(401)
       end
 
       describe "with authentication" do
@@ -50,12 +50,12 @@ module VCAP::CloudController
 
         it "requires a token in query string" do
           get "/bulk/apps"
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
 
         it "returns nil bulk_token for the initial request" do
           get "/bulk/apps"
-          decoded_response["bulk_token"].should be_nil
+          expect(decoded_response["bulk_token"]).to be_nil
         end
 
         it "returns a populated bulk_token for the initial request (which has an empty bulk token)" do
@@ -63,7 +63,7 @@ module VCAP::CloudController
             "batch_size" => 20,
             "bulk_token" => "{}",
           }
-          decoded_response["bulk_token"].should_not be_nil
+          expect(decoded_response["bulk_token"]).not_to be_nil
         end
 
         it "returns results in the response body" do
@@ -71,8 +71,8 @@ module VCAP::CloudController
             "batch_size" => 20,
             "bulk_token" => "{\"id\":20}",
           }
-          last_response.status.should == 200
-          decoded_response["results"].should_not be_nil
+          expect(last_response.status).to eq(200)
+          expect(decoded_response["results"]).not_to be_nil
         end
 
         it "returns results that are valid json" do
@@ -80,11 +80,11 @@ module VCAP::CloudController
             "batch_size" => 100,
             "bulk_token" => "{\"id\":0}",
           }
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
           decoded_response["results"].each { |key,value|
-            value.should be_kind_of Hash
-            value["id"].should_not be_nil
-            value["version"].should_not be_nil
+            expect(value).to be_kind_of Hash
+            expect(value["id"]).not_to be_nil
+            expect(value["version"]).not_to be_nil
           }
         end
 
@@ -94,7 +94,7 @@ module VCAP::CloudController
               "batch_size" => size,
               "bulk_token" => "{\"id\":0}",
             }
-            decoded_response["results"].size.should == size
+            expect(decoded_response["results"].size).to eq(size)
           }
         end
 
@@ -104,16 +104,16 @@ module VCAP::CloudController
             "bulk_token" => "{\"id\":0}",
           }
           saved_results = decoded_response["results"].dup
-          saved_results.size.should == 2
+          expect(saved_results.size).to eq(2)
 
           get "/bulk/apps", {
             "batch_size" => 2,
             "bulk_token" => Yajl::Encoder.encode(decoded_response["bulk_token"]),
           }
           new_results = decoded_response["results"].dup
-          new_results.size.should == 2
+          expect(new_results.size).to eq(2)
           saved_results.each do |saved_result|
-            new_results.should_not include(saved_result)
+            expect(new_results).not_to include(saved_result)
           end
         end
 
@@ -127,17 +127,17 @@ module VCAP::CloudController
               "batch_size" => 2,
               "bulk_token" => Yajl::Encoder.encode(token),
             }
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
             token = decoded_response["bulk_token"]
             apps.merge!(decoded_response["results"])
           end
 
-          apps.size.should == total_size
+          expect(apps.size).to eq(total_size)
           get "/bulk/apps", {
             "batch_size" => 2,
             "bulk_token" => Yajl::Encoder.encode(token),
           }
-          decoded_response["results"].size.should == 0
+          expect(decoded_response["results"].size).to eq(0)
         end
       end
     end
@@ -145,15 +145,15 @@ module VCAP::CloudController
     describe "GET", "/bulk/counts" do
       it "requires authentication" do
         get "/bulk/counts", {"model" => "user"}
-        last_response.status.should == 401
+        expect(last_response.status).to eq(401)
       end
 
       it "returns the number of users" do
         4.times { User.make }
         authorize @bulk_user, @bulk_password
         get "/bulk/counts", {"model" => "user"}
-        decoded_response["counts"].should include("user" => kind_of(Integer))
-        decoded_response["counts"]["user"].should == User.count
+        expect(decoded_response["counts"]).to include("user" => kind_of(Integer))
+        expect(decoded_response["counts"]["user"]).to eq(User.count)
       end
     end
   end

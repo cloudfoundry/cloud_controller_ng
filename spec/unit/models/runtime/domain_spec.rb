@@ -3,16 +3,16 @@ require "spec_helper"
 module VCAP::CloudController
   describe Domain do
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :owning_organization, class: Organization }
-      it { should have_associated :routes }
+      it { is_expected.to have_associated :owning_organization, class: Organization }
+      it { is_expected.to have_associated :routes }
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :owning_organization_guid }
-      it { should import_attributes :name, :owning_organization_guid }
+      it { is_expected.to export_attributes :name, :owning_organization_guid }
+      it { is_expected.to import_attributes :name, :owning_organization_guid }
     end
 
     describe "#spaces_sti_eager_load (eager loading)" do

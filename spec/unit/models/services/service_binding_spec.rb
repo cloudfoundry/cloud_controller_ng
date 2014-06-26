@@ -12,27 +12,27 @@ module VCAP::CloudController
     let(:client) { double('broker client', unbind: nil, deprovision: nil) }
 
     before do
-      Service.any_instance.stub(:client).and_return(client)
+      allow_any_instance_of(Service).to receive(:client).and_return(client)
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :app }
-      it { should have_associated :service_instance }
+      it { is_expected.to have_associated :app }
+      it { is_expected.to have_associated :service_instance }
     end
 
     describe "Validations" do
-      it { should validate_presence :app }
-      it { should validate_presence :service_instance }
-      it { should validate_db_presence :credentials }
-      it { should validate_uniqueness [:app_id, :service_instance_id] }
+      it { is_expected.to validate_presence :app }
+      it { is_expected.to validate_presence :service_instance }
+      it { is_expected.to validate_db_presence :credentials }
+      it { is_expected.to validate_uniqueness [:app_id, :service_instance_id] }
     end
 
     describe "Serialization" do
-      it { should export_attributes :app_guid, :service_instance_guid, :credentials, :binding_options,
+      it { is_expected.to export_attributes :app_guid, :service_instance_guid, :credentials, :binding_options,
                                     :gateway_data, :gateway_name, :syslog_drain_url }
-      it { should import_attributes :app_guid, :service_instance_guid, :credentials,
+      it { is_expected.to import_attributes :app_guid, :service_instance_guid, :credentials,
                                     :binding_options, :gateway_data, :syslog_drain_url }
     end
 
@@ -46,12 +46,12 @@ module VCAP::CloudController
     describe "#destroy" do
       let(:binding) { ServiceBinding.make }
       it "unbinds at the broker" do
-        binding.client.should_receive(:unbind)
+        expect(binding.client).to receive(:unbind)
         binding.destroy(savepoint: true)
       end
 
       context 'when unbind fails' do
-        before { binding.client.stub(:unbind).and_raise }
+        before { allow(binding.client).to receive(:unbind).and_raise }
 
         it 'raises an error and rolls back' do
           expect {
@@ -185,28 +185,28 @@ module VCAP::CloudController
       it "should not trigger restaging when creating a binding" do
         ServiceBinding.make(:app => app, :service_instance => service_instance)
         app.refresh
-        app.needs_staging?.should be false
+        expect(app.needs_staging?).to be false
       end
 
       it "should not trigger restaging when directly destroying a binding" do
         binding = ServiceBinding.make(:app => app, :service_instance => service_instance)
         app.refresh
         fake_app_staging(app)
-        app.needs_staging?.should be false
+        expect(app.needs_staging?).to be false
 
         binding.destroy(savepoint: true)
         app.refresh
-        app.needs_staging?.should be false
+        expect(app.needs_staging?).to be false
       end
 
       it "should not trigger restaging when indirectly destroying a binding" do
         binding = ServiceBinding.make(:app => app, :service_instance => service_instance)
         app.refresh
         fake_app_staging(app)
-        app.needs_staging?.should be false
+        expect(app.needs_staging?).to be false
 
         app.remove_service_binding(binding)
-        app.needs_staging?.should be false
+        expect(app.needs_staging?).to be false
       end
     end
 

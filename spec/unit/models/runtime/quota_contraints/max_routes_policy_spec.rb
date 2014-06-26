@@ -14,23 +14,23 @@ describe MaxRoutesPolicy do
 
     context "when requested exceeds the total allowed routes" do
       let(:requested_routes) { 3 }
-      it { should be false }
+      it { is_expected.to be false }
     end
 
     context "when requested equals the total allowed routes" do
       let(:requested_routes) { 2 }
-      it { should be true }
+      it { is_expected.to be true }
     end
 
     context "when requested less than the total allowed routes" do
       let(:requested_routes) { 1 }
-      it { should be true }
+      it { is_expected.to be true }
     end
 
     context "when an unlimited amount routes are available" do
       let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make(total_routes: -1) }
       let(:requested_routes) { 100_000_000 }
-      it { should be true }
+      it { is_expected.to be true }
     end
   end
 end

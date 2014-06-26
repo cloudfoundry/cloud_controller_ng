@@ -5,7 +5,7 @@ RSpec::Matchers.define :validate_with_error do |validation_result, error|
     @errors.size == 1 && @errors.values.first == error
   end
 
-  failure_message_for_should do |_|
+  failure_message do |_|
     "Expected validator to fail with error #{error} but got #{@errors.inspect}"
   end
 end

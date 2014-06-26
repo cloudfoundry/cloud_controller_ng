@@ -30,32 +30,32 @@ module VCAP::CloudController
 
     before do
       client = double('broker client', unbind: nil, deprovision: nil)
-      Service.any_instance.stub(:client).and_return(client)
+      allow_any_instance_of(Service).to receive(:client).and_return(client)
       VCAP::CloudController::Seeds.create_seed_stacks
     end
 
     describe "Associations" do
-      it { should have_timestamp_columns }
-      it { should have_associated :droplets }
+      it { is_expected.to have_timestamp_columns }
+      it { is_expected.to have_associated :droplets }
       it do
-        should have_associated :service_bindings, associated_instance: ->(app) {
+        is_expected.to have_associated :service_bindings, associated_instance: ->(app) {
           service_binding = ServiceBinding.make
           service_binding.service_instance.space = app.space
           service_binding
         }
       end
-      it { should have_associated :events, class: AppEvent }
-      it { should have_associated :admin_buildpack, class: Buildpack }
-      it { should have_associated :space }
-      it { should have_associated :stack }
-      it { should have_associated :routes, associated_instance: ->(app) { Route.make(space: app.space) } }
+      it { is_expected.to have_associated :events, class: AppEvent }
+      it { is_expected.to have_associated :admin_buildpack, class: Buildpack }
+      it { is_expected.to have_associated :space }
+      it { is_expected.to have_associated :stack }
+      it { is_expected.to have_associated :routes, associated_instance: ->(app) { Route.make(space: app.space) } }
     end
 
     describe "Validations" do
-      it { should validate_presence :name }
-      it { should validate_presence :space }
-      it { should validate_uniqueness [:space_id, :name] }
-      it { should strip_whitespace :name }
+      it { is_expected.to validate_presence :name }
+      it { is_expected.to validate_presence :space }
+      it { is_expected.to validate_uniqueness [:space_id, :name] }
+      it { is_expected.to strip_whitespace :name }
 
       describe "buildpack" do
         it "does allow nil value" do
@@ -243,25 +243,25 @@ module VCAP::CloudController
         end
 
         it "should save direct updates to the metadata" do
-          app.metadata.should == {}
+          expect(app.metadata).to eq({})
           app.metadata["some_key"] = "some val"
-          app.metadata["some_key"].should == "some val"
+          expect(app.metadata["some_key"]).to eq("some val")
           app.save
-          app.metadata["some_key"].should == "some val"
+          expect(app.metadata["some_key"]).to eq("some val")
           app.refresh
-          app.metadata["some_key"].should == "some val"
+          expect(app.metadata["some_key"]).to eq("some val")
         end
       end
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :production,
+      it { is_expected.to export_attributes :name, :production,
                                     :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                                     :environment_json, :memory, :instances, :disk_quota,
                                     :state, :version, :command, :console, :debug,
                                     :staging_task_id, :package_state, :health_check_timeout,
                                     :staging_failed_reason }
-      it { should import_attributes :name, :production,
+      it { is_expected.to import_attributes :name, :production,
                                     :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                                     :environment_json, :memory, :instances, :disk_quota,
                                     :state, :command, :console, :debug,
@@ -308,20 +308,20 @@ module VCAP::CloudController
           it "keeps previously set stack" do
             subject.save
             subject.refresh
-            subject.stack.should == stack
+            expect(subject.stack).to eq(stack)
           end
         end
 
         context "when stack was set to nil" do
           before do
             subject.stack = nil
-            Stack.default.should_not be_nil
+            expect(Stack.default).not_to be_nil
           end
 
           it "is populated with default stack" do
             subject.save
             subject.refresh
-            subject.stack.should == Stack.default
+            expect(subject.stack).to eq(Stack.default)
           end
         end
       end
@@ -350,8 +350,8 @@ module VCAP::CloudController
 
         it "doesn't mark the app for staging" do
           subject.stack = new_stack
-          subject.staged?.should be false
-          subject.needs_staging?.should be nil
+          expect(subject.staged?).to be false
+          expect(subject.needs_staging?).to be nil
         end
       end
 
@@ -365,8 +365,8 @@ module VCAP::CloudController
 
         it "keeps app as needs staging" do
           subject.stack = new_stack
-          subject.staged?.should be false
-          subject.needs_staging?.should be true
+          expect(subject.staged?).to be false
+          expect(subject.needs_staging?).to be true
         end
       end
 
@@ -490,14 +490,14 @@ module VCAP::CloudController
             users: nil
         }
 
-        app.vcap_application.should == expected_hash
+        expect(app.vcap_application).to eq(expected_hash)
       end
     end
 
     describe "#environment_json" do
       it "deserializes the serialized value" do
         app = AppFactory.make(:environment_json => {"jesse" => "awesome"})
-        app.environment_json.should eq("jesse" => "awesome")
+        expect(app.environment_json).to eq("jesse" => "awesome")
       end
 
       def self.it_does_not_mark_for_re_staging
@@ -646,11 +646,11 @@ module VCAP::CloudController
           end
 
           its(:count) { should eq(5) }
-          it { should include('name') }
-          it { should include('label') }
-          it { should include('tags') }
-          it { should include('plan') }
-          it { should include('credentials') }
+          it { is_expected.to include('name') }
+          it { is_expected.to include('label') }
+          it { is_expected.to include('tags') }
+          it { is_expected.to include('plan') }
+          it { is_expected.to include('credentials') }
         end
 
         describe "grouping" do
@@ -660,9 +660,9 @@ module VCAP::CloudController
           end
 
           it "should group services by label" do
-            app.system_env_json["VCAP_SERVICES"].should have(2).groups
-            app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"].should have(2).services
-            app.system_env_json["VCAP_SERVICES"]["#{service_alt.label}-#{service_alt.version}"].should have(1).service
+            expect(app.system_env_json["VCAP_SERVICES"]).to have(2).groups
+            expect(app.system_env_json["VCAP_SERVICES"]["#{service.label}-#{service.version}"]).to have(2).services
+            expect(app.system_env_json["VCAP_SERVICES"]["#{service_alt.label}-#{service_alt.version}"]).to have(1).service
           end
         end
       end
@@ -673,23 +673,23 @@ module VCAP::CloudController
         app = AppFactory.make(
             :metadata => {"jesse" => "super awesome"},
         )
-        app.metadata.should eq("jesse" => "super awesome")
+        expect(app.metadata).to eq("jesse" => "super awesome")
       end
     end
 
     describe "command" do
       it "stores the command in the metadata" do
         app = AppFactory.make(:command => "foobar")
-        app.metadata.should eq("command" => "foobar")
+        expect(app.metadata).to eq("command" => "foobar")
         app.save
-        app.metadata.should eq("command" => "foobar")
+        expect(app.metadata).to eq("command" => "foobar")
         app.refresh
-        app.metadata.should eq("command" => "foobar")
+        expect(app.metadata).to eq("command" => "foobar")
       end
 
       it "saves the field as nil when initializing to empty string" do
         app = AppFactory.make(:command => "")
-        app.metadata.should eq("command" => nil)
+        expect(app.metadata).to eq("command" => nil)
       end
 
       it "saves the field as nil when overriding to empty string" do
@@ -712,47 +712,47 @@ module VCAP::CloudController
     describe "console" do
       it "stores the command in the metadata" do
         app = AppFactory.make(:console => true)
-        app.metadata.should eq("console" => true)
+        expect(app.metadata).to eq("console" => true)
         app.save
-        app.metadata.should eq("console" => true)
+        expect(app.metadata).to eq("console" => true)
         app.refresh
-        app.metadata.should eq("console" => true)
+        expect(app.metadata).to eq("console" => true)
       end
 
       it "returns true if console was set to true" do
         app = AppFactory.make(:console => true)
-        app.console.should == true
+        expect(app.console).to eq(true)
       end
 
       it "returns false if console was set to false" do
         app = AppFactory.make(:console => false)
-        app.console.should == false
+        expect(app.console).to eq(false)
       end
 
       it "returns false if console was not set" do
         app = AppFactory.make
-        app.console.should == false
+        expect(app.console).to eq(false)
       end
     end
 
     describe "debug" do
       it "stores the command in the metadata" do
         app = AppFactory.make(:debug => "suspend")
-        app.metadata.should eq("debug" => "suspend")
+        expect(app.metadata).to eq("debug" => "suspend")
         app.save
-        app.metadata.should eq("debug" => "suspend")
+        expect(app.metadata).to eq("debug" => "suspend")
         app.refresh
-        app.metadata.should eq("debug" => "suspend")
+        expect(app.metadata).to eq("debug" => "suspend")
       end
 
       it "returns nil if debug was explicitly set to nil" do
         app = AppFactory.make(:debug => nil)
-        app.debug.should be_nil
+        expect(app.debug).to be_nil
       end
 
       it "returns nil if debug was not set" do
         app = AppFactory.make
-        app.debug.should be_nil
+        expect(app.debug).to be_nil
       end
     end
 
@@ -921,14 +921,14 @@ module VCAP::CloudController
 
       it "should set the state to PENDING if the hash changes" do
         app.package_hash = "def"
-        app.package_state.should == "PENDING"
-        app.package_hash.should == "def"
+        expect(app.package_state).to eq("PENDING")
+        expect(app.package_hash).to eq("def")
       end
 
       it "should not set the state to PENDING if the hash remains the same" do
         app.package_hash = "abc"
-        app.package_state.should == "STAGED"
-        app.package_hash.should == "abc"
+        expect(app.package_state).to eq("STAGED")
+        expect(app.package_hash).to eq("abc")
       end
     end
 
@@ -937,12 +937,12 @@ module VCAP::CloudController
 
       it "should return true if package_state is STAGED" do
         app.package_state = "STAGED"
-        app.staged?.should be true
+        expect(app.staged?).to be true
       end
 
       it "should return false if package_state is PENDING" do
         app.package_state = "PENDING"
-        app.staged?.should be false
+        expect(app.staged?).to be false
       end
     end
 
@@ -951,12 +951,12 @@ module VCAP::CloudController
 
       it "should return true if package_state is PENDING" do
         app.package_state = "PENDING"
-        app.pending?.should be true
+        expect(app.pending?).to be true
       end
 
       it "should return false if package_state is not PENDING" do
         app.package_state = "STARTED"
-        app.pending?.should be false
+        expect(app.pending?).to be false
       end
     end
 
@@ -965,12 +965,12 @@ module VCAP::CloudController
 
       it "should return true if package_state is FAILED" do
         app.package_state = "FAILED"
-        app.staging_failed?.should be true
+        expect(app.staging_failed?).to be true
       end
 
       it "should return false if package_state is not FAILED" do
         app.package_state = "STARTED"
-        app.staging_failed?.should be false
+        expect(app.staging_failed?).to be false
       end
     end
 
@@ -985,19 +985,19 @@ module VCAP::CloudController
 
         it "should return false if the package_hash is nil" do
           app.package_hash = nil
-          app.needs_staging?.should be nil
+          expect(app.needs_staging?).to be nil
         end
 
         it "should return true if PENDING is set" do
           app.package_hash = "abc"
           app.package_state = "PENDING"
-          app.needs_staging?.should be true
+          expect(app.needs_staging?).to be true
         end
 
         it "should return false if STAGING is set" do
           app.package_hash = "abc"
           app.package_state = "STAGED"
-          app.needs_staging?.should be false
+          expect(app.needs_staging?).to be false
         end
       end
 
@@ -1009,7 +1009,7 @@ module VCAP::CloudController
         end
 
         it 'should return false' do
-          app.should_not be_needs_staging
+          expect(app).not_to be_needs_staging
         end
       end
 
@@ -1021,7 +1021,7 @@ module VCAP::CloudController
           app.instances = 0
         end
 
-        it { should_not be_needs_staging }
+        it { is_expected.not_to be_needs_staging }
       end
     end
 
@@ -1030,12 +1030,12 @@ module VCAP::CloudController
 
       it "should return true if app is STARTED" do
         app.state = "STARTED"
-        app.started?.should be true
+        expect(app.started?).to be true
       end
 
       it "should return false if app is STOPPED" do
         app.state = "STOPPED"
-        app.started?.should be false
+        expect(app.started?).to be false
       end
     end
 
@@ -1044,12 +1044,12 @@ module VCAP::CloudController
 
       it "should return true if app is STOPPED" do
         app.state = "STOPPED"
-        app.stopped?.should be true
+        expect(app.stopped?).to be true
       end
 
       it "should return false if app is STARTED" do
         app.state = "STARTED"
-        app.stopped?.should be false
+        expect(app.stopped?).to be false
       end
     end
 
@@ -1070,7 +1070,7 @@ module VCAP::CloudController
       let(:app) { AppFactory.make(:package_hash => "abc", :package_state => "STAGED") }
 
       it "should have a version on create" do
-        app.version.should_not be_nil
+        expect(app.version).not_to be_nil
       end
 
       it "should update the version when changing :state" do
@@ -1244,10 +1244,10 @@ module VCAP::CloudController
         app.state = "STARTED"
         app.instances = 1
         app.package_hash = "abc"
-        app.needs_staging?.should be true
+        expect(app.needs_staging?).to be true
         app.droplet_hash = "def"
-        app.needs_staging?.should be false
-        app.droplet_hash.should == "def"
+        expect(app.needs_staging?).to be false
+        expect(app.droplet_hash).to eq("def")
       end
     end
 
@@ -1256,7 +1256,7 @@ module VCAP::CloudController
       it "should return the uris on the app" do
         app = AppFactory.make(:space => space)
         app.add_route(route)
-        app.uris.should == [route.fqdn]
+        expect(app.uris).to eq([route.fqdn])
       end
     end
 
@@ -1267,7 +1267,7 @@ module VCAP::CloudController
                       :stack => Stack.make)
         app.add_route_by_guid(route.guid)
         app.save
-        app.routes.should == [route]
+        expect(app.routes).to eq([route])
       end
 
       it "should not allow a route on a domain from another org" do
@@ -1276,7 +1276,7 @@ module VCAP::CloudController
                       :stack => Stack.make)
         app.add_route_by_guid(Route.make.guid)
         expect { app.save }.to raise_error(Errors::InvalidRouteRelation)
-        app.routes.should be_empty
+        expect(app.routes).to be_empty
       end
     end
 
@@ -1291,7 +1291,7 @@ module VCAP::CloudController
     describe "saving" do
       it "calls AppObserver.updated", isolation: :truncation do
         app = AppFactory.make
-        AppObserver.should_receive(:updated).with(app)
+        expect(AppObserver).to receive(:updated).with(app)
         app.update(instances: app.instances + 1)
       end
 
@@ -1300,18 +1300,18 @@ module VCAP::CloudController
         
         it "should undo any change", isolation: :truncation do
           app = AppFactory.make
-          UndoAppChanges.stub(:new).with(app).and_return(undo_app)
+          allow(UndoAppChanges).to receive(:new).with(app).and_return(undo_app)
 
-          AppObserver.should_receive(:updated).once.with(app).and_raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
-          undo_app.should_receive(:undo)
+          expect(AppObserver).to receive(:updated).once.with(app).and_raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
+          expect(undo_app).to receive(:undo)
           expect{app.update(state: "STARTED")}.to raise_error
         end
 
         it "does not call UndoAppChanges when its not an ApiError", isolation: :truncation do
           app = AppFactory.make
 
-          AppObserver.should_receive(:updated).once.with(app).and_raise("boom")
-          UndoAppChanges.should_not_receive(:new)
+          expect(AppObserver).to receive(:updated).once.with(app).and_raise("boom")
+          expect(UndoAppChanges).not_to receive(:new)
           expect{app.update(state: "STARTED")}.to raise_error
         end
       end
@@ -1408,7 +1408,7 @@ module VCAP::CloudController
       let(:app) { AppFactory.make(package_hash: "abc", package_state: "STAGED", space: space) }
 
       it "notifies the app observer", isolation: :truncation do
-        AppObserver.should_receive(:deleted).with(app)
+        expect(AppObserver).to receive(:deleted).with(app)
         app.destroy
       end
 
@@ -1455,7 +1455,7 @@ module VCAP::CloudController
       end
 
       it "locks the record when destroying" do
-        app.should_receive(:lock!)
+        expect(app).to receive(:lock!)
         app.destroy
       end
     end
@@ -1468,8 +1468,8 @@ module VCAP::CloudController
       context "app state changes" do
         context "creating a stopped app" do
           it "does not generate a start event or stop event" do
-            AppStartEvent.should_not_receive(:create_from_app)
-            AppStopEvent.should_not_receive(:create_from_app)
+            expect(AppStartEvent).not_to receive(:create_from_app)
+            expect(AppStopEvent).not_to receive(:create_from_app)
             AppFactory.make(:state => "STOPPED")
           end
         end
@@ -1477,8 +1477,8 @@ module VCAP::CloudController
         context "starting a stopped app" do
           it "generates a start event" do
             app = AppFactory.make(:state => "STOPPED")
-            AppStartEvent.should_receive(:create_from_app).with(app)
-            AppStopEvent.should_not_receive(:create_from_app)
+            expect(AppStartEvent).to receive(:create_from_app).with(app)
+            expect(AppStopEvent).not_to receive(:create_from_app)
             app.update(:state => "STARTED", :package_hash => "abc", :package_state => "STAGED")
           end
         end
@@ -1486,8 +1486,8 @@ module VCAP::CloudController
         context "updating a stopped app" do
           it "does not generate a start event or stop event" do
             app = AppFactory.make(:state => "STOPPED")
-            AppStartEvent.should_not_receive(:create_from_app)
-            AppStopEvent.should_not_receive(:create_from_app)
+            expect(AppStartEvent).not_to receive(:create_from_app)
+            expect(AppStopEvent).not_to receive(:create_from_app)
             app.update(:state => "STOPPED")
           end
         end
@@ -1495,8 +1495,8 @@ module VCAP::CloudController
         context "stopping a started app" do
           it "does not generate a start event, but generates a stop event" do
             app = AppFactory.make(state: "STARTED", :package_hash => "abc", :package_state => "STAGED")
-            AppStartEvent.should_not_receive(:create_from_app)
-            AppStopEvent.should_receive(:create_from_app).with(app)
+            expect(AppStartEvent).not_to receive(:create_from_app)
+            expect(AppStopEvent).to receive(:create_from_app).with(app)
             app.update(state: "STOPPED")
           end
         end
@@ -1504,8 +1504,8 @@ module VCAP::CloudController
         context "updating a started app" do
           it "does not generate a start or stop event" do
             app = AppFactory.make(state: "STARTED", package_hash: "abc", package_state: "STAGED")
-            AppStartEvent.should_not_receive(:create_from_app)
-            AppStopEvent.should_not_receive(:create_from_app)
+            expect(AppStartEvent).not_to receive(:create_from_app)
+            expect(AppStopEvent).not_to receive(:create_from_app)
             app.update(state: "STARTED")
           end
         end
@@ -1521,17 +1521,17 @@ module VCAP::CloudController
 
           before do
             AppStartEvent.create_from_app(app)
-            VCAP::CloudController::DeaClient.stub(:stop)
+            allow(VCAP::CloudController::DeaClient).to receive(:stop)
           end
 
           it "generates a stop event" do
-            AppStopEvent.should_receive(:create_from_app).with(app)
+            expect(AppStopEvent).to receive(:create_from_app).with(app)
             app.destroy(savepoint: true)
           end
 
           context "when the stop event creation fails" do
             before do
-              AppStopEvent.stub(:create_from_app).with(app).and_raise("boom")
+              allow(AppStopEvent).to receive(:create_from_app).with(app).and_raise("boom")
             end
 
             it "rolls back the deletion" do
@@ -1542,7 +1542,7 @@ module VCAP::CloudController
           context "when somehow there is already a stop event for the most recent start event" do
             it "succeeds and does not generate a duplicate stop event" do
               AppStopEvent.create_from_app(app)
-              AppStopEvent.should_not_receive(:create_from_app).with(app)
+              expect(AppStopEvent).not_to receive(:create_from_app).with(app)
               app.destroy(savepoint: true)
             end
           end
@@ -1551,7 +1551,7 @@ module VCAP::CloudController
         context "deleting a stopped app" do
           it "does not generate a stop event" do
             app = AppFactory.make(:state => "STOPPED")
-            AppStopEvent.should_not_receive(:create_from_app)
+            expect(AppStopEvent).not_to receive(:create_from_app)
             app.destroy(savepoint: true)
           end
         end
@@ -1568,16 +1568,16 @@ module VCAP::CloudController
 
         context "new app" do
           it "does not generate a start event or stop event" do
-            AppStartEvent.should_not_receive(:create_from_app)
-            AppStopEvent.should_not_receive(:create_from_app)
+            expect(AppStartEvent).not_to receive(:create_from_app)
+            expect(AppStopEvent).not_to receive(:create_from_app)
             app
           end
         end
 
         context "no change in footprint" do
           it "does not generate a start event or stop event" do
-            AppStartEvent.should_not_receive(:create_from_app)
-            AppStopEvent.should_not_receive(:create_from_app)
+            expect(AppStartEvent).not_to receive(:create_from_app)
+            expect(AppStopEvent).not_to receive(:create_from_app)
             app.save
           end
         end
@@ -1598,14 +1598,14 @@ module VCAP::CloudController
 
               app.save
 
-              AppStopEvent.filter(
+              expect(AppStopEvent.filter(
                   :app_guid => app.guid,
                   :app_run_id => original_start_event.app_run_id
-              ).count.should == 1
+              ).count).to eq(1)
 
-              AppStartEvent.filter(
+              expect(AppStartEvent.filter(
                   :app_guid => app.guid
-              ).all.last.app_run_id.should_not == original_start_event.app_run_id
+              ).all.last.app_run_id).not_to eq(original_start_event.app_run_id)
             end
           end
 
@@ -1657,10 +1657,10 @@ module VCAP::CloudController
 
       context "app update" do
         def act_as_cf_admin(&block)
-          VCAP::CloudController::SecurityContext.stub(:admin? => true)
+          allow(VCAP::CloudController::SecurityContext).to receive_messages(:admin? => true)
           block.call
         ensure
-          VCAP::CloudController::SecurityContext.unstub(:admin?)
+          allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_call_original
         end
 
         let(:org) { Organization.make(:quota_definition => quota) }

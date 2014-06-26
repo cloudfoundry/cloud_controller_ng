@@ -6,7 +6,7 @@ module VCAP::CloudController
       BillingEvent.dataset.destroy
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe ".create" do
       let(:values) { {
@@ -46,23 +46,23 @@ module VCAP::CloudController
       end
 
       it "should return an array of all events" do
-        BillingEvent.all.should == [
+        expect(BillingEvent.all).to eq([
           @org_event,
           @app_start_event,
           @app_stop_event,
           @service_create_event,
           @service_delete_event,
-        ]
+        ])
       end
 
       it "should return events with the correct event_type strings" do
-        BillingEvent.map(&:event_type).should == [
+        expect(BillingEvent.map(&:event_type)).to eq([
           "organization_billing_start",
           "app_start",
           "app_stop",
           "service_create",
           "service_delete",
-        ]
+        ])
       end
     end
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
             klass.make kind: klass.to_s
 
             billing_event_classes = BillingEvent.all.map(&:class)
-            billing_event_classes.should == [klass, klass]
+            expect(billing_event_classes).to eq([klass, klass])
           end
         end
       end

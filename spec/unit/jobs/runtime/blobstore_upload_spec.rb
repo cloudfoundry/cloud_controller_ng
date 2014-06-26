@@ -13,11 +13,11 @@ module VCAP::CloudController
 
       let!(:blobstore) do
         blobstore = CloudController::DependencyLocator.instance.droplet_blobstore
-        CloudController::DependencyLocator.instance.stub(:droplet_blobstore).and_return(blobstore)
+        allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(blobstore)
         blobstore
       end
 
-      it { should be_a_valid_job }
+      it { is_expected.to be_a_valid_job }
 
       describe "#perform" do
         it "uploads the file to the blostore" do

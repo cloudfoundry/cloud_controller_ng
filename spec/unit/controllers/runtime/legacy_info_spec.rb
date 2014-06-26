@@ -7,23 +7,23 @@ module VCAP::CloudController
     it "can have allow_debug set to false" do
       controller = described_class.new({ :info => {}, :uaa => {}, :allow_debug => false }, Logger.new(nil), :why, :why, :why)
       info = YAML.load(controller.info)
-      info["allow_debug"].should == false
+      expect(info["allow_debug"]).to eq(false)
     end
 
     shared_examples "legacy info response" do |expected_status, expect_user|
       it "should return #{expected_status}" do
-        last_response.status.should == expected_status
+        expect(last_response.status).to eq(expected_status)
       end
 
       if expect_user
         it "should return a 'user' entry" do
           hash = Yajl::Parser.parse(last_response.body)
-          hash.should have_key("user")
+          expect(hash).to have_key("user")
         end
       else
         it "should not return a 'user' entry" do
           hash = Yajl::Parser.parse(last_response.body)
-          hash.should_not have_key("user")
+          expect(hash).not_to have_key("user")
         end
       end
     end
@@ -90,15 +90,15 @@ module VCAP::CloudController
 
         it "should return admin limits for an admin" do
           get "/info", {}, headers
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
           hash = Yajl::Parser.parse(last_response.body)
-          hash.should have_key("limits")
-          hash["limits"].should == {
+          expect(hash).to have_key("limits")
+          expect(hash["limits"]).to eq({
             "memory" => AccountCapacity::ADMIN_MEM,
             "app_uris" => AccountCapacity::ADMIN_URIS,
             "services" => AccountCapacity::ADMIN_SERVICES,
             "apps" => AccountCapacity::ADMIN_APPS
-          }
+          })
         end
       end
 
@@ -107,9 +107,9 @@ module VCAP::CloudController
 
         it "should not return service usage" do
           get "/info", {}, headers
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
           hash = Yajl::Parser.parse(last_response.body)
-          hash.should_not have_key("usage")
+          expect(hash).not_to have_key("usage")
         end
       end
 
@@ -118,29 +118,29 @@ module VCAP::CloudController
 
         it "should return default limits for a user" do
           get "/info", {}, headers
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
           hash = Yajl::Parser.parse(last_response.body)
-          hash.should have_key("limits")
-          hash["limits"].should == {
+          expect(hash).to have_key("limits")
+          expect(hash["limits"]).to eq({
             "memory" => AccountCapacity::DEFAULT_MEM,
             "app_uris" => AccountCapacity::DEFAULT_URIS,
             "services" => AccountCapacity::DEFAULT_SERVICES,
             "apps" => AccountCapacity::DEFAULT_APPS
-          }
+          })
         end
 
         context "with no apps and services" do
           it "should return 0 apps and service usage" do
             get "/info", {}, headers
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
             hash = Yajl::Parser.parse(last_response.body)
-            hash.should have_key("usage")
+            expect(hash).to have_key("usage")
 
-            hash["usage"].should == {
+            expect(hash["usage"]).to eq({
               "memory" => 0,
               "apps" => 0,
               "services" => 0
-            }
+            })
           end
         end
 
@@ -164,15 +164,15 @@ module VCAP::CloudController
 
           it "should return 2 apps and 3 services" do
             get "/info", {}, headers
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
             hash = Yajl::Parser.parse(last_response.body)
-            hash.should have_key("usage")
+            expect(hash).to have_key("usage")
 
-            hash["usage"].should == {
+            expect(hash["usage"]).to eq({
               "memory" => 128 * 4,
               "apps" => 2,
               "services" => 3
-            }
+            })
           end
         end
       end
@@ -231,24 +231,24 @@ module VCAP::CloudController
       end
 
       it "should return success" do
-        last_response.status.should == 200
+        expect(last_response.status).to eq(200)
       end
 
       it "should return synthesized types as the top level key" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash.should have_key("database")
-        hash.should have_key("key-value")
-        hash.should have_key("generic")
+        expect(hash).to have_key("database")
+        expect(hash).to have_key("key-value")
+        expect(hash).to have_key("generic")
 
-        hash["database"].length.should == 2
-        hash["key-value"].length.should == 2
-        hash["generic"].length.should == 1
+        expect(hash["database"].length).to eq(2)
+        expect(hash["key-value"].length).to eq(2)
+        expect(hash["generic"].length).to eq(1)
       end
 
       it "should return mysql as a database" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["database"].should have_key("mysql")
-        hash["database"]["mysql"].should == {
+        expect(hash["database"]).to have_key("mysql")
+        expect(hash["database"]["mysql"]).to eq({
           @mysql_svc.version => {
             "id" => @mysql_svc.guid,
             "vendor" => "mysql",
@@ -262,13 +262,13 @@ module VCAP::CloudController
               }
             }
           }
-        }
+        })
       end
 
       it "should return pg as a database" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["database"].should have_key("postgresql")
-        hash["database"]["postgresql"].should == {
+        expect(hash["database"]).to have_key("postgresql")
+        expect(hash["database"]["postgresql"]).to eq({
           @pg_svc.version => {
             "id" => @pg_svc.guid,
             "vendor" => "postgresql",
@@ -282,13 +282,13 @@ module VCAP::CloudController
               }
             }
           }
-        }
+        })
       end
 
       it "should return redis under key-value" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["key-value"].should have_key("redis")
-        hash["key-value"]["redis"].should == {
+        expect(hash["key-value"]).to have_key("redis")
+        expect(hash["key-value"]["redis"]).to eq({
           @redis_svc.version => {
             "id" => @redis_svc.guid,
             "vendor" => "redis",
@@ -302,13 +302,13 @@ module VCAP::CloudController
               }
             }
           }
-        }
+        })
       end
 
       it "should (incorrectly) return mongo under key-value" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["key-value"].should have_key("mongodb")
-        hash["key-value"]["mongodb"].should == {
+        expect(hash["key-value"]).to have_key("mongodb")
+        expect(hash["key-value"]["mongodb"]).to eq({
           @mongo_svc.version => {
             "id" => @mongo_svc.guid,
             "vendor" => "mongodb",
@@ -322,13 +322,13 @@ module VCAP::CloudController
               }
             }
           }
-        }
+        })
       end
 
       it "should return random under generic" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["generic"].should have_key("random")
-        hash["generic"]["random"].should == {
+        expect(hash["generic"]).to have_key("random")
+        expect(hash["generic"]["random"]).to eq({
           @random_svc.version => {
             "id" => @random_svc.guid,
             "vendor" => "random",
@@ -342,14 +342,14 @@ module VCAP::CloudController
               }
             }
           }
-        }
+        })
       end
 
       it "should filter service with non-100 plan" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["database"].should_not have_key("random_other")
-        hash["key-value"].should_not have_key("random_other")
-        hash["generic"].should_not have_key("random_other")
+        expect(hash["database"]).not_to have_key("random_other")
+        expect(hash["key-value"]).not_to have_key("random_other")
+        expect(hash["generic"]).not_to have_key("random_other")
       end
     end
 
@@ -410,24 +410,24 @@ module VCAP::CloudController
       end
 
       it "should return success" do
-        last_response.status.should == 200
+        expect(last_response.status).to eq(200)
       end
 
       it "should return synthesized types as the top level key" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash.should have_key("database")
-        hash.should have_key("key-value")
-        hash.should have_key("generic")
+        expect(hash).to have_key("database")
+        expect(hash).to have_key("key-value")
+        expect(hash).to have_key("generic")
 
-        hash["database"].length.should == 2
-        hash["key-value"].length.should == 2
-        hash["generic"].length.should == 1
+        expect(hash["database"].length).to eq(2)
+        expect(hash["key-value"].length).to eq(2)
+        expect(hash["generic"].length).to eq(1)
       end
 
       it "should return mysql as a database" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["database"].should have_key(@mysql_svc.label)
-        hash["database"][@mysql_svc.label].should == {
+        expect(hash["database"]).to have_key(@mysql_svc.label)
+        expect(hash["database"][@mysql_svc.label]).to eq({
           @mysql_svc.version => {
             "id" => @mysql_svc.guid,
             "vendor" => @mysql_svc.label,
@@ -441,13 +441,13 @@ module VCAP::CloudController
               }
             }
           }
-        }
+        })
       end
 
       it "should return pg as a database" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["database"].should have_key(@pg_svc.label)
-        hash["database"][@pg_svc.label].should == {
+        expect(hash["database"]).to have_key(@pg_svc.label)
+        expect(hash["database"][@pg_svc.label]).to eq({
           @pg_svc.version => {
             "id" => @pg_svc.guid,
             "vendor" => @pg_svc.label,
@@ -461,13 +461,13 @@ module VCAP::CloudController
               }
             }
           }
-        }
+        })
       end
 
       it "should return redis under key-value" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["key-value"].should have_key(@redis_svc.label)
-        hash["key-value"][@redis_svc.label].should == {
+        expect(hash["key-value"]).to have_key(@redis_svc.label)
+        expect(hash["key-value"][@redis_svc.label]).to eq({
           @redis_svc.version => {
             "id" => @redis_svc.guid,
             "vendor" => @redis_svc.label,
@@ -481,13 +481,13 @@ module VCAP::CloudController
               }
             }
           }
-        }
+        })
       end
 
       it "should (incorrectly) return mongo under key-value" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["key-value"].should have_key(@mongo_svc.label)
-        hash["key-value"][@mongo_svc.label].should == {
+        expect(hash["key-value"]).to have_key(@mongo_svc.label)
+        expect(hash["key-value"][@mongo_svc.label]).to eq({
           @mongo_svc.version => {
             "id" => @mongo_svc.guid,
             "vendor" => @mongo_svc.label,
@@ -501,13 +501,13 @@ module VCAP::CloudController
               }
             }
           }
-        }
+        })
       end
 
       it "should return random under generic" do
         hash = Yajl::Parser.parse(last_response.body)
-        hash["generic"].should have_key(@random_svc.label)
-        hash["generic"][@random_svc.label].should == {
+        expect(hash["generic"]).to have_key(@random_svc.label)
+        expect(hash["generic"][@random_svc.label]).to eq({
           @random_svc.version => {
             "id" => @random_svc.guid,
             "vendor" => @random_svc.label,
@@ -521,7 +521,7 @@ module VCAP::CloudController
               }
             }
           }
-        }
+        })
       end
     end
   end

@@ -70,7 +70,7 @@ module VCAP::CloudController
       it "should return 403 for bad credentials" do
         authorize "hacker", "sw0rdf1sh"
         send(verb, "/staging/#{path}/#{app_obj.guid}")
-        last_response.status.should == 403
+        expect(last_response.status).to eq(403)
       end
     end
 
@@ -87,17 +87,17 @@ module VCAP::CloudController
           FileUtils.rm_rf(tmpdir)
 
           get "/staging/apps/#{app_obj.guid}"
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
         end
 
         it "should return an error for non-existent apps" do
           get "/staging/apps/#{Sham.guid}"
-          last_response.status.should == 404
+          expect(last_response.status).to eq(404)
         end
 
         it "should return an error for an app without a package" do
           get "/staging/apps/#{app_obj_without_pkg.guid}"
-          last_response.status.should == 404
+          expect(last_response.status).to eq(404)
         end
       end
 
@@ -140,7 +140,7 @@ module VCAP::CloudController
         context "with a valid app" do
           it "returns 200" do
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
           end
 
           it "updates the app's droplet hash" do
@@ -178,7 +178,7 @@ module VCAP::CloudController
           end
 
           it "deletes the uploaded file" do
-            FileUtils.should_receive(:rm_f).with(/ngx\.uploads/)
+            expect(FileUtils).to receive(:rm_f).with(/ngx\.uploads/)
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
           end
 
@@ -199,7 +199,7 @@ module VCAP::CloudController
         context "with an invalid app" do
           it "returns 404" do
             post "/staging/droplets/bad-app/upload", upload_req
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
           end
 
           context "when the upload path is nil" do
@@ -208,7 +208,7 @@ module VCAP::CloudController
             end
 
             it "deletes the uploaded file" do
-              FileUtils.should_not_receive(:rm_f)
+              expect(FileUtils).not_to receive(:rm_f)
               post "/staging/droplets/#{app_obj.guid}/upload", upload_req
             end
           end
@@ -257,7 +257,7 @@ module VCAP::CloudController
         context "with an invalid app" do
           it "returns 404" do
             post "/staging/droplets/bad-app/upload", upload_req
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
           end
 
           it "does not add a job" do
@@ -312,15 +312,15 @@ module VCAP::CloudController
               droplet.upload(droplet_file.path)
 
               get "/staging/droplets/#{app_obj.guid}/download"
-              last_response.status.should == 200
-              last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
+              expect(last_response.status).to eq(200)
+              expect(last_response.headers["X-Accel-Redirect"]).to match("/cc-droplets/.*/#{app_obj.guid}")
             end
 
             context "with a valid app but no droplet" do
               it "raises an error" do
                 get "/staging/droplets/#{app_obj.guid}/download"
-                last_response.status.should == 400
-                decoded_response["description"].should == "Staging error: droplet not found for #{app_obj.guid}"
+                expect(last_response.status).to eq(400)
+                expect(decoded_response["description"]).to eq("Staging error: droplet not found for #{app_obj.guid}")
               end
             end
           end
@@ -335,16 +335,16 @@ module VCAP::CloudController
                 CloudController::DropletUploader.new(app_obj, blobstore).upload(f.path)
 
                 get "/staging/droplets/#{app_obj.guid}/download"
-                last_response.status.should == 200
-                last_response.body.should == "droplet contents"
+                expect(last_response.status).to eq(200)
+                expect(last_response.body).to eq("droplet contents")
               end
             end
 
             context "with a valid app but no droplet" do
               it "should return an error" do
                 get "/staging/droplets/#{app_obj.guid}/download"
-                last_response.status.should == 400
-                decoded_response["description"].should == "Staging error: droplet not found for #{app_obj.guid}"
+                expect(last_response.status).to eq(400)
+                expect(decoded_response["description"]).to eq("Staging error: droplet not found for #{app_obj.guid}")
               end
             end
           end
@@ -353,33 +353,33 @@ module VCAP::CloudController
         context "with an invalid app" do
           it "should return an error" do
             get "/staging/droplets/bad/download"
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
           end
         end
       end
 
         context "when the blobstore is not local" do
           before do
-            CloudController::Blobstore::Client.any_instance.stub(:local?).and_return(false)
+            allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
             authorize(staging_user, staging_password)
           end
 
           it "should redirect to the url provided by the blobstore_url_generator" do
-            CloudController::Blobstore::UrlGenerator.any_instance.stub(:droplet_download_url).and_return("http://example.com/somewhere/else")
+            allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return("http://example.com/somewhere/else")
             get "/staging/droplets/#{app_obj.guid}/download"
-            last_response.should be_redirect()
-            last_response.header["Location"].should eq("http://example.com/somewhere/else")
+            expect(last_response).to be_redirect()
+            expect(last_response.header["Location"]).to eq("http://example.com/somewhere/else")
           end
 
           it "should return an error for non-existent apps" do
             get "/staging/droplets/not-a-thing-app/download"
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
           end
 
           it "should return an error for an app without a package" do
-            CloudController::Blobstore::UrlGenerator.any_instance.stub(:droplet_download_url).and_return(nil)
+            allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return(nil)
             get "/staging/droplets/app-guid-without-droplet/download"
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
           end
         end
     end
@@ -401,7 +401,7 @@ module VCAP::CloudController
       context "with a valid app" do
         it "returns 200" do
           post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
         end
 
         it "stores file path in handle.buildpack_cache_upload_path" do
@@ -437,7 +437,7 @@ module VCAP::CloudController
       context "with an invalid app" do
         it "returns 404" do
           post "/staging/buildpack_cache/bad-app/upload", upload_req
-          last_response.status.should == 404
+          expect(last_response.status).to eq(404)
         end
 
         context "when the upload path is nil" do
@@ -446,7 +446,7 @@ module VCAP::CloudController
           end
 
           it "deletes the uploaded file" do
-            FileUtils.should_not_receive(:rm_f)
+            expect(FileUtils).not_to receive(:rm_f)
             post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req
           end
         end
@@ -478,8 +478,8 @@ module VCAP::CloudController
             )
 
             make_request
-            last_response.status.should == 200
-            last_response.headers["X-Accel-Redirect"].should match("/cc-droplets/.*/#{app_obj.guid}")
+            expect(last_response.status).to eq(200)
+            expect(last_response.headers["X-Accel-Redirect"]).to match("/cc-droplets/.*/#{app_obj.guid}")
           end
         end
 
@@ -495,8 +495,8 @@ module VCAP::CloudController
             )
 
             make_request
-            last_response.status.should == 200
-            last_response.body.should == "droplet contents"
+            expect(last_response.status).to eq(200)
+            expect(last_response.body).to eq("droplet contents")
           end
         end
       end
@@ -504,14 +504,14 @@ module VCAP::CloudController
       context "with a valid buildpack cache but no file" do
         it "should return an error" do
           make_request
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
       end
 
       context "with an invalid buildpack cache" do
         it "should return an error" do
           get "/staging/buildpack_cache/bad"
-          last_response.status.should == 404
+          expect(last_response.status).to eq(404)
         end
       end
     end

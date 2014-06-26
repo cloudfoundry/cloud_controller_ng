@@ -17,26 +17,26 @@ module VCAP::CloudController
         space: space
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :space }
+      it { is_expected.to have_associated :space }
     end
 
     describe "Validations" do
-      it { should validate_presence :type }
-      it { should validate_presence :timestamp }
-      it { should validate_presence :actor }
-      it { should validate_presence :actor_type }
-      it { should validate_presence :actee }
-      it { should validate_presence :actee_type }
-      it { should validate_presence :actee_name }
+      it { is_expected.to validate_presence :type }
+      it { is_expected.to validate_presence :timestamp }
+      it { is_expected.to validate_presence :actor }
+      it { is_expected.to validate_presence :actor_type }
+      it { is_expected.to validate_presence :actee }
+      it { is_expected.to validate_presence :actee_type }
+      it { is_expected.to validate_presence :actee_name }
     end
 
     describe "Serialization" do
-      it { should export_attributes :type, :actor, :actor_type, :actor_name, :actee, :actee_type, :actee_name,
+      it { is_expected.to export_attributes :type, :actor, :actor_type, :actor_name, :actee, :actee_type, :actee_name,
                                     :timestamp, :metadata, :space_guid, :organization_guid }
-      it { should import_attributes }
+      it { is_expected.to import_attributes }
     end
 
     it "has a data bag" do

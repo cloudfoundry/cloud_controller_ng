@@ -4,22 +4,22 @@ module VCAP::CloudController
   describe Stack, type: :model do
     let(:file) { File.join(Paths::FIXTURES, "config/stacks.yml") }
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :apps }
+      it { is_expected.to have_associated :apps }
     end
 
     describe "Validations" do
-      it { should validate_presence :name }
-      it { should validate_presence :description }
-      it { should validate_uniqueness :name }
-      it { should strip_whitespace :name }
+      it { is_expected.to validate_presence :name }
+      it { is_expected.to validate_presence :description }
+      it { is_expected.to validate_uniqueness :name }
+      it { is_expected.to strip_whitespace :name }
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :description }
-      it { should import_attributes :name, :description }
+      it { is_expected.to export_attributes :name, :description }
+      it { is_expected.to import_attributes :name, :description }
     end
 
     describe ".configure" do
@@ -89,9 +89,9 @@ module VCAP::CloudController
 
 
                 mock_logger = double
-                Steno.stub(:logger).and_return(mock_logger)
+                allow(Steno).to receive(:logger).and_return(mock_logger)
 
-                mock_logger.should_receive(:warn).with("stack.populate.collision", "name" => "cider", "description" => "cider-description")
+                expect(mock_logger).to receive(:warn).with("stack.populate.collision", "name" => "cider", "description" => "cider-description")
 
                 Stack.populate
               end
@@ -121,7 +121,7 @@ module VCAP::CloudController
           before { Stack.make(:name => "default-stack-name") }
 
           it "returns found stack" do
-            Stack.default.name.should == "default-stack-name"
+            expect(Stack.default.name).to eq("default-stack-name")
           end
         end
 

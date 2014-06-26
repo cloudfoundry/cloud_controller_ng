@@ -56,14 +56,14 @@ module VCAP::CloudController
     end
 
     before do
-      app.staged?.should be false
+      expect(app.staged?).to be false
 
-      VCAP.stub(:secure_uuid) { "some_task_id" }
-      stager_pool.stub(:find_stager).with(app.stack.name, 1024, anything).and_return(stager_id)
+      allow(VCAP).to receive(:secure_uuid) { "some_task_id" }
+      allow(stager_pool).to receive(:find_stager).with(app.stack.name, 1024, anything).and_return(stager_id)
 
-      EM.stub(:add_timer)
-      EM.stub(:defer).and_yield
-      EM.stub(:schedule_sync)
+      allow(EM).to receive(:add_timer)
+      allow(EM).to receive(:defer).and_yield
+      allow(EM).to receive(:schedule_sync)
     end
 
     context 'when no stager can be found' do
@@ -78,7 +78,7 @@ module VCAP::CloudController
 
     context 'when a stager can be found' do
       it 'should stop other staging tasks' do
-        message_bus.should_receive(:publish).with("staging.stop", hash_including({ :app_id => app.guid }))
+        expect(message_bus).to receive(:publish).with("staging.stop", hash_including({ :app_id => app.guid }))
         staging_task.stage
       end
     end
@@ -87,7 +87,7 @@ module VCAP::CloudController
       context 'when the app memory requirement exceeds the staging memory requirement (1024)' do
         it 'should request a stager with the app memory requirement' do
           app.memory = 1025
-          stager_pool.should_receive(:find_stager).with(app.stack.name, 1025, anything).and_return(stager_id)
+          expect(stager_pool).to receive(:find_stager).with(app.stack.name, 1025, anything).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -95,7 +95,7 @@ module VCAP::CloudController
       context 'when the app memory requirement is less than the staging memory requirement' do
         it "requests the staging memory requirement" do
           config_hash[:staging][:minimum_staging_memory_mb] = 2048
-          stager_pool.should_receive(:find_stager).with(app.stack.name, 2048, anything).and_return(stager_id)
+          expect(stager_pool).to receive(:find_stager).with(app.stack.name, 2048, anything).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -106,7 +106,7 @@ module VCAP::CloudController
         it "should request a stager with enough disk" do
           app.disk_quota = 12
           config_hash[:staging][:minimum_staging_disk_mb] = 1025
-          stager_pool.should_receive(:find_stager).with(app.stack.name, anything, 1025).and_return(stager_id)
+          expect(stager_pool).to receive(:find_stager).with(app.stack.name, anything, 1025).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -115,7 +115,7 @@ module VCAP::CloudController
         it "should request a stager with enough disk" do
           app.disk_quota = 123
           config_hash[:staging][:minimum_staging_disk_mb] = nil
-          stager_pool.should_receive(:find_stager).with(app.stack.name, anything, 4096).and_return(stager_id)
+          expect(stager_pool).to receive(:find_stager).with(app.stack.name, anything, 4096).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -124,7 +124,7 @@ module VCAP::CloudController
         it "should request a stager with enough disk" do
           app.disk_quota = 123
           config_hash[:staging][:minimum_staging_disk_mb] = 122
-          stager_pool.should_receive(:find_stager).with(app.stack.name, anything, 123).and_return(stager_id)
+          expect(stager_pool).to receive(:find_stager).with(app.stack.name, anything, 123).and_return(stager_id)
           staging_task.stage
         end
       end
@@ -144,7 +144,7 @@ module VCAP::CloudController
 
         context "when staging setup succeeds" do
           it "returns streaming log url and rest will happen asynchronously" do
-            stage.streaming_log_url.should == "task-streaming-log-url"
+            expect(stage.streaming_log_url).to eq("task-streaming-log-url")
           end
 
           it "leaves the app as not having been staged" do
@@ -154,15 +154,15 @@ module VCAP::CloudController
 
           context "when there are available stagers" do
             it "stops other staging tasks and starts a new one" do
-              message_bus.should_receive(:publish).with("staging.stop", anything)
-              message_bus.should_receive(:publish).with("staging.my_stager.start", staging_task.staging_request)
+              expect(message_bus).to receive(:publish).with("staging.stop", anything)
+              expect(message_bus).to receive(:publish).with("staging.my_stager.start", staging_task.staging_request)
 
               stage
             end
 
             it "saves staging task id" do
               stage
-              app.staging_task_id.should eq("some_task_id")
+              expect(app.staging_task_id).to eq("some_task_id")
             end
           end
           it "keeps the app as not staged" do
@@ -180,7 +180,7 @@ module VCAP::CloudController
           it "does not call provided callback (not yet)" do
             callback_called = false
             stage { callback_called = true }
-            callback_called.should be false
+            expect(callback_called).to be false
           end
         end
 
@@ -212,7 +212,7 @@ module VCAP::CloudController
           it "does not call provided callback (not yet)" do
             callback_called = false
             ignore_staging_error { stage { callback_called = true } }
-            callback_called.should be false
+            expect(callback_called).to be false
           end
 
           it "marks the app as having failed to stage" do
@@ -244,7 +244,7 @@ module VCAP::CloudController
           it "does not call provided callback (not yet)" do
             callback_called = false
             ignore_staging_error { stage { callback_called = true } }
-            callback_called.should be false
+            expect(callback_called).to be false
           end
 
           it "marks the app as having failed to stage" do
@@ -258,7 +258,7 @@ module VCAP::CloudController
           end
 
           it "copes when the app is destroyed halfway between staging (currently we dont know why this happened but seen on tabasco)" do
-            VCAP::CloudController::AppStagerTask::Response.stub(:new) do
+            allow(VCAP::CloudController::AppStagerTask::Response).to receive(:new) do
               app.destroy(savepoint: true) # We saw that app maybe destroyed half-way through staging
               raise ArgumentError, "Some Fake Error"
             end
@@ -285,7 +285,7 @@ module VCAP::CloudController
           context "and the app was staged and started by the DEA" do
             context "when no other staging has happened" do
               before do
-                dea_pool.stub(:mark_app_started)
+                allow(dea_pool).to receive(:mark_app_started)
               end
 
               it "saves the detected buildpack" do
@@ -306,7 +306,7 @@ module VCAP::CloudController
 
               it "does not clobber other attributes that changed between staging" do
                 # fake out the app refresh as the race happens after it
-                app.stub(:refresh)
+                allow(app).to receive(:refresh)
 
                 other_app_ref = App.find(guid: app.guid)
                 other_app_ref.command = "some other command"
@@ -318,14 +318,14 @@ module VCAP::CloudController
               end
 
               it "marks app started in dea pool" do
-                dea_pool.should_receive(:mark_app_started).with({:dea_id => stager_id, :app_id => app.guid})
+                expect(dea_pool).to receive(:mark_app_started).with({:dea_id => stager_id, :app_id => app.guid})
                 stage
               end
 
               it "calls provided callback" do
                 callback_options = nil
                 stage { |options| callback_options = options }
-                callback_options[:started_instances].should equal(1)
+                expect(callback_options[:started_instances]).to equal(1)
               end
             end
           end
@@ -367,7 +367,7 @@ module VCAP::CloudController
               ignore_staging_error do
                 stage { callback_called = true }
               end
-              callback_called.should be false
+              expect(callback_called).to be false
             end
           end
         end
@@ -378,9 +378,9 @@ module VCAP::CloudController
 
           it "logs StagingError instead of raising to avoid stopping main runloop" do
             logger = double(:logger).as_null_object
-            logger.should_receive(:error).with(/Encountered error on stager with id #{stager_id}/)
+            expect(logger).to receive(:error).with(/Encountered error on stager with id #{stager_id}/)
 
-            Steno.stub(:logger => logger)
+            allow(Steno).to receive_messages(:logger => logger)
             stage
           end
 
@@ -399,7 +399,7 @@ module VCAP::CloudController
           it "does not call provided callback (not yet)" do
             callback_called = false
             stage { callback_called = true }
-            callback_called.should be false
+            expect(callback_called).to be false
           end
 
           it "marks the app as having failed to stage" do
@@ -417,11 +417,11 @@ module VCAP::CloudController
           it "logs StagingError instead of raising to avoid stopping main runloop" do
             logger = double(:logger).as_null_object
 
-            logger.should_receive(:error) do |msg|
-              msg.should match(/Encountered error on stager with id #{stager_id}/)
+            expect(logger).to receive(:error) do |msg|
+              expect(msg).to match(/Encountered error on stager with id #{stager_id}/)
             end
 
-            Steno.stub(:logger => logger)
+            allow(Steno).to receive_messages(:logger => logger)
             stage
           end
 
@@ -440,7 +440,7 @@ module VCAP::CloudController
           it "does not call provided callback (not yet)" do
             callback_called = false
             stage { callback_called = true }
-            callback_called.should be false
+            expect(callback_called).to be false
           end
 
           it "marks the app as having failed to stage" do
@@ -467,7 +467,7 @@ module VCAP::CloudController
 
       describe "reserve app memory" do
         before do
-          stager_pool.stub(:find_stager).with(app.stack.name, 1025, 4096).and_return(stager_id)
+          allow(stager_pool).to receive(:find_stager).with(app.stack.name, 1025, 4096).and_return(stager_id)
         end
 
         context "when app memory is less when configured minimum_staging_memory_mb" do
@@ -476,24 +476,24 @@ module VCAP::CloudController
           end
 
           it "decrement dea's available memory by minimum_staging_memory_mb" do
-            dea_pool.should_receive(:reserve_app_memory).with(stager_id, 1025)
+            expect(dea_pool).to receive(:reserve_app_memory).with(stager_id, 1025)
             staging_task.stage
           end
 
           it "decrement stager's available memory by minimum_staging_memory_mb" do
-            stager_pool.should_receive(:reserve_app_memory).with(stager_id, 1025)
+            expect(stager_pool).to receive(:reserve_app_memory).with(stager_id, 1025)
             staging_task.stage
           end
         end
 
         context "when app memory is greater when configured minimum_staging_memory_mb" do
           it "decrement dea's available memory by app memory" do
-            dea_pool.should_receive(:reserve_app_memory).with(stager_id, 1024)
+            expect(dea_pool).to receive(:reserve_app_memory).with(stager_id, 1024)
             staging_task.stage
           end
 
           it "decrement stager's available memory by app memory" do
-            stager_pool.should_receive(:reserve_app_memory).with(stager_id, 1024)
+            expect(stager_pool).to receive(:reserve_app_memory).with(stager_id, 1024)
             staging_task.stage
           end
         end
@@ -516,31 +516,31 @@ module VCAP::CloudController
       end
 
       it "includes app guid, task id and download/upload uris" do
-        blobstore_url_generator.stub(:app_package_download_url).with(app).and_return("http://www.app.uri")
-        blobstore_url_generator.stub(:droplet_upload_url).with(app).and_return("http://www.droplet.upload.uri")
-        blobstore_url_generator.stub(:buildpack_cache_download_url).with(app).and_return("http://www.buildpack.cache.download.uri")
-        blobstore_url_generator.stub(:buildpack_cache_upload_url).with(app).and_return("http://www.buildpack.cache.upload.uri")
+        allow(blobstore_url_generator).to receive(:app_package_download_url).with(app).and_return("http://www.app.uri")
+        allow(blobstore_url_generator).to receive(:droplet_upload_url).with(app).and_return("http://www.droplet.upload.uri")
+        allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app).and_return("http://www.buildpack.cache.download.uri")
+        allow(blobstore_url_generator).to receive(:buildpack_cache_upload_url).with(app).and_return("http://www.buildpack.cache.upload.uri")
         request = staging_task.staging_request
 
-        request[:app_id].should == app.guid
-        request[:task_id].should eq(staging_task.task_id)
-        request[:download_uri].should eq("http://www.app.uri")
-        request[:upload_uri].should eq("http://www.droplet.upload.uri")
-        request[:buildpack_cache_upload_uri].should eq("http://www.buildpack.cache.upload.uri")
-        request[:buildpack_cache_download_uri].should eq("http://www.buildpack.cache.download.uri")
+        expect(request[:app_id]).to eq(app.guid)
+        expect(request[:task_id]).to eq(staging_task.task_id)
+        expect(request[:download_uri]).to eq("http://www.app.uri")
+        expect(request[:upload_uri]).to eq("http://www.droplet.upload.uri")
+        expect(request[:buildpack_cache_upload_uri]).to eq("http://www.buildpack.cache.upload.uri")
+        expect(request[:buildpack_cache_download_uri]).to eq("http://www.buildpack.cache.download.uri")
       end
 
       it "includes misc app properties" do
         request = staging_task.staging_request
-        request[:properties][:meta].should be_kind_of(Hash)
+        expect(request[:properties][:meta]).to be_kind_of(Hash)
       end
 
       it "includes service binding properties" do
         request = staging_task.staging_request
-        request[:properties][:services].count.should == 3
+        expect(request[:properties][:services].count).to eq(3)
         request[:properties][:services].each do |service|
-          service[:credentials].should be_kind_of(Hash)
-          service[:options].should be_kind_of(Hash)
+          expect(service[:credentials]).to be_kind_of(Hash)
+          expect(service[:options]).to be_kind_of(Hash)
         end
       end
 
@@ -548,7 +548,7 @@ module VCAP::CloudController
         it "returns nil for buildpack" do
           app.buildpack = nil
           request = staging_task.staging_request
-          request[:properties][:buildpack].should be_nil
+          expect(request[:properties][:buildpack]).to be_nil
         end
       end
 
@@ -556,8 +556,8 @@ module VCAP::CloudController
         it "returns url for buildpack" do
           app.buildpack = "git://example.com/foo.git"
           request = staging_task.staging_request
-          request[:properties][:buildpack].should == "git://example.com/foo.git"
-          request[:properties][:buildpack_git_url].should == "git://example.com/foo.git"
+          expect(request[:properties][:buildpack]).to eq("git://example.com/foo.git")
+          expect(request[:properties][:buildpack_git_url]).to eq("git://example.com/foo.git")
         end
 
         it "doesn't return a buildpack key" do
@@ -569,22 +569,22 @@ module VCAP::CloudController
 
       it "includes start app message" do
         request = staging_task.staging_request
-        request[:start_message].should be_a(StartAppMessage)
+        expect(request[:start_message]).to be_a(StartAppMessage)
       end
 
       it "includes app index 0" do
         request = staging_task.staging_request
-        request[:start_message].should include ({ :index => 0 })
+        expect(request[:start_message]).to include ({ :index => 0 })
       end
 
       it "overwrites droplet sha" do
         request = staging_task.staging_request
-        request[:start_message].should include ({ :sha1 => nil })
+        expect(request[:start_message]).to include ({ :sha1 => nil })
       end
 
       it "overwrites droplet download uri" do
         request = staging_task.staging_request
-        request[:start_message].should include ({ :executableUri => nil })
+        expect(request[:start_message]).to include ({ :executableUri => nil })
       end
 
       describe "the list of admin buildpacks" do
@@ -699,7 +699,7 @@ module VCAP::CloudController
 end
 
 def stub_schedule_sync(&before_resolve)
-  EM.stub(:schedule_sync) do |&blk|
+  allow(EM).to receive(:schedule_sync) do |&blk|
     promise = VCAP::Concurrency::Promise.new
 
     begin

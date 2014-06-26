@@ -40,7 +40,7 @@ module VCAP::CloudController
                        :key => "123-456",
       })
       buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-      buildpack_blobstore.stub(:files).and_return(double(:files, :head => @file, create: {}))
+      allow(buildpack_blobstore).to receive(:files).and_return(double(:files, :head => @file, create: {}))
     end
 
     after { FileUtils.rm_rf(tmpdir) }
@@ -68,7 +68,7 @@ module VCAP::CloudController
         end
 
         it "takes a buildpack file and adds it to the custom buildpacks blobstore with the correct key" do
-          CloudController::DependencyLocator.instance.upload_handler.stub(:uploaded_file).and_return(valid_zip)
+          allow(CloudController::DependencyLocator.instance.upload_handler).to receive(:uploaded_file).and_return(valid_zip)
           buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
           expected_key = "#{test_buildpack.guid}_#{sha_valid_zip}"
 
@@ -81,7 +81,7 @@ module VCAP::CloudController
 
         it "gets the uploaded file from the upload handler" do
           upload_handler = CloudController::DependencyLocator.instance.upload_handler
-          upload_handler.should_receive(:uploaded_file).
+          expect(upload_handler).to receive(:uploaded_file).
             with(hash_including('buildpack_name' => filename), "buildpack").
             and_return(valid_zip)
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", upload_body, admin_headers
@@ -96,7 +96,7 @@ module VCAP::CloudController
         end
 
         it "requires a file to be uploaded" do
-          FileUtils.should_not_receive(:rm_f)
+          expect(FileUtils).not_to receive(:rm_f)
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: nil, buildpack_name: "abc.zip" }, admin_headers
           expect(last_response.status).to eq(400)
           json = Yajl::Parser.parse(last_response.body)
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
         it "does not allow non-zip files" do
           buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-          buildpack_blobstore.should_not_receive(:cp_to_blobstore)
+          expect(buildpack_blobstore).not_to receive(:cp_to_blobstore)
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { :buildpack => valid_tar_gz }, admin_headers
           expect(last_response.status).to eql 400
@@ -148,7 +148,7 @@ module VCAP::CloudController
         end
 
         it "removes the uploaded buildpack file" do
-          FileUtils.should_receive(:rm_f).with(/.*ngx.upload.*/)
+          expect(FileUtils).to receive(:rm_f).with(/.*ngx.upload.*/)
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { :buildpack => valid_zip }, admin_headers
         end
 
@@ -168,7 +168,7 @@ module VCAP::CloudController
 
         context "when the upload file is nil" do
           it "should be a bad request" do
-            FileUtils.should_not_receive(:rm_f)
+            expect(FileUtils).not_to receive(:rm_f)
             put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: nil }, admin_headers
             expect(last_response.status).to eq(400)
           end

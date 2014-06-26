@@ -2,11 +2,11 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Service, type: :model do
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :service_broker }
-      it { should have_associated :service_plans }
+      it { is_expected.to have_associated :service_broker }
+      it { is_expected.to have_associated :service_plans }
 
       it "has associated service_auth_token" do
         service = Service.make
@@ -15,13 +15,13 @@ module VCAP::CloudController
     end
 
     describe "Validations" do
-      it { should validate_presence :label, message: 'Service name is required' }
-      it { should validate_presence :description, message: 'is required' }
-      it { should validate_presence :bindable, message: 'is required' }
-      it { should validate_uniqueness [:label, :provider], message: 'is taken' }
-      it { should validate_uniqueness :unique_id, message: 'Service ids must be unique' }
-      it { should strip_whitespace :label }
-      it { should strip_whitespace :provider }
+      it { is_expected.to validate_presence :label, message: 'Service name is required' }
+      it { is_expected.to validate_presence :description, message: 'is required' }
+      it { is_expected.to validate_presence :bindable, message: 'is required' }
+      it { is_expected.to validate_uniqueness [:label, :provider], message: 'is taken' }
+      it { is_expected.to validate_uniqueness :unique_id, message: 'Service ids must be unique' }
+      it { is_expected.to strip_whitespace :label }
+      it { is_expected.to strip_whitespace :provider }
 
       context 'when the unique_id is not unique' do
         let(:existing_service) { Service.make }
@@ -75,9 +75,9 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { should export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
+      it { is_expected.to export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
                                     :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid }
-      it { should import_attributes :label, :provider, :url, :description, :long_description, :version, :info_url,
+      it { is_expected.to import_attributes :label, :provider, :url, :description, :long_description, :version, :info_url,
                                     :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url }
     end
 
@@ -120,12 +120,12 @@ module VCAP::CloudController
       end
 
       it "returns all services for admins" do
-        records(admin_user).should include(private_service, public_service)
+        expect(records(admin_user)).to include(private_service, public_service)
       end
 
       it "only returns public services for nonadmins" do
-        records(nonadmin_user).should include(public_service)
-        records(nonadmin_user).should_not include(private_service)
+        expect(records(nonadmin_user)).to include(public_service)
+        expect(records(nonadmin_user)).not_to include(private_service)
       end
 
       it "returns private services if a user can see a plan inside them" do
@@ -133,7 +133,7 @@ module VCAP::CloudController
           organization: nonadmin_org,
           service_plan: private_plan,
         )
-        records(nonadmin_user).should include(private_service, public_service)
+        expect(records(nonadmin_user)).to include(private_service, public_service)
       end
     end
 
@@ -178,12 +178,12 @@ module VCAP::CloudController
     describe "#v2?" do
       it "returns true when the service is associated with a broker" do
         service = Service.make(service_broker: ServiceBroker.make)
-        service.should be_v2
+        expect(service).to be_v2
       end
 
       it "returns false when the service is not associated with a broker" do
         service = Service.make(service_broker: nil)
-        service.should_not be_v2
+        expect(service).not_to be_v2
       end
     end
 
@@ -301,9 +301,9 @@ module VCAP::CloudController
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
 
         visible = Service.organization_visible(organization).all
-        visible.should include(visible_public_service)
-        visible.should include(visible_private_service)
-        visible.should_not include(hidden_private_service)
+        expect(visible).to include(visible_public_service)
+        expect(visible).to include(visible_private_service)
+        expect(visible).not_to include(hidden_private_service)
       end
     end
 
@@ -340,10 +340,10 @@ module VCAP::CloudController
 
         it 'returns a v1 broker client' do
           v1_client = double(VCAP::Services::ServiceBrokers::V1::Client)
-          VCAP::Services::ServiceBrokers::V1::Client.stub(:new).and_return(v1_client)
+          allow(VCAP::Services::ServiceBrokers::V1::Client).to receive(:new).and_return(v1_client)
 
           client = service.client
-          client.should == v1_client
+          expect(client).to eq(v1_client)
 
           expect(VCAP::Services::ServiceBrokers::V1::Client).to have_received(:new).with(
             hash_including(
@@ -360,10 +360,10 @@ module VCAP::CloudController
 
         it 'returns a v2 broker client' do
           v2_client = double(VCAP::Services::ServiceBrokers::V2::Client)
-          service.service_broker.stub(:client).and_return(v2_client)
+          allow(service.service_broker).to receive(:client).and_return(v2_client)
 
           client = service.client
-          client.should == v2_client
+          expect(client).to eq(v2_client)
         end
       end
     end

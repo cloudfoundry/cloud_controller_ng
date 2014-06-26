@@ -16,12 +16,12 @@ module VCAP::CloudController
       let(:encrypted_attr) { :credentials }
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :space }
+      it { is_expected.to have_associated :space }
       it do
-        should have_associated :service_bindings, associated_instance: ->(service_instance) {
+        is_expected.to have_associated :service_bindings, associated_instance: ->(service_instance) {
           app = VCAP::CloudController::App.make(:space => service_instance.space)
           ServiceBinding.make(:app => app, :service_instance => service_instance, :credentials => Sham.service_credentials)
         }
@@ -29,10 +29,10 @@ module VCAP::CloudController
     end
 
     describe "Validations" do
-      it { should validate_presence :name }
-      it { should validate_presence :space }
-      it { should strip_whitespace :name }
-      it { should strip_whitespace :syslog_drain_url }
+      it { is_expected.to validate_presence :name }
+      it { is_expected.to validate_presence :space }
+      it { is_expected.to strip_whitespace :name }
+      it { is_expected.to strip_whitespace :syslog_drain_url }
 
       it "should not bind an app and a service instance from different app spaces" do
         service_instance = described_class.make
@@ -45,8 +45,8 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :credentials, :space_guid, :type, :syslog_drain_url }
-      it { should import_attributes :name, :credentials, :space_guid, :syslog_drain_url }
+      it { is_expected.to export_attributes :name, :credentials, :space_guid, :type, :syslog_drain_url }
+      it { is_expected.to import_attributes :name, :credentials, :space_guid, :syslog_drain_url }
     end
 
     describe "#create" do
@@ -56,7 +56,7 @@ module VCAP::CloudController
           space: VCAP::CloudController::Space.make,
           credentials: {"foo" => "bar"},
         )
-        instance.refresh.is_gateway_service.should be false
+        expect(instance.refresh.is_gateway_service).to be false
       end
 
       it 'creates a CREATED service usage event' do

@@ -3,7 +3,7 @@ RSpec::Matchers.define :allow_op_on_object do |op, object|
     access.can?("#{op}_with_token".to_sym, object) && access.can?(op, object)
   end
 
-  failure_message_for_should do
+  failure_message do
     "Expected to be able to perform operation #{op} on object #{object}"
   end
 end

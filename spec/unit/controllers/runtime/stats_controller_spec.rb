@@ -55,8 +55,8 @@ module VCAP::CloudController
                 {},
                 headers_for(@developer))
 
-            last_response.status.should == 200
-            Yajl::Parser.parse(last_response.body).should == expected
+            expect(last_response.status).to eq(200)
+            expect(Yajl::Parser.parse(last_response.body)).to eq(expected)
             expect(instances_reporter).to have_received(:stats_for_app).with(
                                             satisfy { |requested_app| requested_app.guid == @app.guid })
           end
@@ -85,8 +85,8 @@ module VCAP::CloudController
                 {},
                 headers_for(@auditor))
 
-            last_response.status.should == 200
-            Yajl::Parser.parse(last_response.body).should == expected
+            expect(last_response.status).to eq(200)
+            expect(Yajl::Parser.parse(last_response.body)).to eq(expected)
             expect(instances_reporter).to have_received(:stats_for_app).with(
                                             satisfy { |requested_app| requested_app.guid == @app.guid })
           end
@@ -102,7 +102,7 @@ module VCAP::CloudController
                 {},
                 headers_for(@developer))
 
-            last_response.status.should == 400
+            expect(last_response.status).to eq(400)
           end
         end
 
@@ -127,7 +127,7 @@ module VCAP::CloudController
                 {},
                 headers_for(@user))
 
-            last_response.status.should == 403
+            expect(last_response.status).to eq(403)
           end
         end
       end

@@ -154,12 +154,12 @@ module VCAP::CloudController
         expect(DeaClient.config).to eq(@test_config)
         expect(DeaClient.message_bus).to eq(message_bus)
 
-        message_bus.should_receive(:subscribe).at_least(:once)
+        expect(message_bus).to receive(:subscribe).at_least(:once)
         DeaClient.dea_pool.register_subscriptions
       end
 
       it "starts the staging task completion handler" do
-        StagingCompletionHandler.any_instance.should_receive(:subscribe!)
+        expect_any_instance_of(StagingCompletionHandler).to receive(:subscribe!)
 
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
@@ -175,13 +175,13 @@ module VCAP::CloudController
       end
 
       it "sets up the quota definition" do
-        QuotaDefinition.should_receive(:configure).with(@test_config)
+        expect(QuotaDefinition).to receive(:configure).with(@test_config)
         Config.configure_components(@test_config)
       end
 
       it "sets up the stack" do
         config = @test_config.merge(stacks_file: "path/to/stacks/file")
-        Stack.should_receive(:configure).with("path/to/stacks/file")
+        expect(Stack).to receive(:configure).with("path/to/stacks/file")
         Config.configure_components(config)
       end
 

@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe ServicePlanVisibilityAccess, type: :access do
     before do
       token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
     subject(:access) { ServicePlanVisibilityAccess.new(double(:context, user: user, roles: roles)) }

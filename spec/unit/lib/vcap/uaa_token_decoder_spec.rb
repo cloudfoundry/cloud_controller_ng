@@ -56,7 +56,7 @@ module VCAP
           it "uses UAA::TokenCoder to decode the token with skey" do
             token = CF::UAA::TokenCoder.encode(token_content, {:skey => "symmetric-key" })
 
-            subject.decode_token("bearer #{token}").should == token_content
+            expect(subject.decode_token("bearer #{token}")).to eq(token_content)
           end
         end
 
@@ -75,7 +75,7 @@ module VCAP
         before { config_hash[:symmetric_secret] = nil }
 
         let(:rsa_key) { OpenSSL::PKey::RSA.new(2048) }
-        before { uaa_info.stub(:validation_key => {"value" => rsa_key.public_key.to_pem}) }
+        before { allow(uaa_info).to receive_messages(:validation_key => {"value" => rsa_key.public_key.to_pem}) }
 
         context "when token is valid" do
           let(:token_content) do
@@ -85,26 +85,26 @@ module VCAP
           it "successfully decodes token and caches key" do
             token = generate_token(rsa_key, token_content)
 
-            uaa_info.should_receive(:validation_key)
-            subject.decode_token("bearer #{token}").should == token_content
+            expect(uaa_info).to receive(:validation_key)
+            expect(subject.decode_token("bearer #{token}")).to eq(token_content)
 
-            uaa_info.should_not_receive(:validation_key)
-            subject.decode_token("bearer #{token}").should == token_content
+            expect(uaa_info).not_to receive(:validation_key)
+            expect(subject.decode_token("bearer #{token}")).to eq(token_content)
           end
 
           describe "re-fetching key" do
             let(:old_rsa_key) { OpenSSL::PKey::RSA.new(2048) }
 
             it "retries to decode token with newly fetched asymmetric key" do
-              uaa_info.stub(:validation_key).and_return(
+              allow(uaa_info).to receive(:validation_key).and_return(
                   {"value" => old_rsa_key.public_key.to_pem},
                   {"value" => rsa_key.public_key.to_pem},
               )
-              subject.decode_token("bearer #{generate_token(rsa_key, token_content)}").should == token_content
+              expect(subject.decode_token("bearer #{generate_token(rsa_key, token_content)}")).to eq(token_content)
             end
 
             it "stops retrying to decode token with newly fetched asymmetric key after 1 try" do
-              uaa_info.stub(:validation_key).and_return("value" => old_rsa_key.public_key.to_pem)
+              allow(uaa_info).to receive(:validation_key).and_return("value" => old_rsa_key.public_key.to_pem)
 
               expect(logger).to receive(:warn).with(/invalid bearer token/i)
               expect {

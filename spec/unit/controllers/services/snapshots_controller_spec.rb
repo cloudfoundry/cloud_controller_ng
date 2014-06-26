@@ -28,15 +28,15 @@ module VCAP::CloudController
       context "for an unauthenticated user" do
         it "requires authentication" do
           post "/v2/snapshots", payload, json_headers({})
-          last_response.status.should == 401
-          a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
+          expect(last_response.status).to eq(401)
+          expect(a_request(:any, %r(http://horsemeat.com))).not_to have_been_made
         end
       end
 
       context "for an admin" do
         it "should allow them to create a snapshot" do
           post "/v2/snapshots", payload, json_headers(admin_headers)
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
         end
       end
 
@@ -45,8 +45,8 @@ module VCAP::CloudController
         let(:developer) { make_developer_for_space(another_space) }
         it "denies access" do
           post "/v2/snapshots", payload, json_headers(headers_for(developer))
-          last_response.status.should eq 403
-          a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
+          expect(last_response.status).to eq 403
+          expect(a_request(:any, %r(http://horsemeat.com))).not_to have_been_made
         end
       end
 
@@ -56,13 +56,13 @@ module VCAP::CloudController
         context "without service_instance_id" do
           it "returns a 400 status code" do
             post "/v2/snapshots", '{}', json_headers(headers_for(developer))
-            last_response.status.should == 400
+            expect(last_response.status).to eq(400)
           end
 
           it "does not create a snapshot" do
-            ManagedServiceInstance.any_instance.should_not_receive(:create_snapshot)
+            expect_any_instance_of(ManagedServiceInstance).not_to receive(:create_snapshot)
             post "/v2/snapshots", '{}', json_headers(headers_for(developer))
-            a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
+            expect(a_request(:any, %r(http://horsemeat.com))).not_to have_been_made
           end
         end
 
@@ -70,10 +70,10 @@ module VCAP::CloudController
           let(:new_name) {nil}
 
           it "returns a 400 status code and does not create a snapshot" do
-            ManagedServiceInstance.any_instance.should_not_receive(:create_snapshot)
+            expect_any_instance_of(ManagedServiceInstance).not_to receive(:create_snapshot)
             post "/v2/snapshots", payload, json_headers(headers_for(developer))
-            last_response.status.should == 400
-            a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
+            expect(last_response.status).to eq(400)
+            expect(a_request(:any, %r(http://horsemeat.com))).not_to have_been_made
           end
         end
 
@@ -81,16 +81,16 @@ module VCAP::CloudController
           let(:new_name) {""}
           it "returns a 400 status code and does not create a snapshot" do
             post "/v2/snapshots", payload, json_headers(headers_for(developer))
-            last_response.status.should == 400
-            a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
+            expect(last_response.status).to eq(400)
+            expect(a_request(:any, %r(http://horsemeat.com))).not_to have_been_made
           end
         end
 
         it "invokes create_snapshot on the corresponding service instance" do
-          ManagedServiceInstance.should_receive(:find).
+          expect(ManagedServiceInstance).to receive(:find).
             with(:guid => service_instance.guid).
             and_return(service_instance)
-          service_instance.should_receive(:create_snapshot).
+          expect(service_instance).to receive(:create_snapshot).
             with(new_name).
             and_return(VCAP::Services::Api::SnapshotV2.new)
 
@@ -100,15 +100,15 @@ module VCAP::CloudController
         context "when the gateway successfully creates the snapshot" do
           it "returns the details of the new snapshot" do
             post "/v2/snapshots", payload, json_headers(headers_for(developer))
-            last_response.status.should == 201
+            expect(last_response.status).to eq(201)
             snapguid = "#{service_instance.guid}_1"
-            decoded_response['metadata'].should == {
+            expect(decoded_response['metadata']).to eq({
               "guid" => snapguid,
               "url" => "/v2/snapshots/#{snapguid}",
               "created_at" => snapshot_created_at,
               "updated_at" => nil
-            }
-            decoded_response['entity'].should include({"state" => "empty", "name" => "foo"})
+            })
+            expect(decoded_response['entity']).to include({"state" => "empty", "name" => "foo"})
           end
         end
       end
@@ -119,28 +119,28 @@ module VCAP::CloudController
 
       it 'requires authentication' do
         get snapshots_url
-        last_response.status.should == 401
-        a_request(:any, %r(http://horsemeat.com)).should_not have_been_made
+        expect(last_response.status).to eq(401)
+        expect(a_request(:any, %r(http://horsemeat.com))).not_to have_been_made
       end
 
       context "once authenticated" do
         let(:developer) {make_developer_for_space(service_instance.space)}
         before do
-          ManagedServiceInstance.stub(:find).
+          allow(ManagedServiceInstance).to receive(:find).
             with(:guid => service_instance.guid).
             and_return(service_instance)
         end
 
         it "returns an empty list" do
-          service_instance.stub(:enum_snapshots).and_return []
+          allow(service_instance).to receive(:enum_snapshots).and_return []
           get snapshots_url, {} , headers_for(developer)
-          last_response.status.should == 200
-          decoded_response['resources'].should == []
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['resources']).to eq([])
         end
 
         it "returns an list of snapshots" do
           created_time = Time.now.to_s
-          service_instance.should_receive(:enum_snapshots) do
+          expect(service_instance).to receive(:enum_snapshots) do
             [VCAP::Services::Api::SnapshotV2.new(
               "snapshot_id" => "1234",
               "name" => "something",
@@ -150,7 +150,7 @@ module VCAP::CloudController
             ]
           end
           get snapshots_url, {} , headers_for(developer)
-          decoded_response.should == {
+          expect(decoded_response).to eq({
             "total_results" => 1,
             "total_pages" => 1,
             "prev_url" => nil,
@@ -168,14 +168,14 @@ module VCAP::CloudController
                 }
               }
             ]
-          }
-          last_response.status.should == 200
+          })
+          expect(last_response.status).to eq(200)
         end
 
         it "checks for permission to read the service" do
           another_developer   =  make_developer_for_space(Space.make)
           get snapshots_url, {} , headers_for(another_developer)
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
       end
     end

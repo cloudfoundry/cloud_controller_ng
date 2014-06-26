@@ -9,19 +9,19 @@ module VCAP::CloudController
     after { VCAP::Request.current_id = nil }
 
     before do
-      VCAP::CloudController::SecurityContext.stub(:current_user_email) { email }
+      allow(VCAP::CloudController::SecurityContext).to receive(:current_user_email) { email }
 
       client = double('broker client', unbind: nil, deprovision: nil)
-      Service.any_instance.stub(:client).and_return(client)
+      allow_any_instance_of(Service).to receive(:client).and_return(client)
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :service_plan }
-      it { should have_associated :space }
+      it { is_expected.to have_associated :service_plan }
+      it { is_expected.to have_associated :space }
       it do
-        should have_associated :service_bindings, associated_instance: ->(service_instance) {
+        is_expected.to have_associated :service_bindings, associated_instance: ->(service_instance) {
           app = VCAP::CloudController::App.make(:space => service_instance.space)
           ServiceBinding.make(:app => app, :service_instance => service_instance, :credentials => Sham.service_credentials)
         }
@@ -29,11 +29,11 @@ module VCAP::CloudController
     end
 
     describe "Validations" do
-      it { should validate_presence :name }
-      it { should validate_presence :service_plan }
-      it { should validate_presence :space }
-      it { should validate_uniqueness [:space_id, :name] }
-      it { should strip_whitespace :name }
+      it { is_expected.to validate_presence :name }
+      it { is_expected.to validate_presence :service_plan }
+      it { is_expected.to validate_presence :space }
+      it { is_expected.to validate_uniqueness [:space_id, :name] }
+      it { is_expected.to strip_whitespace :name }
 
       it "should not bind an app and a service instance from different app spaces" do
         AppFactory.make(:space => service_instance.space)
@@ -45,8 +45,8 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type }
-      it { should import_attributes :name, :service_plan_guid, :space_guid, :gateway_data }
+      it { is_expected.to export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type }
+      it { is_expected.to import_attributes :name, :service_plan_guid, :space_guid, :gateway_data }
     end
 
     describe "#create" do
@@ -57,7 +57,7 @@ module VCAP::CloudController
 
       it "saves with is_gateway_service true" do
         instance = described_class.make
-        instance.refresh.is_gateway_service.should == true
+        expect(instance.refresh.is_gateway_service).to eq(true)
       end
 
       it 'creates a CREATED service usage event' do
@@ -86,18 +86,18 @@ module VCAP::CloudController
     describe "lifecycle" do
       context "service deprovisioning" do
         it "should deprovision a service on destroy" do
-          service_instance.client.should_receive(:deprovision).with(service_instance)
+          expect(service_instance.client).to receive(:deprovision).with(service_instance)
           service_instance.destroy(savepoint: true)
         end
       end
 
       context "when deprovision fails" do
         it "should raise and rollback" do
-          service_instance.client.stub(:deprovision).and_raise
+          allow(service_instance.client).to receive(:deprovision).and_raise
           expect {
             service_instance.destroy(savepoint: true)
           }.to raise_error
-          VCAP::CloudController::ManagedServiceInstance.find(id: service_instance.id).should be
+          expect(VCAP::CloudController::ManagedServiceInstance.find(id: service_instance.id)).to be
         end
       end
     end
@@ -105,8 +105,8 @@ module VCAP::CloudController
     context "billing" do
       context "creating a service instance" do
         it "should call ServiceCreateEvent.create_from_service_instance" do
-          ServiceCreateEvent.should_receive(:create_from_service_instance)
-          ServiceDeleteEvent.should_not_receive(:create_from_service_instance)
+          expect(ServiceCreateEvent).to receive(:create_from_service_instance)
+          expect(ServiceDeleteEvent).not_to receive(:create_from_service_instance)
           service_instance
         end
       end
@@ -114,8 +114,8 @@ module VCAP::CloudController
       context "destroying a service instance" do
         it "should call ServiceDeleteEvent.create_from_service_instance" do
           service_instance
-          ServiceCreateEvent.should_not_receive(:create_from_service_instance)
-          ServiceDeleteEvent.should_receive(:create_from_service_instance).with(service_instance)
+          expect(ServiceCreateEvent).not_to receive(:create_from_service_instance)
+          expect(ServiceDeleteEvent).to receive(:create_from_service_instance).with(service_instance)
           service_instance.destroy(savepoint: true)
         end
       end
@@ -129,7 +129,7 @@ module VCAP::CloudController
       it 'returns detailed summary' do
         service_instance.dashboard_url = 'http://dashboard.example.com'
 
-        service_instance.as_summary_json.should == {
+        expect(service_instance.as_summary_json).to eq({
           'guid' => subject.guid,
           'name' => subject.name,
           'bound_app_count' => 0,
@@ -144,7 +144,7 @@ module VCAP::CloudController
               'version' => '1.2.3',
             }
           }
-        }
+        })
       end
     end
 
@@ -293,15 +293,15 @@ module VCAP::CloudController
 
         it "return a list of snapshot from the gateway" do
           snapshots = subject.enum_snapshots
-          snapshots.should have(2).items
-          snapshots.first.snapshot_id.should == '1'
-          snapshots.first.state.should == 'ok'
-          snapshots.last.snapshot_id.should == '2'
-          snapshots.last.state.should == 'bad'
-          a_request(:get, enum_snapshots_url_matcher).with(:headers => {
+          expect(snapshots).to have(2).items
+          expect(snapshots.first.snapshot_id).to eq('1')
+          expect(snapshots.first.state).to eq('ok')
+          expect(snapshots.last.snapshot_id).to eq('2')
+          expect(snapshots.last.state).to eq('bad')
+          expect(a_request(:get, enum_snapshots_url_matcher).with(:headers => {
             "Content-Type" => "application/json",
             "X-Vcap-Service-Token" => "tokenvalue"
-          }).should have_been_made
+          })).to have_been_made
         end
       end
     end
@@ -339,23 +339,23 @@ module VCAP::CloudController
 
         it "makes an HTTP call to the corresponding service gateway and returns the decoded response" do
           snapshot = subject.create_snapshot(name)
-          snapshot.snapshot_id.should == '1'
-          snapshot.state.should == 'empty'
-          a_request(:post, create_snapshot_url_matcher).should have_been_made
+          expect(snapshot.snapshot_id).to eq('1')
+          expect(snapshot.state).to eq('empty')
+          expect(a_request(:post, create_snapshot_url_matcher)).to have_been_made
         end
 
         it "uses the correct svc auth token" do
           subject.create_snapshot(name)
 
-          a_request(:post, create_snapshot_url_matcher).with(
-            headers: {"X-VCAP-Service-Token" => 'tokenvalue'}).should have_been_made
+          expect(a_request(:post, create_snapshot_url_matcher).with(
+            headers: {"X-VCAP-Service-Token" => 'tokenvalue'})).to have_been_made
         end
 
         it "has the name in the payload" do
           payload = Yajl::Encoder.encode({name: name})
           subject.create_snapshot(name)
 
-          a_request(:post, create_snapshot_url_matcher).with(:body => payload).should have_been_made
+          expect(a_request(:post, create_snapshot_url_matcher).with(:body => payload)).to have_been_made
         end
       end
 
@@ -374,13 +374,13 @@ module VCAP::CloudController
       context "when the service is bindable" do
         let(:service) { Service.make(bindable: true) }
 
-        specify { service_instance.should be_bindable }
+        specify { expect(service_instance).to be_bindable }
       end
 
       context "when the service is not bindable" do
         let(:service) { Service.make(bindable: false) }
 
-        specify { service_instance.should_not be_bindable }
+        specify { expect(service_instance).not_to be_bindable }
       end
     end
 

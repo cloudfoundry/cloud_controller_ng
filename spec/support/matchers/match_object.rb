@@ -3,7 +3,7 @@ RSpec::Matchers.define :match_object do |expected|
     expected == actual
   end
 
-  failure_message_for_should do |actual|
+  failure_message do |actual|
     object_eq(actual, expected)
     @error_message.join("\n")
   end

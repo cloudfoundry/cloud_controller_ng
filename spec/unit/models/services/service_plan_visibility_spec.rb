@@ -2,22 +2,22 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe ServicePlanVisibility, type: :model do
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :service_plan }
-      it { should have_associated :organization }
+      it { is_expected.to have_associated :service_plan }
+      it { is_expected.to have_associated :organization }
     end
 
     describe "Validations" do
-      it { should validate_presence :service_plan }
-      it { should validate_presence :organization }
-      it { should validate_uniqueness [:organization_id, :service_plan_id] }
+      it { is_expected.to validate_presence :service_plan }
+      it { is_expected.to validate_presence :organization }
+      it { is_expected.to validate_uniqueness [:organization_id, :service_plan_id] }
     end
 
     describe "Serialization" do
-      it { should export_attributes :service_plan_guid, :organization_guid }
-      it { should import_attributes :service_plan_guid, :organization_guid }
+      it { is_expected.to export_attributes :service_plan_guid, :organization_guid }
+      it { is_expected.to import_attributes :service_plan_guid, :organization_guid }
     end
 
     describe ".visible_private_plan_ids_for_user(user)" do
@@ -43,9 +43,9 @@ module VCAP::CloudController
       end
 
       it "returns the list of ids for plans the user's orgs can see" do
-        ServicePlanVisibility.visible_private_plan_ids_for_user(user).should =~ [
+        expect(ServicePlanVisibility.visible_private_plan_ids_for_user(user)).to match_array([
           plan_visible_to_both.id, plan_visible_to_org1.id, plan_visible_to_org2.id
-        ]
+        ])
       end
     end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
       end
 
       it "returns the list of ids for plans the user's orgs can see" do
-        ServicePlanVisibility.visible_private_plan_ids_for_organization(organization).should =~ [visible_plan.id]
+        expect(ServicePlanVisibility.visible_private_plan_ids_for_organization(organization)).to match_array([visible_plan.id])
       end
     end
   end

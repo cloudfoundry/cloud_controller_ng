@@ -40,7 +40,7 @@ module CloudController
 
         before do
           upload_tmpfile(client, key)
-          cdn.stub(:download_uri).and_return(url_from_cdn)
+          allow(cdn).to receive(:download_uri).and_return(url_from_cdn)
         end
 
         it "is not local" do
@@ -48,7 +48,7 @@ module CloudController
         end
 
         it "downloads through the CDN" do
-          cdn.should_receive(:get).
+          expect(cdn).to receive(:get).
             with("ab/cd/abcdef").
             and_yield("foobar").and_yield(" barbaz")
 
@@ -139,7 +139,7 @@ module CloudController
             it "does not re-upload it" do
               client.cp_r_to_blobstore(local_dir)
 
-              client.should_not_receive(:cp_to_blobstore)
+              expect(client).not_to receive(:cp_to_blobstore)
               client.cp_r_to_blobstore(local_dir)
             end
           end
@@ -154,8 +154,8 @@ module CloudController
               File.open(path, "w") { |file| file.write("a") }
               key = "987654321"
 
-              client.should_not_receive(:exists)
-              client.should_not_receive(:cp_to_blobstore)
+              expect(client).not_to receive(:exists)
+              expect(client).not_to receive(:cp_to_blobstore)
               client.cp_r_to_blobstore(path)
             end
 
@@ -164,8 +164,8 @@ module CloudController
               File.open(path, "w") { |file| file.write("an amount of content that is larger than the maximum limit") }
               key = "777777777"
 
-              client.should_not_receive(:exists)
-              client.should_not_receive(:cp_to_blobstore)
+              expect(client).not_to receive(:exists)
+              expect(client).not_to receive(:cp_to_blobstore)
               client.cp_r_to_blobstore(path)
             end
           end
@@ -232,7 +232,7 @@ module CloudController
         describe "#cp_to_blobstore" do
           it "calls the fog with public false" do
             FileUtils.touch(File.join(local_dir, "empty_file"))
-            client.files.should_receive(:create).with(hash_including(public: false))
+            expect(client.files).to receive(:create).with(hash_including(public: false))
             client.cp_to_blobstore(local_dir, "empty_file")
           end
 
@@ -255,7 +255,7 @@ module CloudController
           end
 
           it "can copy as a public file" do
-            client.stub(:local?) { true }
+            allow(client).to receive(:local?) { true }
             path = File.join(local_dir, "empty_file")
             FileUtils.touch(path)
             key = "abcdef12345"

@@ -130,12 +130,12 @@ module VCAP::CloudController
     it "sends a dea.update message after adding an app" do
       @foo_app.add_route(@route)
       get "/v2/routes/#{@route.guid}/apps", {}, @headers_for_user
-      last_response.status.should == 200
+      expect(last_response.status).to eq(200)
       expect(decoded_response["resources"].map { |r|
         r["metadata"]["guid"]
       }).to eq [@foo_app.guid]
 
-      DeaClient.should_receive(:update_uris)
+      expect(DeaClient).to receive(:update_uris)
 
       put(
         "/v2/routes/#{@route.guid}",
@@ -144,7 +144,7 @@ module VCAP::CloudController
         ).encode,
         json_headers(@headers_for_user)
       )
-      last_response.status.should == 201
+      expect(last_response.status).to eq(201)
     end
 
     it "sends a dea.update message after removing an app" do
@@ -152,13 +152,13 @@ module VCAP::CloudController
       @bar_app.add_route(@route)
 
       get "/v2/routes/#{@route.guid}/apps", {}, @headers_for_user
-      last_response.status.should == 200
-      decoded_response["total_results"].should eq(2)
-      decoded_response["resources"].map { |r|
+      expect(last_response.status).to eq(200)
+      expect(decoded_response["total_results"]).to eq(2)
+      expect(decoded_response["resources"].map { |r|
         r["metadata"]["guid"]
-      }.sort.should eq [@foo_app.guid, @bar_app.guid].sort
+      }.sort).to eq [@foo_app.guid, @bar_app.guid].sort
 
-      DeaClient.should_receive(:update_uris)
+      expect(DeaClient).to receive(:update_uris)
 
 
       put(
@@ -168,7 +168,7 @@ module VCAP::CloudController
         ).encode,
         json_headers(@headers_for_user)
       )
-      last_response.status.should == 201
+      expect(last_response.status).to eq(201)
     end
   end
 end

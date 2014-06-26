@@ -15,7 +15,7 @@ module VCAP::Services::ServiceBrokers::V2
     let(:http_client) { double('http_client') }
 
     before do
-      HttpClient.stub(:new).
+      allow(HttpClient).to receive(:new).
         with(url: service_broker.broker_url, auth_username: service_broker.auth_username, auth_password: service_broker.auth_password).
         and_return(http_client)
 
@@ -34,8 +34,8 @@ module VCAP::Services::ServiceBrokers::V2
           }.to raise_error { |e|
             expect(e).to be_a(ServiceBrokerBadResponse)
             error_hash = e.to_h
-            error_hash.fetch('description').should eq("The service broker API returned an error from #{service_broker.broker_url}#{path}: 500 Internal Server Error")
-            error_hash.fetch('source').should include({'foo' => 'bar'})
+            expect(error_hash.fetch('description')).to eq("The service broker API returned an error from #{service_broker.broker_url}#{path}: 500 Internal Server Error")
+            expect(error_hash.fetch('source')).to include({'foo' => 'bar'})
           }
         end
       end
@@ -85,8 +85,8 @@ module VCAP::Services::ServiceBrokers::V2
           }.to raise_error { |e|
             expect(e).to be_a(ServiceBrokerApiAuthenticationFailed)
             error_hash = e.to_h
-            error_hash.fetch('description').
-              should eq("Authentication failed for the service broker API. Double-check that the username and password are correct: #{service_broker.broker_url}#{path}")
+            expect(error_hash.fetch('description')).
+              to eq("Authentication failed for the service broker API. Double-check that the username and password are correct: #{service_broker.broker_url}#{path}")
           }
         end
       end

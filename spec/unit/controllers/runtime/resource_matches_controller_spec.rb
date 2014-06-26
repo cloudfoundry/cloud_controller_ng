@@ -12,9 +12,9 @@ module VCAP::CloudController
       user = User.make(:admin => true, :active => true)
       req = Yajl::Encoder.encode(matches + non_matches)
       send(verb, path, req, json_headers(headers_for(user)))
-      last_response.status.should == 200
+      expect(last_response.status).to eq(200)
       resp = Yajl::Parser.parse(last_response.body)
-      resp.should == matches
+      expect(resp).to eq(matches)
     end
 
     describe "PUT /v2/resource_match" do

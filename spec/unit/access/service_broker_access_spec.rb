@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe ServiceBrokerAccess, type: :access do
     before do
       token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
     subject(:access) { described_class.new(double(:context, user: user, roles: roles)) }
@@ -20,13 +20,13 @@ module VCAP::CloudController
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
       it_behaves_like :no_access
-      it { should_not be_able_to :index, VCAP::CloudController::ServiceBroker }
+      it { is_expected.not_to be_able_to :index, VCAP::CloudController::ServiceBroker }
     end
 
     context 'organization user (defensive)' do
       before { org.add_user(user) }
       it_behaves_like :no_access
-      it { should_not be_able_to :index, VCAP::CloudController::ServiceBroker }
+      it { is_expected.not_to be_able_to :index, VCAP::CloudController::ServiceBroker }
     end
 
     context 'user in a different organization (defensive)' do
@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       it_behaves_like :no_access
-      it { should_not be_able_to :index, VCAP::CloudController::ServiceBroker }
+      it { is_expected.not_to be_able_to :index, VCAP::CloudController::ServiceBroker }
     end
 
     context 'manager in a different organization (defensive)' do
@@ -46,14 +46,14 @@ module VCAP::CloudController
       end
 
       it_behaves_like :no_access
-      it { should_not be_able_to :index, VCAP::CloudController::ServiceBroker }
+      it { is_expected.not_to be_able_to :index, VCAP::CloudController::ServiceBroker }
     end
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
       let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
       it_behaves_like :no_access
-      it { should_not be_able_to :index, VCAP::CloudController::ServiceBroker }
+      it { is_expected.not_to be_able_to :index, VCAP::CloudController::ServiceBroker }
     end
   end
 end

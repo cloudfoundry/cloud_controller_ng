@@ -55,7 +55,7 @@ describe "Cloud controller", type: :integration, isolation: :truncation do
         "private_instance_id" => nil,
       }
 
-      received.should match_json(include(expected))
+      expect(received).to match_json(include(expected))
     end
   end
 end

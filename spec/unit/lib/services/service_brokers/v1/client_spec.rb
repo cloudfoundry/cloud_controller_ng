@@ -12,7 +12,7 @@ module VCAP::Services
     let(:http_client) { double('http_client') }
 
     before do
-      ServiceBrokers::V1::HttpClient.stub(:new).
+      allow(ServiceBrokers::V1::HttpClient).to receive(:new).
         with(url: 'http://broker.example.com', auth_token: 'abc123').
         and_return(http_client)
     end
@@ -39,8 +39,8 @@ module VCAP::Services
       end
 
       before do
-        VCAP::CloudController::SecurityContext.stub(:current_user_email).and_return(current_user_email)
-        http_client.stub(:provision).with(
+        allow(VCAP::CloudController::SecurityContext).to receive(:current_user_email).and_return(current_user_email)
+        allow(http_client).to receive(:provision).with(
           plan.unique_id,
           instance.name,
           {
@@ -74,7 +74,7 @@ module VCAP::Services
         })
         error = HttpResponseError.new('Duplicate service', 'http://broker.example.com/whatever', :POST, response)
 
-        http_client.stub(:provision).and_raise(error)
+        allow(http_client).to receive(:provision).and_raise(error)
 
         expect {
           client.provision(instance)
@@ -106,8 +106,8 @@ module VCAP::Services
       end
 
       before do
-        VCAP::CloudController::SecurityContext.stub(:current_user_email).and_return(current_user_email)
-        http_client.stub(:bind).with(
+        allow(VCAP::CloudController::SecurityContext).to receive(:current_user_email).and_return(current_user_email)
+        allow(http_client).to receive(:bind).with(
           instance.broker_provided_id,
           app.guid,
           "#{service.label}-#{service.version}",
@@ -135,7 +135,7 @@ module VCAP::Services
       let(:instance) { binding.service_instance }
 
       before do
-        http_client.stub(:unbind).with(
+        allow(http_client).to receive(:unbind).with(
           instance.broker_provided_id,
           binding.broker_provided_id,
           binding.binding_options,
@@ -153,7 +153,7 @@ module VCAP::Services
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
       before do
-        http_client.stub(:deprovision).with(
+        allow(http_client).to receive(:deprovision).with(
           instance.broker_provided_id
         )
       end

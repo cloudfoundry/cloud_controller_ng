@@ -27,7 +27,7 @@ describe SafeZipper do
     end
 
     it "returns the size if it is large" do
-      Open3.stub(:capture3).with(%Q{unzip -l #{zip_path}}).and_return(
+      allow(Open3).to receive(:capture3).with(%Q{unzip -l #{zip_path}}).and_return(
         [
           "\nArchive:\n Filename\n ---\n app.rb\n10000000001 1 file",
           nil,
@@ -138,7 +138,7 @@ describe SafeZipper do
       let(:tmp_zip) { "/non/existent/path/to/tmp.zip" }
 
       it "will raise an error" do
-        File.stub(:exists?).and_return(true)
+        allow(File).to receive(:exists?).and_return(true)
 
         expect {
           SafeZipper.zip(root_path, tmp_zip)

@@ -35,7 +35,7 @@ module VCAP::RestAPI
         it "should return the full dataset" do
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, {})
-          ds.count.should == @num_authors
+          expect(ds.count).to eq(@num_authors)
         end
       end
 
@@ -44,7 +44,7 @@ module VCAP::RestAPI
           q = "num_val:5"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
-          ds.all.should == [Author[:num_val => 5]]
+          expect(ds.all).to eq([Author[:num_val => 5]])
         end
       end
 
@@ -58,7 +58,7 @@ module VCAP::RestAPI
             a.num_val && a.num_val > @num_authors - 5
           end
 
-          ds.all.should =~ expected
+          expect(ds.all).to match_array(expected)
         end
       end
 
@@ -72,7 +72,7 @@ module VCAP::RestAPI
             a.num_val && a.num_val >= @num_authors - 5
           end
 
-          ds.all.should =~ expected
+          expect(ds.all).to match_array(expected)
         end
       end
 
@@ -86,7 +86,7 @@ module VCAP::RestAPI
             a.num_val && a.num_val < @num_authors - 5
           end
 
-          ds.all.should =~ expected
+          expect(ds.all).to match_array(expected)
         end
       end
 
@@ -100,7 +100,7 @@ module VCAP::RestAPI
             a.num_val && a.num_val <= @num_authors - 5
           end
 
-          ds.all.should =~ expected
+          expect(ds.all).to match_array(expected)
         end
       end
 
@@ -109,7 +109,7 @@ module VCAP::RestAPI
           q = "num_val:#{@num_authors + 10}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
-          ds.count.should == 0
+          expect(ds.count).to eq(0)
         end
       end
 
@@ -118,7 +118,7 @@ module VCAP::RestAPI
           q = "num_val:a"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
-          ds.count.should == 0
+          expect(ds.count).to eq(0)
         end
       end
 
@@ -127,7 +127,7 @@ module VCAP::RestAPI
           q = "str_val:str 5"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
-          ds.all.should == [Author[:str_val => "str 5"]]
+          expect(ds.all).to eq([Author[:str_val => "str 5"]])
         end
       end
 
@@ -136,7 +136,7 @@ module VCAP::RestAPI
           q = "str_val:fnord"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
-          ds.count.should == 0
+          expect(ds.count).to eq(0)
         end
       end
 
@@ -145,7 +145,7 @@ module VCAP::RestAPI
           q = "str_val:str"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
-          ds.count.should == 0
+          expect(ds.count).to eq(0)
         end
       end
 
@@ -174,7 +174,7 @@ module VCAP::RestAPI
           q = "num_val:5;str_val:str 4"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
-          ds.all.should == [Author[:num_val => 5, :str_val => "str 4"]]
+          expect(ds.all).to eq([Author[:num_val => 5, :str_val => "str 4"]])
         end
       end
 
@@ -193,7 +193,7 @@ module VCAP::RestAPI
           q = "num_val:"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
-          ds.all.should == [@owner_nil_num]
+          expect(ds.all).to eq([@owner_nil_num])
         end
       end
 
@@ -202,7 +202,7 @@ module VCAP::RestAPI
           q = "book_id:9999"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
-          ds.count.should == 0
+          expect(ds.count).to eq(0)
         end
       end
 
@@ -211,7 +211,7 @@ module VCAP::RestAPI
           q = "book_id:2"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
-          ds.all.should == [Author[Book[2].author_id]]
+          expect(ds.all).to eq([Author[Book[2].author_id]])
         end
       end
 
@@ -220,7 +220,7 @@ module VCAP::RestAPI
           q = "author_id:9999"
           ds = Query.filtered_dataset_from_query_params(Book, Book.dataset,
                                                         @queryable_attributes, :q => q)
-          ds.count.should == 0
+          expect(ds.count).to eq(0)
         end
       end
 
@@ -229,7 +229,7 @@ module VCAP::RestAPI
           q = "author_id:1"
           ds = Query.filtered_dataset_from_query_params(Book, Book.dataset,
                                                         @queryable_attributes, :q => q)
-          ds.all.should == Author[1].books
+          expect(ds.all).to eq(Author[1].books)
         end
       end
 
@@ -237,13 +237,13 @@ module VCAP::RestAPI
         it "returns correctly filtered results for true" do
           ds = Query.filtered_dataset_from_query_params(
             Author, Author.dataset, @queryable_attributes, :q => "published:t")
-          ds.all.should == [Author.first]
+          expect(ds.all).to eq([Author.first])
         end
 
         it "returns correctly filtered results for false" do
           ds = Query.filtered_dataset_from_query_params(
             Author, Author.dataset, @queryable_attributes, :q => "published:f")
-          ds.all.should == Author.all - [Author.first]
+          expect(ds.all).to eq(Author.all - [Author.first])
         end
       end
 
@@ -253,7 +253,7 @@ module VCAP::RestAPI
             q = "published_at:"
             ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
               @queryable_attributes, :q => q)
-            ds.all.should == [Author[:num_val => 1]]
+            expect(ds.all).to eq([Author[:num_val => 1]])
           end
         end
 
@@ -263,7 +263,7 @@ module VCAP::RestAPI
             q = "published_at:#{query_value}"
             ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
               @queryable_attributes, :q => q)
-            ds.all.should == [Author[:num_val => 5]]
+            expect(ds.all).to eq([Author[:num_val => 5]])
           end
         end
       end
@@ -279,7 +279,7 @@ module VCAP::RestAPI
             a.published_at && a.published_at > query_value
           end
 
-          ds.all.should =~ expected
+          expect(ds.all).to match_array(expected)
         end
       end
 
@@ -294,7 +294,7 @@ module VCAP::RestAPI
             a.published_at && a.published_at >= query_value
           end
 
-          ds.all.should =~ expected
+          expect(ds.all).to match_array(expected)
         end
       end
 
@@ -309,7 +309,7 @@ module VCAP::RestAPI
             a.published_at && a.published_at < query_value
           end
 
-          ds.all.should =~ expected
+          expect(ds.all).to match_array(expected)
         end
       end
 
@@ -324,7 +324,7 @@ module VCAP::RestAPI
             a.published_at && a.published_at <= query_value
           end
 
-          ds.all.should =~ expected
+          expect(ds.all).to match_array(expected)
         end
       end
 
@@ -335,7 +335,7 @@ module VCAP::RestAPI
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
 
-          ds.count.should == 0
+          expect(ds.count).to eq(0)
         end
       end
 
@@ -358,7 +358,7 @@ module VCAP::RestAPI
             a.str_val == "str 1" || a.str_val == "str 2"
           end
 
-          ds.all.should =~ expected
+          expect(ds.all).to match_array(expected)
         end
       end
     end

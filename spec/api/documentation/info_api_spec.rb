@@ -6,7 +6,7 @@ resource "Info", :type => :api do
   get "/v2/info" do
     example "Get Info" do
       do_request
-      status.should == 200
+      expect(status).to eq(200)
     end
   end
 end

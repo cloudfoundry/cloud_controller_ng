@@ -126,8 +126,8 @@ module VCAP::Services::ServiceBrokers
           let(:errors) { double(:errors) }
           let(:formatter) { double(:formatter, format: 'something bad happened') }
           before do
-            catalog.stub(:valid?).and_return(false)
-            catalog.stub(:errors).and_return(errors)
+            allow(catalog).to receive(:valid?).and_return(false)
+            allow(catalog).to receive(:errors).and_return(errors)
             allow(ValidationErrorsFormatter).to receive(:new).and_return(formatter)
           end
 
@@ -219,11 +219,11 @@ module VCAP::Services::ServiceBrokers
 
       context 'when exception is raised during transaction' do
         before do
-          catalog.stub(:valid?).and_return(true)
-          client_manager.stub(:synchronize_clients_with_catalog) {
+          allow(catalog).to receive(:valid?).and_return(true)
+          allow(client_manager).to receive(:synchronize_clients_with_catalog) {
             VCAP::CloudController::ServiceDashboardClient.make(uaa_id: 'my-uaa-id', service_broker_id: broker.id)
           }
-          service_manager.stub(:sync_services_and_plans).and_raise(VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
+          allow(service_manager).to receive(:sync_services_and_plans).and_raise(VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
         end
 
         it 'does not save new broker' do
@@ -251,8 +251,8 @@ module VCAP::Services::ServiceBrokers
 
       context 'when exception is raised during dashboard client creation' do
         before do
-          catalog.stub(:valid?).and_return(true)
-          client_manager.stub(:synchronize_clients_with_catalog).and_raise
+          allow(catalog).to receive(:valid?).and_return(true)
+          allow(client_manager).to receive(:synchronize_clients_with_catalog).and_raise
         end
 
         it 'raises the error and does not create a new service broker' do
@@ -400,8 +400,8 @@ module VCAP::Services::ServiceBrokers
           let(:errors) { double(:errors) }
           let(:formatter) { double(:formatter, format: 'something bad happened') }
           before do
-            catalog.stub(:valid?).and_return(false)
-            catalog.stub(:errors).and_return(errors)
+            allow(catalog).to receive(:valid?).and_return(false)
+            allow(catalog).to receive(:errors).and_return(errors)
             allow(ValidationErrorsFormatter).to receive(:new).and_return(formatter)
           end
 
@@ -501,8 +501,8 @@ module VCAP::Services::ServiceBrokers
 
       context 'when exception is raised during transaction' do
         before do
-          catalog.stub(:valid?).and_return(true)
-          service_manager.stub(:sync_services_and_plans).and_raise(VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
+          allow(catalog).to receive(:valid?).and_return(true)
+          allow(service_manager).to receive(:sync_services_and_plans).and_raise(VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", 'omg it broke'))
         end
 
         it 'does not update the broker' do
@@ -518,8 +518,8 @@ module VCAP::Services::ServiceBrokers
 
       context 'when exception is raised during dashboard client creation' do
         before do
-          catalog.stub(:valid?).and_return(true)
-          client_manager.stub(:synchronize_clients_with_catalog).and_raise
+          allow(catalog).to receive(:valid?).and_return(true)
+          allow(client_manager).to receive(:synchronize_clients_with_catalog).and_raise
         end
 
         it 'raises the error' do

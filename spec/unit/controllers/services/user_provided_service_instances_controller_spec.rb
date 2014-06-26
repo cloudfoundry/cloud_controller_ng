@@ -64,9 +64,9 @@ module VCAP::CloudController
       })
 
       post "/v2/user_provided_service_instances", json_body.to_s, json_headers(admin_headers)
-      last_response.status.should == 201
+      expect(last_response.status).to eq(201)
 
-      UserProvidedServiceInstance.last.syslog_drain_url.should == "syslog://example.com"
+      expect(UserProvidedServiceInstance.last.syslog_drain_url).to eq("syslog://example.com")
     end
   end
 end

@@ -6,7 +6,7 @@ describe QuotaDefinitionPresenter do
     subject { QuotaDefinitionPresenter.new(quota_definition) }
 
     it "creates a valid JSON" do
-      subject.to_hash.should eq({
+      expect(subject.to_hash).to eq({
         :metadata => {
           :guid => quota_definition.guid,
           :created_at => quota_definition.created_at.iso8601,

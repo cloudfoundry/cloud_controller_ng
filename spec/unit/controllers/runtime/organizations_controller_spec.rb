@@ -67,31 +67,31 @@ module VCAP::CloudController
         org.billing_enabled = true
         org.save(:validate => false)
         get "/v2/organizations/#{org.guid}", {}, admin_headers
-        last_response.status.should == 200
-        decoded_response["entity"]["billing_enabled"].should == true
+        expect(last_response.status).to eq(200)
+        expect(decoded_response["entity"]["billing_enabled"]).to eq(true)
       end
 
       describe "cf admins" do
         it "should be allowed to set billing_enabled flag to true" do
-          org.billing_enabled.should == false
+          expect(org.billing_enabled).to eq(false)
           req = Yajl::Encoder.encode(:billing_enabled => true)
           put "/v2/organizations/#{org.guid}", req, json_headers(admin_headers)
-          last_response.status.should == 201
-          decoded_response["entity"]["billing_enabled"].should == true
+          expect(last_response.status).to eq(201)
+          expect(decoded_response["entity"]["billing_enabled"]).to eq(true)
           org.refresh
-          org.billing_enabled.should == true
+          expect(org.billing_enabled).to eq(true)
         end
       end
 
       describe "org admins" do
         it "should not be allowed to set billing_enabled flag to true" do
-          org.billing_enabled.should == false
+          expect(org.billing_enabled).to eq(false)
           req = Yajl::Encoder.encode(:billing_enabled => true)
           put "/v2/organizations/#{org.guid}", req, json_headers(org_admin_headers)
 
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
           org.refresh
-          org.billing_enabled.should == false
+          expect(org.billing_enabled).to eq(false)
         end
 
         it "should not be allowed to set billing_enabled flag to false" do
@@ -99,9 +99,9 @@ module VCAP::CloudController
           org.save(:validate => false)
           req = Yajl::Encoder.encode(:billing_enabled => false)
           put "/v2/organizations/#{org.guid}", req, json_headers(org_admin_headers)
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
           org.refresh
-          org.billing_enabled.should == true
+          expect(org.billing_enabled).to eq(true)
         end
       end
     end
@@ -161,9 +161,9 @@ module VCAP::CloudController
       describe "cf admins" do
         it "should be allowed to set the quota definition" do
           put "/v2/organizations/#{org.guid}", update_request, json_headers(admin_headers)
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
           org.refresh
-          org.quota_definition.should == quota_definition
+          expect(org.quota_definition).to eq(quota_definition)
         end
       end
 
@@ -171,9 +171,9 @@ module VCAP::CloudController
         it "should not be allowed to set the quota definition" do
           orig_quota_definition = org.quota_definition
           put "/v2/organizations/#{org.guid}", update_request, json_headers(org_admin_headers)
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
           org.refresh
-          org.quota_definition.should == orig_quota_definition
+          expect(org.quota_definition).to eq(orig_quota_definition)
         end
       end
     end
@@ -201,7 +201,7 @@ module VCAP::CloudController
         it "should pretends that it deleted a domain" do
           expect{delete "/v2/organizations/#{org.guid}/domains/#{domain.guid}", {},
                  headers_for(@org_a_manager)}.not_to change{SharedDomain.count}
-          last_response.status.should == 301
+          expect(last_response.status).to eq(301)
 
           warning_header = CGI.unescape(last_response.headers["X-Cf-Warnings"])
           expect(warning_header).to eq("Endpoint removed")
@@ -257,11 +257,11 @@ module VCAP::CloudController
           context "a single organization" do
             it "should remove the user from the organization if that user does not belong to any space" do
               org.add_space(org_space_empty)
-              org.users.should include(user)
+              expect(org.users).to include(user)
               remove_org_user(user.guid)
               org.refresh
 
-              org.user_guids.should_not include(user)
+              expect(org.user_guids).not_to include(user)
             end
 
             it "should not remove the user from the organization if that user belongs to a space associated with the organization" do
@@ -270,7 +270,7 @@ module VCAP::CloudController
 
               expect(last_response.status).to eql(400)
               org.refresh
-              org.users.should include(user)
+              expect(org.users).to include(user)
             end
           end
         end
@@ -279,20 +279,20 @@ module VCAP::CloudController
           context "a single organization" do
             it "should remove the user from each space that is associated with the organization" do
               org.add_space(org_space_full)
-              ["developers", "auditors", "managers"].each { |type| org_space_full.send(type).should include(user) }
+              ["developers", "auditors", "managers"].each { |type| expect(org_space_full.send(type)).to include(user) }
               remove_org_user_recursive(user.guid)
               org_space_full.refresh
 
-              ["developers", "auditors", "managers"].each { |type| org_space_full.send(type).should_not include(user) }
+              ["developers", "auditors", "managers"].each { |type| expect(org_space_full.send(type)).not_to include(user) }
             end
 
             it "should remove the user from the organization" do
               org.add_space(org_space_full)
-              org.users.should include(user)
+              expect(org.users).to include(user)
               remove_org_user_recursive(user.guid)
               org.refresh
 
-              org.users.should_not include(user)
+              expect(org.users).not_to include(user)
             end
           end
 
@@ -303,24 +303,24 @@ module VCAP::CloudController
             it "should remove a user from one organization, but no the other" do
               org.add_space(org_space_full)
               org_2.add_space(org2_space)
-              [org, org_2].each { |organization| organization.users.should include(user) }
+              [org, org_2].each { |organization| expect(organization.users).to include(user) }
               remove_org_user_recursive(user.guid)
 
               [org, org_2].each { |organization| organization.refresh }
-              org.users.should_not include(user)
-              org_2.users.should include(user)
+              expect(org.users).not_to include(user)
+              expect(org_2.users).to include(user)
             end
 
             it "should remove a user from each space associated with the organization being removed, but not the other" do
               org.add_space(org_space_full)
               org_2.add_space(org2_space)
-              ["developers", "auditors", "managers"].each { |type| org_space_full.send(type).should include(user) }
-              org2_space.developers.should include(user)
+              ["developers", "auditors", "managers"].each { |type| expect(org_space_full.send(type)).to include(user) }
+              expect(org2_space.developers).to include(user)
               remove_org_user_recursive(user.guid)
 
               [org_space_full, org2_space].each { |space| space.refresh }
-              ["developers", "auditors", "managers"].each { |type| org_space_full.send(type).should_not include(user) }
-              org2_space.developers.should include(user)
+              ["developers", "auditors", "managers"].each { |type| expect(org_space_full.send(type)).not_to include(user) }
+              expect(org2_space.developers).to include(user)
             end
           end
         end
@@ -329,10 +329,10 @@ module VCAP::CloudController
       context "PUT /v2/organizations/org_guid" do
         it "should remove the user if that user does not belong to any space associated with the organization" do
           org.add_space(org_space_empty)
-          org.users.should include(user)
+          expect(org.users).to include(user)
           update_org_user("user_guids" => [])
           org.refresh
-          org.users.should_not include(user)
+          expect(org.users).not_to include(user)
         end
 
         it "should not remove the user if they attempt to delete the user through an update" do
@@ -340,7 +340,7 @@ module VCAP::CloudController
           update_org_user("user_guids" => [])
           expect(last_response.status).to eql(400)
           org.refresh
-          org.users.should include(user)
+          expect(org.users).to include(user)
         end
       end
     end

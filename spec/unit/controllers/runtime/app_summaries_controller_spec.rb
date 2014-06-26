@@ -46,19 +46,19 @@ module VCAP::CloudController
       end
 
       it "should return 200" do
-        last_response.status.should == 200
+        expect(last_response.status).to eq(200)
       end
 
       it "should return the app guid" do
-        decoded_response["guid"].should == @app.guid
+        expect(decoded_response["guid"]).to eq(@app.guid)
       end
 
       it "should return the app name" do
-        decoded_response["name"].should == @app.name
+        expect(decoded_response["name"]).to eq(@app.name)
       end
 
       it "should return the app routes" do
-        decoded_response["routes"].should == [{
+        expect(decoded_response["routes"]).to eq([{
           "guid" => @route1.guid,
           "host" => @route1.host,
           "domain" => {
@@ -71,16 +71,16 @@ module VCAP::CloudController
           "domain" => {
             "guid" => @route2.domain.guid,
             "name" => @route2.domain.name}
-        }]
+        }])
       end
 
       it "should contain the running instances" do
-        decoded_response["running_instances"].should == @app.instances
+        expect(decoded_response["running_instances"]).to eq(@app.instances)
       end
 
       it "should contain the basic app attributes" do
         @app.to_hash.each do |k, v|
-          v.should eql(decoded_response[k.to_s]), "value of field #{k} expected to eql #{v}"
+          expect(v).to eql(decoded_response[k.to_s]), "value of field #{k} expected to eql #{v}"
         end
       end
 
@@ -102,18 +102,18 @@ module VCAP::CloudController
           }
         end
 
-        decoded_response["available_domains"].should =~ (private_domains + shared_domains)
+        expect(decoded_response["available_domains"]).to match_array(private_domains + shared_domains)
       end
 
       it "should return correct number of services" do
-        decoded_response["services"].size.should == @num_services
+        expect(decoded_response["services"].size).to eq(@num_services)
       end
 
       it "should return the correct info for a service" do
         svc_resp = decoded_response["services"][0]
         svc = @services.find { |s| s.guid == svc_resp["guid"] }
 
-        svc_resp.should == {
+        expect(svc_resp).to eq({
           "guid" => svc.guid,
           "name" => svc.name,
           "bound_app_count" => 1,
@@ -128,7 +128,7 @@ module VCAP::CloudController
               "version" => svc.service_plan.service.version,
             }
           }
-        }
+        })
       end
     end
   end

@@ -32,15 +32,15 @@ module VCAP::CloudController
         end
 
         it "should return success" do
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
         end
 
         it "should return an array" do
-          decoded_response.should be_a_kind_of(Array)
+          expect(decoded_response).to be_a_kind_of(Array)
         end
 
         it "should only return services for the default app space" do
-          decoded_response.length.should == 5
+          expect(decoded_response.length).to eq(5)
         end
 
         it "should return service names" do
@@ -68,15 +68,15 @@ module VCAP::CloudController
 
         it "should return service offerings" do
           get "/services/v1/offerings", {}, headers_for(user)
-          last_response.status.should == 200
-          decoded_response["generic"]["foo"]["core"]["1.0"]["label"].should == "foo-1.0"
-          decoded_response["generic"]["foo"]["core"]["1.0"]["url"].should == "http://localhost:56789"
-          decoded_response["generic"]["foo"]["core"]["1.0"]["plans"].should == ["free", "nonfree"]
-          decoded_response["generic"]["foo"]["core"]["1.0"]["active"].should == true
-          decoded_response["generic"]["foo"]["test"]["1.0"]["label"].should == "foo-1.0"
-          decoded_response["generic"]["foo"]["test"]["1.0"]["url"].should == "http://localhost:56789"
-          decoded_response["generic"]["foo"]["test"]["1.0"]["plans"].should == ["free", "nonfree"]
-          decoded_response["generic"]["foo"]["test"]["1.0"]["active"].should == true
+          expect(last_response.status).to eq(200)
+          expect(decoded_response["generic"]["foo"]["core"]["1.0"]["label"]).to eq("foo-1.0")
+          expect(decoded_response["generic"]["foo"]["core"]["1.0"]["url"]).to eq("http://localhost:56789")
+          expect(decoded_response["generic"]["foo"]["core"]["1.0"]["plans"]).to eq(["free", "nonfree"])
+          expect(decoded_response["generic"]["foo"]["core"]["1.0"]["active"]).to eq(true)
+          expect(decoded_response["generic"]["foo"]["test"]["1.0"]["label"]).to eq("foo-1.0")
+          expect(decoded_response["generic"]["foo"]["test"]["1.0"]["url"]).to eq("http://localhost:56789")
+          expect(decoded_response["generic"]["foo"]["test"]["1.0"]["plans"]).to eq(["free", "nonfree"])
+          expect(decoded_response["generic"]["foo"]["test"]["1.0"]["active"]).to eq(true)
         end
       end
 
@@ -104,13 +104,13 @@ module VCAP::CloudController
           end
 
           it "should return success" do
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
           end
 
           it "should add the servicew the default app space" do
             svc = user.default_space.service_instances.find(:name => "instance_name")
-            svc.should_not be_nil
-            ManagedServiceInstance.count.should == @num_instances_before + 1
+            expect(svc).not_to be_nil
+            expect(ManagedServiceInstance.count).to eq(@num_instances_before + 1)
           end
         end
 
@@ -119,8 +119,8 @@ module VCAP::CloudController
             @req[:vendor] = "invalid"
             post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
 
-            last_response.status.should == 400
-            ManagedServiceInstance.count.should == @num_instances_before
+            expect(last_response.status).to eq(400)
+            expect(ManagedServiceInstance.count).to eq(@num_instances_before)
             expect(decoded_response["code"]).to eq(120001)
             expect(decoded_response["description"]).to match(/service is invalid: invalid-9.0/)
           end
@@ -131,8 +131,8 @@ module VCAP::CloudController
             @req[:version] = "invalid"
             post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
 
-            last_response.status.should == 400
-            ManagedServiceInstance.count.should == @num_instances_before
+            expect(last_response.status).to eq(400)
+            expect(ManagedServiceInstance.count).to eq(@num_instances_before)
             expect(decoded_response["code"]).to eq(120001)
             expect(decoded_response["description"]).to match(/service is invalid: postgres-invalid/)
           end
@@ -143,8 +143,8 @@ module VCAP::CloudController
             @req[:name] = "duplicate"
             post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
 
-            last_response.status.should == 400
-            ManagedServiceInstance.count.should == @num_instances_before
+            expect(last_response.status).to eq(400)
+            expect(ManagedServiceInstance.count).to eq(@num_instances_before)
             expect(decoded_response["code"]).to eq(60002)
             expect(decoded_response["description"]).to match(/service instance name is taken: duplicate/)
           end
@@ -163,12 +163,12 @@ module VCAP::CloudController
             plan = @svc.service_plan
             service = plan.service
 
-            last_response.status.should == 200
-            decoded_response["name"].should == @svc.name
-            decoded_response["vendor"].should == service.label
-            decoded_response["provider"].should == service.provider
-            decoded_response["version"].should == service.version
-            decoded_response["tier"].should == plan.name
+            expect(last_response.status).to eq(200)
+            expect(decoded_response["name"]).to eq(@svc.name)
+            expect(decoded_response["vendor"]).to eq(service.label)
+            expect(decoded_response["provider"]).to eq(service.provider)
+            expect(decoded_response["version"]).to eq(service.version)
+            expect(decoded_response["tier"]).to eq(plan.name)
           end
         end
 
@@ -176,7 +176,7 @@ module VCAP::CloudController
           it "should return not found" do
             get "/services/invalid_name", {}, headers_for(user)
 
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
             expect(decoded_response["code"]).to eq(60004)
             expect(decoded_response["description"]).to match(/service instance could not be found: invalid_name/)
           end
@@ -194,8 +194,8 @@ module VCAP::CloudController
           it "should reduce the services count by 1" do
             delete "/services/#{@svc.name}", {}, headers_for(user)
 
-            last_response.status.should == 200
-            ManagedServiceInstance.count.should == @num_instances_before - 1
+            expect(last_response.status).to eq(200)
+            expect(ManagedServiceInstance.count).to eq(@num_instances_before - 1)
           end
         end
 
@@ -203,7 +203,7 @@ module VCAP::CloudController
           it "should return not found" do
             delete "/services/invalid_name", {}, headers_for(user)
 
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
             expect(decoded_response["code"]).to eq(60004)
             expect(decoded_response["description"]).to match(/service instance could not be found: invalid_name/)
           end

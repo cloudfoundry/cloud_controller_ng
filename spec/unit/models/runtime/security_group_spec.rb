@@ -250,15 +250,15 @@ module VCAP::CloudController
       end
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :spaces }
+      it { is_expected.to have_associated :spaces }
     end
 
     describe "Validations" do
-      it { should validate_presence :name }
-      it { should validate_uniqueness :name }
+      it { is_expected.to validate_presence :name }
+      it { is_expected.to validate_uniqueness :name }
 
       context 'name' do
         subject(:sec_group) { SecurityGroup.make }
@@ -601,8 +601,8 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :rules }
-      it { should import_attributes :name, :rules, :running_default, :staging_default, :space_guids }
+      it { is_expected.to export_attributes :name, :rules }
+      it { is_expected.to import_attributes :name, :rules, :running_default, :staging_default, :space_guids }
     end
   end
 end

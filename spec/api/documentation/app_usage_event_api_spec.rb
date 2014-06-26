@@ -45,7 +45,7 @@ resource "App Usage Events", :type => :api do
         DOC
 
         client.get "/v2/app_usage_events?results-per-page=1&after_guid=#{event1.guid}", {}, headers
-        status.should == 200
+        expect(status).to eq(200)
         standard_entity_response parsed_response["resources"][0], :app_usage_event,
                                  state: event2.state,
                                  instance_count: event2.instance_count,
@@ -71,7 +71,7 @@ resource "App Usage Events", :type => :api do
       DOC
 
       client.post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", {}, headers
-      status.should == 204
+      expect(status).to eq(204)
     end
   end
 end

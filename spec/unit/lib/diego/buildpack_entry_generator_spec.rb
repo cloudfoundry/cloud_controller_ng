@@ -19,8 +19,8 @@ module VCAP::CloudController::Diego
       allow(blobstore_url_generator).to receive(:admin_buildpack_download_url).and_return(admin_buildpack_download_url)
       allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).and_return(build_artifacts_cache_download_uri)
 
-      EM.stub(:add_timer)
-      EM.stub(:defer).and_yield
+      allow(EM).to receive(:add_timer)
+      allow(EM).to receive(:defer).and_yield
     end
 
     describe "#buildpack_entries" do

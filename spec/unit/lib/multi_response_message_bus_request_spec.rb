@@ -5,7 +5,7 @@ describe MultiResponseMessageBusRequest do
   let(:message_bus) { CfMessageBus::MockMessageBus.new }
   subject(:multi_response_message_bus_request) { described_class.new(message_bus, "fake nats subject") }
 
-  let!(:timer_stub) { EM.stub(:add_timer) }
+  let!(:timer_stub) { allow(EM).to receive(:add_timer) }
 
   describe "#request" do
     it "makes a request" do
@@ -18,7 +18,7 @@ describe MultiResponseMessageBusRequest do
       multi_response_message_bus_request.on_response(0) { |*args| }
       multi_response_message_bus_request.request(expected_data)
 
-      requested_data.should == expected_data
+      expect(requested_data).to eq(expected_data)
     end
 
     it "notifies first callback with first response" do
@@ -35,9 +35,9 @@ describe MultiResponseMessageBusRequest do
       multi_response_message_bus_request.request(:request => "request-value")
       message_bus.respond_to_request("fake nats subject", :response => "response-value")
 
-      responses_count.should == 1
-      last_error.should be_nil
-      last_response.should == { "response" => "response-value" }
+      expect(responses_count).to eq(1)
+      expect(last_error).to be_nil
+      expect(last_response).to eq({ "response" => "response-value" })
     end
 
     it "does not accept responses after the specified timeout and returns an error" do
@@ -56,11 +56,11 @@ describe MultiResponseMessageBusRequest do
 
       message_bus.respond_to_request("fake nats subject", :response => "response-value")
 
-      responses_count.should == 1
-      last_response.should be_nil
+      expect(responses_count).to eq(1)
+      expect(last_response).to be_nil
 
-      last_error.should be_a(described_class::Error)
-      last_error.message.should match /timed out/
+      expect(last_error).to be_a(described_class::Error)
+      expect(last_error.message).to match /timed out/
     end
 
     it "does not accept responses after the specified timeout for subsequent requests" do
@@ -85,8 +85,8 @@ describe MultiResponseMessageBusRequest do
       # but after first response timeout expires
       message_bus.respond_to_request("fake nats subject", "response2" => "response-value")
 
-      response1_count.should == 1
-      response2_count.should == 1
+      expect(response1_count).to eq(1)
+      expect(response2_count).to eq(1)
     end
 
     it "notifies second callback with second response" do
@@ -114,13 +114,13 @@ describe MultiResponseMessageBusRequest do
       message_bus.respond_to_request("fake nats subject", "response1" => "response-value")
       message_bus.respond_to_request("fake nats subject", "response2" => "response-value")
 
-      response1_count.should == 1
-      last1_response.should == { "response1" => "response-value" }
-      last1_error.should be_nil
+      expect(response1_count).to eq(1)
+      expect(last1_response).to eq({ "response1" => "response-value" })
+      expect(last1_error).to be_nil
 
-      response2_count.should == 1
-      last2_response.should == { "response2" => "response-value" }
-      last2_error.should be_nil
+      expect(response2_count).to eq(1)
+      expect(last2_response).to eq({ "response2" => "response-value" })
+      expect(last2_error).to be_nil
     end
 
     it "does nothing when callbacks were not provided" do
@@ -168,7 +168,7 @@ describe MultiResponseMessageBusRequest do
       multi_response_message_bus_request.request({})
       multi_response_message_bus_request.ignore_subsequent_responses
       message_bus.respond_to_request("fake nats subject", :response => "response-value")
-      responses_count.should == 0
+      expect(responses_count).to eq(0)
     end
 
     it "cancels timeout" do
@@ -180,7 +180,7 @@ describe MultiResponseMessageBusRequest do
       # if timeout timer does not get cancelled
       # this test will take ~100s instead of less than 100s
       # (Use within 50s instead of 0.1s since system might be busy.)
-      Time.now.should be_within(50).of(t)
+      expect(Time.now).to be_within(50).of(t)
     end
 
     it "raises error when request was not made" do
@@ -201,7 +201,7 @@ describe MultiResponseMessageBusRequest do
       multi_response_message_bus_request.request({})
       message_bus.respond_to_request("fake nats subject", :response => "response-value")
       message_bus.respond_to_request("fake nats subject", :response => "response-value")
-      responses_count.should == 1
+      expect(responses_count).to eq(1)
     end
   end
 end

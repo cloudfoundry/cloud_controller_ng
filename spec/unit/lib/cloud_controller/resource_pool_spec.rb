@@ -11,17 +11,17 @@ module VCAP::CloudController
 
       it "should return an empty list when no resources match" do
         res = @resource_pool.match_resources([@dummy_descriptor])
-        res.should == []
+        expect(res).to eq([])
       end
 
       it "should return a resource that matches" do
         res = @resource_pool.match_resources([@descriptors.first, @dummy_descriptor])
-        res.should == [@descriptors.first]
+        expect(res).to eq([@descriptors.first])
       end
 
       it "should return many resources that match" do
         res = @resource_pool.match_resources(@descriptors + [@dummy_descriptor])
-        res.should == @descriptors
+        expect(res).to eq(@descriptors)
       end
 
       it "does not break when the sha1 is not long enough to generate a key" do
@@ -41,13 +41,13 @@ module VCAP::CloudController
         end
 
         res = @resource_pool.resource_sizes(without_sizes)
-        res.should == @descriptors
+        expect(res).to eq(@descriptors)
       end
     end
 
     describe "#add_path" do
       it "should walk the fs tree and add only allowable files" do
-        @resource_pool.should_receive(:add_path).exactly(@total_allowed_files).times
+        expect(@resource_pool).to receive(:add_path).exactly(@total_allowed_files).times
         @resource_pool.add_directory(@tmpdir)
       end
     end
@@ -61,19 +61,19 @@ module VCAP::CloudController
       end
 
       it "should return true for a size between min and max size" do
-        @resource_pool.send(:size_allowed?, @minimum_size + 1).should be true
+        expect(@resource_pool.send(:size_allowed?, @minimum_size + 1)).to be true
       end
 
       it "should return false for a size < min size" do
-        @resource_pool.send(:size_allowed?, @minimum_size - 1).should be false
+        expect(@resource_pool.send(:size_allowed?, @minimum_size - 1)).to be false
       end
 
       it "should return false for a size > max size" do
-        @resource_pool.send(:size_allowed?, @maximum_size + 1).should be false
+        expect(@resource_pool.send(:size_allowed?, @maximum_size + 1)).to be false
       end
 
       it "should return false for a nil size" do
-        @resource_pool.send(:size_allowed?, nil).should be nil
+        expect(@resource_pool.send(:size_allowed?, nil)).to be nil
       end
     end
 
@@ -86,22 +86,22 @@ module VCAP::CloudController
       end
 
       before do
-        @resource_pool.stub(:resource_known?).and_return(true)
-        @resource_pool.blobstore.stub(:files).and_return(files)
-        files.stub(:get)
-        File.stub(:open).and_yield(fake_io)
+        allow(@resource_pool).to receive(:resource_known?).and_return(true)
+        allow(@resource_pool.blobstore).to receive(:files).and_return(files)
+        allow(files).to receive(:get)
+        allow(File).to receive(:open).and_yield(fake_io)
       end
 
       it "creates the path to the destination" do
-        FileUtils.should_receive(:mkdir_p).with("some")
+        expect(FileUtils).to receive(:mkdir_p).with("some")
         @resource_pool.copy(descriptor, "some/destination")
       end
 
       it "streams the resource to the destination" do
-        fake_io.should_receive(:write).with("chunk one")
-        fake_io.should_receive(:write).with("chunk two")
+        expect(fake_io).to receive(:write).with("chunk one")
+        expect(fake_io).to receive(:write).with("chunk two")
 
-        files.should_receive(:get).with("de/ad/deadbeef").
+        expect(files).to receive(:get).with("de/ad/deadbeef").
           and_yield("chunk one", 9, 18).
           and_yield("chunk two", 0, 18)
 
@@ -125,13 +125,13 @@ module VCAP::CloudController
         end
 
         it "downloads the resource via the CDN" do
-          HTTPClient.any_instance.stub(:get) do |&blk|
+          allow_any_instance_of(HTTPClient).to receive(:get) do |&blk|
             blk.call("chunk one")
             blk.call("chunk two")
           end
 
-          fake_io.should_receive(:write).with("chunk one")
-          fake_io.should_receive(:write).with("chunk two")
+          expect(fake_io).to receive(:write).with("chunk one")
+          expect(fake_io).to receive(:write).with("chunk two")
 
           @resource_pool.copy(descriptor, "some/destination")
         end

@@ -34,7 +34,7 @@ RSpec::Matchers.define :match_app do |expected_app|
     problems.empty?
   end
 
-  failure_message_for_should do |actual_event|
+  failure_message do |actual_event|
     "Expect event to match app, but did not. Problems were:\n" + problems.join("\n")
   end
 end

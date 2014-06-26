@@ -5,7 +5,7 @@ module VCAP::CloudController
     before do
       TestConfig.override({ :billing_event_writing_enabled => true })
       token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
     subject(:access) { BillingEventAccess.new(double(:context, user: user, roles: roles)) }

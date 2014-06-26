@@ -21,9 +21,9 @@ describe 'Service Broker API integration' do
     let(:guid_pattern) { '[[:alnum:]-]+' }
 
     def request_has_version_header(method, url)
-      a_request(method, url).
-          with { |request| request.headers[api_header].should match(api_accepted_version) }.
-          should have_been_made
+      expect(a_request(method, url).
+          with { |request| expect(request.headers[api_header]).to match(api_accepted_version) }).
+          to have_been_made
     end
 
     shared_examples 'broker errors' do
@@ -78,11 +78,11 @@ describe 'Service Broker API integration' do
 
         shared_examples 'a catalog fetch request' do
           it 'makes request to correct endpoint' do
-            a_request(:get, 'http://username:password@broker-url/v2/catalog').should have_been_made
+            expect(a_request(:get, 'http://username:password@broker-url/v2/catalog')).to have_been_made
           end
 
           it 'sends basic auth info' do
-            a_request(:get, %r(http://#{username_pattern}:#{password_pattern}@broker-url/v2/catalog)).should have_been_made
+            expect(a_request(:get, %r(http://#{username_pattern}:#{password_pattern}@broker-url/v2/catalog))).to have_been_made
           end
 
           it 'uses correct version header' do
@@ -169,9 +169,9 @@ describe 'Service Broker API integration' do
         include_examples 'broker errors'
 
         it 'sends all required fields' do
-          a_request(:put, %r(broker-url/v2/service_instances/#{guid_pattern})).
-            with(body: hash_including(request_from_cc_to_broker)).
-            should have_been_made
+          expect(a_request(:put, %r(broker-url/v2/service_instances/#{guid_pattern})).
+            with(body: hash_including(request_from_cc_to_broker))).
+            to have_been_made
         end
 
         it 'uses the correct version header' do
@@ -179,7 +179,7 @@ describe 'Service Broker API integration' do
         end
 
         it 'sends request with basic auth' do
-          a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern})).should have_been_made
+          expect(a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern}))).to have_been_made
         end
 
         context 'when the response from broker does not contain a dashboard_url' do
@@ -202,7 +202,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 409 }
 
           it 'makes the request to the broker' do
-            a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern})).should have_been_made
+            expect(a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern}))).to have_been_made
           end
 
           it 'responds to user with 409' do
@@ -262,17 +262,17 @@ describe 'Service Broker API integration' do
         end
 
         it 'sends request with basic auth' do
-          a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$)).should have_been_made
+          expect(a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$))).to have_been_made
         end
 
         it 'sends all required fields' do
-          a_request(:put, %r(broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$)).
-            with(body: hash_including(request_from_cc_to_broker)).
-            should have_been_made
+          expect(a_request(:put, %r(broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$)).
+            with(body: hash_including(request_from_cc_to_broker))).
+            to have_been_made
         end
 
         it 'makes a request' do
-          a_request(:put, %r(/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$)).should have_been_made
+          expect(a_request(:put, %r(/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$))).to have_been_made
         end
 
         context 'when broker responds with 200' do
@@ -341,8 +341,8 @@ describe 'Service Broker API integration' do
         include_examples 'broker errors'
 
         it 'sends all required fields' do
-          a_request(:delete, %r(broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}\?plan_id=plan1-guid-here&service_id=service-guid-here)).
-            should have_been_made
+          expect(a_request(:delete, %r(broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}\?plan_id=plan1-guid-here&service_id=service-guid-here))).
+            to have_been_made
         end
 
         context 'broker returns a 200 response' do
@@ -399,8 +399,8 @@ describe 'Service Broker API integration' do
         include_examples 'broker errors'
 
         it 'sends all required fields' do
-          a_request(:delete, %r(broker-url/v2/service_instances/#{service_instance_guid}\?plan_id=plan1-guid-here&service_id=service-guid-here)).
-            should have_been_made
+          expect(a_request(:delete, %r(broker-url/v2/service_instances/#{service_instance_guid}\?plan_id=plan1-guid-here&service_id=service-guid-here))).
+            to have_been_made
         end
 
         context 'broker returns a 200 response' do

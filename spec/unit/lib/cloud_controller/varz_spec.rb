@@ -102,8 +102,8 @@ module VCAP::CloudController
         Varz.update_job_queue_length
 
         VCAP::Component.varz.synchronize do
-          VCAP::Component.varz[:cc_job_queue_length][:cc_local].should == 2
-          VCAP::Component.varz[:cc_job_queue_length][:cc_generic].should == 1
+          expect(VCAP::Component.varz[:cc_job_queue_length][:cc_local]).to eq(2)
+          expect(VCAP::Component.varz[:cc_job_queue_length][:cc_generic]).to eq(1)
         end
       end
 
@@ -138,27 +138,27 @@ module VCAP::CloudController
 
       it 'should contain thread count' do
         VCAP::Component.varz.synchronize do
-          VCAP::Component.varz[:thread_info][:thread_count].should == Thread.list.size
+          expect(VCAP::Component.varz[:thread_info][:thread_count]).to eq(Thread.list.size)
         end
       end
 
       it 'should contain EventMachine connection count' do
         VCAP::Component.varz.synchronize do
-          VCAP::Component.varz[:thread_info][:event_machine][:connection_count].should == 123
+          expect(VCAP::Component.varz[:thread_info][:event_machine][:connection_count]).to eq(123)
         end
       end
 
       it 'should contain EventMachine @threadqueue size and num_waiting' do
         VCAP::Component.varz.synchronize do
-          VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:size].should == 20
-          VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:num_waiting].should == 0
+          expect(VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:size]).to eq(20)
+          expect(VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:num_waiting]).to eq(0)
         end
       end
 
       it 'should contain EventMachine @resultqueue size and num_waiting' do
         VCAP::Component.varz.synchronize do
-          VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:size].should == 0
-          VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:num_waiting].should == 1
+          expect(VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:size]).to eq(0)
+          expect(VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:num_waiting]).to eq(1)
         end
       end
     end

@@ -7,20 +7,20 @@ module VCAP::CloudController
     let(:secure_token) { "42" }
 
     before do
-      SecureRandom.stub(:urlsafe_base64).and_return(secure_token)
+      allow(SecureRandom).to receive(:urlsafe_base64).and_return(secure_token)
     end
 
     subject { Task.make :app => app }
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :app }
+      it { is_expected.to have_associated :app }
     end
 
     describe "Serialization" do
-      it { should export_attributes :app_guid, :secure_token }
-      it { should import_attributes :app_guid }
+      it { is_expected.to export_attributes :app_guid, :secure_token }
+      it { is_expected.to import_attributes :app_guid }
     end
 
     it "belongs to an application" do
@@ -35,12 +35,12 @@ module VCAP::CloudController
 
     describe "#secure_token" do
       it "uses secure random to generate a random string" do
-        SecureRandom.should_receive(:urlsafe_base64).and_return(secure_token)
+        expect(SecureRandom).to receive(:urlsafe_base64).and_return(secure_token)
         expect(subject.secure_token).to eq(secure_token)
       end
 
       it "returns the same token every time" do
-        SecureRandom.unstub(:urlsafe_base64)
+        allow(SecureRandom).to receive(:urlsafe_base64).and_call_original
 
         secure_token = subject.secure_token
         expect(subject.reload.secure_token).to eq(secure_token)
@@ -72,7 +72,7 @@ module VCAP::CloudController
 
       it "works with long secure tokens" do
         maddeningly_long_secure_token = "supercalifredgilisticexpialidocious"*1000
-        SecureRandom.stub(:urlsafe_base64).and_return(maddeningly_long_secure_token)
+        allow(SecureRandom).to receive(:urlsafe_base64).and_return(maddeningly_long_secure_token)
 
         long_secure_token_task = Task.make(:app => app)
         long_secure_token_task.reload
@@ -98,9 +98,9 @@ module VCAP::CloudController
 
     describe "#after_commit" do
       it "sends task.start with the URI for the app's droplet", isolation: :truncation do
-        CloudController::DependencyLocator.instance.task_client.should_receive(:start_task).with(instance_of(Task))
+        expect(CloudController::DependencyLocator.instance.task_client).to receive(:start_task).with(instance_of(Task))
         @task = Task.make :app => app
-        @task.stub(:secure_token => "42")
+        allow(@task).to receive_messages(:secure_token => "42")
       end
     end
 
@@ -108,7 +108,7 @@ module VCAP::CloudController
       it "sends task.stop with the public key, the URI for the app's droplet" do
         task = Task.make :app => app
 
-        CloudController::DependencyLocator.instance.task_client.should_receive(:stop_task).with(task)
+        expect(CloudController::DependencyLocator.instance.task_client).to receive(:stop_task).with(task)
 
         task.destroy(savepoint: true)
       end

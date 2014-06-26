@@ -4,25 +4,25 @@ module VCAP::CloudController
   describe VCAP::CloudController::InfoController do
     shared_examples "info response" do |expected_status, expect_user|
       it "should return #{expected_status}" do
-        last_response.status.should == expected_status
+        expect(last_response.status).to eq(expected_status)
       end
 
       if expected_status == 200
         it "should return an api_version" do
           hash = Yajl::Parser.parse(last_response.body)
-          hash.should have_key("api_version")
+          expect(hash).to have_key("api_version")
         end
       end
 
       if expect_user
         it "should return a 'user' entry" do
           hash = Yajl::Parser.parse(last_response.body)
-          hash.should have_key("user")
+          expect(hash).to have_key("user")
         end
       else
         it "should not return a 'user' entry" do
           hash = Yajl::Parser.parse(last_response.body)
-          hash.should_not have_key("user")
+          expect(hash).not_to have_key("user")
         end
       end
     end
@@ -87,8 +87,8 @@ module VCAP::CloudController
           get "/v2/info"
 
           hash = Yajl::Parser.parse(last_response.body)
-          hash.should have_key(endpoint)
-          hash[endpoint].should eq(endpoint_value)
+          expect(hash).to have_key(endpoint)
+          expect(hash[endpoint]).to eq(endpoint_value)
         end
       end
 
@@ -126,7 +126,7 @@ module VCAP::CloudController
               get "/v2/info"
 
               hash = Yajl::Parser.parse(last_response.body)
-              hash.should_not have_key("logging_endpoint")
+              expect(hash).not_to have_key("logging_endpoint")
             end
           end
         end

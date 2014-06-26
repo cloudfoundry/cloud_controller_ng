@@ -52,8 +52,8 @@ module VCAP::CloudController
 
             post "/v2/service_instances", req, json_headers(headers_for(member_a))
 
-            last_response.status.should == 403
-            Yajl::Parser.parse(last_response.body)['description'].should eq("You are not authorized to perform the requested action")
+            expect(last_response.status).to eq(403)
+            expect(Yajl::Parser.parse(last_response.body)['description']).to eq("You are not authorized to perform the requested action")
           end
         end
 
@@ -73,8 +73,8 @@ module VCAP::CloudController
 
               post 'v2/service_instances', payload, json_headers(headers_for(developer))
 
-              last_response.status.should == 403
-              Yajl::Parser.parse(last_response.body)['description'].should eq("You are not authorized to perform the requested action")
+              expect(last_response.status).to eq(403)
+              expect(Yajl::Parser.parse(last_response.body)['description']).to eq("You are not authorized to perform the requested action")
             end
           end
 
@@ -102,7 +102,7 @@ module VCAP::CloudController
               )
 
               post 'v2/service_instances', payload, json_headers(headers_for(developer))
-              last_response.status.should == 201
+              expect(last_response.status).to eq(201)
             end
 
             it "does not allow a user to create a service instance in an unprivileged organization" do
@@ -114,8 +114,8 @@ module VCAP::CloudController
 
               post 'v2/service_instances', payload, json_headers(headers_for(developer))
 
-              last_response.status.should == 403
-              Yajl::Parser.parse(last_response.body)['description'].should match('A service instance for the selected plan cannot be created in this organization.')
+              expect(last_response.status).to eq(403)
+              expect(Yajl::Parser.parse(last_response.body)['description']).to match('A service instance for the selected plan cannot be created in this organization.')
             end
           end
         end
@@ -140,12 +140,12 @@ module VCAP::CloudController
         let(:client) { double('client') }
 
         before do
-          client.stub(:provision) do |instance|
+          allow(client).to receive(:provision) do |instance|
             instance.credentials = '{}'
             instance.dashboard_url = 'the dashboard_url'
           end
-          client.stub(:deprovision)
-          Service.any_instance.stub(:client).and_return(client)
+          allow(client).to receive(:deprovision)
+          allow_any_instance_of(Service).to receive(:client).and_return(client)
         end
 
         it 'provisions a service instance' do
@@ -206,7 +206,7 @@ module VCAP::CloudController
             :service_plan_guid => plan.guid
           )
 
-          ManagedServiceInstance.any_instance.stub(:save).and_raise
+          allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise
 
           post "/v2/service_instances", req, json_headers(headers_for(developer))
 
@@ -250,8 +250,8 @@ module VCAP::CloudController
 
           post "/v2/service_instances", req, headers
 
-          last_response.status.should == 400
-          decoded_response["description"].should =~ /service instance name.*limited to 50 characters/
+          expect(last_response.status).to eq(400)
+          expect(decoded_response["description"]).to match(/service instance name.*limited to 50 characters/)
         end
       end
       end
@@ -263,7 +263,7 @@ module VCAP::CloudController
         let(:service) { Service.make(:description => "blah blah foobar") }
 
         before do
-          service.stub(:v2?) { false }
+          allow(service).to receive(:v2?) { false }
         end
 
         context 'when provisioning without a service-auth-token' do
@@ -292,7 +292,7 @@ module VCAP::CloudController
       it "shows the dashboard_url if there is" do
         service_instance.update(dashboard_url: 'http://dashboard.io')
         get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
-        decoded_response.fetch('entity').fetch('dashboard_url').should == 'http://dashboard.io'
+        expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('http://dashboard.io')
       end
 
       context "filtering" do
@@ -300,16 +300,16 @@ module VCAP::CloudController
 
         it 'allows filtering by gateway_name' do
           get "v2/service_instances?q=gateway_name:#{service_instance.gateway_name}", {}, admin_headers
-          last_response.status.should == 200
-          first_found_instance.should be_present
-          first_found_instance.fetch('metadata').should be_present
-          first_found_instance.fetch('metadata').fetch('guid').should == service_instance.guid
+          expect(last_response.status).to eq(200)
+          expect(first_found_instance).to be_present
+          expect(first_found_instance.fetch('metadata')).to be_present
+          expect(first_found_instance.fetch('metadata').fetch('guid')).to eq(service_instance.guid)
         end
 
         it 'allows filtering by name' do
           get "v2/service_instances?q=name:#{service_instance.name}", {}, admin_headers
-          last_response.status.should == 200
-          first_found_instance.fetch('entity').fetch('name').should == service_instance.name
+          expect(last_response.status).to eq(200)
+          expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
         end
 
         it 'allows filtering by organization_guid' do
@@ -325,14 +325,14 @@ module VCAP::CloudController
 
         it 'allows filtering by space_guid' do
           get "v2/service_instances?q=space_guid:#{service_instance.space_guid}", {}, admin_headers
-          last_response.status.should == 200
-          first_found_instance.fetch('entity').fetch('space_guid').should == service_instance.space_guid
+          expect(last_response.status).to eq(200)
+          expect(first_found_instance.fetch('entity').fetch('space_guid')).to eq(service_instance.space_guid)
         end
 
         it 'allows filtering by service_plan_guid' do
           get "v2/service_instances?q=service_plan_guid:#{service_instance.service_plan_guid}", {}, admin_headers
-          last_response.status.should == 200
-          first_found_instance.fetch('entity').fetch('service_plan_guid').should == service_instance.service_plan_guid
+          expect(last_response.status).to eq(200)
+          expect(first_found_instance.fetch('entity').fetch('service_plan_guid')).to eq(service_instance.service_plan_guid)
         end
       end
     end
@@ -343,8 +343,8 @@ module VCAP::CloudController
 
         it "returns the service instance with the given guid" do
           get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
-          last_response.status.should == 200
-          decoded_response.fetch('metadata').fetch('guid').should == service_instance.guid
+          expect(last_response.status).to eq(200)
+          expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_instance.guid)
         end
       end
 
@@ -353,8 +353,8 @@ module VCAP::CloudController
 
         it "returns the service instance with the given guid" do
           get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
-          last_response.status.should == 200
-          decoded_response.fetch('metadata').fetch('guid').should == service_instance.guid
+          expect(last_response.status).to eq(200)
+          expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_instance.guid)
         end
       end
     end
@@ -454,8 +454,8 @@ module VCAP::CloudController
           expect {
             delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
           }.to change(ServiceInstance, :count).by(-1)
-          last_response.status.should == 204
-          ServiceInstance.find(:guid => service_instance.guid).should be_nil
+          expect(last_response.status).to eq(204)
+          expect(ServiceInstance.find(:guid => service_instance.guid)).to be_nil
         end
 
         it 'creates a DELETED service usage event' do
@@ -489,7 +489,7 @@ module VCAP::CloudController
         context 'when the service gateway returns a 409' do
           before do
             # Stub 409
-            VCAP::Services::ServiceBrokers::V1::HttpClient.unstub(:new)
+            allow(VCAP::Services::ServiceBrokers::V1::HttpClient).to receive(:new).and_call_original
 
             guid = service_instance.broker_provided_id
             path = "/gateway/v1/configurations/#{guid}"
@@ -515,8 +515,8 @@ module VCAP::CloudController
           expect {
             delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
           }.to change(ServiceInstance, :count).by(-1)
-          last_response.status.should == 204
-          ServiceInstance.find(:guid => service_instance.guid).should be_nil
+          expect(last_response.status).to eq(204)
+          expect(ServiceInstance.find(:guid => service_instance.guid)).to be_nil
         end
       end
     end
@@ -603,8 +603,8 @@ module VCAP::CloudController
                                      :service_plan_guid => paid_plan.guid)
 
           post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
-          last_response.status.should == 400
-          decoded_response["description"].should =~ /exceeded your organization's services limit/
+          expect(last_response.status).to eq(400)
+          expect(decoded_response["description"]).to match(/exceeded your organization's services limit/)
         end
       end
 
@@ -617,8 +617,8 @@ module VCAP::CloudController
                                      :service_plan_guid => free_plan.guid)
 
           post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
-          last_response.status.should == 400
-          decoded_response["description"].should =~ /exceeded your organization's services limit/
+          expect(last_response.status).to eq(400)
+          expect(decoded_response["description"]).to match(/exceeded your organization's services limit/)
         end
 
         it "should enforce quota check on service plan type during creation" do
@@ -629,8 +629,8 @@ module VCAP::CloudController
                                      :service_plan_guid => paid_plan.guid)
 
           post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
-          last_response.status.should == 400
-          decoded_response["description"].should =~ /paid service plans are not allowed/
+          expect(last_response.status).to eq(400)
+          expect(decoded_response["description"]).to match(/paid service plans are not allowed/)
         end
       end
 
@@ -647,8 +647,8 @@ module VCAP::CloudController
           }
 
           post "/v2/service_instances", Yajl::Encoder.encode(body), json_headers(headers_for(make_developer_for_space(space)))
-          decoded_response["description"].should =~ /invalid.*space.*/
-          last_response.status.should == 400
+          expect(decoded_response["description"]).to match(/invalid.*space.*/)
+          expect(last_response.status).to eq(400)
         end
       end
     end

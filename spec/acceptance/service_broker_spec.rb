@@ -426,10 +426,10 @@ describe 'Service Broker' do
           }
         ]
 
-        a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').with do |req|
+        expect(a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').with do |req|
           client_modifications = JSON.parse(req.body)
           expect(client_modifications).to match_array(expected_client_modifications)
-        end.should have_been_made
+        end).to have_been_made
 
       end
 
@@ -644,9 +644,9 @@ HEREDOC
           }
         ].to_json
 
-        a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').with(
+        expect(a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').with(
           body:  expected_json_body
-        ).should have_been_made
+        )).to have_been_made
       end
     end
 

@@ -60,15 +60,15 @@ shared_examples "permission enumeration" do |perm_name, opts|
       expected_count = expected.respond_to?(:call) ? expected.call : expected
       get path, {}, headers_a
       if expected_count == :not_allowed
-        last_response.status.should == 403
+        expect(last_response.status).to eq(403)
       else
-        last_response.should be_ok
-        decoded_response["total_results"].should == expected_count
+        expect(last_response).to be_ok
+        expect(decoded_response["total_results"]).to eq(expected_count)
         guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
         if respond_to?(:enumeration_expectation_a)
           expect(guids.sort).to eq enumeration_expectation_a.map(&:guid).sort
         else
-          guids.should include(@obj_a.guid) if expected_count > 0
+          expect(guids).to include(@obj_a.guid) if expected_count > 0
         end
       end
     end
@@ -76,7 +76,7 @@ shared_examples "permission enumeration" do |perm_name, opts|
     unless perms_overlap
       it "should not return a #{name} to a user with the #{perm_name} permission on a different #{name}" do
         get "#{path}/#{@obj_a.guid}", {}, headers_b
-        last_response.should_not be_ok
+        expect(last_response).not_to be_ok
       end
     end
   end

@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe OrganizationAccess, type: :access do
     before do
       token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
     subject(:access) { OrganizationAccess.new(double(:context, user: user, roles: roles)) }
@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       context 'changing the name' do
         before { object.name = 'my new name' }
-        it { should be_able_to :update, object }
+        it { is_expected.to be_able_to :update, object }
       end
 
       context 'with a suspended organization' do
@@ -46,15 +46,15 @@ module VCAP::CloudController
       before { object.add_manager(user) }
 
       context 'with an active organization' do
-        it { should_not be_able_to :create, object }
-        it { should be_able_to :read, object }
-        it { should be_able_to :update, object }
-        it { should_not be_able_to :delete, object }
+        it { is_expected.not_to be_able_to :create, object }
+        it { is_expected.to be_able_to :read, object }
+        it { is_expected.to be_able_to :update, object }
+        it { is_expected.not_to be_able_to :delete, object }
       end
 
       context 'changing the name' do
         before { object.name = 'my new name' }
-        it { should be_able_to :update, object }
+        it { is_expected.to be_able_to :update, object }
       end
 
       context 'with a suspended organization' do
@@ -71,7 +71,7 @@ module VCAP::CloudController
     context 'any user using client without cloud_controller.write' do
       before do
         token = { 'scope' => 'cloud_controller.read'}
-        VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         object.add_user(user)
         object.add_manager(user)
         object.add_billing_manager(user)
@@ -84,7 +84,7 @@ module VCAP::CloudController
     context 'any user using client without cloud_controller.read' do
       before do
         token = { 'scope' => ''}
-        VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         object.add_user(user)
         object.add_manager(user)
         object.add_billing_manager(user)

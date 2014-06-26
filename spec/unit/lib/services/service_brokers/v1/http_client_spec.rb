@@ -23,8 +23,8 @@ module VCAP::Services
       end
 
       before do
-        HttpClient.unstub(:new)
-        VCAP::Request.stub(:current_id).and_return(request_id)
+        allow(HttpClient).to receive(:new).and_call_original
+        allow(VCAP::Request).to receive(:current_id).and_return(request_id)
       end
 
 
@@ -78,7 +78,7 @@ module VCAP::Services
           stub_request(:post, "https://broker.example.com/gateway/v1/configurations").
               to_return(:status => 200, :body => "", :headers => {})
           client.provision("unique_id", "name")
-          WebMock.should have_requested(:post, "https://broker.example.com/gateway/v1/configurations")
+          expect(WebMock).to have_requested(:post, "https://broker.example.com/gateway/v1/configurations")
         end
       end
 

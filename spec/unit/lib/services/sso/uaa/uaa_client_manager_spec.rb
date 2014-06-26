@@ -17,7 +17,7 @@ module VCAP::Services::SSO::UAA
         token_info = double('info', auth_header: 'bearer BLAH')
         token_issuer = double('issuer', client_credentials_grant: token_info)
 
-        CF::UAA::TokenIssuer.stub(:new).with('http://localhost:8080/uaa', 'cc_service_broker_client', 'some-sekret').and_return(token_issuer)
+        allow(CF::UAA::TokenIssuer).to receive(:new).with('http://localhost:8080/uaa', 'cc_service_broker_client', 'some-sekret').and_return(token_issuer)
 
         expect(creator.send(:scim)).to be_a(CF::UAA::Scim)
         expect(token_issuer).to have_received(:client_credentials_grant)
@@ -62,7 +62,7 @@ module VCAP::Services::SSO::UAA
       before do
         stub_request(:post, tx_url)
 
-        CF::UAA::TokenIssuer.stub(:new).with(uaa_uri, 'cc_service_broker_client', 'some-sekret').
+        allow(CF::UAA::TokenIssuer).to receive(:new).with(uaa_uri, 'cc_service_broker_client', 'some-sekret').
           and_return(token_issuer)
       end
 
@@ -102,9 +102,9 @@ module VCAP::Services::SSO::UAA
         client_manager = UaaClientManager.new
         client_manager.modify_transaction(changeset)
 
-        a_request(:post, tx_url).with(
+        expect(a_request(:post, tx_url).with(
           body: expected_json_body,
-          headers: {'Authorization' => auth_header}).should have_been_made
+          headers: {'Authorization' => auth_header})).to have_been_made
       end
 
       it 'logs a sanitized version of the request' do
@@ -130,7 +130,7 @@ module VCAP::Services::SSO::UAA
           client_manager = UaaClientManager.new
           client_manager.modify_transaction([])
 
-          a_request(:post, tx_url).should_not have_been_made
+          expect(a_request(:post, tx_url)).not_to have_been_made
         end
       end
 
@@ -354,9 +354,9 @@ module VCAP::Services::SSO::UAA
           let(:expected_scope) { ['openid', 'cloud_controller_service_permissions.read'] }
 
           it 'makes a request to UAA with minimal scope' do
-            a_request(:post, tx_url).with(
+            expect(a_request(:post, tx_url).with(
               body: expected_json_body,
-              headers: {'Authorization' => auth_header}).should have_been_made
+              headers: {'Authorization' => auth_header})).to have_been_made
           end
         end
 
@@ -365,9 +365,9 @@ module VCAP::Services::SSO::UAA
           let(:expected_scope) { ['cloud_controller.write', 'openid', 'cloud_controller.read', 'cloud_controller_service_permissions.read'] }
 
           it 'makes a request to UAA with extended scope' do
-            a_request(:post, tx_url).with(
+            expect(a_request(:post, tx_url).with(
               body: expected_json_body,
-              headers: {'Authorization' => auth_header}).should have_been_made
+              headers: {'Authorization' => auth_header})).to have_been_made
           end
         end
 
@@ -376,9 +376,9 @@ module VCAP::Services::SSO::UAA
           let(:expected_scope) { ['openid'] }
 
           it 'makes a request to UAA with extended scope' do
-            a_request(:post, tx_url).with(
+            expect(a_request(:post, tx_url).with(
               body: expected_json_body,
-              headers: {'Authorization' => auth_header}).should have_been_made
+              headers: {'Authorization' => auth_header})).to have_been_made
           end
         end
       end

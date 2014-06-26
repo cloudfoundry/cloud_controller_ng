@@ -16,10 +16,10 @@ resource "Files", :type => :api do
         :credentials => [],
         :file_uri_v2 => "dea.example.com/encoded_path_to_file",
       )
-      VCAP::CloudController::DeaClient.should_receive(:get_file_uri_for_active_instance_by_index).and_return(deal_file_result)
+      expect(VCAP::CloudController::DeaClient).to receive(:get_file_uri_for_active_instance_by_index).and_return(deal_file_result)
 
       client.get "/v2/apps/#{app_guid}/instances/#{instance_index}/files/#{file_path}", {}, headers
-      status.should == 302
+      expect(status).to eq(302)
       expect(response_headers["Location"]).to eq("dea.example.com/encoded_path_to_file")
     end
   end

@@ -3,20 +3,20 @@ require "spec_helper"
 module VCAP::CloudController
   describe ServicePlan, type: :model do
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :service }
-      it { should have_associated :service_instances, class: ManagedServiceInstance }
-      it { should have_associated :service_plan_visibilities }
+      it { is_expected.to have_associated :service }
+      it { is_expected.to have_associated :service_instances, class: ManagedServiceInstance }
+      it { is_expected.to have_associated :service_plan_visibilities }
     end
 
     describe "Validations" do
-      it { should validate_presence :name, message: "is required" }
-      it { should validate_presence :free, message: "is required" }
-      it { should validate_presence :description, message: "is required" }
-      it { should validate_presence :service, message: "is required" }
-      it { should strip_whitespace :name }
+      it { is_expected.to validate_presence :name, message: "is required" }
+      it { is_expected.to validate_presence :free, message: "is required" }
+      it { is_expected.to validate_presence :description, message: "is required" }
+      it { is_expected.to validate_presence :service, message: "is required" }
+      it { is_expected.to strip_whitespace :name }
 
       context 'when the unique_id is not unique' do
         let(:existing_service_plan) { ServicePlan.make }
@@ -34,8 +34,8 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :active }
-      it { should import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public }
+      it { is_expected.to export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :active }
+      it { is_expected.to import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public }
     end
 
     describe '#save' do
@@ -123,10 +123,10 @@ module VCAP::CloudController
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
 
         visible = ServicePlan.organization_visible(organization).all
-        visible.should include(visible_public_plan)
-        visible.should include(visible_private_plan)
-        visible.should_not include(hidden_private_plan)
-        visible.should_not include(inactive_public_plan)
+        expect(visible).to include(visible_public_plan)
+        expect(visible).to include(visible_private_plan)
+        expect(visible).not_to include(hidden_private_plan)
+        expect(visible).not_to include(inactive_public_plan)
       end
     end
 
@@ -135,12 +135,12 @@ module VCAP::CloudController
 
       context "when the service is bindable" do
         let(:service) { Service.make(bindable: true) }
-        specify { service_plan.should be_bindable }
+        specify { expect(service_plan).to be_bindable }
       end
 
       context "when the service is unbindable" do
         let(:service) { Service.make(bindable: false) }
-        specify { service_plan.should_not be_bindable }
+        specify { expect(service_plan).not_to be_bindable }
       end
     end
 

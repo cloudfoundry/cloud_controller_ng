@@ -16,13 +16,13 @@ module VCAP::CloudController
 
       let!(:blobstore) do
         blobstore = CloudController::DependencyLocator.instance.droplet_blobstore
-        CloudController::DependencyLocator.instance.stub(:droplet_blobstore).and_return(blobstore)
+        allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(blobstore)
         blobstore
       end
 
       subject(:job) { DropletUpload.new(local_file.path, app.id) }
 
-      it { should be_a_valid_job }
+      it { is_expected.to be_a_valid_job }
 
       it "updates the app's droplet hash" do
         expect {
@@ -61,7 +61,7 @@ module VCAP::CloudController
       end
 
       it "deletes the uploaded file" do
-        FileUtils.should_receive(:rm_f).with(local_file.path)
+        expect(FileUtils).to receive(:rm_f).with(local_file.path)
         job.perform
       end
 

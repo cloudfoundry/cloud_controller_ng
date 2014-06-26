@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     describe ".create_seed_stacks" do
       it "populates stacks" do
-        Stack.should_receive(:populate)
+        expect(Stack).to receive(:populate)
         Seeds.create_seed_stacks
       end
     end
@@ -85,10 +85,10 @@ module VCAP::CloudController
         context "when there are records with names that match but other fields that do not match" do
           it "warns" do
             mock_logger = double
-            Steno.stub(:logger).and_return(mock_logger)
+            allow(Steno).to receive(:logger).and_return(mock_logger)
             config[:quota_definitions]["small"][:total_routes] = 2
 
-            mock_logger.should_receive(:warn).with("seeds.quota-collision", hash_including(name: "small"))
+            expect(mock_logger).to receive(:warn).with("seeds.quota-collision", hash_including(name: "small"))
 
             Seeds.create_seed_quota_definitions(config)
           end
@@ -144,9 +144,9 @@ module VCAP::CloudController
             org.save(validate: false) # See tracker story #61090364
 
             mock_logger = double
-            Steno.stub(:logger).and_return(mock_logger)
+            allow(Steno).to receive(:logger).and_return(mock_logger)
 
-            mock_logger.should_receive(:warn).with("seeds.system-domain-organization.collision", existing_quota_name: "runaway")
+            expect(mock_logger).to receive(:warn).with("seeds.system-domain-organization.collision", existing_quota_name: "runaway")
 
             Seeds.create_seed_organizations(config)
           end
@@ -201,9 +201,9 @@ module VCAP::CloudController
 
         it "warns if the system domain exists but has different attributes from the seed" do
           mock_logger = double(:info => nil)
-          Steno.stub(:logger).and_return(mock_logger)
+          allow(Steno).to receive(:logger).and_return(mock_logger)
 
-          mock_logger.should_receive(:warn).with("seeds.system-domain.collision", instance_of(Hash))
+          expect(mock_logger).to receive(:warn).with("seeds.system-domain.collision", instance_of(Hash))
 
           PrivateDomain.create(
             name: config[:system_domain],

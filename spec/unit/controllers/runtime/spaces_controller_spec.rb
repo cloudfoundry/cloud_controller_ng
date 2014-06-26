@@ -9,7 +9,7 @@ module VCAP::CloudController
         space.name = "1234"
         space.save
         get "/v2/spaces/#{space.guid}", {}, admin_headers
-        decoded_response["entity"]["name"].should == "1234"
+        expect(decoded_response["entity"]["name"]).to eq("1234")
       end
     end
 
@@ -210,11 +210,11 @@ module VCAP::CloudController
 
           get "v2/spaces/#{space.guid}/service_instances", {'q' => 'name:provided service 1;', 'return_user_provided_service_instances' => true}, headers_for(developer)
           guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
-          guids.should == [user_provided_service_instance_1.guid]
+          expect(guids).to eq([user_provided_service_instance_1.guid])
 
           get "v2/spaces/#{space.guid}/service_instances", {'q' => 'name:managed service 1;', 'return_user_provided_service_instances' => true}, headers_for(developer)
           guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
-          guids.should == [managed_service_instance_1.guid]
+          expect(guids).to eq([managed_service_instance_1.guid])
         end
       end
 
@@ -227,7 +227,7 @@ module VCAP::CloudController
             get "v2/spaces/#{space.guid}/service_instances", {return_user_provided_service_instances: true}, headers_for(developer)
 
             guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
-            guids.should include(user_provided_service_instance.guid, managed_service_instance.guid)
+            expect(guids).to include(user_provided_service_instance.guid, managed_service_instance.guid)
           end
 
           it 'includes service_plan_url for managed service instances' do
@@ -236,9 +236,9 @@ module VCAP::CloudController
             managed_service_instance_response = service_instances_response.detect {|si|
               si.fetch('metadata').fetch('guid') == managed_service_instance.guid
             }
-            managed_service_instance_response.fetch('entity').fetch('service_plan_url').should be
-            managed_service_instance_response.fetch('entity').fetch('space_url').should be
-            managed_service_instance_response.fetch('entity').fetch('service_bindings_url').should be
+            expect(managed_service_instance_response.fetch('entity').fetch('service_plan_url')).to be
+            expect(managed_service_instance_response.fetch('entity').fetch('space_url')).to be
+            expect(managed_service_instance_response.fetch('entity').fetch('service_bindings_url')).to be
           end
         end
 
@@ -246,7 +246,7 @@ module VCAP::CloudController
           it 'returns only the managed service instances' do
             get "/v2/spaces/#{space.guid}/service_instances", '', headers_for(developer)
             guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
-            guids.should =~ [managed_service_instance.guid]
+            expect(guids).to match_array([managed_service_instance.guid])
           end
 
           it 'includes service_plan_url for managed service instances' do
@@ -255,9 +255,9 @@ module VCAP::CloudController
             managed_service_instance_response = service_instances_response.detect {|si|
               si.fetch('metadata').fetch('guid') == managed_service_instance.guid
             }
-            managed_service_instance_response.fetch('entity').fetch('service_plan_url').should be
-            managed_service_instance_response.fetch('entity').fetch('space_url').should be
-            managed_service_instance_response.fetch('entity').fetch('service_bindings_url').should be
+            expect(managed_service_instance_response.fetch('entity').fetch('service_plan_url')).to be
+            expect(managed_service_instance_response.fetch('entity').fetch('space_url')).to be
+            expect(managed_service_instance_response.fetch('entity').fetch('service_bindings_url')).to be
           end
         end
       end
@@ -269,7 +269,7 @@ module VCAP::CloudController
             it "disallows a user that only has #{perm_name} permission on the space" do
               get "/v2/spaces/#{@space_a.guid}/service_instances", {}, headers_for(member_a)
 
-              last_response.status.should == 403
+              expect(last_response.status).to eq(403)
             end
           end
         end
@@ -286,15 +286,15 @@ module VCAP::CloudController
           it "should return service instances to a user that has #{perm_name} permissions" do
             get path, {}, headers_for(member_a)
 
-            last_response.should be_ok
-            decoded_response["total_results"].should == expected
+            expect(last_response).to be_ok
+            expect(decoded_response["total_results"]).to eq(expected)
             guids = decoded_response["resources"].map { |o| o["metadata"]["guid"] }
-            guids.should include(managed_service_instance.guid) if expected > 0
+            expect(guids).to include(managed_service_instance.guid) if expected > 0
           end
 
           it "should not return a service instance to a user with the #{perm_name} permission on a different space" do
             get path, {}, headers_for(member_b)
-            last_response.status.should eq(403)
+            expect(last_response.status).to eq(403)
           end
         end
 
@@ -303,7 +303,7 @@ module VCAP::CloudController
             it "disallows a user that only has #{perm_name} permission on the space" do
               get "/v2/spaces/#{@space_a.guid}/services", {}, headers_for(member_a)
 
-              last_response.should be_forbidden
+              expect(last_response).to be_forbidden
             end
           end
         end
@@ -314,12 +314,12 @@ module VCAP::CloudController
           it "should return services to a user that has #{perm_name} permissions" do
             get path, {}, headers_for(member_a)
 
-            last_response.should be_ok
+            expect(last_response).to be_ok
           end
 
           it "should not return services to a user with the #{perm_name} permission on a different space" do
             get path, {}, headers_for(member_b)
-            last_response.should be_forbidden
+            expect(last_response).to be_forbidden
           end
         end
 
@@ -469,25 +469,25 @@ module VCAP::CloudController
 
         it "should remove the offering when the org does not have access to any of the service's plans" do
           get "/v2/spaces/#{space_two.guid}/services", {}, headers
-          last_response.should be_ok
-          decoded_guids.should_not include(@service.guid)
+          expect(last_response).to be_ok
+          expect(decoded_guids).not_to include(@service.guid)
         end
 
         it "should return the offering when the org has access to one of the service's plans" do
           get "/v2/spaces/#{space_one.guid}/services", {}, headers
-          last_response.should be_ok
-          decoded_guids.should include(@service.guid)
+          expect(last_response).to be_ok
+          expect(decoded_guids).to include(@service.guid)
         end
 
         it 'should include plans that are visible to the org' do
           get "/v2/spaces/#{space_one.guid}/services?inline-relations-depth=1", {}, headers
 
-          last_response.should be_ok
+          expect(last_response).to be_ok
           service = decoded_response.fetch('resources').fetch(0)
           service_plans = service.fetch('entity').fetch('service_plans')
-          service_plans.length.should == 1
-          service_plans.first.fetch('metadata').fetch('guid').should == @service_plan.guid
-          service_plans.first.fetch('metadata').fetch('url').should == "/v2/service_plans/#{@service_plan.guid}"
+          expect(service_plans.length).to eq(1)
+          expect(service_plans.first.fetch('metadata').fetch('guid')).to eq(@service_plan.guid)
+          expect(service_plans.first.fetch('metadata').fetch('url')).to eq("/v2/service_plans/#{@service_plan.guid}")
         end
 
         it 'should exclude plans that are not visible to the org' do
@@ -495,11 +495,11 @@ module VCAP::CloudController
 
           get "/v2/spaces/#{space_two.guid}/services?inline-relations-depth=1", {}, headers
 
-          last_response.should be_ok
+          expect(last_response).to be_ok
           service = decoded_response.fetch('resources').fetch(0)
           service_plans = service.fetch('entity').fetch('service_plans')
-          service_plans.length.should == 1
-          service_plans.first.fetch('metadata').fetch('guid').should == public_service_plan.guid
+          expect(service_plans.length).to eq(1)
+          expect(service_plans.first.fetch('metadata').fetch('guid')).to eq(public_service_plan.guid)
         end
       end
 
@@ -514,14 +514,14 @@ module VCAP::CloudController
           # sqlite, instead of 'true' or 'false', the parameter must be specified
           # as 't' or 'f'. But in postgresql, either way is ok.
           get "/v2/spaces/#{space_one.guid}/services?q=active:t", {}, headers
-          last_response.should be_ok
-          decoded_guids.should =~ @active.map(&:guid)
+          expect(last_response).to be_ok
+          expect(decoded_guids).to match_array(@active.map(&:guid))
         end
 
         it 'can only get inactive services' do
           get "/v2/spaces/#{space_one.guid}/services?q=active:f", {}, headers
-          last_response.should be_ok
-          decoded_guids.should =~ @inactive.map(&:guid)
+          expect(last_response).to be_ok
+          expect(decoded_guids).to match_array(@inactive.map(&:guid))
         end
       end
     end
@@ -533,7 +533,7 @@ module VCAP::CloudController
           request_body = {organization_guid: organization.guid, name: "space_name"}.to_json
           post "/v2/spaces", request_body, json_headers(admin_headers)
 
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
 
           new_space_guid = decoded_response['metadata']['guid']
           event = Event.find(:type => "audit.space.create", :actee => new_space_guid)
@@ -548,7 +548,7 @@ module VCAP::CloudController
         request_body = {name: "new_space_name"}.to_json
         put "/v2/spaces/#{space.guid}", request_body, json_headers(admin_headers)
 
-        last_response.status.should == 201
+        expect(last_response.status).to eq(201)
 
         space_guid = decoded_response['metadata']['guid']
         event = Event.find(:type => "audit.space.update", :actee => space_guid)
@@ -563,7 +563,7 @@ module VCAP::CloudController
         space_guid = space.guid
         delete "/v2/spaces/#{space_guid}", "", json_headers(admin_headers)
 
-        last_response.status.should == 204
+        expect(last_response.status).to eq(204)
 
         event = Event.find(:type => "audit.space.delete-request", :actee => space_guid)
         expect(event).not_to be_nil

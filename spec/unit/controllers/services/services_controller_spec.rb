@@ -300,7 +300,7 @@ module VCAP::CloudController
           post '/v2/services', payload, json_headers(admin_headers)
         }.to change(Service, :count).by(1)
 
-        last_response.status.should eq(201)
+        expect(last_response.status).to eq(201)
         guid = decoded_response.fetch('metadata').fetch('guid')
 
         service = Service.last
@@ -325,9 +325,9 @@ module VCAP::CloudController
           :unique_id   => Sham.unique_id,
         ).encode
         post "/v2/services", payload_without_bindable, json_headers(admin_headers)
-        last_response.status.should eq(201)
+        expect(last_response.status).to eq(201)
         service_guid = decoded_response.fetch('metadata').fetch('guid')
-        Service.first(:guid => service_guid).bindable.should be true
+        expect(Service.first(:guid => service_guid).bindable).to be true
       end
 
       it 'creates the service with default tags' do
@@ -340,9 +340,9 @@ module VCAP::CloudController
           :unique_id   => Sham.unique_id
         ).encode
         post "/v2/services", payload_without_tags, json_headers(admin_headers)
-        last_response.status.should eq(201)
+        expect(last_response.status).to eq(201)
         service_guid = decoded_response.fetch('metadata').fetch('guid')
-        Service.first(:guid => service_guid).tags.should == []
+        expect(Service.first(:guid => service_guid).tags).to eq([])
       end
 
       it 'creates the service with specified tags' do
@@ -356,9 +356,9 @@ module VCAP::CloudController
           :tags        => ["relational"]
         ).encode
         post "/v2/services", payload_with_tags, json_headers(admin_headers)
-        last_response.status.should eq(201)
+        expect(last_response.status).to eq(201)
         service_guid = decoded_response.fetch('metadata').fetch('guid')
-        Service.first(:guid => service_guid).tags.should == ["relational"]
+        expect(Service.first(:guid => service_guid).tags).to eq(["relational"])
       end
 
       it 'creates the service with default requires' do
@@ -371,9 +371,9 @@ module VCAP::CloudController
           :unique_id   => Sham.unique_id
         ).encode
         post "/v2/services", payload_without_requires, json_headers(admin_headers)
-        last_response.status.should eq(201)
+        expect(last_response.status).to eq(201)
         service_guid = decoded_response.fetch('metadata').fetch('guid')
-        Service.first(:guid => service_guid).requires.should == []
+        expect(Service.first(:guid => service_guid).requires).to eq([])
       end
 
       it 'creates the service with specified requires' do
@@ -387,9 +387,9 @@ module VCAP::CloudController
           :requires    => ["loggyness"]
         ).encode
         post "/v2/services", payload_with_requires, json_headers(admin_headers)
-        last_response.status.should eq(201)
+        expect(last_response.status).to eq(201)
         service_guid = decoded_response.fetch('metadata').fetch('guid')
-        Service.first(:guid => service_guid).requires.should == ["loggyness"]
+        expect(Service.first(:guid => service_guid).requires).to eq(["loggyness"])
       end
     end
 

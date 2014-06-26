@@ -37,7 +37,7 @@ module VCAP::Errors
         let(:name) { "What is this?  I don't know?!!"}
 
         before do
-          Details.unstub(:new)
+          allow(Details).to receive(:new).and_call_original
         end
 
         it "explodes" do

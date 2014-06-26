@@ -66,7 +66,7 @@ resource "Apps", :type => :api do
         new_attributes = {name: 'new_name'}
 
         client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(new_attributes), headers
-        status.should == 201
+        expect(status).to eq(201)
         standard_entity_response parsed_response, :app, name: "new_name"
       end
     end
@@ -80,7 +80,7 @@ resource "Apps", :type => :api do
         EOD
 
         client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(buildpack: buildpack), headers
-        status.should == 201
+        expect(status).to eq(201)
         standard_entity_response parsed_response, :app, :buildpack => buildpack
 
         audited_event VCAP::CloudController::Event.find(:type => "audit.app.update", :actee => guid)
@@ -97,7 +97,7 @@ resource "Apps", :type => :api do
         EOD
 
         client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(buildpack: buildpack), headers
-        status.should == 201
+        expect(status).to eq(201)
         standard_entity_response parsed_response, :app, :buildpack => admin_buildpack.name
 
         audited_event VCAP::CloudController::Event.find(:type => "audit.app.update", :actee => guid)

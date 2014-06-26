@@ -38,19 +38,19 @@ module VCAP::CloudController
 
         it "should reject requests without auth tokens" do
           post path, build_offering.encode, json_headers({})
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
 
         it "should should reject posts with malformed bodies" do
           post path, Yajl::Encoder.encode(:bla => "foobar"), json_headers(auth_header)
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
 
         it "should reject requests with missing parameters" do
           msg = { :label => "foobar-2.2",
                   :description => "the foobar svc" }
           post path, Yajl::Encoder.encode(msg), json_headers(auth_header)
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
 
         it "should reject requests with invalid parameters" do
@@ -58,20 +58,20 @@ module VCAP::CloudController
                   :description => "the foobar svc",
                   :url => "zazzle" }
           post path, Yajl::Encoder.encode(msg), json_headers(auth_header)
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
 
         it "should reject requests with extra dash in label" do
           post path, foo_bar_dash_offering.encode, json_headers(auth_header)
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
 
         it "should create service offerings for label/provider services" do
           post path, build_offering.encode, json_headers(auth_header)
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
           svc = Service.find(:label => "foobar", :provider => "core")
-          svc.should_not be_nil
-          svc.version.should == "2.0"
+          expect(svc).not_to be_nil
+          expect(svc.version).to eq("2.0")
         end
 
         it "should create services with 'extra' data" do
@@ -80,17 +80,17 @@ module VCAP::CloudController
           o.extra = extra_data
           post path, o.encode, json_headers(auth_header)
 
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
           service = Service[:label => "foobar", :provider => "core"]
-          service.extra.should == extra_data
+          expect(service.extra).to eq(extra_data)
         end
 
         it "should set bindable to true" do
           post path, build_offering.encode, json_headers(auth_header)
 
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
           service = Service[:label => "foobar", :provider => "core"]
-          service.bindable.should == true
+          expect(service.bindable).to eq(true)
         end
 
         shared_examples_for "offering containing service plans" do
@@ -98,7 +98,7 @@ module VCAP::CloudController
             post path, both_plans.encode, json_headers(auth_header)
 
             service = Service[:label => "foobar", :provider => "core"]
-            service.service_plans.map(&:name).should include("free", "nonfree")
+            expect(service.service_plans.map(&:name)).to include("free", "nonfree")
           end
 
           it "should update service plans" do
@@ -106,7 +106,7 @@ module VCAP::CloudController
             post path, both_plans.encode, json_headers(auth_header)
 
             service = Service[:label => "foobar", :provider => "core"]
-            service.service_plans.map(&:name).should include("free", "nonfree")
+            expect(service.service_plans.map(&:name)).to include("free", "nonfree")
           end
 
           it "should remove plans not posted" do
@@ -114,7 +114,7 @@ module VCAP::CloudController
             post path, just_free_plan.encode, json_headers(auth_header)
 
             service = Service[:label => "foobar", :provider => "core"]
-            service.service_plans.map(&:name).should == ["free"]
+            expect(service.service_plans.map(&:name)).to eq(["free"])
           end
         end
 
@@ -150,28 +150,28 @@ module VCAP::CloudController
               ]
             )
             post path, offer.encode, json_headers(auth_header)
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
 
             service = Service[:label => "foobar", :provider => "core"]
-            service.service_plans.should have(1).entries
-            service.service_plans.first.description.should == "free plan"
-            service.service_plans.first.name.should == "freeplan"
-            service.service_plans.first.free.should == true
-            service.service_plans.first.extra.should == "extra info"
+            expect(service.service_plans).to have(1).entries
+            expect(service.service_plans.first.description).to eq("free plan")
+            expect(service.service_plans.first.name).to eq("freeplan")
+            expect(service.service_plans.first.free).to eq(true)
+            expect(service.service_plans.first.extra).to eq("extra info")
           end
 
           it "does not add plans with identical names but different freeness under the same service" do
             post path, just_free_plan.encode, json_headers(auth_header)
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
 
             offer2 = build_offering(plan_details: [{"name" => "free", "free" => false, "description" => "tetris"}])
             post path, offer2.encode, json_headers(auth_header)
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
 
             service = Service[:label => "foobar", :provider => "core"]
-            service.should have(1).service_plans
-            service.service_plans.first.description.should == "tetris"
-            service.service_plans.first.free.should == false
+            expect(service).to have(1).service_plans
+            expect(service.service_plans.first.description).to eq("tetris")
+            expect(service.service_plans.first.free).to eq(false)
           end
 
           it "prevents the request from setting the plan guid" do
@@ -179,11 +179,11 @@ module VCAP::CloudController
               plan_details:[{"name" => "plan name", "free" => true, "guid" => "myguid"}]
             )
             post path, offer.encode, json_headers(auth_header)
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
 
             service = Service[:label => "foobar", :provider => "core"]
-            service.should have(1).service_plans
-            service.service_plans.first.guid.should_not == "myguid"
+            expect(service).to have(1).service_plans
+            expect(service.service_plans.first.guid).not_to eq("myguid")
           end
         end
 
@@ -213,10 +213,10 @@ module VCAP::CloudController
           offer = build_offering
           offer.url = "http://newurl.com"
           post path, offer.encode, json_headers(auth_header)
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
           svc = Service.find(:label => "foobar", :provider => "core")
-          svc.should_not be_nil
-          svc.url.should == "http://newurl.com"
+          expect(svc).not_to be_nil
+          expect(svc.url).to eq("http://newurl.com")
         end
       end
 
@@ -254,41 +254,41 @@ module VCAP::CloudController
 
         it "should return not found for unknown label services" do
           get "services/v1/offerings/xxx", {}, auth_header
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
 
         it "should return not found for unknown provider services" do
           get "services/v1/offerings/foobar-version/xxx", {}, auth_header
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
 
         it "should return not authorized on token mismatch" do
           get "services/v1/offerings/foobar-version", {}, {
             "HTTP_X_VCAP_SERVICE_TOKEN" => "xxx",
           }
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
 
         it "should return the specific service offering which has null provider" do
           get "services/v1/offerings/foobar-version", {}, auth_header
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
 
           resp = Yajl::Parser.parse(last_response.body)
-          resp["label"].should == "foobar"
-          resp["url"].should   == "http://www.google.com"
-          resp["plans"].sort.should == %w[free nonfree]
-          resp["provider"].should == "core"
+          expect(resp["label"]).to eq("foobar")
+          expect(resp["url"]).to   eq("http://www.google.com")
+          expect(resp["plans"].sort).to eq(%w[free nonfree])
+          expect(resp["provider"]).to eq("core")
         end
 
         it "should return the specific service offering which has specific provider" do
           get "services/v1/offerings/foobar-version/test", {}, {"HTTP_X_VCAP_SERVICE_TOKEN" => @svc2.service_auth_token.token}
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
 
           resp = Yajl::Parser.parse(last_response.body)
-          resp["label"].should == "foobar"
-          resp["url"].should   == "http://www.google.com"
-          resp["plans"].sort.should == %w[free nonfree]
-          resp["provider"].should == "test"
+          expect(resp["label"]).to eq("foobar")
+          expect(resp["url"]).to   eq("http://www.google.com")
+          expect(resp["plans"].sort).to eq(%w[free nonfree])
+          expect(resp["provider"]).to eq("test")
         end
       end
 
@@ -332,41 +332,41 @@ module VCAP::CloudController
 
         it "should return not found for unknown services" do
           get "services/v1/offerings/xxx-version/handles"
-          last_response.status.should == 404
+          expect(last_response.status).to eq(404)
         end
 
         it "should return not found for unknown services with a provider" do
           get "services/v1/offerings/xxx-version/fooprovider/handles"
-          last_response.status.should == 404
+          expect(last_response.status).to eq(404)
         end
 
         it "rejects requests with mismatching tokens" do
           get "/services/v1/offerings/foobar-version/handles", {}, {
             "HTTP_X_VCAP_SERVICE_TOKEN" => "xxx",
           }
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
 
         it "should return provisioned and bound handles" do
           get "/services/v1/offerings/foobar-version/handles", {}, {"HTTP_X_VCAP_SERVICE_TOKEN" => svc1.service_auth_token.token}
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
 
           handles = JSON.parse(last_response.body)["handles"]
-          handles.size.should == 2
-          handles[0]["service_id"].should == "foo1"
-          handles[0]["configuration"].should == { "config" => "foo1" }
-          handles[1]["service_id"].should == "bind1"
-          handles[1]["configuration"].should == { "config" => "bind1" }
+          expect(handles.size).to eq(2)
+          expect(handles[0]["service_id"]).to eq("foo1")
+          expect(handles[0]["configuration"]).to eq({ "config" => "foo1" })
+          expect(handles[1]["service_id"]).to eq("bind1")
+          expect(handles[1]["configuration"]).to eq({ "config" => "bind1" })
 
           get "/services/v1/offerings/foobar-version/test/handles", {}, {"HTTP_X_VCAP_SERVICE_TOKEN" => svc2.service_auth_token.token }
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
 
           handles = JSON.parse(last_response.body)["handles"]
-          handles.size.should == 2
-          handles[0]["service_id"].should == "foo2"
-          handles[0]["configuration"].should == { "config" => "foo2" }
-          handles[1]["service_id"].should == "bind2"
-          handles[1]["configuration"].should == { "config" => "bind2" }
+          expect(handles.size).to eq(2)
+          expect(handles[0]["service_id"]).to eq("foo2")
+          expect(handles[0]["configuration"]).to eq({ "config" => "foo2" })
+          expect(handles[1]["service_id"]).to eq("bind2")
+          expect(handles[1]["configuration"]).to eq({ "config" => "bind2" })
         end
       end
 
@@ -398,7 +398,7 @@ module VCAP::CloudController
                 :configuration => [],
                 :credentials   => []
             ).encode, json_headers(@auth_header)
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
           end
 
           it "should update provisioned handles" do
@@ -408,7 +408,7 @@ module VCAP::CloudController
                 :configuration => [],
                 :credentials   => { foo: 'bar' }
             ).encode, json_headers(@auth_header)
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
           end
 
           it "should update bound handles" do
@@ -418,7 +418,7 @@ module VCAP::CloudController
                 :configuration => [],
                 :credentials   => []
             ).encode, json_headers(@auth_header)
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
           end
         end
 
@@ -452,7 +452,7 @@ module VCAP::CloudController
                 :configuration => [],
                 :credentials   => { foo: 'bar' }
             ).encode, json_headers(@auth_header)
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
           end
 
           it "should update bound handles" do
@@ -462,7 +462,7 @@ module VCAP::CloudController
                 :configuration => [],
                 :credentials   => []
             ).encode, json_headers(@auth_header)
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
           end
         end
       end
@@ -474,35 +474,35 @@ module VCAP::CloudController
 
         it "should return not found for unknown label services" do
           delete "/services/v1/offerings/xxx", {}, auth_header
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
 
         it "should return not found for unknown provider services" do
           delete "/services/v1/offerings/foobar-version/xxx", {}, auth_header
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
 
         it "should return not authorized on token mismatch" do
           delete "/services/v1/offerings/foobar-version/xxx", {}, {
             "HTTP_X_VCAP_SERVICE_TOKEN" => "barfoo",
           }
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
 
         it "should delete existing offerings which has null provider" do
           delete "/services/v1/offerings/foobar-version", {}, auth_header
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
 
           svc = Service[:label => "foobar", :provider => "core"]
-          svc.should be_nil
+          expect(svc).to be_nil
         end
 
         it "should delete existing offerings which has specific provider" do
           delete "/services/v1/offerings/foobar-version/test", {}, {"HTTP_X_VCAP_SERVICE_TOKEN" => service_plan_test.service.service_auth_token.token}
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
 
           svc = Service[:label => "foobar", :provider => "test"]
-          svc.should be_nil
+          expect(svc).to be_nil
         end
       end
 

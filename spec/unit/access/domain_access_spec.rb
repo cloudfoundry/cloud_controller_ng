@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe DomainAccess, type: :access do
     before do
       token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      SecurityContext.stub(:token).and_return(token)
+      allow(SecurityContext).to receive(:token).and_return(token)
     end
 
     let(:user) { User.make }
@@ -66,7 +66,7 @@ module VCAP::CloudController
       context 'any user using client without cloud_controller.write' do
         before do
           token = { 'scope' => 'cloud_controller.read'}
-          VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+          allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
           org.add_user(user)
           org.add_manager(user)
           org.add_billing_manager(user)
@@ -82,7 +82,7 @@ module VCAP::CloudController
       context 'any user using client without cloud_controller.read' do
         before do
           token = { 'scope' => ''}
-          VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+          allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
           org.add_user(user)
           org.add_manager(user)
           org.add_billing_manager(user)
@@ -111,7 +111,7 @@ module VCAP::CloudController
       context 'any user using client without cloud_controller.read' do
         before do
           token = { 'scope' => ''}
-          VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+          allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
           org.add_user(user)
           org.add_manager(user)
           org.add_billing_manager(user)

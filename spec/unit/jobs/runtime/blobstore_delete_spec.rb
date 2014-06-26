@@ -15,7 +15,7 @@ module VCAP::CloudController
       let(:tmpfile) { Tempfile.new("")}
 
       before do
-        CloudController::DependencyLocator.instance.stub(:droplet_blobstore).and_return(blobstore)
+        allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(blobstore)
         blobstore.cp_to_blobstore(tmpfile.path, key)
       end
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
         tmpfile.delete
       end
 
-      it { should be_a_valid_job }
+      it { is_expected.to be_a_valid_job }
 
       context "when no attributes defined" do
         it "deletes the blob" do
@@ -64,7 +64,7 @@ module VCAP::CloudController
 
       context "when the blob does not exist" do
         it "does not invoke delete" do
-          blobstore.should_receive(:blob).and_return(nil)
+          expect(blobstore).to receive(:blob).and_return(nil)
           job.perform
         end
       end

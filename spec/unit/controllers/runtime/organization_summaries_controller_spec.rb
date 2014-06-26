@@ -54,23 +54,23 @@ module VCAP::CloudController
         end
 
         it "should return 200" do
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
         end
 
         it "should return the org guid" do
-          decoded_response["guid"].should == org.guid
+          expect(decoded_response["guid"]).to eq(org.guid)
         end
 
         it "should return the org name" do
-          decoded_response["name"].should == org.name
+          expect(decoded_response["name"]).to eq(org.name)
         end
 
         it "returns the org's status" do
-          decoded_response["status"].should == "active"
+          expect(decoded_response["status"]).to eq("active")
         end
 
         it "should return num_spaces spaces" do
-          decoded_response["spaces"].size.should == num_spaces
+          expect(decoded_response["spaces"].size).to eq(num_spaces)
         end
 
         it "should return the correct info for all spaces" do
@@ -109,14 +109,14 @@ module VCAP::CloudController
         context "when the user is a member of the space" do
           it "should only return spaces a user has access to" do
             get "/v2/organizations/#{org.guid}/summary", {}, json_headers(headers_for(member))
-            decoded_response["spaces"].size.should == num_visible_spaces
+            expect(decoded_response["spaces"].size).to eq(num_visible_spaces)
           end
         end
 
         context "when the user is not a member of the space (but is a member of the org)" do
           it "should only return spaces a user has access to" do
             get "/v2/organizations/#{org.guid}/summary", {}, json_headers(headers_for(non_member))
-            decoded_response["spaces"].size.should == 0
+            expect(decoded_response["spaces"].size).to eq(0)
           end
         end
       end

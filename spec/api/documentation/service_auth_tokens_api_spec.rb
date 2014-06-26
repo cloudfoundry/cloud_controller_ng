@@ -30,11 +30,11 @@ resource "ServiceAuthTokens (deprecated)", :type => :api do
       example "Filtering the result set by label" do
         client.get "/v2/service_auth_tokens", params, headers
 
-        status.should == 200
+        expect(status).to eq(200)
 
         standard_paginated_response_format? parsed_response
 
-        parsed_response["resources"].size.should == 1
+        expect(parsed_response["resources"].size).to eq(1)
 
         standard_entity_response(
           parsed_response["resources"].first,
@@ -53,11 +53,11 @@ resource "ServiceAuthTokens (deprecated)", :type => :api do
       example "Filtering the result set by provider" do
         client.get "/v2/service_auth_tokens", params, headers
 
-        status.should == 200
+        expect(status).to eq(200)
 
         standard_paginated_response_format? parsed_response
 
-        parsed_response["resources"].size.should == 1
+        expect(parsed_response["resources"].size).to eq(1)
 
         standard_entity_response(
           parsed_response["resources"].first,

@@ -48,7 +48,7 @@ module VCAP::CloudController
         describe 'GET /v2/billing_events' do
           it "should return 400" do
             get "/v2/billing_events", {}, admin_headers
-            last_response.status.should == 400
+            expect(last_response.status).to eq(400)
           end
 
           it "should be deprecated" do
@@ -60,7 +60,7 @@ module VCAP::CloudController
         describe 'GET /v2/billing_events?start_date=#{start_date}' do
           it "should return 400" do
             get "/v2/billing_events?start_date=#{@start_time.iso8601}", {}, admin_headers
-            last_response.status.should == 400
+            expect(last_response.status).to eq(400)
           end
 
           it "should be deprecated" do
@@ -72,14 +72,14 @@ module VCAP::CloudController
         describe 'GET /v2/billing_events?start_date=bogus' do
           it "should return 400" do
             get "/v2/billing_events?start_date=bogus", {}, admin_headers
-            last_response.status.should == 400
+            expect(last_response.status).to eq(400)
           end
         end
 
         describe 'GET /v2/billing_events?end_date=bogus' do
           it "should return 400" do
             get "/v2/billing_events?end_date=bogus", {}, admin_headers
-            last_response.status.should == 400
+            expect(last_response.status).to eq(400)
           end
         end
 
@@ -93,31 +93,31 @@ module VCAP::CloudController
           context "as a cf admin" do
             it "should return 200" do
               get path, {}, admin_headers
-              last_response.status.should == 200
+              expect(last_response.status).to eq(200)
             end
 
             it "should return 5 records" do
               get path, {}, admin_headers
-              decoded_response["total_results"].should == 5
-              decoded_response["total_pages"].should == 1
-              decoded_response["prev_url"].should == nil
-              decoded_response["next_url"].should == nil
-              decoded_response["resources"].size.should == 5
+              expect(decoded_response["total_results"]).to eq(5)
+              expect(decoded_response["total_pages"]).to eq(1)
+              expect(decoded_response["prev_url"]).to eq(nil)
+              expect(decoded_response["next_url"]).to eq(nil)
+              expect(decoded_response["resources"].size).to eq(5)
             end
 
             it "should correctly serialize the org billing start event" do
               get path, {}, admin_headers
-              decoded_response["resources"][0].should == {
+              expect(decoded_response["resources"][0]).to eq({
                 "event_type" => "organization_billing_start",
                 "organization_guid" => @org_event.organization_guid,
                 "organization_name" => @org_event.organization_name,
                 "timestamp" => @org_event.timestamp.iso8601,
-              }
+              })
             end
 
             it "should correctly serialize the app start event" do
               get path, {}, admin_headers
-              decoded_response["resources"][1].should == {
+              expect(decoded_response["resources"][1]).to eq({
                 "event_type" => "app_start",
                 "organization_guid" => @app_start_event.organization_guid,
                 "organization_name" => @app_start_event.organization_name,
@@ -130,12 +130,12 @@ module VCAP::CloudController
                 "app_memory" => @app_start_event.app_memory,
                 "app_instance_count" => @app_start_event.app_instance_count,
                 "timestamp" => @app_start_event.timestamp.iso8601,
-              }
+              })
             end
 
             it "should correctly serialize the app stop event" do
               get path, {}, admin_headers
-              decoded_response["resources"][2].should == {
+              expect(decoded_response["resources"][2]).to eq({
                 "event_type" => "app_stop",
                 "organization_guid" => @app_stop_event.organization_guid,
                 "organization_name" => @app_stop_event.organization_name,
@@ -145,12 +145,12 @@ module VCAP::CloudController
                 "app_name" => @app_stop_event.app_name,
                 "app_run_id" => @app_stop_event.app_run_id,
                 "timestamp" => @app_stop_event.timestamp.iso8601,
-              }
+              })
             end
 
             it "should correctly serialize the service create event" do
               get path, {}, admin_headers
-              decoded_response["resources"][3].should == {
+              expect(decoded_response["resources"][3]).to eq({
                 "event_type" => "service_create",
                 "organization_guid" => @service_create_event.organization_guid,
                 "organization_name" => @service_create_event.organization_name,
@@ -165,12 +165,12 @@ module VCAP::CloudController
                 "service_plan_guid" => @service_create_event.service_plan_guid,
                 "service_plan_name" => @service_create_event.service_plan_name,
                 "timestamp" => @service_create_event.timestamp.iso8601,
-              }
+              })
             end
 
             it "should correctly serialize the service delete event" do
               get path, {}, admin_headers
-              decoded_response["resources"][4].should == {
+              expect(decoded_response["resources"][4]).to eq({
                 "event_type" => "service_delete",
                 "organization_guid" => @service_delete_event.organization_guid,
                 "organization_name" => @service_delete_event.organization_name,
@@ -179,20 +179,20 @@ module VCAP::CloudController
                 "service_instance_guid" => @service_delete_event.service_instance_guid,
                 "service_instance_name" => @service_delete_event.service_instance_name,
                 "timestamp" => @service_delete_event.timestamp.iso8601,
-              }
+              })
             end
           end
 
           context "as an org admin" do
             it "should return 200" do
               get path, {}, org_admin_headers
-              last_response.status.should == 200
+              expect(last_response.status).to eq(200)
             end
 
             it "should return 0 records" do
               get path, {}, org_admin_headers
-              decoded_response["total_results"].should == 0
-              decoded_response["resources"].size.should == 0
+              expect(decoded_response["total_results"]).to eq(0)
+              expect(decoded_response["resources"].size).to eq(0)
             end
           end
         end
@@ -206,16 +206,16 @@ module VCAP::CloudController
 
           it "should return 200" do
             get path, {}, admin_headers
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
           end
 
           it "should return 4 records" do
             get path, {}, admin_headers
-            decoded_response["total_results"].should == 4
-            decoded_response["total_pages"].should == 1
-            decoded_response["prev_url"].should == nil
-            decoded_response["next_url"].should == nil
-            decoded_response["resources"].size.should == 4
+            expect(decoded_response["total_results"]).to eq(4)
+            expect(decoded_response["total_pages"]).to eq(1)
+            expect(decoded_response["prev_url"]).to eq(nil)
+            expect(decoded_response["next_url"]).to eq(nil)
+            expect(decoded_response["resources"].size).to eq(4)
           end
         end
 
@@ -228,16 +228,16 @@ module VCAP::CloudController
 
           it "should return 200" do
             get path, {}, admin_headers
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
           end
 
           it "should return 4 records" do
             get path, {}, admin_headers
-            decoded_response["total_results"].should == 4
-            decoded_response["total_pages"].should == 1
-            decoded_response["prev_url"].should == nil
-            decoded_response["next_url"].should == nil
-            decoded_response["resources"].size.should == 4
+            expect(decoded_response["total_results"]).to eq(4)
+            expect(decoded_response["total_pages"]).to eq(1)
+            expect(decoded_response["prev_url"]).to eq(nil)
+            expect(decoded_response["next_url"]).to eq(nil)
+            expect(decoded_response["resources"].size).to eq(4)
           end
         end
 
@@ -250,16 +250,16 @@ module VCAP::CloudController
 
           it "should return 200" do
             get path, {}, admin_headers
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
           end
 
           it "should return 3 records" do
             get path, {}, admin_headers
-            decoded_response["total_results"].should == 3
-            decoded_response["total_pages"].should == 1
-            decoded_response["prev_url"].should == nil
-            decoded_response["next_url"].should == nil
-            decoded_response["resources"].size.should == 3
+            expect(decoded_response["total_results"]).to eq(3)
+            expect(decoded_response["total_pages"]).to eq(1)
+            expect(decoded_response["prev_url"]).to eq(nil)
+            expect(decoded_response["next_url"]).to eq(nil)
+            expect(decoded_response["resources"].size).to eq(3)
           end
         end
       end

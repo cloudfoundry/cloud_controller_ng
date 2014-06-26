@@ -6,29 +6,29 @@ module VCAP::CloudController
       TestConfig.override({ :billing_event_writing_enabled => true })
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Validations" do
-      it { should validate_presence :timestamp }
-      it { should validate_presence :organization_guid }
-      it { should validate_presence :organization_name }
-      it { should validate_presence :space_guid }
-      it { should validate_presence :space_name }
-      it { should validate_presence :app_guid }
-      it { should validate_presence :app_name }
-      it { should validate_uniqueness :app_run_id }
+      it { is_expected.to validate_presence :timestamp }
+      it { is_expected.to validate_presence :organization_guid }
+      it { is_expected.to validate_presence :organization_name }
+      it { is_expected.to validate_presence :space_guid }
+      it { is_expected.to validate_presence :space_name }
+      it { is_expected.to validate_presence :app_guid }
+      it { is_expected.to validate_presence :app_name }
+      it { is_expected.to validate_uniqueness :app_run_id }
     end
 
     describe "Serialization" do
-      it { should export_attributes :timestamp, :event_type, :organization_guid, :organization_name, :space_guid,
+      it { is_expected.to export_attributes :timestamp, :event_type, :organization_guid, :organization_name, :space_guid,
                                     :space_name, :app_guid, :app_name, :app_run_id }
-      it { should import_attributes }
+      it { is_expected.to import_attributes }
     end
 
     describe "create_from_app" do
       context "on an org without billing enabled" do
         it "should do nothing" do
-          AppStopEvent.should_not_receive(:create)
+          expect(AppStopEvent).not_to receive(:create)
           app = AppFactory.make
           app.space.organization.billing_enabled = false
           app.space.organization.save(:validate => false)
@@ -53,7 +53,7 @@ module VCAP::CloudController
             newest_by_sequence.save
 
             stop_event = AppStopEvent.create_from_app(app)
-            stop_event.app_run_id.should == newest_by_sequence.app_run_id
+            expect(stop_event.app_run_id).to eq(newest_by_sequence.app_run_id)
           end
         end
 

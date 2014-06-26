@@ -7,24 +7,24 @@ module VCAP::CloudController
       let(:encrypted_attr) { :token }
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :service }
+      it { is_expected.to have_associated :service }
     end
 
     describe "Validations" do
-      it { should validate_presence :label }
-      it { should validate_presence :provider }
-      it { should validate_presence :token }
-      it { should validate_uniqueness [:label, :provider] }
-      it { should strip_whitespace :label }
-      it { should strip_whitespace :provider }
+      it { is_expected.to validate_presence :label }
+      it { is_expected.to validate_presence :provider }
+      it { is_expected.to validate_presence :token }
+      it { is_expected.to validate_uniqueness [:label, :provider] }
+      it { is_expected.to strip_whitespace :label }
+      it { is_expected.to strip_whitespace :provider }
     end
 
     describe "Serialization" do
-      it { should export_attributes :label, :provider }
-      it { should import_attributes :label, :provider, :token }
+      it { is_expected.to export_attributes :label, :provider }
+      it { is_expected.to import_attributes :label, :provider, :token }
     end
   end
 end

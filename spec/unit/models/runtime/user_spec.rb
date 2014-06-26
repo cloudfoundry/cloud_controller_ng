@@ -2,45 +2,45 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::User, type: :model do
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :organizations }
-      it { should have_associated :default_space, class: Space }
+      it { is_expected.to have_associated :organizations }
+      it { is_expected.to have_associated :default_space, class: Space }
       it do
-        should have_associated :managed_organizations, associated_instance: ->(user) {
+        is_expected.to have_associated :managed_organizations, associated_instance: ->(user) {
           org = Organization.make
           user.add_organization(org)
           org
         }
       end
       it do
-        should have_associated :billing_managed_organizations, associated_instance: ->(user) {
+        is_expected.to have_associated :billing_managed_organizations, associated_instance: ->(user) {
           org = Organization.make
           user.add_organization(org)
           org
         }
       end
       it do
-        should have_associated :audited_organizations, associated_instance: ->(user) {
+        is_expected.to have_associated :audited_organizations, associated_instance: ->(user) {
           org = Organization.make
           user.add_organization(org)
           org
         }
       end
-      it { should have_associated :spaces }
-      it { should have_associated :managed_spaces, class: Space }
-      it { should have_associated :audited_spaces, class: Space }
+      it { is_expected.to have_associated :spaces }
+      it { is_expected.to have_associated :managed_spaces, class: Space }
+      it { is_expected.to have_associated :audited_spaces, class: Space }
     end
 
     describe "Validations" do
-      it { should validate_presence :guid }
-      it { should validate_uniqueness :guid }
+      it { is_expected.to validate_presence :guid }
+      it { is_expected.to validate_uniqueness :guid }
     end
 
     describe "Serialization" do
-      it { should export_attributes :admin, :active, :default_space_guid }
-      it { should import_attributes :guid, :admin, :active, :organization_guids, :managed_organization_guids,
+      it { is_expected.to export_attributes :admin, :active, :default_space_guid }
+      it { is_expected.to import_attributes :guid, :admin, :active, :organization_guids, :managed_organization_guids,
                                     :billing_managed_organization_guids, :audited_organization_guids, :space_guids,
                                     :managed_space_guids, :audited_space_guids, :default_space_guid }
     end

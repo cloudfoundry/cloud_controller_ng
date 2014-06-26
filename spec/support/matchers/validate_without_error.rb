@@ -5,7 +5,7 @@ RSpec::Matchers.define :validate_without_error do |validation_result|
     @errors.empty?
   end
 
-  failure_message_for_should do |_|
+  failure_message do |_|
     "Expected validator to pass without errors but got #{@errors.inspect}"
   end
 end

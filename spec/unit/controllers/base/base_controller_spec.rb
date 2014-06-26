@@ -23,12 +23,12 @@ describe VCAP::CloudController::RestController::BaseController do
       end
 
       it "should dispatch the request" do
-        subject.should_receive(:to_s).with([:a, :b])
+        expect(subject).to receive(:to_s).with([:a, :b])
         subject.dispatch(:to_s, [:a, :b])
       end
 
       it "should log a debug message" do
-        logger.should_receive(:debug).with("cc.dispatch", endpoint: :to_s, args: [])
+        expect(logger).to receive(:debug).with("cc.dispatch", endpoint: :to_s, args: [])
         subject.dispatch(:to_s)
       end
 
@@ -36,8 +36,8 @@ describe VCAP::CloudController::RestController::BaseController do
         let(:token_info) { nil }
 
         it "should not dispatch the request" do
-          subject.should_not_receive(:to_s)
-          logger.should_not_receive(:error)
+          expect(subject).not_to receive(:to_s)
+          expect(logger).not_to receive(:error)
           subject.dispatch(:to_s) rescue nil
         end
       end
@@ -55,44 +55,44 @@ describe VCAP::CloudController::RestController::BaseController do
       end
 
       it "should log an error for a Sequel Validation error" do
-        subject.stub(:to_s).and_raise(Sequel::ValidationFailed.new("hello"))
-        VCAP::CloudController::RestController::BaseController.should_receive(:translate_validation_exception) { RuntimeError.new("some new error") }
+        allow(subject).to receive(:to_s).and_raise(Sequel::ValidationFailed.new("hello"))
+        expect(VCAP::CloudController::RestController::BaseController).to receive(:translate_validation_exception) { RuntimeError.new("some new error") }
         expect {
           subject.dispatch(:to_s)
         }.to raise_error RuntimeError, "some new error"
       end
 
       it "should log an error for a Sequel HookFailed error" do
-        subject.stub(:to_s).and_raise(Sequel::HookFailed.new("hello"))
+        allow(subject).to receive(:to_s).and_raise(Sequel::HookFailed.new("hello"))
         expect {
           subject.dispatch(:to_s)
         }.to raise_error VCAP::Errors::ApiError
       end
 
       it "should reraise any vcap error" do
-        subject.stub(:to_s).and_raise(VCAP::Errors::ApiError.new_from_details("NotAuthorized"))
+        allow(subject).to receive(:to_s).and_raise(VCAP::Errors::ApiError.new_from_details("NotAuthorized"))
         expect {
           subject.dispatch(:to_s)
         }.to raise_error VCAP::Errors::ApiError
       end
 
       it "should log an error for a Sequel Database Error error" do
-        subject.stub(:to_s).and_raise(Sequel::DatabaseError)
-        VCAP::CloudController::RestController::BaseController.should_receive(:translate_and_log_exception) { RuntimeError.new("some new error") }
+        allow(subject).to receive(:to_s).and_raise(Sequel::DatabaseError)
+        expect(VCAP::CloudController::RestController::BaseController).to receive(:translate_and_log_exception) { RuntimeError.new("some new error") }
         expect {
           subject.dispatch(:to_s)
         }.to raise_error RuntimeError, "some new error"
       end
 
       it "should log an error for a JSON error" do
-        subject.stub(:to_s).and_raise(JsonMessage::Error)
+        allow(subject).to receive(:to_s).and_raise(JsonMessage::Error)
         expect {
           subject.dispatch(:to_s)
         }.to raise_error(VCAP::Errors::ApiError, /Request invalid due to parse error/)
       end
 
       it "should log an error for a Model error" do
-        subject.stub(:to_s).and_raise(VCAP::Errors::InvalidRelation)
+        allow(subject).to receive(:to_s).and_raise(VCAP::Errors::InvalidRelation)
         expect {
           subject.dispatch(:to_s)
         }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
@@ -110,7 +110,7 @@ describe VCAP::CloudController::RestController::BaseController do
         end
 
         it 'delegates #redirect to the injected sinatra' do
-          sinatra.should_receive(:redirect).with('redirect_url')
+          expect(sinatra).to receive(:redirect).with('redirect_url')
           app.redirect('redirect_url')
         end
       end
@@ -130,7 +130,7 @@ describe VCAP::CloudController::RestController::BaseController do
         end
 
         it 'allows the operation' do
-          subject.stub(:download)
+          allow(subject).to receive(:download)
 
           subject.dispatch(:download)
           expect(subject).to have_received(:download)
@@ -147,7 +147,7 @@ describe VCAP::CloudController::RestController::BaseController do
         end
 
         it 'allows the operation' do
-          subject.stub(:download)
+          allow(subject).to receive(:download)
 
           subject.dispatch(:download)
           expect(subject).to have_received(:download)
@@ -164,7 +164,7 @@ describe VCAP::CloudController::RestController::BaseController do
         end
 
         it 'raises a NotAuthenticated error' do
-          subject.stub(:download)
+          allow(subject).to receive(:download)
 
           expect {
             subject.dispatch(:download)
@@ -173,7 +173,7 @@ describe VCAP::CloudController::RestController::BaseController do
 
         context 'when a particular operation is allowed to skip authentication' do
           before do
-            subject.stub(:unauthed_download)
+            allow(subject).to receive(:unauthed_download)
             subject.class.allow_unauthenticated_access(:only => :unauthed_download)
           end
 
@@ -188,7 +188,7 @@ describe VCAP::CloudController::RestController::BaseController do
 
         context 'when all operations on the controller are allowed to skip authentication' do
           before do
-            subject.stub(:download)
+            allow(subject).to receive(:download)
             subject.class.allow_unauthenticated_access
           end
 
@@ -210,7 +210,7 @@ describe VCAP::CloudController::RestController::BaseController do
         end
 
         it 'raises InvalidAuthToken' do
-          subject.stub(:download)
+          allow(subject).to receive(:download)
 
           expect {
             subject.dispatch(:download)
@@ -274,7 +274,7 @@ describe VCAP::CloudController::RestController::BaseController do
         end
 
         it 'raises an InvalidAuthToken error' do
-          subject.stub(:download)
+          allow(subject).to receive(:download)
 
           expect {
             subject.dispatch(:download)
@@ -288,38 +288,38 @@ describe VCAP::CloudController::RestController::BaseController do
     context "when the recursive flag is present" do
       context "and the flag is true" do
         let(:params) { {"recursive" => "true"} }
-        it { should be_recursive }
+        it { is_expected.to be_recursive }
       end
 
       context "and the flag is false" do
         let(:params) { {"recursive" => "false"} }
-        it { should_not be_recursive }
+        it { is_expected.not_to be_recursive }
       end
     end
 
     context "when the recursive flag is not present" do
-      it { should_not be_recursive }
+      it { is_expected.not_to be_recursive }
     end
   end
 
   describe "#v2_api?" do
     context "when the endpoint is v2" do
       let(:env) { { "PATH_INFO" => "/v2/foobar" } }
-      it { should be_v2_api }
+      it { is_expected.to be_v2_api }
     end
 
     context "when the endpoint is not v2" do
       let(:env) { { "PATH_INFO" => "/v1/foobar" } }
-      it { should_not be_v2_api }
+      it { is_expected.not_to be_v2_api }
 
       context "and the v2 is in capitals" do
         let(:env) { { "PATH_INFO" => "/V2/foobar" } }
-        it { should_not be_v2_api }
+        it { is_expected.not_to be_v2_api }
       end
 
       context "and the v2 is somewhere in the middle (for example, the app is called v2)" do
         let(:env) { { "PATH_INFO" => "/v1/apps/v2" } }
-        it { should_not be_v2_api }
+        it { is_expected.not_to be_v2_api }
       end
     end
   end
@@ -328,17 +328,17 @@ describe VCAP::CloudController::RestController::BaseController do
     context "when the async flag is present" do
       context "and the flag is true" do
         let(:params) { {"async" => "true"} }
-        it { should be_async }
+        it { is_expected.to be_async }
       end
 
       context "and the flag is false" do
         let(:params) { {"async" => "false"} }
-        it { should_not be_async }
+        it { is_expected.not_to be_async }
       end
     end
 
     context "when the async flag is not present" do
-      it { should_not be_async }
+      it { is_expected.not_to be_async }
     end
   end
 

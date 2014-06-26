@@ -18,7 +18,7 @@ module VCAP::CloudController
       it "finds advertised stagers" do
         subject.register_subscriptions
         message_bus.publish("staging.advertise", staging_advertise_msg)
-        subject.find_stager("stack-name", 0, 0).should == "staging-id"
+        expect(subject.find_stager("stack-name", 0, 0)).to eq("staging-id")
       end
     end
 
@@ -32,7 +32,7 @@ module VCAP::CloudController
         it "only finds registered stagers" do
           expect { subject.find_stager("stack-name", 0, 0) }.to raise_error(Errors::ApiError, /The stack could not be found/)
           subject.process_advertise_message(staging_advertise_msg)
-          subject.find_stager("stack-name", 0, 0).should == "staging-id"
+          expect(subject.find_stager("stack-name", 0, 0)).to eq("staging-id")
         end
       end
 
@@ -42,10 +42,10 @@ module VCAP::CloudController
             subject.process_advertise_message(staging_advertise_msg)
 
             Timecop.travel(10)
-            subject.find_stager("stack-name", 1024, 0).should == "staging-id"
+            expect(subject.find_stager("stack-name", 1024, 0)).to eq("staging-id")
 
             Timecop.travel(1)
-            subject.find_stager("stack-name", 1024, 0).should be_nil
+            expect(subject.find_stager("stack-name", 1024, 0)).to be_nil
           end
         end
       end
@@ -53,8 +53,8 @@ module VCAP::CloudController
       describe "memory capacity" do
         it "only finds stagers that can satisfy memory request" do
           subject.process_advertise_message(staging_advertise_msg)
-          subject.find_stager("stack-name", 1025, 0).should be_nil
-          subject.find_stager("stack-name", 1024, 0).should == "staging-id"
+          expect(subject.find_stager("stack-name", 1025, 0)).to be_nil
+          expect(subject.find_stager("stack-name", 1024, 0)).to eq("staging-id")
         end
 
         it "samples out of the top 5 stagers with enough memory" do
@@ -78,7 +78,7 @@ module VCAP::CloudController
         it "only finds deas that can satisfy stack request" do
           subject.process_advertise_message(staging_advertise_msg)
           expect { subject.find_stager("unknown-stack-name", 0, 0) }.to raise_error(Errors::ApiError, /The stack could not be found/)
-          subject.find_stager("stack-name", 0, 0).should == "staging-id"
+          expect(subject.find_stager("stack-name", 0, 0)).to eq("staging-id")
         end
       end
 

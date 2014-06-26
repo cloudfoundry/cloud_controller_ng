@@ -11,7 +11,7 @@ module VCAP::CloudController
         @event = Event.make(created_at: 1.days.ago)
       end
 
-      it { should be_a_valid_job }
+      it { is_expected.to be_a_valid_job }
 
       it "removes app events that are older than the specfied cutoff age" do
         expect {

@@ -15,12 +15,12 @@ module VCAP::CloudController
     let(:broker_client) { double('broker client') }
 
     before do
-      broker_client.stub(:bind) do |binding|
+      allow(broker_client).to receive(:bind) do |binding|
         binding.broker_provided_id = Sham.guid
         binding.credentials = CREDENTIALS
       end
-      broker_client.stub(:unbind)
-      Service.any_instance.stub(:client).and_return(broker_client)
+      allow(broker_client).to receive(:unbind)
+      allow_any_instance_of(Service).to receive(:client).and_return(broker_client)
     end
 
     describe "staging" do
@@ -38,21 +38,21 @@ module VCAP::CloudController
                                    :service_instance_guid => service_instance.guid)
 
         post "/v2/service_bindings", req, json_headers(admin_headers)
-        last_response.status.should == 201
+        expect(last_response.status).to eq(201)
         app_obj.refresh
-        app_obj.needs_staging?.should be false
+        expect(app_obj.needs_staging?).to be false
       end
 
       it " does not flag app for restaging when deleting a binding" do
         binding = ServiceBinding.make(:app => app_obj, :service_instance => service_instance)
         fake_app_staging(app_obj)
-        app_obj.service_bindings.should include(binding)
+        expect(app_obj.service_bindings).to include(binding)
 
         delete "/v2/service_bindings/#{binding.guid}", {}, admin_headers
 
-        last_response.status.should == 204
+        expect(last_response.status).to eq(204)
         app_obj.refresh
-        app_obj.needs_staging?.should be false
+        expect(app_obj.needs_staging?).to be false
       end
     end
 
@@ -160,14 +160,14 @@ module VCAP::CloudController
 
       it 'creates a service binding' do
         post "/v2/service_bindings", params.to_json, headers_for(developer)
-        last_response.status.should == 201
+        expect(last_response.status).to eq(201)
       end
 
       it 'honors the binding options' do
         binding_options = Sham.binding_options
         body =  params.merge("binding_options" => binding_options).to_json
         post "/v2/service_bindings", body, headers_for(developer)
-        ServiceBinding.last.binding_options.should == binding_options
+        expect(ServiceBinding.last.binding_options).to eq(binding_options)
       end
     end
 
@@ -200,7 +200,7 @@ module VCAP::CloudController
           :service_instance_guid => instance.guid
         )
 
-        ServiceBinding.any_instance.stub(:save).and_raise
+        allow_any_instance_of(ServiceBinding).to receive(:save).and_raise
 
         post "/v2/service_bindings", req, json_headers(headers_for(developer))
         expect(broker_client).to have_received(:unbind).with(an_instance_of(ServiceBinding))
@@ -360,7 +360,7 @@ module VCAP::CloudController
         context 'when the v2 broker returns a 409' do
           before do
             service.service_broker = ServiceBroker.make
-            broker_client.stub(:bind) do
+            allow(broker_client).to receive(:bind) do
               uri = 'http://broker.url.com'
               method = 'PUT'
               response = double(:response, code: 409, body: '{}')
@@ -382,7 +382,7 @@ module VCAP::CloudController
         context 'when the v2 broker returns any other error' do
           before do
             service.service_broker = ServiceBroker.make
-            broker_client.stub(:bind) do
+            allow(broker_client).to receive(:bind) do
               uri = 'http://broker.url.com'
               method = 'PUT'
               response = double(:response, code: 500, body: '{"description": "ERROR MESSAGE HERE"}')

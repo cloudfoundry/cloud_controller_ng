@@ -73,7 +73,7 @@ module VCAP::CloudController
             put "/v2/domains/#{@shared_domain.guid}",
                 Yajl::Encoder.encode(name: Sham.domain),
                 json_headers(headers_for(@org_a_manager))
-            last_response.status.should == 403
+            expect(last_response.status).to eq(403)
           end
         end
       end
@@ -109,12 +109,12 @@ module VCAP::CloudController
         it "has its GUID as null, and no url key in the response body" do
           get "/v2/domains/#{domain.guid}", {}, json_headers(admin_headers)
 
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
 
           json = Yajl::Parser.parse(last_response.body)
-          json["entity"]["owning_organization_guid"].should be_nil
+          expect(json["entity"]["owning_organization_guid"]).to be_nil
 
-          json["entity"].should_not include("owning_organization_url")
+          expect(json["entity"]).not_to include("owning_organization_url")
           expect(last_response).to be_a_deprecated_response
         end
       end

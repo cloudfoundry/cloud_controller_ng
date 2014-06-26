@@ -96,7 +96,7 @@ resource 'Apps', :type => :api do
         req[:request_body] = request_body_example
         req[:curl] = nil
       end
-      status.should == 201
+      expect(status).to eq(201)
     end
   end
 
@@ -111,7 +111,7 @@ resource 'Apps', :type => :api do
       no_doc { client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers }
       client.get "/v2/apps/#{app_obj.guid}/download", {}, headers
       expect(response_headers["Location"]).to include("cc-packages.s3.amazonaws.com")
-      status.should == 302
+      expect(status).to eq(302)
     end
   end
 end

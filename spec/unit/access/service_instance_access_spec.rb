@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe ServiceInstanceAccess, type: :access do
     before do
       token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
     subject(:access) { ServiceInstanceAccess.new(double(:context, user: user, roles: roles)) }
@@ -129,7 +129,7 @@ module VCAP::CloudController
     describe 'a user with full org and space permissions using a client with limited scope' do
       before do
         token = { 'scope' => scope }
-        VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
         org.add_billing_manager(user)
@@ -142,7 +142,7 @@ module VCAP::CloudController
       context 'with only cloud_controller.read scope' do
         let(:scope) { 'cloud_controller.read' }
         it_behaves_like :read_only
-        it { should allow_op_on_object(:read_permissions, object) }
+        it { is_expected.to allow_op_on_object(:read_permissions, object) }
       end
 
       context 'with only cloud_controller_service_permissions.read scope' do
@@ -160,7 +160,7 @@ module VCAP::CloudController
         let(:scope) { '' }
 
         it_behaves_like :no_access
-        it { should_not allow_op_on_object(:read_permissions, object) }
+        it { is_expected.not_to allow_op_on_object(:read_permissions, object) }
       end
     end
   end

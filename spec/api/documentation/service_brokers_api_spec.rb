@@ -40,7 +40,7 @@ resource "Service Brokers", :type => :api do
       client.get "/v2/service_brokers", {}, headers
       service_brokers = parsed_response["resources"]
 
-      status.should == 200
+      expect(status).to eq(200)
       validate_response VCAP::RestAPI::PaginatedResponse, parsed_response
       expect(service_brokers.size).to eq(3)
       service_brokers.each do |broker|

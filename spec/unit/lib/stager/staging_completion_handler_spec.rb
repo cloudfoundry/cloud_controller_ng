@@ -44,9 +44,9 @@ module VCAP::CloudController
     subject { StagingCompletionHandler.new(message_bus, diego_client) }
 
     before do
-      Steno.stub(:logger).and_return(logger)
-      DeaClient.stub(:start)
-      diego_client.stub(:running_enabled).and_return(false)
+      allow(Steno).to receive(:logger).and_return(logger)
+      allow(DeaClient).to receive(:start)
+      allow(diego_client).to receive(:running_enabled).and_return(false)
 
       staged_app.add_new_droplet("lol")
     end
@@ -72,46 +72,46 @@ module VCAP::CloudController
           it "saves it on the app's current droplet" do
             publish_staging_result(success_response)
 
-            staged_app.current_droplet.detected_start_command.should == "./some-start-command"
+            expect(staged_app.current_droplet.detected_start_command).to eq("./some-start-command")
           end
         end
 
         context "when running in diego is not enabled" do
           before do
-            diego_client.stub(:running_enabled).and_return(false)
+            allow(diego_client).to receive(:running_enabled).and_return(false)
           end
 
           it "starts the app instances" do
-            DeaClient.should_receive(:start) do |received_app, received_hash|
-              received_app.guid.should ==  app_id
-              received_hash.should  == {:instances_to_start => 3}
+            expect(DeaClient).to receive(:start) do |received_app, received_hash|
+              expect(received_app.guid).to eq(app_id)
+              expect(received_hash).to  eq({:instances_to_start => 3})
             end
-            diego_client.should_not_receive(:send_desire_request)
+            expect(diego_client).not_to receive(:send_desire_request)
             publish_staging_result(success_response)
           end
 
           it 'logs the staging result' do
             publish_staging_result(success_response)
-            logger.log_messages.should include("diego.staging.finished")
+            expect(logger.log_messages).to include("diego.staging.finished")
           end
 
           it 'should update the app with the detected buildpack' do
             publish_staging_result(success_response)
             staged_app.reload
-            staged_app.detected_buildpack.should == 'INTERCAL'
-            staged_app.detected_buildpack_guid.should == buildpack.guid
+            expect(staged_app.detected_buildpack).to eq('INTERCAL')
+            expect(staged_app.detected_buildpack_guid).to eq(buildpack.guid)
           end
         end
 
         context "when running in diego is enabled" do
           before do
-            diego_client.stub(:running_enabled).and_return(true)
+            allow(diego_client).to receive(:running_enabled).and_return(true)
           end
 
           it "desires the app using the diego client" do
-            DeaClient.should_not_receive(:start)
-            diego_client.should_receive(:send_desire_request) do |received_app|
-              received_app.guid.should ==  app_id
+            expect(DeaClient).not_to receive(:start)
+            expect(diego_client).to receive(:send_desire_request) do |received_app|
+              expect(received_app.guid).to eq(app_id)
             end
             publish_staging_result(success_response)
           end
@@ -125,15 +125,15 @@ module VCAP::CloudController
           end
 
           it "does not start the app instances" do
-            DeaClient.should_not_receive(:start)
+            expect(DeaClient).not_to receive(:start)
             publish_staging_result(success_response)
           end
 
           it 'should not update the app with a detected buildpack' do
             publish_staging_result(success_response)
             staged_app.reload
-            staged_app.detected_buildpack.should_not == 'INTERCAL'
-            staged_app.detected_buildpack_guid.should_not == buildpack.guid
+            expect(staged_app.detected_buildpack).not_to eq('INTERCAL')
+            expect(staged_app.detected_buildpack_guid).not_to eq(buildpack.guid)
           end
         end
 
@@ -144,20 +144,20 @@ module VCAP::CloudController
           end
 
           it 'should emit a loggregator error' do
-            Loggregator.should_receive(:emit_error).with(staged_app.guid, /bad/)
+            expect(Loggregator).to receive(:emit_error).with(staged_app.guid, /bad/)
             publish_staging_result(fail_response)
           end
 
           it "should not start the app instance" do
-            DeaClient.should_not_receive(:start)
+            expect(DeaClient).not_to receive(:start)
             publish_staging_result(fail_response)
           end
 
           it 'should not update the app with the detected buildpack' do
             publish_staging_result(fail_response)
             staged_app.reload
-            staged_app.detected_buildpack.should_not == 'INTERCAL'
-            staged_app.detected_buildpack_guid.should_not == buildpack.guid
+            expect(staged_app.detected_buildpack).not_to eq('INTERCAL')
+            expect(staged_app.detected_buildpack_guid).not_to eq(buildpack.guid)
           end
         end
 
@@ -165,21 +165,21 @@ module VCAP::CloudController
           let(:app_id) { "ooh ooh ah ah" }
 
           it "should not attempt to start anything" do
-            DeaClient.should_not_receive(:start)
+            expect(DeaClient).not_to receive(:start)
             publish_staging_result(success_response)
           end
         end
 
         context "with a malformed success message" do
           it "should not start anything" do
-            DeaClient.should_not_receive(:start)
+            expect(DeaClient).not_to receive(:start)
             publish_staging_result(malformed_success_response)
           end
         end
 
         context "with a malformed error message" do
           it "should not emit any loggregator messages" do
-            Loggregator.should_not_receive(:emit_error).with(staged_app.guid, /bad/)
+            expect(Loggregator).not_to receive(:emit_error).with(staged_app.guid, /bad/)
             publish_staging_result(malformed_fail_response)
           end
         end

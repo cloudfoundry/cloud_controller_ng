@@ -36,7 +36,7 @@ module VCAP::CloudController
 
     context "upload_bits" do
       before do
-        CloudController::DependencyLocator.instance.stub(:buildpack_blobstore).and_return(buildpack_blobstore)
+        allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(buildpack_blobstore)
         buildpack
       end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
       context "new bits (new sha)" do
         it "copies new bits to the blobstore" do
-          buildpack_blobstore.should_receive(:cp_to_blobstore).with(valid_zip, expected_sha_valid_zip)
+          expect(buildpack_blobstore).to receive(:cp_to_blobstore).with(valid_zip, expected_sha_valid_zip)
 
           expect(upload_buildpack.upload_bits(buildpack, valid_zip, filename)).to be true
         end
@@ -82,7 +82,7 @@ module VCAP::CloudController
 
         context "when bits are in the blobstore" do
           before do
-            buildpack_blobstore.stub(:exists?).with(expected_sha_valid_zip).and_return(true)
+            allow(buildpack_blobstore).to receive(:exists?).with(expected_sha_valid_zip).and_return(true)
           end
 
           it "returns false if both bits and filename are not changed" do
@@ -92,7 +92,7 @@ module VCAP::CloudController
           it "does not copy the same bits to the blobstore" do
             upload_buildpack.upload_bits(buildpack, valid_zip, filename)
 
-            buildpack_blobstore.should_not_receive(:cp_to_blobstore)
+            expect(buildpack_blobstore).not_to receive(:cp_to_blobstore)
             upload_buildpack.upload_bits(buildpack, valid_zip, filename)
           end
 
@@ -112,7 +112,7 @@ module VCAP::CloudController
 
         context "when the bit are missing from the blobstore" do
           before do
-            buildpack_blobstore.stub(:exists?).with(expected_sha_valid_zip).and_return(false)
+            allow(buildpack_blobstore).to receive(:exists?).with(expected_sha_valid_zip).and_return(false)
           end
 
           it "returns true if the bits are uploaded" do
@@ -122,7 +122,7 @@ module VCAP::CloudController
           it "does copy the bits to the blobstore" do
             upload_buildpack.upload_bits(buildpack, valid_zip, filename)
 
-            buildpack_blobstore.should_receive(:cp_to_blobstore)
+            expect(buildpack_blobstore).to receive(:cp_to_blobstore)
             upload_buildpack.upload_bits(buildpack, valid_zip, filename)
           end
 

@@ -3,18 +3,18 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe Organization, type: :model do
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :spaces }
-      it { should have_associated :private_domains }
-      it { should have_associated :service_plan_visibilities }
-      it { should have_associated :quota_definition }
-      it { should have_associated :domains, class: SharedDomain }
-      it { should have_associated :users }
-      it { should have_associated :managers, class: User }
-      it { should have_associated :billing_managers, class: User }
-      it { should have_associated :auditors, class: User }
+      it { is_expected.to have_associated :spaces }
+      it { is_expected.to have_associated :private_domains }
+      it { is_expected.to have_associated :service_plan_visibilities }
+      it { is_expected.to have_associated :quota_definition }
+      it { is_expected.to have_associated :domains, class: SharedDomain }
+      it { is_expected.to have_associated :users }
+      it { is_expected.to have_associated :managers, class: User }
+      it { is_expected.to have_associated :billing_managers, class: User }
+      it { is_expected.to have_associated :auditors, class: User }
 
       it "has associated apps" do
         app = App.make
@@ -30,9 +30,9 @@ module VCAP::CloudController
     end
 
     describe "Validations" do
-      it { should validate_presence :name }
-      it { should validate_uniqueness :name }
-      it { should strip_whitespace :name }
+      it { is_expected.to validate_presence :name }
+      it { is_expected.to validate_uniqueness :name }
+      it { is_expected.to strip_whitespace :name }
 
       context "name" do
         subject(:org) { Organization.make }
@@ -116,8 +116,8 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :billing_enabled, :quota_definition_guid, :status }
-      it { should import_attributes :name, :billing_enabled, :user_guids, :manager_guids, :billing_manager_guids,
+      it { is_expected.to export_attributes :name, :billing_enabled, :quota_definition_guid, :status }
+      it { is_expected.to import_attributes :name, :billing_enabled, :user_guids, :manager_guids, :billing_manager_guids,
                                     :auditor_guids, :private_domain_guids, :quota_definition_guid, :status, :domain_guids }
     end
 
@@ -143,7 +143,7 @@ module VCAP::CloudController
 
     describe "billing" do
       it "should not be enabled for billing when first created" do
-        Organization.make.billing_enabled.should == false
+        expect(Organization.make.billing_enabled).to eq(false)
       end
 
       context "enabling billing" do
@@ -175,7 +175,7 @@ module VCAP::CloudController
         end
 
         it "should call OrganizationStartEvent.create_from_org" do
-          OrganizationStartEvent.should_receive(:create_from_org)
+          expect(OrganizationStartEvent).to receive(:create_from_org)
           org.billing_enabled = true
           org.save(:validate => false)
         end
@@ -186,7 +186,7 @@ module VCAP::CloudController
           )
           org.billing_enabled = true
           org.save(:validate => false)
-          ds.count.should == 4
+          expect(ds.count).to eq(4)
         end
 
         it "should emit create events for provisioned services" do
@@ -195,7 +195,7 @@ module VCAP::CloudController
           )
           org.billing_enabled = true
           org.save(:validate => false)
-          ds.count.should == 4
+          expect(ds.count).to eq(4)
         end
       end
     end
@@ -208,7 +208,7 @@ module VCAP::CloudController
       it "should return the memory available when no apps are running" do
         org = Organization.make(:quota_definition => quota)
 
-        org.memory_remaining.should == 500
+        expect(org.memory_remaining).to eq(500)
       end
 
       it "should return the memory remaining when apps are consuming memory" do
@@ -221,7 +221,7 @@ module VCAP::CloudController
                         :memory => 50,
                         :instances => 1)
 
-        org.memory_remaining.should == 50
+        expect(org.memory_remaining).to eq(50)
       end
     end
 
@@ -390,21 +390,21 @@ module VCAP::CloudController
         it "should raise an error if the user's developer space is associated with an organization's space" do
           space_1.add_developer(user)
           space_1.refresh
-          user.spaces.should include(space_1)
+          expect(user.spaces).to include(space_1)
           expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
         end
 
         it "should raise an error if the user's managed space is associated with an organization's space" do
           space_1.add_manager(user)
           space_1.refresh
-          user.managed_spaces.should include(space_1)
+          expect(user.managed_spaces).to include(space_1)
           expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
         end
 
         it "should raise an error if the user's audited space is associated with an organization's space" do
           space_1.add_auditor(user)
           space_1.refresh
-          user.audited_spaces.should include(space_1)
+          expect(user.audited_spaces).to include(space_1)
           expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
         end
 
@@ -412,7 +412,7 @@ module VCAP::CloudController
           org.add_space(space_2)
           space_2.add_manager(user)
           space_2.refresh
-          user.managed_spaces.should include(space_2)
+          expect(user.managed_spaces).to include(space_2)
           expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
         end
 
@@ -443,24 +443,24 @@ module VCAP::CloudController
         end
 
         it "should remove the user from each spaces developer role" do
-          [space_1, space_2].each { |space| space.developers.should include(user) }
+          [space_1, space_2].each { |space| expect(space.developers).to include(user) }
           org.remove_user_recursive(user)
           [space_1, space_2].each { |space| space.refresh }
-          [space_1, space_2].each { |space| space.developers.should_not include(user) }
+          [space_1, space_2].each { |space| expect(space.developers).not_to include(user) }
         end
 
         it "should remove the user from each spaces manager role" do
-          [space_1, space_2].each { |space| space.managers.should include(user) }
+          [space_1, space_2].each { |space| expect(space.managers).to include(user) }
           org.remove_user_recursive(user)
           [space_1, space_2].each { |space| space.refresh }
-          [space_1, space_2].each { |space| space.managers.should_not include(user) }
+          [space_1, space_2].each { |space| expect(space.managers).not_to include(user) }
         end
 
         it "should remove the user from each spaces auditor role" do
-          [space_1, space_2].each { |space| space.auditors.should include(user) }
+          [space_1, space_2].each { |space| expect(space.auditors).to include(user) }
           org.remove_user_recursive(user)
           [space_1, space_2].each { |space| space.refresh }
-          [space_1, space_2].each { |space| space.auditors.should_not include(user) }
+          [space_1, space_2].each { |space| expect(space.auditors).not_to include(user) }
         end
       end
     end

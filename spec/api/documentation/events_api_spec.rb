@@ -78,7 +78,7 @@ resource "Events", :type => :api do
       app_event_repository.record_app_create(test_app, test_user, test_user_email, app_request)
 
       client.get "/v2/events?q=type:audit.app.create", {}, headers
-      status.should == 200
+      expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
@@ -95,7 +95,7 @@ resource "Events", :type => :api do
       app_event_repository.create_app_exit_event(test_app, droplet_exited_payload)
 
       client.get "/v2/events?q=type:app.crash", {}, headers
-      status.should == 200
+      expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "app",
                                :actor => test_app.guid,
@@ -112,7 +112,7 @@ resource "Events", :type => :api do
       app_event_repository.record_app_update(test_app, test_user, test_user_email, app_request)
 
       client.get "/v2/events?q=type:audit.app.update", {}, headers
-      status.should == 200
+      expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
@@ -131,7 +131,7 @@ resource "Events", :type => :api do
       app_event_repository.record_app_delete_request(test_app, test_user, test_user_email, false)
 
       client.get "/v2/events?q=type:audit.app.delete-request", {}, headers
-      status.should == 200
+      expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
@@ -147,7 +147,7 @@ resource "Events", :type => :api do
       space_event_repository.record_space_create(test_space, test_user, test_user_email, space_request)
 
       client.get "/v2/events?q=type:audit.space.create", {}, headers
-      status.should == 200
+      expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
@@ -164,7 +164,7 @@ resource "Events", :type => :api do
       space_event_repository.record_space_update(test_space, test_user, test_user_email, space_request)
 
       client.get "/v2/events?q=type:audit.space.update", {}, headers
-      status.should == 200
+      expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,
@@ -180,7 +180,7 @@ resource "Events", :type => :api do
       space_event_repository.record_space_delete_request(test_space, test_user, test_user_email, true)
 
       client.get "/v2/events?q=type:audit.space.delete-request", {}, headers
-      status.should == 200
+      expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
                                :actor => test_user.guid,

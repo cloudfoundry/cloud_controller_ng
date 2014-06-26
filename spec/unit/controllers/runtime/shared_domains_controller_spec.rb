@@ -9,7 +9,7 @@ module VCAP::CloudController
                '{"name":"example.com"}',
                json_headers(admin_headers)
 
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
         end
 
         it "creates the shared domain" do
@@ -35,7 +35,7 @@ module VCAP::CloudController
                '{}',
                json_headers(admin_headers)
 
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
       end
     end
@@ -59,7 +59,7 @@ module VCAP::CloudController
         get "/v2/shared_domains", {}, admin_headers
 
         parsed_body = Yajl::Parser.parse(last_response.body)
-        parsed_body["total_results"].should == 2
+        expect(parsed_body["total_results"]).to eq(2)
       end
 
       describe "filtering by name" do
@@ -67,9 +67,9 @@ module VCAP::CloudController
 
         it "should return the domain with the matching name" do
           get "/v2/shared_domains?q=name:#{domain.name}", {}, admin_headers
-          last_response.status.should == 200
-          decoded_response["resources"].size.should == 1
-          decoded_response["resources"][0]["entity"]["name"].should == domain.name
+          expect(last_response.status).to eq(200)
+          expect(decoded_response["resources"].size).to eq(1)
+          expect(decoded_response["resources"][0]["entity"]["name"]).to eq(domain.name)
         end
       end
 
@@ -79,7 +79,7 @@ module VCAP::CloudController
           it "returns the correct shared domain" do
             get "/v2/shared_domains/#{@shared_domain_a.guid}", {}, admin_headers
 
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
 
             parsed_body = Yajl::Parser.parse(last_response.body)
             expect(parsed_body["entity"]["name"]).to eq(@shared_domain_a.name)
@@ -90,7 +90,7 @@ module VCAP::CloudController
           it "returns a 404 error" do
             get "/v2/shared_domains/some-bogus-guid", {}, admin_headers
 
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
           end
         end
       end
@@ -102,7 +102,7 @@ module VCAP::CloudController
       it "returns status code 204" do
         delete "/v2/shared_domains/#{shared_domain.guid}", {}, admin_headers
 
-        last_response.status.should == 204
+        expect(last_response.status).to eq(204)
       end
 
       it "deletes the shared domain" do
@@ -144,7 +144,7 @@ module VCAP::CloudController
                  json_headers(admin_headers)
           }.to change { domain.reload.name }.to("example.com")
 
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
         end
       end
     end

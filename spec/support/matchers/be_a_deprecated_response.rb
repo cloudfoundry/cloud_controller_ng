@@ -4,7 +4,7 @@ RSpec::Matchers.define :be_a_deprecated_response do |_|
     unescaped_header == "Endpoint deprecated"
   end
 
-  failure_message_for_should do |actual|
+  failure_message do |actual|
     "expected that #{actual.headers} to have a header [X-Cf-Warnings: Endpoint deprecated] but did not"
   end
 end

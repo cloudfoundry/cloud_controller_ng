@@ -20,14 +20,14 @@ module VCAP::CloudController
       def self.it_forbids_upload
         it "returns 403" do
           put "/v2/apps/#{app_obj.guid}/bits", req_body, headers_for(user)
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
       end
 
       def self.it_succeeds_to_upload
         it "returns 201" do
           make_request
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
         end
 
         it "returns valid JSON" do
@@ -45,7 +45,7 @@ module VCAP::CloudController
       def self.it_fails_to_upload
         it "returns 400" do
           make_request
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
 
         it "returns valid JSON" do
@@ -126,7 +126,7 @@ module VCAP::CloudController
                 Timecop.travel(Time.now + 1.week + 100.seconds) do
                   put "/v2/apps/#{app_obj.guid}/bits", req_body, headers
                 end
-                last_response.status.should == 201
+                expect(last_response.status).to eq(201)
               end
             end
 
@@ -137,7 +137,7 @@ module VCAP::CloudController
                 Timecop.travel(Time.now + 1.week + 10000.seconds) do
                   put "/v2/apps/#{app_obj.guid}/bits", req_body, headers
                 end
-                last_response.status.should == 401
+                expect(last_response.status).to eq(401)
               end
             end
           end

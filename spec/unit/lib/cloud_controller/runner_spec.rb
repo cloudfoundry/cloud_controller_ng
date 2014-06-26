@@ -11,19 +11,19 @@ module VCAP::CloudController
 
     before do
       allow(Steno).to receive(:init)
-      MessageBus::Configurer.any_instance.stub(:go).and_return(message_bus)
-      VCAP::Component.stub(:register)
-      EM.stub(:run).and_yield
-      VCAP::CloudController::Varz.stub(:setup_updates)
-      VCAP::PidFile.stub(:new) { double(:pidfile, unlink_at_exit: nil) }
-      registrar.stub(:message_bus => message_bus)
-      registrar.stub(:register_with_router)
+      allow_any_instance_of(MessageBus::Configurer).to receive(:go).and_return(message_bus)
+      allow(VCAP::Component).to receive(:register)
+      allow(EM).to receive(:run).and_yield
+      allow(VCAP::CloudController::Varz).to receive(:setup_updates)
+      allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
+      allow(registrar).to receive_messages(:message_bus => message_bus)
+      allow(registrar).to receive(:register_with_router)
     end
 
     subject do
       Runner.new(argv + ["-c", config_file.path]).tap do |r|
-        r.stub(:start_thin_server)
-        r.stub(:router_registrar => registrar)
+        allow(r).to receive(:start_thin_server)
+        allow(r).to receive_messages(:router_registrar => registrar)
       end
     end
 
@@ -69,7 +69,7 @@ module VCAP::CloudController
         end
 
         it "starts thin server on set up bind address" do
-          subject.unstub(:start_thin_server)
+          allow(subject).to receive(:start_thin_server).and_call_original
           expect(VCAP).to receive(:local_ip).and_return("some_local_ip")
           expect(Thin::Server).to receive(:new).with("some_local_ip", 8181).and_return(double(:thin_server).as_null_object)
           subject.run!
@@ -120,7 +120,7 @@ module VCAP::CloudController
           let(:argv) { ["-s"] }
           before do
             QuotaDefinition.dataset.destroy
-            Stack.stub(:configure)
+            allow(Stack).to receive(:configure)
           end
 
           it_behaves_like "running Cloud Controller"
@@ -130,16 +130,16 @@ module VCAP::CloudController
 
             it "creates stacks from the config file" do
               cider = Stack.find(:name => "cider")
-              cider.description.should == "cider-description"
-              cider.should be_valid
+              expect(cider.description).to eq("cider-description")
+              expect(cider).to be_valid
             end
 
             it "should load quota definitions" do
-              QuotaDefinition.count.should == 2
+              expect(QuotaDefinition.count).to eq(2)
               default = QuotaDefinition[:name => "default"]
-              default.non_basic_services_allowed.should == true
-              default.total_services.should == 100
-              default.memory_limit.should == 10240
+              expect(default.non_basic_services_allowed).to eq(true)
+              expect(default.total_services).to eq(100)
+              expect(default.memory_limit).to eq(10240)
             end
 
             it "creates the system domain organization" do
@@ -207,7 +207,7 @@ module VCAP::CloudController
         it_behaves_like "running Cloud Controller"
 
         it "registers with the router" do
-          registrar.should_receive(:register_with_router)
+          expect(registrar).to receive(:register_with_router)
           subject.run!
         end
       end
@@ -215,52 +215,52 @@ module VCAP::CloudController
 
     describe "#stop!" do
       it "should stop thin and EM after unregistering routes" do
-        registrar.should_receive(:shutdown).and_yield
-        subject.should_receive(:stop_thin_server)
-        EM.should_receive(:stop)
+        expect(registrar).to receive(:shutdown).and_yield
+        expect(subject).to receive(:stop_thin_server)
+        expect(EM).to receive(:stop)
         subject.stop!
       end
     end
 
     describe "#trap_signals" do
       it "registers TERM, INT, QUIT, USR1, and USR2 handlers" do
-        subject.should_receive(:trap).with("TERM")
-        subject.should_receive(:trap).with("INT")
-        subject.should_receive(:trap).with("QUIT")
-        subject.should_receive(:trap).with("USR1")
-        subject.should_receive(:trap).with("USR2")
+        expect(subject).to receive(:trap).with("TERM")
+        expect(subject).to receive(:trap).with("INT")
+        expect(subject).to receive(:trap).with("QUIT")
+        expect(subject).to receive(:trap).with("USR1")
+        expect(subject).to receive(:trap).with("USR2")
         subject.trap_signals
       end
 
       it "calls #stop! when the handlers are triggered" do
         callbacks = []
 
-        subject.should_receive(:trap).with("TERM") do |_, &blk|
+        expect(subject).to receive(:trap).with("TERM") do |_, &blk|
           callbacks << blk
         end
 
-        subject.should_receive(:trap).with("INT") do |_, &blk|
+        expect(subject).to receive(:trap).with("INT") do |_, &blk|
           callbacks << blk
         end
 
-        subject.should_receive(:trap).with("QUIT") do |_, &blk|
+        expect(subject).to receive(:trap).with("QUIT") do |_, &blk|
           callbacks << blk
         end
 
-        subject.should_receive(:trap).with("USR1") do |_, &blk|
+        expect(subject).to receive(:trap).with("USR1") do |_, &blk|
           callbacks << blk
         end
 
-        subject.should_receive(:trap).with("USR2") do |_, &blk|
+        expect(subject).to receive(:trap).with("USR2") do |_, &blk|
           callbacks << blk
         end
 
         subject.trap_signals
 
-        subject.should_receive(:stop!).exactly(3).times
+        expect(subject).to receive(:stop!).exactly(3).times
 
         registrar = double(:registrar)
-        subject.should_receive(:router_registrar).and_return(registrar)
+        expect(subject).to receive(:router_registrar).and_return(registrar)
         expect(registrar).to receive(:shutdown)
 
         callbacks.each(&:call)
@@ -271,8 +271,8 @@ module VCAP::CloudController
       let (:argv_options) { [] }
 
       before do
-        Runner.any_instance.stub(:parse_config)
-        Runner.any_instance.stub(:deprecation_warning)
+        allow_any_instance_of(Runner).to receive(:parse_config)
+        allow_any_instance_of(Runner).to receive(:deprecation_warning)
       end
 
       subject { Runner.new(argv_options) }
@@ -312,7 +312,7 @@ module VCAP::CloudController
             let (:argv_options) { [flag] }
 
             it "should set insert_seed_data to true" do
-              Runner.any_instance.should_receive(:deprecation_warning).with("Deprecated: Use -s or --insert-seed flag")
+              expect_any_instance_of(Runner).to receive(:deprecation_warning).with("Deprecated: Use -s or --insert-seed flag")
               expect(subject.insert_seed_data).to be true
             end
           end
@@ -359,11 +359,11 @@ module VCAP::CloudController
 
       before do
         callback = nil
-        subject.should_receive(:trap).with("TERM")
-        subject.should_receive(:trap).with("INT")
-        subject.should_receive(:trap).with("QUIT")
-        subject.should_receive(:trap).with("USR2")
-        subject.should_receive(:trap).with("USR1") do |_, &blk|
+        expect(subject).to receive(:trap).with("TERM")
+        expect(subject).to receive(:trap).with("INT")
+        expect(subject).to receive(:trap).with("QUIT")
+        expect(subject).to receive(:trap).with("USR2")
+        expect(subject).to receive(:trap).with("USR1") do |_, &blk|
           callback = blk
         end
         subject.trap_signals
@@ -371,17 +371,17 @@ module VCAP::CloudController
 
       context "when the diagnostics directory is not configured" do
         it "uses a temporary directory" do
-          Dir.should_receive(:mktmpdir).and_return("some/tmp/dir")
-          subject.should_receive(:collect_diagnostics).and_call_original
-          ::VCAP::CloudController::Diagnostics.should_receive(:collect).with("some/tmp/dir")
+          expect(Dir).to receive(:mktmpdir).and_return("some/tmp/dir")
+          expect(subject).to receive(:collect_diagnostics).and_call_original
+          expect(::VCAP::CloudController::Diagnostics).to receive(:collect).with("some/tmp/dir")
 
           callback.call
         end
 
         it "memoizes the temporary directory" do
-          Dir.should_receive(:mktmpdir).and_return("some/tmp/dir")
-          subject.should_receive(:collect_diagnostics).twice.and_call_original
-          ::VCAP::CloudController::Diagnostics.should_receive(:collect).with("some/tmp/dir").twice
+          expect(Dir).to receive(:mktmpdir).and_return("some/tmp/dir")
+          expect(subject).to receive(:collect_diagnostics).twice.and_call_original
+          expect(::VCAP::CloudController::Diagnostics).to receive(:collect).with("some/tmp/dir").twice
 
           callback.call
           callback.call
@@ -400,9 +400,9 @@ module VCAP::CloudController
         end
 
         it "uses the configured directory" do
-          Dir.should_not_receive(:mktmpdir)
-          subject.should_receive(:collect_diagnostics).and_call_original
-          ::VCAP::CloudController::Diagnostics.should_receive(:collect).with("diagnostics/dir")
+          expect(Dir).not_to receive(:mktmpdir)
+          expect(subject).to receive(:collect_diagnostics).and_call_original
+          expect(::VCAP::CloudController::Diagnostics).to receive(:collect).with("diagnostics/dir")
 
           callback.call
         end

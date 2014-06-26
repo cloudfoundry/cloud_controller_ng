@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe SharedDomainAccess, type: :access do
     before do
       token = {'scope' => scope }
-      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
     subject(:access) { SharedDomainAccess.new(double(:context, user: user, roles: roles)) }

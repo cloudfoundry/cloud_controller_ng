@@ -13,10 +13,10 @@ describe BackgroundJobEnvironment do
     let(:message_bus_configurer) { double(MessageBus::Configurer, go: message_bus)}
 
     before do
-      MessageBus::Configurer.stub(:new).and_return(message_bus_configurer)
+      allow(MessageBus::Configurer).to receive(:new).and_return(message_bus_configurer)
       allow(VCAP::CloudController::DB).to receive(:load_models)
-      Thread.stub(:new).and_yield
-      EM.stub(:run).and_yield
+      allow(Thread).to receive(:new).and_yield
+      allow(EM).to receive(:run).and_yield
     end
 
     it "loads models" do

@@ -14,7 +14,7 @@ describe VCAP::CloudController::FrontController do
     end
     let(:token_decoder) do
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
-      token_decoder.stub(:decode_token => token_info)
+      allow(token_decoder).to receive_messages(:decode_token => token_info)
       token_decoder
     end
 

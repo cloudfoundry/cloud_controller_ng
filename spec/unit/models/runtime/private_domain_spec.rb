@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe PrivateDomain, type: :model do
     subject { described_class.make name: "test.example.com" }
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
       it "has associated spaces" do
@@ -15,8 +15,8 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :owning_organization_guid }
-      it { should import_attributes :name, :owning_organization_guid }
+      it { is_expected.to export_attributes :name, :owning_organization_guid }
+      it { is_expected.to import_attributes :name, :owning_organization_guid }
     end
 
     describe "#as_summary_json" do
@@ -53,7 +53,7 @@ module VCAP::CloudController
       context "when an owning organization is not given" do
         before { subject.owning_organization = nil }
 
-        it { should_not be_valid }
+        it { is_expected.not_to be_valid }
 
         it "fails to validate" do
           subject.validate
@@ -69,7 +69,7 @@ module VCAP::CloudController
           subject.name = "foo.com"
         end
 
-        it { should be_valid }
+        it { is_expected.to be_valid }
       end
 
       context "when the name is bar.foo.com and the same org has foo.com" do
@@ -80,7 +80,7 @@ module VCAP::CloudController
           subject.name = "bar.foo.com"
         end
 
-        it { should be_valid }
+        it { is_expected.to be_valid }
       end
 
       context "when the name is baz.bar.foo.com and the same org has bar.foo.com" do
@@ -91,7 +91,7 @@ module VCAP::CloudController
           subject.name = "baz.bar.foo.com"
         end
 
-        it { should be_valid }
+        it { is_expected.to be_valid }
       end
       
       context "when the name is foo.com and shared domains has bar.foo.com" do
@@ -112,7 +112,7 @@ module VCAP::CloudController
           subject.name = "pans.com"
         end
 
-        it { should be_valid } 
+        it { is_expected.to be_valid } 
       end  
     end
 

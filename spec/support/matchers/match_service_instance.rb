@@ -44,7 +44,7 @@ RSpec::Matchers.define :match_service_instance do |expected_service_instance|
     end
   end
 
-  failure_message_for_should do |actual_event|
+  failure_message do |actual_event|
     "Expect event to match service_instance, but did not. Problems were:\n" + problems.join("\n")
   end
 end

@@ -12,7 +12,7 @@ module VCAP::CloudController
               '{"app_guid":"some-app-guid"}',
               json_headers(admin_headers)
 
-            last_response.status.should == 201
+            expect(last_response.status).to eq(201)
           end
 
           it "creates the task" do
@@ -40,7 +40,7 @@ module VCAP::CloudController
                 '{"app_guid":"some-app-guid"}',
                 json_headers(admin_headers)
 
-              last_response.status.should == 404
+              expect(last_response.status).to eq(404)
             end
           end
         end
@@ -53,7 +53,7 @@ module VCAP::CloudController
               '{"app_guid":"some-bogus-app-guid"}',
               json_headers(admin_headers)
 
-            last_response.status.should == 400
+            expect(last_response.status).to eq(400)
           end
         end
       end
@@ -64,7 +64,7 @@ module VCAP::CloudController
             '{}',
             json_headers(admin_headers)
 
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
       end
 
@@ -74,7 +74,7 @@ module VCAP::CloudController
             '{"app_guid":"some-app-guid"}',
             json_headers(admin_headers)
 
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
       end
     end
@@ -107,7 +107,7 @@ module VCAP::CloudController
         get "/v2/tasks", {}, headers_for(@user_a)
 
         parsed_body = Yajl::Parser.parse(last_response.body)
-        parsed_body["total_results"].should == 1
+        expect(parsed_body["total_results"]).to eq(1)
       end
 
       describe "GET /v2/tasks/:guid" do
@@ -117,7 +117,7 @@ module VCAP::CloudController
               get "/v2/tasks/#{@task_a.guid}", {},
                 headers_for(@user_a)
 
-              last_response.status.should == 200
+              expect(last_response.status).to eq(200)
 
               parsed_body = Yajl::Parser.parse(last_response.body)
               expect(parsed_body["entity"]["app_guid"]).to eq(@task_a.app_guid)
@@ -131,7 +131,7 @@ module VCAP::CloudController
                 get "/v2/tasks/#{@task_a.guid}", {},
                   headers_for(@user_a)
 
-                last_response.status.should == 404
+                expect(last_response.status).to eq(404)
               end
             end
           end
@@ -141,7 +141,7 @@ module VCAP::CloudController
               get "/v2/tasks/#{@task_a.guid}", {},
                 headers_for(@user_b)
 
-              last_response.status.should == 403
+              expect(last_response.status).to eq(403)
             end
           end
         end
@@ -150,7 +150,7 @@ module VCAP::CloudController
           it "returns a 404 error" do
             get "/v2/tasks/some-bogus-guid", {}, admin_headers
 
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
           end
         end
       end
@@ -186,7 +186,7 @@ module VCAP::CloudController
         it "returns status code #{code}" do
           delete "/v2/tasks/#{@task.guid}", {}, headers
 
-          last_response.status.should == code
+          expect(last_response.status).to eq(code)
         end
       end
 
@@ -263,7 +263,7 @@ module VCAP::CloudController
         it "returns 404" do
           put "/v2/tasks/some-app-guid", '{"app_guid":"some-app-guid"}', json_headers(admin_headers)
 
-          last_response.status.should == 404
+          expect(last_response.status).to eq(404)
         end
       end
     end

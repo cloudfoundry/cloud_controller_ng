@@ -39,7 +39,7 @@ module CloudController
         describe "app package" do
           context "when the packages are stored on local blobstore" do
             context "and the package exists" do
-              before { package_blobstore.stub(download_uri: "/a/b/c") }
+              before { allow(package_blobstore).to receive_messages(download_uri: "/a/b/c") }
 
               it "gives a local URI to the blobstore host/port" do
                 uri = URI.parse(url_generator.app_package_download_url(app))
@@ -52,7 +52,7 @@ module CloudController
             end
 
             context "and the package does not exist" do
-              before { package_blobstore.stub(download_uri: nil) }
+              before { allow(package_blobstore).to receive_messages(download_uri: nil) }
 
               it "returns nil" do
                 expect(url_generator.app_package_download_url(app)).to be_nil
@@ -66,7 +66,7 @@ module CloudController
             it "gives out signed url to remote blobstore for appbits" do
               remote_uri = "http://s3.example.com/signed"
 
-              package_blobstore.should_receive(:download_uri).with(app.guid).and_return(remote_uri)
+              expect(package_blobstore).to receive(:download_uri).with(app.guid).and_return(remote_uri)
 
               expect(url_generator.app_package_download_url(app)).to eql(remote_uri)
             end
@@ -86,7 +86,7 @@ module CloudController
         describe "buildpack cache" do
           context "when the caches are stored on local blobstore" do
             context "and the package exists" do
-              before { buildpack_cache_blobstore.stub(download_uri: "/a/b/c") }
+              before { allow(buildpack_cache_blobstore).to receive_messages(download_uri: "/a/b/c") }
 
               it "gives a local URI to the blobstore host/port" do
                 uri = URI.parse(url_generator.buildpack_cache_download_url(app))
@@ -99,7 +99,7 @@ module CloudController
             end
 
             context "and the package does not exist" do
-              before { buildpack_cache_blobstore.stub(download_uri: nil) }
+              before { allow(buildpack_cache_blobstore).to receive_messages(download_uri: nil) }
 
               it "returns nil" do
                 expect(url_generator.buildpack_cache_download_url(app)).to be_nil
@@ -113,7 +113,7 @@ module CloudController
             it "gives out signed url to remote blobstore for appbits" do
               remote_uri = "http://s3.example.com/signed"
 
-              buildpack_cache_blobstore.should_receive(:download_uri).with(app.guid).and_return(remote_uri)
+              expect(buildpack_cache_blobstore).to receive(:download_uri).with(app.guid).and_return(remote_uri)
 
               expect(url_generator.buildpack_cache_download_url(app)).to eql(remote_uri)
             end
@@ -125,7 +125,7 @@ module CloudController
 
           context "when the admin buildpacks are stored on local blobstore" do
             context "and the package exists" do
-              before { admin_buildpack_blobstore.stub(download_uri: "/a/b/c") }
+              before { allow(admin_buildpack_blobstore).to receive_messages(download_uri: "/a/b/c") }
 
               it "gives a local URI to the blobstore host/port" do
                 uri = URI.parse(url_generator.admin_buildpack_download_url(buildpack))
@@ -138,7 +138,7 @@ module CloudController
             end
 
             context "and the package does not exist" do
-              before { admin_buildpack_blobstore.stub(download_uri: nil) }
+              before { allow(admin_buildpack_blobstore).to receive_messages(download_uri: nil) }
 
               it "returns nil" do
                 expect(url_generator.admin_buildpack_download_url(buildpack)).to be_nil
@@ -151,7 +151,7 @@ module CloudController
 
             it "gives out signed url to remote blobstore for appbits" do
               remote_uri = "http://s3.example.com/signed"
-              admin_buildpack_blobstore.should_receive(:download_uri).with(buildpack.key).and_return(remote_uri)
+              expect(admin_buildpack_blobstore).to receive(:download_uri).with(buildpack.key).and_return(remote_uri)
               expect(url_generator.admin_buildpack_download_url(buildpack)).to eql(remote_uri)
             end
           end
@@ -162,7 +162,7 @@ module CloudController
           let(:blob) { double("blob", download_url: "http://example.com/blob") }
 
           before do
-            CloudController::DependencyLocator.instance.stub(:droplet_blobstore).
+            allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).
               and_return(droplet_blobstore)
           end
 

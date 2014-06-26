@@ -23,9 +23,9 @@ module VCAP::CloudController
       context "when name and space provided" do
         it "responds with new app data" do
           create_app
-          last_response.status.should == 201
-          decoded_response["entity"]["name"].should == "maria"
-          decoded_response["entity"]["space_guid"].should == space_guid
+          expect(last_response.status).to eq(201)
+          expect(decoded_response["entity"]["name"]).to eq("maria")
+          expect(decoded_response["entity"]["space_guid"]).to eq(space_guid)
         end
       end
 
@@ -36,8 +36,8 @@ module VCAP::CloudController
 
         it "responds invalid arguments" do
           create_app
-          last_response.status.should == 400
-          last_response.body.should match /invalid amount of memory/
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match /invalid amount of memory/
         end
       end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
         it "uses the configured default when no memory is specified" do
           create_app
-          decoded_response["entity"]["memory"].should == default_memory
+          expect(decoded_response["entity"]["memory"]).to eq(default_memory)
         end
       end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
 
         it "uses the configured default when no quota is specified" do
           create_app
-          decoded_response["entity"]["disk_quota"].should == default_disk
+          expect(decoded_response["entity"]["disk_quota"]).to eq(default_disk)
         end
         context "when disk quota provided" do
            let(:provided_disk) { 256 }
@@ -74,7 +74,7 @@ module VCAP::CloudController
  
            it "uses the provided disk quota" do
              create_app
-             decoded_response["entity"]["disk_quota"].should == provided_disk
+             expect(decoded_response["entity"]["disk_quota"]).to eq(provided_disk)
            end
          end
       end
@@ -86,8 +86,8 @@ module VCAP::CloudController
 
         it "responds invalid arguments" do
           create_app
-          last_response.status.should == 400
-          last_response.body.should match /instances less than 1/
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match /instances less than 1/
         end
       end
 
@@ -95,8 +95,8 @@ module VCAP::CloudController
         let(:initial_hash) {{ :space_guid => space_guid }}
         it "responds with missing field name error" do
           create_app
-          last_response.status.should == 400
-          last_response.body.should match /Error: Missing field name/
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match /Error: Missing field name/
         end
       end
 
@@ -104,8 +104,8 @@ module VCAP::CloudController
         let(:initial_hash) {{ :name => "maria" }}
         it "responds with missing field space error" do
           create_app
-          last_response.status.should == 400
-          last_response.body.should match /Error: Missing field space/
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match /Error: Missing field space/
         end
       end
 
@@ -114,7 +114,7 @@ module VCAP::CloudController
 
         it "ignores the attribute" do
           expect { create_app }.to change(App, :count).by(1)
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
 
           app = App.last
           expect(app.detected_buildpack).to be_nil
@@ -162,7 +162,7 @@ module VCAP::CloudController
 
         it "does not allow user to create new app (spot check)" do
           post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(headers_for(make_developer_for_space(space)))
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
       end
 
@@ -184,8 +184,8 @@ module VCAP::CloudController
           it "should set to provided value" do
             update_app
             app_obj.refresh
-            app_obj.health_check_timeout.should == 80
-            last_response.status.should == 201
+            expect(app_obj.health_check_timeout).to eq(80)
+            expect(last_response.status).to eq(201)
           end
         end
 
@@ -194,7 +194,7 @@ module VCAP::CloudController
 
           it "should not return error" do
             update_app
-            last_response.status.should == 201
+            expect(last_response.status).to eq(201)
           end
         end
       end
@@ -208,8 +208,8 @@ module VCAP::CloudController
           it "should work" do
             update_app
             app_obj.refresh
-            app_obj.debug.should == "run"
-            last_response.status.should == 201
+            expect(app_obj.debug).to eq("run")
+            expect(last_response.status).to eq(201)
           end
 
         end
@@ -224,8 +224,8 @@ module VCAP::CloudController
           it "should work" do
             update_app
             app_obj.refresh
-            app_obj.debug.should == "suspend"
-            last_response.status.should == 201
+            expect(app_obj.debug).to eq("suspend")
+            expect(last_response.status).to eq(201)
           end
         end
 
@@ -239,8 +239,8 @@ module VCAP::CloudController
           it "should work" do
             update_app
             app_obj.refresh
-            app_obj.debug.should be_nil
-            last_response.status.should == 201
+            expect(app_obj.debug).to be_nil
+            expect(last_response.status).to eq(201)
           end
         end
 
@@ -254,8 +254,8 @@ module VCAP::CloudController
           it "should do nothing" do
             update_app
             app_obj.refresh
-            app_obj.debug.should == "run"
-            last_response.status.should == 201
+            expect(app_obj.debug).to eq("run")
+            expect(last_response.status).to eq(201)
           end
         end
       end
@@ -267,7 +267,7 @@ module VCAP::CloudController
 
         it "should work" do
           update_app
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
         end
       end
 
@@ -277,7 +277,7 @@ module VCAP::CloudController
         it "should ignore the attribute" do
           update_app
 
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
 
           app_obj.reload
           expect(app_obj.detected_buildpack).to be == 'buildpack-name'
@@ -291,7 +291,7 @@ module VCAP::CloudController
         it "ignores the attribute" do
           update_app
 
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
 
           app_obj.reload
           expect(app_obj.package_state).to_not be == 'FAILED'
@@ -344,31 +344,31 @@ module VCAP::CloudController
 
       it "should return the detected buildpack" do
         get_app
-        last_response.status.should == 200
-        decoded_response["entity"]["detected_buildpack"].should eq("buildpack-name")
+        expect(last_response.status).to eq(200)
+        expect(decoded_response["entity"]["detected_buildpack"]).to eq("buildpack-name")
       end
 
       it "should not return the detected buildpack guid" do
         get_app
-        last_response.status.should == 200
-        decoded_response["entity"].should_not have_key("detected_buildpack_guid")
+        expect(last_response.status).to eq(200)
+        expect(decoded_response["entity"]).not_to have_key("detected_buildpack_guid")
       end
 
       it "should not return the detected buildpack name" do
         get_app
-        last_response.status.should == 200
-        decoded_response["entity"].should_not have_key("detected_buildpack_name")
+        expect(last_response.status).to eq(200)
+        expect(decoded_response["entity"]).not_to have_key("detected_buildpack_name")
       end
 
       it "should return the package state" do
         get_app
-        last_response.status.should == 200
+        expect(last_response.status).to eq(200)
         expect(parse(last_response.body)["entity"]).to have_key("package_state")
       end
 
       it "should not return system_env_json" do
         get_app
-        last_response.status.should == 200
+        expect(last_response.status).to eq(200)
         expect(parse(last_response.body)["entity"]).not_to have_key("system_env_json")
       end
     end
@@ -387,7 +387,7 @@ module VCAP::CloudController
 
         it "should delete the app" do
           delete_app
-          last_response.status.should == 204
+          expect(last_response.status).to eq(204)
         end
       end
 
@@ -395,14 +395,14 @@ module VCAP::CloudController
         let(:app_obj) { AppFactory.make :state => "STARTED", :package_hash => "abc" }
         it "registers a billing stop event" do
           called = false
-          AppStopEvent.should_receive(:create_from_app) do |app|
-            app.guid.should == app_obj.guid
+          expect(AppStopEvent).to receive(:create_from_app) do |app|
+            expect(app.guid).to eq(app_obj.guid)
             called = true
           end
 
           delete_app
 
-          called.should be true
+          expect(called).to be true
         end
       end
 
@@ -421,10 +421,10 @@ module VCAP::CloudController
 
         it "should delete the dependencies" do
           delete_app_recursively
-          last_response.status.should == 204
+          expect(last_response.status).to eq(204)
 
-          App.find(id: app_obj.id).should be_nil
-          AppEvent.find(:id => app_event.id).should be_nil
+          expect(App.find(id: app_obj.id)).to be_nil
+          expect(AppEvent.find(:id => app_event.id)).to be_nil
         end
       end
 
@@ -433,8 +433,8 @@ module VCAP::CloudController
           it "should destroy the app" do
             delete_app
 
-            last_response.status.should == 204
-            App.find(id: app_obj.id).should be_nil
+            expect(last_response.status).to eq(204)
+            expect(App.find(id: app_obj.id)).to be_nil
           end
         end
 
@@ -445,14 +445,14 @@ module VCAP::CloudController
           it "should raise an error" do
             delete_app
 
-            last_response.status.should == 400
-            decoded_response["description"].should =~ /service_bindings/i
+            expect(last_response.status).to eq(400)
+            expect(decoded_response["description"]).to match(/service_bindings/i)
           end
 
           it "should succeed on a recursive delete" do
             delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
 
-            last_response.status.should == 204
+            expect(last_response.status).to eq(204)
           end
         end
 
@@ -592,14 +592,14 @@ module VCAP::CloudController
           update_hash = { :environment_json => hash }
 
           put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
         end
 
         it "should allow multiple variables" do
           hash = { :abc => 123, :def => "hi" }
           update_hash = { :environment_json => hash }
           put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
-          last_response.status.should == 201
+          expect(last_response.status).to eq(201)
         end
 
         [ "VMC", "vmc", "VCAP", "vcap" ].each do |k|
@@ -607,8 +607,8 @@ module VCAP::CloudController
             hash = { :abc => 123, "#{k}_abc" => "hi" }
             update_hash = { :environment_json => hash }
             put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
-            last_response.status.should == 400
-            decoded_response["description"].should match /environment_json reserved_key:#{k}_abc/
+            expect(last_response.status).to eq(400)
+            expect(decoded_response["description"]).to match /environment_json reserved_key:#{k}_abc/
           end
         end
       end
@@ -620,25 +620,25 @@ module VCAP::CloudController
 
       it "should have no command entry in the metadata if not provided" do
         get "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
-        last_response.status.should == 200
-        decoded_response["entity"]["command"].should be_nil
-        decoded_response["entity"]["metadata"].should be_nil
+        expect(last_response.status).to eq(200)
+        expect(decoded_response["entity"]["command"]).to be_nil
+        expect(decoded_response["entity"]["metadata"]).to be_nil
       end
 
       it "should set the command on the app metadata" do
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:command => "foobar"), json_headers(admin_headers)
-        last_response.status.should == 201
-        decoded_response["entity"]["command"].should == "foobar"
-        decoded_response["entity"]["metadata"].should be_nil
+        expect(last_response.status).to eq(201)
+        expect(decoded_response["entity"]["command"]).to eq("foobar")
+        expect(decoded_response["entity"]["metadata"]).to be_nil
       end
 
       it "can be cleared if a request arrives asking command to be an empty string" do
         app_obj.command = "echo hi"
         app_obj.save
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:command => ""), json_headers(admin_headers)
-        last_response.status.should == 201
-        decoded_response["entity"]["command"].should be_nil
-        decoded_response["entity"]["metadata"].should be_nil
+        expect(last_response.status).to eq(201)
+        expect(decoded_response["entity"]["command"]).to be_nil
+        expect(decoded_response["entity"]["metadata"]).to be_nil
       end
     end
 
@@ -648,16 +648,16 @@ module VCAP::CloudController
 
       it "should have no health_check_timeout entry in the metadata if not provided" do
         get "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
-        last_response.status.should == 200
-        decoded_response["entity"]["health_check_timeout"].should be_nil
-        decoded_response["entity"]["metadata"].should be_nil
+        expect(last_response.status).to eq(200)
+        expect(decoded_response["entity"]["health_check_timeout"]).to be_nil
+        expect(decoded_response["entity"]["metadata"]).to be_nil
       end
 
       it "should set the health_check_timeout on the app metadata if provided" do
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:health_check_timeout => 100), json_headers(admin_headers)
-        last_response.status.should == 201
-        decoded_response["entity"]["health_check_timeout"].should == 100
-        decoded_response["entity"]["metadata"].should be_nil
+        expect(last_response.status).to eq(201)
+        expect(decoded_response["entity"]["health_check_timeout"]).to eq(100)
+        expect(decoded_response["entity"]["metadata"]).to be_nil
       end
     end
 
@@ -672,22 +672,22 @@ module VCAP::CloudController
         it "stages the app asynchronously" do
           received_app = nil
 
-          AppObserver.should_receive(:stage_app) do |app|
+          expect(AppObserver).to receive(:stage_app) do |app|
             received_app = app
             AppStagerTask::Response.new({})
           end
 
           put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
-          received_app.id.should == app_obj.id
+          expect(received_app.id).to eq(app_obj.id)
         end
 
         it "returns X-App-Staging-Log header with staging log url" do
           stager_response = AppStagerTask::Response.new("task_streaming_log_url" => "streaming-log-url")
-          AppObserver.stub(stage_app: stager_response)
+          allow(AppObserver).to receive_messages(stage_app: stager_response)
 
           put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
-          last_response.status.should == 201
-          last_response.headers["X-App-Staging-Log"].should == "streaming-log-url"
+          expect(last_response.status).to eq(201)
+          expect(last_response.headers["X-App-Staging-Log"]).to eq("streaming-log-url")
         end
       end
 
@@ -696,8 +696,8 @@ module VCAP::CloudController
 
         it "does not add X-App-Staging-Log" do
           put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode({}), json_headers(admin_headers)
-          last_response.status.should == 201
-          last_response.headers.should_not have_key("X-App-Staging-Log")
+          expect(last_response.status).to eq(201)
+          expect(last_response.headers).not_to have_key("X-App-Staging-Log")
         end
       end
     end
@@ -728,7 +728,7 @@ module VCAP::CloudController
           :space => space,
         )
 
-        DeaClient.should_receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
+        expect(DeaClient).to receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
           expect(app.uris).to include("app.jesse.cloud")
         end
 
@@ -739,7 +739,7 @@ module VCAP::CloudController
           ).encode,
           json_headers(@headers_for_user)
         )
-        last_response.status.should == 201
+        expect(last_response.status).to eq(201)
       end
 
       it "tells the dea client to update when we remove a url through PUT /v2/apps/:guid" do
@@ -754,11 +754,11 @@ module VCAP::CloudController
           :domain => domain,
         )
         get "#{@app_url}/routes", {}, @headers_for_user
-        decoded_response["resources"].map { |r|
+        expect(decoded_response["resources"].map { |r|
           r["metadata"]["guid"]
-        }.sort.should == [bar_route.guid, route.guid].sort
+        }.sort).to eq([bar_route.guid, route.guid].sort)
 
-        DeaClient.should_receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
+        expect(DeaClient).to receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
           expect(app.uris).to include("foo.jesse.cloud")
         end
 
@@ -769,7 +769,7 @@ module VCAP::CloudController
           ).encode,
           json_headers(@headers_for_user)
         )
-        last_response.status.should == 201
+        expect(last_response.status).to eq(201)
       end
     end
 
@@ -869,8 +869,8 @@ module VCAP::CloudController
 
           post "/v2/apps", req, json_headers(headers_for(make_developer_for_space(space)))
 
-          last_response.status.should == 400
-          decoded_response["description"].should =~ /exceeded your organization's memory limit/
+          expect(last_response.status).to eq(400)
+          expect(decoded_response["description"]).to match(/exceeded your organization's memory limit/)
         end
       end
     end

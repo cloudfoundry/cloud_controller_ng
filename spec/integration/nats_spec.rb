@@ -20,7 +20,7 @@ describe "NATS", type: :integration, isolation: :truncation do
 
     it "still works" do
       make_get_request("/info").tap do |r|
-        r.code.should == "200"
+        expect(r.code).to eq("200")
       end
     end
 
@@ -40,13 +40,13 @@ describe "NATS", type: :integration, isolation: :truncation do
       it "creates org, space and app in database" do
         data = %Q({"name":"nats-spec-org"})
         response = make_post_request("/v2/organizations", data, authorized_token)
-        response.code.should eql("201"), "Status is [#{response.code}], Body is [#{response.body}]"
+        expect(response.code).to eql("201"), "Status is [#{response.code}], Body is [#{response.body}]"
 
         @org_guid = response.json_body["metadata"]["guid"]
 
         data = %Q({"organization_guid":"#{@org_guid}","name":"nats-spec-space"})
         response = make_post_request("/v2/spaces", data, authorized_token)
-        response.code.should == "201"
+        expect(response.code).to eq("201")
         @space_guid = response.json_body["metadata"]["guid"]
 
         data = %Q({
@@ -61,7 +61,7 @@ describe "NATS", type: :integration, isolation: :truncation do
         })
 
         response = make_post_request("/v2/apps", data, authorized_token)
-        response.code.should == "201"
+        expect(response.code).to eq("201")
       end
     end
   end

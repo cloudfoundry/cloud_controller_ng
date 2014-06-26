@@ -3,7 +3,7 @@ RSpec::Matchers.define :have_status_code do |expected_code|
     status_code_for(response) == expected_code
   end
 
-  failure_message_for_should do |response|
+  failure_message do |response|
     "Expected #{expected_code} response, got:\n code: #{status_code_for(response)}\n body: \"#{response.body}\""
   end
 

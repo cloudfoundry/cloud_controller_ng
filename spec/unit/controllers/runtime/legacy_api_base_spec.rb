@@ -27,16 +27,16 @@ module VCAP::CloudController
 
         it "should return true if the user is in atleast one app space and the default_space is not set" do
           user.add_space(as)
-          api.has_default_space?.should == true
+          expect(api.has_default_space?).to eq(true)
         end
 
         it "should return true if the default app space is set explicitly and the user is not in any app space" do
           user.default_space = as
-          api.has_default_space?.should == true
+          expect(api.has_default_space?).to eq(true)
         end
 
         it "should return false if the default app space is not set explicitly and the user is not in atleast one app space" do
-          api.has_default_space?.should == false
+          expect(api.has_default_space?).to eq(false)
         end
       end
     end
@@ -72,14 +72,14 @@ module VCAP::CloudController
         end
 
         it "should return the first app space a user is in if default_space is not set" do
-          api.default_space.should == as1
+          expect(api.default_space).to eq(as1)
           user.remove_space(as1)
-          api.default_space.should == as2
+          expect(api.default_space).to eq(as2)
         end
 
         it "should return the explicitly set default app space if one is set" do
           user.default_space = as2
-          api.default_space.should == as2
+          expect(api.default_space).to eq(as2)
         end
       end
     end

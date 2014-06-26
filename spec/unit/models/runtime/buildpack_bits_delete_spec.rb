@@ -21,7 +21,7 @@ module VCAP::CloudController
     context "delays the blobstore delete until staging completes" do
       it "based on config" do
         Timecop.freeze do
-          Delayed::Job.should_receive(:enqueue).with(an_instance_of(BlobstoreDelete),
+          expect(Delayed::Job).to receive(:enqueue).with(an_instance_of(BlobstoreDelete),
                                                      hash_including(run_at: 144.seconds.from_now))
           BuildpackBitsDelete.delete_when_safe(key, staging_timeout)
         end
@@ -29,7 +29,7 @@ module VCAP::CloudController
     end
 
     it 'does nothing if the key is nil' do
-      Delayed::Job.should_not_receive(:enqueue)
+      expect(Delayed::Job).not_to receive(:enqueue)
       BuildpackBitsDelete.delete_when_safe(nil,staging_timeout)
     end
 
@@ -39,7 +39,7 @@ module VCAP::CloudController
         job_attrs = {:last_modified => attrs[:last_modified],
                      :etag => attrs[:etag]}
 
-        Jobs::Runtime::BlobstoreDelete.should_receive(:new).with(key, :buildpack_blobstore, job_attrs).and_call_original
+        expect(Jobs::Runtime::BlobstoreDelete).to receive(:new).with(key, :buildpack_blobstore, job_attrs).and_call_original
         BuildpackBitsDelete.delete_when_safe(key, staging_timeout)
       end
     end
@@ -48,7 +48,7 @@ module VCAP::CloudController
       it "will not create a job" do
         blobstore.delete(key)
 
-        Jobs::Runtime::BlobstoreDelete.should_not_receive(:new)
+        expect(Jobs::Runtime::BlobstoreDelete).not_to receive(:new)
         BuildpackBitsDelete.delete_when_safe(key, staging_timeout)
       end
     end

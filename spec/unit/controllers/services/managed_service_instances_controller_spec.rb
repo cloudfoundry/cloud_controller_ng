@@ -5,7 +5,7 @@ module VCAP::CloudController
     describe 'GET', '/v2/managed_service_instances/:guid' do
       it 'redirects to /v2/service_instances/:guid' do
         get "/v2/managed_service_instances/abcd"
-        last_response.status.should == 302
+        expect(last_response.status).to eq(302)
       end
     end
   end

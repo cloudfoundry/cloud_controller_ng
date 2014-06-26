@@ -3,7 +3,7 @@ require "cloud_controller/dea/dea_respondent"
 
 module VCAP::CloudController
   describe DeaRespondent do
-    before { message_bus.stub(:subscribe).with(anything) }
+    before { allow(message_bus).to receive(:subscribe).with(anything) }
 
     let(:message_bus) { double("message_bus") }
 
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
     describe "#start" do
       it "subscribes to 'droplet.exited' with a queue" do
-        message_bus.should_receive(:subscribe).with("droplet.exited",
+        expect(message_bus).to receive(:subscribe).with("droplet.exited",
           :queue => VCAP::CloudController::DeaRespondent::CRASH_EVENT_QUEUE)
 
         respondent.start
@@ -92,7 +92,7 @@ module VCAP::CloudController
           let(:droplet) { "non existent droplet" }
 
           it "does not add a record in the AppEvents table" do
-            AppEvent.should_not_receive(:create)
+            expect(AppEvent).not_to receive(:create)
             respondent.process_droplet_exited_message(payload)
           end
         end
@@ -103,14 +103,14 @@ module VCAP::CloudController
 
         context "the app described in the event exists" do
           it "does not add a record in the AppEvents table" do
-            AppEvent.should_not_receive(:create)
+            expect(AppEvent).not_to receive(:create)
             respondent.process_droplet_exited_message(payload)
           end
         end
 
         context "the app described in the event does not exist" do
           it "does not add a record in the AppEvents table" do
-            AppEvent.should_not_receive(:create)
+            expect(AppEvent).not_to receive(:create)
             respondent.process_droplet_exited_message(payload)
           end
         end
@@ -120,7 +120,7 @@ module VCAP::CloudController
         let(:reason) { nil }
 
         it "does not add a record in the AppEvents table" do
-          AppEvent.should_not_receive(:create)
+          expect(AppEvent).not_to receive(:create)
           respondent.process_droplet_exited_message(payload)
         end
       end

@@ -140,7 +140,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'returns that ServicePlan' do
-          catalog_plan.cc_plan.should == cc_plan
+          expect(catalog_plan.cc_plan).to eq(cc_plan)
         end
       end
 
@@ -150,7 +150,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'returns nil' do
-          catalog_plan.cc_plan.should be_nil
+          expect(catalog_plan.cc_plan).to be_nil
         end
       end
     end

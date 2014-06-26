@@ -12,12 +12,12 @@ describe "String :name" do
     end
 
     it "should allow create with different case" do
-      @c.create(:str => "ABC").should be_valid
+      expect(@c.create(:str => "ABC")).to be_valid
     end
 
     it "should perform case sensitive search" do
-      @c.dataset[:str => "abc"].should_not be_nil
-      @c.dataset[:str => "aBC"].should be_nil
+      expect(@c.dataset[:str => "abc"]).not_to be_nil
+      expect(@c.dataset[:str => "aBC"]).to be_nil
     end
   end
 
@@ -31,12 +31,12 @@ describe "String :name" do
     end
 
     it "should allow create with different case" do
-      @c.create(:str => "ABC").should be_valid
+      expect(@c.create(:str => "ABC")).to be_valid
     end
 
     it "should perform case sensitive search" do
-      @c.dataset[:str => "abc"].should_not be_nil
-      @c.dataset[:str => "aBC"].should be_nil
+      expect(@c.dataset[:str => "abc"]).not_to be_nil
+      expect(@c.dataset[:str => "aBC"]).to be_nil
     end
   end
 
@@ -66,8 +66,8 @@ describe "String :name" do
     end
 
     it "should perform case sensitive search" do
-      @c.dataset[:str => "abc"].should_not be_nil
-      @c.dataset[:str => "aBC"].should_not be_nil
+      expect(@c.dataset[:str => "abc"]).not_to be_nil
+      expect(@c.dataset[:str => "aBC"]).not_to be_nil
     end
   end
 
@@ -79,8 +79,8 @@ describe "String :name" do
         @c = Class.new(Sequel::Model)
         @c.set_dataset(DbConfig.connection[table_name])
         @c.create(:altered_to_default => "abc")
-        @c.dataset[:altered_to_default => "abc"].should_not be_nil
-        @c.dataset[:altered_to_default => "ABC"].should be_nil
+        expect(@c.dataset[:altered_to_default => "abc"]).not_to be_nil
+        expect(@c.dataset[:altered_to_default => "ABC"]).to be_nil
       end
     end
 
@@ -89,8 +89,8 @@ describe "String :name" do
         @c = Class.new(Sequel::Model)
         @c.set_dataset(DbConfig.connection[table_name])
         @c.create(:altered_to_case_sensitive => "abc")
-        @c.dataset[:altered_to_case_sensitive => "abc"].should_not be_nil
-        @c.dataset[:altered_to_case_sensitive => "ABC"].should be_nil
+        expect(@c.dataset[:altered_to_case_sensitive => "abc"]).not_to be_nil
+        expect(@c.dataset[:altered_to_case_sensitive => "ABC"]).to be_nil
       end
     end
 
@@ -99,8 +99,8 @@ describe "String :name" do
         @c = Class.new(Sequel::Model)
         @c.set_dataset(DbConfig.connection[table_name])
         @c.create(:altered_to_case_insensitive => "abc")
-        @c.dataset[:altered_to_case_insensitive => "abc"].should_not be_nil
-        @c.dataset[:altered_to_case_insensitive => "ABC"].should_not be_nil
+        expect(@c.dataset[:altered_to_case_insensitive => "abc"]).not_to be_nil
+        expect(@c.dataset[:altered_to_case_insensitive => "ABC"]).not_to be_nil
       end
     end
   end

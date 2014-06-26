@@ -40,17 +40,17 @@ describe ErrorHasher do
     subject { error_hasher.services_error? }
     context "for a StructuredError" do
       let(:error) { services_error }
-      it { should be true }
+      it { is_expected.to be true }
     end
 
     context "for an ApiError" do
       let(:error) { api_error }
-      it { should be false }
+      it { is_expected.to be false }
     end
 
     context "for an UnknownError" do
       let(:error) { unknown_error }
-      it { should be false }
+      it { is_expected.to be false }
     end
   end
 
@@ -58,17 +58,17 @@ describe ErrorHasher do
     subject { error_hasher.api_error? }
     context "for a StructuredError" do
       let(:error) { services_error }
-      it { should be false }
+      it { is_expected.to be false }
     end
 
     context "for an ApiError" do
       let(:error) { api_error }
-      it { should be true }
+      it { is_expected.to be true }
     end
 
     context "for an UnknownError" do
       let(:error) { unknown_error }
-      it { should be false }
+      it { is_expected.to be false }
     end
   end
 

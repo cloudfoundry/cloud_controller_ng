@@ -25,11 +25,11 @@ module VCAP::CloudController
       end
 
       it "enqueues a job to install a buildpack" do
-        Jobs::Runtime::BuildpackInstaller.should_receive(:new).with("buildpack1", "abuildpack.zip", {}).and_return(job)
-        Jobs::Enqueuer.should_receive(:new).with(job, queue: instance_of(LocalQueue)).and_return(enqueuer)
-        enqueuer.should_receive(:enqueue)
-        Dir.should_receive(:[]).with("/var/vcap/packages/mybuildpackpkg/*.zip").and_return(["abuildpack.zip"])
-        File.should_receive(:file?).with("abuildpack.zip").and_return(true)
+        expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with("buildpack1", "abuildpack.zip", {}).and_return(job)
+        expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(LocalQueue)).and_return(enqueuer)
+        expect(enqueuer).to receive(:enqueue)
+        expect(Dir).to receive(:[]).with("/var/vcap/packages/mybuildpackpkg/*.zip").and_return(["abuildpack.zip"])
+        expect(File).to receive(:file?).with("abuildpack.zip").and_return(true)
 
         installer.install(TestConfig.config[:install_buildpacks])
       end
@@ -40,24 +40,24 @@ module VCAP::CloudController
           "package"=>"myotherpkg"
         }
 
-        Jobs::Runtime::BuildpackInstaller.should_receive(:new).with("buildpack1", "abuildpack.zip", {}).ordered.and_return(job)
-        Jobs::Enqueuer.should_receive(:new).with(job, queue: instance_of(LocalQueue)).ordered.and_return(enqueuer)
-        Dir.should_receive(:[]).with("/var/vcap/packages/mybuildpackpkg/*.zip").and_return(["abuildpack.zip"])
-        File.should_receive(:file?).with("abuildpack.zip").and_return(true)
+        expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with("buildpack1", "abuildpack.zip", {}).ordered.and_return(job)
+        expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(LocalQueue)).ordered.and_return(enqueuer)
+        expect(Dir).to receive(:[]).with("/var/vcap/packages/mybuildpackpkg/*.zip").and_return(["abuildpack.zip"])
+        expect(File).to receive(:file?).with("abuildpack.zip").and_return(true)
 
-        Jobs::Runtime::BuildpackInstaller.should_receive(:new).with("buildpack2", "otherbp.zip", {}).ordered.and_return(job2)
-        Jobs::Enqueuer.should_receive(:new).with(job2, queue: instance_of(LocalQueue)).ordered.and_return(enqueuer)
-        Dir.should_receive(:[]).with("/var/vcap/packages/myotherpkg/*.zip").and_return(["otherbp.zip"])
-        File.should_receive(:file?).with("otherbp.zip").and_return(true)
+        expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with("buildpack2", "otherbp.zip", {}).ordered.and_return(job2)
+        expect(Jobs::Enqueuer).to receive(:new).with(job2, queue: instance_of(LocalQueue)).ordered.and_return(enqueuer)
+        expect(Dir).to receive(:[]).with("/var/vcap/packages/myotherpkg/*.zip").and_return(["otherbp.zip"])
+        expect(File).to receive(:file?).with("otherbp.zip").and_return(true)
 
-        enqueuer.should_receive(:enqueue).twice
+        expect(enqueuer).to receive(:enqueue).twice
 
         installer.install(TestConfig.config[:install_buildpacks])
       end
 
       it "logs an error when no buildpack zip file is found" do
-        Dir.should_receive(:[]).with("/var/vcap/packages/mybuildpackpkg/*.zip").and_return([])
-        installer.logger.should_receive(:error).with(/No file found for the buildpack/)
+        expect(Dir).to receive(:[]).with("/var/vcap/packages/mybuildpackpkg/*.zip").and_return([])
+        expect(installer.logger).to receive(:error).with(/No file found for the buildpack/)
 
         installer.install(TestConfig.config[:install_buildpacks])
       end
@@ -82,16 +82,16 @@ module VCAP::CloudController
         end
 
         it "uses the file override" do
-          Jobs::Runtime::BuildpackInstaller.should_receive(:new).with("buildpack1", "another.zip", {}).and_return(job)
-          Jobs::Enqueuer.should_receive(:new).with(job, queue: instance_of(LocalQueue)).and_return(enqueuer)
-          enqueuer.should_receive(:enqueue)
-          File.should_receive(:file?).with("another.zip").and_return(true)
+          expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with("buildpack1", "another.zip", {}).and_return(job)
+          expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(LocalQueue)).and_return(enqueuer)
+          expect(enqueuer).to receive(:enqueue)
+          expect(File).to receive(:file?).with("another.zip").and_return(true)
 
           installer.install(TestConfig.config[:install_buildpacks])
         end
 
         it "fails when no buildpack zip file is found" do
-          installer.logger.should_receive(:error).with(/File not found: another.zip/)
+          expect(installer.logger).to receive(:error).with(/File not found: another.zip/)
 
           installer.install(TestConfig.config[:install_buildpacks])
         end
@@ -99,10 +99,10 @@ module VCAP::CloudController
         it "succeeds when no package is specified" do
           TestConfig.config[:install_buildpacks][0].delete("package")
 
-          Jobs::Runtime::BuildpackInstaller.should_receive(:new).with("buildpack1", "another.zip", {}).and_return(job)
-          Jobs::Enqueuer.should_receive(:new).with(job, queue: instance_of(LocalQueue)).and_return(enqueuer)
-          enqueuer.should_receive(:enqueue)
-          File.should_receive(:file?).with("another.zip").and_return(true)
+          expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with("buildpack1", "another.zip", {}).and_return(job)
+          expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(LocalQueue)).and_return(enqueuer)
+          expect(enqueuer).to receive(:enqueue)
+          expect(File).to receive(:file?).with("another.zip").and_return(true)
 
           installer.install(TestConfig.config[:install_buildpacks])
         end
@@ -111,14 +111,14 @@ module VCAP::CloudController
       context "missing required values" do
         it "fails when no package is specified" do
           TestConfig.config[:install_buildpacks][0].delete("package")
-          installer.logger.should_receive(:error).with(/A package or file must be specified/)
+          expect(installer.logger).to receive(:error).with(/A package or file must be specified/)
 
           installer.install(TestConfig.config[:install_buildpacks])
         end
 
         it "fails when no name is specified" do
           TestConfig.config[:install_buildpacks][0].delete("name")
-          installer.logger.should_receive(:error).with(/A name must be specified for the buildpack/)
+          expect(installer.logger).to receive(:error).with(/A name must be specified for the buildpack/)
 
           installer.install(TestConfig.config[:install_buildpacks])
         end
@@ -145,10 +145,10 @@ module VCAP::CloudController
         end
 
         it "passes optional attributes to the job" do
-          Jobs::Runtime::BuildpackInstaller.should_receive(:new).
+          expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).
             with("buildpack1", "abuildpack.zip",{:enabled => true, :locked =>false, :position=>5}).and_return(job)
-          Dir.should_receive(:[]).with("/var/vcap/packages/mybuildpackpkg/*.zip").and_return(["abuildpack.zip"])
-          File.should_receive(:file?).with("abuildpack.zip").and_return(true)
+          expect(Dir).to receive(:[]).with("/var/vcap/packages/mybuildpackpkg/*.zip").and_return(["abuildpack.zip"])
+          expect(File).to receive(:file?).with("abuildpack.zip").and_return(true)
 
           installer.install(TestConfig.config[:install_buildpacks])
         end

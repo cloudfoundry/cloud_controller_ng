@@ -43,8 +43,8 @@ module VCAP::CloudController
           broker: broker,
           errors: errors,
         })
-        reg.stub(:create).and_return(reg)
-        reg.stub(:warnings).and_return([])
+        allow(reg).to receive(:create).and_return(reg)
+        allow(reg).to receive(:warnings).and_return([])
         reg
       end
       let(:presenter) { double(ServiceBrokerPresenter, {
@@ -52,9 +52,9 @@ module VCAP::CloudController
       }) }
 
       before do
-        ServiceBroker.stub(:new).and_return(broker)
-        VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
-        ServiceBrokerPresenter.stub(:new).with(broker).and_return(presenter)
+        allow(ServiceBroker).to receive(:new).and_return(broker)
+        allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new).with(broker).and_return(registration)
+        allow(ServiceBrokerPresenter).to receive(:new).with(broker).and_return(presenter)
       end
 
       it 'returns a 201 status' do
@@ -79,7 +79,7 @@ module VCAP::CloudController
         post '/v2/service_brokers', body, headers
 
         headers = last_response.original_headers
-        headers.fetch('Location').should == '/v2/service_brokers/123'
+        expect(headers.fetch('Location')).to eq('/v2/service_brokers/123')
       end
 
       it 'does not set fields that are unmodifiable' do
@@ -89,45 +89,45 @@ module VCAP::CloudController
       end
 
       context 'when there is an error in Broker Registration' do
-        before { registration.stub(:create).and_return(nil) }
+        before { allow(registration).to receive(:create).and_return(nil) }
 
         context 'when the broker url is taken' do
-          before { errors.stub(:on).with(:broker_url).and_return([:unique]) }
+          before { allow(errors).to receive(:on).with(:broker_url).and_return([:unique]) }
 
           it 'returns an error' do
             post '/v2/service_brokers', body, headers
 
-            last_response.status.should == 400
-            decoded_response.fetch('code').should == 270003
-            decoded_response.fetch('description').should =~ /The service broker url is taken/
+            expect(last_response.status).to eq(400)
+            expect(decoded_response.fetch('code')).to eq(270003)
+            expect(decoded_response.fetch('description')).to match(/The service broker url is taken/)
           end
         end
 
         context 'when the broker name is taken' do
-          before { errors.stub(:on).with(:name).and_return([:unique]) }
+          before { allow(errors).to receive(:on).with(:name).and_return([:unique]) }
 
           it 'returns an error' do
             post '/v2/service_brokers', body, headers
 
-            last_response.status.should == 400
-            decoded_response.fetch('code').should == 270002
-            decoded_response.fetch('description').should =~ /The service broker name is taken/
+            expect(last_response.status).to eq(400)
+            expect(decoded_response.fetch('code')).to eq(270002)
+            expect(decoded_response.fetch('description')).to match(/The service broker name is taken/)
           end
         end
 
         context 'when there are other errors on the registration' do
           let(:error_message) { 'A bunch of stuff was wrong' }
           before do
-            errors.stub(:full_messages).and_return([error_message])
-            registration.stub(:create).and_raise(Sequel::ValidationFailed.new(errors))
+            allow(errors).to receive(:full_messages).and_return([error_message])
+            allow(registration).to receive(:create).and_raise(Sequel::ValidationFailed.new(errors))
           end
 
           it 'returns an error' do
             post '/v2/service_brokers', body, headers
 
-            last_response.status.should == 502
-            decoded_response.fetch('code').should == 270012
-            decoded_response.fetch('description').should == 'Service broker catalog is invalid: A bunch of stuff was wrong'
+            expect(last_response.status).to eq(502)
+            expect(decoded_response.fetch('code')).to eq(270012)
+            expect(decoded_response.fetch('description')).to eq('Service broker catalog is invalid: A bunch of stuff was wrong')
           end
         end
       end
@@ -271,8 +271,8 @@ JSON
           delete "/v2/service_brokers/#{broker.guid}", {}, headers
 
           expect(last_response.status).to eq(400)
-          decoded_response.fetch('code').should == 270010
-          decoded_response.fetch('description').should =~ /Can not remove brokers that have associated service instances/
+          expect(decoded_response.fetch('code')).to eq(270010)
+          expect(decoded_response.fetch('description')).to match(/Can not remove brokers that have associated service instances/)
 
           get '/v2/service_brokers', {}, headers
           expect(decoded_response).to include('total_results' => 1)
@@ -330,8 +330,8 @@ JSON
           broker: broker,
           errors: errors
         })
-        reg.stub(:update).and_return(reg)
-        reg.stub(:warnings).and_return([])
+        allow(reg).to receive(:update).and_return(reg)
+        allow(reg).to receive(:warnings).and_return([])
         reg
       end
       let(:presenter) { double(ServiceBrokerPresenter, {
@@ -339,10 +339,10 @@ JSON
       }) }
 
       before do
-        ServiceBroker.stub(:find)
-        ServiceBroker.stub(:find).with(guid: broker.guid).and_return(broker)
-        VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.stub(:new).with(broker).and_return(registration)
-        ServiceBrokerPresenter.stub(:new).with(broker).and_return(presenter)
+        allow(ServiceBroker).to receive(:find)
+        allow(ServiceBroker).to receive(:find).with(guid: broker.guid).and_return(broker)
+        allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new).with(broker).and_return(registration)
+        allow(ServiceBrokerPresenter).to receive(:new).with(broker).and_return(presenter)
       end
 
       it 'updates the broker' do
@@ -375,53 +375,53 @@ JSON
       end
 
       context 'when there is an error in Broker Registration' do
-        before { registration.stub(:update).and_return(nil) }
+        before { allow(registration).to receive(:update).and_return(nil) }
 
         context 'when the broker url is not a valid http/https url' do
-          before { errors.stub(:on).with(:broker_url).and_return([:url]) }
+          before { allow(errors).to receive(:on).with(:broker_url).and_return([:url]) }
 
           it 'returns an error' do
             put "/v2/service_brokers/#{broker.guid}", body, headers
 
-            last_response.status.should == 400
-            decoded_response.fetch('code').should == 270011
-            decoded_response.fetch('description').should =~ /is not a valid URL/
+            expect(last_response.status).to eq(400)
+            expect(decoded_response.fetch('code')).to eq(270011)
+            expect(decoded_response.fetch('description')).to match(/is not a valid URL/)
           end
         end
 
         context 'when the broker url is taken' do
-          before { errors.stub(:on).with(:broker_url).and_return([:unique]) }
+          before { allow(errors).to receive(:on).with(:broker_url).and_return([:unique]) }
 
           it 'returns an error' do
             put "/v2/service_brokers/#{broker.guid}", body, headers
 
-            last_response.status.should == 400
-            decoded_response.fetch('code').should == 270003
-            decoded_response.fetch('description').should =~ /The service broker url is taken/
+            expect(last_response.status).to eq(400)
+            expect(decoded_response.fetch('code')).to eq(270003)
+            expect(decoded_response.fetch('description')).to match(/The service broker url is taken/)
           end
         end
 
         context 'when the broker name is taken' do
-          before { errors.stub(:on).with(:name).and_return([:unique]) }
+          before { allow(errors).to receive(:on).with(:name).and_return([:unique]) }
 
           it 'returns an error' do
             put "/v2/service_brokers/#{broker.guid}", body, headers
 
-            last_response.status.should == 400
-            decoded_response.fetch('code').should == 270002
-            decoded_response.fetch('description').should =~ /The service broker name is taken/
+            expect(last_response.status).to eq(400)
+            expect(decoded_response.fetch('code')).to eq(270002)
+            expect(decoded_response.fetch('description')).to match(/The service broker name is taken/)
           end
         end
 
         context 'when there are other errors on the registration' do
-          before { errors.stub(:full_messages).and_return('A bunch of stuff was wrong') }
+          before { allow(errors).to receive(:full_messages).and_return('A bunch of stuff was wrong') }
 
           it 'returns an error' do
             put "/v2/service_brokers/#{broker.guid}", body, headers
 
-            last_response.status.should == 400
-            decoded_response.fetch('code').should == 270001
-            decoded_response.fetch('description').should == 'Service broker is invalid: A bunch of stuff was wrong'
+            expect(last_response.status).to eq(400)
+            expect(decoded_response.fetch('code')).to eq(270001)
+            expect(decoded_response.fetch('description')).to eq('Service broker is invalid: A bunch of stuff was wrong')
           end
         end
       end

@@ -12,7 +12,7 @@ describe OrganizationPresenter do
     subject { OrganizationPresenter.new(org) }
 
     it "creates a valid JSON" do
-      subject.to_hash.should eq({
+      expect(subject.to_hash).to eq({
         metadata: {
           guid: org.guid,
           created_at: org.created_at.iso8601,

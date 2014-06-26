@@ -3,13 +3,13 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::Space, type: :model do
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Validations" do
-      it { should validate_presence :name }
-      it { should validate_presence :organization }
-      it { should validate_uniqueness [:organization_id, :name] }
-      it { should strip_whitespace :name }
+      it { is_expected.to validate_presence :name }
+      it { is_expected.to validate_presence :organization }
+      it { is_expected.to validate_uniqueness [:organization_id, :name] }
+      it { is_expected.to strip_whitespace :name }
 
       context "name" do
         subject(:space) { Space.make }
@@ -52,15 +52,15 @@ module VCAP::CloudController
     end
 
     describe "Associations" do
-      it { should have_associated :organization }
-      it { should have_associated :apps }
-      it { should have_associated :events }
-      it { should have_associated :service_instances, class: UserProvidedServiceInstance }
-      it { should have_associated :managed_service_instances }
-      it { should have_associated :routes, associated_instance: ->(space) { Route.make(space: space) } }
-      it { should have_associated :security_groups }
-      it { should have_associated :default_users, class: User }
-      it { should have_associated :domains, class: SharedDomain }
+      it { is_expected.to have_associated :organization }
+      it { is_expected.to have_associated :apps }
+      it { is_expected.to have_associated :events }
+      it { is_expected.to have_associated :service_instances, class: UserProvidedServiceInstance }
+      it { is_expected.to have_associated :managed_service_instances }
+      it { is_expected.to have_associated :routes, associated_instance: ->(space) { Route.make(space: space) } }
+      it { is_expected.to have_associated :security_groups }
+      it { is_expected.to have_associated :default_users, class: User }
+      it { is_expected.to have_associated :domains, class: SharedDomain }
 
       describe "domains" do
         subject(:space) { Space.make(organization: organization) }
@@ -145,7 +145,7 @@ module VCAP::CloudController
           expect {
             expect(@eager_loaded_spaces).to have(2).items
             actual_domains = @eager_loaded_spaces[0].domains + @eager_loaded_spaces[1].domains
-            actual_domains.should =~ expected_domains
+            expect(actual_domains).to match_array(expected_domains)
           }.to have_queried_db_times(//, 0)
         end
 
@@ -227,8 +227,8 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :organization_guid }
-      it { should import_attributes :name, :organization_guid, :developer_guids,
+      it { is_expected.to export_attributes :name, :organization_guid }
+      it { is_expected.to import_attributes :name, :organization_guid, :developer_guids,
                                     :manager_guids, :auditor_guids, :security_group_guids }
     end
 
@@ -254,12 +254,12 @@ module VCAP::CloudController
     describe "data integrity" do
       it "should not make strings into integers" do
         space = Space.make
-        space.name.should be_kind_of(String)
+        expect(space.name).to be_kind_of(String)
         space.name = "1234"
-        space.name.should be_kind_of(String)
+        expect(space.name).to be_kind_of(String)
         space.save
         space.refresh
-        space.name.should be_kind_of(String)
+        expect(space.name).to be_kind_of(String)
       end
     end
 

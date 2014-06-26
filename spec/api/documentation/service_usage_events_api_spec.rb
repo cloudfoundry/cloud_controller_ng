@@ -30,7 +30,7 @@ resource "Service Usage Events (experimental)", :type => :api do
       DOC
 
       client.get "/v2/service_usage_events?results-per-page=1&after_guid=#{event1.guid}", {}, headers
-      status.should == 200
+      expect(status).to eq(200)
       standard_list_response parsed_response, :service_usage_event
     end
   end
@@ -47,7 +47,7 @@ resource "Service Usage Events (experimental)", :type => :api do
       DOC
 
       client.post "/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances", {}, headers
-      status.should == 204
+      expect(status).to eq(204)
     end
   end
 end

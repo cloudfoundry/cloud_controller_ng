@@ -15,7 +15,7 @@ describe ErrorPresenter do
         allow(error).to receive(:response_code).and_return(403)
       end
 
-      it { should be_a_client_error }
+      it { is_expected.to be_a_client_error }
     end
 
     context "when the response code is not 4xx" do
@@ -23,7 +23,7 @@ describe ErrorPresenter do
         allow(error).to receive(:response_code).and_return(500)
       end
 
-      it { should_not be_a_client_error }
+      it { is_expected.not_to be_a_client_error }
     end
   end
 
@@ -36,7 +36,7 @@ describe ErrorPresenter do
   describe "#api_error?" do
     it "delegates to the error_hasher" do
       expect(error_hasher).to receive(:api_error?).and_return("foo")
-      presenter.api_error?.should == "foo"
+      expect(presenter.api_error?).to eq("foo")
     end
   end
 

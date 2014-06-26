@@ -6,7 +6,7 @@ describe SpacePresenter do
     subject { SpacePresenter.new(space) }
 
     it "creates a valid JSON" do
-      subject.to_hash.should eq({
+      expect(subject.to_hash).to eq({
         :metadata => {
           :guid => space.guid,
           :created_at => space.created_at.iso8601,

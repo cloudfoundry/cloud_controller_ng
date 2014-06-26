@@ -27,7 +27,7 @@ describe CloudController::DependencyLocator do
       let(:cdn_settings) { nil }
 
       it "creates blob stores without the CDN" do
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', nil)
+        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil)
         locator.droplet_blobstore
       end
     end
@@ -38,8 +38,8 @@ describe CloudController::DependencyLocator do
       let(:cdn) { double(:cdn) }
 
       it "creates the blob stores with CDNs if configured" do
-        CloudController::Blobstore::Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', cdn)
+        expect(CloudController::Blobstore::Cdn).to receive(:new).with(cdn_host).and_return(cdn)
+        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', cdn)
         locator.droplet_blobstore
       end
     end
@@ -60,7 +60,7 @@ describe CloudController::DependencyLocator do
       let(:cdn_settings) { nil }
 
       it "creates blob stores without the CDN" do
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', nil, "buildpack_cache")
+        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil, "buildpack_cache")
         locator.buildpack_cache_blobstore
       end
     end
@@ -71,8 +71,8 @@ describe CloudController::DependencyLocator do
       let(:cdn) { double(:cdn) }
 
       it "creates the blob stores with CDNs if configured" do
-        CloudController::Blobstore::Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', cdn, "buildpack_cache")
+        expect(CloudController::Blobstore::Cdn).to receive(:new).with(cdn_host).and_return(cdn)
+        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', cdn, "buildpack_cache")
         locator.buildpack_cache_blobstore
       end
     end
@@ -93,7 +93,7 @@ describe CloudController::DependencyLocator do
       let(:cdn_settings) { nil }
 
       it "creates blob stores without the CDN" do
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', nil)
+        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil)
         locator.package_blobstore
       end
     end
@@ -104,8 +104,8 @@ describe CloudController::DependencyLocator do
       let(:cdn) { double(:cdn) }
 
       it "creates the blob stores with CDNs if configured" do
-        CloudController::Blobstore::Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', cdn)
+        expect(CloudController::Blobstore::Cdn).to receive(:new).with(cdn_host).and_return(cdn)
+        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', cdn)
         locator.package_blobstore
       end
     end
@@ -130,7 +130,7 @@ describe CloudController::DependencyLocator do
       let(:max_file_size) { nil }
 
       it "creates blob stores without the CDN" do
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', nil, nil, nil, nil)
+        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil, nil, nil, nil)
         locator.global_app_bits_cache
       end
     end
@@ -141,7 +141,7 @@ describe CloudController::DependencyLocator do
       let(:max_file_size) { nil }
 
       it "creates blob stores without file size limits" do
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', nil, nil, nil, nil)
+        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil, nil, nil, nil)
         locator.global_app_bits_cache
       end
     end
@@ -152,7 +152,7 @@ describe CloudController::DependencyLocator do
       let(:max_file_size) { 512 * 1024 * 1024 }
 
       it "creates the blob stores with file size limits if configured" do
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', nil, nil, min_file_size, max_file_size)
+        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil, nil, min_file_size, max_file_size)
         locator.global_app_bits_cache
       end
     end
@@ -165,8 +165,8 @@ describe CloudController::DependencyLocator do
       let(:max_file_size) { nil }
 
       it "creates the blob stores with CDNs if configured" do
-        CloudController::Blobstore::Cdn.should_receive(:new).with(cdn_host).and_return(cdn)
-        CloudController::Blobstore::Client.should_receive(:new).with('fog_connection', 'key', cdn, nil, nil, nil)
+        expect(CloudController::Blobstore::Cdn).to receive(:new).with(cdn_host).and_return(cdn)
+        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', cdn, nil, nil, nil)
         locator.global_app_bits_cache
       end
     end
@@ -197,7 +197,7 @@ describe CloudController::DependencyLocator do
         user: "username",
         password: "password"
       }
-      CloudController::Blobstore::UrlGenerator.should_receive(:new).
+      expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
         with(hash_including(connection_options),
              instance_of(CloudController::Blobstore::Client),
              instance_of(CloudController::Blobstore::Client),
@@ -211,7 +211,7 @@ describe CloudController::DependencyLocator do
   describe "#app_event_repository" do
     subject { locator.app_event_repository }
 
-    it { should be_a(VCAP::CloudController::Repositories::Runtime::AppEventRepository) }
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::AppEventRepository) }
 
     it "memoizes the instance" do
       expect(locator.app_event_repository).to eq(locator.app_event_repository)
@@ -221,7 +221,7 @@ describe CloudController::DependencyLocator do
   describe "#space_event_repository" do
     subject { locator.space_event_repository }
 
-    it { should be_a(VCAP::CloudController::Repositories::Runtime::SpaceEventRepository) }
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::SpaceEventRepository) }
   end
 
   describe "#object_renderer" do
@@ -233,8 +233,8 @@ describe CloudController::DependencyLocator do
       TestConfig.override(renderer: opts)
 
       renderer = double('renderer')
-      VCAP::CloudController::RestController::ObjectRenderer.
-        should_receive(:new).
+      expect(VCAP::CloudController::RestController::ObjectRenderer).
+        to receive(:new).
         with(eager_loader, serializer, opts).
         and_return(renderer)
 
@@ -255,8 +255,8 @@ describe CloudController::DependencyLocator do
       TestConfig.override(renderer: opts)
 
       renderer = double('renderer')
-      VCAP::CloudController::RestController::PaginatedCollectionRenderer.
-        should_receive(:new).
+      expect(VCAP::CloudController::RestController::PaginatedCollectionRenderer).
+        to receive(:new).
         with(eager_loader, serializer, opts).
         and_return(renderer)
 
@@ -277,8 +277,8 @@ describe CloudController::DependencyLocator do
       TestConfig.override(renderer: opts)
 
       renderer = double('renderer')
-      VCAP::CloudController::RestController::PaginatedCollectionRenderer.
-        should_receive(:new).
+      expect(VCAP::CloudController::RestController::PaginatedCollectionRenderer).
+        to receive(:new).
         with(eager_loader, serializer, opts).
         and_return(renderer)
 

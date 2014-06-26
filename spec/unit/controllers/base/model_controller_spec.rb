@@ -55,7 +55,7 @@ module VCAP::CloudController
         end
 
         it "succeeds" do
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
         end
       end
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
         end
 
         it "succeeds" do
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
         end
       end
 
@@ -77,7 +77,7 @@ module VCAP::CloudController
         end
 
         it "returns 200 by recreating the user" do
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
         end
       end
 
@@ -87,7 +87,7 @@ module VCAP::CloudController
         end
 
         it "succeeds" do
-          last_response.status.should == 200
+          expect(last_response.status).to eq(200)
         end
       end
 
@@ -97,7 +97,7 @@ module VCAP::CloudController
         end
 
         it "should return 401" do
-          last_response.status.should == 401
+          expect(last_response.status).to eq(401)
         end
       end
     end
@@ -106,14 +106,14 @@ module VCAP::CloudController
       it "calls the hooks in the right order" do
         calls = []
 
-        TestModelsController.any_instance.should_receive(:before_create).with(no_args) do
+        expect_any_instance_of(TestModelsController).to receive(:before_create).with(no_args) do
           calls << :before_create
         end
-        TestModel.should_receive(:create_from_hash) {
+        expect(TestModel).to receive(:create_from_hash) {
           calls << :create_from_hash
           TestModel.make
         }
-        TestModelsController.any_instance.should_receive(:after_create).with(instance_of(TestModel)) do
+        expect_any_instance_of(TestModelsController).to receive(:after_create).with(instance_of(TestModel)) do
           calls << :after_create
         end
 
@@ -163,8 +163,8 @@ module VCAP::CloudController
         end
 
         it "returns the serialized object if access is validated" do
-          RestController::ObjectRenderer.any_instance.
-            should_receive(:render_json).
+          expect_any_instance_of(RestController::ObjectRenderer).
+            to receive(:render_json).
             with(TestModelsController, model, {}).
             and_return("serialized json")
 
@@ -191,8 +191,8 @@ module VCAP::CloudController
       end
 
       it "returns the serialized updated object on success" do
-        RestController::ObjectRenderer.any_instance.
-          should_receive(:render_json).
+        expect_any_instance_of(RestController::ObjectRenderer).
+          to receive(:render_json).
           with(TestModelsController, instance_of(TestModel), {}).
           and_return("serialized json")
 
@@ -210,9 +210,9 @@ module VCAP::CloudController
       end
 
       it "prevents other processes from updating the same row until the transaction finishes" do
-        TestModel.stub(:find).with(:guid => model.guid).and_return(model)
-        model.should_receive(:lock!).ordered
-        model.should_receive(:update_from_hash).ordered.and_call_original
+        allow(TestModel).to receive(:find).with(:guid => model.guid).and_return(model)
+        expect(model).to receive(:lock!).ordered
+        expect(model).to receive(:update_from_hash).ordered.and_call_original
 
         put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "something"}), admin_headers
       end
@@ -220,14 +220,14 @@ module VCAP::CloudController
       it "calls the hooks in the right order" do
         calls = []
 
-        TestModelsController.any_instance.should_receive(:before_update).with(model) do
+        expect_any_instance_of(TestModelsController).to receive(:before_update).with(model) do
           calls << :before_update
         end
-        TestModel.any_instance.should_receive(:update_from_hash) do
+        expect_any_instance_of(TestModel).to receive(:update_from_hash) do
           calls << :update_from_hash
           model
         end
-        TestModelsController.any_instance.should_receive(:after_update).with(instance_of(TestModel)) do
+        expect_any_instance_of(TestModelsController).to receive(:after_update).with(instance_of(TestModel)) do
           calls << :after_update
         end
 
@@ -342,8 +342,8 @@ module VCAP::CloudController
       let!(:model3) { TestModel.make }
 
       it "paginates the dataset with query params" do
-        RestController::PaginatedCollectionRenderer.any_instance
-          .should_receive(:render_json).with(
+        expect_any_instance_of(RestController::PaginatedCollectionRenderer)
+          .to receive(:render_json).with(
             TestModelsController,
             anything,
             anything,
@@ -406,22 +406,22 @@ module VCAP::CloudController
         it "returns not found for reads" do
           get "/v2/test_models/99999", "", admin_headers
           expect(last_response.status).to eq(404)
-          decoded_response["code"].should eq 999999999
-          decoded_response["description"].should match(/Test Model Not Found/)
+          expect(decoded_response["code"]).to eq 999999999
+          expect(decoded_response["description"]).to match(/Test Model Not Found/)
         end
 
         it "returns not found for updates" do
           put "/v2/test_models/99999", {}, admin_headers
           expect(last_response.status).to eq(404)
-          decoded_response["code"].should eq 999999999
-          decoded_response["description"].should match(/Test Model Not Found/)
+          expect(decoded_response["code"]).to eq 999999999
+          expect(decoded_response["description"]).to match(/Test Model Not Found/)
         end
 
         it "returns not found for deletes" do
           delete "/v2/test_models/99999", "", admin_headers
           expect(last_response.status).to eq(404)
-          decoded_response["code"].should eq 999999999
-          decoded_response["description"].should match(/Test Model Not Found/)
+          expect(decoded_response["code"]).to eq 999999999
+          expect(decoded_response["description"]).to match(/Test Model Not Found/)
         end
       end
 
@@ -437,18 +437,18 @@ module VCAP::CloudController
         it "returns 400 error for missing attributes; returns a request-id and no location" do
           post "/v2/test_models", "{}", admin_headers
           expect(last_response.status).to eq(400)
-          decoded_response["code"].should eq 1001
-          decoded_response["description"].should match(/invalid/)
-          last_response.location.should be_nil
-          last_response.headers["X-VCAP-Request-ID"].should_not be_nil
+          expect(decoded_response["code"]).to eq 1001
+          expect(decoded_response["description"]).to match(/invalid/)
+          expect(last_response.location).to be_nil
+          expect(last_response.headers["X-VCAP-Request-ID"]).not_to be_nil
         end
 
         it "returns 400 error when validation fails on create" do
           TestModel.make(unique_value: 'unique')
           post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: 'unique'}), admin_headers
           expect(last_response.status).to eq(400)
-          decoded_response["code"].should eq 999999998
-          decoded_response["description"].should match(/Validation Error/)
+          expect(decoded_response["code"]).to eq 999999998
+          expect(decoded_response["description"]).to match(/Validation Error/)
         end
 
         it "returns 400 error when validation fails on update" do
@@ -456,8 +456,8 @@ module VCAP::CloudController
           test_model = TestModel.make(unique_value: 'not-unique')
           put "/v2/test_models/#{test_model.guid}", Yajl::Encoder.encode({unique_value: 'unique'}), admin_headers
           expect(last_response.status).to eq(400)
-          decoded_response["code"].should eq 999999998
-          decoded_response["description"].should match(/Validation Error/)
+          expect(decoded_response["code"]).to eq 999999998
+          expect(decoded_response["description"]).to match(/Validation Error/)
         end
       end
 
@@ -473,7 +473,7 @@ module VCAP::CloudController
             get "/v2/test_models", "", headers
             expect(last_response.status).to eq 401
             expect(decoded_response["code"]).to eq 1000
-            decoded_response["description"].should match(/Invalid Auth Token/)
+            expect(decoded_response["description"]).to match(/Invalid Auth Token/)
           end
         end
       end

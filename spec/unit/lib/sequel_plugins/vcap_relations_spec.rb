@@ -26,20 +26,20 @@ describe "Sequel::Plugins::VcapRelations" do
     end
 
     it "should add a <relation> method" do
-      @o.dogs.should be_empty
+      expect(@o.dogs).to be_empty
     end
 
     it "should add a add_<relation> method that takes an object" do
       d = dog_klass.create
       @o.add_dog d
-      @o.dogs.should include(d)
+      expect(@o.dogs).to include(d)
     end
 
     it "should add a add_<relation> method that takes an id" do
       d = dog_klass.create
       @o.add_dog d.id
       d.refresh
-      @o.dogs.should include(d)
+      expect(@o.dogs).to include(d)
     end
 
     it "should add a <relation>_ids= method that takes an array of ids" do
@@ -49,14 +49,14 @@ describe "Sequel::Plugins::VcapRelations" do
       @o.dog_ids = [d1.id, d2.id]
       d1.refresh
       d2.refresh
-      @o.dogs.should include(d1)
-      @o.dogs.should include(d2)
+      expect(@o.dogs).to include(d1)
+      expect(@o.dogs).to include(d2)
 
       @o.dog_ids = [d2.id]
       d1.refresh
       d2.refresh
-      @o.dogs.should_not include(d1)
-      @o.dogs.should include(d2)
+      expect(@o.dogs).not_to include(d1)
+      expect(@o.dogs).to include(d2)
     end
 
     it "should add a add_<relation>_guids= method that takes a guid" do
@@ -66,29 +66,29 @@ describe "Sequel::Plugins::VcapRelations" do
       @o.dog_guids = [d1.guid, d2.guid]
       d1.refresh
       d2.refresh
-      @o.dogs.should include(d1)
-      @o.dogs.should include(d2)
+      expect(@o.dogs).to include(d1)
+      expect(@o.dogs).to include(d2)
 
       @o.dog_guids = [d2.guid]
       d1.refresh
       d2.refresh
-      @o.dogs.should_not include(d1)
-      @o.dogs.should include(d2)
+      expect(@o.dogs).not_to include(d1)
+      expect(@o.dogs).to include(d2)
     end
 
     it "should define a <relation>_ids accessor method" do
-      @o.dog_ids.should be_empty
-      @o.dog_ids.respond_to?(:each).should == true
+      expect(@o.dog_ids).to be_empty
+      expect(@o.dog_ids.respond_to?(:each)).to eq(true)
 
       d1 = dog_klass.create
       d2 = dog_klass.create
 
       @o.add_dog d1
-      @o.dog_ids.should include(d1.id)
+      expect(@o.dog_ids).to include(d1.id)
 
       @o.add_dog d2
-      @o.dog_ids.should include(d1.id)
-      @o.dog_ids.should include(d2.id)
+      expect(@o.dog_ids).to include(d1.id)
+      expect(@o.dog_ids).to include(d2.id)
     end
 
     it "should allow multiple adds of the same id" do
@@ -96,8 +96,8 @@ describe "Sequel::Plugins::VcapRelations" do
       @o.add_dog d1
       @o.add_dog d1
 
-      @o.dogs.should include(d1)
-      @o.dogs.length.should == 1
+      expect(@o.dogs).to include(d1)
+      expect(@o.dogs.length).to eq(1)
     end
 
     it "should define a remove_<relation> method that takes an object" do
@@ -107,14 +107,14 @@ describe "Sequel::Plugins::VcapRelations" do
       @o.add_dog d1
       @o.add_dog d2
 
-      @o.dogs.should include(d1)
-      @o.dogs.should include(d2)
+      expect(@o.dogs).to include(d1)
+      expect(@o.dogs).to include(d2)
 
       @o.remove_dog(d1)
 
-      @o.dogs.should_not include(d1)
-      @o.dogs.should include(d2)
-      @o.dogs.length.should == 1
+      expect(@o.dogs).not_to include(d1)
+      expect(@o.dogs).to include(d2)
+      expect(@o.dogs.length).to eq(1)
     end
 
     it "should define a remove_<relation> method that takes an id" do
@@ -124,14 +124,14 @@ describe "Sequel::Plugins::VcapRelations" do
       @o.add_dog d1
       @o.add_dog d2
 
-      @o.dogs.should include(d1)
-      @o.dogs.should include(d2)
+      expect(@o.dogs).to include(d1)
+      expect(@o.dogs).to include(d2)
 
       @o.remove_dog(d1.id)
 
-      @o.dogs.should_not include(d1)
-      @o.dogs.should include(d2)
-      @o.dogs.length.should == 1
+      expect(@o.dogs).not_to include(d1)
+      expect(@o.dogs).to include(d2)
+      expect(@o.dogs.length).to eq(1)
     end
   end
 
@@ -149,137 +149,137 @@ describe "Sequel::Plugins::VcapRelations" do
       dog_klass.many_to_many :names
       name_klass.many_to_many :dogs
 
-      @d1.names.should be_empty
-      @d2.names.should be_empty
-      @n1.dogs.should be_empty
-      @n2.dogs.should be_empty
+      expect(@d1.names).to be_empty
+      expect(@d2.names).to be_empty
+      expect(@n1.dogs).to be_empty
+      expect(@n2.dogs).to be_empty
     end
 
     it "should add a <relation> method" do
-      @d1.names.should be_empty
+      expect(@d1.names).to be_empty
     end
 
     it "should add a add_<relation> method that takes an object" do
       @d1.add_name @n1
-      @d1.names.should include(@n1)
-      @n1.dogs.should include(@d1)
+      expect(@d1.names).to include(@n1)
+      expect(@n1.dogs).to include(@d1)
     end
 
     it "should add a add_<relation> method that takes an id" do
       @d1.add_name @n1.id
-      @d1.names.should include(@n1)
+      expect(@d1.names).to include(@n1)
       @n1.refresh
-      @n1.dogs.should include(@d1)
+      expect(@n1.dogs).to include(@d1)
     end
 
     it "should add a <relation>_ids= method that takes an array of ids" do
       @d1.name_ids = [@n1.id, @n2.id]
       @n1.refresh
       @n2.refresh
-      @d1.names.should include(@n1)
-      @d1.names.should include(@n2)
-      @n1.dogs.should include(@d1)
-      @n2.dogs.should include(@d1)
+      expect(@d1.names).to include(@n1)
+      expect(@d1.names).to include(@n2)
+      expect(@n1.dogs).to include(@d1)
+      expect(@n2.dogs).to include(@d1)
 
       @d1.name_ids = [@n2.id]
       @n1.refresh
       @n2.refresh
-      @d1.names.should_not include(@n1)
-      @d1.names.should include(@n2)
+      expect(@d1.names).not_to include(@n1)
+      expect(@d1.names).to include(@n2)
 
-      @n1.dogs.should be_empty
-      @n2.dogs.should include(@d1)
+      expect(@n1.dogs).to be_empty
+      expect(@n2.dogs).to include(@d1)
     end
 
     it "should add a add_<relation> method that takes a guid" do
       @d1.add_name_by_guid @n1.guid
-      @d1.names.should include(@n1)
+      expect(@d1.names).to include(@n1)
       @n1.refresh
-      @n1.dogs.should include(@d1)
+      expect(@n1.dogs).to include(@d1)
     end
 
     it "should add a <relation>_guids= method that takes an array of guids" do
       @d1.name_guids = [@n1.guid, @n2.guid]
       @n1.refresh
       @n2.refresh
-      @d1.names.should include(@n1)
-      @d1.names.should include(@n2)
-      @n1.dogs.should include(@d1)
-      @n2.dogs.should include(@d1)
+      expect(@d1.names).to include(@n1)
+      expect(@d1.names).to include(@n2)
+      expect(@n1.dogs).to include(@d1)
+      expect(@n2.dogs).to include(@d1)
 
       @d1.name_guids = [@n2.guid]
       @n1.refresh
       @n2.refresh
-      @d1.names.should_not include(@n1)
-      @d1.names.should include(@n2)
+      expect(@d1.names).not_to include(@n1)
+      expect(@d1.names).to include(@n2)
 
-      @n1.dogs.should be_empty
-      @n2.dogs.should include(@d1)
+      expect(@n1.dogs).to be_empty
+      expect(@n2.dogs).to include(@d1)
     end
 
     it "should define a <relation>_ids accessor method" do
-      @d1.name_ids.should be_empty
-      @d1.name_ids.respond_to?(:each).should == true
+      expect(@d1.name_ids).to be_empty
+      expect(@d1.name_ids.respond_to?(:each)).to eq(true)
 
       @d1.name_ids = [@n1.id, @n2.id]
-      @d1.name_ids.should include(@n1.id)
-      @d1.name_ids.should include(@n2.id)
+      expect(@d1.name_ids).to include(@n1.id)
+      expect(@d1.name_ids).to include(@n2.id)
 
       @d1.name_ids = [@n2.id]
-      @d1.name_ids.should_not include(@n1.id)
-      @d1.name_ids.should include(@n2.id)
+      expect(@d1.name_ids).not_to include(@n1.id)
+      expect(@d1.name_ids).to include(@n2.id)
     end
 
     it "should allow multiple adds of the same object" do
       @d1.add_name @n1
       @d1.add_name @n1
-      @d1.names.should include(@n1)
-      @d1.names.length.should == 1
+      expect(@d1.names).to include(@n1)
+      expect(@d1.names.length).to eq(1)
     end
 
     it "should allow multiple adds of the same id" do
       @d1.add_name @n1.id
       @d1.add_name @n1.id
       @n1.refresh
-      @d1.names.should include(@n1)
-      @d1.names.length.should == 1
+      expect(@d1.names).to include(@n1)
+      expect(@d1.names.length).to eq(1)
     end
 
     it "should define a remove_<relation> method that takes an object" do
       @d1.add_name @n1
       @d1.add_name @n2
 
-      @d1.names.should include(@n1)
-      @d1.names.should include(@n2)
+      expect(@d1.names).to include(@n1)
+      expect(@d1.names).to include(@n2)
 
       @d1.remove_name(@n1)
 
-      @d1.names.should_not include(@n1)
-      @d1.names.should include(@n2)
-      @d1.names.length.should == 1
+      expect(@d1.names).not_to include(@n1)
+      expect(@d1.names).to include(@n2)
+      expect(@d1.names.length).to eq(1)
 
-      @n1.dogs.should be_empty
-      @n2.dogs.should include(@d1)
-      @d1.names.length.should == 1
+      expect(@n1.dogs).to be_empty
+      expect(@n2.dogs).to include(@d1)
+      expect(@d1.names.length).to eq(1)
     end
 
     it "should define a remove_<relation> method that takes an id" do
       @d1.add_name @n1
       @d1.add_name @n2
 
-      @d1.names.should include(@n1)
-      @d1.names.should include(@n2)
+      expect(@d1.names).to include(@n1)
+      expect(@d1.names).to include(@n2)
 
       @d1.remove_name(@n1.id)
       @n1.refresh
 
-      @d1.names.should_not include(@n1)
-      @d1.names.should include(@n2)
-      @d1.names.length.should == 1
+      expect(@d1.names).not_to include(@n1)
+      expect(@d1.names).to include(@n2)
+      expect(@d1.names.length).to eq(1)
 
-      @n1.dogs.should be_empty
-      @n2.dogs.should include(@d1)
-      @d1.names.length.should == 1
+      expect(@n1.dogs).to be_empty
+      expect(@n2.dogs).to include(@d1)
+      expect(@d1.names.length).to eq(1)
     end
   end
 
@@ -290,11 +290,11 @@ describe "Sequel::Plugins::VcapRelations" do
     it "should return true when there are one_to_many associations" do
       d = dog_klass.create
       owner.add_dog(d)
-      owner.has_one_to_many?(:dogs).should == true
+      expect(owner.has_one_to_many?(:dogs)).to eq(true)
     end
 
     it "should return false when there are NO one_to_many associations" do
-      owner.has_one_to_many?(:dogs).should == false
+      expect(owner.has_one_to_many?(:dogs)).to eq(false)
     end
   end
 
@@ -305,11 +305,11 @@ describe "Sequel::Plugins::VcapRelations" do
     it "should return true when there are one_to_one associations" do
       d = dog_klass.create
       owner.dog = d
-      owner.has_one_to_one?(:dog).should == true
+      expect(owner.has_one_to_one?(:dog)).to eq(true)
     end
 
     it "should return false when there are NO one_to_one associations" do
-      owner.has_one_to_one?(:dog).should == false
+      expect(owner.has_one_to_one?(:dog)).to eq(false)
     end
   end
 
@@ -318,12 +318,12 @@ describe "Sequel::Plugins::VcapRelations" do
 
     it "should return one_to_one association type when it is defined" do
       owner_klass.one_to_one :dog
-      owner.association_type(:dog).should == :one_to_one
+      expect(owner.association_type(:dog)).to eq(:one_to_one)
     end
 
     it "should return one_to_many association type when it is defined" do
       owner_klass.one_to_many :dog
-      owner.association_type(:dog).should == :one_to_many
+      expect(owner.association_type(:dog)).to eq(:one_to_many)
     end
   end
 
@@ -365,16 +365,16 @@ describe "Sequel::Plugins::VcapRelations" do
     context "with no custom dataset defined" do
       it "uses the full dataset of the related model" do
         all = middle.relationship_dataset(:bottoms).all
-        all.size.should == 10
-        all.should == bottom_klass.all
+        expect(all.size).to eq(10)
+        expect(all).to eq(bottom_klass.all)
       end
     end
 
     context "with a custom dataset for the relationship" do
       it "uses the custom dataset" do
         all = top.relationship_dataset(:bottoms).all
-        all.size.should == 10
-        all.should == bottom_klass.all
+        expect(all.size).to eq(10)
+        expect(all).to eq(bottom_klass.all)
       end
     end
   end
@@ -398,10 +398,10 @@ describe "Sequel::Plugins::VcapRelations" do
 
       it "adds a middle_guid accessor to bottom" do
         bottom = bottoms.first
-        bottom.middle_guid.should == "middle-guid"
+        expect(bottom.middle_guid).to eq("middle-guid")
         bottom.middle_guid = "other_middle_guid"
         bottom.save
-        bottom.middle_guid.should == "other_middle_guid"
+        expect(bottom.middle_guid).to eq("other_middle_guid")
       end
     end
 

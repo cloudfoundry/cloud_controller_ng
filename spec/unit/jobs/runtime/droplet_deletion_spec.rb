@@ -7,7 +7,7 @@ module VCAP::CloudController
       let(:new_droplet_key) { "zyxwvy" }
       subject(:job) { DropletDeletion.new(new_droplet_key, old_droplet_key) }
 
-      it { should be_a_valid_job }
+      it { is_expected.to be_a_valid_job }
 
       describe "#perform" do
         let!(:droplet_blobstore) {
@@ -15,7 +15,7 @@ module VCAP::CloudController
         }
 
         before do
-          CloudController::DependencyLocator.instance.stub(:droplet_blobstore).
+          allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).
             and_return(droplet_blobstore)
         end
 
@@ -30,13 +30,13 @@ module VCAP::CloudController
           # key is also the parent directory, and trying to delete it when there are
           # multiple versions of the app results in an "is a directory" error
           it "it hides EISDIR if raised by the blob store on deleting the old format of the droplet key" do
-            droplet_blobstore.stub(:delete).with(new_droplet_key)
-            droplet_blobstore.stub(:delete).with(old_droplet_key).and_raise Errno::EISDIR
+            allow(droplet_blobstore).to receive(:delete).with(new_droplet_key)
+            allow(droplet_blobstore).to receive(:delete).with(old_droplet_key).and_raise Errno::EISDIR
             expect { job.perform }.to_not raise_error
           end
 
           it "it doesn't hide EISDIR if raised for the new droplet key format" do
-            droplet_blobstore.stub(:delete).with(new_droplet_key).and_raise Errno::EISDIR
+            allow(droplet_blobstore).to receive(:delete).with(new_droplet_key).and_raise Errno::EISDIR
             expect { job.perform }.to raise_error
           end
 

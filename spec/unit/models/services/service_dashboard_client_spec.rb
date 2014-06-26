@@ -6,15 +6,15 @@ module VCAP::CloudController
     let(:other_broker) { ServiceBroker.make }
     let(:uaa_id) { 'claimed_client_id' }
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :service_broker }
+      it { is_expected.to have_associated :service_broker }
     end
 
     describe 'Validations' do
-      it { should validate_presence :uaa_id }
-      it { should validate_uniqueness :uaa_id }
+      it { is_expected.to validate_presence :uaa_id }
+      it { is_expected.to validate_uniqueness :uaa_id }
 
       context 'when all fields are valid' do
         let(:client) { ServiceDashboardClient.make_unsaved(service_broker: service_broker) }

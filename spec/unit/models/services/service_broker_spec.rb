@@ -13,10 +13,10 @@ module VCAP::CloudController
       let(:encrypted_attr) { :auth_password }
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
-      it { should have_associated :services }
+      it { is_expected.to have_associated :services }
 
       it "has associated service_plans" do
         service = Service.make(:v2)
@@ -27,12 +27,12 @@ module VCAP::CloudController
     end
 
     describe 'Validations' do
-      it { should validate_presence :name }
-      it { should validate_presence :broker_url }
-      it { should validate_presence :auth_username }
-      it { should validate_presence :auth_password }
-      it { should validate_uniqueness :name }
-      it { should validate_uniqueness :broker_url }
+      it { is_expected.to validate_presence :name }
+      it { is_expected.to validate_presence :broker_url }
+      it { is_expected.to validate_presence :auth_username }
+      it { is_expected.to validate_presence :auth_password }
+      it { is_expected.to validate_uniqueness :name }
+      it { is_expected.to validate_uniqueness :broker_url }
 
       it 'validates the url is a valid http/https url' do
         expect(broker).to be_valid
@@ -52,14 +52,14 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :broker_url, :auth_username }
-      it { should import_attributes :name, :broker_url, :auth_username, :auth_password }
+      it { is_expected.to export_attributes :name, :broker_url, :auth_username }
+      it { is_expected.to import_attributes :name, :broker_url, :auth_username, :auth_password }
     end
 
     describe '#client' do
       it 'returns a client created with the correct arguments' do
         v2_client = double('client')
-        VCAP::Services::ServiceBrokers::V2::Client.should_receive(:new).with(url: broker_url, auth_username: auth_username, auth_password: auth_password).and_return(v2_client)
+        expect(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).with(url: broker_url, auth_username: auth_username, auth_password: auth_password).and_return(v2_client)
         expect(broker.client).to be(v2_client)
       end
     end

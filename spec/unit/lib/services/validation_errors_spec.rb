@@ -62,25 +62,25 @@ module VCAP::Services
       context 'when there are errors on the object' do
         before { errors.add('some message') }
 
-        it { should be false }
+        it { is_expected.to be false }
       end
 
       context 'when there are nested error objects' do
         let!(:nested_errors) { errors.add_nested(Object.new) }
 
         context 'and the nested error objects have no errors' do
-          it { should be true }
+          it { is_expected.to be true }
         end
 
         context 'and the nested error objects have errors' do
           before { nested_errors.add('something bad happened') }
 
-          it { should be false }
+          it { is_expected.to be false }
         end
       end
 
       context 'when there no errors on the object or any nested objects' do
-        it { should be true }
+        it { is_expected.to be true }
       end
     end
 

@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe ServiceBindingAccess, type: :access do
     before do
       token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
     subject(:access) { ServiceBindingAccess.new(double(:context, user: user, roles: roles)) }
@@ -74,10 +74,10 @@ module VCAP::CloudController
         space.add_developer(user)
       end
 
-      it { should be_able_to :create, object }
-      it { should be_able_to :read, object }
-      it { should_not be_able_to :update, object }
-      it { should be_able_to :delete, object }
+      it { is_expected.to be_able_to :create, object }
+      it { is_expected.to be_able_to :read, object }
+      it { is_expected.not_to be_able_to :update, object }
+      it { is_expected.to be_able_to :delete, object }
 
       context 'when the organization is suspended' do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
@@ -88,7 +88,7 @@ module VCAP::CloudController
     context 'any user using client without cloud_controller.write' do
       before do
         token = { 'scope' => 'cloud_controller.read'}
-        VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
         org.add_billing_manager(user)
@@ -104,7 +104,7 @@ module VCAP::CloudController
     context 'any user using client without cloud_controller.read' do
       before do
         token = { 'scope' => ''}
-        VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
         org.add_billing_manager(user)

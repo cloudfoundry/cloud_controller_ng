@@ -6,15 +6,15 @@ module VCAP::CloudController
       Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Validations" do
-      it { should validate_uniqueness :name }
+      it { is_expected.to validate_uniqueness :name }
     end
 
     describe "Serialization" do
-      it { should export_attributes :name, :position, :enabled, :locked, :filename }
-      it { should import_attributes :name, :position, :enabled, :locked, :filename, :key }
+      it { is_expected.to export_attributes :name, :position, :enabled, :locked, :filename }
+      it { is_expected.to import_attributes :name, :position, :enabled, :locked, :filename, :key }
 
       it "does not string mung(e)?" do
         expect(Buildpack.new(name: "my_custom_buildpack\r\n").to_json).to eq '"my_custom_buildpack\r\n"'
@@ -49,7 +49,7 @@ module VCAP::CloudController
           @another_buildpack = Buildpack.make(key: "c key", position: 3)
         end
 
-        it { should have(3).items }
+        it { is_expected.to have(3).items }
 
         it "returns the list in position order" do
           expect(all_buildpacks.collect(&:key)).to eq(["b key", "a key", "c key"])

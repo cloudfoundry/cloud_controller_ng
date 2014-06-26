@@ -38,7 +38,7 @@ resource "Buildpacks", :type => :api do
 
         expect {
           client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(position: 3), headers
-          status.should == 201
+          expect(status).to eq(201)
           standard_entity_response parsed_response, :buildpack, position: 3
         }.to change {
           VCAP::CloudController::Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
@@ -109,7 +109,7 @@ resource "Buildpacks", :type => :api do
         client.put "/v2/buildpacks/#{guid}/bits", {buildpack: valid_zip}, headers
       end
 
-      status.should == 201
+      expect(status).to eq(201)
       standard_entity_response parsed_response, :buildpack
     end
   end

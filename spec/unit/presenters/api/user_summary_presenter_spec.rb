@@ -28,7 +28,7 @@ describe UserSummaryPresenter do
     subject { UserSummaryPresenter.new(user) }
 
     it "creates a valid JSON" do
-      subject.to_hash.should eq({
+      expect(subject.to_hash).to eq({
         metadata: {
           guid: user.guid,
           created_at: user.created_at.iso8601,

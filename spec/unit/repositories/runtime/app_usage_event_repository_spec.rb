@@ -110,7 +110,7 @@ module VCAP::CloudController
           allow(AppUsageEvent.dataset).to receive(:truncate) do
             AppUsageEvent.dataset.delete 
           end
-          AppObserver.stub(:updated)
+          allow(AppObserver).to receive(:updated)
         end
 
         it "will purge all existing events" do

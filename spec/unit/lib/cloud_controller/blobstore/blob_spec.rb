@@ -14,7 +14,7 @@ module CloudController
         let(:url_from_cdn) { "http://some_distribution.cloudfront.net/ab/cd/abcdef" }
 
         before do
-          cdn.stub(:download_uri).and_return(url_from_cdn)
+          allow(cdn).to receive(:download_uri).and_return(url_from_cdn)
         end
 
         it "returns a url to the cdn" do
@@ -27,7 +27,7 @@ module CloudController
 
         context "a file responds to url" do
           before do
-            file.stub(:url).and_return("http://example.com")
+            allow(file).to receive(:url).and_return("http://example.com")
           end
 
           it "returns a url from file" do
@@ -45,8 +45,8 @@ module CloudController
 
         context "a file does not respond to url" do
           before do
-            file.stub(:url).and_return(nil)
-            file.stub(:public_url).and_return("http://example.com/public")
+            allow(file).to receive(:url).and_return(nil)
+            allow(file).to receive(:public_url).and_return("http://example.com/public")
             it "returns a public url from file" do
               expect(blob.download_url).to eql("http://example.com/public")
             end

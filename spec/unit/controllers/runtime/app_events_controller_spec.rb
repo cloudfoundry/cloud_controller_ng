@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     def no_resource_has
       body[:resources].each do |r|
-        yield(r).should be false
+        expect(yield(r)).to be false
       end
     end
 
@@ -52,34 +52,34 @@ module VCAP::CloudController
 
       it "returns status code 200" do
         get "#{endpoint}?q=timestamp%3E%3D#{timestamp_after_two.utc.iso8601}", {}, admin_headers
-        last_response.status.should == 200
+        expect(last_response.status).to eq(200)
       end
 
       it "returns crash events on or after start timestamp if specified" do
         get "#{endpoint}?q=timestamp%3E%3D#{timestamp_after_two.utc.iso8601}", {}, admin_headers
-        total_results.should == 1
-        result(0)[:exit_description].should == "Crashed 3"
+        expect(total_results).to eq(1)
+        expect(result(0)[:exit_description]).to eq("Crashed 3")
       end
 
       it "returns crash events on or before end timestamp if specified" do
         get "#{endpoint}?q=timestamp%3C%3D#{timestamp_after_one.utc.iso8601}", {}, admin_headers
-        total_results.should == 1
-        result(0)[:exit_description].should == "Crashed 1"
+        expect(total_results).to eq(1)
+        expect(result(0)[:exit_description]).to eq("Crashed 1")
       end
 
       it "returns crash events between start and end timestamps (inclusive) if both are specified" do
         get "#{endpoint}?q=timestamp%3E%3D#{base_timestamp.utc.iso8601}%3Btimestamp%3C%3D#{timestamp_after_two.utc.iso8601}", {}, admin_headers
-        total_results.should == 2
-        result(0)[:exit_description].should == "Crashed 1"
-        result(1)[:exit_description].should == "Crashed 2"
+        expect(total_results).to eq(2)
+        expect(result(0)[:exit_description]).to eq("Crashed 1")
+        expect(result(1)[:exit_description]).to eq("Crashed 2")
       end
 
       it "returns all crash events if neither start nor end timestamp is specified" do
         get "#{endpoint}", {}, admin_headers
-        total_results.should == 3
-        result(0)[:exit_description].should == "Crashed 1"
-        result(1)[:exit_description].should == "Crashed 2"
-        result(2)[:exit_description].should == "Crashed 3"
+        expect(total_results).to eq(3)
+        expect(result(0)[:exit_description]).to eq("Crashed 1")
+        expect(result(1)[:exit_description]).to eq("Crashed 2")
+        expect(result(2)[:exit_description]).to eq("Crashed 3")
       end
     end
 
@@ -94,9 +94,9 @@ module VCAP::CloudController
 
       it "paginates the results" do
         get "/v2/apps/#{completely_unrelated_app.guid}/events", {}, admin_headers
-        body[:total_pages].should == 2
-        body[:prev_url].should be_nil
-        body[:next_url].should == "/v2/apps/#{completely_unrelated_app.guid}/events?order-direction=asc&page=2&results-per-page=50"
+        expect(body[:total_pages]).to eq(2)
+        expect(body[:prev_url]).to be_nil
+        expect(body[:next_url]).to eq("/v2/apps/#{completely_unrelated_app.guid}/events?order-direction=asc&page=2&results-per-page=50")
       end
     end
 
@@ -117,7 +117,7 @@ module VCAP::CloudController
 
       it "aggregates over a space" do
         get "/v2/spaces/#{space_a.guid}/app_events", {}, admin_headers
-        total_results.should == 3
+        expect(total_results).to eq(3)
         no_resource_has { |r| r[:exit_description] == "Wrong Space" }
       end
     end
@@ -134,7 +134,7 @@ module VCAP::CloudController
 
       it "aggregates over an org" do
         get "/v2/organizations/#{org.guid}/app_events", {}, admin_headers
-        total_results.should == 3
+        expect(total_results).to eq(3)
         no_resource_has { |r| r[:exit_description] == "Wrong Org" }
       end
     end

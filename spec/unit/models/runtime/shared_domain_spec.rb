@@ -4,11 +4,11 @@ module VCAP::CloudController
   describe SharedDomain, type: :model do
     subject { described_class.make name: "test.example.com" }
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Serialization" do
-      it { should export_attributes :name }
-      it { should import_attributes :name }
+      it { is_expected.to export_attributes :name }
+      it { is_expected.to import_attributes :name }
     end
 
     describe "#as_summary_json" do
@@ -28,7 +28,7 @@ module VCAP::CloudController
           subject.name = "foo.com"
         end
 
-        it { should be_valid }
+        it { is_expected.to be_valid }
       end          
     end
 

@@ -12,9 +12,9 @@ module ApiDsl
       # if a relationship is not present, its url should not be present
       next if field_is_url_and_relationship_not_present?(json, expected_attribute)
 
-      json.should have_key expected_attribute.to_s
+      expect(json).to have_key expected_attribute.to_s
       if expected_values.has_key? expected_attribute.to_sym
-        json[expected_attribute.to_s].should == expected_values[expected_attribute.to_sym]
+        expect(json[expected_attribute.to_s]).to eq(expected_values[expected_attribute.to_sym])
       end
     end
   end
@@ -26,8 +26,8 @@ module ApiDsl
   end
 
   def standard_entity_response json, model, expected_values={}
-    json.should include("metadata")
-    json.should include("entity")
+    expect(json).to include("metadata")
+    expect(json).to include("entity")
     standard_metadata_response_format? json["metadata"], model
     validate_response model, json["entity"], expected_values
   end

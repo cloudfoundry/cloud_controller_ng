@@ -18,7 +18,7 @@ module VCAP::CloudController::Jobs
 
     context "when the job takes longer than its timeout" do
       before do
-        job.stub(:perform) { sleep(2) }
+        allow(job).to receive(:perform) { sleep(2) }
       end
 
       it "doesn't allow the job to exceed the timeout" do
@@ -44,7 +44,7 @@ module VCAP::CloudController::Jobs
       end
 
       before do
-        VCAP::CloudController::Config.stub(:config).and_return(config)
+        allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
       end
 
       context "by default" do

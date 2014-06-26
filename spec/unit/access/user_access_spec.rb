@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe UserAccess, type: :access do
     before do
       token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
     subject(:access) { UserAccess.new(double(:context, user: current_user, roles: roles)) }
@@ -26,7 +26,7 @@ module VCAP::CloudController
     context 'any user using client without cloud_controller.read' do
       before do
         token = { 'scope' => ''}
-        VCAP::CloudController::SecurityContext.stub(:token).and_return(token)
+        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
       end
 
       it_behaves_like :no_access

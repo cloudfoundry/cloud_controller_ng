@@ -31,7 +31,7 @@ module CloudController
 
         context "when CloudFront Signer is not configured" do
           before do
-            AWS::CF::Signer.stub(:is_configured?).and_return(false)
+            allow(AWS::CF::Signer).to receive(:is_configured?).and_return(false)
             @stub = stub_request(:get, "#{cdn_host}/#{path_location}").to_return(body: "barbaz")
           end
 
@@ -54,10 +54,10 @@ module CloudController
         end
 
         context "when CloudFront Signer is configured" do
-          before { AWS::CF::Signer.stub(:is_configured?).and_return(true) }
+          before { allow(AWS::CF::Signer).to receive(:is_configured?).and_return(true) }
 
           it "returns a signed URI using the CDN" do
-            AWS::CF::Signer.should_receive(:sign_url).with("#{cdn_host}/#{path_location}").and_return("http://signed_url")
+            expect(AWS::CF::Signer).to receive(:sign_url).with("#{cdn_host}/#{path_location}").and_return("http://signed_url")
             stub = stub_request(:get, "signed_url").to_return(body: "foobar")
 
             cdn.get(path_location) {}

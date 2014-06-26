@@ -2,7 +2,7 @@ RSpec::Matchers.define :have_queried_db_times do |query_regex, expected_times|
   match do |actual_blk|
     begin
       @matched_calls = []
-      stub = Sequel::Model.db.stub(:_execute)
+      stub = allow(Sequel::Model.db).to receive(:_execute)
       stub.and_call_original
       @calls = stub.and_record_arguments
       actual_blk.call
@@ -12,11 +12,11 @@ RSpec::Matchers.define :have_queried_db_times do |query_regex, expected_times|
       @raised_exception = e
       false
     ensure
-      Sequel::Model.db.unstub(:_execute)
+      allow(Sequel::Model.db).to receive(:_execute).and_call_original
     end
   end
 
-  failure_message_for_should do |_|
+  failure_message do |_|
     if @raised_exception
       "Raised exception in the block: #{@raised_exception.inspect}\n#{@raised_exception.backtrace.join("\n")}"
     else

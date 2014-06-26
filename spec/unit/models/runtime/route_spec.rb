@@ -2,21 +2,21 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::Route, type: :model do
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :domain }
-      it { should have_associated :space }
-      it { should have_associated :apps, associated_instance: ->(route) { App.make(space: route.space) } }
+      it { is_expected.to have_associated :domain }
+      it { is_expected.to have_associated :space }
+      it { is_expected.to have_associated :apps, associated_instance: ->(route) { App.make(space: route.space) } }
     end
 
     describe "Validations" do
       let(:route) { Route.make }
 
-      it { should validate_presence :domain }
-      it { should validate_presence :space }
-      it { should validate_presence :host }
-      it { should validate_uniqueness [:host, :domain_id] }
+      it { is_expected.to validate_presence :domain }
+      it { is_expected.to validate_presence :space }
+      it { is_expected.to validate_presence :host }
+      it { is_expected.to validate_uniqueness [:host, :domain_id] }
 
       describe "host" do
         let(:space) { Space.make }
@@ -24,12 +24,12 @@ module VCAP::CloudController
 
         it "should not allow . in the host name" do
           route.host = "a.b"
-          route.should_not be_valid
+          expect(route).not_to be_valid
         end
 
         it "should not allow / in the host name" do
           route.host = "a/b"
-          route.should_not be_valid
+          expect(route).not_to be_valid
         end
 
         it "should not allow a nil host" do
@@ -99,8 +99,8 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { should export_attributes :host, :domain_guid, :space_guid }
-      it { should import_attributes :host, :domain_guid, :space_guid, :app_guids }
+      it { is_expected.to export_attributes :host, :domain_guid, :space_guid }
+      it { is_expected.to import_attributes :host, :domain_guid, :space_guid, :app_guids }
     end
 
     describe "instance methods" do
@@ -120,7 +120,7 @@ module VCAP::CloudController
               :domain => domain,
               :space => space,
             )
-            r.fqdn.should == "www.#{domain.name}"
+            expect(r.fqdn).to eq("www.#{domain.name}")
           end
         end
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
               :domain => domain,
               :space => space,
             )
-            r.fqdn.should == domain.name
+            expect(r.fqdn).to eq(domain.name)
           end
         end
       end
@@ -143,14 +143,14 @@ module VCAP::CloudController
             :domain => domain,
             :space => space,
           )
-          r.as_summary_json.should == {
+          expect(r.as_summary_json).to eq({
             :guid => r.guid,
             :host => r.host,
             :domain => {
               :guid => r.domain.guid,
               :name => r.domain.name
             }
-          }
+          })
         end
       end
 
@@ -216,7 +216,7 @@ module VCAP::CloudController
         let(:app_attributes) { {:state => "STARTED", :package_hash => "abc", :package_state => "STAGED"} }
 
         it "notifies DEAs of route change for running apps" do
-          VCAP::CloudController::DeaClient.should_receive(:update_uris).with(app_1)
+          expect(VCAP::CloudController::DeaClient).to receive(:update_uris).with(app_1)
           Route[:guid => route.guid].destroy(savepoint: true)
         end
       end
@@ -229,7 +229,7 @@ module VCAP::CloudController
               :space => route.space, :state => "STOPPED",
               :route_guids => [route.guid], :droplet_hash => nil, :package_state => "PENDING")
 
-          VCAP::CloudController::DeaClient.should_not_receive(:update_uris)
+          expect(VCAP::CloudController::DeaClient).not_to receive(:update_uris)
 
           route.destroy(savepoint: true)
         end
@@ -240,7 +240,7 @@ module VCAP::CloudController
 
         it "does not notify DEAs of route change for apps that are not staged" do
           AppFactory.make(:space => route.space, :package_state => "FAILED", :route_guids => [route.guid])
-          VCAP::CloudController::DeaClient.should_not_receive(:update_uris)
+          expect(VCAP::CloudController::DeaClient).not_to receive(:update_uris)
           Route[:guid => route.guid].destroy(savepoint: true)
         end
       end

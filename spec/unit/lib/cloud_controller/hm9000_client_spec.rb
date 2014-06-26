@@ -62,7 +62,7 @@ module VCAP::CloudController
     subject(:hm9000_client) { VCAP::CloudController::HM9000Client.new(message_bus, hm9000_config) }
 
     before do
-      message_bus.stub(:synchronous_request) do |subject, data, options|
+      allow(message_bus).to receive(:synchronous_request) do |subject, data, options|
         next unless subject == "app.state"
         expect(options).to include(timeout: 2)
 

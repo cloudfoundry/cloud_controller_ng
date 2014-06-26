@@ -1,24 +1,24 @@
 shared_examples :full_access do
-  it { should allow_op_on_object :create, object }
-  it { should allow_op_on_object :read, object }
-  it { should allow_op_on_object :update, object }
-  it { should allow_op_on_object :delete, object }
-  it { should allow_op_on_object :index, object.class }
+  it { is_expected.to allow_op_on_object :create, object }
+  it { is_expected.to allow_op_on_object :read, object }
+  it { is_expected.to allow_op_on_object :update, object }
+  it { is_expected.to allow_op_on_object :delete, object }
+  it { is_expected.to allow_op_on_object :index, object.class }
 end
 
 shared_examples :read_only do
-  it { should_not allow_op_on_object :create, object }
-  it { should allow_op_on_object :read, object }
-  it { should_not allow_op_on_object :update, object }
-  it { should_not allow_op_on_object :delete, object }
-  it { should allow_op_on_object :index, object.class }
+  it { is_expected.not_to allow_op_on_object :create, object }
+  it { is_expected.to allow_op_on_object :read, object }
+  it { is_expected.not_to allow_op_on_object :update, object }
+  it { is_expected.not_to allow_op_on_object :delete, object }
+  it { is_expected.to allow_op_on_object :index, object.class }
 end
 
 shared_examples :no_access do
-  it { should_not allow_op_on_object :create, object }
-  it { should_not allow_op_on_object :read, object }
-  it { should_not allow_op_on_object :update, object }
-  it { should_not allow_op_on_object :delete, object }
+  it { is_expected.not_to allow_op_on_object :create, object }
+  it { is_expected.not_to allow_op_on_object :read, object }
+  it { is_expected.not_to allow_op_on_object :update, object }
+  it { is_expected.not_to allow_op_on_object :delete, object }
   #it { should_not allow_op_on_object :index, object.class }
   # backward compatibility:
   # :index is not tested here because some subclasses of BaseAccess

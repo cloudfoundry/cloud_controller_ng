@@ -189,7 +189,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     before do
-      VCAP::Request.stub(:current_id).and_return(request_id)
+      allow(VCAP::Request).to receive(:current_id).and_return(request_id)
     end
 
     shared_examples 'a basic successful request' do
@@ -202,26 +202,26 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'sets X-Broker-Api-Version header correctly' do
         make_request
-        a_request(http_method, full_url).
+        expect(a_request(http_method, full_url).
           with(:query => hash_including({})).
-          with(:headers => {'X-Broker-Api-Version' => '2.3'}).
-          should have_been_made
+          with(:headers => {'X-Broker-Api-Version' => '2.3'})).
+          to have_been_made
       end
 
       it 'sets the X-Vcap-Request-Id header to the current request id' do
         make_request
-        a_request(http_method, full_url).
+        expect(a_request(http_method, full_url).
           with(:query => hash_including({})).
-          with(:headers => { 'X-Vcap-Request-Id' => request_id }).
-          should have_been_made
+          with(:headers => { 'X-Vcap-Request-Id' => request_id })).
+          to have_been_made
       end
 
       it 'sets the Accept header to application/json' do
         make_request
-        a_request(http_method, full_url).
+        expect(a_request(http_method, full_url).
           with(:query => hash_including({})).
-          with(:headers => { 'Accept' => 'application/json' }).
-          should have_been_made
+          with(:headers => { 'Accept' => 'application/json' })).
+          to have_been_made
       end
 
       context 'when an https URL is used' do
@@ -230,9 +230,9 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'uses SSL' do
           make_request
-          a_request(http_method, 'https://me:abc123@broker.example.com/the/path').
-            with(query: hash_including({})).
-            should have_been_made
+          expect(a_request(http_method, 'https://me:abc123@broker.example.com/the/path').
+            with(query: hash_including({}))).
+            to have_been_made
         end
 
         describe 'ssl cert verification' do
@@ -246,11 +246,11 @@ module VCAP::Services::ServiceBrokers::V2
             let(:config) { {skip_cert_verify: true } }
 
             it 'accepts self-signed cert from the broker' do
-              Net::HTTP.should_receive(:start) do |host, port, opts, &blk|
+              expect(Net::HTTP).to receive(:start) { |host, port, opts, &blk|
                 expect(host).to eq 'broker.example.com'
                 expect(port).to eq 443
                 expect(opts).to eq({use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE})
-              end.and_return(response)
+              }.and_return(response)
               make_request
             end
           end
@@ -259,11 +259,11 @@ module VCAP::Services::ServiceBrokers::V2
             let(:config) { {skip_cert_verify: false } }
 
             it 'does not accept self-signed cert from the broker' do
-              Net::HTTP.should_receive(:start) do |host, port, opts, &blk|
+              expect(Net::HTTP).to receive(:start) { |host, port, opts, &blk|
                 expect(host).to eq 'broker.example.com'
                 expect(port).to eq 443
                 expect(opts).to eq({use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_PEER})
-              end.and_return(response)
+              }.and_return(response)
               make_request
             end
           end
@@ -355,24 +355,24 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'makes the correct GET http request' do
           make_request
-          a_request(:get, 'http://me:abc123@broker.example.com/the/path').should have_been_made
+          expect(a_request(:get, 'http://me:abc123@broker.example.com/the/path')).to have_been_made
         end
 
         it 'does not set a Content-Type header' do
           make_request
           no_content_type = ->(request) {
-            request.headers.should_not have_key('Content-Type')
+            expect(request.headers).not_to have_key('Content-Type')
             true
           }
 
-          a_request(:get, full_url).with(&no_content_type).should have_been_made
+          expect(a_request(:get, full_url).with(&no_content_type)).to have_been_made
         end
 
         it 'does not have a content body' do
           make_request
-          a_request(:get, full_url).
-            with { |req| req.body.should be_nil }.
-            should have_been_made
+          expect(a_request(:get, full_url).
+            with { |req| expect(req.body).to be_nil }).
+            to have_been_made
         end
 
         it_behaves_like 'a basic successful request'
@@ -407,24 +407,24 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'makes the correct PUT http request' do
           make_request
-          a_request(:put, 'http://me:abc123@broker.example.com/the/path').should have_been_made
+          expect(a_request(:put, 'http://me:abc123@broker.example.com/the/path')).to have_been_made
         end
 
         it 'sets the Content-Type header to application/json' do
           make_request
-          a_request(:put, full_url).
-            with(headers: { 'Content-Type' => 'application/json' }).
-            should have_been_made
+          expect(a_request(:put, full_url).
+            with(headers: { 'Content-Type' => 'application/json' })).
+            to have_been_made
         end
 
         it 'has a content body' do
           make_request
-          a_request(:put, full_url).
+          expect(a_request(:put, full_url).
             with(body: {
               'key1' => 'value1',
               'key2' => 'value2'
-            }.to_json).
-            should have_been_made
+            }.to_json)).
+            to have_been_made
         end
 
         it_behaves_like 'a basic successful request'
@@ -459,25 +459,25 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'makes the correct DELETE http request' do
           make_request
-          a_request(:delete, 'http://me:abc123@broker.example.com/the/path?key1=value1&key2=value2').should have_been_made
+          expect(a_request(:delete, 'http://me:abc123@broker.example.com/the/path?key1=value1&key2=value2')).to have_been_made
         end
 
         it 'does not set a Content-Type header' do
           make_request
           no_content_type = ->(request) {
-            request.headers.should_not have_key('Content-Type')
+            expect(request.headers).not_to have_key('Content-Type')
             true
           }
 
-          a_request(:delete, full_url).with(query: message, &no_content_type).should have_been_made
+          expect(a_request(:delete, full_url).with(query: message, &no_content_type)).to have_been_made
         end
 
         it 'does not have a content body' do
           make_request
-          a_request(:delete, full_url).
+          expect(a_request(:delete, full_url).
             with(query: message).
-            with { |req| req.body.should be_nil }.
-            should have_been_made
+            with { |req| expect(req.body).to be_nil }).
+            to have_been_made
         end
 
         it_behaves_like 'a basic successful request'

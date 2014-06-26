@@ -10,7 +10,7 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
 
   let(:service_instance) { described_class.create(service_instance_attrs) }
 
-  it { should have_timestamp_columns }
+  it { is_expected.to have_timestamp_columns }
 
   describe "#create" do
     context "when the name is longer than 50 characters" do
@@ -25,7 +25,7 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
       it "returns a UserProvidedServiceInstance" do
         service_instance_attrs[:is_gateway_service] = false
         service_instance = described_class.create(service_instance_attrs)
-        described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::UserProvidedServiceInstance
+        expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::UserProvidedServiceInstance)
       end
     end
 
@@ -33,7 +33,7 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
       it "returns a ManagedServiceInstance" do
         service_instance_attrs[:is_gateway_service] = true
         service_instance = described_class.create(service_instance_attrs)
-        described_class.find(guid: service_instance.guid).class.should == VCAP::CloudController::ManagedServiceInstance
+        expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::ManagedServiceInstance)
       end
     end
   end
@@ -67,7 +67,7 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
   end
 
   describe '#bindable?' do
-    it { should be_bindable }
+    it { is_expected.to be_bindable }
   end
 
   describe '#as_summary_json' do
@@ -75,11 +75,11 @@ describe VCAP::CloudController::ServiceInstance, type: :model do
       instance = VCAP::CloudController::ServiceInstance.make(guid: 'ABCDEFG12', name: 'Random-Number-Service')
       VCAP::CloudController::ServiceBinding.make(service_instance: instance)
 
-      instance.as_summary_json.should == {
+      expect(instance.as_summary_json).to eq({
         'guid' => 'ABCDEFG12',
         'name' => 'Random-Number-Service',
         'bound_app_count' => 1
-      }
+      })
     end
   end
 

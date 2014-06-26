@@ -6,23 +6,23 @@ module VCAP::CloudController
       TestConfig.override({ :billing_event_writing_enabled => true })
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Validations" do
-      it { should validate_presence :timestamp }
-      it { should validate_presence :organization_guid }
-      it { should validate_presence :organization_name }
+      it { is_expected.to validate_presence :timestamp }
+      it { is_expected.to validate_presence :organization_guid }
+      it { is_expected.to validate_presence :organization_name }
     end
 
     describe "Serialization" do
-      it { should export_attributes :timestamp, :event_type, :organization_guid, :organization_name }
-      it { should import_attributes }
+      it { is_expected.to export_attributes :timestamp, :event_type, :organization_guid, :organization_name }
+      it { is_expected.to import_attributes }
     end
 
     describe "create_from_org" do
       context "on an org without billing enabled" do
         it "should raise an error" do
-          OrganizationStartEvent.should_not_receive(:create)
+          expect(OrganizationStartEvent).not_to receive(:create)
           org = Organization.make
           org.billing_enabled = false
           org.save(:validate => false)

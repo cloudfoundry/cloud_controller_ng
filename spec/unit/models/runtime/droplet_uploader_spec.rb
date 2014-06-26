@@ -24,7 +24,7 @@ describe CloudController::DropletUploader do
     end
 
     it "does not create a new droplet if the upload fails" do
-      blobstore.stub(:cp_to_blobstore).and_raise "Upload failed"
+      allow(blobstore).to receive(:cp_to_blobstore).and_raise "Upload failed"
       expect {
         expect {
           subject.upload(temp_file_with_content.path)

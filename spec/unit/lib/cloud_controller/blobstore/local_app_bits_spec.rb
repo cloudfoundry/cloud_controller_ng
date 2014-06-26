@@ -11,10 +11,10 @@ module CloudController
 
       describe ".from_compressed_bits" do
         before do
-          File.stub(:exists?).and_return(true)
-          SafeZipper.stub(:unzip).and_return(123)
-          Dir.stub(:mktmpdir).and_yield(root_path)
-          FileUtils.stub(:mkdir)
+          allow(File).to receive(:exists?).and_return(true)
+          allow(SafeZipper).to receive(:unzip).and_return(123)
+          allow(Dir).to receive(:mktmpdir).and_yield(root_path)
+          allow(FileUtils).to receive(:mkdir)
         end
 
         it "yields a block" do
@@ -24,7 +24,7 @@ module CloudController
         end
 
         it "unzips the folder" do
-          SafeZipper.should_receive(:unzip).with(compressed_zip_path, uncompressed_path)
+          expect(SafeZipper).to receive(:unzip).with(compressed_zip_path, uncompressed_path)
 
           LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
             expect(local_app_bits.uncompressed_path).to eq uncompressed_path
@@ -32,7 +32,7 @@ module CloudController
         end
 
         it "create and delete the tmp dir where its uncompressed" do
-          Dir.should_receive(:mktmpdir).with("safezipper", tmp_dir)
+          expect(Dir).to receive(:mktmpdir).with("safezipper", tmp_dir)
 
           LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
             expect(local_app_bits.uncompressed_path).to start_with uncompressed_path
@@ -47,8 +47,8 @@ module CloudController
 
         context "when the zip file is pointing to a non existent file" do
           it "does not unzip anything" do
-            File.should_receive(:exists?).with(compressed_zip_path).and_return(false)
-            SafeZipper.should_not_receive(:unzip)
+            expect(File).to receive(:exists?).with(compressed_zip_path).and_return(false)
+            expect(SafeZipper).not_to receive(:unzip)
             LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
               expect(local_app_bits.storage_size).to eq 0
             end
@@ -59,7 +59,7 @@ module CloudController
           let(:compressed_zip_path) { nil }
 
           it "does not unzip anything" do
-            SafeZipper.should_not_receive(:unzip)
+            expect(SafeZipper).not_to receive(:unzip)
             LocalAppBits.from_compressed_bits(compressed_zip_path, tmp_dir) do |local_app_bits|
               expect(local_app_bits.storage_size).to eq 0
             end
@@ -72,8 +72,8 @@ module CloudController
 
         it "should zip up the file and yield the open stream of it" do
           path = "/tmp/safezipper/package.zip"
-          SafeZipper.should_receive(:zip).with(uncompressed_path, path)
-          File.should_receive(:new).with(path).and_return(double(:file, path: path, hexdigest: "some_sha"))
+          expect(SafeZipper).to receive(:zip).with(uncompressed_path, path)
+          expect(File).to receive(:new).with(path).and_return(double(:file, path: path, hexdigest: "some_sha"))
 
           package = local_app_bits.create_package
           expect(package.path).to eq path
@@ -81,8 +81,8 @@ module CloudController
         end
 
         it "its zip destination should be outside the source" do
-          File.should_receive(:new)
-          SafeZipper.should_receive(:zip) do |source, destination|
+          expect(File).to receive(:new)
+          expect(SafeZipper).to receive(:zip) do |source, destination|
             expect(File.dirname(destination)).to_not match /^#{source}/
           end
           local_app_bits.create_package

@@ -82,16 +82,16 @@ module VCAP::CloudController
       context "a cf admin" do
         it "can modify service plans" do
           put "/v2/service_plans/#{plan.guid}", body, json_headers(admin_headers)
-          last_response.status.should == 201
-          plan.reload.public.should be false
+          expect(last_response.status).to eq(201)
+          expect(plan.reload.public).to be false
         end
       end
 
       context "otherwise" do
         it "cannot modify service plans" do
           put "/v2/service_plans/#{plan.guid}", body, json_headers(headers_for(developer))
-          last_response.status.should == 403
-          plan.reload.public.should be true
+          expect(last_response.status).to eq(403)
+          expect(plan.reload.public).to be true
         end
       end
     end
@@ -107,7 +107,7 @@ module VCAP::CloudController
 
       it "is not visible to users from normal organization" do
         get '/v2/service_plans', {}, headers_for(developer)
-        plan_guids.should_not include(private_plan.guid)
+        expect(plan_guids).not_to include(private_plan.guid)
       end
 
       it "is visible to users from organizations with access to the plan" do
@@ -117,12 +117,12 @@ module VCAP::CloudController
           service_plan: private_plan,
         )
         get '/v2/service_plans', {}, headers_for(developer)
-        plan_guids.should include(private_plan.guid)
+        expect(plan_guids).to include(private_plan.guid)
       end
 
       it "is visible to cf admin" do
         get '/v2/service_plans', {}, admin_headers
-        plan_guids.should include(private_plan.guid)
+        expect(plan_guids).to include(private_plan.guid)
       end
     end
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
 
       it "should return correct visibility" do
         get "/v2/service_plans/#{public_plan.guid}", {}, headers_for(developer)
-        last_response.status.should eq(200)
+        expect(last_response.status).to eq(200)
         expect(parse(last_response.body)["entity"]).to include("public" => true)
       end
     end
@@ -143,13 +143,13 @@ module VCAP::CloudController
       context 'when the user is admin' do
         it 'returns both active and inactive plans' do
           get '/v2/service_plans', {}, admin_headers
-          last_response.status.should eq(200)
+          expect(last_response.status).to eq(200)
           expect(parse(last_response.body)['total_results']).to eq(2)
         end
 
         it 'returns just the inactive plans when filtered for active:f' do
           get '/v2/service_plans?q=active:f', {}, admin_headers
-          last_response.status.should eq(200)
+          expect(last_response.status).to eq(200)
           expect(parse(last_response.body)['total_results']).to eq(1)
           expect(parse(last_response.body)['resources'].first['entity']['active']).to eq(false)
         end
@@ -157,7 +157,7 @@ module VCAP::CloudController
 
       it 'returns just the active plans when the user is not admin' do
         get '/v2/service_plans', {}, headers_for(developer)
-        last_response.status.should eq(200)
+        expect(last_response.status).to eq(200)
         expect(parse(last_response.body)['total_results']).to eq(1)
         expect(parse(last_response.body)['resources'].first['entity']['active']).to eq(true)
       end
@@ -243,7 +243,7 @@ module VCAP::CloudController
         :unique_id => Sham.unique_id,
       ).encode
       post "/v2/service_plans", payload, json_headers(admin_headers)
-      last_response.status.should eq(201)
+      expect(last_response.status).to eq(201)
     end
 
     it 'makes the service plan public by default' do
@@ -255,9 +255,9 @@ module VCAP::CloudController
         :unique_id => Sham.unique_id,
       ).encode
       post '/v2/service_plans', payload_without_public, json_headers(admin_headers)
-      last_response.status.should eq(201)
+      expect(last_response.status).to eq(201)
       plan_guid = decoded_response.fetch('metadata').fetch('guid')
-      ServicePlan.first(:guid => plan_guid).public.should be true
+      expect(ServicePlan.first(:guid => plan_guid).public).to be true
     end
   end
 
@@ -311,8 +311,8 @@ module VCAP::CloudController
       delete "/v2/service_plans/#{service_plan.guid}?recursive=true", {}, admin_headers
       expect(last_response.status).to eq(400)
 
-      decoded_response.fetch('code').should == 10006
-      decoded_response.fetch('description').should == 'Please delete the service_instances associations for your service_plans.'
+      expect(decoded_response.fetch('code')).to eq(10006)
+      expect(decoded_response.fetch('description')).to eq('Please delete the service_instances associations for your service_plans.')
     end
   end
 end

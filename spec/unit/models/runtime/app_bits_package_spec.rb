@@ -28,7 +28,7 @@ describe AppBitsPackage do
 
   before do
     Fog.unmock!
-    FileUtils.stub(:rm_f).with(compressed_path)
+    allow(FileUtils).to receive(:rm_f).with(compressed_path)
   end
 
   after do
@@ -92,7 +92,7 @@ describe AppBitsPackage do
     end
 
     it "removes the compressed path afterwards" do
-      FileUtils.should_receive(:rm_f).with(compressed_path)
+      expect(FileUtils).to receive(:rm_f).with(compressed_path)
       create
     end
 
@@ -100,7 +100,7 @@ describe AppBitsPackage do
       let(:compressed_path) { nil }
 
       it "doesn't try to remove the file" do
-        FileUtils.should_not_receive(:rm_f)
+        expect(FileUtils).not_to receive(:rm_f)
         create
       end
     end
@@ -115,7 +115,7 @@ describe AppBitsPackage do
       end
 
       it "removes the compressed path afterwards" do
-        FileUtils.should_receive(:rm_f).with(compressed_path)
+        expect(FileUtils).to receive(:rm_f).with(compressed_path)
         expect { create }.to raise_exception
       end
     end

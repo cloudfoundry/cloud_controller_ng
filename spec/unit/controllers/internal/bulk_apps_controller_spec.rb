@@ -30,11 +30,11 @@ module VCAP::CloudController
 
       it "requires authentication" do
         get "/internal/bulk/apps"
-        last_response.status.should == 401
+        expect(last_response.status).to eq(401)
 
         authorize "bar", "foo"
         get "/internal/bulk/apps"
-        last_response.status.should == 401
+        expect(last_response.status).to eq(401)
       end
 
       describe "with authentication" do
@@ -47,7 +47,7 @@ module VCAP::CloudController
               "batch_size" => 20,
           }
 
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
 
         it "returns a populated token for the initial request (which has an empty bulk token)" do
@@ -158,7 +158,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
 
           saved_apps = decoded_response["apps"].dup
-          saved_apps.size.should == 2
+          expect(saved_apps.size).to eq(2)
 
           get "/internal/bulk/apps", {
               "batch_size" => 2,
@@ -168,9 +168,9 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
 
           new_apps = decoded_response["apps"].dup
-          new_apps.size.should == 2
+          expect(new_apps.size).to eq(2)
           saved_apps.each do |saved_result|
-            new_apps.should_not include(saved_result)
+            expect(new_apps).not_to include(saved_result)
           end
         end
 
@@ -190,14 +190,14 @@ module VCAP::CloudController
             apps += decoded_response["apps"]
           end
 
-          apps.size.should == total_size
+          expect(apps.size).to eq(total_size)
           get "/internal/bulk/apps", {
               "batch_size" => 2,
               "token" => Yajl::Encoder.encode(token),
           }
 
           expect(last_response.status).to eq(200)
-          decoded_response["apps"].size.should == 0
+          expect(decoded_response["apps"].size).to eq(0)
         end
 
         it "does not return unstaged apps" do

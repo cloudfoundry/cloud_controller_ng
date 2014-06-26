@@ -13,19 +13,19 @@ module VCAP::CloudController
     before do
       #force evaluate the blobstore let before stubbing out dependency locator
       blobstore
-      CloudController::DependencyLocator.instance.stub(:droplet_blobstore).
+      allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).
         and_return(blobstore)
     end
 
-    it { should have_timestamp_columns }
+    it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { should have_associated :app }
+      it { is_expected.to have_associated :app }
     end
 
     describe "Validations" do
-      it { should validate_presence :app }
-      it { should validate_presence :droplet_hash }
+      it { is_expected.to validate_presence :app }
+      it { is_expected.to validate_presence :droplet_hash }
     end
 
     it "creates successfully with an app and a droplet hash" do

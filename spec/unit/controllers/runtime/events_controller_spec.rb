@@ -42,7 +42,7 @@ module VCAP::CloudController
           get "/v2/events", {}, admin_headers
 
           parsed_body = Yajl::Parser.parse(last_response.body)
-          parsed_body["total_results"].should == 2
+          expect(parsed_body["total_results"]).to eq(2)
         end
       end
 
@@ -56,7 +56,7 @@ module VCAP::CloudController
           get "/v2/events", {}, headers_for(@user_a)
 
           parsed_body = Yajl::Parser.parse(last_response.body)
-          parsed_body["total_results"].should == 1
+          expect(parsed_body["total_results"]).to eq(1)
         end
       end
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
           get "/v2/events", {}, headers_for(@user_a)
 
           parsed_body = Yajl::Parser.parse(last_response.body)
-          parsed_body["total_results"].should == 1
+          expect(parsed_body["total_results"]).to eq(1)
         end
       end
 
@@ -84,7 +84,7 @@ module VCAP::CloudController
             get "/v2/spaces/#{@space_a.guid}/events", {}, headers_for(@user_a)
 
             parsed_body = Yajl::Parser.parse(last_response.body)
-            parsed_body["total_results"].should == 1
+            expect(parsed_body["total_results"]).to eq(1)
           end
         end
 
@@ -97,7 +97,7 @@ module VCAP::CloudController
             get "/v2/spaces/#{@space_a.guid}/events", {}, headers_for(@user_a)
 
             parsed_body = Yajl::Parser.parse(last_response.body)
-            parsed_body["total_results"].should == 1
+            expect(parsed_body["total_results"]).to eq(1)
           end
         end
 
@@ -105,7 +105,7 @@ module VCAP::CloudController
           it "returns a 403 error" do
             get "/v2/spaces/#{@space_a.guid}/events", {}, headers_for(@user_a)
 
-            last_response.status.should == 403
+            expect(last_response.status).to eq(403)
           end
         end
       end
@@ -122,7 +122,7 @@ module VCAP::CloudController
               get "/v2/events/#{@event_a.guid}", {},
                   headers_for(@user_a)
 
-              last_response.status.should == 200
+              expect(last_response.status).to eq(200)
 
               parsed_body = Yajl::Parser.parse(last_response.body)
               expect(parsed_body["entity"]["actor"]).to eq(@event_a.actor)
@@ -137,7 +137,7 @@ module VCAP::CloudController
               get "/v2/events/#{@event_a.guid}", {},
                   headers_for(@user_b)
 
-              last_response.status.should == 403
+              expect(last_response.status).to eq(403)
             end
           end
         end
@@ -146,7 +146,7 @@ module VCAP::CloudController
           it "returns a 404 error" do
             get "/v2/events/some-bogus-guid", {}, admin_headers
 
-            last_response.status.should == 404
+            expect(last_response.status).to eq(404)
           end
         end
       end
@@ -161,9 +161,9 @@ module VCAP::CloudController
 
       it "paginates the results" do
         get "/v2/events", {}, admin_headers
-        decoded_response["total_pages"].should == 2
-        decoded_response["prev_url"].should be_nil
-        decoded_response["next_url"].should == "/v2/events?order-direction=asc&page=2&results-per-page=50"
+        expect(decoded_response["total_pages"]).to eq(2)
+        expect(decoded_response["prev_url"]).to be_nil
+        expect(decoded_response["next_url"]).to eq("/v2/events?order-direction=asc&page=2&results-per-page=50")
       end
     end
 
@@ -182,9 +182,9 @@ module VCAP::CloudController
 
         get "/v2/events?q=timestamp%3E=#{start_time.iso8601}%3Btimestamp%3C=#{end_time.iso8601}", {}, admin_headers
 
-        decoded_response["total_pages"].should == 2
-        decoded_response["prev_url"].should be_nil
-        decoded_response["next_url"].should == "/v2/events?order-direction=asc&page=2&q=timestamp%3E=#{start_time.iso8601}%3Btimestamp%3C=#{end_time.iso8601}&results-per-page=50"
+        expect(decoded_response["total_pages"]).to eq(2)
+        expect(decoded_response["prev_url"]).to be_nil
+        expect(decoded_response["next_url"]).to eq("/v2/events?order-direction=asc&page=2&q=timestamp%3E=#{start_time.iso8601}%3Btimestamp%3C=#{end_time.iso8601}&results-per-page=50")
       end
     end
 
@@ -194,31 +194,31 @@ module VCAP::CloudController
 
       it "returns a 200 status code" do
         get "/v2/events?q=type:audit.app.update", {}, admin_headers
-        last_response.status.should == 200
+        expect(last_response.status).to eq(200)
       end
 
       context "when passed one type" do
         it "should return events of that type" do
           get "/v2/events?q=type:audit.app.update", {}, admin_headers
-          decoded_response["total_results"].should == 1
-          decoded_response["resources"][0]["metadata"]["guid"].should == update_event.guid
+          expect(decoded_response["total_results"]).to eq(1)
+          expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(update_event.guid)
         end
       end
 
       context "when passed multiple types" do
         it "should return events for matching all the types" do
           get "/v2/events?q=type%20IN%20audit.app.update,app.crash", {}, admin_headers
-          decoded_response["total_results"].should == 2
+          expect(decoded_response["total_results"]).to eq(2)
           filtered_event_guids = decoded_response["resources"].map{ |resource| resource["metadata"]["guid"] }
-          filtered_event_guids.should =~ [ update_event.guid, crash_event.guid ]
+          expect(filtered_event_guids).to match_array([ update_event.guid, crash_event.guid ])
         end
       end
 
       context "when passed an unknown type" do
         it "should succeed and return no events" do
           get "/v2/events?q=type:audit.app.slartibartfast", {}, admin_headers
-          last_response.status.should == 200
-          decoded_response["total_results"].should == 0
+          expect(last_response.status).to eq(200)
+          expect(decoded_response["total_results"]).to eq(0)
         end
       end
     end
@@ -243,8 +243,8 @@ module VCAP::CloudController
       it "returns events within a timerange and type set" do
         get "/v2/events?q=timestamp#{gte}#{(timestamp_two).utc.iso8601}#{semi}timestamp#{lt}#{(timestamp_three+1).utc.iso8601}#{semi}type%20IN%20audit.app.update,app.crash",
             {}, admin_headers
-        decoded_response["total_results"].should == 1
-        decoded_response["resources"][0]["metadata"]["guid"].should == event2.guid
+        expect(decoded_response["total_results"]).to eq(1)
+        expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(event2.guid)
       end
     end
 
@@ -267,49 +267,49 @@ module VCAP::CloudController
 
       it "returns a 200 status code" do
         get "/v2/events?q=timestamp#{gte}#{base_timestamp.utc.iso8601}", {}, admin_headers
-        last_response.status.should == 200
+        expect(last_response.status).to eq(200)
       end
 
       it "returns events on or after (>=) the timestamp" do
         get "/v2/events?q=timestamp#{gte}#{(timestamp_one).utc.iso8601}", {}, admin_headers
-        decoded_response["total_results"].should == 3
-        decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
-        decoded_response["resources"][1]["metadata"]["guid"].should == event2.guid
-        decoded_response["resources"][2]["metadata"]["guid"].should == event3.guid
+        expect(decoded_response["total_results"]).to eq(3)
+        expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(event1.guid)
+        expect(decoded_response["resources"][1]["metadata"]["guid"]).to eq(event2.guid)
+        expect(decoded_response["resources"][2]["metadata"]["guid"]).to eq(event3.guid)
       end
 
       it "returns events after (>) the timestamp" do
         skip "This actually is a bug in Sequel as far as we can tell.  timestamp>X actually behaves like timestamp>=X"
         get "/v2/events?q=timestamp#{gt}#{(timestamp_one).utc.iso8601}", {}, admin_headers
-        decoded_response["total_results"].should == 1
-        decoded_response["resources"][0]["metadata"]["guid"].should == event2.guid
+        expect(decoded_response["total_results"]).to eq(1)
+        expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(event2.guid)
       end
 
       it "returns events before (<=) the timestamp" do
         get "/v2/events?q=timestamp#{lte}#{(timestamp_one + timestamp_delta / 2).utc.iso8601}", {}, admin_headers
-        decoded_response["total_results"].should == 1
-        decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
+        expect(decoded_response["total_results"]).to eq(1)
+        expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(event1.guid)
       end
 
       it "returns events before (<) the timestamp" do
         get "/v2/events?q=timestamp#{lt}#{timestamp_two.utc.iso8601}", {}, admin_headers
-        decoded_response["total_results"].should == 1
-        decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
+        expect(decoded_response["total_results"]).to eq(1)
+        expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(event1.guid)
       end
 
       it "returns events on or before (<=) the timestamp" do
         skip "This actually is a bug in Sequel as far as we can tell.  timestamp<=X actually behaves like timestamp<X"
         get "/v2/events?q=timestamp#{lte}#{timestamp_two.utc.iso8601}", {}, admin_headers
-        decoded_response["total_results"].should == 2
-        decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
-        decoded_response["resources"][1]["metadata"]["guid"].should == event2.guid
+        expect(decoded_response["total_results"]).to eq(2)
+        expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(event1.guid)
+        expect(decoded_response["resources"][1]["metadata"]["guid"]).to eq(event2.guid)
       end
 
       it "returns events within a timerange" do
         get "/v2/events?q=timestamp#{gte}#{(timestamp_one).utc.iso8601}#{semi}timestamp#{lt}#{timestamp_three.utc.iso8601}", {}, admin_headers
-        decoded_response["total_results"].should == 2
-        decoded_response["resources"][0]["metadata"]["guid"].should == event1.guid
-        decoded_response["resources"][1]["metadata"]["guid"].should == event2.guid
+        expect(decoded_response["total_results"]).to eq(2)
+        expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(event1.guid)
+        expect(decoded_response["resources"][1]["metadata"]["guid"]).to eq(event2.guid)
       end
     end
 

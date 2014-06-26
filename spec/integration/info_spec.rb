@@ -13,22 +13,22 @@ describe "Cloud Controller", type: :integration, isolation: :truncation do
 
   it "responds to /info" do
     make_get_request("/info").tap do |r|
-      r.code.should == "200"
-      r.json_body["version"].should == 2
-      r.json_body["description"].should == "Cloud Foundry sponsored by Pivotal"
+      expect(r.code).to eq("200")
+      expect(r.json_body["version"]).to eq(2)
+      expect(r.json_body["description"]).to eq("Cloud Foundry sponsored by Pivotal")
     end
   end
 
   it "authenticate and authorize with valid token" do
     unauthorized_token = {"Authorization" => "bearer unauthorized-token"}
     make_get_request("/v2/stacks", unauthorized_token).tap do |r|
-      r.code.should == "401"
+      expect(r.code).to eq("401")
     end
 
     authorized_token = {"Authorization" => "bearer #{admin_token}"}
     make_get_request("/v2/stacks", authorized_token).tap do |r|
-      r.code.should == "200"
-      r.json_body["resources"].should be_a(Array)
+      expect(r.code).to eq("200")
+      expect(r.json_body["resources"]).to be_a(Array)
     end
   end
 end

@@ -10,7 +10,7 @@ module VCAP::CloudController
         AppBitsPacker.new(app_guid, uploaded_path, [:fingerprints])
       end
 
-      it { should be_a_valid_job }
+      it { is_expected.to be_a_valid_job }
 
       describe "#perform" do
         let(:app) { double(:app) }
@@ -23,29 +23,29 @@ module VCAP::CloudController
         before do
           TestConfig.override({:directories => {:tmpdir => tmpdir}, :packages => TestConfig.config[:packages].merge(:max_package_size => max_package_size)})
 
-          CloudController::Blobstore::FingerprintsCollection.stub(:new) { fingerprints }
-          App.stub(:find) { app }
-          AppBitsPackage.stub(:new) { double(:packer, create: "done") }
+          allow(CloudController::Blobstore::FingerprintsCollection).to receive(:new) { fingerprints }
+          allow(App).to receive(:find) { app }
+          allow(AppBitsPackage).to receive(:new) { double(:packer, create: "done") }
         end
 
         it "finds the app from the guid" do
-          App.should_receive(:find).with(guid: app_guid)
+          expect(App).to receive(:find).with(guid: app_guid)
           job.perform
         end
 
         it "creates blob stores" do
-          CloudController::DependencyLocator.instance.should_receive(:package_blobstore)
-          CloudController::DependencyLocator.instance.should_receive(:global_app_bits_cache)
+          expect(CloudController::DependencyLocator.instance).to receive(:package_blobstore)
+          expect(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache)
           job.perform
         end
 
         it "creates an app bit packer and performs" do
-          CloudController::DependencyLocator.instance.should_receive(:package_blobstore).and_return(package_blobstore)
-          CloudController::DependencyLocator.instance.should_receive(:global_app_bits_cache).and_return(global_app_bits_cache)
+          expect(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
+          expect(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(global_app_bits_cache)
 
           packer = double
-          AppBitsPackage.should_receive(:new).with(package_blobstore, global_app_bits_cache, max_package_size, tmpdir).and_return(packer)
-          packer.should_receive(:create).with(app, uploaded_path, fingerprints)
+          expect(AppBitsPackage).to receive(:new).with(package_blobstore, global_app_bits_cache, max_package_size, tmpdir).and_return(packer)
+          expect(packer).to receive(:create).with(app, uploaded_path, fingerprints)
           job.perform
         end
 

@@ -49,7 +49,7 @@ resource "Security Groups (experimental)", :type => :api do
         new_security_group = {name: 'new_name', rules: []}
 
         client.put "/v2/security_groups/#{guid}", Yajl::Encoder.encode(new_security_group), headers
-        status.should == 201
+        expect(status).to eq(201)
         standard_entity_response parsed_response, :security_group, name: 'new_name', rules: []
       end
     end

@@ -53,7 +53,7 @@ module VCAP::CloudController
         context "when using nginx" do
           it "redirects to correct nginx URL" do
             get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
-            last_response.status.should == 200
+            expect(last_response.status).to eq(200)
             app_bit_path = last_response.headers.fetch("X-Accel-Redirect")
             File.exists?(File.join(workspace, app_bit_path))
           end
@@ -63,24 +63,24 @@ module VCAP::CloudController
       context "dev app download" do
         it "should return 404 for an app without a package" do
           get "/v2/apps/#{app_obj_without_pkg.guid}/download", {}, headers_for(developer2)
-          last_response.status.should == 404
+          expect(last_response.status).to eq(404)
         end
 
         it "should return 302 for valid packages" do
           get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(developer)
-          last_response.status.should == 302
+          expect(last_response.status).to eq(302)
         end
 
         it "should return 404 for non-existent apps" do
           get "/v2/apps/abcd/download", {}, headers_for(developer)
-          last_response.status.should == 404
+          expect(last_response.status).to eq(404)
         end
       end
 
       context "user app download" do
         it "should return 403" do
            get "/v2/apps/#{app_obj.guid}/download", {}, headers_for(user)
-           last_response.status.should == 403
+           expect(last_response.status).to eq(403)
         end
       end
     end

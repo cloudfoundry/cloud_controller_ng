@@ -28,7 +28,7 @@ describe ServiceBindingPresenter do
         subject { ServiceBindingPresenter.new(service_binding).to_hash }
 
         specify do
-          subject.fetch(:syslog_drain_url).should == "syslog://example.com:514"
+          expect(subject.fetch(:syslog_drain_url)).to eq("syslog://example.com:514")
         end
       end
     end
@@ -40,21 +40,21 @@ describe ServiceBindingPresenter do
         subject { ServiceBindingPresenter.new(service_binding).to_hash }
 
         specify do
-          subject.should be_instance_of(Hash)
-          subject.should have_key(:label)
-          subject.should have_key(:name)
-          subject.should have_key(:credentials)
-          subject.should have_key(:options)
-          subject.should have_key(:plan)
-          subject.should have_key(:provider)
-          subject.should have_key(:version)
-          subject.should have_key(:vendor)
-          subject.should have_key(:tags)
+          expect(subject).to be_instance_of(Hash)
+          expect(subject).to have_key(:label)
+          expect(subject).to have_key(:name)
+          expect(subject).to have_key(:credentials)
+          expect(subject).to have_key(:options)
+          expect(subject).to have_key(:plan)
+          expect(subject).to have_key(:provider)
+          expect(subject).to have_key(:version)
+          expect(subject).to have_key(:vendor)
+          expect(subject).to have_key(:tags)
         end
 
         specify do
-          subject.fetch(:credentials).should == service_binding.credentials
-          subject.fetch(:options).should == service_binding.binding_options
+          expect(subject.fetch(:credentials)).to eq(service_binding.credentials)
+          expect(subject.fetch(:options)).to eq(service_binding.binding_options)
         end
       end
     end
@@ -64,7 +64,7 @@ describe ServiceBindingPresenter do
         subject { ServiceBindingPresenter.new(service_binding).to_hash }
 
         specify do
-          subject.fetch(:options).should == {}
+          expect(subject.fetch(:options)).to eq({})
         end
       end
     end
@@ -83,11 +83,11 @@ describe ServiceBindingPresenter do
       subject { ServiceBindingPresenter.new(service_binding).to_hash }
 
       specify do
-        subject.should be_instance_of(Hash)
-        subject.should have_key(:label)
-        subject.should have_key(:credentials)
-        subject.should have_key(:options)
-        subject.should have_key(:tags)
+        expect(subject).to be_instance_of(Hash)
+        expect(subject).to have_key(:label)
+        expect(subject).to have_key(:credentials)
+        expect(subject).to have_key(:options)
+        expect(subject).to have_key(:tags)
       end
     end
   end

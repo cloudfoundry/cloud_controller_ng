@@ -19,13 +19,13 @@ module VCAP::CloudController
               {},
               headers_for(@developer))
 
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
 
           get("/v2/apps/#{@app.guid}/instances/-1/files",
               {},
               headers_for(@developer))
 
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
 
         it "should return 400 when there is an error finding the instance" do
@@ -38,7 +38,7 @@ module VCAP::CloudController
               {},
               headers_for(@developer))
 
-          last_response.status.should == 400
+          expect(last_response.status).to eq(400)
         end
 
         it "should issue redirect", :use_nginx => false do
@@ -55,15 +55,15 @@ module VCAP::CloudController
             :credentials => [],
             :file_uri_v2 => "file_uri/",
           )
-          DeaClient.should_receive(:get_file_uri_for_active_instance_by_index).
+          expect(DeaClient).to receive(:get_file_uri_for_active_instance_by_index).
             with(@app, nil, 5).and_return(to_return)
 
           get("/v2/apps/#{@app.guid}/instances/#{instance}/files",
               {},
               headers_for(@developer).merge("HTTP_RANGE" => range))
 
-          last_response.status.should == 302
-          last_response.headers.should include("Location" => "file_uri/")
+          expect(last_response.status).to eq(302)
+          expect(last_response.headers).to include("Location" => "file_uri/")
         end
       end
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
               {},
               headers_for(@user))
 
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
 
           @app.state = "STARTED"
           @app.instances = 10
@@ -83,13 +83,13 @@ module VCAP::CloudController
               {},
               headers_for(@user))
 
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
 
           get("/v2/apps/#{@app.guid}/instances/5/files/path",
               {},
               headers_for(@user))
 
-          last_response.status.should == 403
+          expect(last_response.status).to eq(403)
         end
       end
     end

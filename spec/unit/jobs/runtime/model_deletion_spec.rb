@@ -7,7 +7,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     describe ModelDeletion do
 
-      it { should be_a_valid_job }
+      it { is_expected.to be_a_valid_job }
 
       describe "#perform" do
         let(:space) { Space.make }

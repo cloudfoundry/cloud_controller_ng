@@ -25,7 +25,7 @@ module VCAP::CloudController
       it "should return a serialized dea message" do
         res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
         expect(res[:executableUri]).to eq("app_uri")
-        res.should be_kind_of(Hash)
+        expect(res).to be_kind_of(Hash)
 
         expect(res[:droplet]).to eq(app.guid)
         expect(res[:services]).to be_kind_of(Array)
@@ -69,7 +69,7 @@ module VCAP::CloudController
         it "should enable console in the start message" do
           app.update(:console => true)
           res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          res[:console].should == true
+          expect(res[:console]).to eq(true)
         end
       end
 
@@ -77,7 +77,7 @@ module VCAP::CloudController
         it "should pass debug mode in the start message" do
           app.update(:debug => "run")
           res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          res[:debug].should == "run"
+          expect(res[:debug]).to eq("run")
         end
       end
 
@@ -85,7 +85,7 @@ module VCAP::CloudController
         it "should pass command in the start message" do
           app.update(:command => "custom start command")
           res = StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          res[:start_command].should == "custom start command"
+          expect(res[:start_command]).to eq("custom start command")
         end
       end
       

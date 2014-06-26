@@ -77,7 +77,7 @@ describe 'Sinatra::VCAP', type: :controller do
         completed = VCAP::Component.varz[:vcap_sinatra][:requests][:completed]
       end
 
-      completed.should == @orig_completed + 1
+      expect(completed).to eq(@orig_completed + 1)
     end
 
     it "should increment the number of #{expected_response}s" do
@@ -89,20 +89,20 @@ describe 'Sinatra::VCAP', type: :controller do
       http_status.each do |code, num|
         expected_num = @orig_http_status[code]
         expected_num += 1 if code == expected_response
-        num.should == expected_num
+        expect(num).to eq(expected_num)
       end
     end
   end
 
   shared_examples 'vcap request id' do
     it 'should return the request guid in the header' do
-      last_response.headers['X-VCAP-Request-ID'].should_not be_nil
+      expect(last_response.headers['X-VCAP-Request-ID']).not_to be_nil
     end
   end
 
   shared_examples 'http header content type' do
     it 'should return json content type in the header' do
-      last_response.headers['Content-Type'].should eql('application/json;charset=utf-8')
+      expect(last_response.headers['Content-Type']).to eql('application/json;charset=utf-8')
     end
   end
 
@@ -112,8 +112,8 @@ describe 'Sinatra::VCAP', type: :controller do
     end
 
     it 'should return success' do
-      last_response.status.should == 200
-      last_response.body.should == 'ok'
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to eq('ok')
     end
 
     include_examples 'vcap sinatra varz stats', 200
@@ -123,12 +123,12 @@ describe 'Sinatra::VCAP', type: :controller do
 
   describe 'accessing an invalid route' do
     before do
-      Steno.logger('vcap_spec').should_not_receive(:error)
+      expect(Steno.logger('vcap_spec')).not_to receive(:error)
       get '/not_found'
     end
 
     it 'should return a 404' do
-      last_response.status.should == 404
+      expect(last_response.status).to eq(404)
       expect(decoded_response["code"]).to eq(10000)
       expect(decoded_response["description"]).to match(/Unknown request/)
     end
@@ -140,12 +140,12 @@ describe 'Sinatra::VCAP', type: :controller do
 
   describe 'accessing a route that throws a low level exception' do
     before do
-      Steno.logger('vcap_spec').should_receive(:error).once
+      expect(Steno.logger('vcap_spec')).to receive(:error).once
       get '/div_0'
     end
 
     it 'should return 500' do
-      last_response.status.should == 500
+      expect(last_response.status).to eq(500)
       expect(decoded_response).to eq({
                                        'code' => 10001,
                                        'error_code' => 'UnknownError',
@@ -169,12 +169,12 @@ describe 'Sinatra::VCAP', type: :controller do
 
   describe 'accessing a route that throws a vcap error' do
     before do
-      Steno.logger('vcap_spec').should_receive(:info).once
+      expect(Steno.logger('vcap_spec')).to receive(:info).once
       get '/vcap_error'
     end
 
     it 'should return 400' do
-      last_response.status.should == 400
+      expect(last_response.status).to eq(400)
     end
 
     it 'should return structure' do
@@ -188,12 +188,12 @@ describe 'Sinatra::VCAP', type: :controller do
 
   describe 'accessing a route that throws a StructuredError' do
     before do
-      Steno.logger('vcap_spec').should_receive(:info).once
+      expect(Steno.logger('vcap_spec')).to receive(:info).once
       get '/structured_error'
     end
 
     it 'should return 418' do
-      last_response.status.should == 418
+      expect(last_response.status).to eq(418)
     end
 
     it 'should return structure' do
@@ -211,8 +211,8 @@ describe 'Sinatra::VCAP', type: :controller do
     end
 
     it 'should access the request id via Thread.current[:request_id]' do
-      last_response.status.should == 200
-      last_response.body.should == last_response.headers['X-VCAP-Request-ID']
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to eq(last_response.headers['X-VCAP-Request-ID'])
     end
   end
 
@@ -222,13 +222,13 @@ describe 'Sinatra::VCAP', type: :controller do
     end
 
     it 'should set the X-VCAP-Request-ID to the caller specified value' do
-      last_response.status.should == 200
-      last_response.headers['X-VCAP-Request-ID'].should match /abcdef::.*/
+      expect(last_response.status).to eq(200)
+      expect(last_response.headers['X-VCAP-Request-ID']).to match /abcdef::.*/
     end
 
     it 'should access the request id via Thread.current[:request_id]' do
-      last_response.status.should == 200
-      last_response.body.should match /abcdef::.*/
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to match /abcdef::.*/
     end
   end
 
@@ -238,13 +238,13 @@ describe 'Sinatra::VCAP', type: :controller do
     end
 
     it 'should set the X-VCAP-Request-ID to the caller specified value' do
-      last_response.status.should == 200
-      last_response.headers['X-VCAP-Request-ID'].should match /abcdef::.*/
+      expect(last_response.status).to eq(200)
+      expect(last_response.headers['X-VCAP-Request-ID']).to match /abcdef::.*/
     end
 
     it 'should access the request id via Thread.current[:request_id]' do
-      last_response.status.should == 200
-      last_response.body.should match /abcdef::.*/
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to match /abcdef::.*/
     end
   end
 
@@ -254,13 +254,13 @@ describe 'Sinatra::VCAP', type: :controller do
     end
 
     it 'should set the X-VCAP-Request-ID to the caller specified value of X-VCAP-Request-ID' do
-      last_response.status.should == 200
-      last_response.headers['X-VCAP-Request-ID'].should match /def::.*/
+      expect(last_response.status).to eq(200)
+      expect(last_response.headers['X-VCAP-Request-ID']).to match /def::.*/
     end
 
     it 'should access the request id via Thread.current[:request_id]' do
-      last_response.status.should == 200
-      last_response.body.should match /def::.*/
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to match /def::.*/
     end
   end
 
