@@ -10,7 +10,7 @@ bundler_args: --deployment --without development
 cache: bundler
 
 rvm:
-  - 1.9.3-p547
+  - 1.9.3
 
 before_script:
   - bundle exec rake db:create
@@ -18,6 +18,10 @@ before_script:
 
 script:
   - bundle exec rake $TASKS
+
+services:
+  - mysql
+  - postgresql
 
 after_script: # and this only on success, fail the whole build if it fails
   - "[ $TRAVIS_TEST_RESULT == 0 ] && travis-artifacts upload --path doc/api --target-path api_docs/$TRAVIS_BUILD_ID && echo https://s3-us-west-1.amazonaws.com/cc-travis-api-doc/api_docs/$TRAVIS_BUILD_ID/index.html"
