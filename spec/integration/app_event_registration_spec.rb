@@ -2,7 +2,7 @@ require "spec_helper"
 require "securerandom"
 
 module VCAP::CloudController
-  describe "Cloud controller app event registration", type: :integration, isolation: :truncation do
+  describe "Cloud controller app event registration", type: :integration do
     before(:all) do
       authed_headers = @authed_headers = {
         "Authorization" => "bearer #{admin_token}",

@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe "Service Instance Management", type: :integration, isolation: :truncation do
+describe "Service Instance Management", type: :integration do
   before(:all) do
     at_exit { stop_fake_service_broker }
     start_fake_service_broker

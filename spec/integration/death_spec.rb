@@ -1,7 +1,7 @@
 require "spec_helper"
 require "thread"
 
-describe "Cloud controller", type: :integration, isolation: :truncation do
+describe "Cloud controller", type: :integration do
   before(:all) do
     start_nats
     start_cc
