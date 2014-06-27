@@ -149,7 +149,7 @@ module VCAP::CloudController
         end
 
         it 'provisions a service instance' do
-          instance = create_service_instance
+          instance = create_managed_service_instance
 
           expect(last_response.status).to eq(201)
 
@@ -160,7 +160,7 @@ module VCAP::CloudController
         it 'creates a CREATED service usage event' do
           instance = nil
           expect {
-            instance = create_service_instance
+            instance = create_managed_service_instance
           }.to change{ServiceUsageEvent.count}.by(1)
 
           event = ServiceUsageEvent.last
@@ -253,7 +253,47 @@ module VCAP::CloudController
           expect(last_response.status).to eq(400)
           expect(decoded_response["description"]).to match(/service instance name.*limited to 50 characters/)
         end
-      end
+        end
+
+        context 'with naming collisions' do
+
+          it 'does not allow duplicate managed service instances' do
+            instance = create_managed_service_instance
+            expect(last_response.status).to eq(201)
+
+            create_managed_service_instance
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['code']).to eq(60002)
+          end
+
+          it 'does not allow duplicate user provided service instances' do
+            instance = create_user_provided_service_instance
+            expect(last_response.status).to eq(201)
+
+            create_user_provided_service_instance
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['code']).to eq(60002)
+          end
+
+          it 'does not allow a user provided service instance with same name as managed service instance' do
+            instance = create_managed_service_instance
+            expect(last_response.status).to eq(201)
+
+            create_user_provided_service_instance
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['code']).to eq(60002)
+          end
+
+          it 'does not allow a managed service instance with same name as user provided service instance' do
+            instance = create_user_provided_service_instance
+            expect(last_response.status).to eq(201)
+
+            create_managed_service_instance
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['code']).to eq(60002)
+          end
+
+        end
       end
 
       context 'with a v1 service' do
@@ -653,7 +693,7 @@ module VCAP::CloudController
       end
     end
 
-    def create_service_instance
+    def create_managed_service_instance
       req = Yajl::Encoder.encode(
         :name => 'foo',
         :space_guid => space.guid,
@@ -662,6 +702,18 @@ module VCAP::CloudController
       headers = json_headers(headers_for(developer))
 
       post "/v2/service_instances", req, headers
+
+      ServiceInstance.last
+    end
+
+    def create_user_provided_service_instance
+      req = Yajl::Encoder.encode(
+        :name => 'foo',
+        :space_guid => space.guid
+      )
+      headers = json_headers(headers_for(developer))
+
+      post "/v2/user_provided_service_instances", req, headers
 
       ServiceInstance.last
     end
