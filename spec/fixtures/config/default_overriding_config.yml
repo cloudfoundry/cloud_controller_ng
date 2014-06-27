@@ -101,3 +101,10 @@ billing_event_writing_enabled: false
 request_timeout_in_seconds: 600
 skip_cert_verify: true
 app_bits_upload_grace_period_in_seconds: 600
+
+security_group_definitions:
+- name: non_allowed
+  rules: []
+
+default_staging_security_group: non_allowed
+default_running_security_group: non_allowed

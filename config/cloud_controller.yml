@@ -150,3 +150,11 @@ install_buildpacks:
   - name: node_buildpack
     package: buildpack_node
 
+security_group_definitions:
+- name: dummy1
+  rules: []
+- name: dummy2
+  rules: []
+
+default_staging_security_group: dummy3
+default_running_security_group: dummy4

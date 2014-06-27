@@ -120,6 +120,7 @@ module VCAP::CloudController
           let(:argv) { ["-s"] }
           before do
             QuotaDefinition.dataset.destroy
+            SecurityGroup.dataset.destroy
             allow(Stack).to receive(:configure)
           end
 
@@ -157,6 +158,10 @@ module VCAP::CloudController
                 expect(Domain.find(:name => domain)).not_to be_nil
                 expect(Domain.find(:name => domain).owning_organization).to be_nil
               end
+            end
+
+            it "creates the security group defaults" do
+              expect(SecurityGroup.count).to eq(1)
             end
           end
 

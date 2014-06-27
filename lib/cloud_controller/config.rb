@@ -111,6 +111,10 @@ module VCAP::CloudController
         :quota_definitions => Hash,
         :default_quota_definition => String,
 
+        :security_group_definitions => Array,
+        :default_staging_security_group => String,
+        :default_running_security_group => String,
+
         :resource_pool => {
           optional(:maximum_size) => Integer,
           optional(:minimum_size) => Integer,
