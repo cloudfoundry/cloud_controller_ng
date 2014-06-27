@@ -116,6 +116,7 @@ module ApiDsl
       get root(path) do
         standard_list_parameters controller
         example_request "List all #{model_name.to_s.pluralize.titleize}#{outer_model_description}" do
+          expect(status).to eq 200
           standard_list_response parsed_response, model
         end
       end
