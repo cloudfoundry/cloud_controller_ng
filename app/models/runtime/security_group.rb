@@ -50,6 +50,8 @@ module VCAP::CloudController
           CloudController::TransportRuleValidator.validate(rule)
         when "icmp"
           CloudController::ICMPRuleValidator.validate(rule)
+        when "all"
+          CloudController::RuleValidator.validate(rule)
         else
           ["contains an unsupported protocol"]
         end

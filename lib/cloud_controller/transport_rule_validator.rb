@@ -1,5 +1,5 @@
 module CloudController
-  class TransportRuleValidator
+  class TransportRuleValidator < RuleValidator
     TRANSPORT_RULE_FIELDS = ["protocol", "ports", "destination"].map(&:freeze).freeze
 
     def self.validate(rule)
@@ -20,11 +20,6 @@ module CloudController
     end
 
     private
-
-    def self.validate_fields(rule, fields)
-      errs = (fields - rule.keys).map { |field| "missing required field '#{field}'" }
-      errs += (rule.keys - fields).map { |key| "contains the invalid field '#{key}'" }
-    end
 
     def self.validate_port(port)
       return false if /[^\d\s\-,]/.match(port)
@@ -53,23 +48,6 @@ module CloudController
 
     def self.port_in_valid_range?(port)
       port > 0 && port < 65536
-    end
-
-    def self.validate_destination(destination)
-      address_list = destination.split('-')
-
-      return false if address_list.length > 2
-      address_list.each do |address|
-        NetAddr::CIDR.create(address)
-      end
-
-      if address_list.length > 1
-        return false if NetAddr.ip_to_i(address_list[0]) > NetAddr.ip_to_i(address_list[1])
-      end
-
-      return true
-    rescue NetAddr::ValidationError
-      return false
     end
   end
 end

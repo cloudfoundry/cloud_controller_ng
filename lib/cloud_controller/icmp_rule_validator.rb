@@ -1,5 +1,5 @@
 module CloudController
-  class ICMPRuleValidator
+  class ICMPRuleValidator < RuleValidator
     ICMP_RULE_FIELDS = ["protocol", "code", "type", "destination"].map(&:freeze).freeze
 
     def self.validate(rule)
@@ -25,30 +25,6 @@ module CloudController
     end
 
     private
-
-    def self.validate_fields(rule, fields)
-      errs = (fields - rule.keys).map { |field| "missing required field '#{field}'" }
-      errs += (rule.keys - fields).map { |key| "contains the invalid field '#{key}'" }
-    end
-
-    def self.validate_destination(destination)
-      address_list = destination.split('-')
-
-      return false if address_list.length > 2
-
-      address_list.each do |address|
-        NetAddr::CIDR.create(address)
-      end
-
-      if address_list.length > 1
-        return false if NetAddr.ip_to_i(address_list[0]) > NetAddr.ip_to_i(address_list[1])
-      end
-
-      return true
-
-    rescue NetAddr::ValidationError
-      return false
-    end
 
     def self.validate_icmp_control_message(value)
       value.is_a?(Integer) && value >= -1 && value < 256
