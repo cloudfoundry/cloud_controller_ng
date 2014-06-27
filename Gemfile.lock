@@ -35,7 +35,7 @@ GIT
     vcap-concurrency (0.1.0)
 
 GIT
-  remote: https://github.com/zipmark/rspec_api_documentation
+  remote: https://github.com/zipmark/rspec_api_documentation.git
   revision: 847cd49bafa9486b3936c73eca6cb275387ee1bb
   specs:
     rspec_api_documentation (4.0.0.pre)
