@@ -60,6 +60,43 @@ module VCAP::CloudController
           expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::ManagedServiceInstance)
         end
       end
+
+      describe "when two are created with the same name" do
+        describe "when a UserProvidedServiceInstance exists" do
+          before { UserProvidedServiceInstance.create(service_instance_attrs) }
+
+          it "raises an exception when creating another UserProvidedServiceInstance" do
+            expect {
+              UserProvidedServiceInstance.create(service_instance_attrs)
+            }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
+          end
+
+          it "raises an exception when creating a ManagedServiceInstance" do
+            expect {
+              ManagedServiceInstance.create(service_instance_attrs)
+            }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
+          end
+        end
+
+        describe "when a ManagedServiceInstance exists" do
+          before do
+            service_plan = ServicePlan.make.reload
+            ManagedServiceInstance.create(service_instance_attrs.merge(service_plan: service_plan))
+          end
+
+          it "raises an exception when creating another ManagedServiceInstance" do
+            expect {
+              ManagedServiceInstance.create(service_instance_attrs)
+            }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
+          end
+
+          it "raises an exception when creating a UserProvidedServiceInstance" do
+            expect {
+              UserProvidedServiceInstance.create(service_instance_attrs)
+            }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
+          end
+        end
+      end
     end
 
     describe '#credentials' do
