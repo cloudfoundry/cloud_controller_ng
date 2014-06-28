@@ -65,10 +65,7 @@ RSpec.configure do |rspec_config|
 
   rspec_config.around :each do |example|
     isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config, DbConfig.connection)
-    tables = Tables.new(DbConfig.connection, DatabaseIsolation.isolated_tables(DbConfig.connection))
-    expect {
-      isolation.cleanly { example.run }
-    }.not_to change { tables.counts }
+    isolation.cleanly { example.run }
   end
 
   rspec_config.after :each do
