@@ -82,10 +82,12 @@ module VCAP::CloudController
         config[:security_group_definitions].each do |security_group|
           seed_security_group = security_group.dup
 
-          if security_group[:name] == config[:default_staging_security_group]
-            seed_security_group.merge!({staging_default: true})
-          elsif security_group[:name] == config[:default_running_security_group]
-            seed_security_group.merge!({running_default: true})
+          if security_group["name"] == config[:default_staging_security_group]
+            seed_security_group["staging_default"] = true
+          end
+
+          if security_group["name"] == config[:default_running_security_group]
+            seed_security_group["running_default"] = true
           end
 
           SecurityGroup.create(seed_security_group)

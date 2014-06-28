@@ -4,6 +4,7 @@ require "uri"
 
 # Config template for cloud controller
 module VCAP::CloudController
+  # rubocop:disable ClassLength
   class Config < VCAP::Config
     define_schema do
       {
@@ -111,7 +112,20 @@ module VCAP::CloudController
         :quota_definitions => Hash,
         :default_quota_definition => String,
 
-        :security_group_definitions => Array,
+        :security_group_definitions => [
+          {
+            "name" => String,
+            "rules" => [
+              {
+                "protocol" => String,
+                "destination" => String,
+                optional("ports") => String,
+                optional("type") => Integer,
+                optional("code") => Integer
+              }
+            ]
+          }
+        ],
         :default_staging_security_group => String,
         :default_running_security_group => String,
 

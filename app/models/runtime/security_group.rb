@@ -7,7 +7,7 @@ module VCAP::CloudController
     plugin :serialization
 
     import_attributes :name, :rules, :running_default, :staging_default, :space_guids
-    export_attributes :name, :rules
+    export_attributes :name, :rules, :running_default, :staging_default
 
     serialize_attributes :json, :rules
 

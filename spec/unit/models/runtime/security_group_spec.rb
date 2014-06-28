@@ -716,7 +716,7 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { is_expected.to export_attributes :name, :rules }
+      it { is_expected.to export_attributes :name, :rules, :running_default, :staging_default }
       it { is_expected.to import_attributes :name, :rules, :running_default, :staging_default, :space_guids }
     end
   end
