@@ -41,6 +41,7 @@ RSpec.configure do |rspec_config|
   rspec_config.include ControllerHelpers, type: :api
   rspec_config.include ControllerHelpers, :file_path => EscapedPath.join(%w[spec acceptance])
   rspec_config.include ApiDsl, type: :api
+  rspec_config.include IntegrationHelpers, type: :integration
 
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
   rspec_config.before :all do
