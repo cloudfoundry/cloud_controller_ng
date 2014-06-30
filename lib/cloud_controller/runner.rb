@@ -179,7 +179,7 @@ module VCAP::CloudController
       if @config[:nginx][:use_nginx]
         @thin_server = Thin::Server.new(@config[:nginx][:instance_socket], signals: false)
       else
-        @thin_server = Thin::Server.new(@config[:external_host], @config[:external_port])
+        @thin_server = Thin::Server.new(@config[:external_host], @config[:external_port], signals: false)
       end
 
       @thin_server.app = app

@@ -27,7 +27,7 @@ gem 'cf-registrar', '~> 1.0.1', git: 'https://github.com/cloudfoundry/cf-registr
 gem 'allowy'
 gem 'loggregator_emitter', '~> 3.0'
 gem 'talentbox-delayed_job_sequel'
-gem 'thin', '~> 1.5.1'
+gem 'thin', '~> 1.6.0'
 gem 'newrelic_rpm'
 gem 'clockwork', require: false
 

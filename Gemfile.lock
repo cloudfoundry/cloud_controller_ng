@@ -120,11 +120,11 @@ GEM
     multipart-post (2.0.0)
     mustache (0.99.5)
     mysql2 (0.3.13)
-    nats (0.5.0.beta.12)
+    nats (0.5.0.beta.14)
       daemons (>= 1.1.9)
       eventmachine (>= 1.0.3)
-      json_pure (>= 1.8.0)
-      thin (>= 1.5.0)
+      json_pure (>= 1.8.1)
+      thin (>= 1.6.0)
     net-scp (1.1.2)
       net-ssh (>= 2.6.5)
     net-ssh (2.7.0)
@@ -202,9 +202,9 @@ GEM
       delayed_job (~> 4.0.0)
       sequel (>= 3.38, < 5.0)
       tzinfo
-    thin (1.5.1)
+    thin (1.6.2)
       daemons (>= 1.0.9)
-      eventmachine (>= 0.12.6)
+      eventmachine (>= 1.0.0)
       rack (>= 1.0.0)
     thread_safe (0.1.3)
       atomic
@@ -282,7 +282,7 @@ DEPENDENCIES
   sqlite3
   steno
   talentbox-delayed_job_sequel
-  thin (~> 1.5.1)
+  thin (~> 1.6.0)
   timecop
   unf
   vcap-concurrency!
