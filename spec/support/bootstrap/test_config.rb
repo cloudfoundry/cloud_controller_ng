@@ -3,10 +3,7 @@ require "support/paths"
 
 module TestConfig
   def self.override(overrides)
-    if @previous_overrides != overrides
-      @config = load(overrides)
-      @previous_overrides = overrides
-    end
+    @config = load(overrides)
   end
 
   def self.reset
