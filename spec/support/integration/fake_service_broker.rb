@@ -4,6 +4,7 @@ require 'json'
 class FakeServiceBroker
   extend Sinatra::Delegator
 
+  # rubocop:disable MethodLength
   def self.start
     set :port, 54329
     set :run, true
