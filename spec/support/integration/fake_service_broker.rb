@@ -1,119 +1,126 @@
 require 'sinatra'
 require 'json'
 
-set :port, 54329
+class FakeServiceBroker
+  extend Sinatra::Delegator
 
-use Rack::Auth::Basic, 'Restricted Area' do |_, password|
-  password == 'supersecretshh'
-end
+  def self.start
+    set :port, 54329
+    set :run, true
 
-# logs by default are sent to /dev/null.  To debug, look for the caller of this fake broker.
+    use Rack::Auth::Basic, 'Restricted Area' do |_, password|
+      password == 'supersecretshh'
+    end
 
-instance_count = 0
-binding_count = 0
+    # logs by default are sent to /dev/null.  To debug, look for the caller of this fake broker.
 
-plans = [
-  {
-    'id' => 'custom-plan-1',
-    'name' => 'free',
-    'description' => 'A description of the Free plan',
-    'metadata' => {
-      'cost' => 0.0,
-      'bullets' =>
-        [
-          {'content' => 'Shared MySQL server'},
-          {'content' => '100 MB storage'},
-          {'content' => '40 concurrent connections'},
-        ]
-    },
-    'free' => true
-  },
-  {
-    'id' => 'custom-plan-2',
-    'name' => 'also free',
-    'description' => 'Two for twice the price!',
-    'free' => true
-  }
-]
+    instance_count = 0
+    binding_count = 0
 
-before '/v2/*' do
-  api_version = request.env['HTTP_X_BROKER_API_VERSION']
-  raise "Wrong broker api version.  Expected 2.3, got #{api_version}." unless api_version == '2.3'
-end
-
-get '/v2/catalog' do
-  body = {
-    'services' => [
+    plans = [
       {
-        'id' => 'custom-service-1',
-        'name' => 'custom-service',
-        'description' => 'A description of My Custom Service',
-        'bindable' => true,
-        'tags' => ['mysql', 'relational'],
+        'id' => 'custom-plan-1',
+        'name' => 'free',
+        'description' => 'A description of the Free plan',
         'metadata' => {
-          'listing' => {
-            'imageUrl' => 'http://example.com/catsaresofunny.gif',
-            'blurb' => 'A very fine service',
-          },
+          'cost' => 0.0,
+          'bullets' =>
+            [
+              {'content' => 'Shared MySQL server'},
+              {'content' => '100 MB storage'},
+              {'content' => '40 concurrent connections'},
+            ]
         },
-        'plans' => plans,
+        'free' => true
+      },
+      {
+        'id' => 'custom-plan-2',
+        'name' => 'also free',
+        'description' => 'Two for twice the price!',
+        'free' => true
       }
     ]
-  }.to_json
 
-  [200, {}, body]
-end
+    before '/v2/*' do
+      api_version = request.env['HTTP_X_BROKER_API_VERSION']
+      raise "Wrong broker api version.  Expected 2.3, got #{api_version}." unless api_version == '2.3'
+    end
 
-put '/v2/service_instances/:service_instance_id' do
-  json = JSON.parse(request.body.read)
-  raise 'unexpected plan_id' unless json['plan_id'] == 'custom-plan-1'
+    get '/v2/catalog' do
+      body = {
+        'services' => [
+          {
+            'id' => 'custom-service-1',
+            'name' => 'custom-service',
+            'description' => 'A description of My Custom Service',
+            'bindable' => true,
+            'tags' => ['mysql', 'relational'],
+            'metadata' => {
+              'listing' => {
+                'imageUrl' => 'http://example.com/catsaresofunny.gif',
+                'blurb' => 'A very fine service',
+              },
+            },
+            'plans' => plans,
+          }
+        ]
+      }.to_json
 
-  instance_count += 1
+      [200, {}, body]
+    end
 
-  body = {
-    'dashboard_url' => 'http://dashboard'
-  }.to_json
-  [201, {}, body]
-end
+    put '/v2/service_instances/:service_instance_id' do
+      json = JSON.parse(request.body.read)
+      raise 'unexpected plan_id' unless json['plan_id'] == 'custom-plan-1'
 
-put '/v2/service_instances/:service_instance_id/service_bindings/:service_binding_id' do
-  json = JSON.parse(request.body.read)
-  raise 'APP_GUID required in bind request' unless json['app_guid']
+      instance_count += 1
 
-  binding_count += 1
+      body = {
+        'dashboard_url' => 'http://dashboard'
+      }.to_json
+      [201, {}, body]
+    end
 
-  body = {
-    'credentials' => {
-      'username' => 'admin',
-      'password' => 'secret'
-    }
-  }.to_json
+    put '/v2/service_instances/:service_instance_id/service_bindings/:service_binding_id' do
+      json = JSON.parse(request.body.read)
+      raise 'APP_GUID required in bind request' unless json['app_guid']
 
-  [200, {}, body]
-end
+      binding_count += 1
 
-delete '/v2/service_instances/:service_instance_id/service_bindings/:service_binding_id' do
-  binding_count -= 1
+      body = {
+        'credentials' => {
+          'username' => 'admin',
+          'password' => 'secret'
+        }
+      }.to_json
 
-  [204, {}, '']
-end
+      [200, {}, body]
+    end
 
-delete '/v2/service_instances/:service_instance_id' do
-  instance_count -= 1
+    delete '/v2/service_instances/:service_instance_id/service_bindings/:service_binding_id' do
+      binding_count -= 1
 
-  [204, {}, '']
-end
+      [204, {}, '']
+    end
 
-get '/counts' do
-  body = {
-    instances: instance_count,
-    bindings: binding_count
-  }.to_json
+    delete '/v2/service_instances/:service_instance_id' do
+      instance_count -= 1
 
-  [200, {}, body]
-end
+      [204, {}, '']
+    end
 
-delete '/plan/last' do
-  plans.pop
-  [204, {}, nil]
+    get '/counts' do
+      body = {
+        instances: instance_count,
+        bindings: binding_count
+      }.to_json
+
+      [200, {}, body]
+    end
+
+    delete '/plan/last' do
+      plans.pop
+      [204, {}, nil]
+    end
+  end
 end

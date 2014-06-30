@@ -72,7 +72,7 @@ module IntegrationSetup
   def start_fake_service_broker
     kill_existing_fake_broker
     fake_service_broker_path = File.expand_path(File.join(File.dirname(__FILE__), 'fake_service_broker.rb'))
-    @fake_service_broker_pid = run_cmd("ruby #{fake_service_broker_path}")
+    @fake_service_broker_pid = run_cmd("ruby -r'#{fake_service_broker_path}' -e 'FakeServiceBroker.start'")
   end
 
   def kill_existing_fake_broker
