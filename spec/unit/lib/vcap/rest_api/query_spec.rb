@@ -330,7 +330,7 @@ module VCAP::RestAPI
 
       describe "exact query on a invalid timestamp" do
         it "should return no results" do
-          query_value = Author.all.last.published_at + 1
+          query_value = Author.last.published_at + 1
           q = "published_at:#{query_value}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)

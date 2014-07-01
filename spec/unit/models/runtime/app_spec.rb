@@ -1605,7 +1605,7 @@ module VCAP::CloudController
 
               expect(AppStartEvent.filter(
                   :app_guid => app.guid
-              ).all.last.app_run_id).not_to eq(original_start_event.app_run_id)
+              ).last.app_run_id).not_to eq(original_start_event.app_run_id)
             end
           end
 
