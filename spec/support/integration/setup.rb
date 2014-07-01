@@ -109,16 +109,3 @@ module IntegrationSetupHelpers
     false
   end
 end
-
-RSpec.configure do |rspec_config|
-  rspec_config.include(IntegrationSetupHelpers, type: :integration)
-  rspec_config.include(IntegrationSetup, type: :integration)
-
-  rspec_config.before(:all, type: :integration) do
-    WebMock.allow_net_connect!
-  end
-
-  rspec_config.after(:all, type: :integration) do
-    WebMock.disable_net_connect!
-  end
-end

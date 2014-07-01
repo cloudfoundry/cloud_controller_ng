@@ -37,11 +37,19 @@ RSpec.configure do |rspec_config|
   rspec_config.include Rack::Test::Methods
   rspec_config.include ModelCreation
 
+  rspec_config.include ServiceBrokerHelpers
   rspec_config.include ControllerHelpers, type: :controller, :file_path => EscapedPath.join(%w[spec unit controllers])
   rspec_config.include ControllerHelpers, type: :api
   rspec_config.include ControllerHelpers, :file_path => EscapedPath.join(%w[spec acceptance])
   rspec_config.include ApiDsl, type: :api
+
   rspec_config.include IntegrationHelpers, type: :integration
+  rspec_config.include IntegrationHttp, type: :integration
+  rspec_config.include IntegrationSetupHelpers, type: :integration
+  rspec_config.include IntegrationSetup, type: :integration
+
+  rspec_config.before(:all, type: :integration) { WebMock.allow_net_connect! }
+  rspec_config.after(:all, type: :integration) { WebMock.disable_net_connect! }
 
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
   rspec_config.before :all do
@@ -62,6 +70,8 @@ RSpec.configure do |rspec_config|
     Sequel::Deprecation.backtrace_filter = 5
 
     TestConfig.reset
+
+    stub_v1_broker
   end
 
   rspec_config.around :each do |example|

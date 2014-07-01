@@ -1,5 +1,5 @@
-RSpec.configure do |config|
-  config.before do
+module ServiceBrokerHelpers
+  def stub_v1_broker
     fake = double('HttpClient')
 
     allow(fake).to receive(:provision).and_return({
