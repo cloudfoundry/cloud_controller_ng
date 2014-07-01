@@ -21,7 +21,7 @@ module VCAP::CloudController
       logger = Steno.logger("cc.db.domain")
       domain = nil
 
-      Domain.db.transaction(savepoint: true) do
+      Domain.db.transaction do
         domain = SharedDomain[name: name]
 
         if domain

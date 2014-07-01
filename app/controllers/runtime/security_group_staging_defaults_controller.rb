@@ -24,7 +24,7 @@ module VCAP::CloudController
     def update(guid)
       obj = find_guid_and_validate_access(:update, guid)
 
-      model.db.transaction(savepoint: true) do
+      model.db.transaction do
         obj.lock!
         obj.update_from_hash({"staging_default" => true})
       end
@@ -39,7 +39,7 @@ module VCAP::CloudController
     def delete(guid)
       obj = find_guid_and_validate_access(:delete, guid)
 
-      model.db.transaction(savepoint: true) do
+      model.db.transaction do
         obj.lock!
         obj.update_from_hash({"staging_default" => false})
       end

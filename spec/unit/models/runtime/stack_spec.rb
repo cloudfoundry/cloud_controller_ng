@@ -140,7 +140,7 @@ module VCAP::CloudController
 
       it "destroys the apps" do
         app = AppFactory.make(:stack => stack)
-        expect { stack.destroy(savepoint: true) }.to change { App.where(:id => app.id).count }.by(-1)
+        expect { stack.destroy }.to change { App.where(:id => app.id).count }.by(-1)
       end
     end
   end

@@ -284,7 +284,7 @@ module VCAP::CloudController
         service_instance = ManagedServiceInstance.make(:space => space)
 
         expect {
-          subject.destroy(savepoint: true)
+          subject.destroy
         }.to change {
           ManagedServiceInstance.where(id: service_instance.id).count
         }.by(-1)
@@ -293,7 +293,7 @@ module VCAP::CloudController
       it "destroys all routes" do
         route = Route.make(space: space)
         expect {
-          subject.destroy(savepoint: true)
+          subject.destroy
         }.to change {
           Route.where(id: route.id).count
         }.by(-1)
@@ -302,7 +302,7 @@ module VCAP::CloudController
       it "doesn't do anything to domains" do
         PrivateDomain.make(owning_organization: space.organization)
         expect {
-          subject.destroy(savepoint: true)
+          subject.destroy
         }.not_to change {
           space.organization.domains
         }
@@ -312,14 +312,14 @@ module VCAP::CloudController
         user = User.make
         space.add_default_user(user)
         space.save
-        expect { subject.destroy(savepoint: true) }.to change { user.reload.default_space }.from(space).to(nil)
+        expect { subject.destroy }.to change { user.reload.default_space }.from(space).to(nil)
       end
 
       it "does not destroy any events related to the space" do
         event = Event.make(space: space)
 
         expect {
-          subject.destroy(savepoint: true)
+          subject.destroy
         }.to_not change {
           Event.where(id: [event.id]).count
         }

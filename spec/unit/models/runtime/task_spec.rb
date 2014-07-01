@@ -110,7 +110,7 @@ module VCAP::CloudController
 
         expect(CloudController::DependencyLocator.instance.task_client).to receive(:stop_task).with(task)
 
-        task.destroy(savepoint: true)
+        task.destroy
       end
     end
   end

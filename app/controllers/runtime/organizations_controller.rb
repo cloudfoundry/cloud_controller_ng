@@ -38,7 +38,7 @@ module VCAP::CloudController
     end
 
     def remove_related(guid, name, other_guid)
-      model.db.transaction(savepoint: true) do
+      model.db.transaction do
         if recursive? && name.to_s.eql?("users")
           org = find_guid_and_validate_access(:update, guid)
           user = User.find(:guid => other_guid)

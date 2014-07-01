@@ -87,7 +87,7 @@ module VCAP::CloudController
       context "service deprovisioning" do
         it "should deprovision a service on destroy" do
           expect(service_instance.client).to receive(:deprovision).with(service_instance)
-          service_instance.destroy(savepoint: true)
+          service_instance.destroy
         end
       end
 
@@ -95,7 +95,7 @@ module VCAP::CloudController
         it "should raise and rollback" do
           allow(service_instance.client).to receive(:deprovision).and_raise
           expect {
-            service_instance.destroy(savepoint: true)
+            service_instance.destroy
           }.to raise_error
           expect(VCAP::CloudController::ManagedServiceInstance.find(id: service_instance.id)).to be
         end
@@ -116,7 +116,7 @@ module VCAP::CloudController
           service_instance
           expect(ServiceCreateEvent).not_to receive(:create_from_service_instance)
           expect(ServiceDeleteEvent).to receive(:create_from_service_instance).with(service_instance)
-          service_instance.destroy(savepoint: true)
+          service_instance.destroy
         end
       end
     end
@@ -254,7 +254,7 @@ module VCAP::CloudController
     end
 
     describe "#destroy" do
-      subject { service_instance.destroy(savepoint: true) }
+      subject { service_instance.destroy }
 
       it "destroys the service bindings" do
         service_binding = ServiceBinding.make(
@@ -276,7 +276,7 @@ module VCAP::CloudController
 
       context "when there isn't a service auth token" do
         it "fails" do
-          subject.service_plan.service.service_auth_token.destroy(savepoint: true)
+          subject.service_plan.service.service_auth_token.destroy
           subject.refresh
           expect do
             subject.enum_snapshots
@@ -317,7 +317,7 @@ module VCAP::CloudController
 
       context "when there isn't a service auth token" do
         it "fails" do
-          subject.service_plan.service.service_auth_token.destroy(savepoint: true)
+          subject.service_plan.service.service_auth_token.destroy
           subject.refresh
           expect do
             subject.create_snapshot(name)

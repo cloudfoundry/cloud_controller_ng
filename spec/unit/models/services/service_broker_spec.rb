@@ -71,7 +71,7 @@ module VCAP::CloudController
         service = Service.make(:service_broker => service_broker)
         expect {
           begin
-            service_broker.destroy(savepoint: true)
+            service_broker.destroy
           rescue Sequel::ForeignKeyConstraintViolation
           end
         }.to change {
@@ -86,7 +86,7 @@ module VCAP::CloudController
           ManagedServiceInstance.make(:service_plan => service_plan)
           expect {
             begin
-              service_broker.destroy(savepoint: true)
+              service_broker.destroy
             rescue Sequel::ForeignKeyConstraintViolation
             end
           }.to_not change {
@@ -101,14 +101,14 @@ module VCAP::CloudController
         end
 
         it 'successfully destroys the broker' do
-          expect { service_broker.destroy(savepoint: true) }.
+          expect { service_broker.destroy }.
             to change(ServiceBroker, :count).by(-1)
         end
 
         it 'sets the broker_id of the dashboard client to nil' do
           client = ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).first
           expect(client.service_broker_id).to eq(service_broker.id)
-          service_broker.destroy(savepoint: true)
+          service_broker.destroy
           expect(client.reload.service_broker_id).to be_nil
         end
       end

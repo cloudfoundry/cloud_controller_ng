@@ -46,7 +46,7 @@ module VCAP::CloudController
         end
 
         context "and the app is not found" do
-          before { some_app.destroy(savepoint: true) }
+          before { some_app.destroy }
 
           it "returns HTTP status 400" do
             post "/v2/tasks",

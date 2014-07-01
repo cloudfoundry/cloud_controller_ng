@@ -15,7 +15,7 @@ module VCAP::Services::ServiceBrokers
       begin
         synchronize_dashboard_clients!
 
-        broker.db.transaction(savepoint: true) do
+        broker.db.transaction do
           synchronize_services_and_plans!
         end
       rescue => e
@@ -30,7 +30,7 @@ module VCAP::Services::ServiceBrokers
       validate_catalog!
       synchronize_dashboard_clients!
 
-      broker.db.transaction(savepoint: true) do
+      broker.db.transaction do
         broker.save
         synchronize_services_and_plans!
       end

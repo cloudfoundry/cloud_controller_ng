@@ -47,7 +47,7 @@ module VCAP::CloudController
       let(:binding) { ServiceBinding.make }
       it "unbinds at the broker" do
         expect(binding.client).to receive(:unbind)
-        binding.destroy(savepoint: true)
+        binding.destroy
       end
 
       context 'when unbind fails' do
@@ -55,7 +55,7 @@ module VCAP::CloudController
 
         it 'raises an error and rolls back' do
           expect {
-            binding.destroy(savepoint: true)
+            binding.destroy
           }.to raise_error
 
           expect(binding).to be_exists
@@ -194,7 +194,7 @@ module VCAP::CloudController
         fake_app_staging(app)
         expect(app.needs_staging?).to be false
 
-        binding.destroy(savepoint: true)
+        binding.destroy
         app.refresh
         expect(app.needs_staging?).to be false
       end

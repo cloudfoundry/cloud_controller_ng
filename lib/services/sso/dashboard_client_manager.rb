@@ -101,7 +101,7 @@ module VCAP::Services::SSO
       uaa_changeset = differ.create_uaa_changeset(requested_clients, existing_uaa_clients)
 
       begin
-        service_broker.db.transaction(savepoint: true) do
+        service_broker.db.transaction do
           db_changeset.each(&:db_command)
           client_manager.modify_transaction(uaa_changeset)
         end

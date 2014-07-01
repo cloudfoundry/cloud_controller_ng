@@ -1526,7 +1526,7 @@ module VCAP::CloudController
 
           it "generates a stop event" do
             expect(AppStopEvent).to receive(:create_from_app).with(app)
-            app.destroy(savepoint: true)
+            app.destroy
           end
 
           context "when the stop event creation fails" do
@@ -1535,7 +1535,7 @@ module VCAP::CloudController
             end
 
             it "rolls back the deletion" do
-              expect { app.destroy(savepoint: true) rescue nil }.not_to change(app, :exists?).from(true)
+              expect { app.destroy rescue nil }.not_to change(app, :exists?).from(true)
             end
           end
 
@@ -1543,7 +1543,7 @@ module VCAP::CloudController
             it "succeeds and does not generate a duplicate stop event" do
               AppStopEvent.create_from_app(app)
               expect(AppStopEvent).not_to receive(:create_from_app).with(app)
-              app.destroy(savepoint: true)
+              app.destroy
             end
           end
         end
@@ -1552,7 +1552,7 @@ module VCAP::CloudController
           it "does not generate a stop event" do
             app = AppFactory.make(:state => "STOPPED")
             expect(AppStopEvent).not_to receive(:create_from_app)
-            app.destroy(savepoint: true)
+            app.destroy
           end
         end
       end

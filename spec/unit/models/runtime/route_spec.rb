@@ -217,7 +217,7 @@ module VCAP::CloudController
 
         it "notifies DEAs of route change for running apps" do
           expect(VCAP::CloudController::DeaClient).to receive(:update_uris).with(app_1)
-          Route[:guid => route.guid].destroy(savepoint: true)
+          Route[:guid => route.guid].destroy
         end
       end
 
@@ -231,7 +231,7 @@ module VCAP::CloudController
 
           expect(VCAP::CloudController::DeaClient).not_to receive(:update_uris)
 
-          route.destroy(savepoint: true)
+          route.destroy
         end
       end
 
@@ -241,7 +241,7 @@ module VCAP::CloudController
         it "does not notify DEAs of route change for apps that are not staged" do
           AppFactory.make(:space => route.space, :package_state => "FAILED", :route_guids => [route.guid])
           expect(VCAP::CloudController::DeaClient).not_to receive(:update_uris)
-          Route[:guid => route.guid].destroy(savepoint: true)
+          Route[:guid => route.guid].destroy
         end
       end
     end

@@ -64,7 +64,7 @@ module VCAP::CloudController
         let(:new_space) { Space.make(guid: space_guid, organization: new_org) }
         let!(:new_event) { Event.make(space: new_space) }
 
-        before { new_space.destroy(savepoint: true) }
+        before { new_space.destroy }
 
         it "the event continues to exist" do
           expect(Space.find(:id => new_space.id)).to be_nil

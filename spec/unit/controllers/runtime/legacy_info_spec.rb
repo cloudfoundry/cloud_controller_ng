@@ -358,7 +358,7 @@ module VCAP::CloudController
         # poor man's reset_db
         Service.filter(:provider => "core").each do |svc|
           svc.service_plans_dataset.filter(:name => "100").destroy
-          svc.destroy(savepoint: true)
+          svc.destroy
         end
         @mysql_svc = Service.make(
           :label => "mysql_#{Sham.name}",

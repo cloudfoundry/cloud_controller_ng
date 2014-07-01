@@ -21,7 +21,7 @@ module VCAP::CloudController
         old_buildpack_key = buildpack.key
       end
 
-      Buildpack.db.transaction(savepoint: true) do
+      Buildpack.db.transaction do
         buildpack.lock!
         buildpack.update_from_hash(key: new_key, filename: new_filename)
       end
