@@ -30,7 +30,7 @@ describe StagerAdvertisement do
       it "returns false" do
         Timecop.freeze now do
           ad
-          Timecop.travel now + 11.seconds do
+          Timecop.freeze now + 11.seconds do
             expect(ad).to be_expired
           end
         end
@@ -41,7 +41,7 @@ describe StagerAdvertisement do
       it "returns false" do
         Timecop.freeze now do
           ad
-          Timecop.travel now + 10.seconds do
+          Timecop.freeze now + 10.seconds do
             expect(ad).to_not be_expired
           end
         end
