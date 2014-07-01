@@ -68,27 +68,6 @@ module IntegrationSetup
   rescue NATS::ConnectError
     nil
   end
-
-  def start_fake_service_broker
-    kill_existing_fake_broker
-    fake_service_broker_path = File.expand_path(File.join(File.dirname(__FILE__), 'fake_service_broker.rb'))
-    @fake_service_broker_pid = run_cmd("ruby -r'#{fake_service_broker_path}' -e 'FakeServiceBroker.start'")
-  end
-
-  def kill_existing_fake_broker
-    existing_broker_process = `ps -o pid,command`.split("\n").find { |s| s[/\d+.*fake_service_broker/] }
-    if existing_broker_process
-      Process.kill('KILL', existing_broker_process[/\d+/].to_i)
-    end
-  end
-
-  def fake_service_broker_is_running?
-    @fake_service_broker_pid && process_alive?(@fake_service_broker_pid)
-  end
-
-  def stop_fake_service_broker
-    Process.kill("KILL", @fake_service_broker_pid) if fake_service_broker_is_running?
-  end
 end
 
 module IntegrationSetupHelpers
