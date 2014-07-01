@@ -18,7 +18,7 @@ module VCAP::CloudController
 
         let(:event) do
           new_request_attrs = request_attrs.merge("environment_json" => {"foo" => 1})
-          app_event_repository.record_app_update(app, user, user_email, new_request_attrs)
+          app_event_repository.record_app_update(app, user, user_email, new_request_attrs).reload
         end
 
         it "records the expected fields on the event" do
@@ -74,6 +74,7 @@ module VCAP::CloudController
 
         it "records the event fields and metadata" do
           event = app_event_repository.record_app_create(app, user, user_email, request_attrs)
+          event.reload
           expect(event.type).to eq("audit.app.create")
           expect(event.actee).to eq(app.guid)
           expect(event.actee_type).to eq("app")
@@ -106,6 +107,7 @@ module VCAP::CloudController
 
         it "records an empty changes in metadata" do
           event = app_event_repository.record_app_delete_request(deleting_app, user, user_email, false)
+          event.reload
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq("user")
           expect(event.actor_name).to eq(user_email)

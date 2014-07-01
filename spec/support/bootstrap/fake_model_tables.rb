@@ -49,6 +49,13 @@ class FakeModelTables
       Date :created_at
     end
 
+    db.create_table :test_model_second_levels do
+      primary_key :id
+      String :guid
+      Integer :test_model_many_to_many_id
+      Date :created_at
+    end
+
     db.create_table :test_model_m_to_m_test_models do
       primary_key :id
       Integer :test_model_id

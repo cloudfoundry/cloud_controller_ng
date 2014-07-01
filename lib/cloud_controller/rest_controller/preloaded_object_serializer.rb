@@ -32,8 +32,11 @@ module VCAP::CloudController::RestController
     private
 
     def to_hash(controller, obj, opts, depth, parents)
-      obj_hash = obj.to_hash(attrs: opts.delete(:export_attrs))
+      export_attrs = opts.delete(:export_attrs)
+
       rel_hash = relations_hash(controller, obj, opts, depth, parents)
+      obj_hash = obj.to_hash(attrs: export_attrs)
+
       entity_hash = obj_hash.merge(rel_hash)
 
       metadata_hash = {

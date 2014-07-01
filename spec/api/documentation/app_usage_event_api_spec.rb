@@ -59,7 +59,7 @@ resource "App Usage Events", :type => :api do
     end
   end
 
-  post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps" do
+  post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", isolation: :truncation do
     example "Purge and reseed App Usage Events" do
       explanation <<-DOC
         Destroys all existing events. Populates new usage events, one for each started app.

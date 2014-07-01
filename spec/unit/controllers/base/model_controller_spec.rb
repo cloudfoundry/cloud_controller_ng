@@ -2,45 +2,6 @@ require "spec_helper"
 require "stringio"
 
 module VCAP::CloudController
-  class TestModelsController < RestController::ModelController
-    define_attributes do
-      attribute :required_attr, TrueClass
-      attribute :unique_value, String
-      to_many :test_model_many_to_ones
-      to_many :test_model_many_to_manies
-    end
-
-    query_parameters :unique_value
-
-    define_messages
-    define_routes
-
-    def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
-    end
-
-    def self.translate_validation_exception(e, attributes)
-      Errors::ApiError.new_from_details("TestModelValidation", attributes["unique_value"])
-    end
-  end
-
-  class TestModelManyToOnesController < RestController::ModelController
-    define_attributes do
-      to_one :test_model
-    end
-
-    define_messages
-    define_routes
-  end
-
-  class TestModelManyToManiesController < RestController::ModelController
-    define_attributes do
-    end
-
-    define_messages
-    define_routes
-  end
-
   describe RestController::ModelController do
     let(:user) { User.make(active: true) }
 

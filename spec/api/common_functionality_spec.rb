@@ -36,7 +36,7 @@ resource "Common Functionality", :type => :api do
           expect(status).to eq(200)
           expect(parsed_response).to eq({
                                             "total_results" => 0,
-                                            "total_pages" => 0,
+                                            "total_pages" => 1,
                                             "prev_url" => nil,
                                             "next_url" => nil,
                                             "resources" => []

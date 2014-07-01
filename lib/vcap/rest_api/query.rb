@@ -143,10 +143,10 @@ module VCAP::RestAPI
       column = model.db_schema[q_key.to_sym]
 
       if column[:db_type] == TINYINT_TYPE
-        q_val = TINYINT_FROM_TRUE_FALSE.fetch(q_val, q_val)
+        TINYINT_FROM_TRUE_FALSE.fetch(q_val, q_val)
+      else
+        q_val == "t"
       end
-
-      q_val
     end
 
     def clean_up_datetime(q_val)

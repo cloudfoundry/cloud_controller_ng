@@ -20,7 +20,11 @@ module Sequel::Plugins::VcapRelations
     def relationship_dataset(association)
       reflection = self.class.association_reflection(association)
       if (dataset = reflection[:dataset])
-        instance_exec(&dataset)
+        if dataset.arity == 1
+          instance_exec(reflection, &dataset)
+        else
+          instance_exec(&dataset)
+        end
       else
         reflection.associated_class.dataset
       end

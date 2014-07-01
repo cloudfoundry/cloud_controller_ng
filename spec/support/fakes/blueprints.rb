@@ -320,4 +320,7 @@ module VCAP::CloudController
 
   TestModelManyToMany.blueprint do
   end
+
+  TestModelSecondLevel.blueprint do
+  end
 end
