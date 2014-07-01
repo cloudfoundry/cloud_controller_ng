@@ -27,6 +27,12 @@ module VCAP::CloudController
         :app_usage_events => {
           :cutoff_age_in_days => Fixnum
         },
+        :audit_events => {
+          :cutoff_age_in_days => Fixnum
+        },
+        :failed_jobs => {
+          :cutoff_age_in_days => Fixnum
+        },
         optional(:billing_event_writing_enabled) => bool,
         :default_app_memory => Fixnum,
         :default_app_disk_in_mb => Fixnum,

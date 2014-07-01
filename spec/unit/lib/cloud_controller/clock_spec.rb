@@ -7,10 +7,12 @@ module VCAP::CloudController
       let(:app_usage_events_cleanup_job) { double(Jobs::Runtime::AppUsageEventsCleanup) }
       let(:app_events_cleanup_job) { double(Jobs::Runtime::AppEventsCleanup) }
       let(:audit_events_cleanup_job) { double(Jobs::Runtime::EventsCleanup) }
+      let(:failed_jobs_cleanup_job) { double(Jobs::Runtime::FailedJobsCleanup) }
 
       let(:app_usage_events_cleanup_enqueuer) { double(Jobs::Enqueuer) }
       let(:app_events_cleanup_enqueuer) { double(Jobs::Enqueuer) }
       let(:audit_events_cleanup_enqueuer) { double(Jobs::Enqueuer) }
+      let(:failed_jobs_cleanup_enqueuer) { double(Jobs::Enqueuer) }
 
       let(:logger) { double(Steno::Logger) }
       let(:config) do
@@ -18,6 +20,7 @@ module VCAP::CloudController
           app_events: { cutoff_age_in_days: 22 },
           app_usage_events: { cutoff_age_in_days: 33 },
           audit_events: { cutoff_age_in_days: 11 },
+          failed_jobs: { cutoff_age_in_days: 44 },
         }
       end
 
@@ -40,6 +43,10 @@ module VCAP::CloudController
         allow(Jobs::Runtime::EventsCleanup).to receive(:new).and_return(audit_events_cleanup_job)
         allow(Jobs::Enqueuer).to receive(:new).with(audit_events_cleanup_job, queue: "cc-generic").and_return(audit_events_cleanup_enqueuer)
         allow(audit_events_cleanup_enqueuer).to receive(:enqueue)
+
+        allow(Jobs::Runtime::FailedJobsCleanup).to receive(:new).and_return(failed_jobs_cleanup_job)
+        allow(Jobs::Enqueuer).to receive(:new).with(failed_jobs_cleanup_job, queue: "cc-generic").and_return(failed_jobs_cleanup_enqueuer)
+        allow(failed_jobs_cleanup_enqueuer).to receive(:enqueue)
 
         clock.start
       end
@@ -83,6 +90,19 @@ module VCAP::CloudController
           expect(Jobs::Runtime::EventsCleanup).to have_received(:new).with(11)
         end
       end
+
+      describe "failed_jobs.cleanup.job" do
+        it "schedules an FailedJobsCleanup job to run every day during business hours in SF" do
+          expect(Clockwork).to have_received(:every).with(1.day, "failed_jobs.cleanup.job", at: "21:00")
+          expect(Jobs::Enqueuer).to have_received(:new).with(failed_jobs_cleanup_job, queue: "cc-generic")
+          expect(failed_jobs_cleanup_enqueuer).to have_received(:enqueue)
+        end
+
+        it "sets the cutoff_age_in_days for FailedJobsCleanup to the configured value" do
+          expect(Jobs::Runtime::FailedJobsCleanup).to have_received(:new).with(44)
+        end
+      end
+
     end
   end
 end

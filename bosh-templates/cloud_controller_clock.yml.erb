@@ -65,6 +65,9 @@ app_usage_events:
 audit_events:
   cutoff_age_in_days: <%= p("cc.audit_events.cutoff_age_in_days") %>
 
+failed_jobs:
+  cutoff_age_in_days: <%= p("cc.failed_jobs.cutoff_age_in_days") %>
+
 billing_event_writing_enabled: <%= p("cc.billing_event_writing_enabled") %>
 
 default_app_memory: <%= p("cc.default_app_memory") %>

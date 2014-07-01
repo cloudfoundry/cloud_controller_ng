@@ -22,6 +22,12 @@ app_events:
 app_usage_events:
   cutoff_age_in_days: 31
 
+audit_events:
+  cutoff_age_in_days: 31
+
+failed_jobs:
+  cutoff_age_in_days: 31
+
 default_app_memory: 1024 #mb
 maximum_health_check_timeout: 180
 

@@ -27,6 +27,9 @@ app_usage_events:
 audit_events:
   cutoff_age_in_days: 31
 
+failed_jobs:
+  cutoff_age_in_days: 31
+
 billing_event_writing_enabled: true
 
 default_app_memory: 1024 #mb

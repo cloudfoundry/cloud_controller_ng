@@ -11,6 +11,7 @@ module VCAP::CloudController
       schedule_cleanup(:app_usage_events, Jobs::Runtime::AppUsageEventsCleanup, "18:00")
       schedule_cleanup(:app_events, Jobs::Runtime::AppEventsCleanup, "19:00")
       schedule_cleanup(:audit_events, Jobs::Runtime::EventsCleanup, "20:00")
+      schedule_cleanup(:failed_jobs, Jobs::Runtime::FailedJobsCleanup, "21:00")
 
       Clockwork.run
     end
