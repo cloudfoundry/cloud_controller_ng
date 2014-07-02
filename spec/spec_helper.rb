@@ -52,17 +52,6 @@ RSpec.configure do |rspec_config|
   rspec_config.after(:all, type: :integration) { WebMock.disable_net_connect! }
 
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
-  rspec_config.before :all do
-    VCAP::CloudController::SecurityContext.clear
-
-    RspecApiDocumentation.configure do |c|
-      c.format = [:html, :json]
-      c.api_name = "Cloud Foundry API"
-      c.template_path = "spec/api/documentation/templates"
-      c.curl_host = "https://api.[your-domain.com]"
-      c.app = FakeFrontController.new(TestConfig.config)
-    end
-  end
 
   rspec_config.before :each do
     Fog::Mock.reset
@@ -88,5 +77,13 @@ RSpec.configure do |rspec_config|
 
   rspec_config.after :all do
     TmpdirCleaner.clean
+  end
+
+  RspecApiDocumentation.configure do |c|
+    c.format = [:html, :json]
+    c.api_name = "Cloud Foundry API"
+    c.template_path = "spec/api/documentation/templates"
+    c.curl_host = "https://api.[your-domain.com]"
+    c.app = FakeFrontController.new(TestConfig.config)
   end
 end
