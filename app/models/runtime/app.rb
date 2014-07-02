@@ -109,6 +109,16 @@ module VCAP::CloudController
       super
     end
 
+    def after_create
+      super
+      create_app_usage_event
+    end
+
+    def after_update
+      super
+      create_app_usage_event
+    end
+
     def before_save
       if generate_start_event? && !package_hash
         raise VCAP::Errors::ApiError.new_from_details("AppPackageInvalid", "bits have not been uploaded")
@@ -123,13 +133,6 @@ module VCAP::CloudController
       AppStopEvent.create_from_app(self) if generate_stop_event?
       AppStartEvent.create_from_app(self) if generate_start_event?
 
-      super
-    end
-
-    def after_save
-      # AppUsageEvents have to be created before we call super because Sequel
-      # will clear the initial_values we use to detect changes
-      create_app_usage_event
       super
     end
 
