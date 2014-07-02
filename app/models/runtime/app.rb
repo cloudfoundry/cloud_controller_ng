@@ -105,16 +105,14 @@ module VCAP::CloudController
     end
 
     def before_create
-      super
       set_new_version
+      super
     end
 
     def before_save
       if generate_start_event? && !package_hash
         raise VCAP::Errors::ApiError.new_from_details("AppPackageInvalid", "bits have not been uploaded")
       end
-
-      super
 
       self.stack ||= Stack.default
       self.memory ||= Config.config[:default_app_memory]
@@ -124,9 +122,13 @@ module VCAP::CloudController
 
       AppStopEvent.create_from_app(self) if generate_stop_event?
       AppStartEvent.create_from_app(self) if generate_start_event?
+
+      super
     end
 
     def after_save
+      # AppUsageEvents have to be created before we call super because Sequel
+      # will clear the initial_values we use to detect changes
       create_app_usage_event
       super
     end
@@ -212,6 +214,7 @@ module VCAP::CloudController
     end
 
     def after_destroy
+      super
       AppStopEvent.create_from_app(self) unless initial_value(:state) == "STOPPED" || has_stop_event_for_latest_run?
       create_app_usage_event
     end

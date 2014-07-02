@@ -81,6 +81,7 @@ module VCAP::CloudController
 
     def before_destroy
       client.unbind(self)
+      super
     end
 
     def self.user_visibility_filter(user)

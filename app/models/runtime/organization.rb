@@ -87,10 +87,10 @@ module VCAP::CloudController
     end
 
     def before_save
-      super
       if column_changed?(:billing_enabled) && billing_enabled?
         @is_billing_enabled = true
       end
+      super
     end
 
     def after_save

@@ -13,13 +13,16 @@ module VCAP::CloudController
 
     def before_save
       self.secure_token ||= SecureRandom.urlsafe_base64
+      super
     end
 
     def after_commit
+      super
       task_client.start_task(self)
     end
 
     def after_destroy
+      super
       task_client.stop_task(self)
     end
 
