@@ -54,6 +54,28 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET', '/v2/service_instances' do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:service_instance) { UserProvidedServiceInstance.make(gateway_name: Sham.name) }
+
+      it "provides the correct service bindings url" do
+        get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
+        expect(decoded_response.fetch('entity').fetch('service_bindings_url')).to eq("/v2/user_provided_service_instances/#{service_instance.guid}/service_bindings")
+      end
+    end
+
+    describe 'GET', '/v2/user_provided_service_instances' do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:service_instance) { UserProvidedServiceInstance.make(gateway_name: Sham.name) }
+
+      it "provides the correct service bindings url" do
+        get "v2/user_provided_service_instances/#{service_instance.guid}", {}, admin_headers
+        expect(decoded_response.fetch('entity').fetch('service_bindings_url')).to eq("/v2/user_provided_service_instances/#{service_instance.guid}/service_bindings")
+      end
+    end
+
     it "allows creation of empty credentials with a syslog drain" do
       space = Space.make
       json_body = Yajl::Encoder.encode({
