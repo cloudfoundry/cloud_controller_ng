@@ -6,12 +6,22 @@ describe MaxServiceInstancePolicy do
     let(:space) { VCAP::CloudController::Space.make organization: org }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make }
     let(:service_instance) { make_organization_service_instance }
-    let(:quota) { VCAP::CloudController::QuotaDefinition.make total_services: 2 }
+    let(:quota) { VCAP::CloudController::QuotaDefinition.make total_services: max_instances }
+    let(:max_instances) { 2 }
 
     subject(:policy) { MaxServiceInstancePolicy.new(org, service_instance) }
 
     def make_organization_service_instance
       VCAP::CloudController::ManagedServiceInstance.make space: space, service_plan: service_plan
+    end
+
+    it 'counts only managed service instances' do
+      max_instances.times do
+        VCAP::CloudController::UserProvidedServiceInstance.make space: space
+      end
+
+      policy.check_quota
+      expect(service_instance.errors).to be_empty
     end
 
     context "when the quota is not reached" do
@@ -24,7 +34,7 @@ describe MaxServiceInstancePolicy do
     context "when the quota is unlimited" do
       let(:quota) { VCAP::CloudController::QuotaDefinition.make total_services: -1 }
 
-      before { 2.times { make_organization_service_instance } }
+      before { max_instances.times { make_organization_service_instance } }
 
       it "should return true when quota is not reached" do
         policy.check_quota
@@ -33,7 +43,7 @@ describe MaxServiceInstancePolicy do
     end
 
     context "when the quota is reached" do
-      before { 2.times { make_organization_service_instance } }
+      before { max_instances.times { make_organization_service_instance } }
 
       context "and the request is for a new service" do
         let(:service_instance) do

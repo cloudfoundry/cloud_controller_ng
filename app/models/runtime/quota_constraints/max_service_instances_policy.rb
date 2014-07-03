@@ -28,7 +28,8 @@ class MaxServiceInstancePolicy
   end
 
   def existing_service_instances
-    @organization.service_instances.count
+    managed_service_instances = @organization.service_instances.select{|si| si.is_gateway_service }
+    managed_service_instances.count
   end
 
   def requested_service_instances
