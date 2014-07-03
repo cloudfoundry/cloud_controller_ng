@@ -622,7 +622,7 @@ module VCAP::CloudController
     end
 
     describe "Quota enforcement" do
-      let(:paid_quota) { QuotaDefinition.make(:total_services => 0) }
+      let(:paid_quota) { QuotaDefinition.make(:total_services => 1) }
       let(:free_quota_with_no_services) do
         QuotaDefinition.make(:total_services => 0,
                                      :non_basic_services_allowed => false)
@@ -635,8 +635,15 @@ module VCAP::CloudController
       let(:free_plan) { ServicePlan.make(:free => true) }
 
       context "paid quota" do
+        let(:org) { Organization.make(:quota_definition => paid_quota) }
+        let(:space) { Space.make(:organization => org) }
+
+        def create_first_instance
+          ManagedServiceInstance.make(:space => space, :service_plan => paid_plan)
+        end
+
         it "should enforce quota check on number of service instances during creation" do
-          org = Organization.make(:quota_definition => paid_quota)
+          create_first_instance
           space = Space.make(:organization => org)
           req = Yajl::Encoder.encode(:name => Sham.name,
                                      :space_guid => space.guid,
@@ -645,6 +652,14 @@ module VCAP::CloudController
           post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
           expect(last_response.status).to eq(400)
           expect(decoded_response["description"]).to match(/exceeded your organization's services limit/)
+        end
+
+        it "should allow updating service instance when this doesn't affect quota" do
+          instance = create_first_instance
+          req = Yajl::Encoder.encode(:name => Sham.name)
+
+          put "/v2/service_instances/#{instance.guid}", req, json_headers(headers_for(make_developer_for_space(space)))
+          expect(last_response.status).to eq(201)
         end
       end
 
@@ -669,6 +684,16 @@ module VCAP::CloudController
                                      :service_plan_guid => paid_plan.guid)
 
           post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
+          expect(last_response.status).to eq(400)
+          expect(decoded_response["description"]).to match(/paid service plans are not allowed/)
+        end
+
+        it "should enforce quota check on service plan type change during update" do
+          org = Organization.make(:quota_definition => free_quota_with_one_service)
+          space = Space.make(:organization => org)
+          instance = ManagedServiceInstance.make(:space => space, :service_plan => free_plan)
+
+          put "/v2/service_instances/#{instance.guid}", Yajl::Encoder.encode(:service_plan_guid => paid_plan.guid), json_headers(headers_for(make_developer_for_space(space)))
           expect(last_response.status).to eq(400)
           expect(decoded_response["description"]).to match(/paid service plans are not allowed/)
         end

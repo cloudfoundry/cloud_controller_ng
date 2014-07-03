@@ -20,7 +20,19 @@ class MaxServiceInstancePolicy
 
   def service_instance_quota_remaining?
     @quota_definition.total_services == -1 || # unlimited
-      @organization.service_instances.count < @quota_definition.total_services
+      desired_service_instance_count <= @quota_definition.total_services
+  end
+
+  def desired_service_instance_count
+    existing_service_instances + requested_service_instances
+  end
+
+  def existing_service_instances
+    @organization.service_instances.count
+  end
+
+  def requested_service_instances
+    @service_instance.new? ? 1 : 0
   end
 
   def paid_services_allowed?

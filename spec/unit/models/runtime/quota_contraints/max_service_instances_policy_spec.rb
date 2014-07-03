@@ -35,47 +35,77 @@ describe MaxServiceInstancePolicy do
     context "when the quota is reached" do
       before { 2.times { make_organization_service_instance } }
 
-      context "and basic services are not allowed" do
-        before { quota.update(non_basic_services_allowed: false) }
+      context "and the request is for a new service" do
+        let(:service_instance) do
+          VCAP::CloudController::ManagedServiceInstance.make_unsaved space: space, service_plan: service_plan
+        end
 
-        context "and the service plan is free" do
-          before { service_plan.update(free: true) }
+        context "and basic services are not allowed" do
+          before { quota.update(non_basic_services_allowed: false) }
 
-          it "adds a free_quota_exceeded error on the org" do
-            policy.check_quota
-            expect(service_instance.errors.on(:org)).to include(:free_quota_exceeded)
+          context "and the service plan is free" do
+            before { service_plan.update(free: true) }
+
+            it "adds a free_quota_exceeded error on the org" do
+              policy.check_quota
+              expect(service_instance.errors.on(:org)).to include(:free_quota_exceeded)
+            end
+          end
+
+          context "and the service plan is paid" do
+            before { service_plan.update(free: false) }
+
+            it "adds a paid_quota_exceeded error on the org" do
+              policy.check_quota
+              expect(service_instance.errors.on(:service_plan)).to include(:paid_services_not_allowed)
+            end
           end
         end
 
-        context "and the service plan is paid" do
-          before { service_plan.update(free: false) }
+        context "and basic services are allowed" do
+          before { quota.update(non_basic_services_allowed: true) }
 
-          it "adds a paid_quota_exceeded error on the org" do
-            policy.check_quota
-            expect(service_instance.errors.on(:service_plan)).to include(:paid_services_not_allowed)
+          context "and the service plan is free" do
+            before { service_plan.update(free: true) }
+
+            it "adds a free_quota_exceeded error on the org" do
+              policy.check_quota
+              expect(service_instance.errors.on(:org)).to include(:paid_quota_exceeded)
+            end
+          end
+
+          context "and the service plan is paid" do
+            before { service_plan.update(free: false) }
+
+            it "adds a paid_quota_exceeded error on the org" do
+              policy.check_quota
+              expect(service_instance.errors.on(:org)).to include(:paid_quota_exceeded)
+            end
           end
         end
       end
 
-      context "and basic services are allowed" do
-        before { quota.update(non_basic_services_allowed: true) }
-
-        context "and the service plan is free" do
-          before { service_plan.update(free: true) }
-
-          it "adds a free_quota_exceeded error on the org" do
-            policy.check_quota
-            expect(service_instance.errors.on(:org)).to include(:paid_quota_exceeded)
-          end
+      context "and the request is to update an existing service" do
+        let(:service_instance) do
+          VCAP::CloudController::ManagedServiceInstance.first
         end
 
-        context "and the service plan is paid" do
-          before { service_plan.update(free: false) }
+        it "allows updating the service" do
+          policy.check_quota
+          expect(service_instance.errors).to be_empty
+        end
 
-          it "adds a paid_quota_exceeded error on the org" do
-            policy.check_quota
-            expect(service_instance.errors.on(:org)).to include(:paid_quota_exceeded)
-          end
+        it "adds an error on the service plan when updating the plan to a value not allowed by the quota" do
+          quota.update(non_basic_services_allowed: false)
+          service_instance.service_plan.free = false
+          policy.check_quota
+          expect(service_instance.errors.on(:service_plan)).to include(:paid_services_not_allowed)
+        end
+
+        it "adds an error on the organization if the quota is actually exceeded" do
+          make_organization_service_instance
+          policy.check_quota
+          expect(service_instance.errors.on(:org)).to include(:paid_quota_exceeded)
         end
       end
     end
