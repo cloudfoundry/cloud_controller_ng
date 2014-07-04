@@ -28,7 +28,7 @@ describe AppEnvironmentPolicy do
     end
 
     ["VMC", "vmc", "VCAP", "vcap"].each do |env_var_name|
-      it "allows entries to start with #{env_var_name}" do
+      it "does not allow entries to start with #{env_var_name}" do
         app.environment_json = { :abc => 123, "#{env_var_name}_abc" => "hi" }
         expect(validator).to validate_with_error(app, AppEnvironmentPolicy::RESERVED_ENV_VAR_ERROR_MSG % "#{env_var_name}_abc")
       end

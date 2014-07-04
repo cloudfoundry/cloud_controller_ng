@@ -116,4 +116,8 @@ module ControllerHelpers
   def admin_headers
     @admin_headers ||= headers_for(admin_user)
   end
+
+  def escape_query(string)
+    URI.encode(string, /[<>;:, ]/)
+  end
 end

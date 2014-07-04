@@ -298,9 +298,10 @@ module VCAP::CloudController
     end
 
     describe "#enumerate" do
-      let!(:model1) { TestModel.make }
-      let!(:model2) { TestModel.make }
-      let!(:model3) { TestModel.make }
+      let(:timestamp) { Time.now.change(usec: 0) }
+      let!(:model1) { TestModel.make(created_at: timestamp) }
+      let!(:model2) { TestModel.make(created_at: timestamp + 1.second) }
+      let!(:model3) { TestModel.make(created_at: timestamp + 2.seconds) }
 
       it "paginates the dataset with query params" do
         expect_any_instance_of(RestController::PaginatedCollectionRenderer)
@@ -342,7 +343,7 @@ module VCAP::CloudController
       end
 
       describe "using query parameters" do
-        it "returns matching results" do
+        it "returns matching results when querying for equality" do
           found_model = TestModel.make(unique_value: 'value1')
           TestModel.make(unique_value: 'value2')
 
@@ -350,6 +351,51 @@ module VCAP::CloudController
 
           expect(decoded_response["total_results"]).to eq(1)
           expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(found_model.guid)
+        end
+
+        it "returns matching results when querying for greater than or equal" do
+          get escape_query("/v2/test_models?q=created_at>=#{model2.created_at.utc.iso8601}"), "", admin_headers
+
+          expect(decoded_response["total_results"]).to eq(2)
+          found_guids = decoded_response["resources"].collect { |resource| resource["metadata"]["guid"] }
+          expect(found_guids).to eq([model2.guid, model3.guid])
+        end
+
+        it "returns matching results when querying for less than or equal" do
+          get escape_query("/v2/test_models?q=created_at<=#{model2.created_at.utc.iso8601}"), "", admin_headers
+
+          expect(decoded_response["total_results"]).to eq(2)
+          found_guids = decoded_response["resources"].collect { |resource| resource["metadata"]["guid"] }
+          expect(found_guids).to eq([model1.guid, model2.guid])
+        end
+
+        it "returns matching results when querying for greater than" do
+          get escape_query("/v2/test_models?q=created_at>#{model2.created_at.utc.iso8601}"), "", admin_headers
+
+          expect(decoded_response["total_results"]).to eq(1)
+          expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(model3.guid)
+        end
+
+        it "returns matching results when querying for less than" do
+          get escape_query("/v2/test_models?q=created_at<#{model2.created_at.utc.iso8601}"), "", admin_headers
+
+          expect(decoded_response["total_results"]).to eq(1)
+          expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(model1.guid)
+        end
+
+        it "returns matching results when querying using IN" do
+          get escape_query("/v2/test_models?q=created_at IN #{model1.created_at.utc.iso8601},#{model3.created_at.utc.iso8601}"), "", admin_headers
+
+          expect(decoded_response["total_results"]).to eq(2)
+          found_guids = decoded_response["resources"].collect { |resource| resource["metadata"]["guid"] }
+          expect(found_guids).to eq([model1.guid, model3.guid])
+        end
+
+        it "returns matching results when querying by multiple conditions" do
+          get escape_query("/v2/test_models?q=created_at<#{model3.created_at.utc.iso8601}\;created_at>#{model1.created_at.utc.iso8601}"), "", admin_headers
+
+          expect(decoded_response["total_results"]).to eq(1)
+          expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(model2.guid)
         end
       end
     end

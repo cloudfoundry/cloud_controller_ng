@@ -17,55 +17,6 @@ module VCAP::CloudController
         Rack::Test::UploadedFile.new(zip_file)
       end
 
-      def self.it_forbids_upload
-        it "returns 403" do
-          put "/v2/apps/#{app_obj.guid}/bits", req_body, headers_for(user)
-          expect(last_response.status).to eq(403)
-        end
-      end
-
-      def self.it_succeeds_to_upload
-        it "returns 201" do
-          make_request
-          expect(last_response.status).to eq(201)
-        end
-
-        it "returns valid JSON" do
-          make_request
-          expect { JSON.parse(last_response.body) }.not_to raise_error
-        end
-
-        it "updates package hash" do
-          expect {
-            make_request
-          }.to change { app_obj.refresh.package_hash }.from(nil)
-        end
-      end
-
-      def self.it_fails_to_upload
-        it "returns 400" do
-          make_request
-          expect(last_response.status).to eq(400)
-        end
-
-        it "returns valid JSON" do
-          make_request
-          expect { JSON.parse(last_response.body) }.not_to raise_error
-        end
-
-        it "does not update package hash" do
-          expect {
-            make_request
-          }.to_not change { app_obj.refresh.package_hash }.from(nil)
-        end
-
-        it "changes the app package_state to FAILED" do
-          expect {
-            make_request
-          }.to change { app_obj.refresh.package_state }.from("PENDING").to("FAILED")
-        end
-      end
-
       def make_request
         put "/v2/apps/#{app_obj.guid}/bits", req_body, headers_for(user)
       end
@@ -75,29 +26,69 @@ module VCAP::CloudController
 
         context "with an empty request" do
           let(:req_body) { {} }
-          it_fails_to_upload
+
+          it "fails to upload" do
+            make_request
+
+            expect(last_response.status).to eq(400)
+            expect(JSON.parse(last_response.body)["description"]).to include("missing :resources")
+
+            app_obj.refresh
+            expect(app_obj.package_hash).to be_nil
+            expect(app_obj.package_state).to eq "FAILED"
+          end
         end
 
         context "with empty resources and no application" do
           let(:req_body) { {resources: "[]"} }
-          it_fails_to_upload
+
+          it "fails to upload" do
+            make_request
+
+            expect(last_response.status).to eq(400)
+            expect(JSON.parse(last_response.body)["description"]).to include("Could not zip the package")
+
+            app_obj.refresh
+            expect(app_obj.package_hash).to be_nil
+            expect(app_obj.package_state).to eq "FAILED"
+          end
         end
 
         context "with at least one resource and no application" do
           let(:req_body) { {resources: JSON.dump([{"fn" => "lol", "sha1" => "abc", "size" => 2048}])} }
-          it_succeeds_to_upload
+
+          it "succeeds to upload" do
+            make_request
+            expect(last_response.status).to eq(201)
+            expect(app_obj.refresh.package_hash).to_not be_nil
+          end
         end
 
         context "with no resources and application" do
           let(:req_body) { {:application => valid_zip} }
-          it_fails_to_upload
+
+          it "fails to upload" do
+            make_request
+
+            expect(last_response.status).to eq(400)
+            expect(JSON.parse(last_response.body)["description"]).to include("missing :resources")
+
+            app_obj.refresh
+            expect(app_obj.package_hash).to be_nil
+            expect(app_obj.package_state).to eq "FAILED"
+          end
         end
 
         context "with empty resources" do
           let(:req_body) do
             {resources: "[]", application: valid_zip}
           end
-          it_succeeds_to_upload
+
+          it "succeeds to upload" do
+            make_request
+            expect(last_response.status).to eq(201)
+            expect(app_obj.refresh.package_hash).to_not be_nil
+          end
         end
 
         context "with a bad zip file" do
@@ -105,14 +96,29 @@ module VCAP::CloudController
           let(:req_body) do
             {resources: "[]", application: bad_zip}
           end
-          it_fails_to_upload
+
+          it "fails to upload" do
+            make_request
+
+            expect(last_response.status).to eq(400)
+            expect(JSON.parse(last_response.body)["description"]).to include("Unzipping had errors")
+
+            app_obj.refresh
+            expect(app_obj.package_hash).to be_nil
+            expect(app_obj.package_state).to eq "FAILED"
+          end
         end
 
         context "with a valid zip file" do
           let(:req_body) do
             {resources: "[]", application: valid_zip}
           end
-          it_succeeds_to_upload
+
+          it "succeeds to upload" do
+            make_request
+            expect(last_response.status).to eq(201)
+            expect(app_obj.refresh.package_hash).to_not be_nil
+          end
 
           context "when the upload will finish after the auth token expires" do
             before do
@@ -149,7 +155,11 @@ module VCAP::CloudController
         let(:req_body) do
           {resources: "[]", application: valid_zip}
         end
-        it_forbids_upload
+
+        it "returns 403" do
+          make_request
+          expect(last_response.status).to eq(403)
+        end
       end
 
       context "when running async" do

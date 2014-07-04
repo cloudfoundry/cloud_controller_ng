@@ -52,10 +52,24 @@ module VCAP::CloudController
     end
 
     describe "Validations" do
+      let(:app) { AppFactory.make }
+
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_presence :space }
       it { is_expected.to validate_uniqueness [:space_id, :name] }
       it { is_expected.to strip_whitespace :name }
+
+      it "includes validator policies" do
+        expect_validator(InstancesPolicy)
+        expect_validator(AppEnvironmentPolicy)
+        expect_validator(DiskQuotaPolicy)
+        expect_validator(MetadataPolicy)
+        expect_validator(MinMemoryPolicy)
+        expect_validator(MaxMemoryPolicy)
+        expect_validator(InstancesPolicy)
+        expect_validator(HealthCheckPolicy)
+        expect_validator(CustomBuildpackPolicy)
+      end
 
       describe "buildpack" do
         it "does allow nil value" do
@@ -77,7 +91,7 @@ module VCAP::CloudController
             }.to_not raise_error
           end
 
-          it "does allow a buildpack name" do
+          it "allows a buildpack name" do
             admin_buildpack = VCAP::CloudController::Buildpack.make
             app = nil
             expect {
@@ -159,26 +173,44 @@ module VCAP::CloudController
       end
 
       describe "disk_quota" do
-        let(:app) { AppFactory.make }
-
         it "allows any disk_quota below the maximum" do
           app.disk_quota = 1000
-          expect {
-            app.save
-          }.to_not raise_error
+          expect(app).to be_valid
         end
 
         it "does not allow a disk_quota above the maximum" do
           app.disk_quota = 3000
-          expect {
-            app.save
-          }.to raise_error(Sequel::ValidationFailed, /too much disk/)
+          expect(app).to_not be_valid
+          expect(app.errors.on(:disk_quota)).to be_present
+        end
+
+        it "does not allow a disk_quota greater than maximum" do
+          app.disk_quota = 4096
+          expect(app).to_not be_valid
+          expect(app.errors.on(:disk_quota)).to be_present
+        end
+      end
+
+      describe "memory" do
+        it "does not allow 0 memory" do
+          app.memory = 0
+          expect(app).to_not be_valid
+          expect(app.errors.on(:memory)).to be_present
+        end
+
+
+      end
+
+      describe "instances" do
+        it "does not allow negative instances" do
+          app.instances = -1
+          expect(app).to_not be_valid
+          expect(app.errors.on(:instances)).to be_present
         end
       end
 
       describe "name" do
         let(:space) { Space.make }
-        let(:app) { AppFactory.make }
 
         it "does not allow the same name in a different case" do
           pending "This test is not valid for SQLite" if DbConfig.connection.database_type == :sqlite
@@ -226,14 +258,6 @@ module VCAP::CloudController
         end
       end
 
-      describe "env" do
-        subject(:app) { AppFactory.make }
-
-        it "validates app environment" do
-          expect_validator(AppEnvironmentPolicy)
-        end
-      end
-
       describe "metadata" do
         let(:app) { AppFactory.make }
 
@@ -250,6 +274,103 @@ module VCAP::CloudController
           expect(app.metadata["some_key"]).to eq("some val")
           app.refresh
           expect(app.metadata["some_key"]).to eq("some val")
+        end
+      end
+
+      describe "quota" do
+        let(:quota) do
+          QuotaDefinition.make(:memory_limit => 128)
+        end
+
+        it "has a default requested instances" do
+          expect(App.new.requested_instances).to be
+        end
+
+        context "app update" do
+          def act_as_cf_admin(&block)
+            allow(VCAP::CloudController::SecurityContext).to receive_messages(:admin? => true)
+            block.call
+          ensure
+            allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_call_original
+          end
+
+          let(:org) { Organization.make(:quota_definition => quota) }
+          let(:space) { Space.make(:organization => org) }
+          subject!(:app) { AppFactory.make(space: space, memory: 64, instances: 2, state: "STARTED", package_hash: "a-hash") }
+
+          it "should raise error when quota is exceeded" do
+            app.memory = 65
+            expect { app.save }.to raise_error(/quota_exceeded/)
+          end
+
+          it "should not raise error when quota is not exceeded" do
+            app.memory = 63
+            expect { app.save }.to_not raise_error
+          end
+
+          it "can delete an app that somehow has exceeded its memory quota" do
+            quota.memory_limit = 32
+            quota.save
+            app.memory = 100
+            app.save(validate: false)
+            expect(app.reload).to_not be_valid
+            expect { app.delete }.not_to raise_error
+          end
+
+          it "allows scaling down instances of an app from above quota to below quota" do
+            org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
+            act_as_cf_admin { org.save }
+
+            expect(app.reload).to_not be_valid
+            app.instances = 1
+
+            app.save
+
+            expect(app.reload).to be_valid
+            expect(app.instances).to eq(1)
+          end
+
+          it "raises when scaling down number of instances but remaining above quota" do
+            org.quota_definition = QuotaDefinition.make(:memory_limit => 32)
+            act_as_cf_admin { org.save }
+
+            app.reload
+            app.instances = 1
+
+            expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
+            app.reload
+            expect(app.instances).to eq(2)
+          end
+
+          it "allows stopping an app that is above quota" do
+            app.update(:state => "STARTED",
+                       :package_hash => "abc",
+                       :package_state => "STAGED",
+                       :droplet_hash => "def")
+
+            org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
+            act_as_cf_admin { org.save }
+
+            app.reload
+            app.state = "STOPPED"
+
+            app.save
+
+            app.reload
+            expect(app).to be_stopped
+          end
+
+          it "allows reducing memory from above quota to at/below quota" do
+            org.quota_definition = QuotaDefinition.make(:memory_limit => 64)
+            act_as_cf_admin { org.save }
+
+            app.memory = 40
+            expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
+
+            app.memory = 32
+            app.save
+            expect(app.memory).to eq(32)
+          end
         end
       end
     end
@@ -1251,7 +1372,6 @@ module VCAP::CloudController
       end
     end
 
-
     describe "uris" do
       it "should return the uris on the app" do
         app = AppFactory.make(:space => space)
@@ -1285,6 +1405,38 @@ module VCAP::CloudController
         expect {
           App.create_from_hash(name: "awesome app", space_guid: space.guid)
         }.not_to change { AppUsageEvent.count }
+      end
+
+      describe "default_app_memory" do
+        before do
+          TestConfig.override({default_app_memory: 200})
+        end
+
+        it "uses the provided memory" do
+          app = App.create_from_hash(name: "awesome app", space_guid: space.guid, memory: 100)
+          expect(app.memory).to eq(100)
+        end
+
+        it "uses the default_app_memory when none is provided" do
+          app = App.create_from_hash(name: "awesome app", space_guid: space.guid)
+          expect(app.memory).to eq(200)
+        end
+      end
+
+      describe "default disk_quota" do
+        before do
+          TestConfig.override({ :default_app_disk_in_mb => 512 })
+        end
+
+        it "should use the provided quota" do
+          app = App.create_from_hash(name: "test", space_guid: space.guid, disk_quota: 256)
+          expect(app.disk_quota).to eq(256)
+        end
+
+        it "should use the default quota" do
+          app = App.create_from_hash(name: "test", space_guid: space.guid)
+          expect(app.disk_quota).to eq(512)
+        end
       end
     end
 
@@ -1630,130 +1782,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "quota" do
-      let(:quota) do
-        QuotaDefinition.make(:memory_limit => 128)
-      end
-
-      it "has a default requested instances" do
-        expect(App.new.requested_instances).to be
-      end
-
-      context "app creation" do
-        subject(:app) { App.new(space: space) }
-
-        it "validates min requested memory" do
-          expect_validator(MinMemoryPolicy)
-        end
-
-        it "validates max requested memory" do
-          expect_validator(MaxMemoryPolicy)
-        end
-
-        it "validates requested instances" do
-          expect_validator(InstancesPolicy)
-        end
-      end
-
-      context "app update" do
-        def act_as_cf_admin(&block)
-          allow(VCAP::CloudController::SecurityContext).to receive_messages(:admin? => true)
-          block.call
-        ensure
-          allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_call_original
-        end
-
-        let(:org) { Organization.make(:quota_definition => quota) }
-        let(:space) { Space.make(:organization => org) }
-        subject!(:app) { AppFactory.make(space: space, memory: 64, instances: 2, state: "STARTED", package_hash: "a-hash") }
-
-        it "validates min requested memory" do
-          expect_validator(MinMemoryPolicy)
-        end
-
-        it "validates max requested memory" do
-          expect_validator(MaxMemoryPolicy)
-        end
-
-        it "validates requested instances" do
-          expect_validator(InstancesPolicy)
-        end
-
-        it "should raise error when quota is exceeded" do
-          app.memory = 65
-          expect { app.save }.to raise_error(/quota_exceeded/)
-        end
-
-        it "should not raise error when quota is not exceeded" do
-          app.memory = 63
-          expect { app.save }.to_not raise_error
-        end
-
-        it "can delete an app that somehow has exceeded its memory quota" do
-          quota.memory_limit = 32
-          quota.save
-          app.memory = 100
-          expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
-          expect { app.delete }.not_to raise_error
-        end
-
-        it "allows scaling down instances of an app from above quota to below quota" do
-          org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
-          act_as_cf_admin { org.save }
-
-          app.reload
-          app.instances = 1
-
-          app.save
-
-          app.reload
-          expect(app.instances).to eq(1)
-        end
-
-        it "raises when scaling down number of instances but remaining above quota" do
-          org.quota_definition = QuotaDefinition.make(:memory_limit => 32)
-          act_as_cf_admin { org.save }
-
-          app.reload
-          app.instances = 1
-
-          expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
-          app.reload
-          expect(app.instances).to eq(2)
-        end
-
-        it "allows stopping an app that is above quota" do
-          app.update(:state => "STARTED",
-                     :package_hash => "abc",
-                     :package_state => "STAGED",
-                     :droplet_hash => "def")
-
-          org.quota_definition = QuotaDefinition.make(:memory_limit => 72)
-          act_as_cf_admin { org.save }
-
-          app.reload
-          app.state = "STOPPED"
-
-          app.save
-
-          app.reload
-          expect(app).to be_stopped
-        end
-
-        it "allows reducing memory from above quota to at/below quota" do
-          org.quota_definition = QuotaDefinition.make(:memory_limit => 64)
-          act_as_cf_admin { org.save }
-
-          app.memory = 40
-          expect { app.save }.to raise_error(Sequel::ValidationFailed, /quota_exceeded/)
-
-          app.memory = 32
-          app.save
-          expect(app.memory).to eq(32)
-        end
-      end
-    end
-
     describe "file_descriptors" do
       subject { AppFactory.make }
       its(:file_descriptors) { should == 16_384 }
@@ -1765,32 +1793,6 @@ module VCAP::CloudController
       it "raises error if the app is deleted" do
         app.delete
         expect { app.save }.to raise_error(Errors::ApplicationMissing)
-      end
-    end
-  end
-
-  describe "default disk_quota" do
-    before do
-      TestConfig.override({ :default_app_disk_in_mb => 512 })
-    end
-  
-    it "should use the provided quota" do
-      app = AppFactory.make(disk_quota: 256)
-      expect(app.disk_quota).to eq(256)
-    end
-
-    it "should use the default quota" do
-      app = AppFactory.make
-      expect(app.disk_quota).to eq(512)
-    end
-
-    context "default is greater than maximum" do
-      before do
-        TestConfig.override({ :default_app_disk_in_mb => 4096 })
-      end
-
-      it "should fail" do
-        expect{AppFactory.make}.to raise_error(Sequel::ValidationFailed)
       end
     end
   end

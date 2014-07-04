@@ -89,25 +89,34 @@ module VCAP::RestAPI
     end
 
     def query_filter(key, comparison, val)
-      case column_type(key)
-      when :foreign_key
-        return clean_up_foreign_key(key, val)
-      when :integer
-        val = clean_up_integer(val)
-      when :boolean
-        val = clean_up_boolean(key, val)
-      when :datetime
-        val = clean_up_datetime(val)
-      end
+      col_type = column_type(key)
+      return clean_up_foreign_key(key, val) if col_type == :foreign_key
 
       if comparison == " IN "
-        val = val.split(",")
+        val = val.split(",").collect { |value| cast_query_value(col_type, key, value) }
+      else
+        val = cast_query_value(col_type, key, val)
       end
 
       if val.nil?
         { key => nil }
       else
         ["#{key} #{comparison} ?", val]
+      end
+    end
+
+    def cast_query_value(col_type, key, value)
+      case col_type
+      when :foreign_key
+        return clean_up_foreign_key(col_type, value)
+      when :integer
+        clean_up_integer(value)
+      when :boolean
+        clean_up_boolean(key, value)
+      when :datetime
+        clean_up_datetime(value)
+      else
+        value
       end
     end
 

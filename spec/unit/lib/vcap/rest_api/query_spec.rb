@@ -349,7 +349,7 @@ module VCAP::RestAPI
       end
 
       describe "query on an array of possible values" do
-        it "returns all of the matching records" do
+        it "returns all of the matching records when using strings" do
           q = "str_val IN str 1,str 2,str IN 3"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
@@ -359,6 +359,26 @@ module VCAP::RestAPI
           end
 
           expect(ds.all).to match_array(expected)
+        end
+
+        it "returns all of the matching records when using timestamps" do
+          author1 = Author[num_val: 2]
+          author2 = Author[num_val: 3]
+          q = "published_at IN #{author1.published_at.utc.iso8601},#{author2.published_at.utc.iso8601}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+                                                        @queryable_attributes, :q => q)
+
+          expect(ds.all).to match_array([author1, author2])
+        end
+
+        it "returns all of the matching records when using integers" do
+          author1 = Author[num_val: 2]
+          author2 = Author[num_val: 3]
+          q = "num_val IN 2,3"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+                                                        @queryable_attributes, :q => q)
+
+          expect(ds.all).to match_array([author1, author2])
         end
       end
     end

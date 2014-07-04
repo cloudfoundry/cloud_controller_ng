@@ -4,6 +4,10 @@ module VCAP::CloudController
   describe VCAP::CloudController::AppsController do
     let(:app_event_repository) { CloudController::DependencyLocator.instance.app_event_repository }
 
+    it { expect(described_class).to be_queryable_by(:name) }
+    it { expect(described_class).to be_queryable_by(:space_guid) }
+    it { expect(described_class).to be_queryable_by(:organization_guid) }
+
     describe "create app" do
       let(:space) { Space.make }
       let(:space_guid) { space.guid.to_s }
@@ -20,108 +24,6 @@ module VCAP::CloudController
         post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(admin_headers)
       end
 
-      context "when name and space provided" do
-        it "responds with new app data" do
-          create_app
-          expect(last_response.status).to eq(201)
-          expect(decoded_response["entity"]["name"]).to eq("maria")
-          expect(decoded_response["entity"]["space_guid"]).to eq(space_guid)
-        end
-      end
-
-      context "when memory is 0" do
-        before do
-          initial_hash[:memory] = 0
-        end
-
-        it "responds invalid arguments" do
-          create_app
-          expect(last_response.status).to eq(400)
-          expect(last_response.body).to match /invalid amount of memory/
-        end
-      end
-
-      context "when default memory is configured" do
-        let (:default_memory) { 200 }
-
-        before do
-          TestConfig.override({ :default_app_memory => default_memory })
-        end
-
-        it "uses the configured default when no memory is specified" do
-          create_app
-          expect(decoded_response["entity"]["memory"]).to eq(default_memory)
-        end
-      end
-
-      context "disk quota" do
-         let (:default_disk) { 512 }
-
-        before do
-          TestConfig.override({ :default_app_disk_in_mb => default_disk })
-        end
-
-        it "uses the configured default when no quota is specified" do
-          create_app
-          expect(decoded_response["entity"]["disk_quota"]).to eq(default_disk)
-        end
-        context "when disk quota provided" do
-           let(:provided_disk) { 256 }
-             
-           before do
-             initial_hash[:disk_quota] = provided_disk
-           end
- 
-           it "uses the provided disk quota" do
-             create_app
-             expect(decoded_response["entity"]["disk_quota"]).to eq(provided_disk)
-           end
-         end
-      end
-
-      context "when instances is less than 0" do
-        before do
-          initial_hash[:instances] = -1
-        end
-
-        it "responds invalid arguments" do
-          create_app
-          expect(last_response.status).to eq(400)
-          expect(last_response.body).to match /instances less than 1/
-        end
-      end
-
-      context "when name is not provided" do
-        let(:initial_hash) {{ :space_guid => space_guid }}
-        it "responds with missing field name error" do
-          create_app
-          expect(last_response.status).to eq(400)
-          expect(last_response.body).to match /Error: Missing field name/
-        end
-      end
-
-      context "when space is not provided" do
-        let(:initial_hash) {{ :name => "maria" }}
-        it "responds with missing field space error" do
-          create_app
-          expect(last_response.status).to eq(400)
-          expect(last_response.body).to match /Error: Missing field space/
-        end
-      end
-
-      context "when detected_buildpack is provided" do
-        before { initial_hash[:detected_buildpack] = 'buildpack-name' }
-
-        it "ignores the attribute" do
-          expect { create_app }.to change(App, :count).by(1)
-          expect(last_response.status).to eq(201)
-
-          app = App.last
-          expect(app.detected_buildpack).to be_nil
-          expect(decoded_response['entity'].fetch('detected_buildpack')).to be_nil
-        end
-      end
-
       describe "events" do
         it "records app create" do
           expected_attrs = AppsController::CreateMessage.decode(initial_hash.to_json).extract(stringify_keys: true)
@@ -130,28 +32,6 @@ module VCAP::CloudController
 
           create_app
           expect(app_event_repository).to have_received(:record_app_create).with(App.last, admin_user, SecurityContext.current_user_email, expected_attrs)
-        end
-      end
-
-      context "buildpacks" do
-        it "accepts the buildpack in git formats" do
-          initial_hash[:buildpack] = "git://user@public.example.com"
-          create_app
-          expect(last_response.status).to eql 201
-        end
-
-        it "accepts a buildpack name uploaded by an admin before" do
-          admin_buildpack = VCAP::CloudController::Buildpack.make
-          initial_hash[:buildpack] = admin_buildpack.name
-          create_app
-          expect(last_response.status).to eql 201
-        end
-
-        it "reject invalid buildpack url " do
-          initial_hash[:buildpack] = "not-a-git-repo"
-          create_app
-          expect(last_response.status).to eql 400
-          expect(decoded_response["description"]).to match /is not valid public git url or a known buildpack name/
         end
       end
 
@@ -175,128 +55,6 @@ module VCAP::CloudController
 
       def update_app
         put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
-      end
-
-      describe "update app health_check_timeout" do
-        context "when health_check_timeout value is provided" do
-          let(:update_hash) { {"health_check_timeout" => 80} }
-
-          it "should set to provided value" do
-            update_app
-            app_obj.refresh
-            expect(app_obj.health_check_timeout).to eq(80)
-            expect(last_response.status).to eq(201)
-          end
-        end
-
-        context "when health_check_timeout value is not provided" do
-          let(:update_hash) { {} }
-
-          it "should not return error" do
-            update_app
-            expect(last_response.status).to eq(201)
-          end
-        end
-      end
-
-      describe "update app debug" do
-        context "set debug" do
-          let(:update_hash) do
-            {"debug" => "run"}
-          end
-
-          it "should work" do
-            update_app
-            app_obj.refresh
-            expect(app_obj.debug).to eq("run")
-            expect(last_response.status).to eq(201)
-          end
-
-        end
-
-        context "change debug" do
-          let(:app_obj) { AppFactory.make(:debug => "run") }
-
-          let(:update_hash) do
-            {"debug" => "suspend"}
-          end
-
-          it "should work" do
-            update_app
-            app_obj.refresh
-            expect(app_obj.debug).to eq("suspend")
-            expect(last_response.status).to eq(201)
-          end
-        end
-
-        context "reset debug" do
-          let(:app_obj) { AppFactory.make(:debug => "run") }
-
-          let(:update_hash) do
-            {"debug" => "none"}
-          end
-
-          it "should work" do
-            update_app
-            app_obj.refresh
-            expect(app_obj.debug).to be_nil
-            expect(last_response.status).to eq(201)
-          end
-        end
-
-        context "passing in nil" do
-          let(:app_obj) { AppFactory.make(:debug => "run") }
-
-          let(:update_hash) do
-            {"debug" => nil}
-          end
-
-          it "should do nothing" do
-            update_app
-            app_obj.refresh
-            expect(app_obj.debug).to eq("run")
-            expect(last_response.status).to eq(201)
-          end
-        end
-      end
-
-      context "when detected buildpack is not provided" do
-        let(:update_hash) do
-          {}
-        end
-
-        it "should work" do
-          update_app
-          expect(last_response.status).to eq(201)
-        end
-      end
-
-      context "when detected buildpack is provided" do
-        before { update_hash[:detected_buildpack] = 'new-buildpack-name' }
-
-        it "should ignore the attribute" do
-          update_app
-
-          expect(last_response.status).to eq(201)
-
-          app_obj.reload
-          expect(app_obj.detected_buildpack).to be == 'buildpack-name'
-          expect(decoded_response['entity'].fetch('detected_buildpack')).to be == 'buildpack-name'
-        end
-      end
-
-      context "when package_state is provided" do
-        before { update_hash[:package_state] = 'FAILED' }
-
-        it "ignores the attribute" do
-          update_app
-
-          expect(last_response.status).to eq(201)
-
-          app_obj.reload
-          expect(app_obj.package_state).to_not be == 'FAILED'
-          expect(parse(last_response.body)["entity"]).not_to include("package_state" => "FAILED")
-        end
       end
 
       describe "events" do
@@ -334,45 +92,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "read an app" do
-      let(:app_obj) { AppFactory.make(:detected_buildpack => "buildpack-name") }
-      let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
-
-      def get_app
-        get "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
-      end
-
-      it "should return the detected buildpack" do
-        get_app
-        expect(last_response.status).to eq(200)
-        expect(decoded_response["entity"]["detected_buildpack"]).to eq("buildpack-name")
-      end
-
-      it "should not return the detected buildpack guid" do
-        get_app
-        expect(last_response.status).to eq(200)
-        expect(decoded_response["entity"]).not_to have_key("detected_buildpack_guid")
-      end
-
-      it "should not return the detected buildpack name" do
-        get_app
-        expect(last_response.status).to eq(200)
-        expect(decoded_response["entity"]).not_to have_key("detected_buildpack_name")
-      end
-
-      it "should return the package state" do
-        get_app
-        expect(last_response.status).to eq(200)
-        expect(parse(last_response.body)["entity"]).to have_key("package_state")
-      end
-
-      it "should not return system_env_json" do
-        get_app
-        expect(last_response.status).to eq(200)
-        expect(parse(last_response.body)["entity"]).not_to have_key("system_env_json")
-      end
-    end
-
     describe "delete an app" do
       let(:app_obj) { AppFactory.make }
 
@@ -382,63 +101,14 @@ module VCAP::CloudController
         delete "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
       end
 
-      context "when the app is not deleted" do
-        let(:app_obj) { AppFactory.make }
-
-        it "should delete the app" do
-          delete_app
-          expect(last_response.status).to eq(204)
-        end
-      end
-
-      context "when the app is running" do
-        let(:app_obj) { AppFactory.make :state => "STARTED", :package_hash => "abc" }
-        it "registers a billing stop event" do
-          called = false
-          expect(AppStopEvent).to receive(:create_from_app) do |app|
-            expect(app.guid).to eq(app_obj.guid)
-            called = true
-          end
-
-          delete_app
-
-          expect(called).to be true
-        end
-      end
-
-      context "recursive deletion with dependencies" do
-        let!(:app_event) { AppEvent.make(:app => app_obj) }
-        let!(:route) { Route.make(:space => app_obj.space) }
-
-        before do
-          app_obj.add_route(route)
-          app_obj.save
-        end
-
-        def delete_app_recursively
-          delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
-        end
-
-        it "should delete the dependencies" do
-          delete_app_recursively
-          expect(last_response.status).to eq(204)
-
-          expect(App.find(id: app_obj.id)).to be_nil
-          expect(AppEvent.find(:id => app_event.id)).to be_nil
-        end
+      it "deletes the app" do
+        delete_app
+        expect(last_response.status).to eq(204)
+        expect(App.filter(id: app_obj.id)).to be_empty
       end
 
       context "non recursive deletion" do
-        context "with other empty associations" do
-          it "should destroy the app" do
-            delete_app
-
-            expect(last_response.status).to eq(204)
-            expect(App.find(id: app_obj.id)).to be_nil
-          end
-        end
-
-        context "with NON-empty service_binding (one_to_many) association" do
+        context "with NON-empty service_binding association" do
           let!(:svc_instance) { ManagedServiceInstance.make(:space => app_obj.space) }
           let!(:service_binding) { ServiceBinding.make(:app => app_obj, :service_instance => svc_instance) }
 
@@ -488,7 +158,7 @@ module VCAP::CloudController
         let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name", space: space) }
 
         context 'when the user is not a space developer' do
-          it 'returns a JSON payload indicating they have permission to manage this instance' do
+          it 'returns a JSON payload indicating they do not have permission to manage this instance' do
             get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(auditor, {scopes: ['cloud_controller.read']}))
             expect(last_response.status).to eql(403)
             expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
@@ -496,7 +166,7 @@ module VCAP::CloudController
         end
 
         context 'when the user has only the cloud_controller.read scope' do
-          it 'returns a JSON payload indicating they have permission to manage this instance' do
+          it 'returns successfully' do
             get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
             expect(last_response.status).to eql(200)
             expect(parse(last_response.body)).to have_key("system_env_json")
@@ -558,7 +228,7 @@ module VCAP::CloudController
       context 'when the user is NOT a member of the space this instance exists in' do
         let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name") }
 
-        it 'returns a JSON payload indicating the user does not have permission to manage this instance' do
+        it 'returns access denied' do
           get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer))
           expect(last_response.status).to eql(403)
         end
@@ -575,89 +245,10 @@ module VCAP::CloudController
       end
 
       context 'when the app does not exist' do
-        it 'returns an error saying the app was not found' do
+        it 'returns not found' do
           get "/v2/apps/nonexistentappguid/env", {}, json_headers(headers_for(developer))
           expect(last_response.status).to eql 404
         end
-      end
-    end
-
-    describe "validations" do
-      let(:app_obj)   { AppFactory.make }
-      let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
-
-      describe "env" do
-        it "should allow an empty environment" do
-          hash = {}
-          update_hash = { :environment_json => hash }
-
-          put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
-          expect(last_response.status).to eq(201)
-        end
-
-        it "should allow multiple variables" do
-          hash = { :abc => 123, :def => "hi" }
-          update_hash = { :environment_json => hash }
-          put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
-          expect(last_response.status).to eq(201)
-        end
-
-        [ "VMC", "vmc", "VCAP", "vcap" ].each do |k|
-          it "should not allow entries to start with #{k}" do
-            hash = { :abc => 123, "#{k}_abc" => "hi" }
-            update_hash = { :environment_json => hash }
-            put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
-            expect(last_response.status).to eq(400)
-            expect(decoded_response["description"]).to match /environment_json reserved_key:#{k}_abc/
-          end
-        end
-      end
-    end
-
-    describe "command" do
-      let(:app_obj)   { AppFactory.make }
-      let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
-
-      it "should have no command entry in the metadata if not provided" do
-        get "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
-        expect(last_response.status).to eq(200)
-        expect(decoded_response["entity"]["command"]).to be_nil
-        expect(decoded_response["entity"]["metadata"]).to be_nil
-      end
-
-      it "should set the command on the app metadata" do
-        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:command => "foobar"), json_headers(admin_headers)
-        expect(last_response.status).to eq(201)
-        expect(decoded_response["entity"]["command"]).to eq("foobar")
-        expect(decoded_response["entity"]["metadata"]).to be_nil
-      end
-
-      it "can be cleared if a request arrives asking command to be an empty string" do
-        app_obj.command = "echo hi"
-        app_obj.save
-        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:command => ""), json_headers(admin_headers)
-        expect(last_response.status).to eq(201)
-        expect(decoded_response["entity"]["command"]).to be_nil
-        expect(decoded_response["entity"]["metadata"]).to be_nil
-      end
-    end
-
-    describe "health_check_timeout" do
-      let(:app_obj)   { AppFactory.make }
-      let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
-
-      it "should have no health_check_timeout entry in the metadata if not provided" do
-        get "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
-        expect(last_response.status).to eq(200)
-        expect(decoded_response["entity"]["health_check_timeout"]).to be_nil
-        expect(decoded_response["entity"]["metadata"]).to be_nil
-      end
-
-      it "should set the health_check_timeout on the app metadata if provided" do
-        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:health_check_timeout => 100), json_headers(admin_headers)
-        expect(last_response.status).to eq(201)
-        expect(decoded_response["entity"]["health_check_timeout"]).to eq(100)
-        expect(decoded_response["entity"]["metadata"]).to be_nil
       end
     end
 
@@ -667,18 +258,6 @@ module VCAP::CloudController
           AppFactory.make(:package_hash => "abc", :state => "STOPPED",
                            :droplet_hash => nil, :package_state => "PENDING",
                            :instances => 1)
-        end
-
-        it "stages the app asynchronously" do
-          received_app = nil
-
-          expect(AppObserver).to receive(:stage_app) do |app|
-            received_app = app
-            AppStagerTask::Response.new({})
-          end
-
-          put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
-          expect(received_app.id).to eq(app_obj.id)
         end
 
         it "returns X-App-Staging-Log header with staging log url" do
@@ -732,13 +311,7 @@ module VCAP::CloudController
           expect(app.uris).to include("app.jesse.cloud")
         end
 
-        put(
-          @app_url,
-          AppsController::UpdateMessage.new(
-            :route_guids => [route.guid],
-          ).encode,
-          json_headers(@headers_for_user)
-        )
+        put @app_url, Yajl::Encoder.encode({route_guids: [route.guid]}), json_headers(@headers_for_user)
         expect(last_response.status).to eq(201)
       end
 
@@ -762,13 +335,7 @@ module VCAP::CloudController
           expect(app.uris).to include("foo.jesse.cloud")
         end
 
-        put(
-          @app_url,
-          AppsController::UpdateMessage.new(
-            :route_guids => [route.guid],
-          ).encode,
-          json_headers(@headers_for_user)
-        )
+        put @app_url, Yajl::Encoder.encode({route_guids: [route.guid]}), json_headers(@headers_for_user)
         expect(last_response.status).to eq(201)
       end
     end
@@ -856,22 +423,61 @@ module VCAP::CloudController
       end
     end
 
-    describe "Quota enforcement" do
-      let(:quota) { QuotaDefinition.make(:memory_limit => 0) }
+    describe "Validation messages" do
+      let(:space) { Space.make }
 
-      context "quota" do
-        it "should enforce quota check on memory" do
-          org = Organization.make(:quota_definition => quota)
-          space = Space.make(:organization => org)
-          req = Yajl::Encoder.encode(:name => Sham.name,
-                                     :space_guid => space.guid,
-                                     :memory => 128)
+      it "returns duplicate app name message correctly" do
+        existing_app = App.make(space: space)
+        app_hash = {
+          :name => existing_app.name,
+          :space_guid => space.guid
+        }
 
-          post "/v2/apps", req, json_headers(headers_for(make_developer_for_space(space)))
+        post "/v2/apps", Yajl::Encoder.encode(app_hash), json_headers(admin_headers)
 
-          expect(last_response.status).to eq(400)
-          expect(decoded_response["description"]).to match(/exceeded your organization's memory limit/)
-        end
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["description"]).to match(/app name is taken/)
+      end
+
+      it "returns memory exceeded message correctly" do
+        app_hash = {
+          :name => Sham.name,
+          :space_guid => space.guid,
+          :memory => 128
+        }
+        space.organization.quota_definition = QuotaDefinition.make(:memory_limit => 0)
+        space.organization.save(validate: false)
+
+        post "/v2/apps", Yajl::Encoder.encode(app_hash), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["description"]).to match(/exceeded your organization's memory limit/)
+      end
+
+      it "returns memory invalid message correctly" do
+        app_hash = {
+          name: Sham.name,
+          space_guid: space.guid,
+          memory: 0
+        }
+
+        post "/v2/apps", Yajl::Encoder.encode(app_hash), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(last_response.body).to match /invalid amount of memory/
+      end
+
+      it "returns instances invalid message correctly" do
+        app_hash = {
+          name: Sham.name,
+          space_guid: space.guid,
+          instances: -1
+        }
+
+        post "/v2/apps", Yajl::Encoder.encode(app_hash), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(last_response.body).to match /instances less than 1/
       end
     end
 

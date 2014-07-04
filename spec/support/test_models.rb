@@ -43,7 +43,7 @@ module VCAP::CloudController
       to_many :test_model_many_to_manies_link_only, association_name: :test_model_many_to_manies, link_only: true
     end
 
-    query_parameters :unique_value
+    query_parameters :unique_value, :created_at
 
     define_messages
     define_routes

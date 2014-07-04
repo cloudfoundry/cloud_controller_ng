@@ -16,8 +16,8 @@ class FakeModelTables
       String :guid
       String :unique_value
       TrueClass :required_attr, null: false
-      Date :created_at
-      Date :updated_at
+      DateTime :created_at
+      DateTime :updated_at
     end
 
     db.create_table :test_model_destroy_deps do
@@ -39,21 +39,21 @@ class FakeModelTables
       String :guid
       Integer :test_model_id
       String :value
-      Date :created_at
+      DateTime :created_at
     end
 
     db.create_table :test_model_many_to_manies do
       primary_key :id
       String :guid
       String :value
-      Date :created_at
+      DateTime :created_at
     end
 
     db.create_table :test_model_second_levels do
       primary_key :id
       String :guid
       Integer :test_model_many_to_many_id
-      Date :created_at
+      DateTime :created_at
     end
 
     db.create_table :test_model_m_to_m_test_models do

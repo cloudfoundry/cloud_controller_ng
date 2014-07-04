@@ -45,16 +45,12 @@ module VCAP::CloudController
         get "/v2/apps/#{@app.guid}/summary", {}, admin_headers
       end
 
-      it "should return 200" do
+      it "should contain the basic app attributes" do
         expect(last_response.status).to eq(200)
-      end
-
-      it "should return the app guid" do
         expect(decoded_response["guid"]).to eq(@app.guid)
-      end
-
-      it "should return the app name" do
-        expect(decoded_response["name"]).to eq(@app.name)
+        @app.to_hash.each do |k, v|
+          expect(v).to eql(decoded_response[k.to_s]), "value of field #{k} expected to eql #{v}"
+        end
       end
 
       it "should return the app routes" do
@@ -78,12 +74,6 @@ module VCAP::CloudController
         expect(decoded_response["running_instances"]).to eq(@app.instances)
       end
 
-      it "should contain the basic app attributes" do
-        @app.to_hash.each do |k, v|
-          expect(v).to eql(decoded_response[k.to_s]), "value of field #{k} expected to eql #{v}"
-        end
-      end
-
       it "should contain list of both private domains and shared domains" do
         domains = @app.space.organization.private_domains
         expect(domains.count > 0).to eq(true)
@@ -105,11 +95,8 @@ module VCAP::CloudController
         expect(decoded_response["available_domains"]).to match_array(private_domains + shared_domains)
       end
 
-      it "should return correct number of services" do
+      it "should return the correct info for services" do
         expect(decoded_response["services"].size).to eq(@num_services)
-      end
-
-      it "should return the correct info for a service" do
         svc_resp = decoded_response["services"][0]
         svc = @services.find { |s| s.guid == svc_resp["guid"] }
 
