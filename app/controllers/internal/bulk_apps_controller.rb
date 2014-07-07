@@ -3,12 +3,6 @@ require "controllers/base/base_controller"
 require "cloud_controller/diego/diego_client"
 
 module VCAP::CloudController
-  class BulkAppsMessage < JsonMessage
-    required :apps, [Diego::DesireAppMessage]
-
-    required :token, Hash
-  end
-
   class BulkApps < RestController::BaseController
     # Endpoint does its own (non-standard) auth
     allow_unauthenticated_access

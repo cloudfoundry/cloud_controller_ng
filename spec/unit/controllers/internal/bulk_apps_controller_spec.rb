@@ -1,6 +1,5 @@
 require "spec_helper"
 require "membrane"
-require "json_message"
 
 module VCAP::CloudController
   describe BulkApps do
