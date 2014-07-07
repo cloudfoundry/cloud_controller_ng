@@ -2,7 +2,7 @@ require "spec_helper"
 require "membrane"
 
 module VCAP::CloudController
-  describe BulkApps do
+  describe BulkAppsController do
     before do
       allow_any_instance_of(::CloudController::Blobstore::UrlGenerator)
       .to receive(:perma_droplet_download_url)
