@@ -234,7 +234,7 @@ module VCAP::CloudController
 
         LegacyBulk.configure(@config, message_bus)
 
-        BulkAppsController.configure(@config)
+        BulkApi.configure(@config)
       end
 
       def config_dir
