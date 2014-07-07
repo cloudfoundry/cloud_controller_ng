@@ -4,26 +4,12 @@ require "membrane"
 module VCAP::CloudController
   module Diego
     describe StagedAppsQuery do
-      #before do
-      #  allow_any_instance_of(::CloudController::Blobstore::UrlGenerator)
-      #  .to receive(:perma_droplet_download_url)
-      #      .and_return("http://blobsto.re/droplet")
-      #end
-
-      #before do
-      #  @bulk_user = "bulk_user"
-      #  @bulk_password = "bulk_password"
-      #end
-
       describe "#all" do
         before do
           5.times do |i|
-            AppFactory.make(id: i+1, state: "STARTED", package_hash: "package-hash", package_state: "STAGED")
+            app = AppFactory.make(id: i+1, state: "STARTED", package_hash: "package-hash", package_state: "STAGED")
+            app.current_droplet.update_start_command("fake-start-command-#{i}")
           end
-
-          App.first.environment_json = {
-            "FOO" => "bar",
-          }
         end
 
         it "returns apps that have the desired data" do
@@ -93,12 +79,15 @@ module VCAP::CloudController
         end
 
         it "does not return unstaged apps" do
-          pending_app = App.make(id: 6, state: "STARTED", package_hash: "brown", package_state: "PENDING")
+          unstaged_app = App.make(id: 6, state: "STARTED", package_hash: "brown", package_state: "PENDING")
+          app_with_droplet_uploaded = App.make(id: 7, state: "STARTED", package_hash: "brown", package_state: "STAGED")
+          app_with_droplet_uploaded.add_new_droplet("fake-droplet-hash")
 
           query = StagedAppsQuery.new(100, 0)
           batch = query.all
 
-          expect(batch).not_to include(pending_app)
+          expect(batch).not_to include(unstaged_app)
+          expect(batch).not_to include(app_with_droplet_uploaded)
         end
 
         it "does not return apps which aren't expected to be started" do

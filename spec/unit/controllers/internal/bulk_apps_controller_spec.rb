@@ -16,9 +16,10 @@ module VCAP::CloudController
 
     describe "GET", "/internal/bulk/apps" do
       before {
-        5.times { |i|
-          AppFactory.make(id: i+1, state: "STARTED", package_hash: "package-hash", package_state: "STAGED")
-        }
+        5.times do |i|
+          app = AppFactory.make(id: i+1, state: "STARTED", package_hash: "package-hash", package_state: "STAGED")
+          app.current_droplet.update_start_command("fake-start-command-#{i}")
+        end
       }
 
       before do
