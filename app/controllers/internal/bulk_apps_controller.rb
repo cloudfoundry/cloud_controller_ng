@@ -1,6 +1,7 @@
 require "sinatra"
 require "controllers/base/base_controller"
 require "cloud_controller/diego/diego_client"
+require "cloud_controller/diego/staged_apps_query"
 require "cloud_controller/bulk_api"
 
 module VCAP::CloudController
@@ -20,22 +21,22 @@ module VCAP::CloudController
       batch_size = Integer(params.fetch("batch_size"))
       bulk_token = Yajl::Parser.parse(params.fetch("token"))
       last_id = Integer(bulk_token["id"] || 0)
-      id_for_next_token = nil
+
+      staged_apps_query = Diego::StagedAppsQuery.new(batch_size, last_id)
+      staged_apps = staged_apps_query.all
+
+      diego_client = ::CloudController::DependencyLocator.instance.diego_client
 
       apps = []
-      App.where(
-          ["id > ?", last_id],
-          "deleted_at IS NULL",
-          ["state = ?", "STARTED"],
-          ["package_state = ?", "STAGED"],
-      ).order(:id).limit(batch_size).each do |app|
-        apps << ::CloudController::DependencyLocator.instance.diego_client.desire_request(app)
+      id_for_next_token = nil
+      staged_apps.each do |app|
+        apps << diego_client.desire_request(app)
         id_for_next_token = app.id
       end
 
       Yajl::Encoder.encode(
-          apps: apps.collect(&:extract),
-          token: {"id" => id_for_next_token}
+        apps: apps.collect(&:extract),
+        token: {"id" => id_for_next_token}
       )
     rescue IndexError => e
       raise ApiError.new_from_details("BadQueryParameter", e.message)
