@@ -98,7 +98,7 @@ module VCAP::CloudController
 
       describe "System Domain permissions" do
         describe "PUT /v2/domains/:system_domain" do
-          it "should not allow modification of the shared domain by an org manager" do
+          it "does not allow modification of the shared domain by an org manager" do
             put "/v2/domains/#{@shared_domain.guid}",
                 Yajl::Encoder.encode(name: Sham.domain),
                 json_headers(headers_for(@org_a_manager))
@@ -106,7 +106,12 @@ module VCAP::CloudController
           end
         end
       end
- end
+    end
+
+    it "has the correct deprecation header" do
+      get "/v2/domains", {}, admin_headers
+      expect(last_response).to be_a_deprecated_response
+    end
 
     describe "GET /v2/domains/:id" do
       let(:user) { User.make }
@@ -161,7 +166,7 @@ module VCAP::CloudController
           organization.add_auditor(user)
         end
 
-        it "should create a domain with the specified name and owning organization" do
+        it "creates a domain with the specified name and owning organization" do
           name = Sham.domain
           post "/v2/domains", Yajl::Encoder.encode(name: name, owning_organization_guid: organization.guid), json_headers(headers_for(user))
           expect(last_response.status).to eq 201
@@ -178,7 +183,7 @@ module VCAP::CloudController
       context "when there are routes using the domain" do
         let!(:route) { Route.make(domain: shared_domain) }
 
-        it "should dot delete the route" do
+        it "does not delete the route" do
           expect {
             delete "/v2/domains/#{shared_domain.guid}", {}, admin_headers
           }.to_not change {
@@ -186,18 +191,11 @@ module VCAP::CloudController
           }
         end
 
-        it "should return an error" do
+        it "returns an error" do
           delete "/v2/domains/#{shared_domain.guid}", {}, admin_headers
           expect(last_response.status).to eq(400)
           expect(decoded_response["code"]).to equal(10006)
           expect(decoded_response["description"]).to match /delete the routes associations for your domains/i
-        end
-      end
-
-      context "deprecation" do
-        it "has the correct deprecation header" do
-          delete "/v2/domains/#{shared_domain.guid}", {}, admin_headers
-          expect(last_response).to be_a_deprecated_response
         end
       end
     end

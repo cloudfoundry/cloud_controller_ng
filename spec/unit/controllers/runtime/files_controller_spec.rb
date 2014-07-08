@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       context "as a developer" do
-        it "should return 400 when a bad instance is used" do
+        it "returns 400 when a bad instance is used" do
           get("/v2/apps/#{@app.guid}/instances/kows$ik/files",
               {},
               headers_for(@developer))
@@ -28,7 +28,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(400)
         end
 
-        it "should return 400 when there is an error finding the instance" do
+        it "returns 400 when there is an error finding the instance" do
           instance = 5
 
           @app.state = "STOPPED"
@@ -41,7 +41,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(400)
         end
 
-        it "should issue redirect", :use_nginx => false do
+        it "issues redirect", :use_nginx => false do
           instance = 5
           range = "bytes=100-200"
 
@@ -68,7 +68,7 @@ module VCAP::CloudController
       end
 
       context "as a user" do
-        it "should return 403" do
+        it "returns 403" do
           get("/v2/apps/#{@app.guid}/instances/bad_instance/files",
               {},
               headers_for(@user))
