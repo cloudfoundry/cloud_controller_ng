@@ -94,10 +94,7 @@ module VCAP::CloudController
     end
 
     def mark_app_routes_changed(app)
-      app.routes_changed = true
-      if app.dea_update_pending?
-        VCAP::CloudController::DeaClient.update_uris(app)
-      end
+      app.mark_routes_changed
     end
 
     def validate_domain

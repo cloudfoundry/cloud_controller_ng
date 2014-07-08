@@ -20,17 +20,13 @@ module VCAP::CloudController
       context "as a developer" do
         let(:account) { make_developer_for_space(application.space) }
 
-        it "returns a success response" do
-          restage_request
-          expect(last_response.status).to eq(201)
-        end
-
         it "restages the app" do
           allow_any_instance_of(VCAP::CloudController::RestagesController).to receive(:find_guid_and_validate_access).with(:read, application.guid).and_return(application)
 
           allow(application).to receive(:restage!)
           restage_request
 
+          expect(last_response.status).to eq(201)
           expect(application).to have_received(:restage!)
         end
 

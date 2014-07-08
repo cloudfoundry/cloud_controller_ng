@@ -3,11 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe SecurityGroupRunningDefaultsController do
     it_behaves_like "an admin only endpoint", path: "/v2/config/running_security_groups"
-    context "with security groups that are running defaults" do
-      before do
-        8.times { SecurityGroup.make(running_default: true) }
-      end
-    end
 
     it "only returns SecurityGroups that are running defaults" do
       SecurityGroup.make(running_default: false)
@@ -18,7 +13,7 @@ module VCAP::CloudController
       expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(running_default.guid)
     end
 
-    context "assigning a security group as a default" do
+    describe "assigning a security group as a default" do
       it "should set running_default to true on the security group and return the security group" do
         security_group = SecurityGroup.make(running_default: false)
 

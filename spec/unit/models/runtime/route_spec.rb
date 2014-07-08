@@ -204,44 +204,34 @@ module VCAP::CloudController
     end
 
     describe "#remove" do
-      let!(:route) { Route.make }
-      let!(:app_1) do
-        AppFactory.make({
-          :space => route.space,
-          :route_guids => [route.guid],
-        }.merge(app_attributes))
+      it "marks the apps routes as changed" do
+        app = AppFactory.make
+        route = Route.make(app_guids: [app.guid], space: app.space)
+        app = route.apps.first
+
+        expect(app).to receive(:mark_routes_changed).and_call_original
+        route.destroy
+      end
+    end
+
+    describe "apps association" do
+      let(:route) { Route.make }
+      let!(:app) do
+        AppFactory.make({:space => route.space})
       end
 
-      context "when app is running and staged" do
-        let(:app_attributes) { {:state => "STARTED", :package_hash => "abc", :package_state => "STAGED"} }
-
-        it "notifies DEAs of route change for running apps" do
-          expect(VCAP::CloudController::DeaClient).to receive(:update_uris).with(app_1)
-          Route[:guid => route.guid].destroy
+      describe "when adding an app" do
+        it "marks the apps routes as changed" do
+          expect(app).to receive(:mark_routes_changed).and_call_original
+          route.add_app(app)
         end
       end
 
-      context "when app is not staged and running" do
-        let(:app_attributes) { {:state => "STARTED", :package_hash => "abc", :package_state => "FAILED", :droplet_hash => nil} }
-
-        it "does not notify DEAs of route change for apps that are not started" do
-          AppFactory.make(
-              :space => route.space, :state => "STOPPED",
-              :route_guids => [route.guid], :droplet_hash => nil, :package_state => "PENDING")
-
-          expect(VCAP::CloudController::DeaClient).not_to receive(:update_uris)
-
-          route.destroy
-        end
-      end
-
-      context "when app is staged but not running" do
-        let(:app_attributes) { {:state => "STOPPED", :package_state => "STAGED"} }
-
-        it "does not notify DEAs of route change for apps that are not staged" do
-          AppFactory.make(:space => route.space, :package_state => "FAILED", :route_guids => [route.guid])
-          expect(VCAP::CloudController::DeaClient).not_to receive(:update_uris)
-          Route[:guid => route.guid].destroy
+      describe "when removing an app" do
+        it "marks the apps routes as changed" do
+          route.add_app(app)
+          expect(app).to receive(:mark_routes_changed).and_call_original
+          route.remove_app(app)
         end
       end
     end

@@ -505,6 +505,13 @@ module VCAP::CloudController
       super(opts)
     end
 
+    def mark_routes_changed(_ = nil)
+      @routes_changed = true
+
+      set_new_version
+      save
+    end
+
     private
 
     def metadata_deserialized
@@ -544,13 +551,6 @@ module VCAP::CloudController
 
     def health_manager_client
       CloudController::DependencyLocator.instance.health_manager_client
-    end
-
-    def mark_routes_changed(_)
-      @routes_changed = true
-
-      set_new_version
-      save
     end
 
     def generate_salt

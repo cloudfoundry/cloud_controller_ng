@@ -3,11 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   describe SecurityGroupStagingDefaultsController do
     it_behaves_like "an admin only endpoint", path: "/v2/config/staging_security_groups"
-    context "with security groups that are staging defaults" do
-      before do
-        8.times { SecurityGroup.make(staging_default: true) }
-      end
-    end
 
     it "only returns SecurityGroups that are staging defaults" do
       SecurityGroup.make(staging_default: false)
