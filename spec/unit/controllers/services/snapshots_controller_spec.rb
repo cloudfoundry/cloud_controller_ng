@@ -2,6 +2,25 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::SnapshotsController do
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+                                                               name: {type: "string", required: true},
+                                                               service_instance_guid: {type: "string", required: true}
+                                                             })
+
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+                                                               name: {type: "string"},
+                                                               service_instance_guid: {type: "string"}
+                                                             })
+
+      end
+    end
+
     let(:service_instance) do
       service = Service.make(
         :url => "http://horsemeat.com",

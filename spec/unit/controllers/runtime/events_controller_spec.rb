@@ -4,6 +4,12 @@ module VCAP::CloudController
   describe EventsController do
     let(:admin_user) { User.make :admin => true }
 
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:timestamp) }
+      it { expect(described_class).to be_queryable_by(:type) }
+      it { expect(described_class).to be_queryable_by(:actee) }
+    end
+
     describe "GET /v2/events" do
       before do
         @user_a = User.make

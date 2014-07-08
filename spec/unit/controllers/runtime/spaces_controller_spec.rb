@@ -2,6 +2,52 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::SpacesController do
+
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(described_class).to be_queryable_by(:organization_guid) }
+      it { expect(described_class).to be_queryable_by(:developer_guid) }
+      it { expect(described_class).to be_queryable_by(:app_guid) }
+    end
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+                                                               name: {type: "string", required: true},
+                                                               organization_guid: {type: "string", required: true},
+                                                               developer_guids: {type: "[string]"},
+                                                               manager_guids: {type: "[string]"},
+                                                               auditor_guids: {type: "[string]"},
+                                                               app_guids: {type: "[string]"},
+                                                               route_guids: {type: "[string]"},
+                                                               domain_guids: {type: "[string]"},
+                                                               service_instance_guids: {type: "[string]"},
+                                                               app_event_guids: {type: "[string]"},
+                                                               event_guids: {type: "[string]"},
+                                                               security_group_guids: {type: "[string]"}
+                                                             })
+
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+                                                               name: {type: "string"},
+                                                               organization_guid: {type: "string"},
+                                                               developer_guids: {type: "[string]"},
+                                                               manager_guids: {type: "[string]"},
+                                                               auditor_guids: {type: "[string]"},
+                                                               app_guids: {type: "[string]"},
+                                                               route_guids: {type: "[string]"},
+                                                               domain_guids: {type: "[string]"},
+                                                               service_instance_guids: {type: "[string]"},
+                                                               app_event_guids: {type: "[string]"},
+                                                               event_guids: {type: "[string]"},
+                                                               security_group_guids: {type: "[string]"}
+                                                             })
+
+      end
+    end
+
     describe "data integrity" do
       let(:space) { Space.make }
 

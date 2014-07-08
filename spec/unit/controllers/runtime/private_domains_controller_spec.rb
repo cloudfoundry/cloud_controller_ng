@@ -2,6 +2,29 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe PrivateDomainsController do
+
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:name) }
+    end
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+                                                               name: {type: "string", required: true},
+                                                               owning_organization_guid: {type: "string", required: true}
+                                                             })
+
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+                                                               name: {type: "string"},
+                                                               owning_organization_guid: {type: "string"}
+                                                             })
+
+      end
+    end
+
     describe "POST /v2/private_domains" do
       context "when owning_organization and name are both given" do
         it "returns 201 Created" do

@@ -2,7 +2,32 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe ServiceBindingsController do
-    # The create_attribute block can't "see" lets and instance variables
+
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:app_guid) }
+      it { expect(described_class).to be_queryable_by(:service_instance_guid) }
+    end
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+                                                               binding_options: {type: "hash", default: {}},
+                                                               app_guid: {type: "string", required: true},
+                                                               service_instance_guid: {type: "string", required: true}
+                                                             })
+
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+                                                               binding_options: {type: "hash"},
+                                                               app_guid: {type: "string"},
+                                                               service_instance_guid: {type: "string"}
+                                                             })
+
+      end
+    end
+
     CREDENTIALS = {'foo' => 'bar'}
 
     def fake_app_staging(app)

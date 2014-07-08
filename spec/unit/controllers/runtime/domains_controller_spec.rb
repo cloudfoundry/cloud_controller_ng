@@ -2,6 +2,35 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::DomainsController do
+
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(described_class).to be_queryable_by(:owning_organization_guid) }
+      it { expect(described_class).to be_queryable_by(:space_guid) }
+    end
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+                                                               name: {type: "string", required: true},
+                                                               wildcard: {type: "bool", default: true},
+                                                               owning_organization_guid: {type: "string"},
+                                                               space_guids: {type: "[string]"}
+                                                             })
+
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+                                                               name: {type: "string"},
+                                                               wildcard: {type: "bool"},
+                                                               owning_organization_guid: {type: "string"},
+                                                               space_guids: {type: "[string]"}
+                                                             })
+
+      end
+    end
+
     context "without seeded domains" do
       before do
         Domain.dataset.destroy # Seeded domains get in the way

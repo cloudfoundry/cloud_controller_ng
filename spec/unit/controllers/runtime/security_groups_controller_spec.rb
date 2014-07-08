@@ -6,6 +6,30 @@ module VCAP::CloudController
 
     it_behaves_like "an admin only endpoint", path: "/v2/security_groups"
 
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:name) }
+    end
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+                                                               name: {type: "string", required: true},
+                                                               rules: {type: "[hash]", default: []},
+                                                               space_guids: {type: "[string]"}
+                                                             })
+
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+                                                               name: {type: "string"},
+                                                               rules: {type: "[hash]"},
+                                                               space_guids: {type: "[string]"}
+                                                             })
+
+      end
+    end
+
     describe "errors" do
       it "returns SecurityGroupInvalid" do
         post '/v2/security_groups', '{"name":"one\ntwo"}', json_headers(admin_headers)

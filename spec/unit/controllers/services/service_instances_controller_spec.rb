@@ -2,6 +2,38 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceInstancesController, :services do
+
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(described_class).to be_queryable_by(:space_guid) }
+      it { expect(described_class).to be_queryable_by(:service_plan_guid) }
+      it { expect(described_class).to be_queryable_by(:service_binding_guid) }
+      it { expect(described_class).to be_queryable_by(:gateway_name) }
+      it { expect(described_class).to be_queryable_by(:organization_guid) }
+    end
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+                                                               name: {type: "string", required: true},
+                                                               space_guid: {type: "string", required: true},
+                                                               service_plan_guid: {type: "string", required: true},
+                                                               service_binding_guids: {type: "[string]"}
+                                                             })
+
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+                                                               name: {type: "string"},
+                                                               space_guid: {type: "string"},
+                                                               service_plan_guid: {type: "string"},
+                                                               service_binding_guids: {type: "[string]"}
+                                                             })
+
+      end
+    end
+
     describe "Permissions" do
       include_context "permissions"
 

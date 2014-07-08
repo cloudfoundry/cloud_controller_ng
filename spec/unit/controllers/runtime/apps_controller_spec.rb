@@ -4,9 +4,56 @@ module VCAP::CloudController
   describe VCAP::CloudController::AppsController do
     let(:app_event_repository) { CloudController::DependencyLocator.instance.app_event_repository }
 
-    it { expect(described_class).to be_queryable_by(:name) }
-    it { expect(described_class).to be_queryable_by(:space_guid) }
-    it { expect(described_class).to be_queryable_by(:organization_guid) }
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(described_class).to be_queryable_by(:space_guid) }
+      it { expect(described_class).to be_queryable_by(:organization_guid) }
+    end
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+          buildpack: {type: "string"},
+          command: {type: "string"},
+          console: {type: "bool", default: false},
+          debug: {type: "string"},
+          disk_quota: {type: "integer"},
+          environment_json: {type: "hash", default: {}},
+          health_check_timeout: { type: "integer" },
+          instances: {type: "integer", default: 1},
+          memory: {type: "integer"},
+          name: {type: "string", required: true},
+          production: {type: "bool", default: false},
+          state: {type: "string", default: "STOPPED"},
+          event_guids: {type: "[string]"},
+          route_guids: {type: "[string]"},
+          space_guid: {type: "string", required: true},
+          stack_guid: {type: "string"}
+        })
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+          buildpack: {type: "string"},
+          command: {type: "string"},
+          console: {type: "bool"},
+          debug: {type: "string"},
+          disk_quota: {type: "integer"},
+          environment_json: {type: "hash"},
+          health_check_timeout: { type: "integer" },
+          instances: {type: "integer"},
+          memory: {type: "integer"},
+          name: {type: "string"},
+          production: {type: "bool"},
+          state: {type: "string"},
+          event_guids: {type: "[string]"},
+          route_guids: {type: "[string]"},
+          service_binding_guids: {type: "[string]"},
+          space_guid: {type: "string"},
+          stack_guid: {type: "string"}
+        })
+      end
+    end
 
     describe "create app" do
       let(:space) { Space.make }
@@ -20,17 +67,13 @@ module VCAP::CloudController
 
       let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
 
-      def create_app
-        post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(admin_headers)
-      end
-
       describe "events" do
         it "records app create" do
           expected_attrs = AppsController::CreateMessage.decode(initial_hash.to_json).extract(stringify_keys: true)
 
           allow(app_event_repository).to receive(:record_app_create).and_call_original
 
-          create_app
+          post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(admin_headers)
           expect(app_event_repository).to have_received(:record_app_create).with(App.last, admin_user, SecurityContext.current_user_email, expected_attrs)
         end
       end

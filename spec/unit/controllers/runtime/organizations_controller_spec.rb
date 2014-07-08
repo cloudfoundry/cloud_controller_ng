@@ -4,6 +4,53 @@ module VCAP::CloudController
   describe VCAP::CloudController::OrganizationsController do
     let(:org) { Organization.make }
 
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(described_class).to be_queryable_by(:space_guid) }
+      it { expect(described_class).to be_queryable_by(:user_guid) }
+      it { expect(described_class).to be_queryable_by(:manager_guid) }
+      it { expect(described_class).to be_queryable_by(:billing_manager_guid) }
+      it { expect(described_class).to be_queryable_by(:auditor_guid) }
+      it { expect(described_class).to be_queryable_by(:status) }
+    end
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+                                                               name: {type: "string", required: true},
+                                                               billing_enabled: {type: "bool", default: false},
+                                                               status: {type: "string", default: "active"},
+                                                               quota_definition_guid: {type: "string"},
+                                                               domain_guids: {type: "[string]"},
+                                                               private_domain_guids: {type: "[string]"},
+                                                               user_guids: {type: "[string]"},
+                                                               manager_guids: {type: "[string]"},
+                                                               billing_manager_guids: {type: "[string]"},
+                                                               auditor_guids: {type: "[string]"},
+                                                               app_event_guids: {type: "[string]"}
+                                                             })
+
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+                                                               name: {type: "string"},
+                                                               billing_enabled: {type: "bool"},
+                                                               status: {type: "string"},
+                                                               quota_definition_guid: {type: "string"},
+                                                               domain_guids: {type: "[string]"},
+                                                               private_domain_guids: {type: "[string]"},
+                                                               user_guids: {type: "[string]"},
+                                                               manager_guids: {type: "[string]"},
+                                                               billing_manager_guids: {type: "[string]"},
+                                                               auditor_guids: {type: "[string]"},
+                                                               app_event_guids: {type: "[string]"},
+                                                               space_guids: {type: "[string]"}
+                                                             })
+
+      end
+    end
+
     describe "Permissions" do
       include_context "permissions"
 

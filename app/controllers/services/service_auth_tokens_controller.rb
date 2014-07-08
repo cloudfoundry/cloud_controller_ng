@@ -3,7 +3,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :label,    String
       attribute :provider, String
-      attribute :token,    String,  :exclude_in => :response
+      attribute :token,    String
     end
 
     query_parameters :label, :provider

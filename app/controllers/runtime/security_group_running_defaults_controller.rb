@@ -12,12 +12,6 @@ module VCAP::CloudController
       Errors::ApiError.new_from_details("SecurityGroupRunningDefaultInvalid", guid)
     end
 
-    define_attributes do
-      attribute :security_group_guid, String
-    end
-
-    define_messages
-
     get path, :enumerate
 
     put path_guid, :update

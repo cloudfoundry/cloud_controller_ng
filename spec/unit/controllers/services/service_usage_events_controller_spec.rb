@@ -4,6 +4,10 @@ module VCAP::CloudController
   describe ServiceUsageEventsController do
     let(:event_guid1) { SecureRandom.uuid }
 
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:service_instance_type) }
+    end
+
     before do
       ServiceUsageEvent.make(
         service_instance_type: 'managed_service_instance',

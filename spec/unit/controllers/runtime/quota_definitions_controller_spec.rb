@@ -2,6 +2,35 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::QuotaDefinitionsController do
+
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:name) }
+    end
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+                                                               name: {type: "string", required: true},
+                                                               non_basic_services_allowed: {type: "bool", required: true},
+                                                               total_services: {type: "integer", required: true},
+                                                               total_routes: {type: "integer", required: true},
+                                                               memory_limit: {type: "integer", required: true}
+                                                             })
+
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+                                                               name: {type: "string"},
+                                                               non_basic_services_allowed: {type: "bool"},
+                                                               total_services: {type: "integer"},
+                                                               total_routes: {type: "integer"},
+                                                               memory_limit: {type: "integer"}
+                                                             })
+
+      end
+    end
+    
     describe "permissions" do
       let(:quota_attributes) do
         {
