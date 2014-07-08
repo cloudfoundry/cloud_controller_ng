@@ -79,7 +79,7 @@ module VCAP::CloudController
         end
 
         context "when custom buildpacks are enabled" do
-          it "does allow a public git url" do
+          it "does allow a public url" do
             expect {
               AppFactory.make(buildpack: "git://user@github.com:repo")
             }.to_not raise_error
@@ -99,18 +99,6 @@ module VCAP::CloudController
             }.to_not raise_error
 
             expect(app.admin_buildpack).to eql(admin_buildpack)
-          end
-
-          it "does not allow a private git url" do
-            expect {
-              app = AppFactory.make(buildpack: "git@example.com:foo.git")
-            }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
-          end
-
-          it "does not allow a private git url with ssh schema" do
-            expect {
-              app = AppFactory.make(buildpack: "ssh://git@example.com:foo.git")
-            }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
           end
         end
 
@@ -168,7 +156,7 @@ module VCAP::CloudController
         it "does not allow a non-url string" do
           expect {
             app = AppFactory.make(buildpack: "Hello, world!")
-          }.to raise_error(Sequel::ValidationFailed, /is not valid public git url or a known buildpack name/)
+          }.to raise_error(Sequel::ValidationFailed, /is not valid public url or a known buildpack name/)
         end
       end
 

@@ -8,12 +8,12 @@ module VCAP::CloudController
       Yajl::Encoder.encode(url)
     end
 
-    URI_REGEXP = /\A#{URI::regexp(%w(http https git))}\Z/.freeze
+    URI_REGEXP = /\A#{URI::regexp}\Z/.freeze
 
     def valid?
       @errors = []
       unless url =~ URI_REGEXP
-        @errors << "#{url} is not valid public git url or a known buildpack name"
+        @errors << "#{url} is not valid public url or a known buildpack name"
       end
       return @errors.empty?
     end
