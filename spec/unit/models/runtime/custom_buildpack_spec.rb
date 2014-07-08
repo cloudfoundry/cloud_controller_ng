@@ -1,8 +1,8 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe GitBasedBuildpack do
-    subject { GitBasedBuildpack.new(url) }
+  describe CustomBuildpack do
+    subject { CustomBuildpack.new(url) }
 
     let(:url) { "http://foo_bar/baz" }
 

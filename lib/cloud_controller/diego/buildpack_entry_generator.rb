@@ -7,7 +7,7 @@ module VCAP::CloudController::Diego
     def buildpack_entries(app)
       buildpack = app.buildpack
 
-      if buildpack.instance_of?(VCAP::CloudController::GitBasedBuildpack)
+      if buildpack.instance_of?(VCAP::CloudController::CustomBuildpack)
         if is_zip_format(buildpack)
           return [custom_buildpack_entry(buildpack)]
         else

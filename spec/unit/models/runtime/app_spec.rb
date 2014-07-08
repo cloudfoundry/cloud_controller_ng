@@ -955,7 +955,7 @@ module VCAP::CloudController
       it "can be set to a git url" do
         app = App.new
         app.buildpack = valid_git_url
-        expect(app.buildpack).to eql GitBasedBuildpack.new(valid_git_url)
+        expect(app.buildpack).to eql CustomBuildpack.new(valid_git_url)
       end
 
       it "can be set to a buildpack name" do
@@ -976,7 +976,7 @@ module VCAP::CloudController
           buildpack = Buildpack.make
           app = App.new(buildpack: buildpack.name)
           app.buildpack = valid_git_url
-          expect(app.buildpack).to eql(GitBasedBuildpack.new(valid_git_url))
+          expect(app.buildpack).to eql(CustomBuildpack.new(valid_git_url))
         end
 
         it "allows changing from git url to admin buildpack" do

@@ -411,7 +411,7 @@ module VCAP::CloudController
       if admin_buildpack
         return admin_buildpack
       elsif super
-        return GitBasedBuildpack.new(super)
+        return CustomBuildpack.new(super)
       end
 
       AutoDetectionBuildpack.new

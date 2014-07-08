@@ -24,20 +24,20 @@ module VCAP::CloudController::Diego
     end
 
     describe "#buildpack_entries" do
-      context "when the app has a GitBasedBuildpack" do
-        context "when the GitBasedBuildpack uri begins with http(s)://" do
+      context "when the app has a CustomBuildpack" do
+        context "when the CustomBuildpack uri begins with http(s)://" do
           before do
             app.buildpack = "http://github.com/mybuildpack/bp.zip"
           end
 
-          it "should use the GitBasedBuildpack's uri and name it 'custom', and use the url as the key" do
+          it "should use the CustomBuildpack's uri and name it 'custom', and use the url as the key" do
             expect(buildpack_entry_generator.buildpack_entries(app)).to eq([
                                                                              { name: "custom", key: "http://github.com/mybuildpack/bp.zip", url: "http://github.com/mybuildpack/bp.zip" }
                                                                            ])
           end
         end
 
-        context "when the GitBasedBuildpack uri begins with git://" do
+        context "when the CustomBuildpack uri begins with git://" do
           before do
             app.buildpack = "git://github.com/mybuildpack/bp"
           end
@@ -50,7 +50,7 @@ module VCAP::CloudController::Diego
           end
         end
 
-        context "when the GitBasedBuildpack uri ends with .git" do
+        context "when the CustomBuildpack uri ends with .git" do
           before do
             app.buildpack = "https://github.com/mybuildpack/bp.git"
           end
