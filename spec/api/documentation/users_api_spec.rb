@@ -9,27 +9,37 @@ resource "Users", type: :api do
 
   authenticated_request
 
-  describe "Standard endpoints" do
-    field :guid, "The guid of the user.", required: false
-    field :default_space_guid, "The guid of the default space for apps created by this user.", required: false
-    field :admin, "Whether the user is an admin (Use UAA instead).", required: false, deprecated: true
-    field :default_space_url, "The url of the default space for apps created by the user.", required: false, readonly: true
-    field :spaces_url, "The url of the spaces this user is a developer of.", required: false, readonly: true
-    field :organizations_url, "The url of the organizations this user in a member of.", required: false, readonly: true
-    field :managed_organizations_url, "The url of the organizations this user in a manager of.", required: false, readonly: true
-    field :billing_managed_organizations_url, "The url of the organizations this user in a billing manager of.", required: false, readonly: true
-    field :audited_organizations_url, "The url of the organizations this user in a auditor of.", required: false, readonly: true
-    field :managed_spaces_url, "The url of the spaces this user in a manager of.", required: false, readonly: true
-    field :audited_spaces_url, "The url of the spaces this user in a auditor of.", required: false, readonly: true
+  shared_context "guid_parameter" do
+    parameter :guid, "The guid of the User"
+  end
 
+  shared_context "updatable_fields" do
+    field :default_space_guid, "The guid of the default space for apps created by this user."
+    field :admin, "Whether the user is an admin (Use UAA instead).", deprecated: true
+  end
+
+  describe "Standard endpoints" do
     standard_model_list(:user, VCAP::CloudController::UsersController)
     standard_model_get(:user, nested_associations: [:default_space])
     standard_model_delete(:user)
 
-    put "/v2/users/:guid" do
-      request_parameter :guid, "The guid for the user to alter"
+    post "/v2/users/" do
+      field :guid, "The UAA guid of the user to create.", required: true, example_values: [Sham.guid]
+      include_context "updatable_fields"
 
-      example "Update a User's default Space" do
+      example "Creating a User" do
+        client.post "/v2/users", fields_json, headers
+        expect(status).to eq(201)
+
+        standard_entity_response parsed_response, :user
+      end
+    end
+
+    put "/v2/users/:guid" do
+      include_context "guid_parameter"
+      include_context "updatable_fields"
+
+      example "Updating a User" do
         new_space = VCAP::CloudController::Space.make
         client.put "/v2/users/#{guid}", Yajl::Encoder.encode(default_space_guid: new_space.guid), headers
 
@@ -40,7 +50,7 @@ resource "Users", type: :api do
   end
 
   describe "Nested endpoints" do
-    field :guid, "The guid of the user.", required: true
+    include_context "guid_parameter"
 
     describe "Developer Spaces" do
       before do

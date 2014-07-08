@@ -33,7 +33,6 @@ module VCAP::CloudController
 
       it do
         expect(described_class).to have_updatable_attributes({
-                                                               guid: {type: "string"},
                                                                admin: {type: "bool"},
                                                                space_guids: {type: "[string]"},
                                                                organization_guids: {type: "[string]"},

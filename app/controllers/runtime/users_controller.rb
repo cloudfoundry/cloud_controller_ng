@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class UsersController < RestController::ModelController
     define_attributes do
-      attribute :guid, String
+      attribute :guid, String, exclude_in: :update
       attribute :admin, Message::Boolean, :default => false
       to_many   :spaces
       to_many   :organizations
