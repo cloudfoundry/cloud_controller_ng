@@ -7,26 +7,19 @@ module VCAP::CloudController::Diego
     def buildpack_entries(app)
       buildpack = app.buildpack
 
-      if buildpack.instance_of?(VCAP::CloudController::CustomBuildpack)
-        if is_zip_format(buildpack)
-          return [custom_buildpack_entry(buildpack)]
-        else
-          return default_admin_buildpacks
-        end
+      case buildpack
+      when VCAP::CloudController::CustomBuildpack
+        [custom_buildpack_entry(buildpack)]
+      when VCAP::CloudController::Buildpack
+        [admin_buildpack_entry(buildpack)]
+      when VCAP::CloudController::AutoDetectionBuildpack
+        default_admin_buildpacks
+      else
+        raise "Unsupported buildpack type: '#{buildpack.class}'"
       end
-
-      if buildpack.instance_of?(VCAP::CloudController::Buildpack)
-        return [admin_buildpack_entry(buildpack)]
-      end
-
-      default_admin_buildpacks
     end
 
-    def is_zip_format(buildpack)
-      buildpackIsHttp = buildpack.url =~ /^http/
-      buildPackIsZip= buildpack.url=~ /\.zip$/
-      buildpackIsHttp && buildPackIsZip
-    end
+    private
 
     def custom_buildpack_entry(buildpack)
       {name: "custom", key: buildpack.url, url: buildpack.url}
