@@ -193,6 +193,14 @@ module VCAP::CloudController
         ],
 
         optional(:app_bits_upload_grace_period_in_seconds) => Integer,
+
+        optional(:tps_url) => String,
+
+        optional(:zones) => [{
+          "name" => String,
+          "priority" => Integer,
+           optional("description") => String
+        }],
       }
     end
 
@@ -259,8 +267,13 @@ module VCAP::CloudController
         end
       end
 
+      def zones
+        config[:zones].uniq { |zone| zone["name"] }.dup
+      end
+
       def merge_defaults(config)
         config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
+        config[:zones] ||= [{"name" => "default", "priority" => 100, "description" => "default zone"}]
         config[:maximum_app_disk_in_mb] ||= 2048
         config[:request_timeout_in_seconds] ||= 300
         config[:directories] ||= {}

@@ -1,7 +1,5 @@
 ---
-local_route: 127.0.0.1
 external_port: 8181
-pid_filename: /tmp/cloud_controller.8181.pid
 
 info:
   name: "vcap"
@@ -18,10 +16,6 @@ app_domains:
   - customer-app-domain1.com
   - customer-app-domain2.com
 
-jobs:
-  global:
-    timeout_in_seconds: 14400
-
 app_events:
   cutoff_age_in_days: 31
 
@@ -36,33 +30,31 @@ failed_jobs:
 
 default_app_memory: 1024 #mb
 default_app_disk_in_mb: 1024
-maximum_app_disk_in_mb: 2048
+maximum_health_check_timeout: 180
 
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
-  symmetric_secret: "tokensecret"
 
 logging:
-  file: /tmp/cloud_controller.8181.log
   level: fatal # Keep at fatal to avoid lots of extraneous output in tests
-
-loggregator:
-  router: "127.0.0.1:12345"
-  shared_secret: "loggregatorsecret"
 
 message_bus_servers:
   - nats://127.0.0.1:4222
+pid_filename: /tmp/cloud_controller.pid
 
 db:
   database: "sqlite:///tmp/cloud_controller.db"
 
-active_record_db:
-  database: "sqlite:///tmp/cloud_controller_ar.db"
-
 bulk_api:
   auth_user: bulk_user
   auth_password: bulk_password
+
+staging:
+  timeout_in_seconds: 120
+  auth:
+    user: user
+    password: password
 
 cc_partition: ng
 
@@ -72,61 +64,42 @@ nginx:
 
 quota_definitions:
   default:
-    memory_limit: 10240
-    total_services: 100
     non_basic_services_allowed: true
+    total_services: 100
     total_routes: 1000
+    memory_limit: 10240
+
+  small:
+    non_basic_services_allowed: false
+    total_services: 2
+    total_routes: 1000
+    memory_limit: 512 # 0.5 GB
 
 default_quota_definition: default
 
-
 resource_pool:
-  resource_directory_key: "cc-resources"
   fog_connection:
     provider: Local
-    local_root: /tmp
 
 packages:
-  app_package_directory_key: "cc-packages"
   fog_connection:
     provider: Local
-    local_root: /tmp
 
 droplets:
-  droplet_directory_key: "cc-droplets"
   fog_connection:
     provider: Local
-    local_root: /tmp
-
-buildpacks:
-  buildpack_directory_key: "cc-buildpacks"
-  fog_connection:
-    provider: Local
-    local_root: /tmp
 
 db_encryption_key: some-key
 
-staging:
-  timeout_in_seconds: 120
-  auth:
-    user: zxsfhgjg
-    password: ZNVfdase9
-
-maximum_health_check_timeout: 180
+loggregator:
+  router: "127.0.0.1:8080"
+  shared_secret: "loggregator-secret"
 
 renderer:
   max_results_per_page: 100
   default_results_per_page: 50
-  max_inline_relations_depth: 3
-
-security_group_definitions:
-- name: non_allowed
-  rules: []
-
-default_staging_security_group: non_allowed
-default_running_security_group: non_allowed
 
 zones:
-- name: "default"
-  description: "default"
-  priority: 100
+- name: "zoneA"
+  description: "zoneA description"
+  priority: "ABC"

@@ -1,4 +1,5 @@
 require "cloud_controller/nats_messages/stager_advertisment"
+require "cloud_controller/dea/eligible_dea_advertisement_filter"
 
 module VCAP::CloudController
   class StagerPool
@@ -19,19 +20,43 @@ module VCAP::CloudController
     def process_advertise_message(msg)
       mutex.synchronize do
         advertisement = StagerAdvertisement.new(msg)
-
         remove_advertisement_for_id(advertisement.stager_id)
         @stager_advertisements << advertisement
       end
     end
 
-    def find_stager(stack, memory, disk)
-      mutex.synchronize do
-        validate_stack_availability(stack)
+    def logger
+      @logger ||= Steno.logger("cc.stager.pool")
+    end
 
+    def find_stager(criteria)
+      if logger.debug2?
+        @stager_advertisements.each do |ad|
+          logger.debug2 "#{ad.id} | #{ad.available_memory} | #{ad.available_disk} | #{ad.zone} | #{ad.stats["app_id_to_count"]}"
+        end
+      end
+
+      mutex.synchronize do
+
+        validate_stack_availability(criteria[:stack])
         prune_stale_advertisements
-        best_ad = top_5_stagers_for(memory, disk, stack).sample
-        best_ad && best_ad.stager_id
+
+        criteria[:index] = 0
+        clear_app_id_to_count_in_advertisement(criteria[:app_id])
+
+        best_ad = EligibleDeaAdvertisementFilter.new(@stager_advertisements, criteria).
+                       only_valid_zone.
+                       only_specific_zone.
+                       only_with_disk.
+                       only_meets_needs.
+                       only_fewest_instances_of_app.
+                       only_fewest_instances_of_all.
+                       upper_by_memory.
+                       sample
+
+        logger.debug2 "best stager  = #{best_ad.id}" if best_ad
+
+        best_ad && best_ad.id
       end
     end
 
@@ -43,6 +68,10 @@ module VCAP::CloudController
 
     def reserve_app_memory(stager_id, app_memory)
       @stager_advertisements.find { |ad| ad.stager_id == stager_id }.decrement_memory(app_memory)
+    end
+
+    def reserve_app_disk(stager_id, app_disk_quota)
+      @stager_advertisements.find { |ad| ad.stager_id == stager_id }.decrement_disk(app_disk_quota)
     end
 
     private
@@ -60,6 +89,10 @@ module VCAP::CloudController
 
     def remove_advertisement_for_id(id)
       @stager_advertisements.delete_if { |ad| ad.stager_id == id }
+    end
+
+    def clear_app_id_to_count_in_advertisement(app_id)
+      @stager_advertisements.each { |ad| ad.clear_app_id_to_count(app_id) }
     end
 
     def mutex

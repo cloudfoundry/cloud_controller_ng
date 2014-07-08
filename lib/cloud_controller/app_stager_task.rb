@@ -45,7 +45,13 @@ module VCAP::CloudController
     end
 
     def stage(&completion_callback)
-      @stager_id = @stager_pool.find_stager(@app.stack.name, staging_task_memory_mb, staging_task_disk_mb)
+      @stager_id = @stager_pool.find_stager(
+                                            :app_id => @app.guid,
+                                            :stack => @app.stack.name,
+                                            :mem => staging_task_memory_mb,
+                                            :disk => staging_task_disk_mb,
+                                            :zone => @app.zone
+                                           )
       raise Errors::ApiError.new_from_details("StagingError", "no available stagers") unless @stager_id
 
       subject = "staging.#{@stager_id}.start"
@@ -61,6 +67,9 @@ module VCAP::CloudController
 
       @dea_pool.reserve_app_memory(@stager_id, staging_task_memory_mb)
       @stager_pool.reserve_app_memory(@stager_id, staging_task_memory_mb)
+
+      @dea_pool.reserve_app_disk(@stager_id, staging_task_disk_mb)
+      @stager_pool.reserve_app_disk(@stager_id, staging_task_disk_mb)
 
       logger.info("staging.begin", :app_guid => @app.guid)
       staging_result = EM.schedule_sync do |promise|
