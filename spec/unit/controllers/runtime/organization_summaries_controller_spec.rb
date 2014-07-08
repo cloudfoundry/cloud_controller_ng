@@ -53,23 +53,11 @@ module VCAP::CloudController
           get "/v2/organizations/#{org.guid}/summary", {}, admin_headers
         end
 
-        it "should return 200" do
+        it "return organization data" do
           expect(last_response.status).to eq(200)
-        end
-
-        it "should return the org guid" do
           expect(decoded_response["guid"]).to eq(org.guid)
-        end
-
-        it "should return the org name" do
           expect(decoded_response["name"]).to eq(org.name)
-        end
-
-        it "returns the org's status" do
           expect(decoded_response["status"]).to eq("active")
-        end
-
-        it "should return num_spaces spaces" do
           expect(decoded_response["spaces"].size).to eq(num_spaces)
         end
 

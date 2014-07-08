@@ -17,37 +17,35 @@ module VCAP::CloudController
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-                                                               name: {type: "string", required: true},
-                                                               billing_enabled: {type: "bool", default: false},
-                                                               status: {type: "string", default: "active"},
-                                                               quota_definition_guid: {type: "string"},
-                                                               domain_guids: {type: "[string]"},
-                                                               private_domain_guids: {type: "[string]"},
-                                                               user_guids: {type: "[string]"},
-                                                               manager_guids: {type: "[string]"},
-                                                               billing_manager_guids: {type: "[string]"},
-                                                               auditor_guids: {type: "[string]"},
-                                                               app_event_guids: {type: "[string]"}
-                                                             })
-
+          name: {type: "string", required: true},
+          billing_enabled: {type: "bool", default: false},
+          status: {type: "string", default: "active"},
+          quota_definition_guid: {type: "string"},
+          domain_guids: {type: "[string]"},
+          private_domain_guids: {type: "[string]"},
+          user_guids: {type: "[string]"},
+          manager_guids: {type: "[string]"},
+          billing_manager_guids: {type: "[string]"},
+          auditor_guids: {type: "[string]"},
+          app_event_guids: {type: "[string]"}
+        })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-                                                               name: {type: "string"},
-                                                               billing_enabled: {type: "bool"},
-                                                               status: {type: "string"},
-                                                               quota_definition_guid: {type: "string"},
-                                                               domain_guids: {type: "[string]"},
-                                                               private_domain_guids: {type: "[string]"},
-                                                               user_guids: {type: "[string]"},
-                                                               manager_guids: {type: "[string]"},
-                                                               billing_manager_guids: {type: "[string]"},
-                                                               auditor_guids: {type: "[string]"},
-                                                               app_event_guids: {type: "[string]"},
-                                                               space_guids: {type: "[string]"}
-                                                             })
-
+          name: {type: "string"},
+          billing_enabled: {type: "bool"},
+          status: {type: "string"},
+          quota_definition_guid: {type: "string"},
+          domain_guids: {type: "[string]"},
+          private_domain_guids: {type: "[string]"},
+          user_guids: {type: "[string]"},
+          manager_guids: {type: "[string]"},
+          billing_manager_guids: {type: "[string]"},
+          auditor_guids: {type: "[string]"},
+          app_event_guids: {type: "[string]"},
+          space_guids: {type: "[string]"}
+        })
       end
     end
 
@@ -102,57 +100,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "billing" do
-      let(:org_admin_headers) do
-        user = User.make
-        org.add_user(user)
-        org.add_manager(user)
-        headers_for(user)
-      end
-
-      it "should export the billing_enabled flag" do
-        org.billing_enabled = true
-        org.save(:validate => false)
-        get "/v2/organizations/#{org.guid}", {}, admin_headers
-        expect(last_response.status).to eq(200)
-        expect(decoded_response["entity"]["billing_enabled"]).to eq(true)
-      end
-
-      describe "cf admins" do
-        it "should be allowed to set billing_enabled flag to true" do
-          expect(org.billing_enabled).to eq(false)
-          req = Yajl::Encoder.encode(:billing_enabled => true)
-          put "/v2/organizations/#{org.guid}", req, json_headers(admin_headers)
-          expect(last_response.status).to eq(201)
-          expect(decoded_response["entity"]["billing_enabled"]).to eq(true)
-          org.refresh
-          expect(org.billing_enabled).to eq(true)
-        end
-      end
-
-      describe "org admins" do
-        it "should not be allowed to set billing_enabled flag to true" do
-          expect(org.billing_enabled).to eq(false)
-          req = Yajl::Encoder.encode(:billing_enabled => true)
-          put "/v2/organizations/#{org.guid}", req, json_headers(org_admin_headers)
-
-          expect(last_response.status).to eq(400)
-          org.refresh
-          expect(org.billing_enabled).to eq(false)
-        end
-
-        it "should not be allowed to set billing_enabled flag to false" do
-          org.billing_enabled = true
-          org.save(:validate => false)
-          req = Yajl::Encoder.encode(:billing_enabled => false)
-          put "/v2/organizations/#{org.guid}", req, json_headers(org_admin_headers)
-          expect(last_response.status).to eq(400)
-          org.refresh
-          expect(org.billing_enabled).to eq(true)
-        end
-      end
-    end
-
     describe 'GET /v2/organizations/:guid/domains' do
       let(:organization) { Organization.make }
       let(:manager) { make_manager_for_org(organization) }
@@ -189,93 +136,10 @@ module VCAP::CloudController
       end
     end
 
-    describe "quota definition" do
-      let(:org_admin_headers) do
-        user = User.make
-        org.add_user(user)
-        org.add_manager(user)
-        headers_for(user)
-      end
-
-      let(:quota_definition) do
-        QuotaDefinition.make
-      end
-
-      let(:update_request) do
-        Yajl::Encoder.encode(:quota_definition_guid => quota_definition.guid)
-      end
-
-      describe "cf admins" do
-        it "should be allowed to set the quota definition" do
-          put "/v2/organizations/#{org.guid}", update_request, json_headers(admin_headers)
-          expect(last_response.status).to eq(201)
-          org.refresh
-          expect(org.quota_definition).to eq(quota_definition)
-        end
-      end
-
-      describe "org admins" do
-        it "should not be allowed to set the quota definition" do
-          orig_quota_definition = org.quota_definition
-          put "/v2/organizations/#{org.guid}", update_request, json_headers(org_admin_headers)
-          expect(last_response.status).to eq(403)
-          org.refresh
-          expect(org.quota_definition).to eq(orig_quota_definition)
-        end
-      end
-    end
-
-    describe "app_events associations" do
-      it "does not return app_events with inline-relations-depth=0" do
-        org = Organization.make
-        get "/v2/organizations/#{org.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
-        expect(last_response.status).to eq 200
-        expect(entity).to have_key("app_events_url")
-        expect(entity).to_not have_key("app_events")
-      end
-
-      it "does not return app_events with inline-relations-depth=1 since app_events dataset is relatively expensive to query" do
-        org = Organization.make
-        get "/v2/organizations/#{org.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
-        expect(entity).to have_key("app_events_url")
-        expect(entity).to_not have_key("app_events")
-      end
-    end
-
     describe "Deprecated endpoints" do
-      let!(:domain) { SharedDomain.make }
-      describe "DELETE /v2/organizations/:guid/domains/:shared_domain_guid" do
-        it "should pretends that it deleted a domain" do
-          expect{delete "/v2/organizations/#{org.guid}/domains/#{domain.guid}", {},
-                 headers_for(@org_a_manager)}.not_to change{SharedDomain.count}
-          expect(last_response.status).to eq(301)
-
-          warning_header = CGI.unescape(last_response.headers["X-Cf-Warnings"])
-          expect(warning_header).to eq("Endpoint removed")
-        end
-      end
-
-      describe "GET /v2/organizations/:guid/domains/:guid" do
+      describe "GET /v2/organizations/:guid/domains" do
         it "should be deprecated" do
-          get "/v2/organizations/#{org.guid}/domains/#{domain.guid}"
-          expect(last_response).to be_a_deprecated_response
-        end
-      end
-
-      describe "PUT /v2/organizations/:guid/domains/:domain_guid" do
-        it "should be deprecated" do
-          put "/v2/organizations/#{org.guid}/domains/#{domain.guid}", {}, admin_headers
-          expect(last_response.status).to eql(201)
-          expect(last_response).to be_a_deprecated_response
-        end
-      end
-
-      describe "PUT /v2/organizations/:guid/domains/:private_domain_guid" do
-        let(:private_domain) { PrivateDomain.make(owning_organization: org) }
-        it "should be deprecated" do
-          expect(org.domains).to include(private_domain)
-          put "/v2/organizations/#{org.guid}/domains/#{private_domain.guid}", {}, admin_headers
-          expect(last_response.status).to eql(201)
+          get "/v2/organizations/#{org.guid}/domains", "", admin_headers
           expect(last_response).to be_a_deprecated_response
         end
       end
@@ -287,25 +151,13 @@ module VCAP::CloudController
       let(:org_space_empty) { Space.make(organization: org) }
       let(:org_space_full)  { Space.make(organization: org, :manager_guids => [user.guid], :developer_guids => [user.guid], :auditor_guids => [user.guid]) }
 
-      def update_org_user user_guid
-        put "/v2/organizations/#{org.guid}", Yajl::Encoder.encode(user_guid), admin_headers
-      end
-
-      def remove_org_user user_guid
-        delete "/v2/organizations/#{org.guid}/users/#{user_guid}", {}, admin_headers
-      end
-
-      def remove_org_user_recursive user_guid
-        delete "/v2/organizations/#{org.guid}/users/#{user_guid}?recursive=true", {}, admin_headers
-      end
-
       context "DELETE /v2/organizations/org_guid/users/user_guid" do
         context "without the recursive flag" do
           context "a single organization" do
             it "should remove the user from the organization if that user does not belong to any space" do
               org.add_space(org_space_empty)
               expect(org.users).to include(user)
-              remove_org_user(user.guid)
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}", {}, admin_headers
               org.refresh
 
               expect(org.user_guids).not_to include(user)
@@ -313,7 +165,7 @@ module VCAP::CloudController
 
             it "should not remove the user from the organization if that user belongs to a space associated with the organization" do
               org.add_space(org_space_full)
-              remove_org_user(user.guid)
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}", {}, admin_headers
 
               expect(last_response.status).to eql(400)
               org.refresh
@@ -327,7 +179,7 @@ module VCAP::CloudController
             it "should remove the user from each space that is associated with the organization" do
               org.add_space(org_space_full)
               ["developers", "auditors", "managers"].each { |type| expect(org_space_full.send(type)).to include(user) }
-              remove_org_user_recursive(user.guid)
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true", {}, admin_headers
               org_space_full.refresh
 
               ["developers", "auditors", "managers"].each { |type| expect(org_space_full.send(type)).not_to include(user) }
@@ -336,7 +188,7 @@ module VCAP::CloudController
             it "should remove the user from the organization" do
               org.add_space(org_space_full)
               expect(org.users).to include(user)
-              remove_org_user_recursive(user.guid)
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true", {}, admin_headers
               org.refresh
 
               expect(org.users).not_to include(user)
@@ -351,7 +203,7 @@ module VCAP::CloudController
               org.add_space(org_space_full)
               org_2.add_space(org2_space)
               [org, org_2].each { |organization| expect(organization.users).to include(user) }
-              remove_org_user_recursive(user.guid)
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true", {}, admin_headers
 
               [org, org_2].each { |organization| organization.refresh }
               expect(org.users).not_to include(user)
@@ -363,7 +215,7 @@ module VCAP::CloudController
               org_2.add_space(org2_space)
               ["developers", "auditors", "managers"].each { |type| expect(org_space_full.send(type)).to include(user) }
               expect(org2_space.developers).to include(user)
-              remove_org_user_recursive(user.guid)
+              delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true", {}, admin_headers
 
               [org_space_full, org2_space].each { |space| space.refresh }
               ["developers", "auditors", "managers"].each { |type| expect(org_space_full.send(type)).not_to include(user) }
@@ -377,14 +229,14 @@ module VCAP::CloudController
         it "should remove the user if that user does not belong to any space associated with the organization" do
           org.add_space(org_space_empty)
           expect(org.users).to include(user)
-          update_org_user("user_guids" => [])
+          put "/v2/organizations/#{org.guid}", Yajl::Encoder.encode("user_guids" => []), admin_headers
           org.refresh
           expect(org.users).not_to include(user)
         end
 
         it "should not remove the user if they attempt to delete the user through an update" do
           org.add_space(org_space_full)
-          update_org_user("user_guids" => [])
+          put "/v2/organizations/#{org.guid}", Yajl::Encoder.encode("user_guids" => []), admin_headers
           expect(last_response.status).to eql(400)
           org.refresh
           expect(org.users).to include(user)

@@ -2,23 +2,19 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe ServicePlanVisibilitiesController, :services do
-    service_plan_visibility_path = "/v2/service_plan_visibilities"
-
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-                                                               service_plan_guid: {type: "string", required: true},
-                                                               organization_guid: {type: "string", required: true}
-                                                             })
-
+          service_plan_guid: {type: "string", required: true},
+          organization_guid: {type: "string", required: true}
+        })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-                                                               service_plan_guid: {type: "string"},
-                                                               organization_guid: {type: "string"}
-                                                             })
-
+          service_plan_guid: {type: "string"},
+          organization_guid: {type: "string"}
+        })
       end
     end
 

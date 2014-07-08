@@ -34,7 +34,7 @@ module VCAP::CloudController
       it { is_expected.to validate_uniqueness :name }
       it { is_expected.to strip_whitespace :name }
 
-      context "name" do
+      describe "name" do
         subject(:org) { Organization.make }
 
         it "shoud allow standard ascii characters" do
@@ -73,7 +73,7 @@ module VCAP::CloudController
         end
       end
 
-      context "managers" do
+      describe "managers" do
         subject(:org) { Organization.make }
 
         it "allows creating an org with no managers" do
@@ -111,6 +111,45 @@ module VCAP::CloudController
           expect {
             org.manager_guids = []
           }.to raise_error(Sequel::HookFailed)
+        end
+      end
+
+      describe "billing_enabled" do
+        let(:organization) { Organization.make(billing_enabled: false) }
+        context "as an admin" do
+          before { allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true) }
+          it "allows updating" do
+            organization.billing_enabled = true
+            expect(organization).to be_valid
+          end
+        end
+
+        context "as a non-admin" do
+          before { allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(false) }
+          it "disallows updating" do
+            organization.billing_enabled = true
+            expect(organization).not_to be_valid
+          end
+        end
+      end
+
+      describe "quota_definition" do
+        let(:organization) { Organization.make(billing_enabled: false) }
+        let(:new_quota_definition) { QuotaDefinition.make }
+        context "as an admin" do
+          before { allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true) }
+          it "allows updating" do
+            organization.quota_definition = new_quota_definition
+            expect(organization).to be_valid
+          end
+        end
+
+        context "as a non-admin" do
+          before { allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(false) }
+          it "disallows updating" do
+            organization.quota_definition = new_quota_definition
+            expect(organization).not_to be_valid
+          end
         end
       end
     end

@@ -19,30 +19,28 @@ module VCAP::CloudController
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-                                                               name: {type: "string", required: true},
-                                                               free: {type: "bool", required: true},
-                                                               description: {type: "string", required: true},
-                                                               extra: {type: "string"},
-                                                               unique_id: {type: "string"},
-                                                               public: {type: "bool", default: true},
-                                                               service_guid: {type: "string", required: true},
-                                                               service_instance_guids: {type: "[string]"}
-                                                             })
-
+          name: {type: "string", required: true},
+          free: {type: "bool", required: true},
+          description: {type: "string", required: true},
+          extra: {type: "string"},
+          unique_id: {type: "string"},
+          public: {type: "bool", default: true},
+          service_guid: {type: "string", required: true},
+          service_instance_guids: {type: "[string]"}
+        })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-                                                               name: {type: "string"},
-                                                               free: {type: "bool"},
-                                                               description: {type: "string"},
-                                                               extra: {type: "string"},
-                                                               unique_id: {type: "string"},
-                                                               public: {type: "bool"},
-                                                               service_guid: {type: "string"},
-                                                               service_instance_guids: {type: "[string]"}
-                                                             })
-
+          name: {type: "string"},
+          free: {type: "bool"},
+          description: {type: "string"},
+          extra: {type: "string"},
+          unique_id: {type: "string"},
+          public: {type: "bool"},
+          service_guid: {type: "string"},
+          service_instance_guids: {type: "[string]"}
+        })
       end
     end
 

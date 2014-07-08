@@ -10,22 +10,20 @@ module VCAP::CloudController
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-                                                               name: {type: "string", required: true},
-                                                               position: {type: "integer", default: 0},
-                                                               enabled: {type: "bool", default: true},
-                                                               locked: {type: "bool", default: false}
-                                                             })
-
+          name: {type: "string", required: true},
+          position: {type: "integer", default: 0},
+          enabled: {type: "bool", default: true},
+          locked: {type: "bool", default: false}
+        })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-                                                               name: {type: "string"},
-                                                               position: {type: "integer"},
-                                                               enabled: {type: "bool"},
-                                                               locked: {type: "bool"}
-                                                             })
-
+          name: {type: "string"},
+          position: {type: "integer"},
+          enabled: {type: "bool"},
+          locked: {type: "bool"}
+        })
       end
     end
 

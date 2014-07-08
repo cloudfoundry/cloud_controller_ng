@@ -6,18 +6,16 @@ module VCAP::CloudController
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-                                                               name: {type: "string", required: true},
-                                                               service_instance_guid: {type: "string", required: true}
-                                                             })
-
+          name: {type: "string", required: true},
+          service_instance_guid: {type: "string", required: true}
+        })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-                                                               name: {type: "string"},
-                                                               service_instance_guid: {type: "string"}
-                                                             })
-
+          name: {type: "string"},
+          service_instance_guid: {type: "string"}
+        })
       end
     end
 

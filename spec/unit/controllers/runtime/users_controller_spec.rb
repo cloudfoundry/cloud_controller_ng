@@ -17,33 +17,31 @@ module VCAP::CloudController
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-                                                               guid: {type: "string", required: true},
-                                                               admin: {type: "bool", default: false},
-                                                               space_guids: {type: "[string]"},
-                                                               organization_guids: {type: "[string]"},
-                                                               managed_organization_guids: {type: "[string]"},
-                                                               billing_managed_organization_guids: {type: "[string]"},
-                                                               audited_organization_guids: {type: "[string]"},
-                                                               managed_space_guids: {type: "[string]"},
-                                                               audited_space_guids: {type: "[string]"},
-                                                               default_space_guid: {type: "string"},
-                                                             })
-
+          guid: {type: "string", required: true},
+          admin: {type: "bool", default: false},
+          space_guids: {type: "[string]"},
+          organization_guids: {type: "[string]"},
+          managed_organization_guids: {type: "[string]"},
+          billing_managed_organization_guids: {type: "[string]"},
+          audited_organization_guids: {type: "[string]"},
+          managed_space_guids: {type: "[string]"},
+          audited_space_guids: {type: "[string]"},
+          default_space_guid: {type: "string"},
+        })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-                                                               admin: {type: "bool"},
-                                                               space_guids: {type: "[string]"},
-                                                               organization_guids: {type: "[string]"},
-                                                               managed_organization_guids: {type: "[string]"},
-                                                               billing_managed_organization_guids: {type: "[string]"},
-                                                               audited_organization_guids: {type: "[string]"},
-                                                               managed_space_guids: {type: "[string]"},
-                                                               audited_space_guids: {type: "[string]"},
-                                                               default_space_guid: {type: "string"},
-                                                             })
-
+          admin: {type: "bool"},
+          space_guids: {type: "[string]"},
+          organization_guids: {type: "[string]"},
+          managed_organization_guids: {type: "[string]"},
+          billing_managed_organization_guids: {type: "[string]"},
+          audited_organization_guids: {type: "[string]"},
+          managed_space_guids: {type: "[string]"},
+          audited_space_guids: {type: "[string]"},
+          default_space_guid: {type: "string"},
+        })
       end
     end
 

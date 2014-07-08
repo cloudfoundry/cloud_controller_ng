@@ -15,6 +15,11 @@ module VCAP::CloudController
       it { is_expected.to import_attributes :name, :owning_organization_guid }
     end
 
+    describe "Validations" do
+      it { is_expected.to validate_presence :name }
+      it { is_expected.to validate_uniqueness :name }
+    end
+
     describe "#spaces_sti_eager_load (eager loading)" do
       before { SharedDomain.dataset.destroy }
 

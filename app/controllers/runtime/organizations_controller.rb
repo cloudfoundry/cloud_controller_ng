@@ -19,7 +19,7 @@ module VCAP::CloudController
       :manager_guid, :billing_manager_guid,
       :auditor_guid, :status
 
-    deprecated_endpoint "#{path_guid}/domains/*"
+    deprecated_endpoint "#{path_guid}/domains"
 
     def self.translate_validation_exception(e, attributes)
       quota_def_errors = e.errors.on(:quota_definition_id)

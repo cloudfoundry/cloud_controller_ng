@@ -13,20 +13,18 @@ module VCAP::CloudController
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-                                                               name: {type: "string", required: true},
-                                                               rules: {type: "[hash]", default: []},
-                                                               space_guids: {type: "[string]"}
-                                                             })
-
+          name: {type: "string", required: true},
+          rules: {type: "[hash]", default: []},
+          space_guids: {type: "[string]"}
+        })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-                                                               name: {type: "string"},
-                                                               rules: {type: "[hash]"},
-                                                               space_guids: {type: "[string]"}
-                                                             })
-
+          name: {type: "string"},
+          rules: {type: "[hash]"},
+          space_guids: {type: "[string]"}
+        })
       end
     end
 

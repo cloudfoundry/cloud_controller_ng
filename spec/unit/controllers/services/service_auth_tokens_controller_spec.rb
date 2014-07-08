@@ -11,20 +11,18 @@ module VCAP::CloudController
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-                                                               label: {type: "string", required: true},
-                                                               provider: {type: "string", required: true},
-                                                               token: {type: "string", required: true}
-                                                             })
-
+          label: {type: "string", required: true},
+          provider: {type: "string", required: true},
+          token: {type: "string", required: true}
+        })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-                                                               label: {type: "string"},
-                                                               provider: {type: "string"},
-                                                               token: {type: "string"}
-                                                             })
-
+          label: {type: "string"},
+          provider: {type: "string"},
+          token: {type: "string"}
+        })
       end
     end
 
