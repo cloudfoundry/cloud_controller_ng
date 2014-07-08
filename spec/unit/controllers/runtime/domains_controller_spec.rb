@@ -108,7 +108,7 @@ module VCAP::CloudController
       end
     end
 
-    it "has the correct deprecation header" do
+    it "is deprecated" do
       get "/v2/domains", {}, admin_headers
       expect(last_response).to be_a_deprecated_response
     end

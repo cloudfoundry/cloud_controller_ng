@@ -93,5 +93,7 @@ module VCAP::CloudController
     end
 
     setup_routes
+
+    deprecated_endpoint("/info")
   end
 end

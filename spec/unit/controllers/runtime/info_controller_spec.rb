@@ -2,134 +2,44 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::InfoController do
-    shared_examples "info response" do |expected_status, expect_user|
-      it "should return #{expected_status}" do
-        expect(last_response.status).to eq(expected_status)
-      end
-
-      if expected_status == 200
-        it "should return an api_version" do
-          hash = Yajl::Parser.parse(last_response.body)
-          expect(hash).to have_key("api_version")
-        end
-      end
-
-      if expect_user
-        it "should return a 'user' entry" do
-          hash = Yajl::Parser.parse(last_response.body)
-          expect(hash).to have_key("user")
-        end
-      else
-        it "should not return a 'user' entry" do
-          hash = Yajl::Parser.parse(last_response.body)
-          expect(hash).not_to have_key("user")
-        end
-      end
-    end
-
     describe "GET /v2/info" do
-      ControllerHelpers::HTTPS_ENFORCEMENT_SCENARIOS.each do |scenario_vars|
-        config_setting = scenario_vars[:config_setting]
-        config_desc = config_setting ? "with #{config_setting} enabled" : ""
-        protocol = scenario_vars[:protocol]
-        expected_status = scenario_vars[:success] ? 200 : 403
-
-        describe "#{config_desc} using #{protocol}" do
-          let(:current_user) do
-            case scenario_vars[:user]
-            when "admin"
-              make_user_with_default_space(:admin => true)
-            when "user"
-              make_user_with_default_space
-            end
-          end
-
-          let(:headers) do
-            headers_for(current_user, :https => scenario_vars[:protocol] == "https")
-          end
-
-          before do
-            TestConfig.override(config_setting => true)
-          end
-
-          context "with no authorization header for #{scenario_vars[:user]}" do
-            before do
-              headers.delete("HTTP_AUTHORIZATION")
-              get "/v2/info", {}, headers
-            end
-
-            include_examples "info response", 200, false
-          end
-
-          context "with invalid authorization header for #{scenario_vars[:user]}" do
-            before do
-              if headers["HTTP_AUTHORIZATION"]
-                headers["HTTP_AUTHORIZATION"] += "EXTRA STUFF"
-              end
-              get "/v2/info", {}, headers
-            end
-
-            include_examples "info response", 200, false
-          end
-
-          context "with a valid authorization header for #{scenario_vars[:user]}" do
-            before do
-              get "/v2/info", {}, headers
-            end
-
-            include_examples "info response", expected_status, scenario_vars[:success]
-          end
-        end
+      it "returns a 'user' entry when authenticated" do
+        get "/v2/info", {}, admin_headers
+        hash = Yajl::Parser.parse(last_response.body)
+        expect(hash).to have_key("user")
       end
 
-      shared_examples "info endpoint verification" do
-        it "should be correct" do
-          get "/v2/info"
-
-          hash = Yajl::Parser.parse(last_response.body)
-          expect(hash).to have_key(endpoint)
-          expect(hash[endpoint]).to eq(endpoint_value)
-        end
+      it "excludes the 'user' entry when not authenticated" do
+        get "/v2/info", {}, {}
+        hash = Yajl::Parser.parse(last_response.body)
+        expect(hash).not_to have_key("user")
       end
 
-      context "and verify endpoint" do
-        describe "authorization" do
-          context "with login url in config" do
-            include_examples "info endpoint verification" do
-              before { TestConfig.override(:login => {:url => "login_url"}) }
-              let(:endpoint) { "authorization_endpoint" }
-              let(:endpoint_value) { "login_url" }
-            end
-          end
+      it "includes data from the config" do
+        get "/v2/info", {}, {}
+        hash = Yajl::Parser.parse(last_response.body)
+        expect(hash['name']).to eq(TestConfig.config[:info][:name])
+        expect(hash['build']).to eq(TestConfig.config[:info][:build])
+        expect(hash['support']).to eq(TestConfig.config[:info][:support_address])
+        expect(hash['version']).to eq(TestConfig.config[:info][:version])
+        expect(hash['description']).to eq(TestConfig.config[:info][:description])
+        expect(hash['authorization_endpoint']).to eq(TestConfig.config[:uaa][:url])
+        expect(hash['token_endpoint']).to eq(TestConfig.config[:uaa][:url])
+        expect(hash['api_version']).to eq(VCAP::CloudController::Constants::API_VERSION)
+      end
 
-          context "without login url in config" do
-            include_examples "info endpoint verification" do
-              let(:endpoint) { "authorization_endpoint" }
-              let(:endpoint_value) { TestConfig.config[:uaa][:url] }
-            end
-          end
-        end
+      it "includes login url when configured" do
+        TestConfig.override(:login => {:url => "login_url"})
+        get "/v2/info", {}, {}
+        hash = Yajl::Parser.parse(last_response.body)
+        expect(hash['authorization_endpoint']).to eq("login_url")
+      end
 
-        describe "logging" do
-          context "with loggregator endpoint_url in config" do
-            include_examples "info endpoint verification" do
-              before { TestConfig.override(:loggregator => {:url => "loggregator_url"}) }
-              let(:endpoint) { "logging_endpoint" }
-              let(:endpoint_value) { "loggregator_url" }
-            end
-          end
-
-          context "without loggregator endpoint url in config" do
-            it "should not have the endpoint in the hash" do
-              TestConfig.config[:loggregator].delete(:url)
-
-              get "/v2/info"
-
-              hash = Yajl::Parser.parse(last_response.body)
-              expect(hash).not_to have_key("logging_endpoint")
-            end
-          end
-        end
+      it "includes the logging endpoint when configured" do
+        TestConfig.override(:loggregator => {:url => "loggregator_url"})
+        get "/v2/info", {}, {}
+        hash = Yajl::Parser.parse(last_response.body)
+        expect(hash['logging_endpoint']).to eq("loggregator_url")
       end
     end
   end

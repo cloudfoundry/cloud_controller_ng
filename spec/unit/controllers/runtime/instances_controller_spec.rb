@@ -10,8 +10,7 @@ module VCAP::CloudController
       end
 
       context "as a developer" do
-        subject { get("/v2/apps/#{@app.guid}/instances", {}, headers_for(@developer)) }
-
+        let(:user) { @developer }
         let(:instances_reporter) { double(:instances_reporter) }
 
         before do
@@ -20,12 +19,10 @@ module VCAP::CloudController
         end
 
         it "returns 400 when there is an error finding the instances" do
-          instance_id = 5
-
           @app.state = "STOPPED"
           @app.save
 
-          subject
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
 
@@ -38,7 +35,7 @@ module VCAP::CloudController
           @app.package_state = "FAILED"
           @app.save
 
-          subject
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
           expect(Yajl::Parser.parse(last_response.body)["code"]).to eq(170001)
@@ -48,7 +45,7 @@ module VCAP::CloudController
           @app.package_state = "PENDING"
           @app.save
 
-          subject
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
           expect(Yajl::Parser.parse(last_response.body)["code"]).to eq(170002)
@@ -58,7 +55,7 @@ module VCAP::CloudController
           @app.mark_as_failed_to_stage("NoAppDetectedError")
           @app.save
 
-          subject
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
           expect(Yajl::Parser.parse(last_response.body)["code"]).to eq(170003)
@@ -68,7 +65,7 @@ module VCAP::CloudController
           @app.mark_as_failed_to_stage("BuildpackCompileFailed")
           @app.save
 
-          subject
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
           expect(Yajl::Parser.parse(last_response.body)["code"]).to eq(170004)
@@ -78,7 +75,7 @@ module VCAP::CloudController
           @app.mark_as_failed_to_stage("BuildpackReleaseFailed")
           @app.save
 
-          subject
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
           expect(Yajl::Parser.parse(last_response.body)["code"]).to eq(170005)
@@ -107,7 +104,7 @@ module VCAP::CloudController
 
           allow(instances_reporter).to receive(:all_instances_for_app).and_return(instances)
 
-          subject
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(200)
           expect(Yajl::Parser.parse(last_response.body)).to eq(expected)
@@ -116,13 +113,11 @@ module VCAP::CloudController
         end
       end
 
-      context "as a user" do
-        it "should return 403" do
-          get("/v2/apps/#{@app.guid}/instances",
-              {},
-              headers_for(@user))
-
-              expect(last_response.status).to eq(403)
+      context "as a non-developer" do
+        let(:user) { @user }
+        it "returns 403" do
+          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+          expect(last_response.status).to eq(403)
         end
       end
     end
