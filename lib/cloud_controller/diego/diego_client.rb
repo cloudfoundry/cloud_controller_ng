@@ -84,11 +84,13 @@ module VCAP::CloudController::Diego
     end
 
     def staging_request(app)
+      enough_memory_for_staging_overhead = 2048
+      enough_disk_for_buildpack = 4096
       {
         :app_id => app.guid,
         :task_id => app.staging_task_id,
-        :memory_mb => app.memory,
-        :disk_mb => app.disk_quota,
+        :memory_mb => enough_memory_for_staging_overhead,
+        :disk_mb => enough_disk_for_buildpack,
         :file_descriptors => app.file_descriptors,
         :environment => environment(app),
         :stack => app.stack.name,
