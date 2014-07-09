@@ -251,18 +251,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "data integrity" do
-      it "should not make strings into integers" do
-        space = Space.make
-        expect(space.name).to be_kind_of(String)
-        space.name = "1234"
-        expect(space.name).to be_kind_of(String)
-        space.save
-        space.refresh
-        expect(space.name).to be_kind_of(String)
-      end
-    end
-
     describe "#destroy" do
       subject(:space) { Space.make }
 
