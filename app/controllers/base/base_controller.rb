@@ -123,7 +123,6 @@ module VCAP::CloudController::RestController
       # legacy calls setting a user, but not providing a token.
       return if self.class.allow_unauthenticated_access?(op)
       return if VCAP::CloudController::SecurityContext.current_user
-      return if VCAP::CloudController::SecurityContext.admin?
 
       if VCAP::CloudController::SecurityContext.missing_token?
         raise VCAP::Errors::ApiError.new_from_details('NotAuthenticated')

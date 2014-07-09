@@ -26,10 +26,6 @@ module VCAP::CloudController
       validate_scheme
     end
 
-    get "/hello/sync" do
-      "sync return\n"
-    end
-
     private
 
     def validate_scheme

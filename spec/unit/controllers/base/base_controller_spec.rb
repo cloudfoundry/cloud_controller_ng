@@ -1,101 +1,119 @@
 require "spec_helper"
 
-describe VCAP::CloudController::RestController::BaseController do
-  let(:logger) { double(:logger, :debug => nil, :error => nil) }
-  let(:env) { {} }
-  let(:params) { {} }
-  let(:sinatra) { nil }
+module VCAP::CloudController
+  describe RestController::BaseController do
+    let(:logger) { double(:logger, :debug => nil, :error => nil) }
+    let(:params) { {} }
+    let(:env) { {} }
+    let(:sinatra) { nil }
 
-  subject do
-    VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), sinatra)
-  end
+    class TestController < RestController::BaseController
 
-  describe "#dispatch" do
-    context "when the dispatch is succesful" do
-      let(:token_decoder) { double(:decoder) }
-      let(:header_token) { 'some token' }
-      let(:token_info) { {'user_id' => 'some user'} }
-
-      before do
-        configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
-        allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
-        configurer.configure(header_token)
+      def test_endpoint
+        "test_response"
       end
+      define_route :get, "/test_endpoint", :test_endpoint
 
-      it "should dispatch the request" do
-        expect(subject).to receive(:to_s).with([:a, :b])
-        subject.dispatch(:to_s, [:a, :b])
+      def test_validation_error
+        raise Sequel::ValidationFailed.new("error")
       end
+      define_route :get, "/test_validation_error", :test_validation_error
 
-      it "should log a debug message" do
-        expect(logger).to receive(:debug).with("cc.dispatch", endpoint: :to_s, args: [])
-        subject.dispatch(:to_s)
+      def test_sql_hook_failed
+        raise Sequel::HookFailed.new("error")
       end
+      define_route :get, "/test_sql_hook_failed", :test_sql_hook_failed
 
-      context "when there is no current user" do
-        let(:token_info) { nil }
+      def test_database_error
+        raise Sequel::DatabaseError.new("error")
+      end
+      define_route :get, "/test_database_error", :test_database_error
 
-        it "should not dispatch the request" do
-          expect(subject).not_to receive(:to_s)
-          expect(logger).not_to receive(:error)
-          subject.dispatch(:to_s) rescue nil
-        end
+      def test_json_error
+        raise JsonMessage::Error.new("error")
+      end
+      define_route :get, "/test_json_error", :test_json_error
+
+      def test_invalid_relation_error
+        raise VCAP::Errors::InvalidRelation.new("error")
+      end
+      define_route :get, "/test_invalid_relation_error", :test_invalid_relation_error
+
+      allow_unauthenticated_access only: :test_unauthenticated
+      def test_unauthenticated
+        "unathenticated_response"
+      end
+      define_route :get, "/test_unauthenticated", :test_unauthenticated
+
+      authenticate_basic_auth("/test_basic_auth") do
+        ["username", "password"]
+      end
+      def test_basic_auth
+        "basic_auth_response"
+      end
+      define_route :get, "/test_basic_auth", :test_basic_auth
+
+      def test_warnings
+        add_warning('warning1')
+        add_warning('!@#$%^&*(),:|{}+=-<>')
+      end
+      define_route :get, "/test_warnings", :test_warnings
+
+      def self.translate_validation_exception(error, attrs)
+        RuntimeError.new("validation failed")
       end
     end
 
-    context "when the dispatch raises an error" do
-      let(:token_decoder) { double(:decoder) }
-      let(:header_token) { 'some token' }
-      let(:token_info) { {'user_id' => 'some user'} }
+    let(:user) { User.make }
 
-      before do
-        configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
-        allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
-        configurer.configure(header_token)
+    before do
+      allow_any_instance_of(TestController).to receive(:logger).and_return(logger)
+    end
+
+    describe "#dispatch" do
+      context "when the dispatch is successful" do
+        let(:token_decoder) { double(:decoder) }
+        let(:header_token) { 'some token' }
+        let(:token_info) { {'user_id' => 'some user'} }
+
+        it "should dispatch the request" do
+          get "/test_endpoint", "", headers_for(user)
+          expect(last_response.body).to eq "test_response"
+        end
+
+        it "should log a debug message" do
+          expect(logger).to receive(:debug).with("cc.dispatch", endpoint: :test_endpoint, args: [])
+          get "/test_endpoint", "", headers_for(user)
+        end
       end
 
-      it "should log an error for a Sequel Validation error" do
-        allow(subject).to receive(:to_s).and_raise(Sequel::ValidationFailed.new("hello"))
-        expect(VCAP::CloudController::RestController::BaseController).to receive(:translate_validation_exception) { RuntimeError.new("some new error") }
-        expect {
-          subject.dispatch(:to_s)
-        }.to raise_error RuntimeError, "some new error"
-      end
+      context "when the dispatch raises an error" do
+        it "processes Sequel Validation errors using translate_validation_exception" do
+          get "/test_validation_error", "", headers_for(user)
+          expect(decoded_response["description"]).to eq "validation failed"
+        end
 
-      it "should log an error for a Sequel HookFailed error" do
-        allow(subject).to receive(:to_s).and_raise(Sequel::HookFailed.new("hello"))
-        expect {
-          subject.dispatch(:to_s)
-        }.to raise_error VCAP::Errors::ApiError
-      end
+        it "returns InvalidRequest when Sequel HookFailed error occurs" do
+          get "/test_sql_hook_failed", "", headers_for(user)
+          expect(decoded_response["code"]).to eq 10004
+        end
 
-      it "should reraise any vcap error" do
-        allow(subject).to receive(:to_s).and_raise(VCAP::Errors::ApiError.new_from_details("NotAuthorized"))
-        expect {
-          subject.dispatch(:to_s)
-        }.to raise_error VCAP::Errors::ApiError
-      end
+        it "logs the error when a Sequel Database Error occurs" do
+          expect(logger).to receive(:warn).with(/exception not translated/)
+          get "/test_database_error", "", headers_for(user)
+          expect(decoded_response["code"]).to eq 10004
+        end
 
-      it "should log an error for a Sequel Database Error error" do
-        allow(subject).to receive(:to_s).and_raise(Sequel::DatabaseError)
-        expect(VCAP::CloudController::RestController::BaseController).to receive(:translate_and_log_exception) { RuntimeError.new("some new error") }
-        expect {
-          subject.dispatch(:to_s)
-        }.to raise_error RuntimeError, "some new error"
-      end
+        it "logs an error when a JSON error occurs" do
+          expect(logger).to receive(:debug).with(/Rescued JsonMessage::Error/)
+          get "/test_json_error", "", headers_for(user)
+          expect(decoded_response["code"]).to eq 1001
+        end
 
-      it "should log an error for a JSON error" do
-        allow(subject).to receive(:to_s).and_raise(JsonMessage::Error)
-        expect {
-          subject.dispatch(:to_s)
-        }.to raise_error(VCAP::Errors::ApiError, /Request invalid due to parse error/)
-      end
-
-      it "should log an error for a Model error" do
-        allow(subject).to receive(:to_s).and_raise(VCAP::Errors::InvalidRelation)
-        expect {
-          subject.dispatch(:to_s)
-        }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+        it "returns InvalidRelation when an Invalid Relation error occurs" do
+          get "/test_invalid_relation_error", "", headers_for(user)
+          expect(decoded_response["code"]).to eq 1002
+        end
       end
 
       describe '#redirect' do
@@ -114,268 +132,137 @@ describe VCAP::CloudController::RestController::BaseController do
           app.redirect('redirect_url')
         end
       end
-    end
 
-    describe 'authentication' do
-      let(:token_decoder) { double(:decoder) }
-      let(:header_token) { 'some token' }
-
-      context 'when the token contains a valid user' do
-        let(:token_info) { {'user_id' => 'some user'} }
-
-        before do
-          configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
-          allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
-          configurer.configure(header_token)
-        end
-
-        it 'allows the operation' do
-          allow(subject).to receive(:download)
-
-          subject.dispatch(:download)
-          expect(subject).to have_received(:download)
-        end
-      end
-
-      context 'when the token has no user but contains an admin scope' do
-        let(:token_info) { { 'scope' => ['cloud_controller.admin'] } }
-
-        before do
-          configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
-          allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
-          configurer.configure(header_token)
-        end
-
-        it 'allows the operation' do
-          allow(subject).to receive(:download)
-
-          subject.dispatch(:download)
-          expect(subject).to have_received(:download)
-        end
-      end
-
-      context 'when there is no token' do
-        let(:token_info) { nil }
-
-        before do
-          configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
-          allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
-          configurer.configure(header_token)
-        end
-
-        it 'raises a NotAuthenticated error' do
-          allow(subject).to receive(:download)
-
-          expect {
-            subject.dispatch(:download)
-          }.to raise_error VCAP::Errors::ApiError, /Authentication error/
-        end
-
-        context 'when a particular operation is allowed to skip authentication' do
-          before do
-            allow(subject).to receive(:unauthed_download)
-            subject.class.allow_unauthenticated_access(:only => :unauthed_download)
-          end
-
-          it 'does not raise error' do
-            expect { subject.dispatch(:unauthed_download) }.to_not raise_error
-          end
-
-          it 'raise error when dispatching a operation not allowed' do
-            expect { subject.dispatch(:download) }.to raise_error(VCAP::Errors::ApiError)
+      describe 'authentication' do
+        context 'when the token contains a valid user' do
+          it 'allows the operation' do
+            get "/test_endpoint", "", headers_for(user)
+            expect(last_response.body).to eq "test_response"
           end
         end
 
-        context 'when all operations on the controller are allowed to skip authentication' do
-          before do
-            allow(subject).to receive(:download)
-            subject.class.allow_unauthenticated_access
+        context 'when there is no token' do
+          it 'returns NotAuthenticated' do
+            get "/test_endpoint"
+            expect(last_response.status).to eq 401
+            expect(decoded_response["code"]).to eq 10002
           end
 
-          after do
-            subject.class.instance_variable_set(:@allow_unauthenticated_access_to_all_ops, nil)
+          context 'when a particular operation is allowed to skip authentication' do
+            it 'does not raise error' do
+              get "/test_unauthenticated"
+              expect(last_response.body).to eq "unathenticated_response"
+            end
+          end
+        end
+
+        context 'when the token cannot be parsed' do
+          it 'returns InvalidAuthToken' do
+            get "/test_endpoint", "", "HTTP_AUTHORIZATION" => "BEARER fake_token"
+            expect(decoded_response["code"]).to eq 1000
+          end
+        end
+
+        context 'when the endpoint requires basic auth' do
+          it "returns NotAuthorized if username and password are not provided" do
+            get "/test_basic_auth"
+            expect(decoded_response["code"]).to eq 10003
           end
 
-          it 'does not raise error' do
-            expect { subject.dispatch(:download) }.to_not raise_error
-          end
-        end
-      end
-
-      context 'when the token cannot be parsed' do
-        before do
-          configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
-          allow(token_decoder).to receive(:decode_token).with(header_token).and_raise(VCAP::UaaTokenDecoder::BadToken)
-          configurer.configure(header_token)
-        end
-
-        it 'raises InvalidAuthToken' do
-          allow(subject).to receive(:download)
-
-          expect {
-            subject.dispatch(:download)
-          }.to raise_error VCAP::Errors::ApiError, /Invalid Auth Token/
-        end
-      end
-
-      context 'when the endpoint requires basic auth' do
-        it "returns NotAuthorized without if username and password was not provided" do
-          subject.class.authenticate_basic_auth("/my_path") do
-            ["username", "password"]
+          it "returns NotAuthorized if username and password are wrong" do
+            authorize "username", "letmein"
+            get "/test_basic_auth"
+            expect(decoded_response["code"]).to eq 10003
           end
 
-          get "/my_path"
-          expect(last_response.status).to eq(403)
-          expect(last_response.body).to match /You are not authorized/
-        end
+          it "does not raise NotAuthorized if username and password is correct" do
+            authorize "username", "password"
 
-        it "returns NotAuthorized without if username and password was wrong" do
-          authorize "username", "letmein"
-          subject.class.authenticate_basic_auth("/my_path") do
-            ["username", "password"]
+            get "/test_basic_auth"
+            expect(last_response.body).to_not eq "basic_auth_response"
           end
-
-          get "/my_path"
-          expect(last_response.status).to eq(403)
-          expect(last_response.body).to match /You are not authorized/
-        end
-
-        it "does not raise NotAuthorized if username and password is correct" do
-          authorize "username", "password"
-
-          subject.class.authenticate_basic_auth("/my_path") do
-            ["username", "password"]
-          end
-
-          get "/my_path"
-          expect(last_response.status).to_not eq 403
-        end
-      end
-
-      context 'when there is no user, no admin scope, with a token that is not invalid' do
-        # With a properly functioning UAA, we expect this case to be impossible. Nevertheless,
-        # we wan to be defensive because failing to handle this case would allow unauthenticated
-        # access to CC resources.
-        let(:token_info) { {'scope' => ['some-non-admin-scope'] } }
-
-        before do
-          configurer = VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder)
-          allow(token_decoder).to receive(:decode_token).with(header_token).and_return(token_info)
-          configurer.configure(header_token)
-        end
-
-        it 'logs an error message because this error is unexpected' do
-          logger = double(:logger, error: nil, debug: nil)
-          allow(subject).to receive(:logger).and_return(logger)
-
-          subject.dispatch(:download) rescue nil
-
-          expect(logger).to have_received(:error).with('Unexpected condition: valid token with no user/client id or admin scope. Token hash: {"scope"=>["some-non-admin-scope"]}')
-        end
-
-        it 'raises an InvalidAuthToken error' do
-          allow(subject).to receive(:download)
-
-          expect {
-            subject.dispatch(:download)
-          }.to raise_error VCAP::Errors::ApiError, /Invalid Auth Token/
         end
       end
     end
-  end
 
-  describe "#recursive?" do
-    context "when the recursive flag is present" do
-      context "and the flag is true" do
-        let(:params) { {"recursive" => "true"} }
-        it { is_expected.to be_recursive }
+    describe "#recursive?" do
+      subject(:base_controller) do
+        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil)
       end
 
-      context "and the flag is false" do
-        let(:params) { {"recursive" => "false"} }
+      context "when the recursive flag is present" do
+        context "and the flag is true" do
+          let(:params) { {"recursive" => "true"} }
+          it { is_expected.to be_recursive }
+        end
+
+        context "and the flag is false" do
+          let(:params) { {"recursive" => "false"} }
+          it { is_expected.not_to be_recursive }
+        end
+      end
+
+      context "when the recursive flag is not present" do
         it { is_expected.not_to be_recursive }
       end
     end
 
-    context "when the recursive flag is not present" do
-      it { is_expected.not_to be_recursive }
-    end
-  end
+    describe "#v2_api?" do
+      subject(:base_controller) do
+        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil)
+      end
+      context "when the endpoint is v2" do
+        let(:env) { { "PATH_INFO" => "/v2/foobar" } }
+        it { is_expected.to be_v2_api }
+      end
 
-  describe "#v2_api?" do
-    context "when the endpoint is v2" do
-      let(:env) { { "PATH_INFO" => "/v2/foobar" } }
-      it { is_expected.to be_v2_api }
-    end
-
-    context "when the endpoint is not v2" do
-      let(:env) { { "PATH_INFO" => "/v1/foobar" } }
-      it { is_expected.not_to be_v2_api }
-
-      context "and the v2 is in capitals" do
-        let(:env) { { "PATH_INFO" => "/V2/foobar" } }
+      context "when the endpoint is not v2" do
+        let(:env) { { "PATH_INFO" => "/v1/foobar" } }
         it { is_expected.not_to be_v2_api }
-      end
 
-      context "and the v2 is somewhere in the middle (for example, the app is called v2)" do
-        let(:env) { { "PATH_INFO" => "/v1/apps/v2" } }
-        it { is_expected.not_to be_v2_api }
+        context "and the v2 is in capitals" do
+          let(:env) { { "PATH_INFO" => "/V2/foobar" } }
+          it { is_expected.not_to be_v2_api }
+        end
+
+        context "and the v2 is somewhere in the middle (for example, the app is called v2)" do
+          let(:env) { { "PATH_INFO" => "/v1/apps/v2" } }
+          it { is_expected.not_to be_v2_api }
+        end
       end
     end
-  end
-  
-  describe "#async?" do
-    context "when the async flag is present" do
-      context "and the flag is true" do
-        let(:params) { {"async" => "true"} }
-        it { is_expected.to be_async }
+
+    describe "#async?" do
+      subject(:base_controller) do
+        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil)
+      end
+      context "when the async flag is present" do
+        context "and the flag is true" do
+          let(:params) { {"async" => "true"} }
+          it { is_expected.to be_async }
+        end
+
+        context "and the flag is false" do
+          let(:params) { {"async" => "false"} }
+          it { is_expected.not_to be_async }
+        end
       end
 
-      context "and the flag is false" do
-        let(:params) { {"async" => "false"} }
+      context "when the async flag is not present" do
         it { is_expected.not_to be_async }
       end
     end
 
-    context "when the async flag is not present" do
-      it { is_expected.not_to be_async }
-    end
-  end
+    describe "#add_warning" do
+      it 'sets warnings in the X-Cf-Warnings header' do
+        get "/test_warnings", "", headers_for(user)
 
-  describe "#add_warning" do
-    let(:expected_key) { 'X-Cf-Warnings' }
-    let(:sinatra) { double(:sinatra) }
-    let(:header_hash) { {} }
+        warnings_header = last_response.headers["X-Cf-Warnings"]
+        warnings = warnings_header.split(',')
 
-    before do
-      allow(sinatra).to receive(:headers).and_return(header_hash)
-    end
-
-    it 'sets the X-Cf-Warnings header' do
-      subject.add_warning('warning')
-
-      expect(header_hash[expected_key]).to eq('warning')
-    end
-
-    it 'comma separates multiple warnings' do
-      subject.add_warning('warning1')
-      subject.add_warning('warning2')
-
-      expect(header_hash[expected_key]).to eq('warning1,warning2')
-    end
-
-    it 'rfc3986 escapes the warnings' do
-      special_chars_warning = '!@#$%^&*(),:|{}+=-<>'
-
-      subject.add_warning('first, warning')
-      subject.add_warning(special_chars_warning)
-      subject.add_warning('last: warning!')
-
-      warnings = header_hash[expected_key].split(',')
-
-      expect(CGI.unescape(warnings[0])).to eq('first, warning')
-      expect(CGI.unescape(warnings[1])).to eq(special_chars_warning)
-      expect(CGI.unescape(warnings[2])).to eq('last: warning!')
+        expect(CGI.unescape(warnings[0])).to eq('warning1')
+        expect(CGI.unescape(warnings[1])).to eq('!@#$%^&*(),:|{}+=-<>')
+      end
     end
   end
 end

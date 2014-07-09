@@ -44,28 +44,11 @@ module VCAP::CloudController
           end
 
           context 'when the specified user does not exist' do
-            context 'and the token has admin scope' do
-              before do
-                token_information['scope'] = ['cloud_controller.admin']
-              end
-
-              it 'creates a user with that id' do
-                expect {
-                  configurer.configure(auth_token)
-                }.to change { User.count }.by(1)
-
-                expect(SecurityContext.current_user.guid).to eq(user_guid)
-                expect(SecurityContext.current_user).to be_admin
-                expect(SecurityContext.current_user).to be_active
-              end
-            end
-
             it 'creates an active user with that id' do
               expect {
                 configurer.configure(auth_token)
               }.to change { User.count }.by(1)
               expect(SecurityContext.current_user.guid).to eq(user_guid)
-              expect(SecurityContext.current_user).not_to be_admin
               expect(SecurityContext.current_user).to be_active
             end
           end
