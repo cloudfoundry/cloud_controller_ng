@@ -121,8 +121,6 @@ buildpacks:
 
 db_encryption_key: "asdfasdfasdf"
 
-tasks_disabled: false
-
 varz_port: 7800
 varz_user: varz
 varz_password: password

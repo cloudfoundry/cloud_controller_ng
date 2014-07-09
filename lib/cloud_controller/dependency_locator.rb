@@ -21,10 +21,6 @@ module CloudController
       @health_manager_client ||= HM9000Client.new(@message_bus, @config)
     end
 
-    def task_client
-      @task_client ||= TaskClient.new(message_bus, blobstore_url_generator)
-    end
-
     def droplet_blobstore
       droplets = config.fetch(:droplets)
       cdn_uri = droplets.fetch(:cdn, nil) && droplets.fetch(:cdn).fetch(:uri, nil)

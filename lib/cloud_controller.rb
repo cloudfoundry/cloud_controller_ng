@@ -79,8 +79,6 @@ require "cloud_controller/stager/staging_completion_handler"
 require "cloud_controller/hm9000_client"
 require "cloud_controller/hm9000_respondent"
 
-require "cloud_controller/task_client"
-
 require "cloud_controller/structured_error"
 require "cloud_controller/http_request_error"
 require "cloud_controller/http_response_error"

@@ -155,8 +155,6 @@ module VCAP::CloudController
 
         :db_encryption_key => String,
 
-        optional(:tasks_disabled) => bool,
-
         optional(:flapping_crash_count_threshold) => Integer,
 
         optional(:varz_port) => Integer,

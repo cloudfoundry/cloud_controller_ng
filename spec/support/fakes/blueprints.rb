@@ -230,10 +230,6 @@ module VCAP::CloudController
     timestamp         { Time.now }
   end
 
-  Task.blueprint do
-    app         { AppFactory.make }
-  end
-
   ServiceCreateEvent.blueprint do
     BillingEvent.blueprint
     space_guid        { Sham.guid }
