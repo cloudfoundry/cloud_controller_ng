@@ -2,6 +2,8 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::SpacesController do
+    let(:organization_one) { Organization.make }
+    let(:space_one) { Space.make(organization: organization_one) }
 
     describe "Query Parameters" do
       it { expect(described_class).to be_queryable_by(:name) }
@@ -43,17 +45,6 @@ module VCAP::CloudController
           event_guids: {type: "[string]"},
           security_group_guids: {type: "[string]"}
         })
-      end
-    end
-
-    describe "data integrity" do
-      let(:space) { Space.make }
-
-      it "should not make strings into integers" do
-        space.name = "1234"
-        space.save
-        get "/v2/spaces/#{space.guid}", {}, admin_headers
-        expect(decoded_response["entity"]["name"]).to eq("1234")
       end
     end
 
@@ -137,107 +128,6 @@ module VCAP::CloudController
             :path => "/v2/spaces",
             :enumerate => 1
         end
-      end
-    end
-
-    describe "GET /v2/space/:guid/security_groups" do
-      let(:space) { Space.make }
-      let!(:default_security_group) { SecurityGroup.make(running_default: true) }
-      let!(:security_group1) { SecurityGroup.make(space_guids: [space.guid]) }
-      let!(:security_group2) { SecurityGroup.make }
-
-      context "as a space developer" do
-        let(:user) { make_developer_for_space(space) }
-
-        it "returns associated security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
-          found_guids = decoded_response.fetch("resources").map { |r| r["metadata"]["guid"] }
-          expect(found_guids).to match_array([default_security_group.guid, security_group1.guid])
-        end
-      end
-
-      context "as a space auditor" do
-        let(:user) { make_auditor_for_space(space) }
-
-        it "returns associated security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
-          found_guids = decoded_response.fetch("resources").map { |r| r["metadata"]["guid"] }
-          expect(found_guids).to match_array([default_security_group.guid, security_group1.guid])
-        end
-      end
-
-      context "as a space manager" do
-        let(:user) { make_manager_for_space(space) }
-
-        it "returns associated security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
-          found_guids = decoded_response.fetch("resources").map { |r| r["metadata"]["guid"] }
-          expect(found_guids).to match_array([default_security_group.guid, security_group1.guid])
-        end
-      end
-
-      context "as an org manager" do
-        let(:user) { make_manager_for_org(space.organization) }
-
-        it "returns associated security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
-          found_guids = decoded_response.fetch("resources").map { |r| r["metadata"]["guid"] }
-          expect(found_guids).to match_array([default_security_group.guid, security_group1.guid])
-        end
-      end
-
-      context "as an org auditor" do
-        let(:user) { make_auditor_for_org(space.organization) }
-
-        it "returns associated security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
-          expect(last_response.status).to eq(403)
-        end
-      end
-
-      context "as an org billing manager" do
-        let(:user) { make_billing_manager_for_org(space.organization) }
-
-        it "returns associated security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
-          expect(last_response.status).to eq(403)
-        end
-      end
-
-      context "as an admin" do
-        it "returns associated security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/security_groups", {}, admin_headers
-          found_guids = decoded_response.fetch("resources").map { |r| r["metadata"]["guid"] }
-          expect(found_guids).to match_array([default_security_group.guid, security_group1.guid])
-        end
-      end
-
-      context "as a user with no permissions" do
-        let(:user) { User.make }
-
-        it "returns associated security groups and defaults" do
-          get "/v2/spaces/#{space.guid}/security_groups", {}, headers_for(user)
-          expect(last_response.status).to eq(403)
-        end
-      end
-    end
-
-    describe 'GET /v2/spaces/:guid/domains' do
-      let(:space) { Space.make(organization: organization) }
-      let(:manager) { make_manager_for_org(space.organization) }
-      let(:organization) { Organization.make }
-
-      before do
-        PrivateDomain.make(owning_organization: space.organization)
-      end
-
-      it "should return the domains associated with the owning organization for allowed users" do
-        get "/v2/spaces/#{space.guid}/domains", {}, headers_for(manager)
-        expect(last_response.status).to eq(200)
-        resources = decoded_response.fetch("resources")
-
-        guids = resources.map { |x| x["metadata"]["guid"] }
-        expect(guids).to match_array(organization.domains.map(&:guid))
       end
     end
 
@@ -483,9 +373,6 @@ module VCAP::CloudController
       end
     end
 
-    let(:organization_one) { Organization.make }
-    let(:space_one) { Space.make(organization: organization_one) }
-
     describe 'GET', '/v2/spaces/:guid/services' do
       let(:organization_two) { Organization.make }
       let(:space_one) { Space.make(organization: organization_one) }
@@ -572,19 +459,18 @@ module VCAP::CloudController
 
     describe "audit events" do
       let(:organization) { Organization.make }
-      describe "audit.space.create" do
-        it "is logged when creating a space" do
-          request_body = {organization_guid: organization.guid, name: "space_name"}.to_json
-          post "/v2/spaces", request_body, json_headers(admin_headers)
 
-          expect(last_response.status).to eq(201)
+      it "logs audit.space.create when creating a space" do
+        request_body = {organization_guid: organization.guid, name: "space_name"}.to_json
+        post "/v2/spaces", request_body, json_headers(admin_headers)
 
-          new_space_guid = decoded_response['metadata']['guid']
-          event = Event.find(:type => "audit.space.create", :actee => new_space_guid)
-          expect(event).not_to be_nil
-          expect(event.actor_name).to eq(SecurityContext.current_user_email)
-          expect(event.metadata["request"]).to eq("organization_guid" => organization.guid, "name" => "space_name")
-        end
+        expect(last_response.status).to eq(201)
+
+        new_space_guid = decoded_response['metadata']['guid']
+        event = Event.find(:type => "audit.space.create", :actee => new_space_guid)
+        expect(event).not_to be_nil
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
+        expect(event.metadata["request"]).to eq("organization_guid" => organization.guid, "name" => "space_name")
       end
 
       it "logs audit.space.update when updating a space" do
@@ -664,45 +550,6 @@ module VCAP::CloudController
           get "/v2/spaces/#{space_one.guid}/domains/#{domain.guid}"
           expect(last_response).to be_a_deprecated_response
         end
-      end
-    end
-
-    describe 'GET', '/v2/spaces?inline-relations-depth=3', regression: true do
-      let(:space) { Space.make }
-
-      it 'returns managed service instances associated with service plans' do
-        managed_service_instance = ManagedServiceInstance.make(space: space)
-        ServiceBinding.make(service_instance: managed_service_instance)
-
-        get "/v2/spaces/#{space.guid}?inline-relations-depth=3", {}, admin_headers
-        expect(last_response.status).to eql(200)
-        service_instance_hashes = decoded_response["entity"]["service_instances"]
-
-        managed_service_instance_hash =
-          find_service_instance_with_guid(service_instance_hashes, managed_service_instance.guid)
-        expect(managed_service_instance_hash["entity"]["service_plan_url"]).to be
-        expect(managed_service_instance_hash["entity"]["service_plan_guid"]).to be
-        expect(managed_service_instance_hash["entity"]["service_plan"]).to be
-      end
-
-      it 'returns provided service instances without plans' do
-        user_provided_service_instance = UserProvidedServiceInstance.make(space: space)
-        ServiceBinding.make(service_instance: user_provided_service_instance)
-
-        get "/v2/spaces/#{space.guid}?inline-relations-depth=3", {}, admin_headers
-        expect(last_response.status).to eql(200)
-        service_instance_hashes = decoded_response["entity"]["service_instances"]
-
-        user_provided_service_instance_hash =
-          find_service_instance_with_guid(service_instance_hashes, user_provided_service_instance.guid)
-        expect(user_provided_service_instance_hash["entity"]).to_not have_key("service_plan_url")
-        expect(user_provided_service_instance_hash["entity"]).to_not have_key("service_plan_guid")
-        expect(user_provided_service_instance_hash["entity"]).to_not have_key("service_plan")
-      end
-
-      def find_service_instance_with_guid(service_instances, guid)
-        service_instances.detect { |res| res["metadata"]["guid"] == guid } ||
-          raise("Failed to find service instance with #{guid}")
       end
     end
   end

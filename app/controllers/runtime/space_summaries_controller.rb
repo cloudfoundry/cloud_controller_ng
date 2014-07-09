@@ -6,9 +6,8 @@ module VCAP::CloudController
     get "#{path_guid}/summary", :summary
     def summary(guid)
       space      = find_guid_and_validate_access(:read, guid)
-      summarizer = SpaceSummarizer.new(space, instances_reporter_factory)
 
-      Yajl::Encoder.encode(summarizer.space_summary, pretty: true)
+      Yajl::Encoder.encode(space_summary(space), pretty: true)
     end
 
     protected
@@ -19,26 +18,19 @@ module VCAP::CloudController
       super
       @instances_reporter_factory = dependencies[:instances_reporter_factory]
     end
-  end
 
-  class SpaceSummarizer
-    attr_reader :space, :instances_reporter_factory
+    private
 
-    def initialize(space, instances_reporter_factory)
-      @instances_reporter_factory = instances_reporter_factory
-      @space                      = space
-    end
-
-    def space_summary
+    def space_summary(space)
       {
         guid:     space.guid,
         name:     space.name,
-        apps:     app_summary,
-        services: services_summary,
+        apps:     app_summary(space),
+        services: services_summary(space),
       }
     end
 
-    def app_summary
+    def app_summary(space)
       space.apps.collect do |app|
         instances_reporter = instances_reporter_factory.instances_reporter_for_app(app)
         {
@@ -52,8 +44,8 @@ module VCAP::CloudController
       end
     end
 
-    def services_summary
-     space.service_instances.map do |instance|
+    def services_summary(space)
+      space.service_instances.map do |instance|
         instance.as_summary_json
       end
     end
