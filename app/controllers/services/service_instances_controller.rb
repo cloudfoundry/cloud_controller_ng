@@ -87,6 +87,14 @@ module VCAP::CloudController
       ]
     end
 
+    def self.url_for_guid(guid)
+      if ServiceInstance.find(guid: guid).instance_of? UserProvidedServiceInstance
+        "#{ROUTE_PREFIX}/user_provided_service_instances/#{guid}"
+      else
+        super
+      end
+    end
+
     class BulkUpdateMessage < VCAP::RestAPI::Message
       required :service_plan_guid, String
     end
