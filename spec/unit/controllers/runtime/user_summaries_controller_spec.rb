@@ -9,16 +9,10 @@ module VCAP::CloudController
       let(:current_user_headers) { admin_headers }
 
       context "when the user being summarized exists" do
-        subject { get("/v2/users/#{user.guid}/summary", {}, current_user_headers) }
-
         context "and the current user is authorized" do
-          it "returns a 200 success" do
-            subject
-            expect(last_response.status).to eq 200
-          end
-
           it "lists all the organizations the user belongs to" do
-            subject
+            get("/v2/users/#{user.guid}/summary", {}, current_user_headers)
+            expect(last_response.status).to eq 200
             expect(decoded_response(symbolize_keys: true)).to eq(::UserSummaryPresenter.new(user).to_hash)
           end
         end
@@ -27,7 +21,7 @@ module VCAP::CloudController
           let(:current_user_headers) { headers_for(make_user) }
 
           it "returns 403 Forbidden" do
-            subject
+            get("/v2/users/#{user.guid}/summary", {}, current_user_headers)
             expect(last_response.status).to eq 403
           end
         end
@@ -37,17 +31,8 @@ module VCAP::CloudController
         subject { get("/v2/users/9999/summary", {}, current_user_headers) }
 
         it "returns 404 Not Found" do
-          subject
+          get("/v2/users/99999/summary", {}, current_user_headers)
           expect(last_response.status).to eq 404
-        end
-      end
-
-      context "when the requester is not logged in" do
-        subject { get("/v2/users/#{user.guid}/summary", {}, {}) }
-
-        it "returns 401 Unauthorized" do
-          subject
-          expect(last_response.status).to eq 401
         end
       end
     end
