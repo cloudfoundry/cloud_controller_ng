@@ -295,6 +295,56 @@ module VCAP::CloudController
           end
         end
 
+        context "when there are no default staging and running groups" do
+          before do
+            config[:default_running_security_groups] = []
+            config[:default_staging_security_groups] = []
+          end
+
+          it "creates the security groups specified and sets the correct defaults" do
+            expect {
+              Seeds.create_seed_security_groups(config)
+            }.to change { SecurityGroup.count }.by(3)
+
+            staging_def = SecurityGroup.find(name: "staging_default")
+            expect(staging_def.staging_default).to be false
+            expect(staging_def.running_default).to be false
+
+            running_def = SecurityGroup.find(name: "running_default")
+            expect(running_def.staging_default).to be false
+            expect(running_def.running_default).to be false
+
+            non_def = SecurityGroup.find(name: "non_default")
+            expect(non_def.staging_default).to be false
+            expect(non_def.running_default).to be false
+          end
+        end
+
+        context "when there are more than one default staging and running groups" do
+          before do
+            config[:default_running_security_groups] = ["running_default", "non_default"]
+            config[:default_staging_security_groups] = ["staging_default", "non_default"]
+          end
+
+          it "creates the security groups specified and sets the correct defaults" do
+            expect {
+              Seeds.create_seed_security_groups(config)
+            }.to change { SecurityGroup.count }.by(3)
+
+            staging_def = SecurityGroup.find(name: "staging_default")
+            expect(staging_def.staging_default).to be true
+            expect(staging_def.running_default).to be false
+
+            running_def = SecurityGroup.find(name: "running_default")
+            expect(running_def.staging_default).to be false
+            expect(running_def.running_default).to be true
+
+            non_def = SecurityGroup.find(name: "non_default")
+            expect(non_def.staging_default).to be true
+            expect(non_def.running_default).to be true
+          end
+        end
+
         context "when no security group seed data is specified in the config" do
           let(:config) do
             {}
