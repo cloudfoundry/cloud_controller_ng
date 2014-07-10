@@ -243,8 +243,8 @@ module VCAP::CloudController
               "rules" => []
             }
           ],
-          :default_staging_security_group => "staging_default",
-          :default_running_security_group => "running_default"
+          :default_staging_security_groups => ["staging_default"],
+          :default_running_security_groups => ["running_default"]
         }
       end
 
@@ -273,7 +273,7 @@ module VCAP::CloudController
 
         context "when the staging and running default are the same" do
           before do
-            config[:default_running_security_group] = "staging_default"
+            config[:default_running_security_groups] = ["staging_default"]
           end
 
           it "creates the security groups specified and sets the correct defaults" do

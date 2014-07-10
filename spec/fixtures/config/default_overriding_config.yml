@@ -112,5 +112,7 @@ security_group_definitions:
 - name: non_allowed
   rules: []
 
-default_staging_security_group: non_allowed
-default_running_security_group: non_allowed
+default_staging_security_groups:
+- non_allowed
+default_running_security_groups:
+- non_allowed

@@ -82,11 +82,11 @@ module VCAP::CloudController
         config[:security_group_definitions].each do |security_group|
           seed_security_group = security_group.dup
 
-          if security_group["name"] == config[:default_staging_security_group]
+          if config[:default_staging_security_groups].include?(security_group["name"])
             seed_security_group["staging_default"] = true
           end
 
-          if security_group["name"] == config[:default_running_security_group]
+          if config[:default_running_security_groups].include?(security_group["name"])
             seed_security_group["running_default"] = true
           end
 

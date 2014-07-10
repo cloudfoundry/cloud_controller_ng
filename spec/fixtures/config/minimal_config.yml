@@ -113,6 +113,8 @@ security_group_definitions:
     - protocol: all
       destination: 192.169.0.0-255.255.255.255
 
-default_running_security_group: defaults
-default_staging_security_group: defaults
+default_staging_security_groups:
+- defaults
+default_running_security_groups:
+- defaults
 

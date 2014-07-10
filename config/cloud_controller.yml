@@ -157,5 +157,7 @@ security_group_definitions:
 - name: dummy2
   rules: []
 
-default_staging_security_group: dummy3
-default_running_security_group: dummy4
+default_staging_security_groups:
+- dummy3
+default_running_security_groups:
+- dummy4

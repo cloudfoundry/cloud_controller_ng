@@ -132,8 +132,8 @@ module VCAP::CloudController
             ]
           }
         ],
-        :default_staging_security_group => String,
-        :default_running_security_group => String,
+        :default_staging_security_groups => [String],
+        :default_running_security_groups => [String],
 
         :resource_pool => {
           optional(:maximum_size) => Integer,
