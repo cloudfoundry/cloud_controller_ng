@@ -212,7 +212,7 @@ module VCAP::CloudController
             post '/v2/service_instances', body, headers
 
             expect(last_response.status).to eq(400)
-            expect(decoded_response['description']).to match(/name is invalid/)
+            expect(decoded_response['code']).to eq 60001
           end
 
           it 'does not provision or deprovision an instance' do
@@ -281,7 +281,7 @@ module VCAP::CloudController
           post "/v2/service_instances", req, headers
 
           expect(last_response.status).to eq(400)
-          expect(decoded_response["description"]).to match(/service instance name.*limited to 50 characters/)
+          expect(decoded_response["code"]).to eq 60009
         end
         end
 
@@ -368,20 +368,6 @@ module VCAP::CloudController
       context "filtering" do
         let(:first_found_instance) { decoded_response.fetch('resources').first }
 
-        it 'allows filtering by gateway_name' do
-          get "v2/service_instances?q=gateway_name:#{service_instance.gateway_name}", {}, admin_headers
-          expect(last_response.status).to eq(200)
-          expect(first_found_instance).to be_present
-          expect(first_found_instance.fetch('metadata')).to be_present
-          expect(first_found_instance.fetch('metadata').fetch('guid')).to eq(service_instance.guid)
-        end
-
-        it 'allows filtering by name' do
-          get "v2/service_instances?q=name:#{service_instance.name}", {}, admin_headers
-          expect(last_response.status).to eq(200)
-          expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
-        end
-
         it 'allows filtering by organization_guid' do
           ManagedServiceInstance.make(name: 'other')
           org_guid = service_instance.space.organization.guid
@@ -391,18 +377,6 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(decoded_response['resources'].length).to eq(1)
           expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
-        end
-
-        it 'allows filtering by space_guid' do
-          get "v2/service_instances?q=space_guid:#{service_instance.space_guid}", {}, admin_headers
-          expect(last_response.status).to eq(200)
-          expect(first_found_instance.fetch('entity').fetch('space_guid')).to eq(service_instance.space_guid)
-        end
-
-        it 'allows filtering by service_plan_guid' do
-          get "v2/service_instances?q=service_plan_guid:#{service_instance.service_plan_guid}", {}, admin_headers
-          expect(last_response.status).to eq(200)
-          expect(first_found_instance.fetch('entity').fetch('service_plan_guid')).to eq(service_instance.service_plan_guid)
         end
       end
     end
@@ -490,9 +464,6 @@ module VCAP::CloudController
       end
 
       it 'requires admin permissions' do
-        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body
-        expect(last_response.status).to eql(401)
-
         put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, json_headers(headers_for(developer))
         expect(last_response.status).to eql(403)
 
@@ -526,16 +497,6 @@ module VCAP::CloudController
           }.to change(ServiceInstance, :count).by(-1)
           expect(last_response.status).to eq(204)
           expect(ServiceInstance.find(:guid => service_instance.guid)).to be_nil
-        end
-
-        it 'creates a DELETED service usage event' do
-          expect {
-            delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
-          }.to change{ServiceUsageEvent.count}.by(1)
-          event = ServiceUsageEvent.last
-          # expect 2 events: CREATED and DELETED
-          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
-          expect(event).to match_service_instance(service_instance)
         end
 
         context 'when the service broker returns a 409' do

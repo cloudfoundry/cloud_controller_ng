@@ -31,11 +31,8 @@ module VCAP::CloudController
           get "/services", {}, headers_for(user)
         end
 
-        it "should return success" do
-          expect(last_response.status).to eq(200)
-        end
-
         it "should return an array" do
+          expect(last_response.status).to eq(200)
           expect(decoded_response).to be_a_kind_of(Array)
         end
 
@@ -103,11 +100,8 @@ module VCAP::CloudController
             post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
           end
 
-          it "should return success" do
-            expect(last_response.status).to eq(200)
-          end
-
           it "should add the servicew the default app space" do
+            expect(last_response.status).to eq(200)
             svc = user.default_space.service_instances.find(:name => "instance_name")
             expect(svc).not_to be_nil
             expect(ManagedServiceInstance.count).to eq(@num_instances_before + 1)
@@ -135,18 +129,6 @@ module VCAP::CloudController
             expect(ManagedServiceInstance.count).to eq(@num_instances_before)
             expect(decoded_response["code"]).to eq(120001)
             expect(decoded_response["description"]).to match(/service is invalid: postgres-invalid/)
-          end
-        end
-
-        context "with a duplicate name" do
-          it "should return bad request" do
-            @req[:name] = "duplicate"
-            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
-
-            expect(last_response.status).to eq(400)
-            expect(ManagedServiceInstance.count).to eq(@num_instances_before)
-            expect(decoded_response["code"]).to eq(60002)
-            expect(decoded_response["description"]).to match(/service instance name is taken: duplicate/)
           end
         end
       end

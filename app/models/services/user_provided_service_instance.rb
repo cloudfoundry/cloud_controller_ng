@@ -8,10 +8,6 @@ module VCAP::CloudController
 
     add_association_dependencies :service_bindings => :destroy
 
-    def validate
-      super
-    end
-
     def tags
       []
     end

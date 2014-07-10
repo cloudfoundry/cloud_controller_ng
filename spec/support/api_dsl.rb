@@ -161,10 +161,10 @@ module ApiDsl
       end
     end
 
-    def standard_model_delete(model)
+    def standard_model_delete(model, options = {})
       delete "#{root(model)}/:guid" do
         parameter :guid, "The guid of the #{model.to_s.titleize}"
-        request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'."
+        request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'." unless options[:async] == false
 
         example_request "Delete a Particular #{model.to_s.titleize}" do
           expect(status).to eq 204

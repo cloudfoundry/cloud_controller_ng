@@ -28,12 +28,6 @@ module VCAP::CloudController
       )
     end
 
-    # Override this method because we want to enable the concept of
-    # deleted apps. This is necessary because we have an app events table
-    # which is a foreign key constraint on apps. Thus, we can't actually delete
-    # the app itself, but instead mark it as deleted.
-    #
-    # @param [String] guid The GUID of the object to delete.
     def delete(guid)
       plan = find_guid_and_validate_access(:delete, guid)
 

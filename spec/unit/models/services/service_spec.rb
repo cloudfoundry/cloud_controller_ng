@@ -37,6 +37,20 @@ module VCAP::CloudController
         end
       end
 
+      describe "urls" do
+        it "validates format of url" do
+          service = Service.make_unsaved(url: "bogus_url")
+          expect(service).to_not be_valid
+          expect(service.errors.on(:url)).to include "must be a valid url"
+        end
+
+        it "validates format of info_url" do
+          service = Service.make_unsaved(info_url: "bogus_url")
+          expect(service).to_not be_valid
+          expect(service.errors.on(:info_url)).to include "must be a valid url"
+        end
+      end
+
       context 'for a v2 service' do
         let(:service_broker) { ServiceBroker.make }
         it 'maintains the uniqueness of the label key' do
@@ -134,6 +148,11 @@ module VCAP::CloudController
           service_plan: private_plan,
         )
         expect(records(nonadmin_user)).to include(private_service, public_service)
+      end
+
+      it "returns public services for unauthenticated users" do
+        records = Service.user_visible(nil).all
+        expect(records).to eq [public_service]
       end
     end
 

@@ -37,17 +37,8 @@ module VCAP::CloudController
 
     allow_unauthenticated_access only: :enumerate
     def enumerate
-      return super if SecurityContext.valid_token?
-      public_active_services = Service.public_visible
-
-      @opts.delete(:inline_relations_depth)
-      collection_renderer.render_json(
-        self.class,
-        public_active_services,
-        self.class.path,
-        @opts,
-        {}
-      )
+      @opts.delete(:inline_relations_depth) unless SecurityContext.valid_token?
+      super
     end
 
     def self.translate_validation_exception(e, attributes)

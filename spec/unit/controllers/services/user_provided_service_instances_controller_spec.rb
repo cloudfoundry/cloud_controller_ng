@@ -76,20 +76,5 @@ module VCAP::CloudController
         end
       end
     end
-
-    it "allows creation of empty credentials with a syslog drain" do
-      space = Space.make
-      json_body = Yajl::Encoder.encode({
-        name: "name",
-        space_guid: space.guid,
-        syslog_drain_url: "syslog://example.com",
-        credentials: {}
-      })
-
-      post "/v2/user_provided_service_instances", json_body.to_s, json_headers(admin_headers)
-      expect(last_response.status).to eq(201)
-
-      expect(UserProvidedServiceInstance.last.syslog_drain_url).to eq("syslog://example.com")
-    end
   end
 end

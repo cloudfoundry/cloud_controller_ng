@@ -9,6 +9,30 @@ module VCAP::CloudController
       json_headers(headers_for(user))
     end
 
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:name) }
+    end
+
+    describe "Attributes" do
+      it do
+        expect(described_class).to have_creatable_attributes({
+          name: {type: "string", required: true},
+          broker_url: {type: "string", required: true},
+          auth_username: {type: "string", required: true},
+          auth_password: {type: "string", required: true}
+        })
+      end
+
+      it do
+        expect(described_class).to have_updatable_attributes({
+          name: {type: "string"},
+          broker_url: {type: "string"},
+          auth_username: {type: "string"},
+          auth_password: {type: "string"}
+        })
+      end
+    end
+
     describe 'POST /v2/service_brokers' do
       let(:name) { Sham.name }
       let(:broker_url) { 'http://cf-service-broker.example.com' }
@@ -57,15 +81,10 @@ module VCAP::CloudController
         allow(ServiceBrokerPresenter).to receive(:new).with(broker).and_return(presenter)
       end
 
-      it 'returns a 201 status' do
-        post '/v2/service_brokers', body, headers
-
-        expect(last_response.status).to eq(201)
-      end
-
       it 'creates a service broker registration' do
         post '/v2/service_brokers', body, headers
 
+        expect(last_response.status).to eq(201)
         expect(registration).to have_received(:create)
       end
 
@@ -82,12 +101,6 @@ module VCAP::CloudController
         expect(headers.fetch('Location')).to eq('/v2/service_brokers/123')
       end
 
-      it 'does not set fields that are unmodifiable' do
-        body_hash[:guid] = 'mycustomguid'
-        post '/v2/service_brokers', body, headers
-        expect(ServiceBroker).to_not have_received(:new).with(hash_including('guid' => 'mycustomguid'))
-      end
-
       context 'when there is an error in Broker Registration' do
         before { allow(registration).to receive(:create).and_return(nil) }
 
@@ -99,7 +112,6 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(400)
             expect(decoded_response.fetch('code')).to eq(270003)
-            expect(decoded_response.fetch('description')).to match(/The service broker url is taken/)
           end
         end
 
@@ -111,7 +123,6 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(400)
             expect(decoded_response.fetch('code')).to eq(270002)
-            expect(decoded_response.fetch('description')).to match(/The service broker name is taken/)
           end
         end
 
@@ -144,103 +155,6 @@ module VCAP::CloudController
           expect(warnings.length).to eq(2)
           expect(warnings[0]).to eq('warning1')
           expect(warnings[1]).to eq('warning2')
-        end
-      end
-
-      describe 'authentication' do
-        it 'returns a forbidden status for non-admin users' do
-          post '/v2/service_brokers', body, non_admin_headers
-          expect(last_response).to be_forbidden
-        end
-
-        it 'returns 401 for logged-out users' do
-          post '/v2/service_brokers', body
-          expect(last_response.status).to eq(401)
-        end
-      end
-    end
-
-    describe 'GET /v2/service_brokers' do
-      let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/') }
-      let(:single_broker_response) do
-        {
-          'total_results' => 1,
-          'total_pages' => 1,
-          'prev_url' => nil,
-          'next_url' => nil,
-          'resources' => [
-            {
-              'metadata' => {
-                'guid' => broker.guid,
-                'url' => "/v2/service_brokers/#{broker.guid}",
-                'created_at' => broker.created_at.iso8601,
-                'updated_at' => nil
-              },
-              'entity' => {
-                'name' => broker.name,
-                'broker_url' => broker.broker_url,
-                'auth_username' => broker.auth_username,
-              }
-            }
-          ],
-        }
-      end
-
-      it 'enumerates the things' do
-        get '/v2/service_brokers', {}, headers
-        expect(decoded_response).to eq(single_broker_response)
-      end
-
-      it 'returns a formatted message' do
-        formatted_message = <<-JSON
-{
-  "total_results": 1,
-  "total_pages": 1,
-  "prev_url": null,
-  "next_url": null,
-  "resources": [
-    {
-      "metadata": {
-        "guid": "#{broker.guid}",
-        "url": "/v2/service_brokers/#{broker.guid}",
-        "created_at": "#{broker.created_at.iso8601}",
-        "updated_at": null
-      },
-      "entity": {
-        "name": "#{broker.name}",
-        "broker_url": "#{broker.broker_url}",
-        "auth_username": "#{broker.auth_username}"
-      }
-    }
-  ]
-}
-JSON
-
-        get '/v2/service_brokers', {}, headers
-        expect(last_response.body).to eq formatted_message.strip
-      end
-
-      context "with a second service broker" do
-        let!(:broker2) { ServiceBroker.make(name: 'FreeWidgets2', broker_url: 'http://example.com/2') }
-
-        it "filters the things" do
-          get "/v2/service_brokers?q=name%3A#{broker.name}", {}, headers
-          expect(decoded_response).to eq(single_broker_response)
-        end
-      end
-
-      describe 'authentication' do
-        it 'returns a forbidden status for non-admin users' do
-          get '/v2/service_brokers', {}, non_admin_headers
-          expect(last_response).to be_forbidden
-        end
-
-        it 'returns 401 for logged-out users' do
-          get '/v2/service_brokers'
-          expect(last_response.status).to eq(401)
-          expect(decoded_response).to include({
-            'error_code' => 'CF-NotAuthenticated'
-          })
         end
       end
     end
@@ -283,15 +197,6 @@ JSON
         it 'returns a forbidden status for non-admin users' do
           delete "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers
           expect(last_response).to be_forbidden
-
-          # make sure it still exists
-          get '/v2/service_brokers', {}, headers
-          expect(decoded_response).to include('total_results' => 1)
-        end
-
-        it 'returns 401 for logged-out users' do
-          delete "/v2/service_brokers/#{broker.guid}"
-          expect(last_response.status).to eq(401)
 
           # make sure it still exists
           get '/v2/service_brokers', {}, headers
@@ -357,13 +262,6 @@ JSON
         put "/v2/service_brokers/#{broker.guid}", body, headers
 
         expect(last_response.body).to eq(presenter.to_json)
-      end
-
-      it 'does not set fields that are unmodifiable' do
-        body_hash['guid'] = 'hacked'
-        put "/v2/service_brokers/#{broker.guid}", body, headers
-
-        expect(broker).to_not have_received(:set).with(hash_including('guid' => 'hacked'))
       end
 
       context 'when specifying an unknown broker' do
@@ -445,11 +343,6 @@ JSON
         it 'returns a forbidden status for non-admin users' do
           put "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers
           expect(last_response).to be_forbidden
-        end
-
-        it 'returns 401 for logged-out users' do
-          put "/v2/service_brokers/#{broker.guid}", {}
-          expect(last_response.status).to eq(401)
         end
       end
     end

@@ -89,7 +89,6 @@ module VCAP::CloudController::RestController
 
     # Enumerate operation
     def enumerate
-      raise ApiError.new_from_details("NotAuthenticated") unless user || roles.admin?
       validate_access(:index, model, user, roles)
 
       collection_renderer.render_json(

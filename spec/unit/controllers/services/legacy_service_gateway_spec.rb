@@ -53,14 +53,6 @@ module VCAP::CloudController
           expect(last_response.status).to eq(400)
         end
 
-        it "should reject requests with invalid parameters" do
-          msg = { :label => "foobar-2.2",
-                  :description => "the foobar svc",
-                  :url => "zazzle" }
-          post path, Yajl::Encoder.encode(msg), json_headers(auth_header)
-          expect(last_response.status).to eq(400)
-        end
-
         it "should reject requests with extra dash in label" do
           post path, foo_bar_dash_offering.encode, json_headers(auth_header)
           expect(last_response.status).to eq(400)

@@ -127,7 +127,6 @@ module VCAP::CloudController
       end
     end
 
-    delete "/v2/service_instances/:guid", :delete
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid, ServiceInstance))
     end

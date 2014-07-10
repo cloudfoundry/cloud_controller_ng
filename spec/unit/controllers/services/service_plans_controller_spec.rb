@@ -109,27 +109,6 @@ module VCAP::CloudController
 
     let(:developer) { make_developer_for_space(Space.make) }
 
-    describe "modifying service plans" do
-      let!(:plan) { ServicePlan.make }
-      let(:body) { Yajl::Encoder.encode("public" => false) }
-
-      context "a cf admin" do
-        it "can modify service plans" do
-          put "/v2/service_plans/#{plan.guid}", body, json_headers(admin_headers)
-          expect(last_response.status).to eq(201)
-          expect(plan.reload.public).to be false
-        end
-      end
-
-      context "otherwise" do
-        it "cannot modify service plans" do
-          put "/v2/service_plans/#{plan.guid}", body, json_headers(headers_for(developer))
-          expect(last_response.status).to eq(403)
-          expect(plan.reload.public).to be true
-        end
-      end
-    end
-
     describe "non public service plans" do
       let!(:private_plan) { ServicePlan.make(public: false) }
 
@@ -160,43 +139,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "public service plans" do
-      let!(:public_plan) { ServicePlan.make(public: true) }
-
-      it "should return correct visibility" do
-        get "/v2/service_plans/#{public_plan.guid}", {}, headers_for(developer)
-        expect(last_response.status).to eq(200)
-        expect(parse(last_response.body)["entity"]).to include("public" => true)
-      end
-    end
-
-    describe 'service plans active flag' do
-      let!(:active_plan) { ServicePlan.make(public: true, active: true) }
-      let!(:inactive_plan) { ServicePlan.make(public: true, active: false) }
-
-      context 'when the user is admin' do
-        it 'returns both active and inactive plans' do
-          get '/v2/service_plans', {}, admin_headers
-          expect(last_response.status).to eq(200)
-          expect(parse(last_response.body)['total_results']).to eq(2)
-        end
-
-        it 'returns just the inactive plans when filtered for active:f' do
-          get '/v2/service_plans?q=active:f', {}, admin_headers
-          expect(last_response.status).to eq(200)
-          expect(parse(last_response.body)['total_results']).to eq(1)
-          expect(parse(last_response.body)['resources'].first['entity']['active']).to eq(false)
-        end
-      end
-
-      it 'returns just the active plans when the user is not admin' do
-        get '/v2/service_plans', {}, headers_for(developer)
-        expect(last_response.status).to eq(200)
-        expect(parse(last_response.body)['total_results']).to eq(1)
-        expect(parse(last_response.body)['resources'].first['entity']['active']).to eq(true)
-      end
-    end
-
     describe "GET", "/v2/service_plans" do
       before do
         ServicePlan.make(active: true, public: true)
@@ -205,24 +147,26 @@ module VCAP::CloudController
         ServicePlan.make(active: false, public: false)
       end
 
-      it 'displays all service plans' do
-        get "/v2/service_plans", {}, admin_headers
-        expect(last_response.status).to eq 200
+      context "as an admin" do
+        it 'displays all service plans' do
+          get "/v2/service_plans", {}, admin_headers
+          expect(last_response.status).to eq 200
 
-        plans = ServicePlan.all
-        expected_plan_guids = plans.map(&:guid)
-        expected_service_guids = plans.map(&:service).map(&:guid).uniq
+          plans = ServicePlan.all
+          expected_plan_guids = plans.map(&:guid)
+          expected_service_guids = plans.map(&:service).map(&:guid).uniq
 
-        returned_plan_guids = decoded_response.fetch('resources').map do |res|
-          res['metadata']['guid']
+          returned_plan_guids = decoded_response.fetch('resources').map do |res|
+            res['metadata']['guid']
+          end
+
+          returned_service_guids = decoded_response.fetch('resources').map do |res|
+            res['entity']['service_guid']
+          end
+
+          expect(returned_plan_guids).to match_array expected_plan_guids
+          expect(returned_service_guids).to match_array expected_service_guids
         end
-
-        returned_service_guids = decoded_response.fetch('resources').map do |res|
-          res['entity']['service_guid']
-        end
-
-        expect(returned_plan_guids).to match_array expected_plan_guids
-        expect(returned_service_guids).to match_array expected_service_guids
       end
 
       context 'when the user is not logged in' do
@@ -258,62 +202,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "POST", "/v2/service_plans" do
-      let(:service) { Service.make }
-
-      it 'requires authentication' do
-        post '/v2/service_plans', '{}', headers_for(nil)
-        expect(last_response.status).to eq 401
-      end
-
-      it "accepts a request with unique_id" do
-        payload = ServicePlansController::CreateMessage.new(
-          :name => 'foo',
-          :free => false,
-          :description => "We don't need no stinking plan'",
-          :extra => '{"thing": 2}',
-          :service_guid => service.guid,
-          :unique_id => Sham.unique_id,
-        ).encode
-        post "/v2/service_plans", payload, json_headers(admin_headers)
-        expect(last_response.status).to eq(201)
-      end
-
-      it 'makes the service plan public by default' do
-        payload_without_public = ServicePlansController::CreateMessage.new(
-          :name => 'foo',
-          :free => false,
-          :description => "We don't need no stinking plan'",
-          :service_guid => service.guid,
-          :unique_id => Sham.unique_id,
-        ).encode
-        post '/v2/service_plans', payload_without_public, json_headers(admin_headers)
-        expect(last_response.status).to eq(201)
-        plan_guid = decoded_response.fetch('metadata').fetch('guid')
-        expect(ServicePlan.first(:guid => plan_guid).public).to be true
-      end
-    end
-
     describe "PUT", "/v2/service_plans/:guid" do
-      it 'requires authentication' do
-        plan = ServicePlan.make
-        put "/v2/service_plans/#{plan.guid}", '{}', headers_for(nil)
-        expect(last_response.status).to eq 401
-      end
-
-      it "updates the unique_id attribute" do
-        service_plan = ServicePlan.make
-        old_unique_id = service_plan.unique_id
-        new_unique_id = old_unique_id.reverse
-        payload = Yajl::Encoder.encode({"unique_id" => new_unique_id})
-
-        put "/v2/service_plans/#{service_plan.guid}", payload, json_headers(admin_headers)
-
-        service_plan.reload
-        expect(last_response.status).to be == 201
-        expect(service_plan.unique_id).to be == new_unique_id
-      end
-
       context "when the given unique_id is already taken" do
         it "returns an error response" do
           service_plan = ServicePlan.make
@@ -324,20 +213,12 @@ module VCAP::CloudController
 
           expect(last_response.status).to be == 400
           expect(decoded_response.fetch('code')).to eql(110001)
-          expect(decoded_response.fetch('error_code')).to eql('CF-ServicePlanInvalid')
-          expect(decoded_response.fetch('description')).to eql("The service plan is invalid: Plan ids must be unique")
         end
       end
     end
 
     describe "DELETE", "/v2/service_plans/:guid" do
-
       let(:service_plan) { ServicePlan.make }
-
-      it 'requires authentication' do
-        delete "/v2/service_plans/#{service_plan.guid}", '{}', headers_for(nil)
-        expect(last_response.status).to eq 401
-      end
 
       it "should prevent recursive deletions if there are any instances" do
         ManagedServiceInstance.make(:service_plan => service_plan)

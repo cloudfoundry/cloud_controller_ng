@@ -9,7 +9,7 @@ module VCAP::CloudController
       }
     end
 
-    let(:service_instance) { described_class.create(service_instance_attrs) }
+    let(:service_instance) { ServiceInstance.create(service_instance_attrs) }
 
     it { is_expected.to have_timestamp_columns }
 
@@ -96,6 +96,18 @@ module VCAP::CloudController
             }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
           end
         end
+      end
+    end
+
+    describe "#destroy" do
+      it 'creates a DELETED service usage event' do
+        service_instance
+        expect {
+          service_instance.destroy
+        }.to change{ServiceUsageEvent.count}.by(1)
+        event = ServiceUsageEvent.last
+        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
+        expect(event).to match_service_instance(service_instance)
       end
     end
 

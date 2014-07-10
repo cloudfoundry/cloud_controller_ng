@@ -6,36 +6,18 @@ module VCAP::CloudController
   # cloudcontroller metaprogramming. We manually generate the JSON
   # expected by CFoundry and CF.
   class ServiceBrokersController < RestController::ModelController
-    class ServiceBrokerMessage < VCAP::RestAPI::Message
-      optional :name,       String
-      optional :broker_url, String
-      optional :auth_username,   String
-      optional :auth_password,   String
-
-      def self.extract(json)
-        decode(json).extract
-      end
+    define_attributes do
+      attribute :name,       String
+      attribute :broker_url, String
+      attribute :auth_username,   String
+      attribute :auth_password,   String
     end
 
-    get '/v2/service_brokers', :enumerate
-    def enumerate
-      validate_access(:index, ServiceBroker, user, roles)
-      headers = {}
-      brokers = ServiceBroker.filter(build_filter)
+    query_parameters :name
 
-      collection_renderer.render_json(
-        self.class,
-        brokers,
-        self.class.path,
-        @opts,
-        {}
-      )
-    end
-
-    post '/v2/service_brokers', :create
     def create
       validate_access(:create, ServiceBroker, user, roles)
-      params = ServiceBrokerMessage.extract(body)
+      params = CreateMessage.decode(body).extract
       broker = ServiceBroker.new(params)
 
       registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker)
@@ -53,10 +35,9 @@ module VCAP::CloudController
       [HTTP::CREATED, headers, body]
     end
 
-    put '/v2/service_brokers/:guid', :update
     def update(guid)
       validate_access(:update, ServiceBroker, user, roles)
-      params = ServiceBrokerMessage.extract(body)
+      params = UpdateMessage.decode(body).extract
       broker = ServiceBroker.find(guid: guid)
       return HTTP::NOT_FOUND unless broker
 
@@ -75,7 +56,6 @@ module VCAP::CloudController
       [HTTP::OK, {}, body]
     end
 
-    delete '/v2/service_brokers/:guid', :delete
     def delete(guid)
       validate_access(:delete, ServiceBroker, user, roles)
       broker = ServiceBroker.find(:guid => guid)
@@ -96,26 +76,10 @@ module VCAP::CloudController
       end
     end
 
+    define_messages
+    define_routes
+
     private
-
-    def build_filter
-      q = params['q']
-      if q && q.start_with?('name:')
-        {:name => q.split(':')[1]}
-      else
-        {}
-      end
-    end
-
-    def paginate(resources)
-      {
-        'total_results' => resources.count,
-        'total_pages' => 1,
-        'prev_url' => nil,
-        'next_url' => nil,
-        'resources' => resources
-      }
-    end
 
     def url_of(broker)
       "#{self.class.path}/#{broker.guid}"
