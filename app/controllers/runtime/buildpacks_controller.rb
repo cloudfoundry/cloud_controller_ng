@@ -31,6 +31,12 @@ module VCAP::CloudController
       response
     end
 
+    def update(guid)
+      obj = find_for_update(guid)
+      model.update(obj, @request_attrs)
+      [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
+    end
+
     private
 
     attr_reader :buildpack_blobstore

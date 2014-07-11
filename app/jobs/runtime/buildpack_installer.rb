@@ -18,10 +18,7 @@ module VCAP::CloudController
           values.delete(:locked)
 
           if buildpack
-            Buildpack.db.transaction do
-              buildpack.lock!
-              buildpack = buildpack.update(values)
-            end
+            buildpack = Buildpack.update(buildpack, values)
           else
             buildpack = Buildpack.create(values)
           end
@@ -31,7 +28,7 @@ module VCAP::CloudController
           upload_buildpack.upload_bits(buildpack, file, File.basename(file))
 
           if opts.key?(:locked)
-            buildpack.update({ locked: opts[:locked] })
+            Buildpack.update(buildpack, { locked: opts[:locked] })
           end
 
           logger.info "Buildpack #{name} installed or updated"

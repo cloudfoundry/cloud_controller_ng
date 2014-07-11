@@ -10,23 +10,6 @@ module VCAP::CloudController
 
     describe "Validations" do
       it { is_expected.to validate_uniqueness :name }
-
-      describe "name" do
-        it "does not allow non-word non-dash characters" do
-          ["git://github.com", "$abc", "foobar!"].each do |name|
-            buildpack = Buildpack.new(name: name)
-            expect(buildpack).not_to be_valid
-            expect(buildpack.errors.on(:name)).to be_present
-          end
-        end
-
-        it "allows word and dash characters" do
-          ["name", "name-with-dash", "-name-"].each do |name|
-            buildpack = Buildpack.new(name: name)
-            expect(buildpack).to be_valid
-          end
-        end
-      end
     end
 
     describe "Serialization" do
@@ -187,6 +170,11 @@ module VCAP::CloudController
           4.times.map { |i| Buildpack.make(name: "name_#{100 - i}", position: i + 1) }
         end
 
+        it "must be transactional so that shifting positions remains consistent" do
+          expect(Buildpack.db).to receive(:transaction).exactly(2).times.and_yield
+          Buildpack.create(name: "new_buildpack", key: "abcdef", position: 2)
+        end
+
         context "with a specified position" do
           it "creates a buildpack at position 1 when less than 1" do
             expect {
@@ -274,20 +262,47 @@ module VCAP::CloudController
         4.times.map { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
       end
 
+      it "locks the current object so that the moves don't race condition it" do
+        expect(buildpacks[0]).to receive(:lock!)
+        Buildpack.update(buildpacks[0], {key: "abcdef"})
+      end
+
       it "locks the last position so that the moves don't race condition it" do
         allow(Buildpack).to receive(:at_last_position) { buildpacks.last }
         expect(buildpacks.last).to receive(:lock!)
-        buildpacks.first.update position: 2
+        Buildpack.update(buildpacks.first, {position: 2})
+      end
+
+      it "must be transactional so that shifting positions remains consistent" do
+        transactions_added_by_sequel = 1
+        expect(Buildpack.db).to receive(:transaction).exactly(transactions_added_by_sequel + 1).times.and_yield
+        Buildpack.update(buildpacks[3], position: 2)
       end
 
       it "has to do a SELECT FOR UPDATE" do
         expect(Buildpack).to receive(:for_update).exactly(1).and_call_original
-        buildpacks[3].update(position: 2)
+        Buildpack.update(buildpacks[3], position: 2)
+      end
+
+      it "locks the last row" do
+        last = double(:last, position: 4)
+        allow(Buildpack).to receive(:at_last_position) { last }
+        expect(last).to receive(:lock!)
+        Buildpack.update(buildpacks[3], position: 2)
       end
 
       it "does not update the position if it isn't specified" do
         expect {
-          buildpacks.first.update(key: "abcdef")
+          Buildpack.update(buildpacks.first, {key: "abcdef"})
+        }.to_not change {
+          get_bp_ordered
+        }
+      end
+
+      it "doesn't try to change the position needlessly" do
+        expect(buildpacks[0]).to_not receive(:update)
+        expect {
+          Buildpack.update(buildpacks[0], position: 1)
         }.to_not change {
           get_bp_ordered
         }
@@ -295,13 +310,13 @@ module VCAP::CloudController
 
       it "does not modify the frozen hash provided by Sequel" do
         expect {
-          buildpacks.first.update({position: 2}.freeze)
+          Buildpack.update(buildpacks.first, {position: 2}.freeze)
         }.not_to raise_error
       end
 
       it "shifts from the end to the beginning" do
         expect {
-          buildpacks[3].update(position: 1)
+          Buildpack.update(buildpacks[3], position: 1)
         }.to change {
           get_bp_ordered
         }.from(
@@ -313,7 +328,7 @@ module VCAP::CloudController
 
       it "shifts in the middle" do
         expect {
-          buildpacks[3].update(position: 2)
+          Buildpack.update(buildpacks[3], position: 2)
         }.to change {
           get_bp_ordered
         }.from(
@@ -325,7 +340,7 @@ module VCAP::CloudController
 
       it "shifts from the beginning to the end" do
         expect {
-          buildpacks.first.update({position: 4})
+          Buildpack.update(buildpacks.first, {position: 4})
         }.to change {
           get_bp_ordered
         }.from(
@@ -339,7 +354,7 @@ module VCAP::CloudController
         context "the beginning" do
           it "normalizes to the beginning of the list" do
             expect {
-              buildpacks[1].update(position: 0)
+              Buildpack.update(buildpacks[1], {position: 0})
             }.to change {
               get_bp_ordered
             }.from(
@@ -348,12 +363,21 @@ module VCAP::CloudController
                    [["name_99", 1], ["name_100", 2], ["name_98", 3], ["name_97", 4]]
                  )
           end
+
+          it "doesn't change the position if there isn't a change after normalization" do
+            expect(buildpacks[0]).to_not receive(:update)
+            expect {
+              Buildpack.update(buildpacks[0], position: 0)
+            }.to_not change {
+              get_bp_ordered
+            }
+          end
         end
 
         context "the end" do
           it "normalizes the position to a valid one" do
             expect {
-              buildpacks[2].update(position: 5)
+              Buildpack.update(buildpacks[2], position: 5)
             }.to change {
               get_bp_ordered
             }.from(
@@ -361,6 +385,15 @@ module VCAP::CloudController
                  ).to(
                    [["name_100", 1], ["name_99", 2], ["name_97", 3], ["name_98", 4]]
                  )
+          end
+
+          it "doesn't change the position if there isn't a change after normalization" do
+            expect(buildpacks[3]).to_not receive(:update)
+            expect {
+              Buildpack.update(buildpacks[3], position: 5)
+            }.to_not change {
+              get_bp_ordered
+            }
           end
         end
       end
