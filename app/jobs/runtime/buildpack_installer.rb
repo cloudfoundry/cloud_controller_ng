@@ -20,7 +20,7 @@ module VCAP::CloudController
           if buildpack
             Buildpack.db.transaction do
               buildpack.lock!
-              buildpack = buildpack.update(values)
+              buildpack.update(values)
             end
           else
             buildpack = Buildpack.create(values)

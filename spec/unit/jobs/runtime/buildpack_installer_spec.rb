@@ -39,6 +39,17 @@ module VCAP::CloudController
             expect(buildpack2.filename).to end_with(File.basename(zipfile2))
             expect(buildpack2.key).to_not eql(buildpack1.key)
           end
+
+          context "when trying to lock the buildpack" do
+            let(:options) { {locked: true} }
+
+            it "locks the buildpack" do
+              Buildpack.make(name: buildpack_name)
+              job.perform
+              buildpack = Buildpack.find(name: buildpack_name)
+              expect(buildpack).to be_locked
+            end
+          end
         end
 
         context "when locking is enabled" do
