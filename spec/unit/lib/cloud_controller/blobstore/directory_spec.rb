@@ -30,7 +30,7 @@ module CloudController
 
       describe "#get" do
         it "retrieves the directory" do
-          expect(directories).to receive(:get).with(directory_key, limit: 1, max_keys: 1).and_return(fog_directory)
+          expect(directories).to receive(:get).with(directory_key, "limit" => 1, "max_keys" => 1).and_return(fog_directory)
           expect(directory.get).to eq(fog_directory)
         end
       end
