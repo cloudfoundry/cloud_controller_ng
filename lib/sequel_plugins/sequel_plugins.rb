@@ -16,6 +16,3 @@ Sequel::Model.plugin :vcap_user_group
 Sequel::Model.plugin :vcap_user_visibility
 Sequel::Model.plugin :update_or_create
 Sequel::Model.plugin :association_dependencies
-
-Sequel::Model.plugin :typecast_on_load,
-                     :name, :label, :provider, :description, :host

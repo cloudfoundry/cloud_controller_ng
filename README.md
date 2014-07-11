@@ -54,14 +54,38 @@ platform using the NATS message bus. For example, it performs the following usin
 To maintain a consistent and effective approach to testing, please refer to `spec/README.md` and
 keep it up to date, documenting the purpose of the various types of tests.
 
-By default `rspec` will randomly pick between postgres and mysql;
-you can specify connection string via `DB_CONNECTION` environment
+By default `rspec` will randomly pick between postgres and mysql.
+
+It will try to connect to those databases with the following connection string:
+postgres: postgres://postgres@localhost:5432/cc_test
+mysql: mysql2://root:password@localhost:3306/cc_test
+
+rake db:create will create the above database when the `DB` environment variable is set to postgres or mysql
+
+You can specify a connection string via `DB_CONNECTION` environment
 variable to test against postgres or mysql. Examples:
 
-    DB_CONNECTION="postgres://postgres@localhost:5432" rspec
-    DB_CONNECTION="mysql2://root:password@localhost:3306/cc" rspec
+    DB_CONNECTION="postgres://postgres@localhost:5432" rake
+    DB_CONNECTION="mysql2://root:password@localhost:3306" rake
 
-Travis currently runs 3 build jobs against postgres and mysql.
+You can also specify the full connection string via the `DB_CONNECTION_STRING`
+environment variable. Examples:
+
+    DB_CONNECTION_STRING="postgres://postgres@localhost:5432/cc_test" rake
+    DB_CONNECTION_STRING="mysql2://root:password@localhost:3306/cc_test" rake
+
+If you are running the integration specs (which are included in the full rake),
+and you are specifying DB_CONNECTION or DB_CONNECTION_STRING, you will also
+need to have a second test database with `_integration_cc` as the name suffix.
+
+For example, if you are using:
+
+    DB_CONNECTION_STRING="postgres://postgres@localhost:5432/cc_test"
+
+You will also need a database called:
+
+    `cc_test_integration_cc`
+
 
 ### Running tests on a single file
 
@@ -73,10 +97,6 @@ The development team typically will run the specs to a single file as (e.g.)
 
     bundle exec rake spec
 
-Due to the large number of tests, the rake spec task is configured to run in parallel using [parallel_rspec](https://github.com/grosser/parallel_tests).
-
-Integration and acceptance tests, however, do not support concurrent testing (e.g. starting NATS on the same port at the same time), and are thus run serially.
-
 ## Static Analysis
 
 To help maintain code consistency, rubocop is used to enforce code conventions and best practices.
@@ -84,8 +104,6 @@ To help maintain code consistency, rubocop is used to enforce code conventions a
 ### Running static analysis
 
     bundle exec rubocop
-
-Travis currently runs rubocop as part of the CI process.
 
 ## API documentation
 

@@ -1,5 +1,6 @@
 desc "Runs all specs"
 task spec: %w[
+              db:pick
               db:recreate
               spec:outer
               spec:unit:fast

@@ -1,20 +1,26 @@
 module DbConfig
   def self.name
-    "cc_test_#{ENV["TEST_ENV_NUMBER"]}"
+    if ENV["DB_CONNECTION_STRING"]
+      ENV["DB_CONNECTION_STRING"].split("/").last
+    elsif ENV["TEST_ENV_NUMBER"]
+      "cc_test_#{ENV["TEST_ENV_NUMBER"]}"
+    else
+      "cc_test"
+    end
   end
 
   def self.connection_string
-    ENV["DB_CONNECTION_STRING"] = "#{connection_prefix}/#{name}"
+    ENV["DB_CONNECTION_STRING"] ||= "#{connection_prefix}/#{name}"
   end
 
   def self.connection_prefix
     default_connection_prefix = {
-        "mysql" => "mysql2://root@localhost:3306",
+        "mysql" => "mysql2://root:password@localhost:3306",
         "postgres" => "postgres://postgres@localhost:5432"
     }
 
-    if ENV["TRAVIS"] != "true"
-      default_connection_prefix["mysql"] = "mysql2://root:password@localhost:3306"
+    if ENV["TRAVIS"] == "true"
+      default_connection_prefix["mysql"] = "mysql2://root@localhost:3306"
     end
 
     db_type = ENV["DB"] || "postgres"

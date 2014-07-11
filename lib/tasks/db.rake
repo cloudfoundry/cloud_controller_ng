@@ -40,11 +40,13 @@ end
   end
 
   task :pick do
-    ENV["DB"] ||= %w[mysql postgres].sample
-    puts "Using #{ENV["DB"]}"
+    unless ENV["DB_CONNECTION_STRING"] || ENV["DB_CONNECTION"]
+      ENV["DB"] ||= %w[mysql postgres].sample
+      puts "Using #{ENV["DB"]}"
+    end
   end
 
-  task create: :pick do
+  task :create do
     require_relative "../../spec/support/bootstrap/db_config"
 
     case ENV["DB"]
@@ -56,10 +58,12 @@ end
         else
           sh "mysql -e 'create database #{DbConfig.name};' -u root --password=password"
         end
+      else
+        puts "rake db:create requires DB to be set to create a database"
     end
   end
 
-  task drop: :pick do
+  task :drop do
     require_relative "../../spec/support/bootstrap/db_config"
 
     case ENV["DB"]
@@ -71,6 +75,8 @@ end
         else
           sh "mysql -e 'drop database if exists #{DbConfig.name};' -u root --password=password"
         end
+      else
+        puts "rake db:drop requires DB to be set to create a database"
     end
   end
 

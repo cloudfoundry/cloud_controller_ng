@@ -27,9 +27,9 @@ module IntegrationSetup
 
     FileUtils.rm(config['pid_filename']) if File.exists?(config['pid_filename'])
 
-    db_connection_string = "#{TestConfig.config[:db][:database]}_test_cc"
+    db_connection_string = "#{TestConfig.config[:db][:database]}_integration_cc"
     if !opts[:preserve_database]
-      run_cmd("bundle exec rake db:recreate db:migrate", wait: true, env: {"TEST_ENV_NUMBER" => "#{ENV["TEST_ENV_NUMBER"]}_test_cc", "DB_CONNECTION_STRING" => db_connection_string}.merge(opts[:env] || {}))
+      run_cmd("bundle exec rake db:recreate db:migrate", wait: true, env: {"DB_CONNECTION_STRING" => db_connection_string}.merge(opts[:env] || {}))
     end
 
     @cc_pids ||= []
