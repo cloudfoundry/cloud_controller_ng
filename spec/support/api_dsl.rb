@@ -93,6 +93,10 @@ module ApiDsl
     "VCAP::CloudController::#{model.to_s.classify}".constantize.columns.include?(:updated_at)
   end
 
+  def add_deprecation_warning
+    example.metadata[:description] << " (deprecated)" if response_headers['X-Cf-Warnings'] && response_headers['X-Cf-Warnings'][/deprecated/i]
+  end
+
   module ClassMethods
     def api_version
       "/v2"

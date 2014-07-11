@@ -18,7 +18,7 @@ module VCAP::CloudController
 
     query_parameters :name, :organization_guid, :developer_guid, :app_guid
 
-    deprecated_endpoint "#{path_guid}/domains/*"
+    deprecated_endpoint "#{path_guid}/domains"
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:organization_id, :name])

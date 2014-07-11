@@ -79,6 +79,9 @@ RSpec.configure do |rspec_config|
     TmpdirCleaner.clean
   end
 
+
+  rspec_config.after(:each, type: :api) { add_deprecation_warning }
+
   RspecApiDocumentation.configure do |c|
     c.format = [:html, :json]
     c.api_name = "Cloud Foundry API"
