@@ -1,5 +1,4 @@
 require "sequel"
-require "sequel/adapters/sqlite"
 require "sequel/adapters/postgres"
 require "sequel/adapters/mysql2"
 
@@ -26,16 +25,6 @@ require "sequel/adapters/mysql2"
 #
 # In the above migration, name will will have case insensitive comparisions,
 # but case preserving data, whereas base64_data will be case sensitive.
-
-Sequel::SQLite::Database.class_eval do
-  def case_insensitive_string_column_type
-    "String"
-  end
-
-  def case_insensitive_string_column_opts
-    { :collate => :nocase }
-  end
-end
 
 Sequel::Postgres::Database.class_eval do
   def case_insensitive_string_column_type

@@ -42,6 +42,10 @@ module VCAP::CloudController
         it "sets a default value for app_bits_upload_grace_period_in_seconds" do
           expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(0)
         end
+
+        it "sets a default value for database" do
+          expect(config[:db][:database]).to eq(ENV["DB_CONNECTION_STRING"])
+        end
       end
 
       context "when config values are provided" do

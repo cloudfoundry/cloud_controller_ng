@@ -6,18 +6,14 @@ module VCAP::CloudController::RestController
       OrderApplicator.new(opts)
     end
 
-    describe "#apply" do
-      let(:database) do
-        database = Sequel.sqlite(':memory:')
-        database.create_table :examples do
-          primary_key :id
-          String :field
-        end
-        database
-      end
+    def normalize_quotes(string)
+      return string unless dataset.db.database_type == :postgres
+      string.gsub '`', '"'
+    end
 
+    describe "#apply" do
       let(:dataset) do
-        database[:examples]
+        VCAP::CloudController::TestModel.db[:test_models]
       end
 
       subject(:sql) do
@@ -30,7 +26,7 @@ module VCAP::CloudController::RestController
         end
 
         it "orders by id in ascending order" do
-          expect(sql).to eq("SELECT * FROM `examples` ORDER BY `id` ASC")
+          expect(sql).to eq(normalize_quotes "SELECT * FROM `test_models` ORDER BY `id` ASC")
         end
       end
 
@@ -40,7 +36,7 @@ module VCAP::CloudController::RestController
         end
 
         it "orders by the specified column" do
-          expect(sql).to eq("SELECT * FROM `examples` ORDER BY `field` ASC")
+          expect(sql).to eq(normalize_quotes "SELECT * FROM `test_models` ORDER BY `field` ASC")
         end
       end
 
@@ -50,7 +46,7 @@ module VCAP::CloudController::RestController
         end
 
         it "orders by id in the specified direction" do
-          expect(sql).to eq("SELECT * FROM `examples` ORDER BY `id` DESC")
+          expect(sql).to eq(normalize_quotes "SELECT * FROM `test_models` ORDER BY `id` DESC")
         end
       end
 

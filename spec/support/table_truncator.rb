@@ -1,7 +1,11 @@
 class TableTruncator
-  def initialize(db, tables)
+  def initialize(db, tables = nil)
     @db = db
-    @tables = tables
+    @tables = tables || self.class.isolated_tables(db)
+  end
+
+  def self.isolated_tables(db)
+    db.tables - [:schema_migrations]
   end
 
   def truncate_tables
@@ -15,10 +19,6 @@ class TableTruncator
         when :mysql
           tables.each do |table|
             db.run("TRUNCATE TABLE #{table};")
-          end
-        when :sqlite
-          tables.each do |table|
-            db.run("DELETE FROM #{table}; DELETE FROM sqlite_sequence WHERE name = '#{table}';")
           end
       end
     end

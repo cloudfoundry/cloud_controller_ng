@@ -40,7 +40,7 @@ end
   end
 
   task :pick do
-    ENV["DB"] ||= %w[sqlite mysql postgres].sample
+    ENV["DB"] ||= %w[mysql postgres].sample
     puts "Using #{ENV["DB"]}"
   end
 

@@ -25,11 +25,6 @@ module VCAP::CloudController
         connection_options[:charset] = "utf8"
       end
 
-      using_sqlite = opts[:database].index("sqlite://") == 0
-      if using_sqlite
-        require "vcap/sequel_sqlite_monkeypatch"
-      end
-
       db = Sequel.connect(opts[:database], connection_options)
       db.logger = logger
       db.sql_log_level = opts[:log_level] || :debug2
@@ -38,7 +33,6 @@ module VCAP::CloudController
         Sequel::MySQL.default_collate = "utf8_bin"
       end
 
-      validate_sqlite_version(db) if using_sqlite
       db
     end
 
@@ -46,42 +40,6 @@ module VCAP::CloudController
       connect(db_config, logger)
       require "models"
       require "delayed_job_sequel"
-    end
-
-    private
-
-    def self.validate_sqlite_version(db)
-      return if @validated_sqlite
-      @validate_sqlite = true
-
-      min_version = "3.6.19"
-      version = db.fetch("SELECT sqlite_version()").first[:"sqlite_version()"]
-      unless validate_version_string(min_version, version)
-        puts <<EOF
-The CC models require sqlite version >= #{min_version} but you are
-running #{version} On OSX, you will might to install the sqlite
-gem against an upgraded sqlite (from source, homebrew, macports, etc)
-and not the system sqlite. You can do so with a command
-such as:
-
-  gem install sqlite3 -- --with-sqlite3-include=/usr/local/include/ \
-                         --with-sqlite3-lib=/usr/local/lib
-
-EOF
-        exit 1
-      end
-    end
-
-    def self.validate_version_string(min_version, version)
-      min_fields = min_version.split(".").map { |v| v.to_i }
-      ver_fields = version.split(".").map { |v| v.to_i }
-
-      (0..2).each do |i|
-        return true  if ver_fields[i] > min_fields[i]
-        return false if ver_fields[i] < min_fields[i]
-      end
-
-      return true
     end
   end
 end

@@ -441,9 +441,6 @@ module VCAP::CloudController
         end
 
         it 'can remove inactive services' do
-          # Sequel stores 'true' and 'false' as 't' and 'f' in sqlite, so with
-          # sqlite, instead of 'true' or 'false', the parameter must be specified
-          # as 't' or 'f'. But in postgresql, either way is ok.
           get "/v2/spaces/#{space_one.guid}/services?q=active:t", {}, headers
           expect(last_response).to be_ok
           expect(decoded_guids).to match_array(@active.map(&:guid))

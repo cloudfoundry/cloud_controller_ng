@@ -4,26 +4,20 @@ module DbConfig
   end
 
   def self.connection_string
-    case connection_prefix
-      when /(mysql|postgres)/
-        "#{connection_prefix}/#{name}"
-      when /sqlite/
-        "sqlite:///tmp/#{name}.db"
-    end
+    ENV["DB_CONNECTION_STRING"] = "#{connection_prefix}/#{name}"
   end
 
   def self.connection_prefix
     default_connection_prefix = {
         "mysql" => "mysql2://root@localhost:3306",
-        "postgres" => "postgres://postgres@localhost:5432",
-        "sqlite" => "sqlite:///tmp/",
+        "postgres" => "postgres://postgres@localhost:5432"
     }
 
     if ENV["TRAVIS"] != "true"
       default_connection_prefix["mysql"] = "mysql2://root:password@localhost:3306"
     end
 
-    db_type = ENV["DB"] || "sqlite"
+    db_type = ENV["DB"] || "postgres"
     ENV["DB_CONNECTION"] ||= default_connection_prefix[db_type]
   end
 

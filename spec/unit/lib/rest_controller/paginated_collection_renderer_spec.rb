@@ -2,26 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController::RestController
   describe PaginatedCollectionRenderer do
-    in_memory_db = Sequel.sqlite(':memory:')
-    in_memory_db.create_table :cars do
-      primary_key :id
-      String :guid
-      String :name
-      Time :created_at
-    end
-
-    class Car < Sequel::Model(in_memory_db)
-      attr_accessor :id, :created_at
-      export_attributes :name
-    end
-
-    class CarsController < ModelController
-      define_attributes {}
-    end
-
-    after do
-      Car.dataset.truncate
-    end
+    let(:controller) { VCAP::CloudController::TestModelsController }
+    let(:dataset) { VCAP::CloudController::TestModel.dataset }
 
     subject(:paginated_collection_renderer) { PaginatedCollectionRenderer.new(eager_loader, serializer, renderer_opts) }
 
@@ -49,7 +31,7 @@ module VCAP::CloudController::RestController
       let(:results_per_page) { nil }
 
       subject(:render_json_call) do
-        paginated_collection_renderer.render_json(CarsController, Car.dataset, "/v2/cars", opts, {})
+        paginated_collection_renderer.render_json(controller, dataset, "/v2/cars", opts, {})
       end
 
       context 'when results_per_page' do
@@ -82,8 +64,8 @@ module VCAP::CloudController::RestController
 
         context 'was not specified' do
           before do
-            Car.create(name: "car-1")
-            Car.create(name: "car-2")
+            VCAP::CloudController::TestModel.make
+            VCAP::CloudController::TestModel.make
           end
 
           let(:default_results_per_page) { 1 }
@@ -127,9 +109,9 @@ module VCAP::CloudController::RestController
 
       context 'order-direction' do
         before do
-          Car.create(name: "car-1")
-          Car.create(name: "car-2")
-          Car.create(name: "car-3")
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
         end
 
         let(:opts) do

@@ -30,11 +30,6 @@ class TableRecreator
 
   def drop_table_unsafely(table)
     case db.database_type
-      when :sqlite
-        db.execute("PRAGMA foreign_keys = OFF")
-        db.drop_table(table)
-        db.execute("PRAGMA foreign_keys = ON")
-
       when :mysql
         db.execute("SET foreign_key_checks = 0")
         db.drop_table(table)

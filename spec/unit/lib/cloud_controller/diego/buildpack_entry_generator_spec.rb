@@ -73,7 +73,7 @@ module VCAP::CloudController::Diego
 
       context "when an invalid buildpack type is returned for some reason" do
         it "fails fast with a clear error" do
-          allow(app).to receive(:buildpack).and_return(stub("BazaarBuildpack"))
+          allow(app).to receive(:buildpack).and_return(double("BazaarBuildpack"))
           expect { buildpack_entry_generator.buildpack_entries(app) }.to raise_error /Unsupported buildpack type/
         end
       end

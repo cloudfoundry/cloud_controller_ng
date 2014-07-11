@@ -9,8 +9,6 @@ class ReferentialIntegrity
         without_referential_integrity_postgres(&block)
       when :mysql
         without_referential_integrity_mysql(&block)
-      when :sqlite
-        without_referential_integrity_sqlite(&block)
     end
   end
 
@@ -31,12 +29,5 @@ class ReferentialIntegrity
       yield
     ensure
       db.run("SET FOREIGN_KEY_CHECKS = 1;")
-  end
-
-  def without_referential_integrity_sqlite
-    db.run("PRAGMA foreign_keys = OFF;")
-    yield
-  ensure
-    db.run("PRAGMA foreign_keys = ON;")
   end
 end

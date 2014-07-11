@@ -57,7 +57,6 @@ loggregator:
   url: "ws://loggregator.vcap.me:80"
 
 db:
-  database: "sqlite:///tmp/cloud_controller.db"
   max_connections: 32
   pool_timeout: 10
 

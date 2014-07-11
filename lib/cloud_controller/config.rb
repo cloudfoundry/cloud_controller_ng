@@ -68,8 +68,8 @@ module VCAP::CloudController
         optional(:stacks_file) => String,
         optional(:newrelic_enabled) => bool,
 
-        :db => {
-          :database                   => String,     # db connection string for sequel
+        optional(:db) => {
+          optional(:database)         => String,     # db connection string for sequel
           optional(:log_level)        => String,     # debug, info, etc.
           optional(:max_connections)  => Integer,    # max connections in the connection pool
           optional(:pool_timeout)     => Integer     # timeout before raising an error when connection can't be established to the db
@@ -265,6 +265,8 @@ module VCAP::CloudController
         config[:billing_event_writing_enabled] = true if config[:billing_event_writing_enabled].nil?
         config[:skip_cert_verify] = false if config[:skip_cert_verify].nil?
         config[:app_bits_upload_grace_period_in_seconds] ||= 0
+        config[:db] ||= {}
+        config[:db][:database] ||= ENV["DB_CONNECTION_STRING"]
         sanitize(config)
       end
 

@@ -91,4 +91,3 @@ describe "Cloud controller", type: :integration, monitoring: true do
     end
   end
 end
-

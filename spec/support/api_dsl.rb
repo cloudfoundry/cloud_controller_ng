@@ -190,6 +190,7 @@ module ApiDsl
       end
       request_parameter :page, "Page of results to fetch"
       request_parameter :'results-per-page', "Number of results per page"
+      request_parameter :'order-direction', "Order of the results: asc (default) or desc"
       request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N.", deprecated: true
     end
 

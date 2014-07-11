@@ -34,7 +34,6 @@ gem 'clockwork', require: false
 group :db do
   gem 'mysql2'
   gem 'pg'
-  gem 'sqlite3'
 end
 
 group :operations do

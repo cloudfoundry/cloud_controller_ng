@@ -8,10 +8,6 @@ module DatabaseIsolation
     end
   end
 
-  def self.isolated_tables(db)
-    db.tables - [:schema_migrations]
-  end
-
   class TruncateTables
     def initialize(config, db)
       @config = config
@@ -21,8 +17,11 @@ module DatabaseIsolation
     def cleanly
       yield
     ensure
-      tables = DatabaseIsolation.isolated_tables(db)
-      table_truncator = TableTruncator.new(db, tables)
+      reset_tables
+    end
+
+    def reset_tables
+      table_truncator = TableTruncator.new(db)
       table_truncator.truncate_tables
 
       VCAP::CloudController::Seeds.write_seed_data(config)

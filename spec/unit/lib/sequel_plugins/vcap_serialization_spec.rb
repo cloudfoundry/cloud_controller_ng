@@ -2,81 +2,56 @@ require "spec_helper"
 require "securerandom"
 
 describe "Sequel::Plugins::VcapSerialization" do
-  before do
-    in_memory_db = Sequel.sqlite(':memory:')
-    in_memory_db.create_table :test do
-      primary_key :id
-
-      Integer :val1
-      Integer :val2
-      Integer :val3
-    end
-
-    @c = Class.new(Sequel::Model)
-    @c.plugin :vcap_serialization
-    @c.set_dataset(in_memory_db[:test])
+  class TestModel < Sequel::Model
+    import_attributes :guid, :required_attr
   end
 
   describe "#create_from_hash" do
     it "should succeed when setting only allowed values" do
-      @c.import_attributes :val1, :val2, :val3
-      m = @c.create_from_hash :val1 => 1, :val2 => 2, :val3 => 3
-      expect(m.val1).to eq(1)
-      expect(m.val2).to eq(2)
-      expect(m.val3).to eq(3)
+      m = TestModel.create_from_hash guid: "1", required_attr: true
+      expect(m.guid).to eq("1")
+      expect(m.required_attr).to eq(true)
     end
 
     it "should not set attributes not marked for import" do
-      @c.import_attributes :val1, :val3
-      m = @c.create_from_hash :val1 => 1, :val2 => 2, :val3 => 3
-      expect(m.val1).to eq(1)
-      expect(m.val2).to eq(nil)
-      expect(m.val3).to eq(3)
+      m = TestModel.create_from_hash guid: "1", unique_value: "unique", required_attr: true
+      expect(m.guid).to eq("1")
+      expect(m.unique_value).to eq(nil)
+      expect(m.required_attr).to eq(true)
     end
   end
 
   describe "#create_from_json" do
     it "should succeed when setting only allowed values" do
-      @c.import_attributes :val1, :val2, :val3
-      json = Yajl::Encoder.encode :val1 => 1, :val2 => 2, :val3 => 3
-      m = @c.create_from_json json
-      expect(m.val1).to eq(1)
-      expect(m.val2).to eq(2)
-      expect(m.val3).to eq(3)
+      json = Yajl::Encoder.encode guid: "1", required_attr: true
+      m = TestModel.create_from_json json
+      expect(m.guid).to eq("1")
+      expect(m.required_attr).to eq(true)
     end
 
     it "should not set attributes not marked for import" do
-      @c.import_attributes :val1, :val3
-      json = Yajl::Encoder.encode :val1 => 1, :val2 => 2, :val3 => 3
-      m = @c.create_from_json json
-      expect(m.val1).to eq(1)
-      expect(m.val2).to eq(nil)
-      expect(m.val3).to eq(3)
+      json = Yajl::Encoder.encode guid: "1", unique_value: "unique", required_attr: true
+      m = TestModel.create_from_json json
+      expect(m.guid).to eq("1")
+      expect(m.unique_value).to eq(nil)
+      expect(m.required_attr).to eq(true)
     end
   end
 
   describe "#update_from_json" do
-    before do
-      @c.export_attributes :val2
-      @r = @c.create :val1 => 1, :val2 => 10
-    end
+    let!(:instance) { TestModel.create(guid: "1", required_attr: true, unique_value: "unique") }
 
     it "should succeed when setting only allowed values" do
-      @c.import_attributes :val1, :val2, :val3
-      json = Yajl::Encoder.encode :val1 => 101, :val2 => 102, :val3 => 103
-      @r.update_from_json json
-      expect(@r.val1).to eq(101)
-      expect(@r.val2).to eq(102)
-      expect(@r.val3).to eq(103)
+      json = Yajl::Encoder.encode guid: "2"
+      instance.update_from_json json
+      expect(instance.guid).to eq("2")
     end
 
     it "should not set attributes not marked for import" do
-      @c.import_attributes :val1, :val3
-      json = Yajl::Encoder.encode :val1 => 101, :val2 => 102, :val3 => 103
-      @r.update_from_json json
-      expect(@r.val1).to eq(101)
-      expect(@r.val2).to eq(10)
-      expect(@r.val3).to eq(103)
+      json = Yajl::Encoder.encode guid: "2", unique_value: "other_unique"
+      instance.update_from_json json
+      expect(instance.guid).to eq("2")
+      expect(instance.unique_value).to eq("unique")
     end
   end
 end

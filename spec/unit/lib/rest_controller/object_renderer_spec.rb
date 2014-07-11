@@ -8,30 +8,10 @@ module VCAP::CloudController::RestController
     let(:renderer_opts) { { max_inline_relations_depth: 100_000 } }
 
     describe '#render_json' do
-      let(:controller) { BicyclesController }
+      let(:controller) { VCAP::CloudController::TestModelSecondLevelsController }
       let(:opts) { {} }
 
-      in_memory_db = Sequel.sqlite(':memory:')
-      in_memory_db.create_table :bicycles do
-        primary_key :id
-        String :guid
-        String :name
-        Time :created_at
-      end
-
-      class Bicycle < Sequel::Model(in_memory_db)
-        attr_accessor :id, :created_at
-        export_attributes :name
-        alias_method :model, :class
-      end
-
-      class BicyclesController < ModelController
-        define_attributes {}
-      end
-
-      before :all do
-        @bicycle = Bicycle.create { |c| c.id = 1 }
-      end
+      let(:instance) { VCAP::CloudController::TestModelSecondLevel.make }
 
       context 'when asked inline_relations_depth is more than max inline_relations_depth' do
         before { renderer_opts.merge!(max_inline_relations_depth: 10) }
@@ -39,7 +19,7 @@ module VCAP::CloudController::RestController
 
         it 'raises BadQueryParameter error' do
           expect {
-            subject.render_json(controller, @bicycle, opts)
+            subject.render_json(controller, instance, opts)
           }.to raise_error(VCAP::Errors::ApiError, /inline_relations_depth/)
         end
       end
@@ -49,7 +29,7 @@ module VCAP::CloudController::RestController
         before { opts.merge!(inline_relations_depth: 10) }
 
         it 'renders json response' do
-          result = subject.render_json(controller, @bicycle, opts)
+          result = subject.render_json(controller, instance, opts)
           expect(result).to be_instance_of(String)
         end
       end
@@ -59,7 +39,7 @@ module VCAP::CloudController::RestController
         before { opts.merge!(inline_relations_depth: 9) }
 
         it 'renders json response' do
-          result = subject.render_json(controller, @bicycle, opts)
+          result = subject.render_json(controller, instance, opts)
           expect(result).to be_instance_of(String)
         end
       end

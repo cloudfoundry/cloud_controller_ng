@@ -27,14 +27,13 @@ module IntegrationSetup
 
     FileUtils.rm(config['pid_filename']) if File.exists?(config['pid_filename'])
 
-    database_file = config["db"]["database"].gsub('sqlite://', '')
-    if !opts[:preserve_database] && File.file?(database_file)
-      run_cmd("rm -f #{database_file}", wait: true)
+    db_connection_string = "#{TestConfig.config[:db][:database]}_test_cc"
+    if !opts[:preserve_database]
+      run_cmd("bundle exec rake db:recreate db:migrate", wait: true, env: {"TEST_ENV_NUMBER" => "#{ENV["TEST_ENV_NUMBER"]}_test_cc", "DB_CONNECTION_STRING" => db_connection_string}.merge(opts[:env] || {}))
     end
 
-    run_cmd("bundle exec rake db:migrate", wait: true)
     @cc_pids ||= []
-    @cc_pids << run_cmd("bin/cloud_controller -s -c #{config_file}", opts)
+    @cc_pids << run_cmd("bin/cloud_controller -s -c #{config_file}", opts.merge(env: {"DB_CONNECTION_STRING" => db_connection_string}.merge(opts[:env] || {})))
 
     info_endpoint = "http://localhost:#{config["external_port"]}/info"
 

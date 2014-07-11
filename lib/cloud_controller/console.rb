@@ -9,6 +9,7 @@ require "bundler/setup"
 require "cloud_controller"
 require "irb/completion"
 require "pry"
+require File.expand_path("../../../spec/support/bootstrap/db_config.rb", __FILE__)
 
 @config_file = ARGV[0] || File.expand_path("../../../config/cloud_controller.yml", __FILE__)
 unless File.exists?(@config_file)
@@ -18,6 +19,7 @@ end
 @config = VCAP::CloudController::Config.from_file(@config_file)
 logger = Logger.new(STDOUT)
 db_config = @config.fetch(:db).merge(log_level: :debug)
+db_config[:database] ||= DbConfig.connection_string
 
 VCAP::CloudController::DB.load_models(db_config, logger)
 VCAP::CloudController::Config.configure_components(@config)

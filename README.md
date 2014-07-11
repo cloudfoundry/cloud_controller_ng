@@ -19,7 +19,7 @@ tables for orgs, spaces, apps, services, service instances, user roles, and more
 
 ### Database (CC_DB)
 
-The Cloud Controller database has been tested with Postgres, Mysql, and Sqlite.
+The Cloud Controller database has been tested with Postgres and Mysql.
 
 ### Blob Store
 
@@ -54,14 +54,14 @@ platform using the NATS message bus. For example, it performs the following usin
 To maintain a consistent and effective approach to testing, please refer to `spec/README.md` and
 keep it up to date, documenting the purpose of the various types of tests.
 
-By default `rspec` will run test suite with sqlite3 in-memory database;
-however, you can specify connection string via `DB_CONNECTION` environment
-variable to test against postgres and mysql. Examples:
+By default `rspec` will randomly pick between postgres and mysql;
+you can specify connection string via `DB_CONNECTION` environment
+variable to test against postgres or mysql. Examples:
 
     DB_CONNECTION="postgres://postgres@localhost:5432" rspec
     DB_CONNECTION="mysql2://root:password@localhost:3306/cc" rspec
 
-Travis currently runs 3 build jobs against sqlite, postgres, and mysql.
+Travis currently runs 3 build jobs against postgres and mysql.
 
 ### Running tests on a single file
 
