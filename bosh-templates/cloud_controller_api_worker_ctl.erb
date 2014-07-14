@@ -40,12 +40,16 @@ case $1 in
     echo $$ > $PIDFILE
     chown vcap:vcap $PIDFILE
 
-    source $CC_JOB_DIR/bin/handle_nfs_or_local_blobstore.sh
+    NFS_SHARE=/var/vcap/nfs
+    if [[ ! -d $NFS_SHARE/shared ]]; then
+      echo "NFS mount $NFS_SHARE not created yet"
+      exit 1
+    fi
 
     /var/vcap/packages/syslog_aggregator/setup_syslog_forwarder.sh $CONFIG_DIR
 
     cd $CC_PACKAGE_DIR/cloud_controller_ng
-    
+
     # Run the buildpack install only on the first CC Worker launch
     <% if spec.index.to_i == 0 %>
     chpst -u vcap:vcap bundle exec rake buildpacks:install
