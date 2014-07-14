@@ -9,7 +9,11 @@ require "bundler/setup"
 require "cloud_controller"
 require "irb/completion"
 require "pry"
-require File.expand_path("../../../spec/support/bootstrap/db_config.rb", __FILE__)
+begin
+  require File.expand_path("../../../spec/support/bootstrap/db_config.rb", __FILE__)
+rescue LoadError
+  # db_config.rb does not exist in a release, but a config with a database should exist there.
+end
 
 @config_file = ARGV[0] || File.expand_path("../../../config/cloud_controller.yml", __FILE__)
 unless File.exists?(@config_file)
