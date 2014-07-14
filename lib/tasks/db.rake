@@ -52,6 +52,7 @@ end
     case ENV["DB"]
       when "postgres"
         sh "psql -U postgres -c 'create database #{DbConfig.name};'"
+        sh "psql -U postgres -d #{DbConfig.name} -c 'CREATE EXTENSION IF NOT EXISTS citext'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
           sh "mysql -e 'create database #{DbConfig.name};' -u root"

@@ -24,10 +24,6 @@
 Sequel.migration do
 
   change do
-    if database_type == :postgres
-      execute("CREATE EXTENSION IF NOT EXISTS citext")
-    end
-
     # rather than creating different tables for each type of events, we're
     # going to denormalize them into one table.
     #
