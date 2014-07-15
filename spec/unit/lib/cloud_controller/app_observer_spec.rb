@@ -50,7 +50,7 @@ module VCAP::CloudController
       end
 
       context "when the app has a droplet" do
-        before { app.droplet_hash = "abcdef" }
+        before { app.add_new_droplet("abcdef") }
 
         it "enqueue a jobs to delete the buildpack cache" do
           expect { AppObserver.deleted(app) }.to change {

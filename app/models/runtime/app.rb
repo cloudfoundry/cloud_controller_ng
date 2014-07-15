@@ -443,14 +443,8 @@ module VCAP::CloudController
       super(stack)
     end
 
-    def droplet_hash=(hash)
-      if hash
-        self.package_state = "STAGED"
-      end
-      super(hash)
-    end
-
     def add_new_droplet(hash)
+      self.package_state = "STAGED" if hash
       self.droplet_hash = hash
       add_droplet(droplet_hash: hash)
       self.save

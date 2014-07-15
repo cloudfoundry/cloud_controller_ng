@@ -1344,7 +1344,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "droplet_hash=" do
+    describe "#add_new_droplet" do
       let(:app) { AppFactory.make }
 
       it "should set the state to staged" do
@@ -1352,7 +1352,7 @@ module VCAP::CloudController
         app.instances = 1
         app.package_hash = "abc"
         expect(app.needs_staging?).to be true
-        app.droplet_hash = "def"
+        app.add_new_droplet("def")
         expect(app.needs_staging?).to be false
         expect(app.droplet_hash).to eq("def")
       end

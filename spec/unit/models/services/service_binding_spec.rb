@@ -4,8 +4,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::ServiceBinding, type: :model do
     def fake_app_staging(app)
       app.package_hash = "abc"
-      app.droplet_hash = "def"
-      app.save
+      app.add_new_droplet("def")
       expect(app.needs_staging?).to eq(false)
     end
 
