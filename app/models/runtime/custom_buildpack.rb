@@ -5,7 +5,7 @@ module VCAP::CloudController
     end
 
     def to_json
-      Yajl::Encoder.encode(url)
+      MultiJson.dump(url)
     end
 
     URI_REGEXP = /\A#{URI::regexp}\Z/.freeze

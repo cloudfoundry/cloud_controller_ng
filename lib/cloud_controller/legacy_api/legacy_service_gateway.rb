@@ -126,7 +126,7 @@ module VCAP::CloudController
           :configuration => sb.gateway_data,
         }
       end
-      Yajl::Encoder.encode({:handles => handles})
+      MultiJson.dump({:handles => handles})
     end
 
     def delete(label_and_version, provider = DEFAULT_PROVIDER)
@@ -190,7 +190,7 @@ module VCAP::CloudController
           end
         end
         offering[:plans] = service.service_plans.map(&:name)
-        Yajl::Encoder.encode(offering)
+        MultiJson.dump(offering)
     end
 
     # NB: ambiguous API: the handle id appears in both URI and body.

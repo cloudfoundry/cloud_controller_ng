@@ -74,12 +74,12 @@ module VCAP::Services
         case response
         when Net::HTTPSuccess
           if response.body.present?
-            return Yajl::Parser.parse(response.body)
+            return MultiJson.load(response.body)
           end
         else
           begin
-            hash = Yajl::Parser.parse(response.body)
-          rescue Yajl::ParseError
+            hash = MultiJson.load(response.body)
+          rescue MultiJson::ParseError
           end
 
           if hash.is_a?(Hash) && hash.has_key?('description')

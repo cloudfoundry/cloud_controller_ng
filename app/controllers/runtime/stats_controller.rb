@@ -16,7 +16,7 @@ module VCAP::CloudController
 
       instances_reporter = instances_reporter_factory.instances_reporter_for_app(app)
       stats              = instances_reporter.stats_for_app(app)
-      [HTTP::OK, Yajl::Encoder.encode(stats)]
+      [HTTP::OK, MultiJson.dump(stats)]
     end
 
     protected

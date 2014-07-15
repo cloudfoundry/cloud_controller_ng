@@ -5,19 +5,19 @@ module VCAP::CloudController
     describe "GET /v2/info" do
       it "returns a 'user' entry when authenticated" do
         get "/v2/info", {}, admin_headers
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash).to have_key("user")
       end
 
       it "excludes the 'user' entry when not authenticated" do
         get "/v2/info", {}, {}
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash).not_to have_key("user")
       end
 
       it "includes data from the config" do
         get "/v2/info", {}, {}
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash['name']).to eq(TestConfig.config[:info][:name])
         expect(hash['build']).to eq(TestConfig.config[:info][:build])
         expect(hash['support']).to eq(TestConfig.config[:info][:support_address])
@@ -31,14 +31,14 @@ module VCAP::CloudController
       it "includes login url when configured" do
         TestConfig.override(:login => {:url => "login_url"})
         get "/v2/info", {}, {}
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash['authorization_endpoint']).to eq("login_url")
       end
 
       it "includes the logging endpoint when configured" do
         TestConfig.override(:loggregator => {:url => "loggregator_url"})
         get "/v2/info", {}, {}
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash['logging_endpoint']).to eq("loggregator_url")
       end
     end

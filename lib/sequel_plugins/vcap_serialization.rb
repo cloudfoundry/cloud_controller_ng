@@ -1,4 +1,4 @@
-require "yajl"
+require "multi_json"
 
 module Sequel::Plugins::VcapSerialization
   # This plugin implements serialization and deserialization of
@@ -44,7 +44,7 @@ module Sequel::Plugins::VcapSerialization
     # @option opts [Array<String>] :only Only import an attribute if it is both
     # included in import_attributes and in the :only option.
     def update_from_json(json, opts = {})
-      parsed = Yajl::Parser.new.parse(json)
+      parsed = MultiJson.load(json)
       update_from_hash(parsed, opts)
     end
 
@@ -77,7 +77,7 @@ module Sequel::Plugins::VcapSerialization
     #
     # @return [Sequel::Model] The created model.
     def create_from_json(json, opts = {})
-      hash = Yajl::Parser.new.parse(json)
+      hash = MultiJson.load(json)
       create_from_hash(hash, opts)
     end
 

@@ -12,7 +12,7 @@ module VCAP::CloudController
 
       output_file = File.join(output_directory, output_file_name)
       File.open(output_file, 'w') do |diag_file|
-        diag_file.write(Yajl::Encoder.encode(data, pretty: true))
+        diag_file.write(MultiJson.dump(data, pretty: true))
       end
 
       output_file

@@ -26,7 +26,7 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(400)
 
-          parsed_response = Yajl::Parser.parse(last_response.body)
+          parsed_response = MultiJson.load(last_response.body)
           expect(parsed_response["code"]).to eq(220001)
           expect(parsed_response["description"]).to eq("Instances error: Request failed for app: #{@app.name} as the app is in stopped state.")
         end
@@ -38,7 +38,7 @@ module VCAP::CloudController
           get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
-          expect(Yajl::Parser.parse(last_response.body)["code"]).to eq(170001)
+          expect(MultiJson.load(last_response.body)["code"]).to eq(170001)
         end
 
         it "returns '170002 NotStaged' when the app is pending to be staged" do
@@ -48,7 +48,7 @@ module VCAP::CloudController
           get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
-          expect(Yajl::Parser.parse(last_response.body)["code"]).to eq(170002)
+          expect(MultiJson.load(last_response.body)["code"]).to eq(170002)
         end
 
         it "returns '170003 NoAppDetectedError' when the app was not detected by a buildpack" do
@@ -58,7 +58,7 @@ module VCAP::CloudController
           get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
-          expect(Yajl::Parser.parse(last_response.body)["code"]).to eq(170003)
+          expect(MultiJson.load(last_response.body)["code"]).to eq(170003)
         end
 
         it "returns '170004 BuildpackCompileFailed' when the app fails due in the buildpack compile phase" do
@@ -68,7 +68,7 @@ module VCAP::CloudController
           get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
-          expect(Yajl::Parser.parse(last_response.body)["code"]).to eq(170004)
+          expect(MultiJson.load(last_response.body)["code"]).to eq(170004)
         end
 
         it "returns '170005 BuildpackReleaseFailed' when the app fails due in the buildpack compile phase" do
@@ -78,7 +78,7 @@ module VCAP::CloudController
           get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(400)
-          expect(Yajl::Parser.parse(last_response.body)["code"]).to eq(170005)
+          expect(MultiJson.load(last_response.body)["code"]).to eq(170005)
         end
 
         it "returns the instances" do
@@ -107,7 +107,7 @@ module VCAP::CloudController
           get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
           expect(last_response.status).to eq(200)
-          expect(Yajl::Parser.parse(last_response.body)).to eq(expected)
+          expect(MultiJson.load(last_response.body)).to eq(expected)
           expect(instances_reporter).to have_received(:all_instances_for_app).with(
               satisfy {|requested_app| requested_app.guid == @app.guid})
         end

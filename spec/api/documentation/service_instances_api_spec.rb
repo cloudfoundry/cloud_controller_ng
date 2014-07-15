@@ -24,7 +24,7 @@ resource "Service Instances", :type => :api do
         service_plan_guid = VCAP::CloudController::ServicePlan.make(public: true).guid
         request_hash = {space_guid: space_guid, name: 'my-service-instance', service_plan_guid: service_plan_guid}
 
-        client.post '/v2/service_instances', Yajl::Encoder.encode(request_hash, pretty: true), headers
+        client.post '/v2/service_instances', MultiJson.dump(request_hash, pretty: true), headers
         expect(status).to eq(201)
       end
     end

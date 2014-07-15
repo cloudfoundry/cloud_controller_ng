@@ -19,7 +19,7 @@ module VCAP::CloudController
           (app.space.organization.private_domains + SharedDomain.all).map(&:as_summary_json)
       }.merge(app.to_hash)
 
-      Yajl::Encoder.encode(app_info)
+      MultiJson.dump(app_info)
     end
 
     protected

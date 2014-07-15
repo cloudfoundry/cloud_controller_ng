@@ -6,8 +6,8 @@ module VCAP::Services
     class ServiceBrokerBadResponse < HttpResponseError
       def initialize(uri, method, response)
         begin
-          hash = Yajl::Parser.parse(response.body)
-        rescue Yajl::ParseError
+          hash = MultiJson.load(response.body)
+        rescue MultiJson::ParseError
         end
 
         if hash.is_a?(Hash) && hash.has_key?('description')
@@ -84,8 +84,8 @@ module VCAP::Services
       private
 
       def parsed_json(str)
-        Yajl::Parser.parse(str)
-      rescue Yajl::ParseError
+        MultiJson.load(str)
+      rescue MultiJson::ParseError
         {}
       end
     end

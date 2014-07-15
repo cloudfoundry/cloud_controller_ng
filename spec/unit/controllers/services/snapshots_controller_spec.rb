@@ -33,7 +33,7 @@ module VCAP::CloudController
       let(:snapshot_created_at) { Time.now.to_s }
       let(:new_snapshot) { VCAP::Services::Api::SnapshotV2.new(snapshot_id: '1', name: 'foo', state: 'empty', size: 0, created_time: snapshot_created_at)}
       let(:payload) {
-        Yajl::Encoder.encode(:service_instance_guid => service_instance.guid,
+        MultiJson.dump(:service_instance_guid => service_instance.guid,
                              :name => new_name)
       }
 

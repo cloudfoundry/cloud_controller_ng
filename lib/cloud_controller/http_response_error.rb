@@ -7,8 +7,8 @@ class HttpResponseError < StructuredError
     @status = response.code.to_i
 
     begin
-      source = Yajl::Parser.parse(response.body)
-    rescue Yajl::ParseError
+      source = MultiJson.load(response.body)
+    rescue MultiJson::ParseError
       source = response.body
     end
 

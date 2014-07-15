@@ -54,7 +54,7 @@ module VCAP::CloudController::Diego
           "droplet_uri" => "app_uri",
           "stack" => app.stack.name,
           "start_command" => "./some-detected-command",
-          "environment" => Yajl::Parser.parse(Yajl::Encoder.encode(client.environment(app))),
+          "environment" => MultiJson.load(MultiJson.dump(client.environment(app))),
           "num_instances" => expected_instances,
           "routes" => ["some-route.some-domain.com", "some-other-route.some-domain.com"],
           "health_check_timeout_in_seconds" => 120,

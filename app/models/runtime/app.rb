@@ -266,7 +266,7 @@ module VCAP::CloudController
     # doesn't play nice with the dirty plugin, and we want the dirty plugin
     # more
     def environment_json=(env)
-      json = Yajl::Encoder.encode(env)
+      json = MultiJson.dump(env)
       generate_salt
       self.encrypted_environment_json =
           VCAP::CloudController::Encryptor.encrypt(json, salt)
@@ -275,7 +275,7 @@ module VCAP::CloudController
     def environment_json
       return unless encrypted_environment_json
 
-      Yajl::Parser.parse(
+      MultiJson.load(
           VCAP::CloudController::Encryptor.decrypt(
               encrypted_environment_json, salt))
     end

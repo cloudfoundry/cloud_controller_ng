@@ -46,7 +46,7 @@ module VCAP::CloudController
           running_instances: 5
         }.merge(app_obj.to_hash)]
 
-        expect(decoded_response["apps"]).to eq(Yajl::Parser.parse(Yajl::Encoder.encode(expected_app_hash)))
+        expect(decoded_response["apps"]).to eq(MultiJson.load(MultiJson.dump(expected_app_hash)))
       end
 
       it "returns the space services" do
@@ -55,7 +55,7 @@ module VCAP::CloudController
           space.service_instances[0].as_summary_json,
           space.service_instances[1].as_summary_json
         ]
-        expect(decoded_response["services"]).to eq(Yajl::Parser.parse(Yajl::Encoder.encode(expected_services)))
+        expect(decoded_response["services"]).to eq(MultiJson.load(MultiJson.dump(expected_services)))
       end
     end
   end

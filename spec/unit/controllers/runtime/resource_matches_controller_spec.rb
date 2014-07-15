@@ -10,10 +10,10 @@ module VCAP::CloudController
 
     def resource_match_request(verb, path, matches, non_matches)
       user = User.make(:admin => true, :active => true)
-      req = Yajl::Encoder.encode(matches + non_matches)
+      req = MultiJson.dump(matches + non_matches)
       send(verb, path, req, json_headers(headers_for(user)))
       expect(last_response.status).to eq(200)
-      resp = Yajl::Parser.parse(last_response.body)
+      resp = MultiJson.load(last_response.body)
       expect(resp).to eq(matches)
     end
 

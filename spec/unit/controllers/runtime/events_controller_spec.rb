@@ -37,7 +37,7 @@ module VCAP::CloudController
           Event.make(:timestamp => Time.new(1995, 1, 1), :type => type, :actor => "middle")
 
           get "/v2/events", {}, admin_headers
-          parsed_body = Yajl::Parser.parse(last_response.body)
+          parsed_body = MultiJson.load(last_response.body)
           events = parsed_body["resources"].select {|r| r["entity"]["type"] == type }.map { |r| r["entity"]["actor"] }
           expect(events).to eq(%w(earlier middle later))
         end
@@ -47,7 +47,7 @@ module VCAP::CloudController
         it "includes all events" do
           get "/v2/events", {}, admin_headers
 
-          parsed_body = Yajl::Parser.parse(last_response.body)
+          parsed_body = MultiJson.load(last_response.body)
           expect(parsed_body["total_results"]).to eq(2)
         end
       end
@@ -61,7 +61,7 @@ module VCAP::CloudController
         it "includes only events from space visible to the user" do
           get "/v2/events", {}, headers_for(@user_a)
 
-          parsed_body = Yajl::Parser.parse(last_response.body)
+          parsed_body = MultiJson.load(last_response.body)
           expect(parsed_body["total_results"]).to eq(1)
         end
       end
@@ -75,7 +75,7 @@ module VCAP::CloudController
         it "includes only events from space visible to the user" do
           get "/v2/events", {}, headers_for(@user_a)
 
-          parsed_body = Yajl::Parser.parse(last_response.body)
+          parsed_body = MultiJson.load(last_response.body)
           expect(parsed_body["total_results"]).to eq(1)
         end
       end

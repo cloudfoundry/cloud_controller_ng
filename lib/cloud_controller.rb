@@ -2,7 +2,7 @@ require "bcrypt"
 require "sinatra"
 require "sequel"
 require "thin"
-require "yajl"
+require "multi_json"
 require "delayed_job"
 
 require "allowy"

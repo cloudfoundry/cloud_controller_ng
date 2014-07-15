@@ -19,7 +19,7 @@ resource "Private Domains", :type => :api do
   post "/v2/private_domains" do
     example "Create a Private Domain owned by the given Organization" do
       org_guid = VCAP::CloudController::Organization.make.guid
-      payload = Yajl::Encoder.encode(
+      payload = MultiJson.dump(
         name: "exmaple.com",
         owning_organization_guid: org_guid
       )

@@ -46,7 +46,7 @@ module VCAP::CloudController
         let(:quota_name) { "quota 1" }
 
         it "does allow creation of a quota def" do
-          post "/v2/quota_definitions", Yajl::Encoder.encode(quota_attributes), json_headers(headers)
+          post "/v2/quota_definitions", MultiJson.dump(quota_attributes), json_headers(headers)
           expect(last_response.status).to eq(201)
         end
 
@@ -56,7 +56,7 @@ module VCAP::CloudController
         end
 
         it "does allow update of a quota def" do
-          put "/v2/quota_definitions/#{existing_quota.guid}", Yajl::Encoder.encode({:total_services => 2}), json_headers(headers)
+          put "/v2/quota_definitions/#{existing_quota.guid}", MultiJson.dump({:total_services => 2}), json_headers(headers)
           expect(last_response.status).to eq(201)
         end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
         let(:quota_name) { "quota 2" }
 
         it "does not allow creation of a quota def" do
-          post "/v2/quota_definitions", Yajl::Encoder.encode(quota_attributes), json_headers(headers)
+          post "/v2/quota_definitions", MultiJson.dump(quota_attributes), json_headers(headers)
           expect(last_response.status).to eq(403)
         end
 
@@ -81,7 +81,7 @@ module VCAP::CloudController
         end
 
         it "does not allow update of a quota def" do
-          put "/v2/quota_definitions/#{existing_quota.guid}", Yajl::Encoder.encode(quota_attributes), json_headers(headers)
+          put "/v2/quota_definitions/#{existing_quota.guid}", MultiJson.dump(quota_attributes), json_headers(headers)
           expect(last_response.status).to eq(403)
         end
 

@@ -7,7 +7,7 @@ module VCAP::CloudController
     def summary(guid)
       space      = find_guid_and_validate_access(:read, guid)
 
-      Yajl::Encoder.encode(space_summary(space), pretty: true)
+      MultiJson.dump(space_summary(space), pretty: true)
     end
 
     protected

@@ -32,7 +32,7 @@ resource "Domains (deprecated)", :type => :api do
       context "Creating a domain owned by an organization" do
         example "creates a domain owned by the given organization" do
           org_guid = VCAP::CloudController::Organization.make.guid
-          payload = Yajl::Encoder.encode(
+          payload = MultiJson.dump(
             name: "exmaple.com",
             wildcard: true,
             owning_organization_guid: org_guid

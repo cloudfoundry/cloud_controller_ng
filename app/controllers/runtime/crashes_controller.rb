@@ -8,7 +8,7 @@ module VCAP::CloudController
       app = find_guid_and_validate_access(:read, guid)
       instances_reporter = instances_reporter_factory.instances_reporter_for_app(app)
       crashed_instances = instances_reporter.crashed_instances_for_app(app)
-      Yajl::Encoder.encode(crashed_instances)
+      MultiJson.dump(crashed_instances)
     end
 
     protected

@@ -92,7 +92,7 @@ module VCAP::CloudController
 
     def credentials=(val)
       if val
-        json = Yajl::Encoder.encode(val)
+        json = MultiJson.dump(val)
         generate_salt
         encrypted_string = VCAP::CloudController::Encryptor.encrypt(json, salt)
         super(encrypted_string)
@@ -105,7 +105,7 @@ module VCAP::CloudController
     def credentials
       return if super.blank?
       json = VCAP::CloudController::Encryptor.decrypt(super, salt)
-      Yajl::Parser.parse(json) if json
+      MultiJson.load(json) if json
     end
 
     def in_suspended_org?

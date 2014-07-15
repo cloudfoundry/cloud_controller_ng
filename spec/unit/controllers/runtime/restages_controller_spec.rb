@@ -46,7 +46,7 @@ module VCAP::CloudController
             restage_request
 
             expect(last_response.status).to eq(400)
-            parsed_response = Yajl::Parser.parse(last_response.body)
+            parsed_response = MultiJson.load(last_response.body)
             expect(parsed_response["code"]).to eq(170002)
           end
         end

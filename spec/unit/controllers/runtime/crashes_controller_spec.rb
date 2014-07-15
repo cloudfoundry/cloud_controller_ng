@@ -33,7 +33,7 @@ module VCAP::CloudController
           get("/v2/apps/#{@app.guid}/crashes", {}, headers_for(@developer))
 
           expect(last_response.status).to eq(200)
-          expect(Yajl::Parser.parse(last_response.body)).to eq(expected)
+          expect(MultiJson.load(last_response.body)).to eq(expected)
           expect(instances_reporter).to have_received(:crashed_instances_for_app).with(
                                           satisfy { |requested_app| requested_app.guid == @app.guid })
         end

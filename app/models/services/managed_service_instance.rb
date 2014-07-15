@@ -118,13 +118,13 @@ module VCAP::CloudController
     end
 
     def gateway_data=(val)
-      str = Yajl::Encoder.encode(val)
+      str = MultiJson.dump(val)
       super(str)
     end
 
     def gateway_data
       val = super
-      val = Yajl::Parser.parse(val) if val
+      val = MultiJson.load(val) if val
       val
     end
 

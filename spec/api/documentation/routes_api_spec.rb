@@ -23,7 +23,7 @@ resource "Routes", :type => :api do
 
     post "/v2/routes/" do
       example "Creating a Route" do
-        client.post "/v2/routes", Yajl::Encoder.encode(required_fields.merge(domain_guid: domain.guid, space_guid: space.guid)), headers
+        client.post "/v2/routes", MultiJson.dump(required_fields.merge(domain_guid: domain.guid, space_guid: space.guid)), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :route
@@ -34,7 +34,7 @@ resource "Routes", :type => :api do
       let(:new_host) { "new_host" }
 
       example "Update a Route" do
-        client.put "/v2/routes/#{guid}", Yajl::Encoder.encode(host: new_host), headers
+        client.put "/v2/routes/#{guid}", MultiJson.dump(host: new_host), headers
         expect(status).to eq 201
         standard_entity_response parsed_response, :route, host: new_host
       end

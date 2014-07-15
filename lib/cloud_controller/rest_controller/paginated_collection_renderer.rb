@@ -70,7 +70,7 @@ module VCAP::CloudController::RestController
       opts[:max_inline] ||= PreloadedObjectSerializer::MAX_INLINE_DEFAULT
       resources = dataset.all.map { |obj| @serializer.serialize(controller, obj, opts) }
 
-      Yajl::Encoder.encode({
+      MultiJson.dump({
                                :total_results => paginated_dataset.pagination_record_count,
                                :total_pages => paginated_dataset.page_count,
                                :prev_url => prev_url,

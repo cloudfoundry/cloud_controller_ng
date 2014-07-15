@@ -178,7 +178,7 @@ describe 'Sinatra::VCAP', type: :controller do
     end
 
     it 'should return structure' do
-      decoded_response = Yajl::Parser.parse(last_response.body)
+      decoded_response = MultiJson.load(last_response.body)
       expect(decoded_response['code']).to eq(1001)
       expect(decoded_response['description']).to eq('Request invalid due to parse error: some message')
 
@@ -197,7 +197,7 @@ describe 'Sinatra::VCAP', type: :controller do
     end
 
     it 'should return structure' do
-      decoded_response = Yajl::Parser.parse(last_response.body)
+      decoded_response = MultiJson.load(last_response.body)
       expect(decoded_response['code']).to eq(10001)
       expect(decoded_response['description']).to eq('boring message')
 
@@ -270,7 +270,7 @@ describe 'Sinatra::VCAP', type: :controller do
     end
 
     def request_info
-      Yajl::Parser.parse(last_response.body)
+      MultiJson.load(last_response.body)
     end
 
     it 'populates the correct request id' do

@@ -11,7 +11,7 @@ module VCAP::CloudController
       # UserAccess allows all to read so org and space user lists show all users in those lists
       raise Errors::ApiError.new_from_details("NotAuthorized") unless roles.admin?
       user = find_guid_and_validate_access(:read, guid)
-      Yajl::Encoder.encode UserSummaryPresenter.new(user).to_hash
+      MultiJson.dump UserSummaryPresenter.new(user).to_hash
     end
   end
 end

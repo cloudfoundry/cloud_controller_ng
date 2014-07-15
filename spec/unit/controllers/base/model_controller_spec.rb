@@ -78,14 +78,14 @@ module VCAP::CloudController
           calls << :after_create
         end
 
-        post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: "foobar"}), admin_headers
+        post "/v2/test_models", MultiJson.dump({required_attr: true, unique_value: "foobar"}), admin_headers
 
         expect(calls).to eq([:before_create, :create_from_hash, :after_create])
       end
 
       context "when the user's token is missing the required scope" do
         it 'responds with a 403 Insufficient Scope' do
-          post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: "foobar"}), headers_for(user, scopes: ['bogus.scope'])
+          post "/v2/test_models", MultiJson.dump({required_attr: true, unique_value: "foobar"}), headers_for(user, scopes: ['bogus.scope'])
           expect(decoded_response["code"]).to eq(10007)
           expect(decoded_response["description"]).to match(/lacks the necessary scopes/)
         end
@@ -93,7 +93,7 @@ module VCAP::CloudController
 
       it "does not persist the model when validate access fails" do
         expect {
-          post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: "foobar"}), headers_for(user)
+          post "/v2/test_models", MultiJson.dump({required_attr: true, unique_value: "foobar"}), headers_for(user)
         }.to_not change { TestModel.count }
 
         expect(decoded_response["code"]).to eq(10003)
@@ -101,7 +101,7 @@ module VCAP::CloudController
       end
 
       it "returns the right values on a successful create" do
-        post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: "foobar"}), admin_headers
+        post "/v2/test_models", MultiJson.dump({required_attr: true, unique_value: "foobar"}), admin_headers
         model_instance = TestModel.first
         url = "/v2/test_models/#{model_instance.guid}"
 
@@ -142,7 +142,7 @@ module VCAP::CloudController
       it "updates the data" do
         expect(model.updated_at).to be_nil
 
-        put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "new value"}), admin_headers
+        put "/v2/test_models/#{model.guid}", MultiJson.dump({unique_value: "new value"}), admin_headers
 
         expect(last_response.status).to eq(201)
         model.reload
@@ -157,13 +157,13 @@ module VCAP::CloudController
           with(TestModelsController, instance_of(TestModel), {}).
           and_return("serialized json")
 
-        put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({}), admin_headers
+        put "/v2/test_models/#{model.guid}", MultiJson.dump({}), admin_headers
 
         expect(last_response.body).to eq("serialized json")
       end
 
       it "returns not authorized if the user does not have access " do
-        put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "something"}), headers_for(user)
+        put "/v2/test_models/#{model.guid}", MultiJson.dump({unique_value: "something"}), headers_for(user)
 
         expect(model.reload.unique_value).not_to eq("something")
         expect(decoded_response["code"]).to eq(10003)
@@ -175,7 +175,7 @@ module VCAP::CloudController
         expect(model).to receive(:lock!).ordered
         expect(model).to receive(:update_from_hash).ordered.and_call_original
 
-        put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "something"}), admin_headers
+        put "/v2/test_models/#{model.guid}", MultiJson.dump({unique_value: "something"}), admin_headers
       end
 
       it "calls the hooks in the right order" do
@@ -192,7 +192,7 @@ module VCAP::CloudController
           calls << :after_update
         end
 
-        put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({unique_value: "new value"}), admin_headers
+        put "/v2/test_models/#{model.guid}", MultiJson.dump({unique_value: "new value"}), admin_headers
 
         expect(calls).to eq([:before_update, :update_from_hash, :after_update])
       end
@@ -452,7 +452,7 @@ module VCAP::CloudController
 
         it "returns 400 error when validation fails on create" do
           TestModel.make(unique_value: 'unique')
-          post "/v2/test_models", Yajl::Encoder.encode({required_attr: true, unique_value: 'unique'}), admin_headers
+          post "/v2/test_models", MultiJson.dump({required_attr: true, unique_value: 'unique'}), admin_headers
           expect(last_response.status).to eq(400)
           expect(decoded_response["code"]).to eq 999999998
           expect(decoded_response["description"]).to match(/Validation Error/)
@@ -461,7 +461,7 @@ module VCAP::CloudController
         it "returns 400 error when validation fails on update" do
           TestModel.make(unique_value: 'unique')
           test_model = TestModel.make(unique_value: 'not-unique')
-          put "/v2/test_models/#{test_model.guid}", Yajl::Encoder.encode({unique_value: 'unique'}), admin_headers
+          put "/v2/test_models/#{test_model.guid}", MultiJson.dump({unique_value: 'unique'}), admin_headers
           expect(last_response.status).to eq(400)
           expect(decoded_response["code"]).to eq 999999998
           expect(decoded_response["description"]).to match(/Validation Error/)
@@ -494,7 +494,7 @@ module VCAP::CloudController
 
         describe "update" do
           it "allows associating nested models" do
-            put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_to_many_guids: [associated_model1.guid, associated_model2.guid]}), admin_headers
+            put "/v2/test_models/#{model.guid}", MultiJson.dump({test_model_many_to_many_guids: [associated_model1.guid, associated_model2.guid]}), admin_headers
             expect(last_response.status).to eq(201)
             model.reload
             expect(model.test_model_many_to_manies).to include(associated_model1)
@@ -505,7 +505,7 @@ module VCAP::CloudController
             before { model.add_test_model_many_to_many associated_model1 }
 
             it "replaces existing associated models" do
-              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_to_many_guids: [associated_model2.guid]}), admin_headers
+              put "/v2/test_models/#{model.guid}", MultiJson.dump({test_model_many_to_many_guids: [associated_model2.guid]}), admin_headers
               expect(last_response.status).to eq(201)
               model.reload
               expect(model.test_model_many_to_manies).not_to include(associated_model1)
@@ -513,14 +513,14 @@ module VCAP::CloudController
             end
 
             it "removes associated models when empty array is provided" do
-              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_to_many_guids: []}), admin_headers
+              put "/v2/test_models/#{model.guid}", MultiJson.dump({test_model_many_to_many_guids: []}), admin_headers
               expect(last_response.status).to eq(201)
               model.reload
               expect(model.test_model_many_to_manies).not_to include(associated_model1)
             end
 
             it "ignores invalid guids" do
-              put "/v2/test_models/#{model.guid}", Yajl::Encoder.encode({test_model_many_to_many_guids: [associated_model2.guid, 'abcd']}), admin_headers
+              put "/v2/test_models/#{model.guid}", MultiJson.dump({test_model_many_to_many_guids: [associated_model2.guid, 'abcd']}), admin_headers
               expect(last_response.status).to eq(201)
               model.reload
               expect(model.test_model_many_to_manies.length).to eq(1)

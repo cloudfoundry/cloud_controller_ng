@@ -74,7 +74,7 @@ module VCAP::CloudController
           it 'prevents a developer from creating a service instance in an unauthorized space' do
             plan = ServicePlan.make
 
-            req = Yajl::Encoder.encode(
+            req = MultiJson.dump(
               :name => 'foo',
               :space_guid => @space_b.guid,
               :service_plan_guid => plan.guid
@@ -83,7 +83,7 @@ module VCAP::CloudController
             post "/v2/service_instances", req, json_headers(headers_for(member_a))
 
             expect(last_response.status).to eq(403)
-            expect(Yajl::Parser.parse(last_response.body)['description']).to eq("You are not authorized to perform the requested action")
+            expect(MultiJson.load(last_response.body)['description']).to eq("You are not authorized to perform the requested action")
           end
         end
 
@@ -95,7 +95,7 @@ module VCAP::CloudController
 
           describe "a user who does not belong to a privileged organization" do
             it "does not allow a user to create a service instance" do
-              payload = Yajl::Encoder.encode(
+              payload = MultiJson.dump(
                 'space_guid' => unprivileged_space.guid,
                 'name' => Sham.name,
                 'service_plan_guid' => private_plan.guid,
@@ -104,7 +104,7 @@ module VCAP::CloudController
               post 'v2/service_instances', payload, json_headers(headers_for(developer))
 
               expect(last_response.status).to eq(403)
-              expect(Yajl::Parser.parse(last_response.body)['description']).to eq("You are not authorized to perform the requested action")
+              expect(MultiJson.load(last_response.body)['description']).to eq("You are not authorized to perform the requested action")
             end
           end
 
@@ -125,7 +125,7 @@ module VCAP::CloudController
             end
 
             it "allows user to create a service instance in a privileged organization" do
-              payload = Yajl::Encoder.encode(
+              payload = MultiJson.dump(
                 'space_guid' => privileged_space.guid,
                 'name' => Sham.name,
                 'service_plan_guid' => private_plan.guid,
@@ -136,7 +136,7 @@ module VCAP::CloudController
             end
 
             it "does not allow a user to create a service instance in an unprivileged organization" do
-              payload = Yajl::Encoder.encode(
+              payload = MultiJson.dump(
                 'space_guid' => unprivileged_space.guid,
                 'name' => Sham.name,
                 'service_plan_guid' => private_plan.guid,
@@ -145,7 +145,7 @@ module VCAP::CloudController
               post 'v2/service_instances', payload, json_headers(headers_for(developer))
 
               expect(last_response.status).to eq(403)
-              expect(Yajl::Parser.parse(last_response.body)['description']).to match('A service instance for the selected plan cannot be created in this organization.')
+              expect(MultiJson.load(last_response.body)['description']).to match('A service instance for the selected plan cannot be created in this organization.')
             end
           end
         end
@@ -200,7 +200,7 @@ module VCAP::CloudController
 
         context 'when name is blank' do
           let(:body) do
-            Yajl::Encoder.encode(
+            MultiJson.dump(
               :name => '',
               :space_guid => space.guid,
               :service_plan_guid => plan.guid
@@ -230,7 +230,7 @@ module VCAP::CloudController
         end
 
         it 'deprovisions the service instance when an exception is raised' do
-          req = Yajl::Encoder.encode(
+          req = MultiJson.dump(
             :name => 'foo',
             :space_guid => space.guid,
             :service_plan_guid => plan.guid
@@ -254,7 +254,7 @@ module VCAP::CloudController
           end
 
           it 'raises the save error' do
-            req = Yajl::Encoder.encode(
+            req = MultiJson.dump(
               :name => 'foo',
               :space_guid => space.guid,
               :service_plan_guid => plan.guid
@@ -271,7 +271,7 @@ module VCAP::CloudController
         let(:very_long_name) { 's' * 51 }
 
         it "returns an error if the service instance name is over 50 characters" do
-          req = Yajl::Encoder.encode(
+          req = MultiJson.dump(
             name: very_long_name,
             space_guid: space.guid,
             service_plan_guid: plan.guid
@@ -338,7 +338,7 @@ module VCAP::CloudController
 
         context 'when provisioning without a service-auth-token' do
           it 'should throw a 500 and give you an error message' do
-            req = Yajl::Encoder.encode(
+            req = MultiJson.dump(
               :name => 'foo',
               :space_guid => space.guid,
               :service_plan_guid => plan.guid
@@ -411,7 +411,7 @@ module VCAP::CloudController
       let(:developer)           { make_developer_for_space(space) }
       let(:new_plan_guid)       { third_service_plan.guid }
       let(:body) do
-        Yajl::Encoder.encode(
+        MultiJson.dump(
           :service_plan_guid => new_plan_guid
         )
       end
@@ -636,7 +636,7 @@ module VCAP::CloudController
         it "should enforce quota check on number of service instances during creation" do
           create_first_instance
           space = Space.make(:organization => org)
-          req = Yajl::Encoder.encode(:name => Sham.name,
+          req = MultiJson.dump(:name => Sham.name,
                                      :space_guid => space.guid,
                                      :service_plan_guid => paid_plan.guid)
 
@@ -647,7 +647,7 @@ module VCAP::CloudController
 
         it "should allow updating service instance when this doesn't affect quota" do
           instance = create_first_instance
-          req = Yajl::Encoder.encode(:name => Sham.name)
+          req = MultiJson.dump(:name => Sham.name)
 
           put "/v2/service_instances/#{instance.guid}", req, json_headers(headers_for(make_developer_for_space(space)))
           expect(last_response.status).to eq(201)
@@ -658,7 +658,7 @@ module VCAP::CloudController
         it "should enforce quota check on number of service instances during creation" do
           org = Organization.make(:quota_definition => free_quota_with_no_services)
           space = Space.make(:organization => org)
-          req = Yajl::Encoder.encode(:name => Sham.name,
+          req = MultiJson.dump(:name => Sham.name,
                                      :space_guid => space.guid,
                                      :service_plan_guid => free_plan.guid)
 
@@ -670,7 +670,7 @@ module VCAP::CloudController
         it "should enforce quota check on service plan type during creation" do
           org = Organization.make(:quota_definition => free_quota_with_one_service)
           space = Space.make(:organization => org)
-          req = Yajl::Encoder.encode(:name => Sham.name,
+          req = MultiJson.dump(:name => Sham.name,
                                      :space_guid => space.guid,
                                      :service_plan_guid => paid_plan.guid)
 
@@ -684,7 +684,7 @@ module VCAP::CloudController
           space = Space.make(:organization => org)
           instance = ManagedServiceInstance.make(:space => space, :service_plan => free_plan)
 
-          put "/v2/service_instances/#{instance.guid}", Yajl::Encoder.encode(:service_plan_guid => paid_plan.guid), json_headers(headers_for(make_developer_for_space(space)))
+          put "/v2/service_instances/#{instance.guid}", MultiJson.dump(:service_plan_guid => paid_plan.guid), json_headers(headers_for(make_developer_for_space(space)))
           expect(last_response.status).to eq(400)
           expect(decoded_response["description"]).to match(/paid service plans are not allowed/)
         end
@@ -702,7 +702,7 @@ module VCAP::CloudController
             "service_plan_guid" => plan.guid
           }
 
-          post "/v2/service_instances", Yajl::Encoder.encode(body), json_headers(headers_for(make_developer_for_space(space)))
+          post "/v2/service_instances", MultiJson.dump(body), json_headers(headers_for(make_developer_for_space(space)))
           expect(decoded_response["description"]).to match(/invalid.*space.*/)
           expect(last_response.status).to eq(400)
         end
@@ -710,7 +710,7 @@ module VCAP::CloudController
     end
 
     def create_managed_service_instance
-      req = Yajl::Encoder.encode(
+      req = MultiJson.dump(
         :name => 'foo',
         :space_guid => space.guid,
         :service_plan_guid => plan.guid
@@ -723,7 +723,7 @@ module VCAP::CloudController
     end
 
     def create_user_provided_service_instance
-      req = Yajl::Encoder.encode(
+      req = MultiJson.dump(
         :name => 'foo',
         :space_guid => space.guid
       )

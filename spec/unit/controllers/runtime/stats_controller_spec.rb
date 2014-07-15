@@ -56,7 +56,7 @@ module VCAP::CloudController
                 headers_for(@developer))
 
             expect(last_response.status).to eq(200)
-            expect(Yajl::Parser.parse(last_response.body)).to eq(expected)
+            expect(MultiJson.load(last_response.body)).to eq(expected)
             expect(instances_reporter).to have_received(:stats_for_app).with(
                                             satisfy { |requested_app| requested_app.guid == @app.guid })
           end
@@ -86,7 +86,7 @@ module VCAP::CloudController
                 headers_for(@auditor))
 
             expect(last_response.status).to eq(200)
-            expect(Yajl::Parser.parse(last_response.body)).to eq(expected)
+            expect(MultiJson.load(last_response.body)).to eq(expected)
             expect(instances_reporter).to have_received(:stats_for_app).with(
                                             satisfy { |requested_app| requested_app.guid == @app.guid })
           end

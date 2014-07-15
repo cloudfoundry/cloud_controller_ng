@@ -23,7 +23,7 @@ module VCAP::CloudController
         info[:usage]  = account_usage if has_default_space?
       end
 
-      Yajl::Encoder.encode(info)
+      MultiJson.dump(info)
     end
 
     def service_info
@@ -37,7 +37,7 @@ module VCAP::CloudController
         legacy_resp[svc_type][svc.label][svc.version] = legacy_svc_encoding(svc)
       end
 
-      Yajl::Encoder.encode(legacy_resp)
+      MultiJson.dump(legacy_resp)
     end
 
     private

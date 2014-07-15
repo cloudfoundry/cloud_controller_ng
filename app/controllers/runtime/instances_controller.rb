@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       instance_reporter = instances_reporter_factory.instances_reporter_for_app(app)
       instances = instance_reporter.all_instances_for_app(app)
-      Yajl::Encoder.encode(instances)
+      MultiJson.dump(instances)
     end
 
     protected

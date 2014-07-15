@@ -135,7 +135,7 @@ module VCAP::Services::ServiceBrokers::V2
         expect(exception.message).to eq("error message")
         expect(exception.uri).to eq(uri)
         expect(exception.method).to eq(method)
-        expect(exception.source).to eq(Yajl::Parser.parse(response.body))
+        expect(exception.source).to eq(MultiJson.load(response.body))
       end
 
       it "has a response_code of 409" do
@@ -151,7 +151,7 @@ module VCAP::Services::ServiceBrokers::V2
           expect(exception.message).to eq("Resource conflict: #{uri}")
           expect(exception.uri).to eq(uri)
           expect(exception.method).to eq(method)
-          expect(exception.source).to eq(Yajl::Parser.parse(response.body))
+          expect(exception.source).to eq(MultiJson.load(response.body))
         end
       end
 

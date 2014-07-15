@@ -19,7 +19,7 @@ module VCAP::CloudController
 
     def bulk_apps
       batch_size = Integer(params.fetch("batch_size"))
-      bulk_token = Yajl::Parser.parse(params.fetch("token"))
+      bulk_token = MultiJson.load(params.fetch("token"))
       last_id = Integer(bulk_token["id"] || 0)
 
       staged_apps_query = Diego::StagedAppsQuery.new(batch_size, last_id)
@@ -34,7 +34,7 @@ module VCAP::CloudController
         id_for_next_token = app.id
       end
 
-      Yajl::Encoder.encode(
+      MultiJson.dump(
         apps: apps.collect(&:extract),
         token: {"id" => id_for_next_token}
       )

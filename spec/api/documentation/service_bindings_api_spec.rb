@@ -20,7 +20,7 @@ resource "Service Bindings", :type => :api do
       space = VCAP::CloudController::Space.make
       service_instance_guid = VCAP::CloudController::ServiceInstance.make(space: space).guid
       app_guid = VCAP::CloudController::App.make(space: space).guid
-      request_json = Yajl::Encoder.encode({service_instance_guid: service_instance_guid, app_guid: app_guid}, pretty: true)
+      request_json = MultiJson.dump({service_instance_guid: service_instance_guid, app_guid: app_guid}, pretty: true)
 
       client.post "/v2/service_bindings", request_json, headers
       expect(status).to eq 201

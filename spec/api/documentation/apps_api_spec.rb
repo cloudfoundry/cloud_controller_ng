@@ -51,7 +51,7 @@ resource "Apps", :type => :api do
     post "/v2/apps/" do
       example "Creating an App" do
         space_guid = VCAP::CloudController::Space.make.guid
-        client.post "/v2/apps", Yajl::Encoder.encode(required_fields.merge(space_guid: space_guid)), headers
+        client.post "/v2/apps", MultiJson.dump(required_fields.merge(space_guid: space_guid)), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :app
@@ -65,7 +65,7 @@ resource "Apps", :type => :api do
       example "Updating an App" do
         new_attributes = {name: 'new_name'}
 
-        client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(new_attributes), headers
+        client.put "/v2/apps/#{guid}", MultiJson.dump(new_attributes), headers
         expect(status).to eq(201)
         standard_entity_response parsed_response, :app, name: "new_name"
       end
@@ -79,7 +79,7 @@ resource "Apps", :type => :api do
         PUT with the buildpack attribute set to the URL of a git repository to set a custom buildpack.
         EOD
 
-        client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(buildpack: buildpack), headers
+        client.put "/v2/apps/#{guid}", MultiJson.dump(buildpack: buildpack), headers
         expect(status).to eq(201)
         standard_entity_response parsed_response, :app, :buildpack => buildpack
 
@@ -96,7 +96,7 @@ resource "Apps", :type => :api do
         than a custom buildpack. The 'buildpack' column returns the name of the configured admin buildpack
         EOD
 
-        client.put "/v2/apps/#{guid}", Yajl::Encoder.encode(buildpack: buildpack), headers
+        client.put "/v2/apps/#{guid}", MultiJson.dump(buildpack: buildpack), headers
         expect(status).to eq(201)
         standard_entity_response parsed_response, :app, :buildpack => admin_buildpack.name
 

@@ -52,7 +52,7 @@ module VCAP::CloudController::RestController
         opts.merge(export_attrs: obj.model.export_attrs),
       )
 
-      Yajl::Encoder.encode(hash, pretty: opts.fetch(:pretty, true))
+      MultiJson.dump(hash, pretty: opts.fetch(:pretty, true))
     end
 
     private

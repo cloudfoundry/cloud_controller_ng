@@ -15,7 +15,7 @@ class AppEnvironmentPolicy
     @environment_json.keys.each do |k|
       @errors.add(:environment_json, RESERVED_ENV_VAR_ERROR_MSG % k) if k =~ /^(vcap|vmc)_/i
     end
-  rescue Yajl::ParseError
+  rescue MultiJson::ParseError
     @errors.add(:environment_json, :invalid_json)
   end
 end

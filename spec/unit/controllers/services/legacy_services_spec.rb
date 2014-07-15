@@ -97,7 +97,7 @@ module VCAP::CloudController
 
         context "with all required parameters" do
           before do
-            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
+            post "/services", MultiJson.dump(@req), json_headers(headers_for(user))
           end
 
           it "should add the servicew the default app space" do
@@ -111,7 +111,7 @@ module VCAP::CloudController
         context "with an invalid vendor" do
           it "should return bad request" do
             @req[:vendor] = "invalid"
-            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
+            post "/services", MultiJson.dump(@req), json_headers(headers_for(user))
 
             expect(last_response.status).to eq(400)
             expect(ManagedServiceInstance.count).to eq(@num_instances_before)
@@ -123,7 +123,7 @@ module VCAP::CloudController
         context "with an invalid version" do
           it "should return bad request" do
             @req[:version] = "invalid"
-            post "/services", Yajl::Encoder.encode(@req), json_headers(headers_for(user))
+            post "/services", MultiJson.dump(@req), json_headers(headers_for(user))
 
             expect(last_response.status).to eq(400)
             expect(ManagedServiceInstance.count).to eq(@num_instances_before)

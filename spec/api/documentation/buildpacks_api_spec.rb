@@ -37,7 +37,7 @@ resource "Buildpacks", :type => :api do
         DOC
 
         expect {
-          client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(position: 3), headers
+          client.put "/v2/buildpacks/#{guid}", MultiJson.dump(position: 3), headers
           expect(status).to eq(201)
           standard_entity_response parsed_response, :buildpack, position: 3
         }.to change {
@@ -51,7 +51,7 @@ resource "Buildpacks", :type => :api do
 
       example "Enable or disable a Buildpack" do
         expect {
-          client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(enabled: false), headers
+          client.put "/v2/buildpacks/#{guid}", MultiJson.dump(enabled: false), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, enabled: false
         }.to change {
@@ -59,7 +59,7 @@ resource "Buildpacks", :type => :api do
         }.from(true).to(false)
 
         expect {
-          client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(enabled: true), headers
+          client.put "/v2/buildpacks/#{guid}", MultiJson.dump(enabled: true), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, enabled: true
         }.to change {
@@ -69,7 +69,7 @@ resource "Buildpacks", :type => :api do
 
       example "Lock or unlock a Buildpack" do
         expect {
-          client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(locked: true), headers
+          client.put "/v2/buildpacks/#{guid}", MultiJson.dump(locked: true), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, locked: true
         }.to change {
@@ -77,7 +77,7 @@ resource "Buildpacks", :type => :api do
         }.from(false).to(true)
 
         expect {
-          client.put "/v2/buildpacks/#{guid}", Yajl::Encoder.encode(locked: false), headers
+          client.put "/v2/buildpacks/#{guid}", MultiJson.dump(locked: false), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, locked: false
         }.to change {

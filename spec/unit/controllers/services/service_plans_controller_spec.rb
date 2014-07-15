@@ -207,7 +207,7 @@ module VCAP::CloudController
         it "returns an error response" do
           service_plan = ServicePlan.make
           other_service_plan = ServicePlan.make
-          payload = Yajl::Encoder.encode({"unique_id" => other_service_plan.unique_id})
+          payload = MultiJson.dump({"unique_id" => other_service_plan.unique_id})
 
           put "/v2/service_plans/#{service_plan.guid}", payload, json_headers(admin_headers)
 

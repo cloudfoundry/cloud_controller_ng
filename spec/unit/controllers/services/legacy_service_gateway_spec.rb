@@ -42,14 +42,14 @@ module VCAP::CloudController
         end
 
         it "should should reject posts with malformed bodies" do
-          post path, Yajl::Encoder.encode(:bla => "foobar"), json_headers(auth_header)
+          post path, MultiJson.dump(:bla => "foobar"), json_headers(auth_header)
           expect(last_response.status).to eq(400)
         end
 
         it "should reject requests with missing parameters" do
           msg = { :label => "foobar-2.2",
                   :description => "the foobar svc" }
-          post path, Yajl::Encoder.encode(msg), json_headers(auth_header)
+          post path, MultiJson.dump(msg), json_headers(auth_header)
           expect(last_response.status).to eq(400)
         end
 
@@ -265,7 +265,7 @@ module VCAP::CloudController
           get "services/v1/offerings/foobar-version", {}, auth_header
           expect(last_response.status).to eq(200)
 
-          resp = Yajl::Parser.parse(last_response.body)
+          resp = MultiJson.load(last_response.body)
           expect(resp["label"]).to eq("foobar")
           expect(resp["url"]).to   eq("http://www.google.com")
           expect(resp["plans"].sort).to eq(%w[free nonfree])
@@ -276,7 +276,7 @@ module VCAP::CloudController
           get "services/v1/offerings/foobar-version/test", {}, {"HTTP_X_VCAP_SERVICE_TOKEN" => @svc2.service_auth_token.token}
           expect(last_response.status).to eq(200)
 
-          resp = Yajl::Parser.parse(last_response.body)
+          resp = MultiJson.load(last_response.body)
           expect(resp["label"]).to eq("foobar")
           expect(resp["url"]).to   eq("http://www.google.com")
           expect(resp["plans"].sort).to eq(%w[free nonfree])

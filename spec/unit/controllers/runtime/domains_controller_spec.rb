@@ -98,7 +98,7 @@ module VCAP::CloudController
         describe "PUT /v2/domains/:system_domain" do
           it "does not allow modification of the shared domain by an org manager" do
             put "/v2/domains/#{@shared_domain.guid}",
-                Yajl::Encoder.encode(name: Sham.domain),
+                MultiJson.dump(name: Sham.domain),
                 json_headers(headers_for(@org_a_manager))
             expect(last_response.status).to eq(403)
           end
@@ -143,7 +143,7 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(200)
 
-          json = Yajl::Parser.parse(last_response.body)
+          json = MultiJson.load(last_response.body)
           expect(json["entity"]["owning_organization_guid"]).to be_nil
 
           expect(json["entity"]).not_to include("owning_organization_url")
@@ -166,7 +166,7 @@ module VCAP::CloudController
 
         it "creates a domain with the specified name and owning organization" do
           name = Sham.domain
-          post "/v2/domains", Yajl::Encoder.encode(name: name, owning_organization_guid: organization.guid), json_headers(headers_for(user))
+          post "/v2/domains", MultiJson.dump(name: name, owning_organization_guid: organization.guid), json_headers(headers_for(user))
           expect(last_response.status).to eq 201
           expect(decoded_response["entity"]["name"]).to eq name
           expect(decoded_response["entity"]["owning_organization_guid"]).to eq organization.guid

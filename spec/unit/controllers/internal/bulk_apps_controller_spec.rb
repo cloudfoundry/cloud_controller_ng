@@ -162,7 +162,7 @@ module VCAP::CloudController
 
           get "/internal/bulk/apps", {
               "batch_size" => 2,
-              "token" => Yajl::Encoder.encode(decoded_response["token"]),
+              "token" => MultiJson.dump(decoded_response["token"]),
           }
 
           expect(last_response.status).to eq(200)
@@ -182,7 +182,7 @@ module VCAP::CloudController
           while apps.size < total_size do
             get "/internal/bulk/apps", {
                 "batch_size" => 2,
-                "token" => Yajl::Encoder.encode(token),
+                "token" => MultiJson.dump(token),
             }
 
             expect(last_response.status).to eq(200)
@@ -193,7 +193,7 @@ module VCAP::CloudController
           expect(apps.size).to eq(total_size)
           get "/internal/bulk/apps", {
               "batch_size" => 2,
-              "token" => Yajl::Encoder.encode(token),
+              "token" => MultiJson.dump(token),
           }
 
           expect(last_response.status).to eq(200)

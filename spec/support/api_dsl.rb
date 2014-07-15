@@ -77,7 +77,7 @@ module ApiDsl
   end
 
   def fields_json(overrides = {})
-    Yajl::Encoder.encode(required_fields.merge(overrides), pretty: true)
+    MultiJson.dump(required_fields.merge(overrides), pretty: true)
   end
 
   def required_fields

@@ -18,7 +18,7 @@ module VCAP::CloudController
       snap_guid = "%s_%s" % [instance.guid, snapshot.snapshot_id]
       [
         HTTP::CREATED,
-        Yajl::Encoder.encode(
+        MultiJson.dump(
           metadata: {
             url: "/v2/snapshots/#{snap_guid}",
             guid: snap_guid,
@@ -37,7 +37,7 @@ module VCAP::CloudController
       snapshots = instance.enum_snapshots
       [
         HTTP::OK,
-        Yajl::Encoder.encode(
+        MultiJson.dump(
           total_results: snapshots.length,
           total_pages: 1,
           prev_url: nil,

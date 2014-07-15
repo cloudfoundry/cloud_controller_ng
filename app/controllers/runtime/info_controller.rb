@@ -23,7 +23,7 @@ module VCAP::CloudController
         info[:user] = user.guid
       end
 
-      Yajl::Encoder.encode(info)
+      MultiJson.dump(info)
     end
   end
 end

@@ -183,7 +183,7 @@ module VCAP::CloudController
         end
 
         it 'unbinds the service instance when an exception is raised' do
-          req = Yajl::Encoder.encode(
+          req = MultiJson.dump(
             :app_guid => app_obj.guid,
             :service_instance_guid => instance.guid
           )

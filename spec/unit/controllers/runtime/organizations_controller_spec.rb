@@ -229,14 +229,14 @@ module VCAP::CloudController
         it "should remove the user if that user does not belong to any space associated with the organization" do
           org.add_space(org_space_empty)
           expect(org.users).to include(user)
-          put "/v2/organizations/#{org.guid}", Yajl::Encoder.encode("user_guids" => []), admin_headers
+          put "/v2/organizations/#{org.guid}", MultiJson.dump("user_guids" => []), admin_headers
           org.refresh
           expect(org.users).not_to include(user)
         end
 
         it "should not remove the user if they attempt to delete the user through an update" do
           org.add_space(org_space_full)
-          put "/v2/organizations/#{org.guid}", Yajl::Encoder.encode("user_guids" => []), admin_headers
+          put "/v2/organizations/#{org.guid}", MultiJson.dump("user_guids" => []), admin_headers
           expect(last_response.status).to eql(400)
           org.refresh
           expect(org.users).to include(user)

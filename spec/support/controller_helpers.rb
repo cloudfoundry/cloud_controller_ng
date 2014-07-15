@@ -98,7 +98,7 @@ module ControllerHelpers
   end
 
   def parse(json, options={})
-    Yajl::Parser.parse(json, options)
+    MultiJson.load(json, options)
   end
 
   def metadata

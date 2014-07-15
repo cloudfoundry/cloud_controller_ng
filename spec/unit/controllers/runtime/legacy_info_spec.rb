@@ -11,19 +11,19 @@ module VCAP::CloudController
 
     it "returns a 'user' entry when authenticated" do
       get "/info", {}, admin_headers
-      hash = Yajl::Parser.parse(last_response.body)
+      hash = MultiJson.load(last_response.body)
       expect(hash).to have_key("user")
     end
 
     it "excludes the 'user' entry when not authenticated" do
       get "/info", {}, {}
-      hash = Yajl::Parser.parse(last_response.body)
+      hash = MultiJson.load(last_response.body)
       expect(hash).not_to have_key("user")
     end
 
     it "includes data from the config" do
       get "/info", {}, {}
-      hash = Yajl::Parser.parse(last_response.body)
+      hash = MultiJson.load(last_response.body)
       expect(hash['name']).to eq(TestConfig.config[:info][:name])
       expect(hash['build']).to eq(TestConfig.config[:info][:build])
       expect(hash['support']).to eq(TestConfig.config[:info][:support_address])
@@ -37,7 +37,7 @@ module VCAP::CloudController
     it "includes login url when configured" do
       TestConfig.override(:login => {:url => "login_url"})
       get "/info", {}, {}
-      hash = Yajl::Parser.parse(last_response.body)
+      hash = MultiJson.load(last_response.body)
       expect(hash['authorization_endpoint']).to eq("login_url")
     end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
         it "should return admin limits for an admin" do
           get "/info", {}, headers
           expect(last_response.status).to eq(200)
-          hash = Yajl::Parser.parse(last_response.body)
+          hash = MultiJson.load(last_response.body)
           expect(hash).to have_key("limits")
           expect(hash["limits"]).to eq({
             "memory" => AccountCapacity::ADMIN_MEM,
@@ -67,7 +67,7 @@ module VCAP::CloudController
         it "should not return service usage" do
           get "/info", {}, headers
           expect(last_response.status).to eq(200)
-          hash = Yajl::Parser.parse(last_response.body)
+          hash = MultiJson.load(last_response.body)
           expect(hash).not_to have_key("usage")
         end
       end
@@ -78,7 +78,7 @@ module VCAP::CloudController
         it "should return default limits for a user" do
           get "/info", {}, headers
           expect(last_response.status).to eq(200)
-          hash = Yajl::Parser.parse(last_response.body)
+          hash = MultiJson.load(last_response.body)
           expect(hash).to have_key("limits")
           expect(hash["limits"]).to eq({
             "memory" => AccountCapacity::DEFAULT_MEM,
@@ -92,7 +92,7 @@ module VCAP::CloudController
           it "should return 0 apps and service usage" do
             get "/info", {}, headers
             expect(last_response.status).to eq(200)
-            hash = Yajl::Parser.parse(last_response.body)
+            hash = MultiJson.load(last_response.body)
             expect(hash).to have_key("usage")
 
             expect(hash["usage"]).to eq({
@@ -124,7 +124,7 @@ module VCAP::CloudController
           it "should return 2 apps and 3 services" do
             get "/info", {}, headers
             expect(last_response.status).to eq(200)
-            hash = Yajl::Parser.parse(last_response.body)
+            hash = MultiJson.load(last_response.body)
             expect(hash).to have_key("usage")
 
             expect(hash["usage"]).to eq({
@@ -191,7 +191,7 @@ module VCAP::CloudController
 
       it "should return synthesized types as the top level key" do
         expect(last_response.status).to eq(200)
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash).to have_key("database")
         expect(hash).to have_key("key-value")
         expect(hash).to have_key("generic")
@@ -202,7 +202,7 @@ module VCAP::CloudController
       end
 
       it "should return mysql as a database" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["database"]).to have_key("mysql")
         expect(hash["database"]["mysql"]).to eq({
           @mysql_svc.version => {
@@ -222,7 +222,7 @@ module VCAP::CloudController
       end
 
       it "should return pg as a database" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["database"]).to have_key("postgresql")
         expect(hash["database"]["postgresql"]).to eq({
           @pg_svc.version => {
@@ -242,7 +242,7 @@ module VCAP::CloudController
       end
 
       it "should return redis under key-value" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["key-value"]).to have_key("redis")
         expect(hash["key-value"]["redis"]).to eq({
           @redis_svc.version => {
@@ -262,7 +262,7 @@ module VCAP::CloudController
       end
 
       it "should (incorrectly) return mongo under key-value" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["key-value"]).to have_key("mongodb")
         expect(hash["key-value"]["mongodb"]).to eq({
           @mongo_svc.version => {
@@ -282,7 +282,7 @@ module VCAP::CloudController
       end
 
       it "should return random under generic" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["generic"]).to have_key("random")
         expect(hash["generic"]["random"]).to eq({
           @random_svc.version => {
@@ -302,7 +302,7 @@ module VCAP::CloudController
       end
 
       it "should filter service with non-100 plan" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["database"]).not_to have_key("random_other")
         expect(hash["key-value"]).not_to have_key("random_other")
         expect(hash["generic"]).not_to have_key("random_other")
@@ -367,7 +367,7 @@ module VCAP::CloudController
 
       it "should return synthesized types as the top level key" do
         expect(last_response.status).to eq(200)
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash).to have_key("database")
         expect(hash).to have_key("key-value")
         expect(hash).to have_key("generic")
@@ -378,7 +378,7 @@ module VCAP::CloudController
       end
 
       it "should return mysql as a database" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["database"]).to have_key(@mysql_svc.label)
         expect(hash["database"][@mysql_svc.label]).to eq({
           @mysql_svc.version => {
@@ -398,7 +398,7 @@ module VCAP::CloudController
       end
 
       it "should return pg as a database" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["database"]).to have_key(@pg_svc.label)
         expect(hash["database"][@pg_svc.label]).to eq({
           @pg_svc.version => {
@@ -418,7 +418,7 @@ module VCAP::CloudController
       end
 
       it "should return redis under key-value" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["key-value"]).to have_key(@redis_svc.label)
         expect(hash["key-value"][@redis_svc.label]).to eq({
           @redis_svc.version => {
@@ -438,7 +438,7 @@ module VCAP::CloudController
       end
 
       it "should (incorrectly) return mongo under key-value" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["key-value"]).to have_key(@mongo_svc.label)
         expect(hash["key-value"][@mongo_svc.label]).to eq({
           @mongo_svc.version => {
@@ -458,7 +458,7 @@ module VCAP::CloudController
       end
 
       it "should return random under generic" do
-        hash = Yajl::Parser.parse(last_response.body)
+        hash = MultiJson.load(last_response.body)
         expect(hash["generic"]).to have_key(@random_svc.label)
         expect(hash["generic"][@random_svc.label]).to eq({
           @random_svc.version => {

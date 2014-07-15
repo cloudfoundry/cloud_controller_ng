@@ -90,7 +90,7 @@ module VCAP::CloudController
         it "requires a filename as part of the upload" do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { :buildpack => "abc" }, admin_headers
           expect(last_response.status).to eql 400
-          json = Yajl::Parser.parse(last_response.body)
+          json = MultiJson.load(last_response.body)
           expect(json['code']).to eq(290002)
           expect(json['description']).to match(/a filename must be specified/)
         end
@@ -99,7 +99,7 @@ module VCAP::CloudController
           expect(FileUtils).not_to receive(:rm_f)
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: nil, buildpack_name: "abc.zip" }, admin_headers
           expect(last_response.status).to eq(400)
-          json = Yajl::Parser.parse(last_response.body)
+          json = MultiJson.load(last_response.body)
           expect(json['code']).to eq(290002)
           expect(json['description']).to match(/a file must be provided/)
         end
@@ -110,7 +110,7 @@ module VCAP::CloudController
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { :buildpack => valid_tar_gz }, admin_headers
           expect(last_response.status).to eql 400
-          json = Yajl::Parser.parse(last_response.body)
+          json = MultiJson.load(last_response.body)
           expect(json['code']).to eq(290002)
           expect(json['description']).to match(/only zip files allowed/)
         end
@@ -123,7 +123,7 @@ module VCAP::CloudController
           expect(buildpack_blobstore.exists?(expected_sha)).to be true
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", upload_body, admin_headers
-          response = Yajl::Parser.parse(last_response.body)
+          response = MultiJson.load(last_response.body)
           entity = response['entity']
           expect(entity['name']).to eq('upload_binary_buildpack')
           expect(entity['filename']).to eq(filename)

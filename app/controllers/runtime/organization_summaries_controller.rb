@@ -7,7 +7,7 @@ module VCAP::CloudController
     def summary(guid)
       org = find_guid_and_validate_access(:read, guid)
 
-      Yajl::Encoder.encode(
+      MultiJson.dump(
         :guid => org.guid,
         :name => org.name,
         :status => org.status,

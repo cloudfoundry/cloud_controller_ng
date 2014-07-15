@@ -28,7 +28,7 @@ resource "User Provided Service Instances", :type => :api do
           syslog_drain_url: 'syslog://example.com'
         }
 
-        client.post '/v2/user_provided_service_instances', Yajl::Encoder.encode(request_hash, pretty: true), headers
+        client.post '/v2/user_provided_service_instances', MultiJson.dump(request_hash, pretty: true), headers
         expect(status).to eq(201)
       end
     end
@@ -43,7 +43,7 @@ resource "User Provided Service Instances", :type => :api do
           credentials: {somekey: 'somenewvalue'}
         }
 
-        client.put "/v2/user_provided_service_instances/#{guid}", Yajl::Encoder.encode(request_hash, pretty: true), headers
+        client.put "/v2/user_provided_service_instances/#{guid}", MultiJson.dump(request_hash, pretty: true), headers
         expect(status).to eq(201)
         standard_entity_response parsed_response, :user_provided_service_instance, credentials: {'somekey' => 'somenewvalue'}
       end

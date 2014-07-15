@@ -86,8 +86,8 @@ module VCAP::Services::ServiceBrokers::V2
 
         when 200..299
           begin
-            response_hash = Yajl::Parser.parse(response.body)
-          rescue Yajl::ParseError
+            response_hash = MultiJson.load(response.body)
+          rescue MultiJson::ParseError
           end
 
           unless response_hash.is_a?(Hash)

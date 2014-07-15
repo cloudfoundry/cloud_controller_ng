@@ -28,7 +28,7 @@ module VCAP::CloudController
     end
 
     let(:user) { make_user }
-    let(:req_body) { Yajl::Encoder.encode({:name => "dynamic_test_buildpack"}) }
+    let(:req_body) { MultiJson.dump({:name => "dynamic_test_buildpack"}) }
 
     describe "create" do
       it "returns 403 for non admins" do
@@ -44,7 +44,7 @@ module VCAP::CloudController
       end
 
       it "returns buildpack invalid message correctly" do
-        post "/v2/buildpacks", Yajl::Encoder.encode({name: "invalid_name!"}), admin_headers
+        post "/v2/buildpacks", MultiJson.dump({name: "invalid_name!"}), admin_headers
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(290003)
       end

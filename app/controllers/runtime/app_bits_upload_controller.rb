@@ -41,8 +41,8 @@ module VCAP::CloudController
 
     def json_param(name)
       raw = params[name]
-      Yajl::Parser.parse(raw)
-    rescue Yajl::ParseError
+      MultiJson.load(raw)
+    rescue MultiJson::ParseError
       raise Errors::ApiError.new_from_details("AppBitsUploadInvalid", "invalid :#{name}")
     end
   end

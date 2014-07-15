@@ -12,11 +12,11 @@ module VCAP::CloudController
         legacy_service_encoding(svc_instance)
       end
 
-      Yajl::Encoder.encode(resp)
+      MultiJson.dump(resp)
     end
 
     def create
-      legacy_attrs = Yajl::Parser.parse(body)
+      legacy_attrs = MultiJson.load(body)
       raise InvalidRequest unless legacy_attrs
 
       logger.debug("legacy service create #{legacy_attrs}")
@@ -39,7 +39,7 @@ module VCAP::CloudController
         :service_plan_guid => plan.guid
       }
 
-      req = Yajl::Encoder.encode(attrs)
+      req = MultiJson.dump(attrs)
       controller_factory = CloudController::ControllerFactory.new(config, logger, env, params, req)
       svc_api = controller_factory.create_controller(VCAP::CloudController::ServiceInstancesController)
       svc_api.dispatch(:create)
@@ -48,7 +48,7 @@ module VCAP::CloudController
 
     def read(name)
       service_instance = service_instance_from_name(name)
-      Yajl::Encoder.encode(legacy_service_encoding(service_instance))
+      MultiJson.dump(legacy_service_encoding(service_instance))
     end
 
     def delete(name)
@@ -70,7 +70,7 @@ module VCAP::CloudController
           legacy_service_offering_encoding(svc)
       end
 
-      Yajl::Encoder.encode(resp)
+      MultiJson.dump(resp)
     end
 
     # Keep these here in the legacy api translation rather than polluting the

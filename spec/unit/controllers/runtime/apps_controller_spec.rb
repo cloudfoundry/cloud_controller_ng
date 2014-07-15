@@ -65,7 +65,7 @@ module VCAP::CloudController
         }
       end
 
-      let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
+      let(:decoded_response) { MultiJson.load(last_response.body) }
 
       describe "events" do
         it "records app create" do
@@ -73,7 +73,7 @@ module VCAP::CloudController
 
           allow(app_event_repository).to receive(:record_app_create).and_call_original
 
-          post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(admin_headers)
+          post "/v2/apps", MultiJson.dump(initial_hash), json_headers(admin_headers)
           expect(app_event_repository).to have_received(:record_app_create).with(App.last, admin_user, SecurityContext.current_user_email, expected_attrs)
         end
       end
@@ -84,7 +84,7 @@ module VCAP::CloudController
         end
 
         it "does not allow user to create new app (spot check)" do
-          post "/v2/apps", Yajl::Encoder.encode(initial_hash), json_headers(headers_for(make_developer_for_space(space)))
+          post "/v2/apps", MultiJson.dump(initial_hash), json_headers(headers_for(make_developer_for_space(space)))
           expect(last_response.status).to eq(403)
         end
       end
@@ -97,7 +97,7 @@ module VCAP::CloudController
       let(:app_obj) { AppFactory.make(:detected_buildpack => "buildpack-name") }
 
       def update_app
-        put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(update_hash), json_headers(admin_headers)
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(update_hash), json_headers(admin_headers)
       end
 
       describe "events" do
@@ -138,7 +138,7 @@ module VCAP::CloudController
     describe "delete an app" do
       let(:app_obj) { AppFactory.make }
 
-      let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
+      let(:decoded_response) { MultiJson.load(last_response.body) }
 
       def delete_app
         delete "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
@@ -195,7 +195,7 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(space) }
       let(:auditor) { make_auditor_for_space(space) }
       let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name") }
-      let(:decoded_response) { Yajl::Parser.parse(last_response.body) }
+      let(:decoded_response) { MultiJson.load(last_response.body) }
 
       context 'when the user is a member of the space this app exists in' do
         let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name", space: space) }
@@ -307,7 +307,7 @@ module VCAP::CloudController
           stager_response = AppStagerTask::Response.new("task_streaming_log_url" => "streaming-log-url")
           allow(AppObserver).to receive_messages(stage_app: stager_response)
 
-          put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode(:state => "STARTED"), json_headers(admin_headers)
+          put "/v2/apps/#{app_obj.guid}", MultiJson.dump(:state => "STARTED"), json_headers(admin_headers)
           expect(last_response.status).to eq(201)
           expect(last_response.headers["X-App-Staging-Log"]).to eq("streaming-log-url")
         end
@@ -317,7 +317,7 @@ module VCAP::CloudController
         let(:app_obj) { AppFactory.make(:state => "STOPPED") }
 
         it "does not add X-App-Staging-Log" do
-          put "/v2/apps/#{app_obj.guid}", Yajl::Encoder.encode({}), json_headers(admin_headers)
+          put "/v2/apps/#{app_obj.guid}", MultiJson.dump({}), json_headers(admin_headers)
           expect(last_response.status).to eq(201)
           expect(last_response.headers).not_to have_key("X-App-Staging-Log")
         end
@@ -354,7 +354,7 @@ module VCAP::CloudController
           expect(app.uris).to include("app.jesse.cloud")
         end
 
-        put @app_url, Yajl::Encoder.encode({route_guids: [route.guid]}), json_headers(@headers_for_user)
+        put @app_url, MultiJson.dump({route_guids: [route.guid]}), json_headers(@headers_for_user)
         expect(last_response.status).to eq(201)
       end
 
@@ -378,7 +378,7 @@ module VCAP::CloudController
           expect(app.uris).to include("foo.jesse.cloud")
         end
 
-        put @app_url, Yajl::Encoder.encode({route_guids: [route.guid]}), json_headers(@headers_for_user)
+        put @app_url, MultiJson.dump({route_guids: [route.guid]}), json_headers(@headers_for_user)
         expect(last_response.status).to eq(201)
       end
     end
@@ -476,7 +476,7 @@ module VCAP::CloudController
           :space_guid => space.guid
         }
 
-        post "/v2/apps", Yajl::Encoder.encode(app_hash), json_headers(admin_headers)
+        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response["description"]).to match(/app name is taken/)
@@ -491,7 +491,7 @@ module VCAP::CloudController
         space.organization.quota_definition = QuotaDefinition.make(:memory_limit => 0)
         space.organization.save(validate: false)
 
-        post "/v2/apps", Yajl::Encoder.encode(app_hash), json_headers(admin_headers)
+        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response["description"]).to match(/exceeded your organization's memory limit/)
@@ -504,7 +504,7 @@ module VCAP::CloudController
           memory: 0
         }
 
-        post "/v2/apps", Yajl::Encoder.encode(app_hash), json_headers(admin_headers)
+        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match /invalid amount of memory/
@@ -517,7 +517,7 @@ module VCAP::CloudController
           instances: -1
         }
 
-        post "/v2/apps", Yajl::Encoder.encode(app_hash), json_headers(admin_headers)
+        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match /instances less than 1/
