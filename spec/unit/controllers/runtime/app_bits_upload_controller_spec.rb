@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe AppBitsUploadController do
     describe "PUT /v2/app/:id/bits" do
       let(:app_obj) do
-        AppFactory.make droplet_hash: nil, package_state: "PENDING"
+        AppFactory.make(droplet_hash: nil, package_hash: nil, package_state: "PENDING")
       end
 
       let(:tmpdir) { Dir.mktmpdir }
