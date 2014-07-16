@@ -54,6 +54,7 @@ module VCAP::CloudController
       app = get_app(logger, payload)
       return if app.nil?
 
+      app.mark_as_staged
       app.update_detected_buildpack(payload["detected_buildpack"], payload["buildpack_key"])
       app.current_droplet.update_start_command(payload["detected_start_command"])
 

@@ -22,7 +22,7 @@ module VCAP::CloudController
         end
 
         delete_package(app) if app.package_hash
-        delete_buildpack_cache(app) if app.staged?
+        delete_buildpack_cache(app)
       end
 
       def updated(app)

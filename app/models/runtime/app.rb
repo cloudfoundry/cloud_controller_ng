@@ -396,6 +396,10 @@ module VCAP::CloudController
       routes.map(&:fqdn)
     end
 
+    def mark_as_staged
+      self.package_state = "STAGED"
+    end
+
     def mark_as_failed_to_stage(reason="StagingError")
       self.package_state = "FAILED"
       self.staging_failed_reason = reason
@@ -444,7 +448,6 @@ module VCAP::CloudController
     end
 
     def add_new_droplet(hash)
-      self.package_state = "STAGED" if hash
       self.droplet_hash = hash
       add_droplet(droplet_hash: hash)
       self.save

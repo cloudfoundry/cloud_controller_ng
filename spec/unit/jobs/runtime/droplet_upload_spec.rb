@@ -32,14 +32,6 @@ module VCAP::CloudController
         }
       end
 
-      it "marks the app as staged" do
-        expect {
-          job.perform
-        }.to change {
-          app.refresh.staged?
-        }.from(false).to(true)
-      end
-
       it "makes the app have a downloadable droplet" do
         job.perform
         app.reload

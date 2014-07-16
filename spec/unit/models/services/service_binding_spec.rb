@@ -2,12 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceBinding, type: :model do
-    def fake_app_staging(app)
-      app.package_hash = "abc"
-      app.add_new_droplet("def")
-      expect(app.needs_staging?).to eq(false)
-    end
-
     let(:client) { double('broker client', unbind: nil, deprovision: nil) }
 
     before do
@@ -171,6 +165,14 @@ module VCAP::CloudController
     end
 
     describe "restaging" do
+      def fake_app_staging(app)
+        app.package_hash = "abc"
+        app.add_new_droplet("def")
+        app.mark_as_staged
+        app.save
+        expect(app.needs_staging?).to eq(false)
+      end
+
       let(:app) do
         app = AppFactory.make
         app.state = "STARTED"

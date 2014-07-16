@@ -282,51 +282,53 @@ module VCAP::CloudController
         context "when app staging succeeds" do
           let(:detected_buildpack) { "buildpack detect output" }
 
-          context "and the app was staged and started by the DEA" do
-            context "when no other staging has happened" do
+          context "when no other staging has happened" do
+            before do
+              allow(dea_pool).to receive(:mark_app_started)
+            end
+
+            it "marks the app as staged" do
+              expect { stage }.to change { app.refresh.staged? }.to(true)
+            end
+
+            it "saves the detected buildpack" do
+              expect { stage }.to change { app.refresh.detected_buildpack }.from(nil)
+            end
+
+            context "when an admin buildpack is used" do
+              let(:admin_buildpack) { Buildpack.make(name: "buildpack-name") }
+              let(:buildpack_key) { admin_buildpack.key }
               before do
-                allow(dea_pool).to receive(:mark_app_started)
+                app.buildpack = admin_buildpack.name
               end
 
-              it "saves the detected buildpack" do
-                expect { stage }.to change { app.refresh.detected_buildpack }.from(nil)
+              it "saves the detected buildpack guid" do
+                expect { stage }.to change { app.refresh.detected_buildpack_guid }.from(nil)
               end
+            end
 
-              context "when an admin buildpack is used" do
-                let(:admin_buildpack) { Buildpack.make(name: "buildpack-name") }
-                let(:buildpack_key) { admin_buildpack.key }
-                before do
-                  app.buildpack = admin_buildpack.name
-                end
+            it "does not clobber other attributes that changed between staging" do
+              # fake out the app refresh as the race happens after it
+              allow(app).to receive(:refresh)
 
-                it "saves the detected buildpack guid" do
-                  expect { stage }.to change { app.refresh.detected_buildpack_guid }.from(nil)
-                end
-              end
+              other_app_ref = App.find(guid: app.guid)
+              other_app_ref.command = "some other command"
+              other_app_ref.save
 
-              it "does not clobber other attributes that changed between staging" do
-                # fake out the app refresh as the race happens after it
-                allow(app).to receive(:refresh)
+              expect { stage }.to_not change {
+                other_app_ref.refresh.command
+              }
+            end
 
-                other_app_ref = App.find(guid: app.guid)
-                other_app_ref.command = "some other command"
-                other_app_ref.save
+            it "marks app started in dea pool" do
+              expect(dea_pool).to receive(:mark_app_started).with({:dea_id => stager_id, :app_id => app.guid})
+              stage
+            end
 
-                expect { stage }.to_not change {
-                  other_app_ref.refresh.command
-                }
-              end
-
-              it "marks app started in dea pool" do
-                expect(dea_pool).to receive(:mark_app_started).with({:dea_id => stager_id, :app_id => app.guid})
-                stage
-              end
-
-              it "calls provided callback" do
-                callback_options = nil
-                stage { |options| callback_options = options }
-                expect(callback_options[:started_instances]).to equal(1)
-              end
+            it "calls provided callback" do
+              callback_options = nil
+              stage { |options| callback_options = options }
+              expect(callback_options[:started_instances]).to equal(1)
             end
           end
 
@@ -336,6 +338,10 @@ module VCAP::CloudController
                 app.staging_task_id = "another-staging-task-id"
                 app.save
               }
+            end
+
+            it "does not mark the app as staged" do
+              expect { stage rescue nil }.not_to change { app.refresh.staged? }
             end
 
             it "raises a StagingError" do

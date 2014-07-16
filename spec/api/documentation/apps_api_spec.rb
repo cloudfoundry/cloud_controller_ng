@@ -158,7 +158,7 @@ resource "Apps", :type => :api do
   get "/v2/apps/:guid/instances" do
     field :guid, "The guid of the app.", required: true
 
-    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: "STARTED", package_hash: "abc") }
+    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: "STARTED", package_hash: "abc", package_state: "STAGED") }
 
     example "Get the instance information for a STARTED App" do
       explanation <<-EOD

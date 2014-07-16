@@ -483,6 +483,7 @@ module VCAP::CloudController
               package_hash: "package-hash",
               instances: 1,
               droplet_hash: "droplet-hash",
+              package_state: "STAGED",
               state: "STARTED")
         end
 
@@ -506,6 +507,7 @@ module VCAP::CloudController
           AppFactory.make(
               package_hash: "package-hash",
               instances: 1,
+              package_state: "STAGED",
               droplet_hash: "droplet-hash")
         end
 
@@ -911,7 +913,7 @@ module VCAP::CloudController
       context "when staging has completed" do
         context "and the app state remains STARTED" do
           it "creates an app usage event with BUILDPACK_SET as the state" do
-            app = AppFactory.make(package_hash: "abc", state: "STARTED")
+            app = AppFactory.make(package_hash: "abc", state: "STARTED", package_state: "STAGED")
             expect {
               app.update_detected_buildpack(detect_output, nil)
             }.to change { AppUsageEvent.count }.by(1)
@@ -1341,20 +1343,6 @@ module VCAP::CloudController
         expect(@updated_apps.first.state).to eq('STOPPED')
         expect(@updated_apps.last.package_state).to eq('PENDING')
         expect(@updated_apps.last.state).to eq('STARTED')
-      end
-    end
-
-    describe "#add_new_droplet" do
-      let(:app) { AppFactory.make }
-
-      it "should set the state to staged" do
-        app.state = "STARTED"
-        app.instances = 1
-        app.package_hash = "abc"
-        expect(app.needs_staging?).to be true
-        app.add_new_droplet("def")
-        expect(app.needs_staging?).to be false
-        expect(app.droplet_hash).to eq("def")
       end
     end
 

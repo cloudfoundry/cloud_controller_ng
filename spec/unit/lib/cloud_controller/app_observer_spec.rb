@@ -49,33 +49,29 @@ module VCAP::CloudController
         end
       end
 
-      context "when the app has a droplet" do
-        before { app.add_new_droplet("abcdef") }
+      it "assumes the app has a buildpack cache and enqueues a job to delete this cache" do
+        expect { AppObserver.deleted(app) }.to change {
+          Delayed::Job.count
+        }.by(1)
 
-        it "enqueue a jobs to delete the buildpack cache" do
-          expect { AppObserver.deleted(app) }.to change {
-            Delayed::Job.count
-          }.by(1)
-
-          job = Delayed::Job.last
-          expect(job.handler).to include(app.guid)
-          expect(job.handler).to include("buildpack_cache_blobstore")
-          expect(job.queue).to eq("cc-generic")
-          expect(job.guid).not_to be_nil
-        end
-
-
+        job = Delayed::Job.last
+        expect(job.handler).to include(app.guid)
+        expect(job.handler).to include("buildpack_cache_blobstore")
+        expect(job.queue).to eq("cc-generic")
+        expect(job.guid).not_to be_nil
       end
 
       context "when the app has a package uploaded" do
         before { app.package_hash = "abcdef" }
 
         it "deletes the app package" do
+          delete_package_jobs = Delayed::Job.where("handler like '%package_blobstore%'")
+
           expect { AppObserver.deleted(app) }.to change {
-            Delayed::Job.count
+            delete_package_jobs.count
           }.by(1)
 
-          job = Delayed::Job.last
+          job = delete_package_jobs.last
           expect(job.handler).to include(app.guid)
           expect(job.handler).to include("package_blobstore")
           expect(job.queue).to eq("cc-generic")

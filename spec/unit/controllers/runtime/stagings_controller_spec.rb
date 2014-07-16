@@ -149,14 +149,6 @@ module VCAP::CloudController
             }.to change { app_obj.refresh.droplet_hash }
           end
 
-          it "marks the app as staged" do
-            expect {
-              post "/staging/droplets/#{app_obj.guid}/upload", upload_req
-            }.to change {
-              app_obj.refresh.staged?
-            }.to(true)
-          end
-
           it "makes the app have a downloadable droplet" do
             post "/staging/droplets/#{app_obj.guid}/upload", upload_req
             app_obj.reload

@@ -18,6 +18,7 @@ module VCAP::CloudController
                                        "state" => "STARTED",
                                        "package_hash" => "package-hash",
                                        "disk_quota" => 1_024,
+                                       "package_state" => "STAGED",
                                        "environment_json" => {
                                          "env-key-3" => "env-value-3",
                                          "env-key-4" => "env-value-4"
@@ -80,14 +81,11 @@ module VCAP::CloudController
 
         it "does not return unstaged apps" do
           unstaged_app = App.make(id: 6, state: "STARTED", package_hash: "brown", package_state: "PENDING")
-          app_with_droplet_uploaded = App.make(id: 7, state: "STARTED", package_hash: "brown", package_state: "STAGED")
-          app_with_droplet_uploaded.add_new_droplet("fake-droplet-hash")
 
           query = StagedAppsQuery.new(100, 0)
           batch = query.all
 
           expect(batch).not_to include(unstaged_app)
-          expect(batch).not_to include(app_with_droplet_uploaded)
         end
 
         it "does not return apps which aren't expected to be started" do

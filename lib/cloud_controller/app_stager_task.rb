@@ -211,6 +211,7 @@ module VCAP::CloudController
 
     def staging_completion(stager_response)
       instance_was_started_by_dea = !!stager_response.droplet_hash
+      @app.mark_as_staged
       @app.update_detected_buildpack(stager_response.detected_buildpack, stager_response.buildpack_key)
       @dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
 

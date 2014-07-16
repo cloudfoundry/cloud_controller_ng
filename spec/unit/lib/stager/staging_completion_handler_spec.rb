@@ -66,6 +66,12 @@ module VCAP::CloudController
       end
 
       describe "success cases" do
+        it "marks the app as staged" do
+          expect {
+            publish_staging_result(success_response)
+          }.to change { staged_app.reload.staged? }.to(true)
+        end
+
         context "when a detected start command is returned" do
           before { success_response["detected_start_command"] = "./some-start-command" }
 

@@ -7,7 +7,7 @@ module VCAP::CloudController
       end
 
       def all
-        apps_with_droplets = App.
+        App.
           where("id > ?", @last_id).
           where("deleted_at IS NULL").
           where("state = ?", "STARTED").
@@ -15,7 +15,6 @@ module VCAP::CloudController
           order(:id).
           limit(@batch_size).
           to_a
-        apps_with_droplets.select { |app| app.detected_start_command.present? }
       end
     end
   end

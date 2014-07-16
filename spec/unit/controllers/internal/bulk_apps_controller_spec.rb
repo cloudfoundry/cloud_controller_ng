@@ -17,8 +17,7 @@ module VCAP::CloudController
     describe "GET", "/internal/bulk/apps" do
       before {
         5.times do |i|
-          app = AppFactory.make(id: i+1, state: "STARTED", package_hash: "package-hash", package_state: "STAGED")
-          app.current_droplet.update_start_command("fake-start-command-#{i}")
+          AppFactory.make(id: i+1, state: "STARTED", package_hash: "package-hash", package_state: "STAGED")
         end
       }
 
@@ -72,20 +71,21 @@ module VCAP::CloudController
 
         it "returns apps that have the desired data" do
           last_app = AppFactory.make({
-            "id" => 6,
-            "state" => "STARTED",
-            "package_hash" => "package-hash",
-            "disk_quota" => 1_024,
-            "environment_json" => {
-              "env-key-3" => "env-value-3",
-              "env-key-4" => "env-value-4"
+            id: 6,
+            state: "STARTED",
+            package_state: "STAGED",
+            package_hash: "package-hash",
+            disk_quota: 1_024,
+            environment_json: {
+                "env-key-3" => "env-value-3",
+                "env-key-4" => "env-value-4"
             },
-            "file_descriptors" => 16_384,
-            "instances" => 4,
-            "memory" => 1_024,
-            "guid" => "app-guid-6",
-            "command" => "start-command-6",
-            "stack" => Stack.make(name: "stack-6"),
+            file_descriptors: 16_384,
+            instances: 4,
+            memory: 1_024,
+            guid: "app-guid-6",
+            command: "start-command-6",
+            stack: Stack.make(name: "stack-6"),
           })
 
           route1 = Route.make(
