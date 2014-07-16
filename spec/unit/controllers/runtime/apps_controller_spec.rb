@@ -522,6 +522,19 @@ module VCAP::CloudController
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match /instances less than 1/
       end
+
+      it "returns state invalid message correctly" do
+        app_hash = {
+          name: Sham.name,
+          space_guid: space.guid,
+          state: 'not a valid state'
+        }
+
+        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(last_response.body).to match /Invalid app state provided/
+      end
     end
 
     describe "events associations (via AppEvents)" do
