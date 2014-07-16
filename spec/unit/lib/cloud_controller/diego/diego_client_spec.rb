@@ -117,8 +117,8 @@ module VCAP::CloudController::Diego
         expected_message = {
             :app_id => app.guid,
             :task_id => staging_task_id,
-            :memory_mb => 2048,
-            :disk_mb => 4096,
+            :memory_mb => app.memory,
+            :disk_mb => app.disk_quota,
             :file_descriptors => app.file_descriptors,
             :environment => client.environment(app),
             :stack => app.stack.name,
