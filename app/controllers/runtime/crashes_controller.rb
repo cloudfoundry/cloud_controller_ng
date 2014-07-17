@@ -6,18 +6,17 @@ module VCAP::CloudController
     get  "#{path_guid}/crashes", :crashes
     def crashes(guid)
       app = find_guid_and_validate_access(:read, guid)
-      instances_reporter = instances_reporter_factory.instances_reporter_for_app(app)
       crashed_instances = instances_reporter.crashed_instances_for_app(app)
       MultiJson.dump(crashed_instances)
     end
 
     protected
 
-    attr_reader :instances_reporter_factory
+    attr_reader :instances_reporter
 
     def inject_dependencies(dependencies)
       super
-      @instances_reporter_factory = dependencies[:instances_reporter_factory]
+      @instances_reporter = dependencies[:instances_reporter]
     end
   end
 end

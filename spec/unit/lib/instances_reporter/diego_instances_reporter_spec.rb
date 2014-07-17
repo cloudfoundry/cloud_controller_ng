@@ -140,6 +140,16 @@ module VCAP::CloudController::InstancesReporter
       end
     end
 
+    describe '#number_of_starting_and_running_instances_for_apps' do
+      let(:app1) { VCAP::CloudController::AppFactory.make(package_hash: 'abc', package_state: 'STAGED', state: 'STARTED', instances: 2) }
+      let(:app2) { VCAP::CloudController::AppFactory.make(package_hash: 'abc', package_state: 'STAGED', state: 'STARTED', instances: 5) }
+
+      it 'returns a hash of app => instance count' do
+        result = subject.number_of_starting_and_running_instances_for_apps([app1, app2])
+        expect(result).to eq({ app1.guid => 2, app2.guid => 4 })
+      end
+    end
+
     describe '#crashed_instances_for_app' do
       it 'returns an array of crashed instances' do
         result = subject.crashed_instances_for_app(app)

@@ -7,8 +7,6 @@ module VCAP::CloudController
     def summary(guid)
       app = find_guid_and_validate_access(:read, guid)
 
-      instances_reporter = instances_reporter_factory.instances_reporter_for_app(app)
-
       app_info = {
         guid: app.guid,
         name: app.name,
@@ -24,11 +22,11 @@ module VCAP::CloudController
 
     protected
 
-    attr_reader :instances_reporter_factory
+    attr_reader :instances_reporter
 
     def inject_dependencies(dependencies)
       super
-      @instances_reporter_factory = dependencies[:instances_reporter_factory]
+      @instances_reporter = dependencies[:instances_reporter]
     end
   end
 end

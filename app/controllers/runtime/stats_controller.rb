@@ -5,7 +5,7 @@ module VCAP::CloudController
 
     get  "#{path_guid}/stats", :stats
     def stats(guid, opts = {})
-      app                = find_guid_and_validate_access(:read, guid)
+      app = find_guid_and_validate_access(:read, guid)
 
       if app.stopped?
         msg = "Request failed for app: #{app.name}"
@@ -14,18 +14,16 @@ module VCAP::CloudController
         raise ApiError.new_from_details('StatsError', msg)
       end
 
-      instances_reporter = instances_reporter_factory.instances_reporter_for_app(app)
-      stats              = instances_reporter.stats_for_app(app)
-      [HTTP::OK, MultiJson.dump(stats)]
+      [HTTP::OK, MultiJson.dump(instances_reporter.stats_for_app(app))]
     end
 
     protected
 
-    attr_reader :instances_reporter_factory
+    attr_reader :instances_reporter
 
     def inject_dependencies(dependencies)
       super
-      @instances_reporter_factory = dependencies[:instances_reporter_factory]
+      @instances_reporter = dependencies[:instances_reporter]
     end
   end
 end

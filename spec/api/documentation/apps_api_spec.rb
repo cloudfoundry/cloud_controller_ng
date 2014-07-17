@@ -177,8 +177,7 @@ resource "Apps", :type => :api do
       }
 
       instances_reporter = double(:instances_reporter)
-      instances_reporter_factory = CloudController::DependencyLocator.instance.instances_reporter_factory
-      allow(instances_reporter_factory).to receive(:instances_reporter_for_app).and_return(instances_reporter)
+      allow(CloudController::DependencyLocator.instance).to receive(:instances_reporter).and_return(instances_reporter)
       allow(instances_reporter).to receive(:all_instances_for_app).and_return(instances)
 
       client.get "/v2/apps/#{app_obj.guid}/instances", {}, headers
@@ -221,8 +220,7 @@ resource "Apps", :type => :api do
       }
 
       instances_reporter = double(:instances_reporter)
-      instances_reporter_factory = CloudController::DependencyLocator.instance.instances_reporter_factory
-      allow(instances_reporter_factory).to receive(:instances_reporter_for_app).and_return(instances_reporter)
+      allow(CloudController::DependencyLocator.instance).to receive(:instances_reporter).and_return(instances_reporter)
       allow(instances_reporter).to receive(:stats_for_app).and_return(stats)
 
       client.get "/v2/apps/#{app_obj.guid}/stats", {}, headers

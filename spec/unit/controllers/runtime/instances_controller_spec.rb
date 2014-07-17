@@ -14,8 +14,7 @@ module VCAP::CloudController
         let(:instances_reporter) { double(:instances_reporter) }
 
         before do
-          instances_reporter_factory = CloudController::DependencyLocator.instance.instances_reporter_factory
-          allow(instances_reporter_factory).to receive(:instances_reporter_for_app).and_return(instances_reporter)
+          allow(CloudController::DependencyLocator.instance).to receive(:instances_reporter).and_return(instances_reporter)
         end
 
         it "returns 400 when there is an error finding the instances" do

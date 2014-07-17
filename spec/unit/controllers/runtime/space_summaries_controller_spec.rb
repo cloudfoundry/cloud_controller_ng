@@ -9,18 +9,16 @@ module VCAP::CloudController
     let(:first_service) {  ManagedServiceInstance.make(space: space) }
     let(:second_service) {  ManagedServiceInstance.make(space: space) }
 
-    let(:instances_reporter_factory) { double(:instances_reporter_factory) }
     let(:instances_reporter) { double(:instances_reporter) }
-    let(:running_instances) { 5 }
+    let(:running_instances) {{ app_obj.guid => 5 }}
 
     before do
       ServiceBinding.make(app: app_obj, service_instance: first_service)
       ServiceBinding.make(app: app_obj, service_instance: second_service)
 
-      allow(instances_reporter_factory).to receive(:instances_reporter_for_app).and_return(instances_reporter)
-      allow(instances_reporter).to receive(:number_of_starting_and_running_instances_for_app).
-        and_return(running_instances)
-      allow_any_instance_of(SpaceSummariesController).to receive(:instances_reporter_factory).and_return(instances_reporter_factory)
+      allow(CloudController::DependencyLocator.instance).to receive(:instances_reporter).and_return(instances_reporter)
+      allow(instances_reporter).to receive(:number_of_starting_and_running_instances_for_apps).and_return(running_instances)
+      allow_any_instance_of(SpaceSummariesController).to receive(:instances_reporter).and_return(instances_reporter)
       app_obj.reload
     end
 

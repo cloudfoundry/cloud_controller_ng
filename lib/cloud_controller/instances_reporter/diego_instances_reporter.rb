@@ -20,6 +20,12 @@ module VCAP::CloudController::InstancesReporter
       fill_unreported_instances_with_down_instances(result, app)
     end
 
+    def number_of_starting_and_running_instances_for_apps(apps)
+      apps.each_with_object({}) do |app, result|
+        result.update(app.guid => number_of_starting_and_running_instances_for_app(app))
+      end
+    end
+
     def number_of_starting_and_running_instances_for_app(app)
       return 0 unless app.started?
       instances = diego_client.lrp_instances(app)

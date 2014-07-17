@@ -315,9 +315,9 @@ describe CloudController::DependencyLocator do
     end
   end
 
-  describe "#instances_reporter_factory" do
-    it "returns the instances reporter factory" do
-      expect(locator.instances_reporter_factory).to be_an_instance_of(VCAP::CloudController::InstancesReporter::InstancesReporterFactory)
+  describe "#instances_reporter" do
+    it "returns the instances reporter" do
+      expect(locator.instances_reporter).to be_an_instance_of(VCAP::CloudController::InstancesReporter::CompositeInstancesReporter)
     end
   end
 end

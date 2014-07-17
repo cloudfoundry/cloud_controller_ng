@@ -8,6 +8,7 @@ module CCInitializers
 
       %w(
         healthy_instances
+        healthy_instances_bulk
         find_crashes
         find_flapping_indices
       ).each do |method_name|

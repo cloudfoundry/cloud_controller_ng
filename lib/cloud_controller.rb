@@ -88,6 +88,6 @@ require "cloud_controller/upload_buildpack"
 
 require "cloud_controller/instances_reporter/legacy_instances_reporter"
 require "cloud_controller/instances_reporter/diego_instances_reporter"
-require "cloud_controller/instances_reporter/instances_reporter_factory"
+require "cloud_controller/instances_reporter/composite_instances_reporter"
 
 require "services"

@@ -56,7 +56,7 @@ module CloudController
                               when 'InstancesController', 'SpaceSummariesController', 'AppSummariesController',
                                    'CrashesController', 'StatsController'
                                 {
-                                  instances_reporter_factory: dependency_locator.instances_reporter_factory,
+                                  instances_reporter:   dependency_locator.instances_reporter,
                                 }
                               when 'AppBitsDownloadController'
                                 {

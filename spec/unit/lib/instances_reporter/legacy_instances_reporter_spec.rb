@@ -55,7 +55,60 @@ module VCAP::CloudController::InstancesReporter
           expect(result).to eq(5)
         end
       end
+    end
 
+    describe '#number_of_starting_and_running_instances_for_apps' do
+      let(:running_apps) do
+        3.times.map do
+          VCAP::CloudController::AppFactory.make(:state => "STARTED", :package_state => "STAGED", :package_hash => "abc")
+        end
+      end
+
+      let(:stopped_apps) do
+        3.times.map do
+          VCAP::CloudController::AppFactory.make(:state => "STOPPED", :package_state => "STAGED", :package_hash => "xyz")
+        end
+      end
+
+      let(:apps) { running_apps + stopped_apps }
+
+      describe 'stopped apps' do
+        before do
+          allow(health_manager_client).to receive(:healthy_instances_bulk) do |args|
+            stopped_apps.each { |stopped| expect(args).not_to include(stopped) }
+            {}
+          end
+        end
+
+        it 'should not ask the health manager about active instances for stopped apps' do
+          subject.number_of_starting_and_running_instances_for_apps(stopped_apps)
+        end
+
+        it 'should return 0 instances for apps that are stopped' do
+          result = subject.number_of_starting_and_running_instances_for_apps(stopped_apps)
+          expect(result.length).to be(3)
+          stopped_apps.each { |app| expect(result[app.guid]).to eq(0) }
+        end
+      end
+
+      describe 'running apps' do
+        before do
+          allow(health_manager_client).to receive(:healthy_instances_bulk) do |apps|
+            apps.reduce({}) do |hash, app|
+              hash[app.guid] = 3
+              hash
+            end
+          end
+        end
+
+        it 'should ask the health manager for active instances for running apps' do
+          expect(health_manager_client).to receive(:healthy_instances_bulk).with(running_apps)
+
+          result = subject.number_of_starting_and_running_instances_for_apps(running_apps)
+          expect(result.length).to be(3)
+          running_apps.each { |app| expect(result[app.guid]).to eq(3) }
+        end
+      end
     end
 
     describe '#crashed_instances_for_app' do

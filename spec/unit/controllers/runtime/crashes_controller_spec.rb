@@ -19,8 +19,7 @@ module VCAP::CloudController
         end
 
         before do
-          instances_reporter_factory = CloudController::DependencyLocator.instance.instances_reporter_factory
-          allow(instances_reporter_factory).to receive(:instances_reporter_for_app).and_return(instances_reporter)
+          allow(CloudController::DependencyLocator.instance).to receive(:instances_reporter).and_return(instances_reporter)
           allow(instances_reporter).to receive(:crashed_instances_for_app).and_return(crashed_instances)
         end
 

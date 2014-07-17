@@ -37,10 +37,8 @@ module VCAP::CloudController
     describe "GET /v2/apps/:id/summary" do
       before do
         instances_reporter = double(:instances_reporter)
+        allow(CloudController::DependencyLocator.instance).to receive(:instances_reporter).and_return(instances_reporter)
         allow(instances_reporter).to receive(:number_of_starting_and_running_instances_for_app).and_return(@app.instances)
-
-        instances_reporter_factory = CloudController::DependencyLocator.instance.instances_reporter_factory
-        allow(instances_reporter_factory).to receive(:instances_reporter_for_app).and_return(instances_reporter)
 
         get "/v2/apps/#{@app.guid}/summary", {}, admin_headers
       end

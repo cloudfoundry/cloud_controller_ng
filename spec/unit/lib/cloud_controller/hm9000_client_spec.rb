@@ -62,91 +62,208 @@ module VCAP::CloudController
     subject(:hm9000_client) { VCAP::CloudController::HM9000Client.new(message_bus, hm9000_config) }
 
     before do
-      allow(message_bus).to receive(:synchronous_request) do |subject, data, options|
-        next unless subject == "app.state"
-        expect(options).to include(timeout: 2)
+      allow(message_bus).to receive(:synchronous_request) do |subject, message, options|
+        case subject
+        when "app.state"
+          expect(options).to include(timeout: 2)
 
-        if data[:droplet] == app0.guid && data[:version] == app0.version
-          if !app0_request_should_fail
-            [app_0_api_response]
+          if message[:droplet] == app0.guid && message[:version] == app0.version
+            if !app0_request_should_fail
+              [app_0_api_response]
+            else
+              [{}]
+            end
+          elsif message[:droplet] == app1.guid && message[:version] == app1.version
+            [app_1_api_response]
+          elsif message[:droplet] == app2.guid && message[:version] == app2.version
+            [app_2_api_response]
           else
             [{}]
           end
-        elsif data[:droplet] == app1.guid && data[:version] == app1.version
-          [app_1_api_response]
-        elsif data[:droplet] == app2.guid && data[:version] == app2.version
-          [app_2_api_response]
-        else
-          [{}]
+        when "app.state.bulk"
+          expect(options).to include(timeout: 2)
+
+          result = {}
+          message.each do |app_request|
+            result[app_request[:droplet]] =
+              if app_request[:droplet] == app0.guid && app_request[:version] == app0.version
+                if !app0_request_should_fail
+                  app_0_api_response
+                else
+                  {}
+                end
+              elsif app_request[:droplet] == app1.guid && app_request[:version] == app1.version
+                app_1_api_response
+              elsif app_request[:droplet] == app2.guid && app_request[:version] == app2.version
+                app_2_api_response
+              else
+                {}
+              end
+          end
+          [result]
         end
       end
     end
 
     describe "healthy_instances" do
-      context "single app" do
-        context "with a single desired and running instance" do
-          it "should return the correct number of healthy instances" do
-            expect(hm9000_client.healthy_instances(app0)).to eq(1)
+
+    end
+
+    describe "healthy_instances" do
+      it "makes a request to healthy_instances_count with the app" do
+        expect(subject).to receive(:app_state_request).with(app0).and_call_original
+        expect(subject.healthy_instances(app0)).to eq(1)
+      end
+
+      it "uses the hm9000 legacy api" do
+        expect(message_bus).to receive(:synchronous_request).with("app.state", anything, anything)
+        subject.healthy_instances(app0)
+      end
+
+      context "with a single desired and running instance" do
+        it "should return the correct number of healthy instances" do
+          expect(hm9000_client.healthy_instances(app0)).to eq(1)
+        end
+      end
+
+      context "when the api response is garbage" do
+        it "should return -1" do
+          allow(message_bus).to receive(:synchronous_request).and_return([], [{}], [{foo: "bar"}])
+          3.times { expect(hm9000_client.healthy_instances(app0)).to eq(-1) }
+        end
+      end
+
+      context "with multiple desired instances" do
+        let(:app0instances) { 3 }
+
+        context "when all the desired instances are running" do
+          let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }, { index: 1, state: "RUNNING" }, { index: 2, state: "STARTING" }]) }
+
+          it "should return the number of running instances" do
+            expect(hm9000_client.healthy_instances(app0)).to eq(3)
           end
         end
 
-        context "when the request fails" do
-          let(:app0_request_should_fail) { true }
+        context "when only some of the desired instances are running" do
+          let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }, { index: 2, state: "STARTING" }]) }
 
-          it "should return 0" do
-            expect(hm9000_client.healthy_instances(app0)).to eq(0)
+          it "should return the number of running instances in the desired range" do
+            expect(hm9000_client.healthy_instances(app0)).to eq(2)
           end
         end
 
-        context "with multiple desired instances" do
-          let(:app0instances) { 3 }
+        context "when there are extra instances outside of the desired range" do
+          let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }, { index: 2, state: "STARTING" }, { index: 3, state: "RUNNING" }]) }
 
-          context "when all the desired instances are running" do
-            let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }, { index: 1, state: "RUNNING" }, { index: 2, state: "STARTING" }]) }
-
-            it "should return the number of running instances" do
-              expect(hm9000_client.healthy_instances(app0)).to eq(3)
-            end
-          end
-
-          context "when only some of the desired instances are running" do
-            let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }, { index: 2, state: "STARTING" }]) }
-
-            it "should return the number of running instances in the desired range" do
-              expect(hm9000_client.healthy_instances(app0)).to eq(2)
-            end
-          end
-
-          context "when there are extra instances outside of the desired range" do
-            let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }, { index: 2, state: "STARTING" }, { index: 3, state: "RUNNING" }]) }
-
-            it "should only return the number of running instances in the desired range" do
-              expect(hm9000_client.healthy_instances(app0)).to eq(2)
-            end
-          end
-
-          context "when there are multiple instances running on the same index" do
-            let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }, { index: 2, state: "STARTING" }, { index: 2, state: "RUNNING" }]) }
-
-            it "should only count one of the instances" do
-              expect(hm9000_client.healthy_instances(app0)).to eq(2)
-            end
-          end
-
-          context "when some of the desired instances are crashed" do
-            let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }, { index: 1, state: "CRASHED" }, { index: 2, state: "STARTING" }, { index: 2, state: "CRASHED" }]) }
-
-            it "should not count the crashed instances" do
-              expect(hm9000_client.healthy_instances(app0)).to eq(2)
-            end
+          it "should only return the number of running instances in the desired range" do
+            expect(hm9000_client.healthy_instances(app0)).to eq(2)
           end
         end
 
-        context "when, mysteriously, a response is received that is not empty but is missing instance heartbeats" do
-          let(:app_0_api_response) { {droplet: app0.guid, version: app0.version } }
+        context "when there are multiple instances running on the same index" do
+          let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }, { index: 2, state: "STARTING" }, { index: 2, state: "RUNNING" }]) }
 
-          it "should return 0" do
-            expect(hm9000_client.healthy_instances(app0)).to eq(0)
+          it "should only count one of the instances" do
+            expect(hm9000_client.healthy_instances(app0)).to eq(2)
+          end
+        end
+
+        context "when some of the desired instances are crashed" do
+          let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }, { index: 1, state: "CRASHED" }, { index: 2, state: "STARTING" }, { index: 2, state: "CRASHED" }]) }
+
+          it "should not count the crashed instances" do
+            expect(hm9000_client.healthy_instances(app0)).to eq(2)
+          end
+        end
+      end
+
+      context "when, mysteriously, a response is received that is not empty but is missing instance heartbeats" do
+        let(:app_0_api_response) { {droplet: app0.guid, version: app0.version } }
+
+        it "should return 0" do
+          expect(hm9000_client.healthy_instances(app0)).to eq(-1)
+        end
+      end
+    end
+
+    describe "healthy_instances_bulk" do
+      [false, true].each do |available|
+        describe "when the bulk api is #{available ? '' : 'not'} available" do
+          before { allow(subject).to receive(:bulk_api_available).and_return(available) }
+
+          context "when the provided app list is empty" do
+            it "returns an empty hash" do
+              expect(subject.healthy_instances_bulk([])).to eq({})
+            end
+          end
+
+          context "when the provided app list is nil" do
+            it "returns and empty hash" do
+              expect(subject.healthy_instances_bulk(nil)).to eq({})
+            end
+          end
+
+          context "when called with multiple apps" do
+            it "returns a hash of app guid => running instance count" do
+              expect(subject.healthy_instances_bulk([app0, app1, app2])).to eq({
+                app0.guid => 1, app1.guid => 0, app2.guid => 1
+              })
+            end
+          end
+        end
+      end
+
+      describe "conditionally using the bulk api" do
+        context "when the bulk api is available" do
+          before { allow(subject).to receive(:bulk_api_available).and_return(true) }
+
+          it "uses the hm9000 app.state.bulk api" do
+            expect(message_bus).to receive(:synchronous_request).with("app.state.bulk", anything, anything)
+            subject.healthy_instances_bulk([app0, app1, app2])
+          end
+        end
+
+        context "when the bulk api is not available" do
+          before { allow(subject).to receive(:bulk_api_available).and_return(false) }
+
+          it "does not try to use the hm9000 app.state.bulk api" do
+            expect(message_bus).to_not receive(:synchronous_request).with("app.state.bulk", anything, anything)
+            subject.healthy_instances_bulk([app0, app1, app2])
+          end
+
+          it "makes multiple calls to the hm900.app.state api" do
+            expect(message_bus).to receive(:synchronous_request).exactly(3).times.with("app.state", anything, anything)
+            subject.healthy_instances_bulk([app0, app1, app2])
+          end
+        end
+      end
+
+      describe "batching bulk api requests to avoid exceeding nats message length" do
+        before { allow(subject).to receive(:bulk_api_available).and_return(true) }
+
+        context "when the application list is less than or equal to APP_STATE_BULK_MAX" do
+          before { stub_const("VCAP::CloudController::HM9000Client::APP_STATE_BULK_MAX_APPS", 3) }
+
+          it "makes a single request via the hm9000 bulk api" do
+            expect(message_bus).to receive(:synchronous_request).once.with("app.state.bulk", anything, anything)
+            subject.healthy_instances_bulk([app0, app1, app2])
+          end
+        end
+
+        context "when the applications list is longer than APP_STATE_BULK_MAX" do
+          before { stub_const("VCAP::CloudController::HM9000Client::APP_STATE_BULK_MAX_APPS", 2) }
+
+          it "makes a multiple requests via the hm9000 bulk api" do
+            expect(message_bus).to receive(:synchronous_request).exactly(2).times.with("app.state.bulk", anything, anything)
+            subject.healthy_instances_bulk([app0, app1, app2])
+          end
+
+          it "does not send more than APP_STATE_BULK_MAX_APPS apps per request" do
+            expect(message_bus).to receive(:synchronous_request).exactly(2).times.with("app.state.bulk", anything, anything) do |_, message, _|
+              expect(message.length <= 2)
+              [{}]
+            end
+            subject.healthy_instances_bulk([app0, app1, app2])
           end
         end
       end

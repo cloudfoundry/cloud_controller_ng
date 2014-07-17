@@ -5,18 +5,18 @@ module VCAP::CloudController
 
     get "#{path_guid}/summary", :summary
     def summary(guid)
-      space      = find_guid_and_validate_access(:read, guid)
+      space = find_guid_and_validate_access(:read, guid)
 
       MultiJson.dump(space_summary(space), pretty: true)
     end
 
     protected
 
-    attr_reader :instances_reporter_factory
+    attr_reader :instances_reporter
 
     def inject_dependencies(dependencies)
       super
-      @instances_reporter_factory = dependencies[:instances_reporter_factory]
+      @instances_reporter = dependencies[:instances_reporter]
     end
 
     private
@@ -31,15 +31,15 @@ module VCAP::CloudController
     end
 
     def app_summary(space)
+      instances = instances_reporter.number_of_starting_and_running_instances_for_apps(space.apps)
       space.apps.collect do |app|
-        instances_reporter = instances_reporter_factory.instances_reporter_for_app(app)
         {
           guid:              app.guid,
           urls:              app.routes.map(&:fqdn),
           routes:            app.routes.map(&:as_summary_json),
           service_count:     app.service_bindings_dataset.count,
           service_names:     app.service_bindings_dataset.map(&:service_instance).map(&:name),
-          running_instances: instances_reporter.number_of_starting_and_running_instances_for_app(app),
+          running_instances: instances[app.guid],
         }.merge(app.to_hash)
       end
     end
