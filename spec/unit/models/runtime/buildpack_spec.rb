@@ -150,6 +150,11 @@ module VCAP::CloudController
     end
 
     describe ".create" do
+      it "has a guid when constructed" do
+        buildpack = described_class.new
+        expect(buildpack.guid).to be
+      end
+
       context "with a specified position" do
         it "creates a buildpack entry at the lowest position" do
           expect {
