@@ -3,10 +3,8 @@ module VCAP::CloudController
     def create?(route)
       return true if admin_user?
       return false if route.in_suspended_org?
-      route.space.organization.managers.include?(context.user) ||
-        [:managers, :developers].any? do |type|
-          route.space.send(type).include?(context.user)
-        end
+      route.space.developers.include?(context.user) ||
+        route.space.managers.include?(context.user)
     end
 
     def update?(route)

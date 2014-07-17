@@ -19,7 +19,7 @@ module VCAP::CloudController
 
     context 'organization manager' do
       before { org.add_manager(user) }
-      it_behaves_like :full_access
+      it_behaves_like :read_only
 
       context 'when the organization is suspended' do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
