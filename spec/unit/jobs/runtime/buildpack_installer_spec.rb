@@ -100,6 +100,22 @@ module VCAP::CloudController
         it "knows its job name" do
           expect(job.job_name_in_configuration).to equal(:buildpack_installer)
         end
+
+        context "when the job raises an exception" do
+          let(:error) { StandardError.new("same message") }
+          let(:logger) { double(:logger) }
+
+          before do
+            allow(Steno).to receive(:logger).and_return(logger)
+            allow(logger).to receive(:info).and_raise(error) # just a way to trigger an exception when calling #perform
+            allow(logger).to receive(:error)
+          end
+
+          it "logs the exception and re-raises the exception" do
+            expect { job.perform }.to raise_error(error, "same message")
+            expect(logger).to have_received(:error).with(/Buildpack .* failed to install or update/)
+          end
+        end
       end
     end
   end

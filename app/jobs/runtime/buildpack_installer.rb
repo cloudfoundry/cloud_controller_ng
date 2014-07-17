@@ -35,6 +35,9 @@ module VCAP::CloudController
           end
 
           logger.info "Buildpack #{name} installed or updated"
+        rescue => e
+          logger.error("Buildpack #{name} failed to install or update. Error: #{e.inspect}")
+          raise e
         end
 
         def max_attempts
