@@ -2,10 +2,10 @@ desc "Runs all specs"
 task spec: %w[
               db:pick
               db:recreate
-              spec:outer
               spec:unit:fast
-              spec:unit:lib
               spec:unit:controllers
+              spec:unit:lib
+              spec:outer
             ]
 
 namespace :spec do
