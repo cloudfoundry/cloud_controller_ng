@@ -200,6 +200,21 @@ module VCAP::Services
           expect(request).to have_been_made
           expect(response).to be_nil
         end
+
+        [404, 410].each do |status_code|
+          context "when the API returns #{status_code}" do
+            it 'should swallow the error' do
+              request = stub_request(:delete, unbind_url).
+                with(body: expected_request_body, headers: expected_request_headers).
+                to_return(status: status_code, body: '{"code": 98765, "description": "not exist"}')
+
+              response = client.unbind(instance_id, binding_id, binding_options)
+
+              expect(request).to have_been_made
+              expect(response).to be_nil
+            end
+          end
+        end
       end
 
       describe '#deprovision' do
@@ -215,6 +230,21 @@ module VCAP::Services
 
           expect(request).to have_been_made
           expect(response).to be_nil
+        end
+
+        [404, 410].each do |status_code|
+          context "when the API returns #{status_code}" do
+            it 'should swallow the error' do
+              request = stub_request(:delete, deprovision_url).
+                with(headers: expected_request_headers).
+                to_return(status: status_code, body: '{"code": 87654, "description": "not exist"}')
+
+              response = client.deprovision(instance_id)
+
+              expect(request).to have_been_made
+              expect(response).to be_nil
+            end
+          end
         end
       end
 

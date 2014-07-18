@@ -77,6 +77,11 @@ module VCAP::Services
             return MultiJson.load(response.body)
           end
         else
+          if (req_class == "Delete") && ([404, 410].include?(response.code.to_i))
+            logger.warn("Already deleted: #{uri.to_s}")
+            return nil
+          end
+
           begin
             hash = MultiJson.load(response.body)
           rescue MultiJson::ParseError
