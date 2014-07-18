@@ -120,5 +120,31 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "DELETE /v2/apps/:id/instances/:index" do
+      let(:app_obj) { AppFactory.make(state: "STARTED", instances: 2) }
+
+      context "as a developer or space manager" do
+        let(:user) { make_developer_for_space(app_obj.space) }
+
+        it "has the dea stop the instance at the given index" do
+          allow(DeaClient).to receive(:stop_indices)
+
+          delete "/v2/apps/#{app_obj.guid}/instances/1", "", headers_for(user)
+
+          expect(last_response.status).to eq(204)
+          expect(DeaClient).to have_received(:stop_indices).with(app_obj, [1])
+        end
+      end
+
+      context "as a non-developer" do
+        let(:user) { make_user_for_space(app_obj.space) }
+
+        it "returns 403" do
+          delete "/v2/apps/#{app_obj.guid}/instances/1", "", headers_for(user)
+          expect(last_response.status).to eq(403)
+        end
+      end
+    end
   end
 end

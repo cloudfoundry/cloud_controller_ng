@@ -23,7 +23,7 @@ resource 'Apps', :type => :api do
 
   authenticated_request
 
-  field :guid, 'The guid of the app.', required: true
+  parameter :guid, "The guid of the App"
   let(:async) { true }
   let(:app_bits_put_params) do
     {
@@ -47,7 +47,7 @@ resource 'Apps', :type => :api do
       If false, the request will block until the bits are persisted synchronously.
       Defaults to false.
     eos
-    field :async, async_description, required: false, example_values: [true]
+    parameter :async, async_description
 
     resources_desc = <<-eos
       Fingerprints of the application bits that have previously been pushed to Cloud Foundry.

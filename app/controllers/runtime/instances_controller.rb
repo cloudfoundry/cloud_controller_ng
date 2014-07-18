@@ -25,6 +25,14 @@ module VCAP::CloudController
       MultiJson.dump(instances)
     end
 
+    delete "#{path_guid}/instances/:index", :kill_instance
+    def kill_instance(guid, index)
+      app = find_guid_and_validate_access(:update, guid)
+
+      DeaClient.stop_indices(app, [index.to_i])
+      [HTTP::NO_CONTENT, nil]
+    end
+
     protected
 
     attr_reader :instances_reporter
