@@ -29,17 +29,39 @@ module VCAP::CloudController
       end
 
       it "includes login url when configured" do
-        TestConfig.override(:login => {:url => "login_url"})
+        TestConfig.override(:login => { :url => "login_url" })
         get "/v2/info", {}, {}
         hash = MultiJson.load(last_response.body)
         expect(hash['authorization_endpoint']).to eq("login_url")
       end
 
       it "includes the logging endpoint when configured" do
-        TestConfig.override(:loggregator => {:url => "loggregator_url"})
+        TestConfig.override(:loggregator => { :url => "loggregator_url" })
         get "/v2/info", {}, {}
         hash = MultiJson.load(last_response.body)
         expect(hash['logging_endpoint']).to eq("loggregator_url")
+      end
+
+      describe "custom fields" do
+        context "without custom fields in config" do
+          it "does not have custom fields in the hash" do
+            get "/v2/info"
+            hash = MultiJson.load(last_response.body)
+            expect(hash).not_to have_key("custom")
+          end
+        end
+
+        context "with custom fields in config" do
+          before { TestConfig.override(:info => { :custom => { :foo => "bar", :baz => "foobar" } }) }
+
+          it "contains the custom fields" do
+            get "/v2/info"
+
+            hash = MultiJson.load(last_response.body)
+            expect(hash).to have_key("custom")
+            expect(hash["custom"]).to eq({ "foo" => "bar", "baz" => "foobar" })
+          end
+        end
       end
     end
   end

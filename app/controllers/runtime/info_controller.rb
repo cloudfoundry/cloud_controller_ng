@@ -19,6 +19,10 @@ module VCAP::CloudController
         info[:logging_endpoint] = @config[:loggregator][:url]
       end
 
+      if @config[:info][:custom]
+        info[:custom] = @config[:info][:custom]
+      end
+
       if user
         info[:user] = user.guid
       end

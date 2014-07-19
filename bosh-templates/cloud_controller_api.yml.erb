@@ -95,6 +95,12 @@ info:
   version: <%= p("version") %>
   support_address: <%= p("support_address") %>
   description: <%= p("description") %>
+<% if_p("cc.info.custom") do |custom| %>
+  custom:
+  <% custom.each do |key, value| %>
+    <%= key %>: <%= value %>
+  <% end %>
+<% end %>
 
 <% if_p("cc.directories") do %>
 directories:<% p("cc.directories").each do |key, value| %>
