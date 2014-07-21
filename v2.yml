@@ -408,6 +408,11 @@
   http_code: 400
   message: "Instances error: %s"
 
+220002:
+  name: InstancesUnavailable
+  http_code: 503
+  message: "Instances information unavailable: %s"
+
 230001:
   name: BillingEventQueryInvalid
   http_code: 400
