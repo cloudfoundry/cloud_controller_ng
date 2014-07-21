@@ -18,6 +18,9 @@ module VCAP::CloudController
       }.merge(app.to_hash)
 
       MultiJson.dump(app_info)
+
+    rescue InstancesReporter::InstancesUnavailable => e
+      raise VCAP::Errors::ApiError.new_from_details("InstancesUnavailable", e.to_s)
     end
 
     protected

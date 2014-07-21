@@ -45,6 +45,16 @@ module VCAP::CloudController::InstancesReporter
         expect(result[5][:state]).to eq('DOWN')
         expect(result[6][:state]).to eq('DOWN')
       end
+
+      context "when diego is unavailable" do
+        before do
+          allow(diego_client).to receive(:lrp_instances).and_raise(VCAP::CloudController::Diego::DiegoUnavailable)
+        end
+
+        it "raises an InstancesUnavailable exception" do
+          expect { subject.all_instances_for_app(app) }.to raise_error(InstancesUnavailable, /Diego/)
+        end
+      end
     end
 
     describe '#number_of_starting_and_running_instances_for_app' do
@@ -137,6 +147,18 @@ module VCAP::CloudController::InstancesReporter
             expect(result).to eq(2)
           end
         end
+
+        context "when diego is unavailable" do
+          before do
+            allow(diego_client).to receive(:lrp_instances).and_raise(VCAP::CloudController::Diego::DiegoUnavailable)
+          end
+
+          it "raises an InstancesUnavailable exception" do
+            expect {
+              subject.number_of_starting_and_running_instances_for_app(app)
+            }.to raise_error(InstancesUnavailable, /Diego/)
+          end
+        end
       end
     end
 
@@ -148,6 +170,18 @@ module VCAP::CloudController::InstancesReporter
         result = subject.number_of_starting_and_running_instances_for_apps([app1, app2])
         expect(result).to eq({ app1.guid => 2, app2.guid => 4 })
       end
+
+      context "when diego is unavailable" do
+        before do
+          allow(diego_client).to receive(:lrp_instances).and_raise(VCAP::CloudController::Diego::DiegoUnavailable)
+        end
+
+        it "raises an InstancesUnavailable exception" do
+          expect {
+            subject.number_of_starting_and_running_instances_for_apps([app1, app2])
+          }.to raise_error(InstancesUnavailable, /Diego/)
+        end
+      end
     end
 
     describe '#crashed_instances_for_app' do
@@ -158,6 +192,18 @@ module VCAP::CloudController::InstancesReporter
         expect(result).to eq([
                                { 'instance' => 'instance-C', 'since' => 3 },
                              ])
+      end
+
+      context "when diego is unavailable" do
+        before do
+          allow(diego_client).to receive(:lrp_instances).and_raise(VCAP::CloudController::Diego::DiegoUnavailable)
+        end
+
+        it "raises an InstancesUnavailable exception" do
+          expect {
+            subject.crashed_instances_for_app(app)
+          }.to raise_error(InstancesUnavailable, /Diego/)
+        end
       end
     end
 
@@ -215,6 +261,18 @@ module VCAP::CloudController::InstancesReporter
         expect(result.length).to eq(app.instances)
         expect(result[5][:state]).to eq('DOWN')
         expect(result[6][:state]).to eq('DOWN')
+      end
+
+      context "when diego is unavailable" do
+        before do
+          allow(diego_client).to receive(:lrp_instances).and_raise(VCAP::CloudController::Diego::DiegoUnavailable)
+        end
+
+        it "raises an InstancesUnavailable exception" do
+          expect {
+            subject.stats_for_app(app)
+          }.to raise_error(InstancesUnavailable, /Diego/)
+        end
       end
     end
   end

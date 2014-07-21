@@ -80,35 +80,62 @@ module VCAP::CloudController
           expect(MultiJson.load(last_response.body)["code"]).to eq(170005)
         end
 
-        it "returns the instances" do
-          @app.state = "STARTED"
-          @app.instances = 1
-          @app.save
+        context "when the app is started" do
+          before do
+            @app.state = "STARTED"
+            @app.instances = 1
+            @app.save
 
-          @app.refresh
+            @app.refresh
+          end
 
-          instances = {
-            0 => {
-              :state => "FLAPPING",
-              :since => 1,
-            },
-          }
+          it "returns the instances" do
+            instances = {
+              0 => {
+                :state => "FLAPPING",
+                :since => 1,
+              },
+            }
 
-          expected = {
-            "0" => {
-              "state" => "FLAPPING",
-              "since" => 1,
-            },
-          }
+            expected = {
+              "0" => {
+                "state" => "FLAPPING",
+                "since" => 1,
+              },
+            }
 
-          allow(instances_reporter).to receive(:all_instances_for_app).and_return(instances)
+            allow(instances_reporter).to receive(:all_instances_for_app).and_return(instances)
 
-          get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+            get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
-          expect(last_response.status).to eq(200)
-          expect(MultiJson.load(last_response.body)).to eq(expected)
-          expect(instances_reporter).to have_received(:all_instances_for_app).with(
-              satisfy {|requested_app| requested_app.guid == @app.guid})
+            expect(last_response.status).to eq(200)
+            expect(MultiJson.load(last_response.body)).to eq(expected)
+            expect(instances_reporter).to have_received(:all_instances_for_app).with(
+                satisfy {|requested_app| requested_app.guid == @app.guid})
+          end
+
+          context "when the instances reporter fails" do
+            class SomeInstancesException < RuntimeError
+              def to_s
+                "It's the end of the world as we know it."
+              end
+            end
+
+            before do
+              allow(instances_reporter).to receive(:all_instances_for_app).and_raise(
+                InstancesReporter::InstancesUnavailable.new(SomeInstancesException.new))
+            end
+
+            it "returns '220001 InstancesError'" do
+              get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
+
+              expect(last_response.status).to eq(503)
+
+              parsed_response = MultiJson.load(last_response.body)
+              expect(parsed_response["code"]).to eq(220002)
+              expect(parsed_response["description"]).to eq("Instances information unavailable: It's the end of the world as we know it.")
+            end
+          end
         end
       end
 

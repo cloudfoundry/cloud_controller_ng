@@ -17,6 +17,18 @@ module VCAP::CloudController::Diego
     required :log_guid, String
   end
 
+  class DiegoUnavailable < RuntimeError
+    def initialize(exception = nil)
+      @wrapped_exception = exception
+    end
+
+    def to_s
+      message = "Diego runtime is unavailable."
+      message << " Error: #{@wrapped_exception}" if @wrapped_exception
+      message
+    end
+  end
+
   class DiegoClient
     def initialize(enabled, message_bus, service_registry, blobstore_url_generator)
       @enabled = enabled
@@ -99,6 +111,10 @@ module VCAP::CloudController::Diego
     end
 
     def lrp_instances(app)
+      if @service_registry.tps_addrs.empty?
+        raise DiegoUnavailable
+      end
+
       address = @service_registry.tps_addrs.first
       guid    = lrp_guid(app)
 
@@ -128,6 +144,8 @@ module VCAP::CloudController::Diego
       logger.info "Returning lrp instances for #{guid}: #{result.inspect}"
 
       result
+    rescue Errno::ECONNREFUSED => e
+      raise DiegoUnavailable.new(e)
     end
 
     def environment(app)

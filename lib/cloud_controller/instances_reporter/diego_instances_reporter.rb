@@ -18,6 +18,8 @@ module VCAP::CloudController::InstancesReporter
       end
 
       fill_unreported_instances_with_down_instances(result, app)
+    rescue VCAP::CloudController::Diego::DiegoUnavailable => e
+      raise InstancesUnavailable.new(e)
     end
 
     def number_of_starting_and_running_instances_for_apps(apps)
@@ -38,6 +40,8 @@ module VCAP::CloudController::InstancesReporter
       end
 
       running_indices.length
+    rescue VCAP::CloudController::Diego::DiegoUnavailable => e
+      raise InstancesUnavailable.new(e)
     end
 
     def crashed_instances_for_app(app)
@@ -54,6 +58,8 @@ module VCAP::CloudController::InstancesReporter
       end
 
       result
+    rescue VCAP::CloudController::Diego::DiegoUnavailable => e
+      raise InstancesUnavailable.new(e)
     end
 
     #TODO: this is only a stub. stats are not yet available from diego.
@@ -77,6 +83,8 @@ module VCAP::CloudController::InstancesReporter
       end
 
       fill_unreported_instances_with_down_instances(result, app)
+    rescue VCAP::CloudController::Diego::DiegoUnavailable => e
+      raise InstancesUnavailable.new(e)
     end
 
     private
