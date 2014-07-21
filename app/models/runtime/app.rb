@@ -133,6 +133,8 @@ module VCAP::CloudController
       AppStopEvent.create_from_app(self) if generate_stop_event?
       AppStartEvent.create_from_app(self) if generate_start_event?
 
+      self.diego = has_diego_run_beta_env?
+
       super
     end
 
@@ -578,6 +580,10 @@ module VCAP::CloudController
     def footprint_changed?
       (column_changed?(:production) || column_changed?(:memory) ||
         column_changed?(:instances))
+    end
+
+    def has_diego_run_beta_env?
+      !!(environment_json && environment_json["CF_DIEGO_RUN_BETA"] == "true")
     end
 
     class << self

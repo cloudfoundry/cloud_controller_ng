@@ -185,8 +185,6 @@ module VCAP::CloudController
           expect(app).to_not be_valid
           expect(app.errors.on(:memory)).to be_present
         end
-
-
       end
 
       describe "instances" do
@@ -1767,6 +1765,23 @@ module VCAP::CloudController
       it "raises error if the app is deleted" do
         app.delete
         expect { app.save }.to raise_error(Errors::ApplicationMissing)
+      end
+    end
+
+    describe "diego flag" do
+      subject { AppFactory.make }
+
+      it "becomes true when the CF_DIEGO_RUN_BETA environment variable is set and saved" do
+        expect(subject.diego).to eq(false)
+
+        subject.environment_json = {"CF_DIEGO_RUN_BETA" => "true"}
+
+        expect(subject.diego).to eq(false)
+
+        subject.save
+        subject.refresh
+
+        expect(subject.diego).to eq(true)
       end
     end
   end
