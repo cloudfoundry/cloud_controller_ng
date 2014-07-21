@@ -33,13 +33,8 @@ env:
     - "ARTIFACTS_AWS_REGION=us-west-1"
     - secure: "E3wLDMLQxIIVxpXA4IPV/pPf/AiHUlcJTvOa1o4Nm5o/c6TDrO/6dR0i183ahhjBzRWAE6no2YGjSGDY6ALZnkVc8DL6UGyAPwy1AMYBSptReOVmZBwbKYWiQOm89Crn7qSUo6tsEvp7CPckTbV9qA1SxGF/gxvvRGoKdYtDBIA=" # ARTIFACTS_AWS_ACCESS_KEY_ID
     - secure: "C+wpbEL7q16vH/V2WmHnw6ZPmVMF74B5RLBYrz0F1WiXOPWh84PGlBjLaNB+/X8X1Aw3AUHaTOtUaf8Exb/FQjzL8bUxgwFRJUOztwfsg+aU1ddGc2MsL8oXamnjSkJZMvEONSHKUG3DpkGctI8sl2gitSwJe6vNQDEjf1xq5ro=" # ARTIFACTS_AWS_SECRET_ACCESS_KEY
+    - secure: "ikEVVNPGAX1NqgBPXdjxcPJ3ihO9TyTtaN4iX3d2Wv0GdlSKgRqtCXrWuttVfYGqSoHHWwvCR3qum7N44akLsntrkcIQXGu6CsTsvqDC+vAKHtC31TVmuTEXZyIYA7455+B+a8nMsrO5LjX1ylucV1ZhGLzA84lMRQYkr6PklK0=" # CODECLIMATE_REPO_TOKEN
   matrix:
-    - DB=postgres TASKS='rubocop spec:outer'
-    - DB=postgres TASKS=spec:unit:fast
-    - DB=postgres TASKS=spec:unit:lib
-    - DB=postgres TASKS=spec:unit:controllers
-
-    - DB=mysql TASKS='rubocop spec:outer'
-    - DB=mysql TASKS=spec:unit:fast
-    - DB=mysql TASKS=spec:unit:lib
-    - DB=mysql TASKS=spec:unit:controllers
+    - DB=postgres TASKS=all
+    - DB=mysql TASKS=all
+    - TASKS=rubocop

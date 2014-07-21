@@ -9,6 +9,10 @@ task spec: %w[
             ]
 
 namespace :spec do
+  task all: "db:pick" do
+    run_specs("spec")
+  end
+
   task api: "db:pick" do
     sh "bundle exec rspec spec/api --format RspecApiDocumentation::ApiFormatter"
   end

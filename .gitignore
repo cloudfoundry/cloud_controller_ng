@@ -8,6 +8,7 @@ bundler
 spec/artifacts
 ci-artifacts-dir
 ci-working-dir
+coverage
 doc
 *.rbc
 *.swp

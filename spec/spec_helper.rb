@@ -5,6 +5,11 @@ require "rubygems"
 require "bundler"
 require "bundler/setup"
 
+if ENV["CODECLIMATE_REPO_TOKEN"]
+  require "codeclimate-test-reporter"
+  CodeClimate::TestReporter.start
+end
+
 require "fakefs/safe"
 require "machinist/sequel"
 require "machinist/object"
@@ -48,8 +53,9 @@ RSpec.configure do |rspec_config|
   rspec_config.include IntegrationSetupHelpers, type: :integration
   rspec_config.include IntegrationSetup, type: :integration
 
+  rspec_config.before(:all) { WebMock.disable_net_connect!(:allow => "codeclimate.com") }
   rspec_config.before(:all, type: :integration) { WebMock.allow_net_connect! }
-  rspec_config.after(:all, type: :integration) { WebMock.disable_net_connect! }
+  rspec_config.after(:all, type: :integration) { WebMock.disable_net_connect!(:allow => "codeclimate.com") }
 
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
 
@@ -61,6 +67,7 @@ RSpec.configure do |rspec_config|
     TestConfig.reset
 
     stub_v1_broker
+    VCAP::CloudController::SecurityContext.clear
   end
 
   rspec_config.around :each do |example|
