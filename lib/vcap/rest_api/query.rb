@@ -73,7 +73,10 @@ module VCAP::RestAPI
     end
 
     def parse
+      v = SecureRandom.uuid
+      query.gsub!(";;", v)
       segments = query.split(";")
+      segments.each {|segment| segment.gsub!(v, ";")}
 
       segments.collect do |segment|
         key, comparison, value = segment.split(/(:|>=|<=|<|>| IN )/, 2)

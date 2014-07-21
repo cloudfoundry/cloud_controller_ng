@@ -382,5 +382,35 @@ module VCAP::RestAPI
         end
       end
     end
+    
+    describe "semicolon escaping" do
+      let!(:one_semi) { VCAP::CloudController::TestModel.make(unique_value: "one_semi;", required_attr: true) }
+      let!(:multiple_semi) { VCAP::CloudController::TestModel.make(unique_value: "two;;semis and one;semi") }
+      let(:queryable_attributes) { Set.new(%w(unique_value required_attr)) }
+
+      describe "#filtered_dataset_from_query_params" do
+        it "matches with a semicolon at the end" do
+          q = "unique_value:one_semi;;"
+          ds = Query.filtered_dataset_from_query_params(VCAP::CloudController::TestModel, VCAP::CloudController::TestModel.dataset, queryable_attributes, :q => q)
+          expect(ds.all).to eq [one_semi]
+        end
+
+        it "matches on multiple semicolons" do
+          q = "unique_value:two;;;;semis and one;;semi"
+          ds = Query.filtered_dataset_from_query_params(VCAP::CloudController::TestModel, VCAP::CloudController::TestModel.dataset, queryable_attributes, :q => q)
+          expect(ds.all).to eq [multiple_semi]
+        end
+
+        it "matches with multiple query params" do
+          q = "unique_value:one_semi;;;required_attr:t"
+          ds = Query.filtered_dataset_from_query_params(VCAP::CloudController::TestModel, VCAP::CloudController::TestModel.dataset, queryable_attributes, :q => q)
+          expect(ds.all).to eq [one_semi]
+
+          q = "unique_value:one_semi;;;required_attr:f"
+          ds = Query.filtered_dataset_from_query_params(VCAP::CloudController::TestModel, VCAP::CloudController::TestModel.dataset, queryable_attributes, :q => q)
+          expect(ds.all).to eq []
+        end
+      end
+    end
   end
 end
