@@ -133,7 +133,10 @@ module VCAP::CloudController
       AppStopEvent.create_from_app(self) if generate_stop_event?
       AppStartEvent.create_from_app(self) if generate_start_event?
 
-      self.diego = has_diego_run_beta_env?
+      # make this conditional for when we remove the diego column later.
+      if self.class.columns.include?(:diego)
+        self.diego = has_diego_run_beta_env?
+      end
 
       super
     end
