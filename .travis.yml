@@ -35,6 +35,6 @@ env:
     - secure: "C+wpbEL7q16vH/V2WmHnw6ZPmVMF74B5RLBYrz0F1WiXOPWh84PGlBjLaNB+/X8X1Aw3AUHaTOtUaf8Exb/FQjzL8bUxgwFRJUOztwfsg+aU1ddGc2MsL8oXamnjSkJZMvEONSHKUG3DpkGctI8sl2gitSwJe6vNQDEjf1xq5ro=" # ARTIFACTS_AWS_SECRET_ACCESS_KEY
     - secure: "ikEVVNPGAX1NqgBPXdjxcPJ3ihO9TyTtaN4iX3d2Wv0GdlSKgRqtCXrWuttVfYGqSoHHWwvCR3qum7N44akLsntrkcIQXGu6CsTsvqDC+vAKHtC31TVmuTEXZyIYA7455+B+a8nMsrO5LjX1ylucV1ZhGLzA84lMRQYkr6PklK0=" # CODECLIMATE_REPO_TOKEN
   matrix:
-    - DB=postgres TASKS=all
-    - DB=mysql TASKS=all
+    - DB=postgres TASKS=spec:all
+    - DB=mysql TASKS=spec:all
     - TASKS=rubocop
