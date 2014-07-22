@@ -45,7 +45,7 @@ resource "Apps", :type => :api do
       include_context "updatable_fields"
       example "Creating an App" do
         space_guid = VCAP::CloudController::Space.make.guid
-        client.post "/v2/apps", MultiJson.dump(required_fields.merge(space_guid: space_guid)), headers
+        client.post "/v2/apps", MultiJson.dump(required_fields.merge("space_guid" => space_guid)), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :app
