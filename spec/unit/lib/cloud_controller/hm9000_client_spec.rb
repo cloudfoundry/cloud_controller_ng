@@ -106,10 +106,6 @@ module VCAP::CloudController
     end
 
     describe "healthy_instances" do
-
-    end
-
-    describe "healthy_instances" do
       it "makes a request to healthy_instances_count with the app" do
         expect(subject).to receive(:app_state_request).with(app0).and_call_original
         expect(subject.healthy_instances(app0)).to eq(1)
