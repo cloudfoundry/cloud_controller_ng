@@ -5,7 +5,7 @@ require "rubygems"
 require "bundler"
 require "bundler/setup"
 
-if ENV["CODECLIMATE_REPO_TOKEN"]
+if ENV["CODECLIMATE_REPO_TOKEN"] && ENV["COVERAGE"]
   require "codeclimate-test-reporter"
   CodeClimate::TestReporter.start
 end
