@@ -15,16 +15,21 @@ module VCAP::CloudController
     end
 
     describe "GET", "/internal/bulk/apps" do
-      before {
-        5.times do |i|
-          AppFactory.make(id: i+1, state: "STARTED", package_hash: "package-hash", package_state: "STAGED")
+      def make_diego_app(options = {})
+        AppFactory.make(options).tap do |app|
+          app.environment_json = (app.environment_json || {}).merge("CF_DIEGO_RUN_BETA" => "true")
+          app.package_state = "STAGED"
+          app.save
         end
-      }
+      end
 
       before do
-        App.first.environment_json = {
-          "FOO" => "bar",
-        }
+        5.times do |i|
+          make_diego_app(
+            id: i+1,
+            state: "STARTED",
+          )
+        end
       end
 
       it "requires authentication" do
@@ -70,7 +75,7 @@ module VCAP::CloudController
         end
 
         it "returns apps that have the desired data" do
-          last_app = AppFactory.make({
+          last_app = make_diego_app(
             id: 6,
             state: "STARTED",
             package_state: "STAGED",
@@ -78,7 +83,8 @@ module VCAP::CloudController
             disk_quota: 1_024,
             environment_json: {
                 "env-key-3" => "env-value-3",
-                "env-key-4" => "env-value-4"
+                "env-key-4" => "env-value-4",
+                "CF_DIEGO_RUN_BETA" => "true",
             },
             file_descriptors: 16_384,
             instances: 4,
@@ -86,7 +92,7 @@ module VCAP::CloudController
             guid: "app-guid-6",
             command: "start-command-6",
             stack: Stack.make(name: "stack-6"),
-          })
+          )
 
           route1 = Route.make(
               space: last_app.space,
@@ -135,6 +141,7 @@ module VCAP::CloudController
           expect(last_response_app_env).to(be_any) { |e| e["name"] == "VCAP_SERVICES" }
           expect(last_response_app_env.find { |e| e["name"] == "env-key-3" }["value"]).to eq("env-value-3")
           expect(last_response_app_env.find { |e| e["name"] == "env-key-4" }["value"]).to eq("env-value-4")
+          expect(last_response_app_env.find { |e| e["name"] == "CF_DIEGO_RUN_BETA" }["value"]).to eq("true")
         end
 
         it "respects the batch_size parameter" do
@@ -201,7 +208,9 @@ module VCAP::CloudController
         end
 
         it "does not return unstaged apps" do
-          App.make(id: 6, state: "STARTED", package_hash: "brown", package_state: "PENDING")
+          app = make_diego_app(id: 6, state: "STARTED")
+          app.package_state = "PENDING"
+          app.save
 
           get "/internal/bulk/apps", {
               "batch_size" => App.count,
@@ -213,7 +222,7 @@ module VCAP::CloudController
         end
 
         it "does not return apps which aren't expected to be started" do
-          AppFactory.make(id: 6, state: "STOPPED", package_hash: "brown", package_state: "STAGED")
+          make_diego_app(id: 6, state: "STOPPED")
 
           get "/internal/bulk/apps", {
               "batch_size" => App.count,
@@ -225,11 +234,26 @@ module VCAP::CloudController
         end
 
         it "does not return deleted apps" do
-          AppFactory.make(id: 6, state: "STARTED", package_hash: "brown", package_state: "STAGED", deleted_at: DateTime.now)
+          make_diego_app(id: 6, state: "STARTED", deleted_at: DateTime.now)
 
           get "/internal/bulk/apps", {
               "batch_size" => App.count,
               "token" => "{}",
+          }
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response["apps"].size).to eq(App.count - 1)
+        end
+
+        it "only returns apps with CF_DIEGO_RUN_BETA" do
+          make_diego_app(id: 6, state: "STARTED").tap do |a|
+            a.environment_json = {} # remove CF_DIEGO_RUN_BETA
+            a.save
+          end
+
+          get "/internal/bulk/apps", {
+            "batch_size" => App.count,
+            "token" => "{}",
           }
 
           expect(last_response.status).to eq(200)

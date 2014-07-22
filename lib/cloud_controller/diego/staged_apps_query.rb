@@ -10,8 +10,9 @@ module VCAP::CloudController
         App.
           where("id > ?", @last_id).
           where("deleted_at IS NULL").
-          where("state = ?", "STARTED").
-          where("package_state = ?", "STAGED").
+          where(state: "STARTED").
+          where(package_state: "STAGED").
+          where(diego: true).
           order(:id).
           limit(@batch_size).
           to_a
