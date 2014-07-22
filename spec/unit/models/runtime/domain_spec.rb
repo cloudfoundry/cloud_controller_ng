@@ -39,7 +39,7 @@ module VCAP::CloudController
         }.to have_queried_db_times(//, 0)
 
         expect(@eager_loaded_domain).to eql(domain)
-        expect(@eager_loaded_spaces).to eql([space1, space2])
+        expect(@eager_loaded_spaces).to match_array([space1, space2])
         expect(@eager_loaded_spaces).to eql(org.spaces)
       end
 
