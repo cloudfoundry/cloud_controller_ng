@@ -26,7 +26,7 @@ resource "Services Plans", type: :api do
 
     post "/v2/service_plans" do
       example "Creating a Service Plan (deprecated)" do
-        client.post "/v2/service_plans", fields_json(service_guid: service_guid), headers
+        client.post "/v2/service_plans", fields_json("service_guid" => service_guid), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :service_plans
