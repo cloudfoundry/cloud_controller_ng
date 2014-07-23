@@ -1,14 +1,9 @@
 require "spec_helper"
 
 describe HealthCheckPolicy do
-  let(:app) { double("app") }
-  let(:errors) { {} }
+  let(:app) { VCAP::CloudController::AppFactory.make }
 
   subject(:validator) { HealthCheckPolicy.new(app, health_check_timeout)}
-  before do
-    allow(app).to receive(:errors).and_return(errors)
-    allow(errors).to receive(:add) {|k, v| errors[k] = v  }
-  end
 
   describe "health_check_timeout" do
     before do
@@ -19,7 +14,7 @@ describe HealthCheckPolicy do
       let(:health_check_timeout) { 1024 }
       
       it "registers error" do
-        expect(validator).to validate_with_error(app, :maximum_exceeded)
+        expect(validator).to validate_with_error(app, :health_check_timeout, :maximum_exceeded)
       end
     end
 
@@ -27,7 +22,7 @@ describe HealthCheckPolicy do
       let(:health_check_timeout) { -10 }
 
       it "registers error" do
-        expect(validator).to validate_with_error(app, :less_than_zero)
+        expect(validator).to validate_with_error(app, :health_check_timeout, :less_than_zero)
       end
     end
 

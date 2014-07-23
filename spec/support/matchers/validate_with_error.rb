@@ -1,8 +1,9 @@
-RSpec::Matchers.define :validate_with_error do |validation_result, error|
+RSpec::Matchers.define :validate_with_error do |validation_result, field, error|
   match do |validator|
     validator.validate
     @errors = validation_result.errors
-    @errors.size == 1 && @errors.values.first == error
+    field_errors = @errors.on(field)
+    field_errors && field_errors.include?(error)
   end
 
   failure_message do |_|

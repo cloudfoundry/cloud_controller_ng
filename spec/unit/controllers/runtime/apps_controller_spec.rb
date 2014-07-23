@@ -479,7 +479,7 @@ module VCAP::CloudController
         post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response["description"]).to match(/app name is taken/)
+        expect(decoded_response["code"]).to eq(100002)
       end
 
       it "returns memory exceeded message correctly" do
@@ -494,7 +494,7 @@ module VCAP::CloudController
         post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response["description"]).to match(/exceeded your organization's memory limit/)
+        expect(decoded_response["code"]).to eq(100005)
       end
 
       it "returns memory invalid message correctly" do
@@ -507,7 +507,23 @@ module VCAP::CloudController
         post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
-        expect(last_response.body).to match /invalid amount of memory/
+        expect(decoded_response["code"]).to eq(100006)
+      end
+
+      it "returns instance memory limit exceeded error correctly" do
+        app_hash = {
+          :name => Sham.name,
+          :space_guid => space.guid,
+          :memory => 128
+        }
+
+        space.organization.quota_definition = QuotaDefinition.make(instance_memory_limit: 100)
+        space.organization.save(validate: false)
+
+        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(100007)
       end
 
       it "returns instances invalid message correctly" do
@@ -521,6 +537,7 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match /instances less than 1/
+        expect(decoded_response["code"]).to eq(100001)
       end
 
       it "returns state invalid message correctly" do
@@ -534,6 +551,7 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match /Invalid app state provided/
+        expect(decoded_response["code"]).to eq(100001)
       end
     end
 

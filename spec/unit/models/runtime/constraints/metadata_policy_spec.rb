@@ -1,14 +1,9 @@
 require "spec_helper"
 
 describe MetadataPolicy do
-  let(:app) { double("app") }
-  let(:errors) { {} }
+  let(:app) { VCAP::CloudController::AppFactory.make }
 
   subject(:validator) { MetadataPolicy.new(app, metadata)}
-  before do
-    allow(app).to receive(:errors).and_return(errors)
-    allow(errors).to receive(:add) {|k, v| errors[k] = v  }
-  end
 
   context "when metadata is a hash" do
     let(:metadata) { {} }
@@ -30,7 +25,7 @@ describe MetadataPolicy do
     let(:metadata) { "not metadata" }
 
     it "registers error" do
-      expect(validator).to validate_with_error(app, :invalid_metadata)
+      expect(validator).to validate_with_error(app, :metadata, :invalid_metadata)
     end
   end
 
@@ -38,7 +33,7 @@ describe MetadataPolicy do
     let(:metadata) { [] }
 
     it "registers error" do
-      expect(validator).to validate_with_error(app, :invalid_metadata)
+      expect(validator).to validate_with_error(app, :metadata, :invalid_metadata)
     end
   end
 

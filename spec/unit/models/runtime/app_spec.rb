@@ -179,14 +179,6 @@ module VCAP::CloudController
         end
       end
 
-      describe "memory" do
-        it "does not allow 0 memory" do
-          app.memory = 0
-          expect(app).to_not be_valid
-          expect(app.errors.on(:memory)).to be_present
-        end
-      end
-
       describe "instances" do
         it "does not allow negative instances" do
           app.instances = -1

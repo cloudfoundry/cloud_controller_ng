@@ -1,14 +1,11 @@
 require "spec_helper"
 
 describe CustomBuildpackPolicy do
-  let(:app) { double("app") }
-  let(:errors) { {} }
+  let(:app) { VCAP::CloudController::AppFactory.make }
   let(:buildpack) { double("build") }
 
   subject(:validator) { CustomBuildpackPolicy.new(app, custom_buildpacks_enabled)}
   before do
-    allow(app).to receive(:errors).and_return(errors)
-    allow(errors).to receive(:add) {|k, v| errors[k] = v  }
     allow(app).to receive(:buildpack).and_return(buildpack)
   end
 
@@ -41,7 +38,7 @@ describe CustomBuildpackPolicy do
 
       it "buildpack is custom" do
         allow(buildpack).to receive(:custom?).and_return(true)
-        expect(validator).to validate_with_error(app, CustomBuildpackPolicy::ERROR_MSG)
+        expect(validator).to validate_with_error(app, :buildpack, CustomBuildpackPolicy::ERROR_MSG)
       end
     end
   end
