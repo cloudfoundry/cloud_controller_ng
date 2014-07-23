@@ -10,12 +10,15 @@ module VCAP::CloudController
 
     query_parameters :name
 
-    def self.translate_validation_exception(e, attributes)
-      name_errors = e.errors.on(:name)
+    def self.translate_validation_exception(quota_definition, attributes)
+      name_errors = quota_definition.errors.on(:name)
+      memory_limit_errors = quota_definition.errors.on(:memory_limit)
       if name_errors && name_errors.include?(:unique)
         Errors::ApiError.new_from_details("QuotaDefinitionNameTaken", attributes["name"])
+      elsif memory_limit_errors && memory_limit_errors.include?(:less_than_zero)
+        Errors::ApiError.new_from_details("QuotaDefinitionMemoryLimitNegative")
       else
-        Errors::ApiError.new_from_details("QuotaDefinitionInvalid", e.errors.full_messages)
+        Errors::ApiError.new_from_details("QuotaDefinitionInvalid", quota_definition.errors.full_messages)
       end
     end
 

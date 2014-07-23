@@ -91,5 +91,16 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "Validation messages" do
+      let(:quota_definition) { QuotaDefinition.make }
+
+      it "returns QuotaDefinitionMemoryLimitNegative error correctly" do
+        put "/v2/quota_definitions/#{quota_definition.guid}", MultiJson.dump({memory_limit: -100}), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(240004)
+      end
+    end
   end
 end

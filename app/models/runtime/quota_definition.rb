@@ -17,6 +17,8 @@ module VCAP::CloudController
       validates_presence :total_services
       validates_presence :total_routes
       validates_presence :memory_limit
+
+      errors.add(:memory_limit, :less_than_zero) if memory_limit && memory_limit < 0
     end
 
     def trial_db_allowed=(_)
