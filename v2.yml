@@ -443,6 +443,11 @@
   http_code: 400
   message: "Quota Definition is invalid: %s"
 
+240004:
+  name: QuotaDefinitionMemoryLimitNegative
+  http_code: 400
+  message: "Quota Definition memory limit cannot be negative"
+
 250001:
   name: StackInvalid
   http_code: 400
