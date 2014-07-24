@@ -52,6 +52,18 @@ module VCAP::CloudController
               expect(SecurityContext.current_user).to be_active
             end
           end
+
+          context 'when the specified user is created after verifying it does not exist' do
+            it 'finds the created user' do
+              user = User.make(:guid => user_guid)
+              allow(User).to receive(:find) do
+                allow(User).to receive(:find).and_call_original
+                nil
+              end
+              configurer.configure(auth_token)
+              expect(SecurityContext.current_user.guid).to eq(user_guid)
+            end
+          end
         end
 
         context 'when only a client_id is present' do
