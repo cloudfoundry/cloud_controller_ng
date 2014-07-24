@@ -82,7 +82,7 @@ module ApiDsl
 
   def required_fields
     self.class.metadata[:fields].inject({}) do |memo, field|
-      memo[field[:name]] = (field[:valid_values] || field[:example_values]).first if field[:required]
+      memo[field[:name].to_sym] = (field[:valid_values] || field[:example_values]).first if field[:required]
       memo
     end
   end
