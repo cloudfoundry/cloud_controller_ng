@@ -562,3 +562,13 @@
   name: SecurityGroupNameTaken
   http_code: 400
   message: "The security group name is taken: %s"
+
+310001:
+  name: SpaceQuotaDefinitionInvalid
+  http_code: 400
+  message: "Space Quota Definition is invalid: %s"
+
+310002:
+  name: SpaceQuotaDefinitionNameTaken
+  http_code: 400
+  message: "The space quota definition name is taken: %s"
