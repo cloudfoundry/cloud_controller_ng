@@ -6,7 +6,7 @@ module VCAP::CloudController
       attribute  :total_services,             Integer
       attribute  :total_routes,               Integer
       attribute  :memory_limit,               Integer
-      attribute  :instance_memory_limit,      Integer, :optional_in => :create, :default => -1
+      attribute  :instance_memory_limit,      Integer, optional_in: :create, default: -1
     end
 
     query_parameters :name

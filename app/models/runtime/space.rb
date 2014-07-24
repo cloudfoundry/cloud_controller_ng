@@ -70,13 +70,15 @@ module VCAP::CloudController
                   end
                 }
 
+    many_to_one :space_quota_definition
+
     add_association_dependencies default_users: :nullify, apps: :destroy,
                                  service_instances: :destroy, routes: :destroy,
                                  events: :nullify, security_groups: :nullify
 
-    export_attributes :name, :organization_guid
+    export_attributes :name, :organization_guid, :space_quota_definition_guid
 
-    import_attributes :name, :organization_guid, :developer_guids,
+    import_attributes :name, :organization_guid, :developer_guids, :space_quota_definition_guid,
                       :manager_guids, :auditor_guids, :security_group_guids
 
     strip_attributes  :name

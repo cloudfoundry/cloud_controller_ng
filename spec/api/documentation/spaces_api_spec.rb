@@ -17,6 +17,7 @@ resource "Spaces", :type => :api do
     field :auditor_guids, "The list of the associated auditors", required: false
     field :domain_guids, "The list of the associated domains", required: false
     field :security_group_guids, "The list of the associated security groups", required: false
+    field :space_quota_definition_guid, "The associated space quota definition", required: false
 
     standard_model_list :space, VCAP::CloudController::SpacesController
     standard_model_get :space, nested_associations: [:organization]
@@ -42,11 +43,15 @@ resource "Spaces", :type => :api do
 
     put "/v2/spaces/:guid" do
       let(:new_name) { "New Space Name" }
+      let(:new_space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization) }
 
       example "Update a Space" do
-        client.put "/v2/spaces/#{guid}", MultiJson.dump(name: new_name), headers
+        client.put "/v2/spaces/#{guid}",
+          MultiJson.dump(name: new_name, space_quota_definition_guid: new_space_quota_definition.guid),
+          headers
+
         expect(status).to eq 201
-        standard_entity_response parsed_response, :space, name: new_name
+        standard_entity_response parsed_response, :space, name: new_name, space_quota_definition_guid: new_space_quota_definition.guid
 
         audited_event VCAP::CloudController::Event.find(type: "audit.space.update", actee: guid)
       end

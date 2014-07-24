@@ -8,6 +8,7 @@ module VCAP::CloudController
 
     describe "Associations" do
       it { is_expected.to have_associated :organization }
+      it { is_expected.to have_associated :spaces }
     end
 
     describe "Validations" do
@@ -23,6 +24,15 @@ module VCAP::CloudController
     describe "Serialization" do
       it { is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit }
       it { is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit }
+    end
+
+    describe "#destroy" do
+      it "nullifies space_quota_definition on space" do
+        space  = Space.make
+        space.space_quota_definition = space_quota_definition
+        space.save
+        expect { space_quota_definition.destroy }.to change { space.reload.space_quota_definition }.from(space_quota_definition).to(nil)
+      end
     end
   end
 end

@@ -1,11 +1,14 @@
 module VCAP::CloudController
   class SpaceQuotaDefinition < Sequel::Model
     many_to_one :organization
+    one_to_many :spaces
 
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
       :total_routes, :memory_limit
     import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
       :total_routes, :memory_limit
+
+    add_association_dependencies spaces: :nullify
 
     def validate
       validates_presence :name

@@ -26,7 +26,8 @@ module VCAP::CloudController
           service_instance_guids: {type: "[string]"},
           app_event_guids: {type: "[string]"},
           event_guids: {type: "[string]"},
-          security_group_guids: {type: "[string]"}
+          security_group_guids: {type: "[string]"},
+          space_quota_definition_guid: {type: "string"}
         })
       end
 
@@ -43,7 +44,8 @@ module VCAP::CloudController
           service_instance_guids: {type: "[string]"},
           app_event_guids: {type: "[string]"},
           event_guids: {type: "[string]"},
-          security_group_guids: {type: "[string]"}
+          security_group_guids: {type: "[string]"},
+          space_quota_definition_guid: {type: "string"}
         })
       end
     end
