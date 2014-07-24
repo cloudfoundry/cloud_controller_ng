@@ -307,6 +307,15 @@ module VCAP::CloudController
     staging_default { false }
   end
 
+  SpaceQuotaDefinition.blueprint do
+    name { Sham.name }
+    non_basic_services_allowed { true }
+    total_services { 60 }
+    total_routes { 1_000 }
+    memory_limit { 20_480 } # 20 GB
+    organization { Organization.make }
+  end
+
   TestModel.blueprint do
     required_attr true
   end

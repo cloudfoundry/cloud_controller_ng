@@ -44,7 +44,8 @@ module VCAP::CloudController
           billing_manager_guids: {type: "[string]"},
           auditor_guids: {type: "[string]"},
           app_event_guids: {type: "[string]"},
-          space_guids: {type: "[string]"}
+          space_guids: {type: "[string]"},
+          space_quota_definition_guids: {type: "[string]" }
         })
       end
     end

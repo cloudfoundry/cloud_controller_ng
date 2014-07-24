@@ -15,6 +15,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :managers, class: User }
       it { is_expected.to have_associated :billing_managers, class: User }
       it { is_expected.to have_associated :auditors, class: User }
+      it { is_expected.to have_associated :space_quota_definitions }
 
       it "has associated apps" do
         app = App.make
@@ -291,6 +292,11 @@ module VCAP::CloudController
 
       it "destroys all spaces" do
         expect { org.destroy }.to change { Space[:id => space.id] }.from(space).to(nil)
+      end
+
+      it "destroys all space quota definitions" do
+        sqd = SpaceQuotaDefinition.make(organization: org)
+        expect { org.destroy }.to change { SpaceQuotaDefinition[:id => sqd.id] }.from(sqd).to(nil)
       end
 
       it "destroys all service instances" do

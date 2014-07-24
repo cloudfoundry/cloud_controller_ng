@@ -13,6 +13,7 @@ module VCAP::CloudController
       to_many   :billing_managers
       to_many   :auditors
       to_many   :app_events, :link_only => true
+      to_many   :space_quota_definitions, exclude_in: :create
     end
 
     query_parameters :name, :space_guid, :user_guid,

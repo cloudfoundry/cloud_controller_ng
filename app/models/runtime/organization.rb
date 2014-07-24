@@ -42,10 +42,13 @@ module VCAP::CloudController
                   end
                 }
 
+    one_to_many :space_quota_definitions
+
     add_association_dependencies spaces: :destroy,
       service_instances: :destroy,
       private_domains: :destroy,
-      service_plan_visibilities: :destroy
+      service_plan_visibilities: :destroy,
+      space_quota_definitions: :destroy
 
     define_user_group :users
     define_user_group :managers, 

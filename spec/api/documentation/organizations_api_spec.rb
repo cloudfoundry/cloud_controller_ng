@@ -49,6 +49,14 @@ resource "Organizations", :type => :api do
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :organization
     end
 
+    describe "Space Quota Definitions" do
+      before do
+        VCAP::CloudController::SpaceQuotaDefinition.make(organization: organization)
+      end
+
+      standard_model_list :space_quota_definition, VCAP::CloudController::SpaceQuotaDefinitionsController, outer_model: :organization
+    end
+
     describe "Domains" do
       standard_model_list :shared_domain, VCAP::CloudController::DomainsController, outer_model: :organization, path: :domains
     end
