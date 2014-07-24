@@ -319,6 +319,11 @@ module VCAP::CloudController
     organization { Organization.make }
   end
 
+  FeatureFlag.blueprint do
+    name { Sham.name }
+    enabled { false }
+  end
+
   TestModel.blueprint do
     required_attr true
   end
