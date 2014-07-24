@@ -6,9 +6,9 @@ module VCAP::CloudController
     add_association_dependencies organizations: :destroy
 
     export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-                      :memory_limit, :trial_db_allowed
+                      :memory_limit, :trial_db_allowed, :instance_memory_limit
     import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-                      :memory_limit, :trial_db_allowed
+                      :memory_limit, :trial_db_allowed, :instance_memory_limit
 
     def validate
       validates_presence :name

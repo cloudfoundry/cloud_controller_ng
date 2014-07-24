@@ -16,8 +16,8 @@ resource "Quota Definitions", type: :api do
     field :non_basic_services_allowed, "If an organization can have non basic services", required: true, valid_values: [true, false]
     field :total_services, "How many services an organization can have.", required: true, example_values: [5, 201]
     field :total_routes, "How many routes an organization can have.", required: true, example_values: [10, 23]
-    field :memory_limit, "How much memory in megabyte an organization can have.", required: true, example_values: [5_120, 10_024]
-    field :instance_memory_limit, "The maximum amount of memory in megabyte an application instance can have. (-1 represents an unlimited amount)", default: -1, example_values: [-1, 10_024]
+    field :memory_limit, "How much memory in megabyte an organization can have.", required: true, example_values: [5_120, 9999]
+    field :instance_memory_limit, "The maximum amount of memory in megabyte an application instance can have. (-1 represents an unlimited amount)", required: false, default: -1, example_values: [-1, 10_240, 9999]
     field :trial_db_allowed, "If an organization can have a trial db.", required: false, deprecated: true
   end
 
@@ -28,10 +28,10 @@ resource "Quota Definitions", type: :api do
   post "/v2/quota_definitions" do
     include_context "updatable_fields"
     example "Creating a Quota Definition" do
-      client.post "/v2/quota_definitions", fields_json, headers
+      client.post "/v2/quota_definitions", fields_json(instance_memory_limit: 10_240), headers
       expect(status).to eq(201)
 
-      standard_entity_response parsed_response, :quota_definition
+      standard_entity_response parsed_response, :quota_definition, instance_memory_limit: 10_240
     end
   end
 
