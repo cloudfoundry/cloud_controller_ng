@@ -269,7 +269,7 @@
   message: "You have specified an invalid amount of memory for your application."
 
 100007:
-  name: InstanceMemoryQuotaExceeded
+  name: QuotaInstanceMemoryLimitExceeded
   http_code: 400
   message: "You have exceeded the instance memory limit for your organization's quota."
 
@@ -577,3 +577,8 @@
   name: SpaceQuotaMemoryLimitExceeded
   http_code: 400
   message: "You have exceeded your space's memory limit."
+
+310004:
+  name: SpaceQuotaInstanceMemoryLimitExceeded
+  http_code: 400
+  message: "You have exceeded the instance memory limit for your organization's quota."
