@@ -183,84 +183,58 @@ module VCAP::CloudController
     end
 
     describe "healthy_instances_bulk" do
-      [false, true].each do |available|
-        describe "when the bulk api is #{available ? '' : 'not'} available" do
-          before { allow(subject).to receive(:bulk_api_available).and_return(available) }
-
-          context "when the provided app list is empty" do
-            it "returns an empty hash" do
-              expect(subject.healthy_instances_bulk([])).to eq({})
-            end
-          end
-
-          context "when the provided app list is nil" do
-            it "returns and empty hash" do
-              expect(subject.healthy_instances_bulk(nil)).to eq({})
-            end
-          end
-
-          context "when called with multiple apps" do
-            it "returns a hash of app guid => running instance count" do
-              expect(subject.healthy_instances_bulk([app0, app1, app2])).to eq({
-                app0.guid => 1, app1.guid => 0, app2.guid => 1
-              })
-            end
-          end
+      context "when the provided app list is empty" do
+        it "returns an empty hash" do
+          expect(subject.healthy_instances_bulk([])).to eq({})
         end
       end
 
-      describe "conditionally using the bulk api" do
-        context "when the bulk api is available" do
-          before { allow(subject).to receive(:bulk_api_available).and_return(true) }
-
-          it "uses the hm9000 app.state.bulk api" do
-            expect(message_bus).to receive(:synchronous_request).with("app.state.bulk", anything, anything)
-            subject.healthy_instances_bulk([app0, app1, app2])
-          end
-        end
-
-        context "when the bulk api is not available" do
-          before { allow(subject).to receive(:bulk_api_available).and_return(false) }
-
-          it "does not try to use the hm9000 app.state.bulk api" do
-            expect(message_bus).to_not receive(:synchronous_request).with("app.state.bulk", anything, anything)
-            subject.healthy_instances_bulk([app0, app1, app2])
-          end
-
-          it "makes multiple calls to the hm900.app.state api" do
-            expect(message_bus).to receive(:synchronous_request).exactly(3).times.with("app.state", anything, anything)
-            subject.healthy_instances_bulk([app0, app1, app2])
-          end
+      context "when the provided app list is nil" do
+        it "returns and empty hash" do
+          expect(subject.healthy_instances_bulk(nil)).to eq({})
         end
       end
 
-      describe "batching bulk api requests to avoid exceeding nats message length" do
-        before { allow(subject).to receive(:bulk_api_available).and_return(true) }
+      context "when called with multiple apps" do
+        it "returns a hash of app guid => running instance count" do
+          expect(subject.healthy_instances_bulk([app0, app1, app2])).to eq({
+            app0.guid => 1, app1.guid => 0, app2.guid => 1
+          })
+        end
+      end
 
-        context "when the application list is less than or equal to APP_STATE_BULK_MAX" do
-          before { stub_const("VCAP::CloudController::HM9000Client::APP_STATE_BULK_MAX_APPS", 3) }
+      it "uses the hm9000 app.state.bulk api" do
+        expect(message_bus).to receive(:synchronous_request).with("app.state.bulk", anything, anything)
+        subject.healthy_instances_bulk([app0, app1, app2])
+      end
+    end
 
-          it "makes a single request via the hm9000 bulk api" do
-            expect(message_bus).to receive(:synchronous_request).once.with("app.state.bulk", anything, anything)
-            subject.healthy_instances_bulk([app0, app1, app2])
-          end
+    describe "batching bulk api requests to avoid exceeding nats message length" do
+      before { allow(subject).to receive(:bulk_api_available).and_return(true) }
+
+      context "when the application list is less than or equal to APP_STATE_BULK_MAX" do
+        before { stub_const("VCAP::CloudController::HM9000Client::APP_STATE_BULK_MAX_APPS", 3) }
+
+        it "makes a single request via the hm9000 bulk api" do
+          expect(message_bus).to receive(:synchronous_request).once.with("app.state.bulk", anything, anything)
+          subject.healthy_instances_bulk([app0, app1, app2])
+        end
+      end
+
+      context "when the applications list is longer than APP_STATE_BULK_MAX" do
+        before { stub_const("VCAP::CloudController::HM9000Client::APP_STATE_BULK_MAX_APPS", 2) }
+
+        it "makes a multiple requests via the hm9000 bulk api" do
+          expect(message_bus).to receive(:synchronous_request).exactly(2).times.with("app.state.bulk", anything, anything)
+          subject.healthy_instances_bulk([app0, app1, app2])
         end
 
-        context "when the applications list is longer than APP_STATE_BULK_MAX" do
-          before { stub_const("VCAP::CloudController::HM9000Client::APP_STATE_BULK_MAX_APPS", 2) }
-
-          it "makes a multiple requests via the hm9000 bulk api" do
-            expect(message_bus).to receive(:synchronous_request).exactly(2).times.with("app.state.bulk", anything, anything)
-            subject.healthy_instances_bulk([app0, app1, app2])
+        it "does not send more than APP_STATE_BULK_MAX_APPS apps per request" do
+          expect(message_bus).to receive(:synchronous_request).exactly(2).times.with("app.state.bulk", anything, anything) do |_, message, _|
+            expect(message.length <= 2)
+            [{}]
           end
-
-          it "does not send more than APP_STATE_BULK_MAX_APPS apps per request" do
-            expect(message_bus).to receive(:synchronous_request).exactly(2).times.with("app.state.bulk", anything, anything) do |_, message, _|
-              expect(message.length <= 2)
-              [{}]
-            end
-            subject.healthy_instances_bulk([app0, app1, app2])
-          end
+          subject.healthy_instances_bulk([app0, app1, app2])
         end
       end
     end

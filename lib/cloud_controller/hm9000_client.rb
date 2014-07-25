@@ -17,15 +17,9 @@ module VCAP::CloudController
     def healthy_instances_bulk(apps)
       return {} if apps.nil? || apps.empty?
 
-      if bulk_api_available
-        response = app_state_bulk_request(apps)
-        apps.each_with_object({}) do |app, result|
-          result[app.guid] = healthy_instance_count(app, response[app.guid])
-        end
-      else
-        apps.each_with_object({}) do |app, result|
-          result[app.guid] = healthy_instances(app)
-        end
+      response = app_state_bulk_request(apps)
+      apps.each_with_object({}) do |app, result|
+        result[app.guid] = healthy_instance_count(app, response[app.guid])
       end
     end
 
@@ -89,10 +83,6 @@ module VCAP::CloudController
           result.add(heartbeats["index"])
         end
       end.length
-    end
-
-    def bulk_api_available
-      false
     end
 
     def logger
