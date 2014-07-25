@@ -4,9 +4,9 @@ module VCAP::CloudController
     one_to_many :spaces
 
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-      :total_routes, :memory_limit
+      :total_routes, :memory_limit, :instance_memory_limit
     import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-      :total_routes, :memory_limit
+      :total_routes, :memory_limit, :instance_memory_limit
 
     add_association_dependencies spaces: :nullify
 

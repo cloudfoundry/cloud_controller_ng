@@ -22,8 +22,8 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit }
-      it { is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit }
+      it { is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit, :instance_memory_limit }
+      it { is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit, :instance_memory_limit }
     end
 
     describe "#destroy" do

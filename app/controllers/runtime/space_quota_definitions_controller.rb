@@ -6,6 +6,7 @@ module VCAP::CloudController
       attribute  :total_services,             Integer
       attribute  :total_routes,               Integer
       attribute  :memory_limit,               Integer
+      attribute  :instance_memory_limit,      Integer, default: nil
 
       to_one     :organization
     end
