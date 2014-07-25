@@ -32,7 +32,7 @@ module VCAP::CloudController
 
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors  = e.errors.on([:space_id, :name])
-      memory_errors    = e.errors.on(:memory)
+      memory_errors          = e.errors.on(:memory)
       instance_number_errors = e.errors.on(:instances)
       state_errors           = e.errors.on(:state)
 
@@ -41,12 +41,14 @@ module VCAP::CloudController
       elsif memory_errors
         if memory_errors.include?(:space_quota_exceeded)
           Errors::ApiError.new_from_details("SpaceQuotaMemoryLimitExceeded")
+        elsif memory_errors.include?(:space_instance_memory_limit_exceeded)
+          Errors::ApiError.new_from_details("SpaceQuotaInstanceMemoryLimitExceeded")
         elsif memory_errors.include?(:quota_exceeded)
           Errors::ApiError.new_from_details("AppMemoryQuotaExceeded")
         elsif memory_errors.include?(:zero_or_less)
           Errors::ApiError.new_from_details("AppMemoryInvalid")
         elsif memory_errors.include?(:instance_memory_limit_exceeded)
-          Errors::ApiError.new_from_details("InstanceMemoryQuotaExceeded")
+          Errors::ApiError.new_from_details("QuotaInstanceMemoryLimitExceeded")
         end
       elsif instance_number_errors
         Errors::ApiError.new_from_details("AppInvalid", "Number of instances less than 1")

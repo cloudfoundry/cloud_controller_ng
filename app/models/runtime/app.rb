@@ -84,7 +84,8 @@ module VCAP::CloudController
           MinMemoryPolicy.new(self),
           MaxMemoryPolicy.new(self, space, :space_quota_exceeded),
           MaxMemoryPolicy.new(self, organization, :quota_exceeded),
-          MaxInstanceMemoryPolicy.new(self),
+          MaxInstanceMemoryPolicy.new(self, organization && organization.quota_definition, :instance_memory_limit_exceeded),
+          MaxInstanceMemoryPolicy.new(self, space && space.space_quota_definition, :space_instance_memory_limit_exceeded),
           InstancesPolicy.new(self),
           HealthCheckPolicy.new(self, health_check_timeout),
           CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?)

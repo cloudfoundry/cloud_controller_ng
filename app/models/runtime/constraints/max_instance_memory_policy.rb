@@ -1,15 +1,18 @@
 class MaxInstanceMemoryPolicy
-  def initialize(app)
+  attr_reader :quota_definition
+
+  def initialize(app, quota_definition, error_name)
     @app = app
+    @quota_definition = quota_definition
+    @error_name = error_name
     @errors = app.errors
   end
 
   def validate
-    return unless @app.organization
     return unless @app.scaling_operation?
 
     if instance_memory_limit != -1 && app_memory > instance_memory_limit
-      @errors.add(:memory, :instance_memory_limit_exceeded)
+      @errors.add(:memory, @error_name)
     end
   end
 
@@ -20,6 +23,7 @@ class MaxInstanceMemoryPolicy
   end
 
   def instance_memory_limit
-    @app.organization.quota_definition.instance_memory_limit || -1
+    return -1 unless @quota_definition
+    quota_definition.instance_memory_limit
   end
 end

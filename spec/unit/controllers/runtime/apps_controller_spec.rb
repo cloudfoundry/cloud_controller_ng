@@ -498,7 +498,7 @@ module VCAP::CloudController
         expect(decoded_response["code"]).to eq(310003)
       end
 
-      it "validates space quotas before organization quotas" do
+      it "validates space quota memory limit before organization quotas" do
         space.organization.quota_definition = QuotaDefinition.make(:memory_limit => 0)
         space.organization.save(validate: false)
         space.space_quota_definition = SpaceQuotaDefinition.make(:memory_limit => 0)
@@ -506,7 +506,6 @@ module VCAP::CloudController
 
         put "/v2/apps/#{app_obj.guid}", MultiJson.dump(memory: 128), json_headers(admin_headers)
 
-        puts last_response.body
         expect(last_response.status).to eq(400)
         expect(decoded_response["code"]).to eq(310003)
       end
@@ -526,6 +525,28 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(400)
         expect(decoded_response["code"]).to eq(100007)
+      end
+
+      it "returns space instance memory limit exceeded error correctly" do
+        space.space_quota_definition = SpaceQuotaDefinition.make(instance_memory_limit: 100)
+        space.save(validate: false)
+
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(memory: 128), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(310004)
+      end
+
+      it "validates space quota instance memory limit before organization quotas" do
+        space.organization.quota_definition = QuotaDefinition.make(:instance_memory_limit => 100)
+        space.organization.save(validate: false)
+        space.space_quota_definition = SpaceQuotaDefinition.make(:instance_memory_limit => 100)
+        space.save(validate: false)
+
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(memory: 128), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(310004)
       end
 
       it "returns instances invalid message correctly" do

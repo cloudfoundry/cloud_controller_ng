@@ -73,13 +73,20 @@ module VCAP::CloudController
       describe "org and space quota validator policies" do
         subject(:app) { AppFactory.make(:space => space) }
         let(:org) { Organization.make }
-        let(:space) { Space.make(:organization => org) }
+        let(:space) { Space.make(:organization => org, space_quota_definition: SpaceQuotaDefinition.make) }
 
         it "validates org and space using MaxMemoryPolicy" do
           max_memory_policies = app.validation_policies.select { |policy| policy.instance_of? MaxMemoryPolicy }
           expect(max_memory_policies.length).to eq(2)
           targets = max_memory_policies.collect(&:policy_target)
           expect(targets).to match_array([org, space])
+        end
+
+        it "validates org and space using MaxInstanceMemoryPolicy" do
+          max_instance_memory_policies = app.validation_policies.select { |policy| policy.instance_of? MaxInstanceMemoryPolicy }
+          expect(max_instance_memory_policies.length).to eq(2)
+          targets = max_instance_memory_policies.collect(&:quota_definition)
+          expect(targets).to match_array([org.quota_definition, space.space_quota_definition])
         end
       end
 
