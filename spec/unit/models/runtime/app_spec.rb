@@ -19,8 +19,7 @@ module VCAP::CloudController
     end
 
     def expect_validator(validator_class)
-      matching_validitor = subject.validation_policies.select { |validator| validator.is_a?(validator_class) }
-      expect(matching_validitor).to be
+      expect(subject.validation_policies).to include(an_instance_of(validator_class))
     end
 
     def expect_no_validator(validator_class)
@@ -66,6 +65,7 @@ module VCAP::CloudController
         expect_validator(MetadataPolicy)
         expect_validator(MinMemoryPolicy)
         expect_validator(MaxMemoryPolicy)
+        expect_validator(MaxInstanceMemoryPolicy)
         expect_validator(InstancesPolicy)
         expect_validator(HealthCheckPolicy)
         expect_validator(CustomBuildpackPolicy)

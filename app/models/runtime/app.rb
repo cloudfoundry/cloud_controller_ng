@@ -83,6 +83,7 @@ module VCAP::CloudController
           MetadataPolicy.new(self, metadata_deserialized),
           MinMemoryPolicy.new(self),
           MaxMemoryPolicy.new(self),
+          MaxInstanceMemoryPolicy.new(self),
           InstancesPolicy.new(self),
           HealthCheckPolicy.new(self, health_check_timeout),
           CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?)
