@@ -572,3 +572,8 @@
   name: SpaceQuotaDefinitionNameTaken
   http_code: 400
   message: "The space quota definition name is taken: %s"
+
+310003:
+  name: SpaceQuotaMemoryLimitExceeded
+  http_code: 400
+  message: "You have exceeded your space's memory limit."
