@@ -6,8 +6,6 @@ module VCAP::CloudController
     export_attributes :name, :position, :enabled, :locked, :filename
     import_attributes :name, :position, :enabled, :locked, :filename, :key
 
-    plugin :after_initialize
-
     def self.list_admin_buildpacks
       exclude(:key => nil).exclude(:key => "").order(:position).all
     end
@@ -40,11 +38,6 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       full_dataset_filter
-    end
-
-    def after_initialize
-      super
-      self.guid ||= SecureRandom.uuid
     end
 
     def after_destroy
