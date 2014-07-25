@@ -468,72 +468,68 @@ module VCAP::CloudController
 
     describe "Validation messages" do
       let(:space) { Space.make }
+      let!(:app_obj) { App.make(space: space) }
 
       it "returns duplicate app name message correctly" do
         existing_app = App.make(space: space)
-        app_hash = {
-          :name => existing_app.name,
-          :space_guid => space.guid
-        }
-
-        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(name: existing_app.name), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response["code"]).to eq(100002)
       end
 
-      it "returns memory exceeded message correctly" do
-        app_hash = {
-          :name => Sham.name,
-          :space_guid => space.guid,
-          :memory => 128
-        }
+      it "returns organization quota memory exceeded message correctly" do
         space.organization.quota_definition = QuotaDefinition.make(:memory_limit => 0)
         space.organization.save(validate: false)
 
-        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(memory: 128), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response["code"]).to eq(100005)
       end
 
-      it "returns memory invalid message correctly" do
-        app_hash = {
-          name: Sham.name,
-          space_guid: space.guid,
-          memory: 0
-        }
+      it "returns space quota memory exceeded message correctly" do
+        space.space_quota_definition = SpaceQuotaDefinition.make(:memory_limit => 0)
+        space.save(validate: false)
 
-        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(memory: 128), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(310003)
+      end
+
+      it "validates space quotas before organization quotas" do
+        space.organization.quota_definition = QuotaDefinition.make(:memory_limit => 0)
+        space.organization.save(validate: false)
+        space.space_quota_definition = SpaceQuotaDefinition.make(:memory_limit => 0)
+        space.save(validate: false)
+
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(memory: 128), json_headers(admin_headers)
+
+        puts last_response.body
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(310003)
+      end
+
+      it "returns memory invalid message correctly" do
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(memory: 0), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response["code"]).to eq(100006)
       end
 
       it "returns instance memory limit exceeded error correctly" do
-        app_hash = {
-          :name => Sham.name,
-          :space_guid => space.guid,
-          :memory => 128
-        }
-
         space.organization.quota_definition = QuotaDefinition.make(instance_memory_limit: 100)
         space.organization.save(validate: false)
 
-        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(memory: 128), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response["code"]).to eq(100007)
       end
 
       it "returns instances invalid message correctly" do
-        app_hash = {
-          name: Sham.name,
-          space_guid: space.guid,
-          instances: -1
-        }
-
-        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(instances: -1), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match /instances less than 1/
@@ -541,13 +537,7 @@ module VCAP::CloudController
       end
 
       it "returns state invalid message correctly" do
-        app_hash = {
-          name: Sham.name,
-          space_guid: space.guid,
-          state: 'not a valid state'
-        }
-
-        post "/v2/apps", MultiJson.dump(app_hash), json_headers(admin_headers)
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(state: 'mississippi'), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match /Invalid app state provided/

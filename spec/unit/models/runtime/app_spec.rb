@@ -22,11 +22,6 @@ module VCAP::CloudController
       expect(subject.validation_policies).to include(an_instance_of(validator_class))
     end
 
-    def expect_scoped_validator(validator_class, scope)
-      expect(subject.validation_policies).to include(an_instance_of(validator_class))
-      expect(subject.validation_policies.select{ |p| p.instance_of?(validator_class) }.map(&:scope)).to include(scope)
-    end
-
     def expect_no_validator(validator_class)
       matching_validitor = subject.validation_policies.select { |validator| validator.is_a?(validator_class) }
       expect(matching_validitor).to be_empty
@@ -80,9 +75,11 @@ module VCAP::CloudController
         let(:org) { Organization.make }
         let(:space) { Space.make(:organization => org) }
 
-        it "includes scoped validator policies" do
-          expect_scoped_validator(MaxMemoryPolicy, org)
-          expect_scoped_validator(MaxMemoryPolicy, space)
+        it "validates org and space using MaxMemoryPolicy" do
+          max_memory_policies = app.validation_policies.select { |policy| policy.instance_of? MaxMemoryPolicy }
+          expect(max_memory_policies.length).to eq(2)
+          targets = max_memory_policies.collect(&:policy_target)
+          expect(targets).to match_array([org, space])
         end
       end
 

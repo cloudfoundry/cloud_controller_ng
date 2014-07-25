@@ -39,7 +39,9 @@ module VCAP::CloudController
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::ApiError.new_from_details("AppNameTaken", attributes["name"])
       elsif memory_errors
-        if memory_errors.include?(:quota_exceeded)
+        if memory_errors.include?(:space_quota_exceeded)
+          Errors::ApiError.new_from_details("SpaceQuotaMemoryLimitExceeded")
+        elsif memory_errors.include?(:quota_exceeded)
           Errors::ApiError.new_from_details("AppMemoryQuotaExceeded")
         elsif memory_errors.include?(:zero_or_less)
           Errors::ApiError.new_from_details("AppMemoryInvalid")

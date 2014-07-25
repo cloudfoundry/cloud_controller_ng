@@ -319,18 +319,18 @@ module VCAP::CloudController
       end
     end
 
-    context "memory quota" do
+    describe "#has_remaining_memory" do
       let(:quota) do
         SpaceQuotaDefinition.make(:memory_limit => 500)
       end
 
-      it "should return the memory available when no apps are running" do
+      it "returns true if there is enough memory remaining when no apps are running" do
         space = Space.make(:space_quota_definition => quota)
         expect(space.has_remaining_memory(500)).to eq(true)
         expect(space.has_remaining_memory(501)).to eq(false)
       end
 
-      it "should return the memory remaining when apps are consuming memory" do
+      it "returns true if there is enough memory remaining when apps are consuming memory" do
         space = Space.make(:space_quota_definition => quota)
         AppFactory.make(:space => space,
                         :memory => 200,
