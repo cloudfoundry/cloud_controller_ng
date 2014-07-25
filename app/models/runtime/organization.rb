@@ -137,9 +137,8 @@ module VCAP::CloudController
       end
     end
 
-    def memory_remaining
-      memory_used = apps_dataset.sum(Sequel.*(:memory, :instances)) || 0
-      quota_definition.memory_limit - memory_used
+    def has_remaining_memory(mem)
+      memory_remaining >= mem
     end
 
     def active?
@@ -159,6 +158,11 @@ module VCAP::CloudController
       unless VCAP::CloudController::SecurityContext.admin?
         errors.add(field_name, :not_authorized)
       end
+    end
+
+    def memory_remaining
+      memory_used = apps_dataset.sum(Sequel.*(:memory, :instances)) || 0
+      quota_definition.memory_limit - memory_used
     end
   end
 end

@@ -319,6 +319,31 @@ module VCAP::CloudController
       end
     end
 
+    context "memory quota" do
+      let(:quota) do
+        SpaceQuotaDefinition.make(:memory_limit => 500)
+      end
+
+      it "should return the memory available when no apps are running" do
+        space = Space.make(:space_quota_definition => quota)
+        expect(space.has_remaining_memory(500)).to eq(true)
+        expect(space.has_remaining_memory(501)).to eq(false)
+      end
+
+      it "should return the memory remaining when apps are consuming memory" do
+        space = Space.make(:space_quota_definition => quota)
+        AppFactory.make(:space => space,
+                        :memory => 200,
+                        :instances => 2)
+        AppFactory.make(:space => space,
+                        :memory => 50,
+                        :instances => 1)
+
+        expect(space.has_remaining_memory(50)).to eq(true)
+        expect(space.has_remaining_memory(51)).to eq(false)
+      end
+    end
+
     describe "#having_developer" do
       it "returns only spaces with developers containing the specified user" do
         space1 = Space.make

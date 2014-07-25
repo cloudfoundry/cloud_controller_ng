@@ -248,7 +248,8 @@ module VCAP::CloudController
       it "should return the memory available when no apps are running" do
         org = Organization.make(:quota_definition => quota)
 
-        expect(org.memory_remaining).to eq(500)
+        expect(org.has_remaining_memory(500)).to eq(true)
+        expect(org.has_remaining_memory(501)).to eq(false)
       end
 
       it "should return the memory remaining when apps are consuming memory" do
@@ -261,7 +262,8 @@ module VCAP::CloudController
                         :memory => 50,
                         :instances => 1)
 
-        expect(org.memory_remaining).to eq(50)
+        expect(org.has_remaining_memory(50)).to eq(true)
+        expect(org.has_remaining_memory(51)).to eq(false)
       end
     end
 

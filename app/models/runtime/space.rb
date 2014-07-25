@@ -122,8 +122,20 @@ module VCAP::CloudController
       )
     end
 
+    def has_remaining_memory(mem)
+      return true unless space_quota_definition
+      memory_remaining >= mem
+    end
+
     def in_suspended_org?
       organization.suspended?
+    end
+
+    private
+
+    def memory_remaining
+      memory_used = apps_dataset.sum(Sequel.*(:memory, :instances)) || 0
+      space_quota_definition.memory_limit - memory_used
     end
   end
 end
