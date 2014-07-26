@@ -149,12 +149,12 @@
   message: "The service instance could not be found: %s"
 
 60005:
-  name: ServiceInstanceFreeQuotaExceeded
+  name: ServiceInstanceQuotaExceeded
   http_code: 400
   message: "You have exceeded your organization's services limit."
 
 60006:
-  name: ServiceInstancePaidQuotaExceeded
+  name: PreviouslyUsedAs_ServiceInstancePaidQuotaExceeded
   http_code: 400
   message: "You have exceeded your organization's services limit."
 
@@ -182,6 +182,16 @@
   name: ServiceInstanceDeprovisionFailed
   http_code: 409
   message: "The service broker reported an error during deprovisioning: %s"
+
+60012:
+  name: ServiceInstanceSpaceQuotaExceeded
+  http_code: 400
+  message: "You have exceeded your space's services limit."
+
+60013:
+  name: ServiceInstanceServicePlanNotAllowedBySpaceQuota
+  http_code: 400
+  message: "The service instance cannot be created because paid service plans are not allowed for your space."
 
 70001:
   name: RuntimeInvalid
