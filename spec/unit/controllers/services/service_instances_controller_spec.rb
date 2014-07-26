@@ -612,7 +612,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "Quota enforcement" do
+    describe "Validation messages" do
       let(:paid_quota) { QuotaDefinition.make(:total_services => 1) }
       let(:free_quota_with_no_services) do
         QuotaDefinition.make(:total_services => 0,
@@ -624,70 +624,88 @@ module VCAP::CloudController
       end
       let(:paid_plan) { ServicePlan.make }
       let(:free_plan) { ServicePlan.make(:free => true) }
+      let(:org) { Organization.make(:quota_definition => paid_quota) }
+      let(:space) { Space.make(:organization => org) }
 
-      context "paid quota" do
-        let(:org) { Organization.make(:quota_definition => paid_quota) }
-        let(:space) { Space.make(:organization => org) }
+      it "returns duplicate name message correctly" do
+        existing_service_instance = ManagedServiceInstance.make(space: space)
+        service_instance_params = {
+          name: existing_service_instance.name,
+          space_guid: space.guid,
+          service_plan_guid: free_plan.guid
+        }
+        post "/v2/service_instances", MultiJson.dump(service_instance_params), json_headers(admin_headers)
 
-        def create_first_instance
-          ManagedServiceInstance.make(:space => space, :service_plan => paid_plan)
-        end
-
-        it "should enforce quota check on number of service instances during creation" do
-          create_first_instance
-          space = Space.make(:organization => org)
-          req = MultiJson.dump(:name => Sham.name,
-                                     :space_guid => space.guid,
-                                     :service_plan_guid => paid_plan.guid)
-
-          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
-          expect(last_response.status).to eq(400)
-          expect(decoded_response["description"]).to match(/exceeded your organization's services limit/)
-        end
-
-        it "should allow updating service instance when this doesn't affect quota" do
-          instance = create_first_instance
-          req = MultiJson.dump(:name => Sham.name)
-
-          put "/v2/service_instances/#{instance.guid}", req, json_headers(headers_for(make_developer_for_space(space)))
-          expect(last_response.status).to eq(201)
-        end
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(60002)
       end
 
-      context "free quota" do
-        it "should enforce quota check on number of service instances during creation" do
-          org = Organization.make(:quota_definition => free_quota_with_no_services)
-          space = Space.make(:organization => org)
-          req = MultiJson.dump(:name => Sham.name,
-                                     :space_guid => space.guid,
-                                     :service_plan_guid => free_plan.guid)
+      it "returns space quota exceeded message correctly" do
+        space.space_quota_definition = SpaceQuotaDefinition.make(total_services: 0)
+        space.save
+        service_instance_params = {
+          name: "name",
+          space_guid: space.guid,
+          service_plan_guid: free_plan.guid
+        }
+        post "/v2/service_instances", MultiJson.dump(service_instance_params), json_headers(admin_headers)
 
-          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
-          expect(last_response.status).to eq(400)
-          expect(decoded_response["description"]).to match(/exceeded your organization's services limit/)
-        end
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(60012)
+      end
 
-        it "should enforce quota check on service plan type during creation" do
-          org = Organization.make(:quota_definition => free_quota_with_one_service)
-          space = Space.make(:organization => org)
-          req = MultiJson.dump(:name => Sham.name,
-                                     :space_guid => space.guid,
-                                     :service_plan_guid => paid_plan.guid)
+      it "returns service plan not allowed by space quota message correctly" do
+        space.space_quota_definition = SpaceQuotaDefinition.make(non_basic_services_allowed: false)
+        space.save
+        service_instance_params = {
+          name: "name",
+          space_guid: space.guid,
+          service_plan_guid: paid_plan.guid
+        }
+        post "/v2/service_instances", MultiJson.dump(service_instance_params), json_headers(admin_headers)
 
-          post "/v2/service_instances", req, json_headers(headers_for(make_developer_for_space(space)))
-          expect(last_response.status).to eq(400)
-          expect(decoded_response["description"]).to match(/paid service plans are not allowed/)
-        end
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(60013)
+      end
 
-        it "should enforce quota check on service plan type change during update" do
-          org = Organization.make(:quota_definition => free_quota_with_one_service)
-          space = Space.make(:organization => org)
-          instance = ManagedServiceInstance.make(:space => space, :service_plan => free_plan)
+      it "returns quota exceeded message correctly" do
+        org.quota_definition.total_services = 0
+        org.quota_definition.save
+        service_instance_params = {
+          name: "name",
+          space_guid: space.guid,
+          service_plan_guid: free_plan.guid
+        }
+        post "/v2/service_instances", MultiJson.dump(service_instance_params), json_headers(admin_headers)
 
-          put "/v2/service_instances/#{instance.guid}", MultiJson.dump(:service_plan_guid => paid_plan.guid), json_headers(headers_for(make_developer_for_space(space)))
-          expect(last_response.status).to eq(400)
-          expect(decoded_response["description"]).to match(/paid service plans are not allowed/)
-        end
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(60005)
+      end
+
+      it "returns service plan not allowed by quota message correctly" do
+        org.quota_definition.non_basic_services_allowed = false
+        org.quota_definition.save
+        service_instance_params = {
+          name: "name",
+          space_guid: space.guid,
+          service_plan_guid: paid_plan.guid
+        }
+        post "/v2/service_instances", MultiJson.dump(service_instance_params), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(60007)
+      end
+
+      it "returns service plan name too long message correctly" do
+        service_instance_params = {
+          name: "n" * 51,
+          space_guid: space.guid,
+          service_plan_guid: free_plan.guid
+        }
+        post "/v2/service_instances", MultiJson.dump(service_instance_params), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(60009)
       end
 
       context 'invalid space guid' do

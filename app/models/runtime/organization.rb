@@ -7,6 +7,9 @@ module VCAP::CloudController
     one_to_many :service_instances,
                 dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces) }
 
+    one_to_many :managed_service_instances,
+                dataset: -> { VCAP::CloudController::ServiceInstance.filter(space: spaces, is_gateway_service: true) }
+
     one_to_many :apps,
                 dataset: -> { App.filter(space: spaces) }
 

@@ -17,30 +17,32 @@ module VCAP::CloudController
 
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
-      quota_errors = e.errors.on(:org)
+      quota_errors = e.errors.on(:quota)
       service_plan_errors = e.errors.on(:service_plan)
       service_instance_name_errors = e.errors.on(:name)
       if space_and_name_errors && space_and_name_errors.include?(:unique)
-        Errors::ApiError.new_from_details("ServiceInstanceNameTaken", attributes["name"])
+        return Errors::ApiError.new_from_details("ServiceInstanceNameTaken", attributes["name"])
       elsif quota_errors
-        if quota_errors.include?(:free_quota_exceeded)
-          Errors::ApiError.new_from_details("ServiceInstanceFreeQuotaExceeded")
-        elsif quota_errors.include?(:paid_quota_exceeded)
-          Errors::ApiError.new_from_details("ServiceInstancePaidQuotaExceeded")
-        else
-          Errors::ApiError.new_from_details("ServiceInstanceInvalid", e.errors.full_messages)
+        if quota_errors.include?(:service_instance_space_quota_exceeded)
+          return Errors::ApiError.new_from_details("ServiceInstanceSpaceQuotaExceeded")
+        elsif quota_errors.include?(:service_instance_quota_exceeded)
+          return Errors::ApiError.new_from_details("ServiceInstanceQuotaExceeded")
         end
       elsif service_plan_errors
-        Errors::ApiError.new_from_details("ServiceInstanceServicePlanNotAllowed")
+        if service_plan_errors.include?(:paid_services_not_allowed_by_space_quota)
+          return Errors::ApiError.new_from_details("ServiceInstanceServicePlanNotAllowedBySpaceQuota")
+        elsif service_plan_errors.include?(:paid_services_not_allowed_by_quota)
+          return Errors::ApiError.new_from_details("ServiceInstanceServicePlanNotAllowed")
+        end
       elsif service_instance_name_errors
         if service_instance_name_errors.include?(:max_length)
-          Errors::ApiError.new_from_details("ServiceInstanceNameTooLong")
+          return Errors::ApiError.new_from_details("ServiceInstanceNameTooLong")
         else
-          Errors::ApiError.new_from_details("ServiceInstanceNameInvalid", attributes['name'])
+          return Errors::ApiError.new_from_details("ServiceInstanceNameInvalid", attributes['name'])
         end
-      else
-        Errors::ApiError.new_from_details("ServiceInstanceInvalid", e.errors.full_messages)
       end
+
+      Errors::ApiError.new_from_details("ServiceInstanceInvalid", e.errors.full_messages)
     end
 
     def self.not_found_exception(guid)

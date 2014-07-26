@@ -42,6 +42,24 @@ module VCAP::CloudController
           service_instance.add_service_binding(service_binding)
         }.to raise_error ServiceInstance::InvalidServiceBinding
       end
+
+      it "validates org and space quotas using MaxServiceInstancePolicy" do
+        space_quota_definition = SpaceQuotaDefinition.make
+        service_instance.space.space_quota_definition = space_quota_definition
+        max_memory_policies = service_instance.validation_policies.select { |policy| policy.instance_of? MaxServiceInstancePolicy }
+        expect(max_memory_policies.length).to eq(2)
+        targets = max_memory_policies.collect(&:quota_definition)
+        expect(targets).to match_array([space_quota_definition, service_instance.organization.quota_definition])
+      end
+
+      it "validates org and space quotas using PaidServiceInstancePolicy" do
+        space_quota_definition = SpaceQuotaDefinition.make
+        service_instance.space.space_quota_definition = space_quota_definition
+        policies = service_instance.validation_policies.select { |policy| policy.instance_of? PaidServiceInstancePolicy }
+        expect(policies.length).to eq(2)
+        targets = policies.collect(&:quota_definition)
+        expect(targets).to match_array([space_quota_definition, service_instance.organization.quota_definition])
+      end
     end
 
     describe "Serialization" do
@@ -161,34 +179,8 @@ module VCAP::CloudController
                                      :non_basic_services_allowed => true)
       end
 
-      context "with a free quota" do
-        let(:org) { Organization.make(:quota_definition => free_quota) }
-        let(:space) { Space.make(:organization => org) }
-
-        context "when the service instance is not associated with a free plan" do
-          it "raises an error" do
-            expect {
-              ManagedServiceInstance.make(space: space, service_plan: paid_plan)
-            }.to raise_error(Sequel::ValidationFailed, /service_plan paid_services_not_allowed/)
-          end
-        end
-      end
-
       context "exceed quota" do
-        it "should raise paid quota error when paid quota is exceeded" do
-          org = Organization.make(:quota_definition => paid_quota)
-          space = Space.make(:organization => org)
-          ManagedServiceInstance.make(:space => space,
-                                              :service_plan => free_plan).
-            save(:validate => false)
-          space.refresh
-          expect do
-            ManagedServiceInstance.make(:space => space,
-                                                :service_plan => free_plan)
-          end.to raise_error(Sequel::ValidationFailed, /org paid_quota_exceeded/)
-        end
-
-        it "should raise free quota error when free quota is exceeded" do
+        it "should raise quota error when quota is exceeded" do
           org = Organization.make(:quota_definition => free_quota)
           space = Space.make(:organization => org)
           ManagedServiceInstance.make(:space => space,
@@ -198,7 +190,7 @@ module VCAP::CloudController
           expect do
             ManagedServiceInstance.make(:space => space,
                                                 :service_plan => free_plan)
-          end.to raise_error(Sequel::ValidationFailed, /org free_quota_exceeded/)
+          end.to raise_error(Sequel::ValidationFailed, /quota service_instance_quota_exceeded/)
         end
 
         it "should not raise error when quota is not exceeded" do
@@ -239,7 +231,7 @@ module VCAP::CloudController
             ManagedServiceInstance.make(:space => space,
                                                 :service_plan => paid_plan)
           end.to raise_error(Sequel::ValidationFailed,
-                             /service_plan paid_services_not_allowed/)
+                             /service_plan paid_services_not_allowed_by_quota/)
         end
 
         it "should not raise error when created in paid quota" do
