@@ -9,8 +9,8 @@ module VCAP::CloudController
     many_to_one :space
 
     many_to_many :apps,
-      before_add: :validate_app,
-      after_add: :mark_app_routes_changed,
+      before_add:   :validate_app,
+      after_add:    :mark_app_routes_changed,
       after_remove: :mark_app_routes_changed
 
     add_association_dependencies apps: :nullify
@@ -24,8 +24,8 @@ module VCAP::CloudController
 
     def as_summary_json
       {
-        guid: guid,
-        host: host,
+        guid:   guid,
+        host:   host,
         domain: {
           guid: domain.guid,
           name: domain.name
@@ -43,8 +43,8 @@ module VCAP::CloudController
 
       errors.add(:host, :presence) if host.nil?
 
-      validates_format   /^([\w\-]+)$/, :host if (host && !host.empty?)
-      validates_unique   [:host, :domain_id]
+      validates_format /^([\w\-]+)$/, :host if (host && !host.empty?)
+      validates_unique [:host, :domain_id]
 
       validate_domain
       validate_total_routes
@@ -69,13 +69,13 @@ module VCAP::CloudController
       ))
 
       spaces = Space.filter(Sequel.or(
-        developers: [user],
-        auditors: [user],
-        managers: [user],
+        developers:   [user],
+        auditors:     [user],
+        managers:     [user],
         organization: orgs,
       ))
 
-      {:space => spaces}
+      { :space => spaces }
     end
 
     def in_suspended_org?
@@ -101,7 +101,7 @@ module VCAP::CloudController
       return unless domain
 
       if (domain.shared? && !host.present?) ||
-            (space && !domain.usable_by_organization?(space.organization))
+        (space && !domain.usable_by_organization?(space.organization))
         errors.add(:domain, :invalid_relation)
       end
     end
@@ -109,7 +109,14 @@ module VCAP::CloudController
     def validate_total_routes
       return unless new? && space
 
-      unless MaxRoutesPolicy.new(space.organization).allow_more_routes?(1)
+      space_routes_policy = MaxRoutesPolicy.new(space.space_quota_definition, SpaceRoutes.new(space))
+      org_routes_policy   = MaxRoutesPolicy.new(space.organization.quota_definition, OrganizationRoutes.new(space.organization))
+
+      if space.space_quota_definition && !space_routes_policy.allow_more_routes?(1)
+        errors.add(:space, :total_routes_exceeded)
+      end
+
+      if !org_routes_policy.allow_more_routes?(1)
         errors.add(:organization, :total_routes_exceeded)
       end
     end

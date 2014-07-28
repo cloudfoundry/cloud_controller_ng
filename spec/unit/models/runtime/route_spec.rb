@@ -40,59 +40,125 @@ module VCAP::CloudController
 
         it "should allow an empty host" do
           Route.make(:space => space,
-                             :domain => domain,
-                             :host => "")
+            :domain         => domain,
+            :host           => "")
         end
 
         it "should not allow a blank host" do
           expect {
             Route.make(:space => space,
-                               :domain => domain,
-                               :host => " ")
+              :domain         => domain,
+              :host           => " ")
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
 
       describe "total allowed routes" do
         let(:space) { Space.make }
-        let(:quota_definition) { space.organization.quota_definition }
+        let(:org_quota) { space.organization.quota_definition }
+        let(:space_quota) { nil }
+
+        before do
+          space.space_quota_definition = space_quota
+        end
 
         subject(:route) { Route.new(space: space) }
 
-        context "on create" do
-          context "when there is less than the total allowed routes" do
-            before do
-              quota_definition.total_routes = 10
-              quota_definition.save
+        context "for organizatin quotas" do
+          context "on create" do
+            context "when not exceeding total allowed routes" do
+              before do
+                org_quota.total_routes = 10
+                org_quota.save
+              end
+
+              it "does not have an error on organization" do
+                subject.valid?
+                expect(subject.errors.on(:organization)).to be_nil
+              end
             end
 
-            it "has the error on organization" do
-              subject.valid?
-              expect(subject.errors.on(:organization)).to be_nil
+            context "when exceeding total allowed routes" do
+              before do
+                org_quota.total_routes = 0
+                org_quota.save
+              end
+
+              it "has the error on organization" do
+                subject.valid?
+                expect(subject.errors.on(:organization)).to include :total_routes_exceeded
+              end
             end
           end
 
-          context "when there is more than the total allowed routes" do
-            before do
-              quota_definition.total_routes = 0
-              quota_definition.save
-            end
-
-            it "has the error on organization" do
-              subject.valid?
-              expect(subject.errors.on(:organization)).to include :total_routes_exceeded
+          context "on update" do
+            it "should not validate the total routes limit if already existing" do
+              expect {
+                org_quota.total_routes = 0
+                org_quota.save
+              }.not_to change {
+                subject.valid?
+              }
             end
           end
         end
 
-        context "on update" do
-          it "should not validate the total routes limit if already existing" do
-            expect {
-              quota_definition.total_routes = 0
-              quota_definition.save
-            }.not_to change {
-              subject.valid?
-            }
+        context "for space quotas" do
+          let(:space_quota) { QuotaDefinition.make }
+
+          context "on create" do
+            context "when not exceeding total allowed routes" do
+              before do
+                space_quota.total_routes = 10
+                space_quota.save
+              end
+
+              it "does not have an error on the space" do
+                subject.valid?
+                expect(subject.errors.on(:space)).to be_nil
+              end
+            end
+
+            context "when exceeding total allowed routes" do
+              before do
+                space_quota.total_routes = 0
+                space_quota.save
+              end
+
+              it "has the error on the space" do
+                subject.valid?
+                expect(subject.errors.on(:space)).to include :total_routes_exceeded
+              end
+            end
+          end
+
+          context "on update" do
+            it "should not validate the total routes limit if already existing" do
+              expect {
+                space_quota.total_routes = 0
+                space_quota.save
+              }.not_to change {
+                subject.valid?
+              }
+            end
+          end
+        end
+
+        describe "quota evaluation order" do
+          let(:space_quota) { QuotaDefinition.make }
+
+          before do
+            org_quota.total_routes   = 0
+            space_quota.total_routes = 10
+
+            org_quota.save
+            space_quota.save
+          end
+
+          it "fails when the space quota is valid and the organization quota is exceeded" do
+            subject.valid?
+            expect(subject.errors.on(:space)).to be_nil
+            expect(subject.errors.on(:organization)).to include :total_routes_exceeded
           end
         end
       end
@@ -116,9 +182,9 @@ module VCAP::CloudController
         context "for a non-nil host" do
           it "should return the fqdn for the route" do
             r = Route.make(
-              :host => "www",
+              :host   => "www",
               :domain => domain,
-              :space => space,
+              :space  => space,
             )
             expect(r.fqdn).to eq("www.#{domain.name}")
           end
@@ -127,9 +193,9 @@ module VCAP::CloudController
         context "for a nil host" do
           it "should return the fqdn for the route" do
             r = Route.make(
-              :host => "",
+              :host   => "",
               :domain => domain,
-              :space => space,
+              :space  => space,
             )
             expect(r.fqdn).to eq(domain.name)
           end
@@ -139,13 +205,13 @@ module VCAP::CloudController
       describe "#as_summary_json" do
         it "returns a hash containing the route id, host, and domain details" do
           r = Route.make(
-            :host => "www",
+            :host   => "www",
             :domain => domain,
-            :space => space,
+            :space  => space,
           )
           expect(r.as_summary_json).to eq({
-            :guid => r.guid,
-            :host => r.host,
+            :guid   => r.guid,
+            :host   => r.host,
             :domain => {
               :guid => r.domain.guid,
               :name => r.domain.name
@@ -184,7 +250,7 @@ module VCAP::CloudController
 
       it "should not associate with apps from a different space" do
         route = Route.make(space: space_b, domain: domain_a)
-        app = AppFactory.make(space: space_a)
+        app   = AppFactory.make(space: space_a)
         expect {
           route.add_app(app)
         }.to raise_error Route::InvalidAppRelation
@@ -195,8 +261,8 @@ module VCAP::CloudController
 
         expect {
           Route.make(
-            host: "",
-            space: space_a,
+            host:   "",
+            space:  space_a,
             domain: shared_domain
           )
         }.to raise_error Sequel::ValidationFailed
@@ -205,9 +271,9 @@ module VCAP::CloudController
 
     describe "#remove" do
       it "marks the apps routes as changed" do
-        app = AppFactory.make
+        app   = AppFactory.make
         route = Route.make(app_guids: [app.guid], space: app.space)
-        app = route.apps.first
+        app   = route.apps.first
 
         expect(app).to receive(:mark_routes_changed).and_call_original
         route.destroy
@@ -217,7 +283,7 @@ module VCAP::CloudController
     describe "apps association" do
       let(:route) { Route.make }
       let!(:app) do
-        AppFactory.make({:space => route.space})
+        AppFactory.make({ :space => route.space })
       end
 
       describe "when adding an app" do

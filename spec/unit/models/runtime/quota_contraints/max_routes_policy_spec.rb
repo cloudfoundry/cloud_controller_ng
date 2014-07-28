@@ -1,36 +1,34 @@
 require "spec_helper"
 
 describe MaxRoutesPolicy do
+  let(:quota_definition) { double(:quota_definition, total_routes: 4) }
+  let(:route_counter) { double(:route_counter, count: 0) }
+
+  subject { MaxRoutesPolicy.new(quota_definition, route_counter) }
+
   describe "#allow_more_routes?" do
-    let(:policy) { MaxRoutesPolicy.new(organization) }
-    let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make(total_routes: 4) }
-    let(:organization) { VCAP::CloudController::Organization.make(quota_definition: quota_definition) }
-    let!(:routes) do
-      space = VCAP::CloudController::Space.make(organization: organization)
-      2.times { VCAP::CloudController::Route.make(space: space) }
+    it "is false when exceeding the total allowed routes" do
+      result = subject.allow_more_routes?(5)
+      expect(result).to be_falsy
     end
 
-    subject { policy.allow_more_routes?(requested_routes) }
-
-    context "when requested exceeds the total allowed routes" do
-      let(:requested_routes) { 3 }
-      it { is_expected.to be false }
+    it "is true when equivalent to the total allowed routes" do
+      result = subject.allow_more_routes?(4)
+      expect(result).to be_truthy
     end
 
-    context "when requested equals the total allowed routes" do
-      let(:requested_routes) { 2 }
-      it { is_expected.to be true }
+    it "is true when not exceeding the total allowed routes" do
+      result = subject.allow_more_routes?(1)
+      expect(result).to be_truthy
     end
 
-    context "when requested less than the total allowed routes" do
-      let(:requested_routes) { 1 }
-      it { is_expected.to be true }
-    end
+    context "when an unlimited amount of routes are available" do
+      let(:quota_definition) { double(:quota_definition, total_routes: -1) }
 
-    context "when an unlimited amount routes are available" do
-      let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make(total_routes: -1) }
-      let(:requested_routes) { 100_000_000 }
-      it { is_expected.to be true }
+      it "is always true" do
+        result = subject.allow_more_routes?(100_000_000)
+        expect(result).to be_truthy
+      end
     end
   end
 end

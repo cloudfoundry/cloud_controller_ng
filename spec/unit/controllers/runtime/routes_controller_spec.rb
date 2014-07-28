@@ -119,5 +119,49 @@ module VCAP::CloudController
         include_examples "route permissions"
       end
     end
+
+    describe "Validation messages" do
+      let(:domain) { Domain.make}
+      let(:space)  { Space.make }
+
+      it "returns the RouteHostTaken message" do
+        taken_host = "someroute"
+        Route.make(host: taken_host, domain: domain)
+
+        post "/v2/routes", MultiJson.dump(host: taken_host, domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(210003)
+      end
+
+      it "returns the SpaceQuotaTotalRoutesExceeded message" do
+        quota_definition = SpaceQuotaDefinition.make(total_routes: 0)
+        space.space_quota_definition = quota_definition
+        space.save
+
+        post "/v2/routes", MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(310005)
+      end
+
+      it "returns the OrgQuotaTotalRoutesExceeded message" do
+        quota_definition = space.organization.quota_definition
+        quota_definition.total_routes = 0
+        quota_definition.save
+
+        post "/v2/routes", MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(310006)
+      end
+
+      it "returns the RouteInvalid message" do
+        post "/v2/routes", MultiJson.dump(host: 'myexample!*', domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response["code"]).to eq(210001)
+      end
+    end
   end
 end
