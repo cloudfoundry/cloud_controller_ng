@@ -34,6 +34,8 @@ module VCAP::CloudController
         User.find(guid: user_guid.to_s) || User.create(guid: user_guid, active: true)
       rescue Sequel::ValidationFailed
         User.find(guid: user_guid.to_s)
+      rescue Sequel::UniqueConstraintViolation
+        User.find(guid: user_guid.to_s)
       end
     end
   end
