@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::StagerPool do
+  describe VCAP::CloudController::Dea::StagerPool do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:staging_advertise_msg) do
       {
@@ -12,7 +12,7 @@ module VCAP::CloudController
       }
     end
 
-    subject { StagerPool.new(TestConfig.config, message_bus) }
+    subject { Dea::StagerPool.new(TestConfig.config, message_bus) }
 
     describe "#register_subscriptions" do
       it "finds advertised stagers" do
