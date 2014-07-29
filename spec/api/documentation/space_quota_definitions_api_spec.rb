@@ -29,7 +29,7 @@ resource "Space Quota Definitions (experimental)", type: :api do
     include_context "updatable_fields"
     example "Creating a Space Quota Definition" do
       organization_guid = VCAP::CloudController::Organization.make.guid
-      client.post "/v2/space_quota_definitions", MultiJson.dump(required_fields.merge(organization_guid: organization_guid)), headers
+      client.post "/v2/space_quota_definitions", MultiJson.dump(required_fields.merge(organization_guid: organization_guid), pretty: true), headers
 
       expect(status).to eq(201)
       standard_entity_response parsed_response, :space_quota_definition

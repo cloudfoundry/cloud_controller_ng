@@ -20,7 +20,7 @@ resource "Organizations", :type => :api do
 
     post "/v2/organizations/" do
       example "Creating an Organization" do
-        client.post "/v2/organizations", MultiJson.dump(required_fields), headers
+        client.post "/v2/organizations", MultiJson.dump(required_fields, pretty: true), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :organization
@@ -31,7 +31,7 @@ resource "Organizations", :type => :api do
       let(:new_name) { "New Organization Name" }
 
       example "Update an Organization" do
-        client.put "/v2/organizations/#{guid}", MultiJson.dump(name: new_name), headers
+        client.put "/v2/organizations/#{guid}", MultiJson.dump({ name: new_name }, pretty: true), headers
         expect(status).to eq 201
         standard_entity_response parsed_response, :organization, name: new_name
       end

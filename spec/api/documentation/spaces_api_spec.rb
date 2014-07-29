@@ -31,7 +31,7 @@ resource "Spaces", :type => :api do
     post "/v2/spaces/" do
       example "Creating a Space" do
         organization_guid = VCAP::CloudController::Organization.make.guid
-        client.post "/v2/spaces", MultiJson.dump(required_fields.merge(organization_guid: organization_guid)), headers
+        client.post "/v2/spaces", MultiJson.dump(required_fields.merge(organization_guid: organization_guid), pretty: true), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :space
@@ -47,7 +47,7 @@ resource "Spaces", :type => :api do
 
       example "Update a Space" do
         client.put "/v2/spaces/#{guid}",
-          MultiJson.dump(name: new_name, space_quota_definition_guid: new_space_quota_definition.guid),
+          MultiJson.dump({ name: new_name, space_quota_definition_guid: new_space_quota_definition.guid }, pretty: true),
           headers
 
         expect(status).to eq 201
