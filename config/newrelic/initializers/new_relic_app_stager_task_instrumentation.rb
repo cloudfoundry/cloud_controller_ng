@@ -1,9 +1,9 @@
 require 'new_relic/agent/method_tracer'
-require 'cloud_controller/app_stager_task'
+require 'cloud_controller/dea/app_stager_task'
 
 module CCInitializers
   def self.new_relic_app_stager_task_instrumentation(_)
-    VCAP::CloudController::AppStagerTask.class_eval do
+    VCAP::CloudController::Dea::AppStagerTask.class_eval do
       include ::NewRelic::Agent::MethodTracer
 
       %w(

@@ -225,7 +225,7 @@ module VCAP::CloudController
         let(:config_hash) { { :diego => false } }
 
         before do
-         allow(AppStagerTask).to receive(:new).
+         allow(Dea::AppStagerTask).to receive(:new).
             with(config_hash,
                  message_bus,
                  app,
@@ -334,7 +334,7 @@ module VCAP::CloudController
             let(:needs_staging) { false }
 
             it "should not make a stager task" do
-              expect(AppStagerTask).not_to receive(:new)
+              expect(Dea::AppStagerTask).not_to receive(:new)
               subject
             end
           end

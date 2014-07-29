@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe AppStagerTask do
+  describe Dea::AppStagerTask do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:stager_pool) { double(:stager_pool, :reserve_app_memory => nil) }
     let(:dea_pool) { double(:stager_pool, :reserve_app_memory => nil) }
@@ -20,7 +20,7 @@ module VCAP::CloudController
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
 
     let(:options) { {} }
-    subject(:staging_task) { AppStagerTask.new(config_hash, message_bus, app, dea_pool, stager_pool, blobstore_url_generator) }
+    subject(:staging_task) { Dea::AppStagerTask.new(config_hash, message_bus, app, dea_pool, stager_pool, blobstore_url_generator) }
 
     let(:first_reply_json_error) { nil }
     let(:task_streaming_log_url) { "task-streaming-log-url" }
@@ -258,7 +258,7 @@ module VCAP::CloudController
           end
 
           it "copes when the app is destroyed halfway between staging (currently we dont know why this happened but seen on tabasco)" do
-            allow(VCAP::CloudController::AppStagerTask::Response).to receive(:new) do
+            allow(VCAP::CloudController::Dea::AppStagerTask::Response).to receive(:new) do
               app.destroy # We saw that app maybe destroyed half-way through staging
               raise ArgumentError, "Some Fake Error"
             end

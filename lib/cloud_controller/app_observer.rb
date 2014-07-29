@@ -71,7 +71,7 @@ module VCAP::CloudController
       def stage_app(app, &completion_callback)
         validate_app_for_staging(app)
 
-        task = AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
+        task = Dea::AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
         task.stage(&completion_callback)
       end
 
