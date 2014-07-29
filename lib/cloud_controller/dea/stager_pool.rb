@@ -1,4 +1,4 @@
-require "cloud_controller/nats_messages/stager_advertisment"
+require "cloud_controller/dea/nats_messages/stager_advertisment"
 
 module VCAP::CloudController
   module Dea
@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       def process_advertise_message(msg)
         mutex.synchronize do
-          advertisement = StagerAdvertisement.new(msg)
+          advertisement = NatsMessages::StagerAdvertisement.new(msg)
 
           remove_advertisement_for_id(advertisement.stager_id)
           @stager_advertisements << advertisement

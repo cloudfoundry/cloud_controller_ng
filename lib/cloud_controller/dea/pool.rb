@@ -1,4 +1,4 @@
-require "cloud_controller/nats_messages/dea_advertisment"
+require "cloud_controller/dea/nats_messages/dea_advertisment"
 require "cloud_controller/dea/eligible_advertisement_filter"
 
 module VCAP::CloudController
@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       def process_advertise_message(message)
         mutex.synchronize do
-          advertisement = DeaAdvertisement.new(message)
+          advertisement = NatsMessages::DeaAdvertisement.new(message)
 
           remove_advertisement_for_id(advertisement.dea_id)
           @dea_advertisements << advertisement
@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       def process_shutdown_message(message)
-        fake_advertisement = DeaAdvertisement.new(message)
+        fake_advertisement = NatsMessages::DeaAdvertisement.new(message)
 
         mutex.synchronize do
           remove_advertisement_for_id(fake_advertisement.dea_id)
