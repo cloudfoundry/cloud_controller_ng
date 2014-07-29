@@ -74,24 +74,29 @@ module VCAP::CloudController
 
     def run!
       EM.run do
-        message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
+        begin
+          message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
 
-        start_cloud_controller(message_bus)
+          start_cloud_controller(message_bus)
 
-        Seeds.write_seed_data(@config) if @insert_seed_data
-        register_with_collector(message_bus)
+          Seeds.write_seed_data(@config) if @insert_seed_data
+          register_with_collector(message_bus)
 
-        globals = Globals.new(@config, message_bus)
-        globals.setup!
+          globals = Globals.new(@config, message_bus)
+          globals.setup!
 
-        builder = RackAppBuilder.new
-        app = builder.build(@config)
+          builder = RackAppBuilder.new
+          app     = builder.build(@config)
 
-        start_thin_server(app)
+          start_thin_server(app)
 
-        router_registrar.register_with_router
+          router_registrar.register_with_router
 
-        VCAP::CloudController::Varz.setup_updates
+          VCAP::CloudController::Varz.setup_updates
+        rescue Exception => e
+          logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
+          raise e
+        end
       end
     end
 

@@ -113,6 +113,12 @@ module VCAP::CloudController
           expect(VCAP::CloudController::Varz).to receive(:setup_updates)
           subject.run!
         end
+
+        it "logs an error if an exception is raised" do
+          allow(subject).to receive(:start_cloud_controller).and_raise("we have a problem")
+          expect(subject.logger).to receive(:error)
+          expect {subject.run!}.to raise_exception
+        end
       end
 
       describe "insert seed flag" do
