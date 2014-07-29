@@ -575,7 +575,7 @@ module VCAP::CloudController
 
       it "includes start app message" do
         request = staging_task.staging_request
-        expect(request[:start_message]).to be_a(StartAppMessage)
+        expect(request[:start_message]).to be_a(Dea::StartAppMessage)
       end
 
       it "includes app index 0" do

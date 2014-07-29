@@ -124,7 +124,7 @@ module VCAP::CloudController
       end
 
       def start_app_message
-        msg = StartAppMessage.new(@app, 0, @config, @blobstore_url_generator)
+        msg = Dea::StartAppMessage.new(@app, 0, @config, @blobstore_url_generator)
         msg[:sha1] = nil
         msg
       end
