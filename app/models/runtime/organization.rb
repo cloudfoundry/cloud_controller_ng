@@ -136,6 +136,10 @@ module VCAP::CloudController
 
     def add_default_quota
       unless quota_definition_id
+        if QuotaDefinition.default.nil?
+          err_msg = Errors::ApiError.new_from_details("QuotaDefinitionNotFound", QuotaDefinition.default_quota_name).message
+          raise Errors::ApiError.new_from_details("OrganizationInvalid", err_msg)
+        end
         self.quota_definition_id = QuotaDefinition.default.id
       end
     end

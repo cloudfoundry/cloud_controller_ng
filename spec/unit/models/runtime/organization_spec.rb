@@ -511,5 +511,32 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "#add_default_quota" do
+      context "when the default quota exists" do
+        let (:my_quota)  { QuotaDefinition.make }
+
+        it "uses the one provided" do
+          subject.quota_definition_id = my_quota.id
+          subject.add_default_quota
+          expect(subject.quota_definition_id).to eq(my_quota.id)
+        end
+
+        it "uses the default when nothing is provided" do
+          subject.quota_definition_id = nil
+          subject.add_default_quota
+          expect(subject.quota_definition_id).to eq(QuotaDefinition.default.id)
+        end
+      end
+
+      context "when the default quota does not exist" do
+        before { QuotaDefinition.default.destroy }
+
+        it "raises an exception" do
+          subject.quota_definition_id = nil
+          expect { subject.add_default_quota }.to raise_exception VCAP::Errors::ApiError, /Quota Definition could not be found/
+        end
+      end
+    end
   end
 end

@@ -244,5 +244,16 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "when the default quota does not exist" do
+      before { QuotaDefinition.default.destroy }
+
+      it "returns an OrganizationInvalid message" do
+        post "/v2/organizations", MultiJson.dump({name: "gotcha"}), admin_headers
+        expect(last_response.status).to eql(400)
+        expect(decoded_response["code"]).to eq(30001)
+        expect(decoded_response["description"]).to include("Quota Definition could not be found")
+      end
+    end
   end
 end
