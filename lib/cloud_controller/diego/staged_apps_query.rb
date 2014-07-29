@@ -8,7 +8,7 @@ module VCAP::CloudController
 
       def all
         App.
-          eager(:current_droplet).
+          eager(:current_droplet, :space, :stack, :routes, :service_bindings).
           where("apps.id > ?", @last_id).
           where("deleted_at IS NULL").
           where(state: "STARTED").
