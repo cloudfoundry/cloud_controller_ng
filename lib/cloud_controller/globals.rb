@@ -11,7 +11,7 @@ module VCAP::CloudController
 
       LegacyBulk.register_subscription
 
-      hm9000_respondent = HM9000Respondent.new(Dea::Client, @message_bus)
+      hm9000_respondent = Dea::HM9000::Respondent.new(Dea::Client, @message_bus)
       hm9000_respondent.handle_requests
 
       VCAP::CloudController.dea_respondent = Dea::Respondent.new(@message_bus)

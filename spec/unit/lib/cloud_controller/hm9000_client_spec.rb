@@ -40,7 +40,7 @@ def generate_hm_api_response(app, running_instances, crash_counts=[])
 end
 
 module VCAP::CloudController
-  describe VCAP::CloudController::HM9000Client do
+  describe VCAP::CloudController::Dea::HM9000::Client do
     let(:app0instances) { 1 }
     let(:app0) { AppFactory.make(instances: app0instances) }
     let(:app1) { AppFactory.make(instances: 1) }
@@ -59,7 +59,7 @@ module VCAP::CloudController
 
     let(:message_bus) { double }
 
-    subject(:hm9000_client) { VCAP::CloudController::HM9000Client.new(message_bus, hm9000_config) }
+    subject(:hm9000_client) { VCAP::CloudController::Dea::HM9000::Client.new(message_bus, hm9000_config) }
 
     before do
       allow(message_bus).to receive(:synchronous_request) do |subject, message, options|
@@ -213,7 +213,7 @@ module VCAP::CloudController
       before { allow(subject).to receive(:bulk_api_available).and_return(true) }
 
       context "when the application list is less than or equal to APP_STATE_BULK_MAX" do
-        before { stub_const("VCAP::CloudController::HM9000Client::APP_STATE_BULK_MAX_APPS", 3) }
+        before { stub_const("VCAP::CloudController::Dea::HM9000::Client::APP_STATE_BULK_MAX_APPS", 3) }
 
         it "makes a single request via the hm9000 bulk api" do
           expect(message_bus).to receive(:synchronous_request).once.with("app.state.bulk", anything, anything)
@@ -222,7 +222,7 @@ module VCAP::CloudController
       end
 
       context "when the applications list is longer than APP_STATE_BULK_MAX" do
-        before { stub_const("VCAP::CloudController::HM9000Client::APP_STATE_BULK_MAX_APPS", 2) }
+        before { stub_const("VCAP::CloudController::Dea::HM9000::Client::APP_STATE_BULK_MAX_APPS", 2) }
 
         it "makes a multiple requests via the hm9000 bulk api" do
           expect(message_bus).to receive(:synchronous_request).exactly(2).times.with("app.state.bulk", anything, anything)

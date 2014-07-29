@@ -1,12 +1,12 @@
 require "spec_helper"
-require "cloud_controller/hm9000_respondent"
+require "cloud_controller/dea/hm9000/respondent"
 
 module VCAP::CloudController
-  describe HM9000Respondent do
+  describe Dea::HM9000::Respondent do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:dea_client) { double("dea client", :message_bus => message_bus) }
 
-    subject { HM9000Respondent.new(dea_client, message_bus) }
+    subject { Dea::HM9000::Respondent.new(dea_client, message_bus) }
 
     before do
       allow(dea_client).to receive(:stop_instances)

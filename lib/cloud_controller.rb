@@ -76,8 +76,8 @@ require "cloud_controller/diego/service_registry"
 require "cloud_controller/stager/stager_pool"
 require "cloud_controller/stager/staging_completion_handler"
 
-require "cloud_controller/hm9000_client"
-require "cloud_controller/hm9000_respondent"
+require "cloud_controller/dea/hm9000/client"
+require "cloud_controller/dea/hm9000/respondent"
 
 require "cloud_controller/structured_error"
 require "cloud_controller/http_request_error"

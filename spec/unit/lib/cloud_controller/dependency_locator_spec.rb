@@ -8,7 +8,7 @@ describe CloudController::DependencyLocator do
 
   describe "#health_manager_client" do
     it "should return the hm9000 client" do
-      expect(locator.health_manager_client).to be_an_instance_of(VCAP::CloudController::HM9000Client)
+      expect(locator.health_manager_client).to be_an_instance_of(VCAP::CloudController::Dea::HM9000::Client)
     end
   end
 

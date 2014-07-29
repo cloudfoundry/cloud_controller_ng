@@ -18,7 +18,7 @@ module CloudController
     end
 
     def health_manager_client
-      @health_manager_client ||= HM9000Client.new(@message_bus, @config)
+      @health_manager_client ||= Dea::HM9000::Client.new(@message_bus, @config)
     end
 
     def droplet_blobstore
