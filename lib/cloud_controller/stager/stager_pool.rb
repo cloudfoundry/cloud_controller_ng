@@ -35,17 +35,18 @@ module VCAP::CloudController
       end
     end
 
+    def reserve_app_memory(stager_id, app_memory)
+      @stager_advertisements.find { |ad| ad.stager_id == stager_id }.decrement_memory(app_memory)
+    end
+
+    private
+
     def validate_stack_availability(stack)
       unless @stager_advertisements.any? { |ad| ad.has_stack?(stack) }
         raise Errors::ApiError.new_from_details("StackNotFound", "The requested app stack #{stack} is not available on this system.")
       end
     end
 
-    def reserve_app_memory(stager_id, app_memory)
-      @stager_advertisements.find { |ad| ad.stager_id == stager_id }.decrement_memory(app_memory)
-    end
-
-    private
     def top_5_stagers_for(memory, disk, stack)
       @stager_advertisements.select do |advertisement|
         advertisement.meets_needs?(memory, stack) && advertisement.has_sufficient_disk?(disk)
