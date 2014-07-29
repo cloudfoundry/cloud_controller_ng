@@ -1,6 +1,6 @@
 require "steno"
 
-require File.expand_path("../dea/dea_client", __FILE__)
+require "cloud_controller/dea/dea_client"
 
 module VCAP::CloudController
   class HM9000Respondent
