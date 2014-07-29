@@ -526,20 +526,7 @@ module VCAP::CloudController
 
           new_droplet_hash = "new droplet hash"
           subject.add_new_droplet(new_droplet_hash)
-          expect(subject.current_droplet.droplet_hash).to eq(new_droplet_hash)
-        end
-
-        context "When it does not have a row in droplets table but has droplet hash column", droplet_cleanup: true do
-          before do
-            subject.droplet_hash = "A-hash"
-            subject.save
-            subject.droplets_dataset.destroy
-          end
-
-          it "knows its current droplet" do
-            expect(subject.current_droplet).to be_instance_of(Droplet)
-            expect(subject.current_droplet.droplet_hash).to eq("A-hash")
-          end
+          expect(subject.reload.current_droplet.droplet_hash).to eq(new_droplet_hash)
         end
 
         context "When the droplet hash is nil" do

@@ -22,6 +22,11 @@ module VCAP::CloudController
     many_to_one :stack
     many_to_many :routes, before_add: :validate_route, after_add: :mark_routes_changed, after_remove: :mark_routes_changed
 
+    one_to_one :current_droplet,
+      :class => "::VCAP::CloudController::Droplet",
+      :key => :droplet_hash,
+      :primary_key => :droplet_hash
+
     add_association_dependencies routes: :nullify, service_bindings: :destroy, events: :delete, droplets: :destroy
 
     export_attributes :name, :production,
@@ -459,12 +464,6 @@ module VCAP::CloudController
       self.droplet_hash = hash
       add_droplet(droplet_hash: hash)
       self.save
-    end
-
-    def current_droplet
-      return nil unless droplet_hash
-      self.droplets_dataset.filter(droplet_hash: droplet_hash).first ||
-          Droplet.new(app: self, droplet_hash: self.droplet_hash)
     end
 
     def start!

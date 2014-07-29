@@ -56,6 +56,7 @@ module VCAP::CloudController
 
       app.mark_as_staged
       app.update_detected_buildpack(payload["detected_buildpack"], payload["buildpack_key"])
+      app.current_droplet ||= Droplet.new(app: app, droplet_hash: app.droplet_hash)
       app.current_droplet.update_start_command(payload["detected_start_command"])
 
       if @diego_client.running_enabled(app)

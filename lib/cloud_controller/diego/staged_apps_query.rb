@@ -8,14 +8,15 @@ module VCAP::CloudController
 
       def all
         App.
-          where("id > ?", @last_id).
+          eager(:current_droplet).
+          where("apps.id > ?", @last_id).
           where("deleted_at IS NULL").
           where(state: "STARTED").
           where(package_state: "STAGED").
           where(diego: true).
           order(:id).
           limit(@batch_size).
-          to_a
+          all
       end
     end
   end

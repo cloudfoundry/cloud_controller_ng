@@ -75,10 +75,22 @@ module VCAP::CloudController
         context "when a detected start command is returned" do
           before { success_response["detected_start_command"] = "./some-start-command" }
 
-          it "saves it on the app's current droplet" do
-            publish_staging_result(success_response)
+          context "when the app's current droplet already exists" do
+            it "updates the droplet with the returned start command" do
+              publish_staging_result(success_response)
+              staged_app.reload
+              expect(staged_app.current_droplet.detected_start_command).to eq("./some-start-command")
+              expect(staged_app.current_droplet.droplet_hash).to eq("lol")
+            end
+          end
 
-            expect(staged_app.current_droplet.detected_start_command).to eq("./some-start-command")
+          context "when the app's current droplet does not exist yet" do
+            before { staged_app.current_droplet.destroy }
+
+            it "creates the droplet with the returned start command" do
+              publish_staging_result(success_response)
+              expect(staged_app.reload.current_droplet.detected_start_command).to eq("./some-start-command")
+            end
           end
         end
 

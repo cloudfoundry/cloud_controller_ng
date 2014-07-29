@@ -125,6 +125,12 @@ module VCAP::CloudController
 
           expect(batch).not_to include(non_diego_app)
         end
+
+        it "loads all of the current droplets in one query" do
+          expect {
+            StagedAppsQuery.new(100, 0).all.each { |app| app.current_droplet }
+          }.to have_queried_db_times(/SELECT/, 2)
+        end
       end
     end
   end
