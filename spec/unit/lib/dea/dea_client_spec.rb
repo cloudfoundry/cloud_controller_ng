@@ -99,7 +99,7 @@ module VCAP::CloudController
         DeaClient.start_instance_at_index(app, 1)
       end
 
-      it "should not log passwords" do
+      it "should not log passwords and raise an error" do
         logger = double(Steno)
         allow(DeaClient).to receive(:logger).and_return(logger)
 
@@ -108,7 +108,17 @@ module VCAP::CloudController
           expect(data[:message]).not_to include(:services, :env, :executableUri)
         }.once
 
-        DeaClient.start_instance_at_index(app, 1)
+        idx = 1
+        expect {
+          DeaClient.start_instance_at_index(app, idx)
+        }.to raise_error { |error|
+          expect(error).to be_an_instance_of Errors::ApiError
+          expect(error.name).to eq("NoAvailableDEAFound")
+
+          msg = "Instance ##{idx} can not find a available DEA to start since APP's requirements is not met"
+
+          expect(error.message).to eq(msg)
+        }
       end
 
       context "when droplet is missing" do
@@ -173,14 +183,25 @@ module VCAP::CloudController
         app.instances = 1
         app.memory = 512
         expect(dea_pool).to receive(:find_dea).with(include(mem: 512))
-        DeaClient.start(app)
+        expect {
+          DeaClient.start(app)
+        }.to raise_error { |error|
+          expect(error).to be_an_instance_of Errors::ApiError
+          expect(error.name).to eq("NoAvailableDEAFound")
+        }
       end
 
       it "includes disk in find_dea request" do
         app.instances = 1
         app.disk_quota = 13
         expect(dea_pool).to receive(:find_dea).with(include(disk: 13))
-        DeaClient.start(app)
+
+        expect {
+          DeaClient.start(app)
+        }.to raise_error { |error|
+          expect(error).to be_an_instance_of Errors::ApiError
+          expect(error.name).to eq("NoAvailableDEAFound")
+        }
       end
     end
 
