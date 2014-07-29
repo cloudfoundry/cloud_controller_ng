@@ -24,6 +24,6 @@ module VCAP::CloudController
     define_messages
     define_routes
 
-    deprecated_endpoint '/v2/service_auth_tokens'
+    deprecated_endpoint '/v2/service_auth_tokens', 'Support for the v1 Service Broker API is deprecated and will be removed in the next major version of Cloud Foundry. Consider upgrading your broker to implement the v2 Service Broker API.'
   end
 end

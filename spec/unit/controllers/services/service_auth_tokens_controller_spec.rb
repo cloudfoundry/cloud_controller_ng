@@ -26,11 +26,52 @@ module VCAP::CloudController
       end
     end
 
-    describe 'deprecation warning' do
-      it 'adds the X-Cf-Warning to all endpoint responses' do
+    describe 'GET', '/v2/service_auth_tokens' do
+      it 'adds the X-Cf-Warning with the right message to the response' do
         get '/v2/service_auth_tokens', {}, admin_headers
         expect(last_response.status).to eq 200
-        expect(last_response).to be_a_deprecated_response
+        expect(last_response).to have_warning_message("Support for the v1 Service Broker API is deprecated and will be removed in the next major version of Cloud Foundry. Consider upgrading your broker to implement the v2 Service Broker API.")
+      end
+    end
+
+    describe 'CREATE', '/v2/service_auth_tokens' do
+      it 'adds the X-Cf-Warning with the right message to the response' do
+
+        req = {
+          :label    => 'some-label',
+          :provider => 'some-provider',
+          :token    => 'some-token'
+        }.to_json
+
+        post '/v2/service_auth_tokens', req, admin_headers
+        expect(last_response.status).to eq 201
+        expect(last_response).to have_warning_message("Support for the v1 Service Broker API is deprecated and will be removed in the next major version of Cloud Foundry. Consider upgrading your broker to implement the v2 Service Broker API.")
+      end
+    end
+
+    describe 'UPDATE', '/v2/service_auth_tokens/:service_auth_token_guid' do
+      let(:token) { ServiceAuthToken.make }
+
+      it 'adds the X-Cf-Warning with the right message to the response' do
+        req = {
+          :label    => 'some-label',
+          :provider => 'some-provider',
+          :token    => 'some-token'
+        }.to_json
+
+        put "/v2/service_auth_tokens/#{token.guid}", req, admin_headers
+        expect(last_response.status).to eq 201
+        expect(last_response).to have_warning_message("Support for the v1 Service Broker API is deprecated and will be removed in the next major version of Cloud Foundry. Consider upgrading your broker to implement the v2 Service Broker API.")
+      end
+    end
+
+    describe 'DELETE', '/v2/service_auth_tokens/:service_auth_token_guid' do
+      let(:token) { ServiceAuthToken.make }
+
+      it 'adds the X-Cf-Warning with the right message to the response' do
+        delete "/v2/service_auth_tokens/#{token.guid}", {}, admin_headers
+        expect(last_response.status).to eq 204
+        expect(last_response).to have_warning_message("Support for the v1 Service Broker API is deprecated and will be removed in the next major version of Cloud Foundry. Consider upgrading your broker to implement the v2 Service Broker API.")
       end
     end
   end

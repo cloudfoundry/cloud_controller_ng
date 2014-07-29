@@ -221,9 +221,9 @@ module VCAP::CloudController::RestController
         @perserved_query_params
       end
 
-      def deprecated_endpoint(path)
+      def deprecated_endpoint(path, message = "Endpoint deprecated")
         controller.after "#{path}*" do
-          headers["X-Cf-Warnings"] ||= CGI.escape("Endpoint deprecated")
+          headers["X-Cf-Warnings"] ||= CGI.escape(message)
         end
       end
 
