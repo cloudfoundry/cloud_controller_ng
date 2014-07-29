@@ -1,4 +1,7 @@
-module VCAP::CloudController::InstancesReporter
+require "cloud_controller/dea/instances_reporter"
+require "cloud_controller/diego/instances_reporter"
+
+module VCAP::CloudController
   class CompositeInstancesReporter
     def initialize(diego_client, health_manager_client)
       @diego_client = diego_client
@@ -33,11 +36,11 @@ module VCAP::CloudController::InstancesReporter
     attr_reader :diego_client, :health_manager_client
 
     def diego_reporter
-      DiegoInstancesReporter.new(diego_client)
+      Diego::InstancesReporter.new(diego_client)
     end
 
     def legacy_reporter
-      LegacyInstancesReporter.new(health_manager_client)
+      Dea::InstancesReporter.new(health_manager_client)
     end
 
     def reporter_for_app(app)

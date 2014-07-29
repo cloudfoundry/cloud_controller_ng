@@ -158,7 +158,7 @@ module CloudController
     end
 
     def instances_reporter
-      @instances_reporter ||= VCAP::CloudController::InstancesReporter::CompositeInstancesReporter.new(diego_client, health_manager_client)
+      @instances_reporter ||= VCAP::CloudController::CompositeInstancesReporter.new(diego_client, health_manager_client)
     end
 
     private

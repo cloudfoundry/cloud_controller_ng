@@ -1,16 +1,16 @@
 require 'spec_helper'
 
-module VCAP::CloudController::InstancesReporter
+module VCAP::CloudController
   describe CompositeInstancesReporter do
     subject { described_class.new(diego_client, health_manager_client) }
     let(:diego_client) { double(:diego_client) }
     let(:health_manager_client) { double(:health_manager_client) }
-    let(:legacy_reporter) { instance_double(LegacyInstancesReporter) }
-    let(:diego_reporter) { instance_double(DiegoInstancesReporter) }
+    let(:dea_reporter) { instance_double(Dea::InstancesReporter) }
+    let(:diego_reporter) { instance_double(Diego::InstancesReporter) }
 
     before do
-      allow(LegacyInstancesReporter).to receive(:new).and_return(legacy_reporter)
-      allow(DiegoInstancesReporter).to receive(:new).and_return(diego_reporter)
+      allow(Dea::InstancesReporter).to receive(:new).and_return(dea_reporter)
+      allow(Diego::InstancesReporter).to receive(:new).and_return(diego_reporter)
     end
 
     let(:app) { VCAP::CloudController::AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
@@ -25,16 +25,16 @@ module VCAP::CloudController::InstancesReporter
         let(:is_diego_app) { false }
 
         it 'uses the legacy reporter' do
-          expect(legacy_reporter).to receive(:number_of_starting_and_running_instances_for_app).with(app)
+          expect(dea_reporter).to receive(:number_of_starting_and_running_instances_for_app).with(app)
           subject.number_of_starting_and_running_instances_for_app(app)
 
-          expect(legacy_reporter).to receive(:all_instances_for_app).with(app)
+          expect(dea_reporter).to receive(:all_instances_for_app).with(app)
           subject.all_instances_for_app(app)
 
-          expect(legacy_reporter).to receive(:crashed_instances_for_app).with(app)
+          expect(dea_reporter).to receive(:crashed_instances_for_app).with(app)
           subject.crashed_instances_for_app(app)
 
-          expect(legacy_reporter).to receive(:stats_for_app).with(app)
+          expect(dea_reporter).to receive(:stats_for_app).with(app)
           subject.stats_for_app(app)
         end
       end
@@ -63,7 +63,7 @@ module VCAP::CloudController::InstancesReporter
         let(:is_diego_app) { false }
 
         it 'returns a hash using legacy reporter' do
-          expect(legacy_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([app]).and_return({})
+          expect(dea_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([app]).and_return({})
           allow(diego_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([]).and_return({})
 
           subject.number_of_starting_and_running_instances_for_apps([app])
@@ -75,7 +75,7 @@ module VCAP::CloudController::InstancesReporter
 
         it 'returns a hash using legacy reporter' do
           expect(diego_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([app]).and_return({})
-          allow(legacy_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([]).and_return({})
+          allow(dea_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([]).and_return({})
 
           subject.number_of_starting_and_running_instances_for_apps([app])
         end
@@ -87,11 +87,11 @@ module VCAP::CloudController::InstancesReporter
         end
 
         let(:diego_report) do
-          { apps[0] => 2, apps[2] => 5 }
+          {apps[0] => 2, apps[2] => 5}
         end
 
         let(:legacy_report) do
-          { apps[1] => 7 }
+          {apps[1] => 7}
         end
 
         before do
@@ -101,14 +101,14 @@ module VCAP::CloudController::InstancesReporter
         it 'associates the apps with the correct client' do
           expect(diego_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([apps[0], apps[2]])
                                     .and_return(diego_report)
-          allow(legacy_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([apps[1]])
-                                    .and_return(legacy_report)
+          allow(dea_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([apps[1]])
+                                 .and_return(legacy_report)
 
           expect(subject.number_of_starting_and_running_instances_for_apps(apps)).to eql({
-            apps[0] => 2,
-            apps[1] => 7,
-            apps[2] => 5,
-          })
+                                                                                             apps[0] => 2,
+                                                                                             apps[1] => 7,
+                                                                                             apps[2] => 5,
+                                                                                         })
         end
       end
     end

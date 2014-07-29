@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       instances = instances_reporter.all_instances_for_app(app)
       MultiJson.dump(instances)
-    rescue InstancesReporter::InstancesUnavailable => e
+    rescue Errors::InstancesUnavailable => e
       raise VCAP::Errors::ApiError.new_from_details("InstancesUnavailable", e.to_s)
     end
 

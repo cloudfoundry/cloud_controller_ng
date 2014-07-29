@@ -1,10 +1,9 @@
 require 'spec_helper'
 
-module VCAP::CloudController::InstancesReporter
-  describe LegacyInstancesReporter do
-
+module VCAP::CloudController
+  describe Dea::InstancesReporter do
     subject { described_class.new(health_manager_client) }
-    let(:app) { VCAP::CloudController::AppFactory.make(:package_hash => "abc", :package_state => "STAGED") }
+    let(:app) { AppFactory.make(:package_hash => "abc", :package_state => "STAGED") }
     let(:health_manager_client) { double(:health_manager_client) }
 
     describe '#all_instances_for_app' do
@@ -18,13 +17,13 @@ module VCAP::CloudController::InstancesReporter
       end
 
       before do
-        allow(VCAP::CloudController::Dea::Client).to receive(:find_all_instances).and_return(instances)
+        allow(Dea::Client).to receive(:find_all_instances).and_return(instances)
       end
 
       it 'uses Dea::Client to return instances' do
         response = subject.all_instances_for_app(app)
 
-        expect(VCAP::CloudController::Dea::Client).to have_received(:find_all_instances).with(app)
+        expect(Dea::Client).to have_received(:find_all_instances).with(app)
         expect(instances).to eq(response)
       end
     end
@@ -60,13 +59,13 @@ module VCAP::CloudController::InstancesReporter
     describe '#number_of_starting_and_running_instances_for_apps' do
       let(:running_apps) do
         3.times.map do
-          VCAP::CloudController::AppFactory.make(:state => "STARTED", :package_state => "STAGED", :package_hash => "abc")
+          AppFactory.make(:state => "STARTED", :package_state => "STAGED", :package_hash => "abc")
         end
       end
 
       let(:stopped_apps) do
         3.times.map do
-          VCAP::CloudController::AppFactory.make(:state => "STOPPED", :package_state => "STAGED", :package_hash => "xyz")
+          AppFactory.make(:state => "STOPPED", :package_state => "STAGED", :package_hash => "xyz")
         end
       end
 
@@ -127,13 +126,13 @@ module VCAP::CloudController::InstancesReporter
     describe '#stats_for_app' do
 
       before do
-        allow(VCAP::CloudController::Dea::Client).to receive(:find_stats).and_return('some return value')
+        allow(Dea::Client).to receive(:find_stats).and_return('some return value')
       end
 
       it 'uses Dea::Client to return stats' do
         result = subject.stats_for_app(app)
 
-        expect(VCAP::CloudController::Dea::Client).to have_received(:find_stats).with(app)
+        expect(Dea::Client).to have_received(:find_stats).with(app)
         expect(result).to eq('some return value')
       end
     end
