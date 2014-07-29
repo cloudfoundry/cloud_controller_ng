@@ -350,7 +350,7 @@ module VCAP::CloudController
           :space => space,
         )
 
-        expect(DeaClient).to receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
+        expect(Dea::Client).to receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
           expect(app.uris).to include("app.jesse.cloud")
         end
 
@@ -374,11 +374,12 @@ module VCAP::CloudController
           r["metadata"]["guid"]
         }.sort).to eq([bar_route.guid, route.guid].sort)
 
-        expect(DeaClient).to receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
+        expect(Dea::Client).to receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
           expect(app.uris).to include("foo.jesse.cloud")
         end
 
         put @app_url, MultiJson.dump({route_guids: [route.guid]}), json_headers(@headers_for_user)
+
         expect(last_response.status).to eq(201)
       end
     end

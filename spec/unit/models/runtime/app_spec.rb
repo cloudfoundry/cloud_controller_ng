@@ -1643,7 +1643,7 @@ module VCAP::CloudController
 
           before do
             AppStartEvent.create_from_app(app)
-            allow(VCAP::CloudController::DeaClient).to receive(:stop)
+            allow(VCAP::CloudController::Dea::Client).to receive(:stop)
           end
 
           it "generates a stop event" do

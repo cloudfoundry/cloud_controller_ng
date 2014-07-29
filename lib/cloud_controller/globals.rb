@@ -6,15 +6,15 @@ module VCAP::CloudController
     end
 
     def setup!
-      DeaClient.run
+      Dea::Client.run
       AppObserver.run
 
       LegacyBulk.register_subscription
 
-      hm9000_respondent = HM9000Respondent.new(DeaClient, @message_bus)
+      hm9000_respondent = HM9000Respondent.new(Dea::Client, @message_bus)
       hm9000_respondent.handle_requests
 
-      VCAP::CloudController.dea_respondent = DeaRespondent.new(@message_bus)
+      VCAP::CloudController.dea_respondent = Dea::Respondent.new(@message_bus)
       VCAP::CloudController.dea_respondent.start
     end
   end

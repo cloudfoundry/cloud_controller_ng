@@ -153,7 +153,7 @@ resource "Apps", :type => :api do
     let(:app_obj) { VCAP::CloudController::AppFactory.make(state: "STARTED", instances: 2) }
 
     example "Terminate the running App Instance at the given index" do
-      allow(VCAP::CloudController::DeaClient).to receive(:stop_indices)
+      allow(VCAP::CloudController::Dea::Client).to receive(:stop_indices)
       client.delete "/v2/apps/#{app_obj.guid}/instances/0", {}, headers
       expect(status).to eq(204)
     end

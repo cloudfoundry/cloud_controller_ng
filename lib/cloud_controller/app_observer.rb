@@ -1,5 +1,6 @@
 require "cloud_controller/multi_response_message_bus_request"
 require "models/runtime/droplet_uploader"
+require "cloud_controller/dea/app_stopper"
 
 module VCAP::CloudController
   module AppObserver
@@ -18,7 +19,7 @@ module VCAP::CloudController
         if @diego_client.running_enabled(app)
           @diego_client.send_desire_request(app)
         else
-          AppStopper.new(@message_bus).stop(app)
+          Dea::AppStopper.new(@message_bus).stop(app)
         end
 
         delete_package(app) if app.package_hash
@@ -95,7 +96,7 @@ module VCAP::CloudController
             return
           end
 
-          DeaClient.stop(app)
+          Dea::Client.stop(app)
           broadcast_app_updated(app)
           return
         end
@@ -112,7 +113,7 @@ module VCAP::CloudController
 
         stage_if_needed(app) do |staging_result|
           started_instances = staging_result[:started_instances] || 0
-          DeaClient.start(app, :instances_to_start => app.instances - started_instances)
+          Dea::Client.start(app, :instances_to_start => app.instances - started_instances)
           broadcast_app_updated(app)
         end
       end
@@ -124,7 +125,7 @@ module VCAP::CloudController
             return
           end
 
-          DeaClient.change_running_instances(app, delta)
+          Dea::Client.change_running_instances(app, delta)
           broadcast_app_updated(app)
         end
       end

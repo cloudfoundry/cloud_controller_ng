@@ -1,9 +1,9 @@
 require 'new_relic/agent/method_tracer'
-require 'cloud_controller/dea/dea_pool'
+require 'cloud_controller/dea/pool'
 
 module CCInitializers
   def self.new_relic_dea_pool_instrumentation(_)
-    VCAP::CloudController::DeaPool.class_eval do
+    VCAP::CloudController::Dea::Pool.class_eval do
       include ::NewRelic::Agent::MethodTracer
 
       %w(

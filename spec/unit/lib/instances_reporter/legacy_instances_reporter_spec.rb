@@ -18,13 +18,13 @@ module VCAP::CloudController::InstancesReporter
       end
 
       before do
-        allow(VCAP::CloudController::DeaClient).to receive(:find_all_instances).and_return(instances)
+        allow(VCAP::CloudController::Dea::Client).to receive(:find_all_instances).and_return(instances)
       end
 
-      it 'uses DeaClient to return instances' do
+      it 'uses Dea::Client to return instances' do
         response = subject.all_instances_for_app(app)
 
-        expect(VCAP::CloudController::DeaClient).to have_received(:find_all_instances).with(app)
+        expect(VCAP::CloudController::Dea::Client).to have_received(:find_all_instances).with(app)
         expect(instances).to eq(response)
       end
     end
@@ -127,13 +127,13 @@ module VCAP::CloudController::InstancesReporter
     describe '#stats_for_app' do
 
       before do
-        allow(VCAP::CloudController::DeaClient).to receive(:find_stats).and_return('some return value')
+        allow(VCAP::CloudController::Dea::Client).to receive(:find_stats).and_return('some return value')
       end
 
-      it 'uses DeaClient to return stats' do
+      it 'uses Dea::Client to return stats' do
         result = subject.stats_for_app(app)
 
-        expect(VCAP::CloudController::DeaClient).to have_received(:find_stats).with(app)
+        expect(VCAP::CloudController::Dea::Client).to have_received(:find_stats).with(app)
         expect(result).to eq('some return value')
       end
     end

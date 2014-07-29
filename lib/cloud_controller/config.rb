@@ -218,13 +218,13 @@ module VCAP::CloudController
       def configure_components_depending_on_message_bus(message_bus)
         @message_bus = message_bus
         stager_pool = StagerPool.new(@config, message_bus)
-        dea_pool = DeaPool.new(message_bus)
+        dea_pool = Dea::Pool.new(message_bus)
         blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
 
         diego_client = CloudController::DependencyLocator.instance.diego_client
         diego_client.connect!
 
-        DeaClient.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
+        Dea::Client.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 
         StagingCompletionHandler.new(message_bus, diego_client).subscribe!
 

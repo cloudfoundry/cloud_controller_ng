@@ -155,12 +155,12 @@ module VCAP::CloudController
         let(:user) { make_developer_for_space(app_obj.space) }
 
         it "has the dea stop the instance at the given index" do
-          allow(DeaClient).to receive(:stop_indices)
+          allow(Dea::Client).to receive(:stop_indices)
 
           delete "/v2/apps/#{app_obj.guid}/instances/1", "", headers_for(user)
 
           expect(last_response.status).to eq(204)
-          expect(DeaClient).to have_received(:stop_indices).with(app_obj, [1])
+          expect(Dea::Client).to have_received(:stop_indices).with(app_obj, [1])
         end
       end
 

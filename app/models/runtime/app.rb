@@ -63,7 +63,7 @@ module VCAP::CloudController
     end
 
     # marked as true on changing the associated routes, and reset by
-    # +DeaClient.start+
+    # +Dea::Client.start+
     attr_accessor :routes_changed
 
     # Last staging response which will contain streaming log url
@@ -484,7 +484,7 @@ module VCAP::CloudController
 
     # returns True if we need to update the DEA's with
     # associated URL's.
-    # We also assume that the relevant methods in +DeaClient+ will reset
+    # We also assume that the relevant methods in +Dea::Client+ will reset
     # this app's routes_changed state
     # @return [Boolean, nil]
     def dea_update_pending?

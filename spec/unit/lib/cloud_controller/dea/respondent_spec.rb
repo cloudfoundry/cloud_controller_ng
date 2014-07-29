@@ -1,8 +1,8 @@
 require "spec_helper"
-require "cloud_controller/dea/dea_respondent"
+require "cloud_controller/dea/respondent"
 
 module VCAP::CloudController
-  describe DeaRespondent do
+  describe Dea::Respondent do
     before { allow(message_bus).to receive(:subscribe).with(anything) }
 
     let(:message_bus) { double("message_bus") }
@@ -28,7 +28,7 @@ module VCAP::CloudController
       }
     end
 
-    subject(:respondent) { DeaRespondent.new(message_bus) }
+    subject(:respondent) { Dea::Respondent.new(message_bus) }
 
     describe "#initialize" do
       it "sets logger to a Steno Logger with tag 'cc.dea_respondent'" do
@@ -41,7 +41,7 @@ module VCAP::CloudController
     describe "#start" do
       it "subscribes to 'droplet.exited' with a queue" do
         expect(message_bus).to receive(:subscribe).with("droplet.exited",
-          :queue => VCAP::CloudController::DeaRespondent::CRASH_EVENT_QUEUE)
+          :queue => VCAP::CloudController::Dea::Respondent::CRASH_EVENT_QUEUE)
 
         respondent.start
       end

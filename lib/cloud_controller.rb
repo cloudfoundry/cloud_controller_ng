@@ -65,9 +65,9 @@ require "cloud_controller/legacy_api/legacy_bulk"
 
 require "cloud_controller/resource_pool"
 
-require "cloud_controller/dea/dea_pool"
-require "cloud_controller/dea/dea_client"
-require "cloud_controller/dea/dea_respondent"
+require "cloud_controller/dea/pool"
+require "cloud_controller/dea/client"
+require "cloud_controller/dea/respondent"
 
 require "cloud_controller/diego/diego_client"
 require "cloud_controller/diego/buildpack_entry_generator"

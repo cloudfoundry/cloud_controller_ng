@@ -50,12 +50,12 @@ module VCAP::CloudController
           @app.save
           @app.refresh
 
-          to_return = DeaClient::FileUriResult.new(
+          to_return = Dea::FileUriResult.new(
             :file_uri_v1 => "file_uri/",
             :credentials => [],
             :file_uri_v2 => "file_uri/",
           )
-          expect(DeaClient).to receive(:get_file_uri_for_active_instance_by_index).
+          expect(Dea::Client).to receive(:get_file_uri_for_active_instance_by_index).
             with(@app, nil, 5).and_return(to_return)
 
           get("/v2/apps/#{@app.guid}/instances/#{instance}/files",

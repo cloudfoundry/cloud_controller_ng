@@ -62,7 +62,7 @@ module VCAP::CloudController
       if @diego_client.running_enabled(app)
         @diego_client.send_desire_request(app)
       else
-        DeaClient.start(app, instances_to_start: app.instances)
+        Dea::Client.start(app, instances_to_start: app.instances)
       end
     end
 

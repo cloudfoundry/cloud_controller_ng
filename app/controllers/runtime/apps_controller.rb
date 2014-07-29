@@ -99,7 +99,7 @@ module VCAP::CloudController
       end
 
       if app.dea_update_pending?
-        DeaClient.update_uris(app)
+        Dea::Client.update_uris(app)
       end
 
       @app_event_repository.record_app_update(app, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)

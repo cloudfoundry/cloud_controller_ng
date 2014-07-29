@@ -1,9 +1,9 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe VCAP::CloudController::DeaPool do
+  describe VCAP::CloudController::Dea::Pool do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    subject { DeaPool.new(message_bus) }
+    subject { Dea::Pool.new(message_bus) }
 
     describe "#register_subscriptions" do
       let(:dea_advertise_msg) do

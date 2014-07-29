@@ -1,4 +1,4 @@
-require "cloud_controller/dea/dea_client"
+require "cloud_controller/dea/client"
 
 module VCAP::CloudController
   class Route < Sequel::Model

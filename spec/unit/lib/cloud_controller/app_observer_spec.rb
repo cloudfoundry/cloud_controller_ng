@@ -13,7 +13,7 @@ module VCAP::CloudController
     let(:diego_client) { Diego::DiegoClient.new(config_hash, message_bus, tps_reporter, blobstore_url_generator) }
 
     before do
-      DeaClient.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
+      Dea::Client.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
       AppObserver.configure(config_hash, message_bus, dea_pool, stager_pool, diego_client)
     end
 
@@ -142,7 +142,7 @@ module VCAP::CloudController
               end
 
               it "should start the app with specified number of instances" do
-                expect(DeaClient).not_to receive(:start)
+                expect(Dea::Client).not_to receive(:start)
                 expect(diego_client).to receive(:send_desire_request).with(app)
                 subject
               end
@@ -154,7 +154,7 @@ module VCAP::CloudController
               end
 
               it "should stop the app" do
-                expect(DeaClient).not_to receive(:start)
+                expect(Dea::Client).not_to receive(:start)
                 expect(diego_client).to receive(:send_desire_request).with(app)
                 subject
               end
@@ -173,7 +173,7 @@ module VCAP::CloudController
               end
 
               it "should redesire the app" do
-                expect(DeaClient).not_to receive(:change_running_instances)
+                expect(Dea::Client).not_to receive(:change_running_instances)
                 expect(diego_client).to receive(:send_desire_request).with(app)
                 subject
               end
@@ -183,7 +183,7 @@ module VCAP::CloudController
                 let(:package_hash) { "something new" }
 
                 it "should start more instances of the old version" do
-                  expect(DeaClient).not_to receive(:change_running_instances)
+                  expect(Dea::Client).not_to receive(:change_running_instances)
                   expect(diego_client).to receive(:send_desire_request).with(app)
                   subject
                 end
@@ -198,7 +198,7 @@ module VCAP::CloudController
               end
 
               it "should redesire the app" do
-                expect(DeaClient).not_to receive(:change_running_instances)
+                expect(Dea::Client).not_to receive(:change_running_instances)
                 expect(diego_client).to receive(:send_desire_request).with(app)
                 subject
               end
@@ -213,7 +213,7 @@ module VCAP::CloudController
             end
 
             it "should not redesire the app" do
-              expect(DeaClient).not_to receive(:change_running_instances)
+              expect(Dea::Client).not_to receive(:change_running_instances)
               expect(diego_client).not_to receive(:send_desire_request)
               subject
             end
@@ -241,9 +241,9 @@ module VCAP::CloudController
 
           allow(app).to receive_messages(previous_changes: changes)
 
-          allow(DeaClient).to receive(:start)
-          allow(DeaClient).to receive(:stop)
-          allow(DeaClient).to receive(:change_running_instances)
+          allow(Dea::Client).to receive(:start)
+          allow(Dea::Client).to receive(:stop)
+          allow(Dea::Client).to receive(:change_running_instances)
         end
 
         shared_examples_for(:stages_if_needed) do
@@ -361,7 +361,7 @@ module VCAP::CloudController
             it_behaves_like :sends_droplet_updated
 
             it "should start the app with specified number of instances" do
-              expect(DeaClient).to receive(:start).with(app, :instances_to_start => app.instances - started_instances)
+              expect(Dea::Client).to receive(:start).with(app, :instances_to_start => app.instances - started_instances)
               subject
             end
           end
@@ -374,7 +374,7 @@ module VCAP::CloudController
             it_behaves_like :sends_droplet_updated
 
             it "should stop the app" do
-              expect(DeaClient).to receive(:stop).with(app)
+              expect(Dea::Client).to receive(:stop).with(app)
               subject
             end
           end
@@ -386,14 +386,14 @@ module VCAP::CloudController
               let(:changes) { { :instances => [5, 8] } }
 
               before do
-                allow(DeaClient).to receive(:change_running_instances).and_call_original
+                allow(Dea::Client).to receive(:change_running_instances).and_call_original
                 allow(app).to receive(:started?) { true }
               end
 
               it_behaves_like :sends_droplet_updated
 
               it "should change the running instance count" do
-                expect(DeaClient).to receive(:change_running_instances).with(app, 3)
+                expect(Dea::Client).to receive(:change_running_instances).with(app, 3)
                 subject
               end
 
@@ -423,7 +423,7 @@ module VCAP::CloudController
               it_behaves_like :sends_droplet_updated
 
               it "should change the running instance count" do
-                expect(DeaClient).to receive(:change_running_instances).with(app, -3)
+                expect(Dea::Client).to receive(:change_running_instances).with(app, -3)
                 subject
               end
             end
@@ -437,7 +437,7 @@ module VCAP::CloudController
             end
 
             it "should not change running instance count" do
-              expect(DeaClient).not_to receive(:change_running_instances)
+              expect(Dea::Client).not_to receive(:change_running_instances)
               subject
             end
           end

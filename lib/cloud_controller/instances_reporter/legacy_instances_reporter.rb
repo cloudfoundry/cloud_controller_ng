@@ -7,7 +7,7 @@ module VCAP::CloudController::InstancesReporter
     end
 
     def all_instances_for_app(app)
-      VCAP::CloudController::DeaClient.find_all_instances(app)
+      VCAP::CloudController::Dea::Client.find_all_instances(app)
     end
 
     def number_of_starting_and_running_instances_for_app(app)
@@ -27,7 +27,7 @@ module VCAP::CloudController::InstancesReporter
     end
 
     def stats_for_app(app)
-      VCAP::CloudController::DeaClient.find_stats(app)
+      VCAP::CloudController::Dea::Client.find_stats(app)
     end
 
     private

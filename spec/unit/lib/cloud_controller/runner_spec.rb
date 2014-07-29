@@ -76,7 +76,7 @@ module VCAP::CloudController
         end
 
         it "starts running dea client (one time set up to start tracking deas)" do
-          expect(DeaClient).to receive(:run)
+          expect(Dea::Client).to receive(:run)
           subject.run!
         end
 
@@ -92,14 +92,14 @@ module VCAP::CloudController
 
         it "starts handling hm9000 requests" do
           hm9000respondent = double(:hm9000respondent)
-          expect(HM9000Respondent).to receive(:new).with(DeaClient, message_bus).and_return(hm9000respondent)
+          expect(HM9000Respondent).to receive(:new).with(Dea::Client, message_bus).and_return(hm9000respondent)
           expect(hm9000respondent).to receive(:handle_requests)
           subject.run!
         end
 
         it "starts dea respondent" do
           dea_respondent = double(:dea_respondent)
-          expect(DeaRespondent).to receive(:new).with(message_bus).and_return(dea_respondent)
+          expect(Dea::Respondent).to receive(:new).with(message_bus).and_return(dea_respondent)
           expect(dea_respondent).to receive(:start)
           subject.run!
         end

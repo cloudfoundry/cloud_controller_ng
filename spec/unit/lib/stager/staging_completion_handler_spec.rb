@@ -45,7 +45,7 @@ module VCAP::CloudController
 
     before do
       allow(Steno).to receive(:logger).and_return(logger)
-      allow(DeaClient).to receive(:start)
+      allow(Dea::Client).to receive(:start)
       allow(diego_client).to receive(:running_enabled).and_return(false)
 
       staged_app.add_new_droplet("lol")
@@ -100,7 +100,7 @@ module VCAP::CloudController
           end
 
           it "starts the app instances" do
-            expect(DeaClient).to receive(:start) do |received_app, received_hash|
+            expect(Dea::Client).to receive(:start) do |received_app, received_hash|
               expect(received_app.guid).to eq(app_id)
               expect(received_hash).to  eq({:instances_to_start => 3})
             end
@@ -127,7 +127,7 @@ module VCAP::CloudController
           end
 
           it "desires the app using the diego client" do
-            expect(DeaClient).not_to receive(:start)
+            expect(Dea::Client).not_to receive(:start)
             expect(diego_client).to receive(:send_desire_request) do |received_app|
               expect(received_app.guid).to eq(app_id)
             end
@@ -143,7 +143,7 @@ module VCAP::CloudController
           end
 
           it "does not start the app instances" do
-            expect(DeaClient).not_to receive(:start)
+            expect(Dea::Client).not_to receive(:start)
             publish_staging_result(success_response)
           end
 
@@ -167,7 +167,7 @@ module VCAP::CloudController
           end
 
           it "should not start the app instance" do
-            expect(DeaClient).not_to receive(:start)
+            expect(Dea::Client).not_to receive(:start)
             publish_staging_result(fail_response)
           end
 
@@ -183,14 +183,14 @@ module VCAP::CloudController
           let(:app_id) { "ooh ooh ah ah" }
 
           it "should not attempt to start anything" do
-            expect(DeaClient).not_to receive(:start)
+            expect(Dea::Client).not_to receive(:start)
             publish_staging_result(success_response)
           end
         end
 
         context "with a malformed success message" do
           it "should not start anything" do
-            expect(DeaClient).not_to receive(:start)
+            expect(Dea::Client).not_to receive(:start)
             publish_staging_result(malformed_success_response)
           end
         end

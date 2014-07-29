@@ -31,7 +31,7 @@ module VCAP::CloudController
     def kill_instance(guid, index)
       app = find_guid_and_validate_access(:update, guid)
 
-      DeaClient.stop_indices(app, [index.to_i])
+      Dea::Client.stop_indices(app, [index.to_i])
       [HTTP::NO_CONTENT, nil]
     end
 
