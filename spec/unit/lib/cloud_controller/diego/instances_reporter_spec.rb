@@ -49,7 +49,7 @@ module VCAP::CloudController
 
         context "when diego is unavailable" do
           before do
-            allow(diego_client).to receive(:lrp_instances).and_raise(Diego::DiegoUnavailable)
+            allow(diego_client).to receive(:lrp_instances).and_raise(Diego::Unavailable)
           end
 
           it "raises an InstancesUnavailable exception" do
@@ -151,7 +151,7 @@ module VCAP::CloudController
 
           context "when diego is unavailable" do
             before do
-              allow(diego_client).to receive(:lrp_instances).and_raise(Diego::DiegoUnavailable)
+              allow(diego_client).to receive(:lrp_instances).and_raise(Diego::Unavailable)
             end
 
             it "raises an InstancesUnavailable exception" do
@@ -174,7 +174,7 @@ module VCAP::CloudController
 
         context "when diego is unavailable" do
           before do
-            allow(diego_client).to receive(:lrp_instances).and_raise(Diego::DiegoUnavailable)
+            allow(diego_client).to receive(:lrp_instances).and_raise(Diego::Unavailable)
           end
 
           it "raises an InstancesUnavailable exception" do
@@ -197,7 +197,7 @@ module VCAP::CloudController
 
         context "when diego is unavailable" do
           before do
-            allow(diego_client).to receive(:lrp_instances).and_raise(Diego::DiegoUnavailable)
+            allow(diego_client).to receive(:lrp_instances).and_raise(Diego::Unavailable)
           end
 
           it "raises an InstancesUnavailable exception" do
@@ -266,7 +266,7 @@ module VCAP::CloudController
 
         context "when diego is unavailable" do
           before do
-            allow(diego_client).to receive(:lrp_instances).and_raise(Diego::DiegoUnavailable)
+            allow(diego_client).to receive(:lrp_instances).and_raise(Diego::Unavailable)
           end
 
           it "raises an InstancesUnavailable exception" do

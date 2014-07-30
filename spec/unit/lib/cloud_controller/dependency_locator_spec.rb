@@ -311,7 +311,7 @@ describe CloudController::DependencyLocator do
 
   describe "#diego_client" do
     it "returns the diego client" do
-      expect(locator.diego_client).to be_an_instance_of(VCAP::CloudController::Diego::DiegoClient)
+      expect(locator.diego_client).to be_an_instance_of(VCAP::CloudController::Diego::Client)
     end
   end
 

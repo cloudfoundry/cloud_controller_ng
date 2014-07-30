@@ -65,7 +65,7 @@ module VCAP::CloudController
           end
 
           it "preserves the directories value from the file" do
-            expect(config[:directories]).to eq({ some: "value" })
+            expect(config[:directories]).to eq({some: "value"})
           end
 
           it "preserves the external_protocol value from the file" do
@@ -116,10 +116,10 @@ module VCAP::CloudController
     describe ".configure_components" do
       before do
         @test_config = {
-          packages: {},
-          droplets: {},
-          cc_partition: "ng",
-          bulk_api: {},
+            packages: {},
+            droplets: {},
+            cc_partition: "ng",
+            bulk_api: {},
         }
       end
 
@@ -142,11 +142,11 @@ module VCAP::CloudController
 
       it "sets up the app manager" do
         expect(AppObserver).to receive(:configure).with(
-          @test_config,
-          message_bus,
-          instance_of(Dea::Pool),
-          instance_of(Dea::StagerPool),
-        instance_of(Diego::DiegoClient))
+                                   @test_config,
+                                   message_bus,
+                                   instance_of(Dea::Pool),
+                                   instance_of(Dea::StagerPool),
+                                   instance_of(Diego::Client))
 
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)

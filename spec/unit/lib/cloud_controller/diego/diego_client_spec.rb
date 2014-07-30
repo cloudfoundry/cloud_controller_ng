@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController::Diego
-  describe DiegoClient do
+  describe Client do
     let(:enabled) { true }
     let(:service_registry) { double(:service_registry) }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
@@ -31,7 +31,7 @@ module VCAP::CloudController::Diego
       )
     end
 
-    subject(:client) { DiegoClient.new(enabled, message_bus, service_registry, blobstore_url_generator) }
+    subject(:client) { Client.new(enabled, message_bus, service_registry, blobstore_url_generator) }
 
     describe '#connect!' do
       before do
@@ -178,8 +178,8 @@ module VCAP::CloudController::Diego
             stub_request(:get, "http://some-tps-addr:5151/lrps/#{app.guid}-#{app.version}").to_raise(Errno::ECONNREFUSED)
           end
 
-          it "raises DiegoUnavailable" do
-            expect { client.lrp_instances(app) }.to raise_error(DiegoUnavailable, /connection refused/i)
+          it "raises Diego::Unavailable" do
+            expect { client.lrp_instances(app) }.to raise_error(Unavailable, /connection refused/i)
           end
         end
 
@@ -221,8 +221,8 @@ module VCAP::CloudController::Diego
           allow(service_registry).to receive(:tps_addrs).and_return([])
         end
 
-        it "raises DiegoUnavailable" do
-          expect { client.lrp_instances(app) }.to raise_error(DiegoUnavailable, "Diego runtime is unavailable.")
+        it "raises Diego::Unavailable" do
+          expect { client.lrp_instances(app) }.to raise_error(Unavailable, "Diego runtime is unavailable.")
         end
       end
     end

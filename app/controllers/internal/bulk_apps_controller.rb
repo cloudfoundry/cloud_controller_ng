@@ -1,6 +1,6 @@
 require "sinatra"
 require "controllers/base/base_controller"
-require "cloud_controller/diego/diego_client"
+require "cloud_controller/diego/client"
 require "cloud_controller/diego/staged_apps_query"
 require "cloud_controller/bulk_api"
 
