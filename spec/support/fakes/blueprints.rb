@@ -264,6 +264,9 @@ module VCAP::CloudController
     name { Sham.name }
     key { Sham.guid }
     position { 0 }
+    enabled { true }
+    filename { Sham.name }
+    locked { false }
   end
 
   AppUsageEvent.blueprint do

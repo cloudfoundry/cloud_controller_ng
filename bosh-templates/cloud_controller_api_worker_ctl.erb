@@ -48,11 +48,13 @@ case $1 in
     
     # Run the buildpack install only on the first CC Worker launch
     <% if spec.index.to_i == 0 %>
-    chpst -u vcap:vcap bundle exec rake buildpacks:install
+    if [ $2 == 1 ]; then
+      chpst -u vcap:vcap bundle exec rake buildpacks:install
 
-    if [ $? != 0 ]; then
-      echo "Buildpacks installation failed"
-      exit 1
+      if [ $? != 0 ]; then
+        echo "Buildpacks installation failed"
+        exit 1
+      fi
     fi
     <% end %>
 

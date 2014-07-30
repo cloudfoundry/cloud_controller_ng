@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       upload_buildpack = UploadBuildpack.new(buildpack_blobstore)
 
-      if upload_buildpack.upload_bits(buildpack, uploaded_file, uploaded_filename)
+      if upload_buildpack.upload_buildpack(buildpack, uploaded_file, uploaded_filename)
         [HTTP::CREATED, object_renderer.render_json(self.class, buildpack, @opts)]
       else
          [HTTP::NO_CONTENT, nil]

@@ -8,27 +8,31 @@ module VCAP::CloudController
       let(:zipfile) { File.expand_path("../../../fixtures/good.zip", File.dirname(__FILE__)) }
       let(:zipfile2) { File.expand_path("../../../fixtures/good_relative_paths.zip", File.dirname(__FILE__)) }
 
-      let(:options) { {} }
+      let(:options) { { enabled: true, locked: false, position: 1} }
 
       let(:job) { BuildpackInstaller.new(buildpack_name, zipfile, options, TestConfig.config) }
 
       it { is_expected.to be_a_valid_job }
 
       describe "#perform" do
-        context "default options" do
+        context "when the buildpack is enabled and unlocked" do
+          let(:options) { { locked: true } }
+
           it "creates a new buildpack" do
-            job.perform
+            expect {
+              job.perform
+            }.to change { Buildpack.count }.from(0).to(1)
 
             buildpack = Buildpack.find(name: buildpack_name)
             expect(buildpack).to_not be_nil
             expect(buildpack.name).to eq(buildpack_name)
             expect(buildpack.key).to start_with(buildpack.guid)
             expect(buildpack.filename).to end_with(File.basename(zipfile))
+            expect(buildpack).to be_locked
           end
 
           it "updates an existing buildpack" do
-            job.perform
-            buildpack1 = Buildpack.find(name: buildpack_name)
+            buildpack1 = Buildpack.make(name: buildpack_name, key: "new_key")
 
             update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false }, TestConfig.config)
             update_job.perform
@@ -39,61 +43,16 @@ module VCAP::CloudController
             expect(buildpack2.filename).to end_with(File.basename(zipfile2))
             expect(buildpack2.key).to_not eql(buildpack1.key)
           end
-
-          context "when trying to lock the buildpack" do
-            let(:options) { {locked: true} }
-
-            it "locks the buildpack" do
-              Buildpack.make(name: buildpack_name)
-              job.perform
-              buildpack = Buildpack.find(name: buildpack_name)
-              expect(buildpack).to be_locked
-            end
-          end
         end
 
-        context "when locking is enabled" do
-          let (:options) { { locked: true } }
-
-          it "creates a locked buildpack" do
-            job.perform
-
-            buildpack = Buildpack.find(name: buildpack_name)
-            expect(buildpack.locked).to be true
-          end
-
+        context "when the buildpack is locked" do
           it "fails to update a locked buildpack" do
-            job.perform
-            buildpack = Buildpack.find(name: buildpack_name)
-
+            buildpack = Buildpack.make(name: buildpack_name, locked: true)
             update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false, locked: false }, TestConfig.config)
             update_job.perform
 
             buildpack2 = Buildpack.find(name: buildpack_name)
             expect(buildpack2).to eql(buildpack)
-          end
-        end
-
-        context "when disabled" do
-          let (:options) { { enabled: false } }
-
-          it "creates a disabled buildpack" do
-            job.perform
-
-            buildpack = Buildpack.find(name: buildpack_name)
-            expect(buildpack.enabled).to be false
-          end
-
-          it "updates a disabled buildpack" do
-            job.perform
-
-            buildpack = Buildpack.find(name: buildpack_name)
-
-            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: true }, TestConfig.config)
-            update_job.perform
-
-            buildpack2 = Buildpack.find(name: buildpack_name)
-            expect(buildpack2.enabled).to be true
           end
         end
 
@@ -114,6 +73,34 @@ module VCAP::CloudController
           it "logs the exception and re-raises the exception" do
             expect { job.perform }.to raise_error(error, "same message")
             expect(logger).to have_received(:error).with(/Buildpack .* failed to install or update/)
+          end
+        end
+
+        context "when uploading the buildpack fails" do
+          before do
+            allow_any_instance_of(UploadBuildpack).to receive(:upload_buildpack).and_raise
+          end
+
+          context "with a new buildpack" do
+            it "does not create a buildpack" do
+              expect {
+                expect {
+                  job.perform
+                }.to raise_error
+              }.to_not change { Buildpack.count }
+            end
+          end
+
+          context "with an existing buildpack" do
+            let!(:buildpack) { Buildpack.make(name: buildpack_name, enabled: false) }
+
+            it "does not update any values on the buildpack" do
+              expect {
+                job.perform
+              }.to raise_error
+
+              expect(Buildpack.find(name: buildpack_name)).to eql(buildpack)
+            end
           end
         end
       end
