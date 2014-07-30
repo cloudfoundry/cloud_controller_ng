@@ -55,6 +55,23 @@ module VCAP::CloudController
         ]
         expect(decoded_response["services"]).to eq(MultiJson.load(MultiJson.dump(expected_services)))
       end
+
+      context "when the instances reporter fails" do
+        before do
+          allow(instances_reporter).to receive(:number_of_starting_and_running_instances_for_apps).and_raise(
+            Errors::InstancesUnavailable.new(RuntimeError.new("something went wrong.")))
+        end
+
+        it "returns '220001 InstancesError'" do
+          get "/v2/spaces/#{space.guid}/summary", "", admin_headers
+
+          expect(last_response.status).to eq(503)
+
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response["code"]).to eq(220002)
+          expect(parsed_response["description"]).to eq("Instances information unavailable: something went wrong.")
+        end
+      end
     end
   end
 end
