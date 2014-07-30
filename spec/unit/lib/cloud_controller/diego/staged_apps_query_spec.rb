@@ -17,6 +17,7 @@ module VCAP::CloudController
           5.times do |i|
             app = make_diego_app(id: i+1, state: "STARTED")
             app.current_droplet.update_start_command("fake-start-command-#{i}")
+            app.add_route(Route.make(space: app.space))
           end
         end
 
@@ -134,6 +135,7 @@ module VCAP::CloudController
               app.stack
               app.routes
               app.service_bindings
+              app.routes.map { |route| route.domain }
             end
           }.to have_queried_db_times(/SELECT/, [
             :apps,
@@ -142,6 +144,7 @@ module VCAP::CloudController
             :stacks,
             :routes,
             :service_bindings,
+            :domain
           ].length)
         end
       end
