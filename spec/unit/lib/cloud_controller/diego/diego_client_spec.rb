@@ -173,7 +173,7 @@ module VCAP::CloudController::Diego
           end
         end
 
-        context "when the TPS endpoint fails" do
+        context "when the TPS endpoint is unavailable" do
           before do
             stub_request(:get, "http://some-tps-addr:5151/lrps/#{app.guid}-#{app.version}").to_raise(Errno::ECONNREFUSED)
           end
@@ -183,13 +183,23 @@ module VCAP::CloudController::Diego
           end
         end
 
+        context "when the TPS endpoint fails" do
+          before do
+            stub_request(:get, "http://some-tps-addr:5151/lrps/#{app.guid}-#{app.version}").to_return(status: 500, body: " ")
+          end
+
+          it "raises DiegoUnavailable" do
+            expect { client.lrp_instances(app) }.to raise_error(DiegoUnavailable, /unavailable/i)
+          end
+        end
+
         describe "timing out" do
           let(:http) { double(:http) }
           let(:expected_timeout) { 10 }
 
           before do
             allow(Net::HTTP).to receive(:new).and_return(http)
-            allow(http).to receive(:get).and_return(double(:http_response, body: '{}'))
+            allow(http).to receive(:get).and_return(double(:http_response, body: '{}', code: '200'))
             allow(http).to receive(:read_timeout=)
             allow(http).to receive(:open_timeout=)
           end

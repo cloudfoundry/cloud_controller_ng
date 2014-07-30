@@ -125,12 +125,14 @@ module VCAP::CloudController::Diego
       http.read_timeout = 10
       http.open_timeout = 10
 
-      body = http.get(uri.path).body
-      logger.info "Received lrp response for #{guid}: #{body}"
+      response = http.get(uri.path)
+      raise DiegoUnavailable.new unless response.code == '200'
+
+      logger.info "Received lrp response for #{guid}: #{response.body}"
 
       result = []
 
-      tps_instances = JSON.parse(body)
+      tps_instances = JSON.parse(response.body)
       tps_instances.each do |instance|
         result << {
           process_guid:  instance['process_guid'],
