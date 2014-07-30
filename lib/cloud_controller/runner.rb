@@ -6,7 +6,7 @@ require "cf_message_bus/message_bus"
 require "cf/registrar"
 require "loggregator_emitter"
 require "loggregator"
-require "cloud_controller/globals"
+require "cloud_controller/dea/sub_system"
 require "cloud_controller/rack_app_builder"
 require "cloud_controller/varz"
 
@@ -82,8 +82,7 @@ module VCAP::CloudController
           Seeds.write_seed_data(@config) if @insert_seed_data
           register_with_collector(message_bus)
 
-          globals = Globals.new(@config, message_bus)
-          globals.setup!
+          Dea::SubSystem.setup!(message_bus)
 
           builder = RackAppBuilder.new
           app     = builder.build(@config)
