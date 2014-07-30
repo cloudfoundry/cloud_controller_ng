@@ -22,7 +22,7 @@ module VCAP::CloudController
     many_to_one :stack
     many_to_many :routes, before_add: :validate_route, after_add: :mark_routes_changed, after_remove: :mark_routes_changed
 
-    one_to_one :current_droplet,
+    one_to_one :current_saved_droplet,
       :class => "::VCAP::CloudController::Droplet",
       :key => :droplet_hash,
       :primary_key => :droplet_hash
@@ -250,7 +250,7 @@ module VCAP::CloudController
     end
 
     def detected_start_command
-      cmd = command || (current_droplet && current_droplet.detected_start_command)
+      cmd = command || current_droplet.detected_start_command
       cmd.nil? ? '' : cmd
     end
 
@@ -464,6 +464,11 @@ module VCAP::CloudController
       self.droplet_hash = hash
       add_droplet(droplet_hash: hash)
       self.save
+    end
+
+    def current_droplet
+      return nil unless droplet_hash
+      current_saved_droplet || Droplet.new(app: self, droplet_hash: self.droplet_hash)
     end
 
     def start!
