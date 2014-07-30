@@ -6,20 +6,39 @@ module VCAP::CloudController
       RackAppBuilder.new
     end
 
+    let (:use_nginx) { false }
+
+    before do
+      TestConfig.override({
+        :nginx => {
+          :use_nginx => use_nginx,
+        }
+      })
+
+      allow(Rack::CommonLogger).to receive(:new)
+    end
+
     describe "#build" do
-      before do
-        allow(Rack::CommonLogger).to receive(:new)
+      context "when nginx is disabled" do
+        it "uses Rack::CommonLogger" do
+          builder.build(TestConfig.config).to_app
+          expect(Rack::CommonLogger).to have_received(:new).with(anything, instance_of(File))
+        end
+
+      end
+
+      context "when nginx is enabled" do
+        let (:use_nginx) { true }
+
+        it "does not use Rack::CommonLogger" do
+          builder.build(TestConfig.config).to_app
+          expect(Rack::CommonLogger).to_not have_received(:new)
+        end
       end
 
       it "returns a Rack application" do
         expect(builder.build(TestConfig.config)).to be_a(Rack::Builder)
         expect(builder.build(TestConfig.config)).to respond_to(:call)
-      end
-
-      it "uses Rack::CommonLogger" do
-        builder.build(TestConfig.config).to_app
-
-        expect(Rack::CommonLogger).to have_received(:new)
       end
     end
   end
