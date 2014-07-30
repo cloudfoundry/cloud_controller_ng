@@ -538,6 +538,45 @@ module VCAP::CloudController
       end
     end
 
+    describe "#detected_start_command" do
+      subject do
+        App.make(
+          package_hash: "package-hash",
+          instances: 1,
+          package_state: "STAGED",
+          droplet_hash: "the-droplet-hash",
+        )
+      end
+
+      context "when the app has a user-specified start command" do
+        before { subject.command = "my command" }
+
+        it "returns that command" do
+          expect(subject.detected_start_command).to eq("my command")
+        end
+      end
+
+      context "when the app has a current droplet" do
+        before do
+          subject.add_droplet(Droplet.new(
+            app: subject,
+            droplet_hash: "the-droplet-hash",
+            detected_start_command: "droplet's command",
+          ))
+        end
+
+        it "returns that droplet's detected start command" do
+          expect(subject.detected_start_command).to eq("droplet's command")
+        end
+      end
+
+      context "when the app does not have a current droplet" do
+        it "returns the empty string" do
+          expect(subject.detected_start_command).to eq("")
+        end
+      end
+    end
+
     describe "bad relationships" do
       it "should not associate an app with a route on a different space" do
         app = AppFactory.make
