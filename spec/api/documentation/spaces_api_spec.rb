@@ -138,6 +138,8 @@ resource "Spaces", :type => :api do
         VCAP::CloudController::ManagedServiceInstance.make(space: space)
       end
 
+      request_parameter :return_user_provided_service_instances, "When 'true', include user provided service instances."
+
       standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, outer_model: :space, path: :service_instances
     end
 
