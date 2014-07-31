@@ -303,10 +303,19 @@ module VCAP::CloudController
                            :instances => 1)
         end
 
-        it "returns X-App-Staging-Log header with staging log url" do
-          stager_response = Dea::AppStagerTask::Response.new("task_streaming_log_url" => "streaming-log-url")
-          allow(AppObserver).to receive_messages(stage_app: stager_response)
+        let(:stager_response) do
+          Dea::AppStagerTask::Response.new("task_streaming_log_url" => "streaming-log-url")
+        end
 
+        let(:app_stager_task) do
+          double(Dea::AppStagerTask, stage: stager_response)
+        end
+
+        before do
+          allow(Dea::AppStagerTask).to receive(:new).and_return(app_stager_task)
+        end
+
+        it "returns X-App-Staging-Log header with staging log url" do
           put "/v2/apps/#{app_obj.guid}", MultiJson.dump(:state => "STARTED"), json_headers(admin_headers)
           expect(last_response.status).to eq(201)
           expect(last_response.headers["X-App-Staging-Log"]).to eq("streaming-log-url")

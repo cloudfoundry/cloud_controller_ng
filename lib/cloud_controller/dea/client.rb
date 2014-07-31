@@ -8,7 +8,7 @@ module VCAP::CloudController
       class << self
         include VCAP::Errors
 
-        attr_reader :config, :message_bus, :dea_pool, :stager_pool
+        attr_reader :config, :message_bus, :dea_pool, :stager_pool, :message_bus
 
         def configure(config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
           @config = config
@@ -26,10 +26,6 @@ module VCAP::CloudController
 
         def run
           @dea_pool.register_subscriptions
-        end
-
-        def stop(app)
-          app_stopper.publish_stop(:droplet => app.guid)
         end
 
         def find_specific_instance(app, options = {})
@@ -156,7 +152,7 @@ module VCAP::CloudController
         end
 
         def app_stopper
-          AppStopper.new(@message_bus)
+          AppStopper.new(message_bus)
         end
 
         def get_file_uri_for_active_instance_by_index(app, path, index)

@@ -1,6 +1,7 @@
 require "cloud_controller/multi_response_message_bus_request"
 require "models/runtime/droplet_uploader"
 require "cloud_controller/dea/app_stopper"
+require "cloud_controller/backends"
 
 module VCAP::CloudController
   module AppObserver
@@ -13,14 +14,11 @@ module VCAP::CloudController
         @dea_pool = dea_pool
         @stager_pool = stager_pool
         @diego_client = diego_client
+        @backends = Backends.new(@message_bus, @diego_client)
       end
 
       def deleted(app)
-        if @diego_client.running_enabled(app)
-          @diego_client.send_desire_request(app)
-        else
-          Dea::AppStopper.new(@message_bus).stop(app)
-        end
+        @backends.find_one_to_run(app).stop
 
         delete_package(app) if app.package_hash
         delete_buildpack_cache(app)
@@ -33,8 +31,7 @@ module VCAP::CloudController
         if changes.has_key?(:state)
           react_to_state_change(app)
         elsif changes.has_key?(:instances)
-          delta = changes[:instances][1] - changes[:instances][0]
-          react_to_instances_change(app, delta)
+          react_to_instances_change(app)
         end
       end
 
@@ -68,70 +65,31 @@ module VCAP::CloudController
         end
       end
 
-      def stage_app(app, &completion_callback)
-        validate_app_for_staging(app)
-
-        task = Dea::AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
-        task.stage(&completion_callback)
-      end
-
-
       def stage_app_on_diego(app)
         validate_app_for_staging(app)
         @diego_client.send_stage_request(app, VCAP.secure_uuid)
       end
 
-      def stage_if_needed(app, &success_callback)
-        if app.needs_staging?
-          app.last_stager_response = stage_app(app, &success_callback)
-        else
-          success_callback.call(:started_instances => 0)
-        end
-      end
-
       def react_to_state_change(app)
         if !app.started?
-          if @diego_client.running_enabled(app)
-            @diego_client.send_desire_request(app)
-            return
+          @backends.find_one_to_run(app).stop
+        elsif app.needs_staging?
+          if @diego_client.staging_needed(app)
+            stage_app_on_diego(app)
+          else
+            validate_app_for_staging(app)
+            task = Dea::AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
+            app.last_stager_response = task.stage do |staging_result|
+              @backends.find_one_to_run(app).start(staging_result)
+            end
           end
-
-          Dea::Client.stop(app)
-          broadcast_app_updated(app)
-          return
-        end
-
-        if @diego_client.staging_needed(app)
-          stage_app_on_diego(app)
-          return
-        end
-
-        if @diego_client.running_enabled(app)
-          @diego_client.send_desire_request(app)
-          return
-        end
-
-        stage_if_needed(app) do |staging_result|
-          started_instances = staging_result[:started_instances] || 0
-          Dea::Client.start(app, :instances_to_start => app.instances - started_instances)
-          broadcast_app_updated(app)
+        else
+          @backends.find_one_to_run(app).start
         end
       end
 
-      def react_to_instances_change(app, delta)
-        if app.started?
-          if @diego_client.running_enabled(app)
-            @diego_client.send_desire_request(app)
-            return
-          end
-
-          Dea::Client.change_running_instances(app, delta)
-          broadcast_app_updated(app)
-        end
-      end
-
-      def broadcast_app_updated(app)
-        @message_bus.publish("droplet.updated", droplet: app.guid)
+      def react_to_instances_change(app)
+        @backends.find_one_to_run(app).scale if app.started?
       end
     end
   end

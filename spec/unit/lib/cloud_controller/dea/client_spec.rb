@@ -227,15 +227,6 @@ module VCAP::CloudController
       end
     end
 
-    describe "stop" do
-      it "should send a stop messages to deas" do
-        app.instances = 2
-        expect(message_bus).to receive(:publish).with("dea.stop", kind_of(Hash))
-
-        Dea::Client.stop(app)
-      end
-    end
-
     describe "find_specific_instance" do
       it "should find a specific instance" do
         expect(app).to receive(:guid).and_return(1)

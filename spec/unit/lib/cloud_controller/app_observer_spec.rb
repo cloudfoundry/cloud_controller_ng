@@ -340,13 +340,6 @@ module VCAP::CloudController
           end
         end
 
-        shared_examples_for(:sends_droplet_updated) do
-          it "should send droplet updated message" do
-            subject
-            expect(message_bus).to have_published_with_message("droplet.updated", droplet: app.guid)
-          end
-        end
-
         context "when the state changes" do
           let(:changes) { { :state => "anything" } }
 
@@ -358,7 +351,6 @@ module VCAP::CloudController
             end
 
             it_behaves_like :stages_if_needed
-            it_behaves_like :sends_droplet_updated
 
             it "should start the app with specified number of instances" do
               expect(Dea::Client).to receive(:start).with(app, :instances_to_start => app.instances - started_instances)
@@ -371,10 +363,8 @@ module VCAP::CloudController
               allow(app).to receive(:started?) { false }
             end
 
-            it_behaves_like :sends_droplet_updated
-
             it "should stop the app" do
-              expect(Dea::Client).to receive(:stop).with(app)
+              expect(message_bus).to receive(:publish).with("dea.stop", droplet: app.guid)
               subject
             end
           end
@@ -389,8 +379,6 @@ module VCAP::CloudController
                 allow(Dea::Client).to receive(:change_running_instances).and_call_original
                 allow(app).to receive(:started?) { true }
               end
-
-              it_behaves_like :sends_droplet_updated
 
               it "should change the running instance count" do
                 expect(Dea::Client).to receive(:change_running_instances).with(app, 3)
@@ -407,7 +395,6 @@ module VCAP::CloudController
                                                    sha1: "initial-droplet-hash"
                                                })
                   }.exactly(3).times.ordered
-                  expect(message_bus).to receive(:publish).with("droplet.updated", anything).ordered
                   subject
                 end
               end
@@ -419,8 +406,6 @@ module VCAP::CloudController
               before do
                 allow(app).to receive(:started?) { true }
               end
-
-              it_behaves_like :sends_droplet_updated
 
               it "should change the running instance count" do
                 expect(Dea::Client).to receive(:change_running_instances).with(app, -3)

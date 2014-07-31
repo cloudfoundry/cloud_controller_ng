@@ -1,6 +1,5 @@
 module VCAP::CloudController
   module Dea
-
     class AppStopper
       attr_reader :message_bus
 
@@ -8,14 +7,12 @@ module VCAP::CloudController
         @message_bus = message_bus
       end
 
-      def stop(app)
-        publish_stop(:droplet => app.guid)
+      def publish_stop(message)
+        logger.debug "sending 'dea.stop' with '#{message}'"
+        message_bus.publish("dea.stop", message)
       end
 
-      def publish_stop(args)
-        logger.debug "sending 'dea.stop' with '#{args}'"
-        message_bus.publish("dea.stop", args)
-      end
+      private
 
       def logger
         @logger ||= Steno.logger("cc.appstopper")
