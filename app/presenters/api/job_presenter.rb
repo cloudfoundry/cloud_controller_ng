@@ -78,7 +78,7 @@ class JobPresenter < ApiPresenter
   end
 
   def job_errored?
-    @object.cf_api_error or @object.last_error
+    @object.cf_api_error
   end
 
   class NullJob
