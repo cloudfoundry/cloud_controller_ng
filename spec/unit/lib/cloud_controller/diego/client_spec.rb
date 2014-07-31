@@ -189,7 +189,7 @@ module VCAP::CloudController::Diego
           end
 
           it "raises DiegoUnavailable" do
-            expect { client.lrp_instances(app) }.to raise_error(DiegoUnavailable, /unavailable/i)
+            expect { client.lrp_instances(app) }.to raise_error(Unavailable, /unavailable/i)
           end
         end
 
