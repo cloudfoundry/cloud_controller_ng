@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   describe SpaceQuotaDefinitionAccess, type: :access do
     before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
+      token = { 'scope' => 'cloud_controller.read cloud_controller.write' }
       allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
@@ -27,31 +27,70 @@ module VCAP::CloudController
       end
     end
 
-    context 'space manager' do
-      before do
-        org.add_user(user)
-        space.add_manager(user)
+    context 'when it is not applied to the space' do
+
+      context 'space manager' do
+        before do
+          org.add_user(user)
+          space.add_manager(user)
+        end
+
+        it_behaves_like :no_access
       end
 
-      it_behaves_like :no_access
+      context 'space developer' do
+        before do
+          org.add_user(user)
+          space.add_developer(user)
+        end
+
+        it_behaves_like :no_access
+      end
+
+      context 'space auditor' do
+        before do
+          org.add_user(user)
+          space.add_auditor(user)
+        end
+
+        it_behaves_like :no_access
+      end
+
     end
 
-    context 'space developer' do
+    context 'when it is applied to the space' do
+
       before do
-        org.add_user(user)
-        space.add_developer(user)
+        space.space_quota_definition = object
+        space.save
+      end
+      context 'space manager' do
+        before do
+          org.add_user(user)
+          space.add_manager(user)
+        end
+
+        it_behaves_like :read_only
       end
 
-      it_behaves_like :no_access
-    end
+      context 'space developer' do
+        before do
+          org.add_user(user)
+          space.add_developer(user)
+        end
 
-    context 'space auditor' do
-      before do
-        org.add_user(user)
-        space.add_auditor(user)
+        it_behaves_like :read_only
       end
 
-      it_behaves_like :no_access
+      context 'space auditor' do
+        before do
+          org.add_user(user)
+          space.add_auditor(user)
+        end
+
+        it_behaves_like :read_only
+      end
+
     end
 
     context 'organization auditor (defensive)' do
@@ -95,7 +134,7 @@ module VCAP::CloudController
 
     context 'any user using client without cloud_controller.write' do
       before do
-        token = { 'scope' => 'cloud_controller.read'}
+        token = { 'scope' => 'cloud_controller.read' }
         allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
@@ -111,7 +150,7 @@ module VCAP::CloudController
 
     context 'any user using client without cloud_controller.read' do
       before do
-        token = { 'scope' => ''}
+        token = { 'scope' => '' }
         allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)

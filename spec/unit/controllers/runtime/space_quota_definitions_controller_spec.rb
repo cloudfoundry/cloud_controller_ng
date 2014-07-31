@@ -35,6 +35,11 @@ module VCAP::CloudController
       before do
         @obj_a = SpaceQuotaDefinition.make(organization_guid: @org_a.guid)
         @obj_b = SpaceQuotaDefinition.make(organization_guid: @org_b.guid)
+
+        @space_a.space_quota_definition = @obj_a
+        @space_a.save
+        @space_b.space_quota_definition = @obj_b
+        @space_b.save
       end
 
       describe "Org Level Permissions" do
@@ -103,7 +108,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "SpaceManager",
             :name      => "space_quota_definition",
             :path      => "/v2/space_quota_definitions",
-            :enumerate => 0
+            :enumerate => 1
         end
 
         describe "Developer" do
@@ -113,7 +118,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "Developer",
             :name      => "space_quota_definition",
             :path      => "/v2/space_quota_definitions",
-            :enumerate => 0
+            :enumerate => 1
         end
 
         describe "SpaceAuditor" do
@@ -123,7 +128,7 @@ module VCAP::CloudController
           include_examples "permission enumeration", "SpaceAuditor",
             :name      => "space_quota_definition",
             :path      => "/v2/space_quota_definitions",
-            :enumerate => 0
+            :enumerate => 1
         end
       end
     end

@@ -21,9 +21,12 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      Sequel.or(
-        organization: user.managed_organizations_dataset
-      )
+      Sequel.or([
+        [:organization, user.managed_organizations_dataset],
+        [:spaces, user.spaces_dataset],
+        [:spaces, user.managed_spaces_dataset],
+        [:spaces, user.audited_spaces_dataset]
+      ])
     end
   end
 end
