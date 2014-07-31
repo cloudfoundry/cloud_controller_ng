@@ -19,7 +19,7 @@ module VCAP::CloudController
         end
 
         fill_unreported_instances_with_down_instances(result, app)
-      rescue Diego::Unavailable => e
+      rescue Unavailable => e
         raise Errors::InstancesUnavailable.new(e)
       end
 
@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         running_indices.length
-      rescue Diego::Unavailable => e
+      rescue Unavailable => e
         raise Errors::InstancesUnavailable.new(e)
       end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
         end
 
         result
-      rescue Diego::Unavailable => e
+      rescue Unavailable => e
         raise Errors::InstancesUnavailable.new(e)
       end
 
@@ -84,7 +84,7 @@ module VCAP::CloudController
         end
 
         fill_unreported_instances_with_down_instances(result, app)
-      rescue Diego::Unavailable => e
+      rescue Unavailable => e
         raise Errors::InstancesUnavailable.new(e)
       end
 
