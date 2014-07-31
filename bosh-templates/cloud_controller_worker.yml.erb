@@ -221,6 +221,10 @@ renderer:
 uaa_client_name: "cc_service_broker_client"
 uaa_client_secret: <%= p("uaa.clients.cc_service_broker_client.secret") %>
 uaa_client_scope: <%= p("uaa.clients.cc_service_broker_client.scope") %>
+<% end.else_if_p("uaa.clients.cc-service-dashboards.secret") do %>
+uaa_client_name: "cc-service-dashboards"
+uaa_client_secret: <%= p("uaa.clients.cc-service-dashboards.secret") %>
+uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 <% end %>
 
 diego: <%= p("cc.diego") %>

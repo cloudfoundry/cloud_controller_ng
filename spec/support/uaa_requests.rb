@@ -1,7 +1,7 @@
 module UAARequests
   def self.stub_all
     # stub token request
-    WebMock::API.stub_request(:post, "http://cc_service_broker_client:some-sekret@localhost:8080/uaa/oauth/token").to_return(
+    WebMock::API.stub_request(:post, "http://cc-service-dashboards:some-sekret@localhost:8080/uaa/oauth/token").to_return(
       status:  200,
       body:    { token_type: "token-type", access_token: "access-token" }.to_json,
       headers: { "content-type" => "application/json" })

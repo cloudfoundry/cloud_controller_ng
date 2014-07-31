@@ -17,7 +17,7 @@ module VCAP::Services::SSO::UAA
         token_info = double('info', auth_header: 'bearer BLAH')
         token_issuer = double('issuer', client_credentials_grant: token_info)
 
-        allow(CF::UAA::TokenIssuer).to receive(:new).with('http://localhost:8080/uaa', 'cc_service_broker_client', 'some-sekret').and_return(token_issuer)
+        allow(CF::UAA::TokenIssuer).to receive(:new).with('http://localhost:8080/uaa', 'cc-service-dashboards', 'some-sekret').and_return(token_issuer)
 
         expect(creator.send(:scim)).to be_a(CF::UAA::Scim)
         expect(token_issuer).to have_received(:client_credentials_grant)
@@ -62,7 +62,7 @@ module VCAP::Services::SSO::UAA
       before do
         stub_request(:post, tx_url)
 
-        allow(CF::UAA::TokenIssuer).to receive(:new).with(uaa_uri, 'cc_service_broker_client', 'some-sekret').
+        allow(CF::UAA::TokenIssuer).to receive(:new).with(uaa_uri, 'cc-service-dashboards', 'some-sekret').
           and_return(token_issuer)
       end
 
