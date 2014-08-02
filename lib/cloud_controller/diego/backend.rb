@@ -6,6 +6,14 @@ module VCAP::CloudController
         @diego_client = diego_client
       end
 
+      def needs_staging?
+         @app.needs_staging? || needs_migration_from_dea?
+      end
+
+      def stage
+       @diego_client.send_stage_request(@app, VCAP.secure_uuid)
+      end
+
       def scale
         @diego_client.send_desire_request(@app)
       end
@@ -16,6 +24,14 @@ module VCAP::CloudController
 
       def stop
         @diego_client.send_desire_request(@app)
+      end
+
+      private
+
+      def needs_migration_from_dea?
+        # The DEA staging process doesn't know to set the start command, this happens
+        # when an existing DEA based app is switched over to running on Diego
+        @app.detected_start_command.empty?
       end
     end
   end

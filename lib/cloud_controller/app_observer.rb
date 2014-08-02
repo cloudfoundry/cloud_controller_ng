@@ -14,7 +14,7 @@ module VCAP::CloudController
         @dea_pool = dea_pool
         @stager_pool = stager_pool
         @diego_client = diego_client
-        @backends = Backends.new(@message_bus, @diego_client)
+        @backends = Backends.new(config, message_bus, dea_pool, stager_pool, diego_client)
       end
 
       def deleted(app)
@@ -51,10 +51,6 @@ module VCAP::CloudController
         Jobs::Enqueuer.new(delete_job, queue: "cc-generic").enqueue()
       end
 
-      def dependency_locator
-        CloudController::DependencyLocator.instance
-      end
-
       def validate_app_for_staging(app)
         if app.package_hash.nil? || app.package_hash.empty?
           raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
@@ -65,24 +61,15 @@ module VCAP::CloudController
         end
       end
 
-      def stage_app_on_diego(app)
-        validate_app_for_staging(app)
-        @diego_client.send_stage_request(app, VCAP.secure_uuid)
-      end
-
       def react_to_state_change(app)
+        staging_backend = @backends.find_one_to_stage(app)
+
         if !app.started?
           @backends.find_one_to_run(app).stop
-        elsif app.needs_staging?
-          if @diego_client.staging_needed(app)
-            stage_app_on_diego(app)
-          else
-            validate_app_for_staging(app)
-            task = Dea::AppStagerTask.new(@config, @message_bus, app, @dea_pool, @stager_pool, dependency_locator.blobstore_url_generator)
-            app.last_stager_response = task.stage do |staging_result|
-              @backends.find_one_to_run(app).start(staging_result)
-            end
-          end
+        elsif staging_backend.needs_staging?
+          validate_app_for_staging(app)
+
+          staging_backend.stage
         else
           @backends.find_one_to_run(app).start
         end
