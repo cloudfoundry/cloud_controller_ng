@@ -12,16 +12,20 @@ resource "Routes", :type => :api do
   authenticated_request
 
   describe "Standard endpoints" do
-    field :guid, "The guid of the route.", required: false
-    field :domain_guid, "The guid of the associated domain", required: true, example_values: [Sham.guid]
-    field :space_guid, "The guid of the associated space", required: true, example_values: [Sham.guid]
-    field :host, "The host portion of the route", required: false
+    shared_context "updatable_fields" do |opts|
+      field :guid, "The guid of the route."
+      field :domain_guid, "The guid of the associated domain", required: opts[:required], example_values: [Sham.guid]
+      field :space_guid, "The guid of the associated space", required: opts[:required], example_values: [Sham.guid]
+      field :host, "The host portion of the route"
+    end
 
     standard_model_list :route, VCAP::CloudController::RoutesController
     standard_model_get :route, nested_associations: [:domain, :space]
     standard_model_delete :route
 
     post "/v2/routes/" do
+      include_context "updatable_fields", required: true
+
       example "Creating a Route" do
         client.post "/v2/routes", MultiJson.dump(required_fields.merge(domain_guid: domain.guid, space_guid: space.guid), pretty: true), headers
         expect(status).to eq(201)
@@ -31,6 +35,8 @@ resource "Routes", :type => :api do
     end
 
     put "/v2/routes/:guid" do
+      include_context "updatable_fields", required: false
+
       let(:new_host) { "new_host" }
 
       example "Update a Route" do

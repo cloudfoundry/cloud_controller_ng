@@ -15,8 +15,8 @@ resource "Security Groups", :type => :api do
     parameter :guid, "The guid of the Security Group"
   end
 
-  shared_context "updatable_fields" do
-    field :name, "The name of the security group.", required: true, example_values: ["my_super_sec_group"]
+  shared_context "updatable_fields" do |opts|
+    field :name, "The name of the security group.", required: opts[:required], example_values: ["my_super_sec_group"]
     field :rules, "The egress rules for apps that belong to this security group.", default: [],
       example_values: [[
         {protocol: "icmp", destination: "0.0.0.0/0", type: 0, code: 1},
@@ -32,7 +32,7 @@ resource "Security Groups", :type => :api do
     standard_model_delete :security_group
 
     post "/v2/security_groups/" do
-      include_context "updatable_fields"
+      include_context "updatable_fields", required: true
       example "Creating a Security Group" do
         client.post "/v2/security_groups", fields_json({rules: field_data("rules")[:example_values].first}), headers
         expect(status).to eq(201)
@@ -43,7 +43,7 @@ resource "Security Groups", :type => :api do
 
     put "/v2/security_groups/:guid" do
       include_context "guid_parameter"
-      include_context "updatable_fields"
+      include_context "updatable_fields", required: false
       modify_fields_for_update
       example "Updating a Security Group" do
         new_security_group = {name: 'new_name', rules: []}

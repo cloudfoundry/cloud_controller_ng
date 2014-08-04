@@ -8,19 +8,26 @@ resource "Buildpacks", :type => :api do
 
   authenticated_request
 
+  shared_context "guid_parameter" do
+    parameter :guid, "The guid of the Buildpack"
+  end
+
   describe "Standard endpoints" do
-    field :guid, "The guid of the buildpack.", required: false
-    field :name, "The name of the buildpack. To be used by app buildpack field. (only alphanumeric characters)", required: true, example_values: ["Golang_buildpack"]
-    field :position, "The order in which the buildpacks are checked during buildpack auto-detection.", required: false
-    field :enabled, "Whether or not the buildpack will be used for staging", required: false, default: true
-    field :locked, "Whether or not the buildpack is locked to prevent updates", required: false, default: false
-    field :filename, "The name of the uploaded buildpack file", required: false
+    shared_context "updatable_fields" do |opts|
+      field :name, "The name of the buildpack. To be used by app buildpack field. (only alphanumeric characters)", required: opts[:required], example_values: ["Golang_buildpack"]
+      field :position, "The order in which the buildpacks are checked during buildpack auto-detection."
+      field :enabled, "Whether or not the buildpack will be used for staging", default: true
+      field :locked, "Whether or not the buildpack is locked to prevent updates", default: false
+      field :filename, "The name of the uploaded buildpack file"
+    end
 
     standard_model_list(:buildpack, VCAP::CloudController::BuildpacksController)
     standard_model_get(:buildpack)
     standard_model_delete(:buildpack)
 
     post "/v2/buildpacks" do
+      include_context "updatable_fields", required: true
+
       example "Creates an admin Buildpack" do
         client.post "/v2/buildpacks", fields_json, headers
         expect(status).to eq 201
@@ -29,6 +36,9 @@ resource "Buildpacks", :type => :api do
     end
 
     put "/v2/buildpacks/:guid" do
+      include_context "updatable_fields", required: false
+      include_context "guid_parameter"
+
       example "Change the position of a Buildpack" do
         explanation <<-DOC
           Buildpacks are maintained in an ordered list.  If the target position is already occupied,
@@ -88,6 +98,8 @@ resource "Buildpacks", :type => :api do
   end
 
   put "/v2/buildpacks/:guid/bits" do
+    include_context "guid_parameter"
+
     let(:tmpdir) { Dir.mktmpdir }
     let(:user) { make_user }
     let(:filename) { "file.zip" }

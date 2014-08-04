@@ -8,17 +8,23 @@ resource "Organizations", :type => :api do
 
   authenticated_request
 
+  shared_context "guid_parameter" do
+    parameter :guid, "The guid of the Organization"
+  end
+
   describe "Standard endpoints" do
-    field :guid, "The guid of the organization.", required: false
-    field :name, "The name of the organization", required: true, example_values: ["my-org-name"]
-    field :status, "Status of the organization"
-    field :billing_enabled, "If billing is enabled for this organization", deprecated: true
+    shared_context "updatable_fields" do |opts|
+      field :name, "The name of the organization", required: opts[:required], example_values: ["my-org-name"]
+      field :status, "Status of the organization"
+      field :billing_enabled, "If billing is enabled for this organization", deprecated: true
+    end
 
     standard_model_list :organization, VCAP::CloudController::OrganizationsController
     standard_model_get :organization, nested_associations: [:quota_definition]
     standard_model_delete :organization
 
     post "/v2/organizations/" do
+      include_context "updatable_fields", required: true
       example "Creating an Organization" do
         client.post "/v2/organizations", MultiJson.dump(required_fields, pretty: true), headers
         expect(status).to eq(201)
@@ -28,6 +34,9 @@ resource "Organizations", :type => :api do
     end
 
     put "/v2/organizations/:guid" do
+      include_context "updatable_fields", required: false
+      include_context "guid_parameter"
+
       let(:new_name) { "New Organization Name" }
 
       example "Update an Organization" do
@@ -39,7 +48,7 @@ resource "Organizations", :type => :api do
   end
 
   describe "Nested endpoints" do
-    field :guid, "The guid of the organization.", required: true
+    include_context "guid_parameter"
 
     describe "Spaces" do
       before do

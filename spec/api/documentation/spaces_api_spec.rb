@@ -8,16 +8,21 @@ resource "Spaces", :type => :api do
 
   authenticated_request
 
+  shared_context "guid_parameter" do
+    parameter :guid, "The guid of the Space"
+  end
+
   describe "Standard endpoints" do
-    field :guid, "The guid of the space.", required: false
-    field :name, "The name of the space", required: true, example_values: %w(development demo production)
-    field :organization_guid, "The guid of the associated organization", required: true, example_values: [Sham.guid]
-    field :developer_guids, "The list of the associated developers", required: false
-    field :manager_guids, "The list of the associated managers", required: false
-    field :auditor_guids, "The list of the associated auditors", required: false
-    field :domain_guids, "The list of the associated domains", required: false
-    field :security_group_guids, "The list of the associated security groups", required: false
-    field :space_quota_definition_guid, "The associated space quota definition", required: false
+    shared_context "updatable_fields" do |opts|
+      field :name, "The name of the space", required: opts[:required], example_values: %w(development demo production)
+      field :organization_guid, "The guid of the associated organization", required: opts[:required], example_values: [Sham.guid]
+      field :developer_guids, "The list of the associated developers"
+      field :manager_guids, "The list of the associated managers"
+      field :auditor_guids, "The list of the associated auditors"
+      field :domain_guids, "The list of the associated domains"
+      field :security_group_guids, "The list of the associated security groups"
+      field :space_quota_definition_guid, "The associated space quota definition"
+    end
 
     standard_model_list :space, VCAP::CloudController::SpacesController
     standard_model_get :space, nested_associations: [:organization]
@@ -29,6 +34,7 @@ resource "Spaces", :type => :api do
     end
 
     post "/v2/spaces/" do
+      include_context "updatable_fields", required: true
       example "Creating a Space" do
         organization_guid = VCAP::CloudController::Organization.make.guid
         client.post "/v2/spaces", MultiJson.dump(required_fields.merge(organization_guid: organization_guid), pretty: true), headers
@@ -42,6 +48,9 @@ resource "Spaces", :type => :api do
     end
 
     put "/v2/spaces/:guid" do
+      include_context "updatable_fields", required: false
+      include_context "guid_parameter"
+
       let(:new_name) { "New Space Name" }
       let(:new_space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization) }
 
@@ -59,7 +68,7 @@ resource "Spaces", :type => :api do
   end
 
   describe "Nested endpoints" do
-    field :guid, "The guid of the space.", required: true
+    include_context "guid_parameter"
 
     describe "Routes" do
       before do
