@@ -99,7 +99,7 @@ module VCAP::CloudController
         DeaClient.start_instance_at_index(app, 1)
       end
 
-      it "should not log passwords and raise an error" do
+      it "should not log passwords" do
         logger = double(Steno)
         allow(DeaClient).to receive(:logger).and_return(logger)
 
@@ -108,17 +108,7 @@ module VCAP::CloudController
           expect(data[:message]).not_to include(:services, :env, :executableUri)
         }.once
 
-        idx = 1
-        expect {
-          DeaClient.start_instance_at_index(app, idx)
-        }.to raise_error { |error|
-          expect(error).to be_an_instance_of Errors::ApiError
-          expect(error.name).to eq("NoAvailableDEAFound")
-
-          msg = "Instance ##{idx} can not find a available DEA to start since APP's requirements is not met"
-
-          expect(error.message).to eq(msg)
-        }
+        expect { DeaClient.start_instance_at_index(app, 1) }.to raise_error
       end
 
       context "when droplet is missing" do
@@ -130,6 +120,24 @@ module VCAP::CloudController
           expect {
             DeaClient.start_instance_at_index(app, 1)
           }.to raise_error Errors::ApiError, "The app package could not be found: #{app.guid}"
+        end
+      end
+
+      context "when_no_DEA_available" do
+        it "should raise_error_when_no_dea_is_available_to_start_instance" do
+          expect(dea_pool).to receive(:find_dea).once.and_return(nil)
+
+          idx = 1
+          expect {
+            DeaClient.start_instance_at_index(app, idx)
+          }.to raise_error { |error|
+            expect(error).to be_an_instance_of Errors::ApiError
+            expect(error.name).to eq("NoAvailableDEAFound")
+
+            msg = "Instance ##{idx} can not find a available DEA to start since APP's requirements is not met"
+
+            expect(error.message).to eq(msg)
+          }
         end
       end
     end
@@ -183,12 +191,8 @@ module VCAP::CloudController
         app.instances = 1
         app.memory = 512
         expect(dea_pool).to receive(:find_dea).with(include(mem: 512))
-        expect {
-          DeaClient.start(app)
-        }.to raise_error { |error|
-          expect(error).to be_an_instance_of Errors::ApiError
-          expect(error.name).to eq("NoAvailableDEAFound")
-        }
+
+        expect { DeaClient.start(app) }.to raise_error
       end
 
       it "includes disk in find_dea request" do
@@ -196,12 +200,7 @@ module VCAP::CloudController
         app.disk_quota = 13
         expect(dea_pool).to receive(:find_dea).with(include(disk: 13))
 
-        expect {
-          DeaClient.start(app)
-        }.to raise_error { |error|
-          expect(error).to be_an_instance_of Errors::ApiError
-          expect(error.name).to eq("NoAvailableDEAFound")
-        }
+        expect { DeaClient.start(app) }.to raise_error
       end
     end
 
