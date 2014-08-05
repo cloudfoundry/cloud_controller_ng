@@ -558,10 +558,6 @@ module VCAP::CloudController
       {"VCAP_SERVICES" => services_hash}
     end
 
-    def health_manager_client
-      CloudController::DependencyLocator.instance.health_manager_client
-    end
-
     def generate_salt
       self.salt ||= VCAP::CloudController::Encryptor.generate_salt.freeze
     end
