@@ -151,10 +151,8 @@ module VCAP::CloudController
         Config.configure_components_depending_on_message_bus(message_bus)
       end
 
-      it "registers subscriptions for dea_pool" do
-        stager_pool = double(Dea::StagerPool)
-        allow(Dea::StagerPool).to receive(:new).and_return(stager_pool)
-        expect(stager_pool).to receive(:register_subscriptions)
+      it "creates the dea stager pool" do
+        expect(Dea::StagerPool).to receive(:new).and_call_original
 
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)

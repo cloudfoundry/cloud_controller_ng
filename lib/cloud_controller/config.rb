@@ -231,8 +231,6 @@ module VCAP::CloudController
         backends = Backends.new(@config, message_bus, dea_pool, stager_pool, diego_client)
         AppObserver.configure(backends)
 
-        stager_pool.register_subscriptions
-
         LegacyBulk.configure(@config, message_bus)
 
         BulkApi.configure(@config)

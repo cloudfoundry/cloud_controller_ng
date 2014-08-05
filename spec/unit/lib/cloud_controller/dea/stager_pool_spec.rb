@@ -15,10 +15,11 @@ module VCAP::CloudController
     subject { Dea::StagerPool.new(TestConfig.config, message_bus) }
 
     describe "#register_subscriptions" do
+      let!(:stager_pool) { subject }
+
       it "finds advertised stagers" do
-        subject.register_subscriptions
         message_bus.publish("staging.advertise", staging_advertise_msg)
-        expect(subject.find_stager("stack-name", 0, 0)).to eq("staging-id")
+        expect(stager_pool.find_stager("stack-name", 0, 0)).to eq("staging-id")
       end
     end
 

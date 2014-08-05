@@ -9,12 +9,7 @@ module VCAP::CloudController
         @config = config
         @message_bus = message_bus
         @stager_advertisements = []
-      end
-
-      def register_subscriptions
-        message_bus.subscribe("staging.advertise") do |msg|
-          process_advertise_message(msg)
-        end
+        register_subscriptions
       end
 
       def process_advertise_message(msg)
@@ -41,6 +36,12 @@ module VCAP::CloudController
       end
 
       private
+
+      def register_subscriptions
+        message_bus.subscribe("staging.advertise") do |msg|
+          process_advertise_message(msg)
+        end
+      end
 
       def validate_stack_availability(stack)
         unless @stager_advertisements.any? { |ad| ad.has_stack?(stack) }
