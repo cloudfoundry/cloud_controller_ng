@@ -109,6 +109,8 @@ module ApiDsl
     def standard_model_list(model, controller, options = {})
       outer_model_description = ''
       model_name = options[:path] || model
+      title = options[:title] || model_name.to_s.pluralize.titleize
+
       if options[:outer_model]
         model_name = options[:path] if options[:path]
         path = "#{options[:outer_model].to_s.pluralize}/:guid/#{model_name}"
@@ -119,7 +121,7 @@ module ApiDsl
 
       get root(path) do
         standard_list_parameters controller
-        example_request "List all #{model_name.to_s.pluralize.titleize}#{outer_model_description}" do
+        example_request "List all #{title}#{outer_model_description}" do
           expect(status).to eq 200
           standard_list_response parsed_response, model
         end
@@ -152,9 +154,10 @@ module ApiDsl
 
     def standard_model_get(model, options = {})
       path = options[:path] || model
+      title = options[:title] || path.to_s.singularize.titleize
       get "#{root(path)}/:guid" do
-        parameter :guid, "The guid of the #{model.to_s.titleize}"
-        example_request "Retrieve a Particular #{path.to_s.singularize.titleize}" do
+        parameter :guid, "The guid of the #{title}"
+        example_request "Retrieve a Particular #{title}" do
           standard_entity_response parsed_response, model
           if options[:nested_associations]
             options[:nested_associations].each do |association_name|
@@ -166,11 +169,12 @@ module ApiDsl
     end
 
     def standard_model_delete(model, options = {})
+      title = options[:title] || model.to_s.titleize
       delete "#{root(model)}/:guid" do
-        parameter :guid, "The guid of the #{model.to_s.titleize}"
+        parameter :guid, "The guid of the #{title}"
         request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'." unless options[:async] == false
 
-        example_request "Delete a Particular #{model.to_s.titleize}" do
+        example_request "Delete a Particular #{title}" do
           expect(status).to eq 204
           after_standard_model_delete(guid) if respond_to?(:after_standard_model_delete)
         end
