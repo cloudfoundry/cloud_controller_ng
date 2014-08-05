@@ -11,17 +11,11 @@ module VCAP::CloudController
     let(:blobstore_url_generator) { double(:blobstore_url_generator, :droplet_download_url => "download-url") }
     let(:tps_reporter) { double(:tps_reporter) }
     let(:diego_client) { Diego::Client.new(config_hash, message_bus, tps_reporter, blobstore_url_generator) }
+    let(:backends) { Backends.new(config_hash, message_bus, dea_pool, stager_pool, diego_client) }
 
     before do
       Dea::Client.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
-      AppObserver.configure(config_hash, message_bus, dea_pool, stager_pool, diego_client)
-    end
-
-    describe ".run" do
-      it "registers subscriptions for dea_pool" do
-        expect(stager_pool).to receive(:register_subscriptions)
-        AppObserver.run
-      end
+      AppObserver.configure(backends)
     end
 
     describe ".deleted" do

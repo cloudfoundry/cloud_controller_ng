@@ -3,7 +3,6 @@ module VCAP::CloudController
     module SubSystem
       def self.setup!(message_bus)
         Client.run
-        AppObserver.run
 
         LegacyBulk.register_subscription
 

@@ -140,13 +140,28 @@ module VCAP::CloudController
         expect(ResourcePool.instance.minimum_size).to eq(9001)
       end
 
+      it "creates the runner backend" do
+        expect(VCAP::CloudController::Backends).to receive(:new).with(
+                                    @test_config,
+                                    message_bus,
+                                    instance_of(Dea::Pool),
+                                    instance_of(Dea::StagerPool),
+                                    instance_of(Diego::Client))
+        Config.configure_components(@test_config)
+        Config.configure_components_depending_on_message_bus(message_bus)
+      end
+
+      it "registers subscriptions for dea_pool" do
+        stager_pool = double(Dea::StagerPool)
+        allow(Dea::StagerPool).to receive(:new).and_return(stager_pool)
+        expect(stager_pool).to receive(:register_subscriptions)
+
+        Config.configure_components(@test_config)
+        Config.configure_components_depending_on_message_bus(message_bus)
+      end
+
       it "sets up the app manager" do
-        expect(AppObserver).to receive(:configure).with(
-                                   @test_config,
-                                   message_bus,
-                                   instance_of(Dea::Pool),
-                                   instance_of(Dea::StagerPool),
-                                   instance_of(Diego::Client))
+        expect(AppObserver).to receive(:configure).with(instance_of(VCAP::CloudController::Backends))
 
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)

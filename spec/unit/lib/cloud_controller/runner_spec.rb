@@ -80,11 +80,6 @@ module VCAP::CloudController
           subject.run!
         end
 
-        it "starts app observer" do
-          expect(AppObserver).to receive(:run)
-          subject.run!
-        end
-
         it "registers subscription for Bulk API" do
           expect(LegacyBulk).to receive(:register_subscription)
           subject.run!

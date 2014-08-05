@@ -8,13 +8,8 @@ module VCAP::CloudController
     class << self
       extend Forwardable
 
-      def configure(config, message_bus, dea_pool, stager_pool, diego_client)
-        @config = config
-        @message_bus = message_bus
-        @dea_pool = dea_pool
-        @stager_pool = stager_pool
-        @diego_client = diego_client
-        @backends = Backends.new(config, message_bus, dea_pool, stager_pool, diego_client)
+      def configure(backends)
+        @backends = backends
       end
 
       def deleted(app)
@@ -33,10 +28,6 @@ module VCAP::CloudController
         elsif changes.has_key?(:instances)
           react_to_instances_change(app)
         end
-      end
-
-      def run
-        @stager_pool.register_subscriptions
       end
 
       private

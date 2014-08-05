@@ -5,10 +5,10 @@ module VCAP::CloudController
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:staging_advertise_msg) do
       {
-          "id" => "staging-id",
-          "stacks" => ["stack-name"],
-          "available_memory" => 1024,
-          "available_disk" => 512,
+        "id" => "staging-id",
+        "stacks" => ["stack-name"],
+        "available_memory" => 1024,
+        "available_disk" => 512,
       }
     end
 
@@ -94,19 +94,19 @@ module VCAP::CloudController
     describe "#reserve_app_memory" do
       let(:stager_advertise_msg) do
         {
-            "id" => "staging-id",
-            "stacks" => ["stack-name"],
-            "available_memory" => 1024,
-            "available_disk" => 512
+          "id" => "staging-id",
+          "stacks" => ["stack-name"],
+          "available_memory" => 1024,
+          "available_disk" => 512
         }
       end
 
       let(:new_stager_advertise_msg) do
         {
-            "id" => "staging-id",
-            "stacks" => ["stack-name"],
-            "available_memory" => 1024,
-            "available_disk" => 512
+          "id" => "staging-id",
+          "stacks" => ["stack-name"],
+          "available_memory" => 1024,
+          "available_disk" => 512
         }
       end
 

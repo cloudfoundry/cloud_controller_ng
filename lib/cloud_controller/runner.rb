@@ -20,7 +20,7 @@ module VCAP::CloudController
     def initialize(argv)
       @argv = argv
 
-      # default to production. this may be overriden during opts parsing
+      # default to production. this may be overridden during opts parsing
       ENV["RACK_ENV"] ||= "production"
 
       @config_file = File.expand_path("../../../config/cloud_controller.yml", __FILE__)

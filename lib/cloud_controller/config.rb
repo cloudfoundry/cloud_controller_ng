@@ -228,7 +228,10 @@ module VCAP::CloudController
 
         StagingCompletionHandler.new(message_bus, diego_client).subscribe!
 
-        AppObserver.configure(@config, message_bus, dea_pool, stager_pool,diego_client)
+        backends = Backends.new(@config, message_bus, dea_pool, stager_pool, diego_client)
+        AppObserver.configure(backends)
+
+        stager_pool.register_subscriptions
 
         LegacyBulk.configure(@config, message_bus)
 
