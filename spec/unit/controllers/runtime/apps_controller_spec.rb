@@ -28,7 +28,8 @@ module VCAP::CloudController
           event_guids: {type: "[string]"},
           route_guids: {type: "[string]"},
           space_guid: {type: "string", required: true},
-          stack_guid: {type: "string"}
+          stack_guid: {type: "string"},
+          docker_image: {type: "string", required: false},
         })
       end
 
@@ -40,7 +41,7 @@ module VCAP::CloudController
           debug: {type: "string"},
           disk_quota: {type: "integer"},
           environment_json: {type: "hash"},
-          health_check_timeout: { type: "integer" },
+          health_check_timeout: {type: "integer"},
           instances: {type: "integer"},
           memory: {type: "integer"},
           name: {type: "string"},
@@ -50,7 +51,8 @@ module VCAP::CloudController
           route_guids: {type: "[string]"},
           service_binding_guids: {type: "[string]"},
           space_guid: {type: "string"},
-          stack_guid: {type: "string"}
+          stack_guid: {type: "string"},
+          docker_image: {type: "string"},
         })
       end
     end

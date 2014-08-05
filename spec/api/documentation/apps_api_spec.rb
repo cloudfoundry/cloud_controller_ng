@@ -25,6 +25,7 @@ resource "Apps", :type => :api do
     field :command, "The command to start an app after it is staged (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT')."
     field :buildpack, "Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.", default: "", example_values: ["", "https://github.com/virtualstaticvoid/heroku-buildpack-r.git", "an_example_installed_buildpack"]
     field :health_check_timeout, "Timeout for health checking of an staged app when starting up"
+    field :docker_image, "Name of the Docker image containing the app", default: nil, experimental: true, example_values: ["cloudfoundry/helloworld", "registry.example.com:5000/user/repository/tag"]
     field :environment_json, "Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables."
     field :production, "Deprecated.", deprecated: true, default: true, valid_values: [true, false]
     field :console, "Open the console port for the app (at $CONSOLE_PORT).", deprecated: true, default: false, valid_values: [true, false]
@@ -49,6 +50,23 @@ resource "Apps", :type => :api do
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :app
+
+        app_guid = parsed_response['metadata']['guid']
+        audited_event VCAP::CloudController::Event.find(:type => "audit.app.create", :actee => app_guid)
+      end
+
+      example "Creating a Docker App (experimental)" do
+        space_guid = VCAP::CloudController::Space.make.guid
+        diego_environment = { "CF_DIEGO_BETA" => "true", "CF_DIEGO_RUN_BETA" => "true" }
+
+        data = required_fields.merge(space_guid: space_guid, name: "docker_app", docker_image: "cloudfoundry/hello")
+        data['environment_json'] = diego_environment
+        client.post "/v2/apps", MultiJson.dump(data, pretty: true), headers
+        expect(status).to eq(201)
+
+        standard_entity_response parsed_response, :app
+        expect(parsed_response['entity']['docker_image']).to eq("cloudfoundry/hello")
+        expect(parsed_response['entity']['environment_json']).to match(diego_environment)
 
         app_guid = parsed_response['metadata']['guid']
         audited_event VCAP::CloudController::Event.find(:type => "audit.app.create", :actee => app_guid)
