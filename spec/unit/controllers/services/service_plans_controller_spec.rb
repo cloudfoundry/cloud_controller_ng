@@ -141,10 +141,17 @@ module VCAP::CloudController
 
     describe "GET", "/v2/service_plans" do
       before do
-        ServicePlan.make(active: true, public: true)
-        ServicePlan.make(active: false, public: true)
-        ServicePlan.make(active: true, public: false)
-        ServicePlan.make(active: false, public: false)
+        @services = {
+          :public => [
+            ServicePlan.make(active: true, public: true),
+            ServicePlan.make(active: true, public: true),
+            ServicePlan.make(active: false, public: true)
+          ],
+          :private => [
+            ServicePlan.make(active: true, public: false),
+            ServicePlan.make(active: false, public: false)
+          ]
+        }
       end
 
       context "as an admin" do
@@ -198,6 +205,17 @@ module VCAP::CloudController
           plans.each do |plan|
             expect(plan['service_instances']).to be_nil
           end
+        end
+
+        it 'does allow the unauthed user to filter by service guid' do
+          service_plan = @services[:public].first
+          service_guid = service_plan.service.guid
+
+          get "/v2/service_plans?q=service_guid:#{service_guid}", {}, headers
+
+          plans = decoded_response.fetch('resources').map{ |plan| plan['entity'] }
+          expect(plans.size).to eq(1)
+          expect(plans[0]["unique_id"]).to eq(service_plan.unique_id)
         end
       end
     end
