@@ -30,12 +30,12 @@ module VCAP::CloudController
       apps = []
       id_for_next_token = nil
       staged_apps.each do |app|
-        apps << diego_client.desire_request(app)
+        apps << diego_client.desire_request(app).extract
         id_for_next_token = app.id
       end
 
       MultiJson.dump(
-        apps: apps.collect(&:extract),
+        apps: apps,
         token: {"id" => id_for_next_token}
       )
     rescue IndexError => e
