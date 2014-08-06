@@ -76,7 +76,6 @@ module VCAP::CloudController
 
     describe ".updated" do
       let(:package_hash) { "bar" }
-      let(:needs_staging) { false }
       let(:environment_json) { {} }
       let(:started_instances) { 1 }
       let(:stager_task) { double(:stager_task) }
@@ -89,7 +88,6 @@ module VCAP::CloudController
             droplet_hash:         "initial-droplet-hash",
             name:                 "app-name"
         )
-        allow(app).to receive(:needs_staging?) { needs_staging }
         allow(app).to receive(:environment_json) { environment_json }
         app
       end
@@ -110,7 +108,9 @@ module VCAP::CloudController
         let(:environment_json) { {"CF_DIEGO_BETA"=>"true", "CF_DIEGO_RUN_BETA"=>"true"} }
 
         context "when the app needs staging" do
-          let(:needs_staging) { true }
+          before do
+            app.mark_for_restaging
+          end
 
           context "when its state has changed" do
             let(:changes) { {:state => "anything"} }
@@ -122,8 +122,8 @@ module VCAP::CloudController
         end
 
         context "when the app is already staged" do
-          let(:needs_staging) { false }
           before do
+            app.mark_as_staged
             allow(app).to receive(:detected_start_command) { "/run" }
           end
 
@@ -173,8 +173,11 @@ module VCAP::CloudController
               end
 
               context "when the app bits were changed as well" do
-                let(:needs_staging) { true }
                 let(:package_hash) { "something new" }
+
+                before do
+                  app.mark_for_restaging
+                end
 
                 it "should start more instances of the old version" do
                   expect(Dea::Client).not_to receive(:change_running_instances)
@@ -254,17 +257,9 @@ module VCAP::CloudController
             end
           end
 
-          context "when the app needs staging" do
-            let(:needs_staging) { true }
-
-            context "when the app package hash is nil" do
-              let(:package_hash) { nil }
-
-              it "raises" do
-                expect {
-                  subject
-                }.to raise_error(Errors::ApiError, /app package is invalid/)
-              end
+          context "when the app is not staged" do
+            before do
+              app.mark_for_restaging
             end
 
             context "when the app package hash is blank" do
@@ -324,8 +319,10 @@ module VCAP::CloudController
             end
           end
 
-          context "when staging is not needed" do
-            let(:needs_staging) { false }
+          context "when the app is already staged" do
+            before do
+              app.mark_as_staged
+            end
 
             it "should not make a stager task" do
               expect(Dea::AppStagerTask).not_to receive(:new)
@@ -338,9 +335,8 @@ module VCAP::CloudController
           let(:changes) { { :state => "anything" } }
 
           context "when the app is started" do
-            let(:needs_staging) { true }
-
             before do
+              app.mark_for_restaging
               allow(app).to receive(:started?) { true }
             end
 
@@ -380,7 +376,10 @@ module VCAP::CloudController
               end
 
               context "when the app bits were changed as well" do
-                let(:needs_staging) { true }
+                before do
+                  app.mark_for_restaging
+                end
+
                 let(:package_hash) { "something new" }
 
                 it "should start more instances of the old version" do
