@@ -251,7 +251,8 @@ module VCAP::CloudController
     end
 
     def detected_start_command
-      cmd = command || current_droplet.detected_start_command
+      cmd = command
+      cmd ||= current_droplet && current_droplet.detected_start_command
       cmd.nil? ? '' : cmd
     end
 

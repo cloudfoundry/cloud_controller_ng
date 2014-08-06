@@ -558,7 +558,6 @@ module VCAP::CloudController
           package_hash: "package-hash",
           instances: 1,
           package_state: "STAGED",
-          droplet_hash: "the-droplet-hash",
         )
       end
 
@@ -577,6 +576,7 @@ module VCAP::CloudController
             droplet_hash: "the-droplet-hash",
             detected_start_command: "droplet's command",
           ))
+          subject.droplet_hash = "the-droplet-hash"
         end
 
         it "returns that droplet's detected start command" do
@@ -586,6 +586,7 @@ module VCAP::CloudController
 
       context "when the app does not have a current droplet" do
         it "returns the empty string" do
+          expect(subject.current_droplet).to be_nil
           expect(subject.detected_start_command).to eq("")
         end
       end
