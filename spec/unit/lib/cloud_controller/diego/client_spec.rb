@@ -114,16 +114,16 @@ module VCAP::CloudController::Diego
         client.send_stage_request(app, staging_task_id)
 
         expected_message = {
-          :app_id => app.guid,
-          :task_id => staging_task_id,
-          :memory_mb => app.memory,
-          :disk_mb => app.disk_quota,
-          :file_descriptors => app.file_descriptors,
-          :environment => Environment.new(app).to_a,
-          :stack => app.stack.name,
-          :build_artifacts_cache_download_uri => "http://buildpack-artifacts-cache.com",
-          :app_bits_download_uri => "http://app-package.com",
-          :buildpacks => BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app)
+          "app_id" => app.guid,
+          "task_id" => staging_task_id,
+          "memory_mb" => app.memory,
+          "disk_mb" => app.disk_quota,
+          "file_descriptors" => app.file_descriptors,
+          "environment" => Environment.new(app).to_a,
+          "stack" => app.stack.name,
+          "build_artifacts_cache_download_uri" => "http://buildpack-artifacts-cache.com",
+          "app_bits_download_uri" => "http://app-package.com",
+          "buildpacks" => BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app)
         }
 
         expect(message_bus.published_messages.size).to eq(1)

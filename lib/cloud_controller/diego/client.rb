@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       def send_desire_request(app)
         logger.info("desire.app.begin", :app_guid => app.guid)
-        @message_bus.publish("diego.desire.app", desire_request(app).encode)
+        @message_bus.publish("diego.desire.app", desire_request(app).to_json)
       end
 
       def send_stage_request(app, staging_task_id)
@@ -37,12 +37,12 @@ module VCAP::CloudController
 
         logger.info("staging.begin", :app_guid => app.guid)
 
-        staging_request = StagingRequest.new(app, @blobstore_url_generator, @buildpack_entry_generator).to_h
-        @message_bus.publish("diego.staging.start", staging_request)
+        staging_request = StagingRequest.new(app, @blobstore_url_generator, @buildpack_entry_generator)
+        @message_bus.publish("diego.staging.start", staging_request.as_json)
       end
 
       def desire_request(app)
-        DesireRequest.new(app, @blobstore_url_generator).message
+        DesireRequest.new(app, @blobstore_url_generator)
       end
 
       def lrp_instances(app)

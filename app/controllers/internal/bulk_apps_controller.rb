@@ -30,7 +30,7 @@ module VCAP::CloudController
       apps = []
       id_for_next_token = nil
       staged_apps.each do |app|
-        apps << diego_client.desire_request(app).extract
+        apps << diego_client.desire_request(app).as_json
         id_for_next_token = app.id
       end
 

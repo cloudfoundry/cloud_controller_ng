@@ -8,6 +8,12 @@ module VCAP::CloudController
         @blobstore_url_generator = blobstore_url_generator
       end
 
+      def as_json(_={})
+        MultiJson.load(message.encode) # Hack to temporarily avoid having to change JsonMessage
+      end
+
+      private
+
       def message
         request = {
           process_guid: @app.versioned_guid,

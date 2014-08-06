@@ -27,17 +27,17 @@ module VCAP::CloudController
       end
 
       it "sends a nats message with the appropriate staging subject and payload" do
-        expect(staging_request.to_h).to eq(
-          :app_id => app.guid,
-          :task_id => "fake-staging-task-id",
-          :memory_mb => app.memory,
-          :disk_mb => app.disk_quota,
-          :file_descriptors => app.file_descriptors,
-          :environment => Environment.new(app).to_a,
-          :stack => app.stack.name,
-          :build_artifacts_cache_download_uri => "http://buildpack-artifacts-cache.com",
-          :app_bits_download_uri => "http://app-package.com",
-          :buildpacks => buildpack_entry_generator.buildpack_entries(app)
+        expect(staging_request.as_json).to eq(
+          "app_id" => app.guid,
+          "task_id" => "fake-staging-task-id",
+          "memory_mb" => app.memory,
+          "disk_mb" => app.disk_quota,
+          "file_descriptors" => app.file_descriptors,
+          "environment" => Environment.new(app).to_a,
+          "stack" => app.stack.name,
+          "build_artifacts_cache_download_uri" => "http://buildpack-artifacts-cache.com",
+          "app_bits_download_uri" => "http://app-package.com",
+          "buildpacks" => buildpack_entry_generator.buildpack_entries(app)
         )
       end
     end
