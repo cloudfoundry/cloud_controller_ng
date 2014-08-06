@@ -3,7 +3,8 @@ require 'rspec_api_documentation/dsl'
 
 resource "Space Quota Definitions (experimental)", type: :api do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
-  let!(:guid) { VCAP::CloudController::SpaceQuotaDefinition.make.guid }
+  let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make }
+  let!(:guid) { space_quota_definition.guid }
 
   authenticated_request
 
@@ -44,6 +45,24 @@ resource "Space Quota Definitions (experimental)", type: :api do
 
       expect(status).to eq(201)
       standard_entity_response parsed_response, :space_quota_definition
+    end
+  end
+
+  describe "Nested endpoints" do
+    include_context "guid_parameter"
+
+    describe "Spaces" do
+      before do
+        space_quota_definition.add_space(associated_space)
+      end
+      let!(:space) { VCAP::CloudController::Space.make(organization_guid: space_quota_definition.organization_guid) }
+      let(:space_guid) { space.guid }
+      let(:associated_space) { VCAP::CloudController::Space.make(organization_guid: space_quota_definition.organization_guid) }
+      let(:associated_space_guid) { associated_space.guid }
+
+      standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :space_quota_definition
+      nested_model_associate :space, :space_quota_definition
+      nested_model_remove :space, :space_quota_definition
     end
   end
 end

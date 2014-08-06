@@ -12,7 +12,8 @@ module VCAP::CloudController
           total_routes:               { type: "integer", required: true },
           memory_limit:               { type: "integer", required: true },
           instance_memory_limit:      { type: "integer" },
-          organization_guid:          { type: "string", required: true }
+          organization_guid:          { type: "string", required: true },
+          space_guids:                { type: "[string]" }
         })
       end
 
@@ -24,7 +25,8 @@ module VCAP::CloudController
           total_routes:               { type: "integer" },
           memory_limit:               { type: "integer" },
           instance_memory_limit:      { type: "integer" },
-          organization_guid:          { type: "string" }
+          organization_guid:          { type: "string" },
+          space_guids:                { type: "[string]" }
         })
       end
     end
