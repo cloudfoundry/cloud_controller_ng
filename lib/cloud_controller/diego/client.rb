@@ -1,5 +1,6 @@
 require "cloud_controller/diego/desire_app_message"
 require "cloud_controller/diego/unavailable"
+require "cloud_controller/diego/environment"
 
 module VCAP::CloudController
   module Diego
@@ -51,7 +52,7 @@ module VCAP::CloudController
             droplet_uri: @blobstore_url_generator.perma_droplet_download_url(app.guid),
             stack: app.stack.name,
             start_command: app.detected_start_command,
-            environment: environment(app),
+            environment: Environment.new(app).to_a,
             num_instances: desired_instances(app),
             routes: app.uris,
             log_guid: app.guid,
@@ -105,18 +106,6 @@ module VCAP::CloudController
         raise Unavailable.new(e)
       end
 
-      def environment(app) # Should be private, but specs uses this
-        env = []
-        env << {name: "VCAP_APPLICATION", value: app.vcap_application.to_json}
-        env << {name: "VCAP_SERVICES", value: app.system_env_json["VCAP_SERVICES"].to_json}
-        db_uri = app.database_uri
-        env << {name: "DATABASE_URL", value: db_uri} if db_uri
-        env << {name: "MEMORY_LIMIT", value: "#{app.memory}m"}
-        app_env_json = app.environment_json || {}
-        app_env_json.each { |k, v| env << {name: k, value: v} }
-        env
-      end
-
       private
 
       def staging_request(app)
@@ -126,7 +115,7 @@ module VCAP::CloudController
           :memory_mb => app.memory,
           :disk_mb => app.disk_quota,
           :file_descriptors => app.file_descriptors,
-          :environment => environment(app),
+          :environment => Environment.new(app).to_a,
           :stack => app.stack.name,
           :build_artifacts_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(app),
           :app_bits_download_uri => @blobstore_url_generator.app_package_download_url(app),

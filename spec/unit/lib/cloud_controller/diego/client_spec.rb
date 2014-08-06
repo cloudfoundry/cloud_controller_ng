@@ -13,7 +13,6 @@ module VCAP::CloudController::Diego
     let(:app) do
       app = VCAP::CloudController::AppFactory.make
       app.instances = 3
-      app.environment_json = {APP_KEY: "APP_VAL"}
       app.space.add_route(route1)
       app.space.add_route(route2)
       app.add_route(route1)
@@ -54,7 +53,7 @@ module VCAP::CloudController::Diego
           "droplet_uri" => "app_uri",
           "stack" => app.stack.name,
           "start_command" => "./some-detected-command",
-          "environment" => MultiJson.load(MultiJson.dump(client.environment(app))),
+          "environment" => MultiJson.load(MultiJson.dump(Environment.new(app).to_a)),
           "num_instances" => expected_instances,
           "routes" => ["some-route.some-domain.com", "some-other-route.some-domain.com"],
           "health_check_timeout_in_seconds" => 120,
@@ -120,7 +119,7 @@ module VCAP::CloudController::Diego
             :memory_mb => app.memory,
             :disk_mb => app.disk_quota,
             :file_descriptors => app.file_descriptors,
-            :environment => client.environment(app),
+            :environment => Environment.new(app).to_a,
             :stack => app.stack.name,
             :build_artifacts_cache_download_uri => "http://buildpack-artifacts-cache.com",
             :app_bits_download_uri => "http://app-package.com",
@@ -131,19 +130,6 @@ module VCAP::CloudController::Diego
         nats_message = message_bus.published_messages.first
         expect(nats_message[:subject]).to eq("diego.staging.start")
         expect(nats_message[:message]).to eq(expected_message)
-      end
-    end
-
-    describe "#environment" do
-      it "should return the correct environment hash for an application" do
-        expected_environment = [
-            {name: "VCAP_APPLICATION", value: app.vcap_application.to_json},
-            {name: "VCAP_SERVICES", value: app.system_env_json["VCAP_SERVICES"].to_json},
-            {name: "MEMORY_LIMIT", value: "#{app.memory}m"},
-            {name: "APP_KEY", value: "APP_VAL"},
-        ]
-
-        expect(client.environment(app)).to match_object(expected_environment)
       end
     end
 
