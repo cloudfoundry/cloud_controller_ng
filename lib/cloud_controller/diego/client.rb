@@ -1,35 +1,8 @@
+require "cloud_controller/diego/desire_app_message"
+require "cloud_controller/diego/unavailable"
+
 module VCAP::CloudController
   module Diego
-    class DesireAppMessage < JsonMessage
-      required :process_guid, String
-      required :memory_mb, Integer
-      required :disk_mb, Integer
-      required :file_descriptors, Integer
-      required :droplet_uri, String
-      required :stack, String
-      required :start_command, String
-      required :environment, [{
-                                  name: String,
-                                  value: String,
-                              }]
-      required :num_instances, Integer
-      required :routes, [String]
-      optional :health_check_timeout_in_seconds, Integer
-      required :log_guid, String
-    end
-
-    class Unavailable < RuntimeError
-      def initialize(exception = nil)
-        @wrapped_exception = exception
-      end
-
-      def to_s
-        message = "Diego runtime is unavailable."
-        message << " Error: #{@wrapped_exception}" if @wrapped_exception
-        message
-      end
-    end
-
     class Client
       def initialize(enabled, message_bus, service_registry, blobstore_url_generator)
         @enabled = enabled
