@@ -12,11 +12,11 @@ module VCAP::CloudController
     end
 
     def find_one_to_stage(app)
-      @diego_client.staging_enabled(app) ? diego_backend(app) : dea_backend(app)
+      @diego_client.staging_enabled?(app) ? diego_backend(app) : dea_backend(app)
     end
 
     def find_one_to_run(app)
-      @diego_client.running_enabled(app) ? diego_backend(app) : dea_backend(app)
+      @diego_client.running_enabled?(app) ? diego_backend(app) : dea_backend(app)
     end
 
     private

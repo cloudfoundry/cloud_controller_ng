@@ -17,7 +17,7 @@ module VCAP::CloudController
     let(:is_diego_app) { true }
 
     before do
-      allow(diego_client).to receive(:running_enabled).and_return(is_diego_app)
+      allow(diego_client).to receive(:running_enabled?).and_return(is_diego_app)
     end
 
     describe 'single app operations' do
@@ -95,7 +95,7 @@ module VCAP::CloudController
         end
 
         before do
-          allow(diego_client).to receive(:running_enabled) { |app| app != apps[1] }
+          allow(diego_client).to receive(:running_enabled?) { |app| app != apps[1] }
         end
 
         it 'associates the apps with the correct client' do

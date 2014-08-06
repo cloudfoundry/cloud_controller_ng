@@ -18,17 +18,13 @@ module VCAP::CloudController
         @service_registry.run!
       end
 
-      def running_enabled(app)
+      def running_enabled?(app)
         @enabled && (app.environment_json || {})["CF_DIEGO_RUN_BETA"] == "true"
       end
 
-      def staging_enabled(app)
+      def staging_enabled?(app)
         return false unless @enabled
-        running_enabled(app) || ((app.environment_json || {})["CF_DIEGO_BETA"] == "true")
-      end
-
-      def staging_needed(app)
-        staging_enabled(app) && (app.needs_staging? || app.detected_start_command.empty?)
+        running_enabled?(app) || ((app.environment_json || {})["CF_DIEGO_BETA"] == "true")
       end
 
       def send_desire_request(app)

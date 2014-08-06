@@ -34,7 +34,7 @@ module VCAP::CloudController
       before do
         allow(Dea::Backend).to receive(:new).and_call_original
         allow(Diego::Backend).to receive(:new).and_call_original
-        allow(diego_client).to receive(:staging_enabled).with(app).and_return(diego)
+        allow(diego_client).to receive(:staging_enabled?).with(app).and_return(diego)
         @backend = backends.find_one_to_stage(app)
       end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
       before do
         allow(Dea::Backend).to receive(:new).and_call_original
         allow(Diego::Backend).to receive(:new).and_call_original
-        allow(diego_client).to receive(:running_enabled).with(app).and_return(diego)
+        allow(diego_client).to receive(:running_enabled?).with(app).and_return(diego)
         @backend = backends.find_one_to_run(app)
       end
 

@@ -44,7 +44,7 @@ module VCAP::CloudController
     end
 
     def reporter_for_app(app)
-      if diego_client.running_enabled(app)
+      if diego_client.running_enabled?(app)
         diego_reporter
       else
         legacy_reporter
@@ -52,7 +52,7 @@ module VCAP::CloudController
     end
 
     def diego_apps(apps)
-      apps.select { |app| diego_client.running_enabled(app) }
+      apps.select { |app| diego_client.running_enabled?(app) }
     end
 
     def legacy_apps(apps)
