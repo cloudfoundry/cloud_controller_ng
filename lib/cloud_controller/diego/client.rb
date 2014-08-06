@@ -65,25 +65,6 @@ module VCAP::CloudController
         DesireAppMessage.new(request)
       end
 
-      def desired_instances(app)
-        app.started? ? app.instances : 0
-      end
-
-      def staging_request(app)
-        {
-            :app_id => app.guid,
-            :task_id => app.staging_task_id,
-            :memory_mb => app.memory,
-            :disk_mb => app.disk_quota,
-            :file_descriptors => app.file_descriptors,
-            :environment => environment(app),
-            :stack => app.stack.name,
-            :build_artifacts_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(app),
-            :app_bits_download_uri => @blobstore_url_generator.app_package_download_url(app),
-            :buildpacks => @buildpack_entry_generator.buildpack_entries(app)
-        }
-      end
-
       def lrp_instances(app)
         if @service_registry.tps_addrs.empty?
           raise Unavailable
@@ -124,7 +105,7 @@ module VCAP::CloudController
         raise Unavailable.new(e)
       end
 
-      def environment(app)
+      def environment(app) # Should be private, but specs uses this
         env = []
         env << {name: "VCAP_APPLICATION", value: app.vcap_application.to_json}
         env << {name: "VCAP_SERVICES", value: app.system_env_json["VCAP_SERVICES"].to_json}
@@ -136,12 +117,33 @@ module VCAP::CloudController
         env
       end
 
-      def logger
-        @logger ||= Steno.logger("cc.diego_client")
+      private
+
+      def staging_request(app)
+        {
+          :app_id => app.guid,
+          :task_id => app.staging_task_id,
+          :memory_mb => app.memory,
+          :disk_mb => app.disk_quota,
+          :file_descriptors => app.file_descriptors,
+          :environment => environment(app),
+          :stack => app.stack.name,
+          :build_artifacts_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(app),
+          :app_bits_download_uri => @blobstore_url_generator.app_package_download_url(app),
+          :buildpacks => @buildpack_entry_generator.buildpack_entries(app)
+        }
+      end
+
+      def desired_instances(app)
+        app.started? ? app.instances : 0
       end
 
       def lrp_guid(app)
         "#{app.guid}-#{app.version}"
+      end
+
+      def logger
+        @logger ||= Steno.logger("cc.diego_client")
       end
     end
   end
