@@ -215,6 +215,14 @@ module VCAP::CloudController
       column_changed?(:buildpack)
     end
 
+    def desired_instances
+      started? ? instances : 0
+    end
+
+    def versioned_guid
+      "#{guid}-#{version}"
+    end
+
     def organization
       space && space.organization
     end

@@ -1,4 +1,4 @@
-require "cloud_controller/diego/desire_app_message"
+require "cloud_controller/diego/desire_request"
 require "cloud_controller/diego/staging_request"
 require "cloud_controller/diego/unavailable"
 require "cloud_controller/diego/environment"
@@ -46,26 +46,7 @@ module VCAP::CloudController
       end
 
       def desire_request(app)
-        request = {
-            process_guid: lrp_guid(app),
-            memory_mb: app.memory,
-            disk_mb: app.disk_quota,
-            file_descriptors: app.file_descriptors,
-            droplet_uri: @blobstore_url_generator.perma_droplet_download_url(app.guid),
-            stack: app.stack.name,
-            start_command: app.detected_start_command,
-            environment: Environment.new(app).to_a,
-            num_instances: desired_instances(app),
-            routes: app.uris,
-            log_guid: app.guid,
-        }
-
-        if app.health_check_timeout
-          request[:health_check_timeout_in_seconds] =
-              app.health_check_timeout
-        end
-
-        DesireAppMessage.new(request)
+        DesireRequest.new(app, @blobstore_url_generator).message
       end
 
       def lrp_instances(app)
@@ -74,7 +55,7 @@ module VCAP::CloudController
         end
 
         address = @service_registry.tps_addrs.first
-        guid = lrp_guid(app)
+        guid = app.versioned_guid
 
         uri = URI("#{address}/lrps/#{guid}")
         logger.info "Requesting lrp information for #{guid} from #{address}"
@@ -93,11 +74,11 @@ module VCAP::CloudController
         tps_instances = JSON.parse(response.body)
         tps_instances.each do |instance|
           result << {
-              process_guid: instance['process_guid'],
-              instance_guid: instance['instance_guid'],
-              index: instance['index'],
-              state: instance['state'].upcase,
-              since: instance['since_in_ns'].to_i / 1_000_000_000,
+            process_guid: instance['process_guid'],
+            instance_guid: instance['instance_guid'],
+            index: instance['index'],
+            state: instance['state'].upcase,
+            since: instance['since_in_ns'].to_i / 1_000_000_000,
           }
         end
 
@@ -109,14 +90,6 @@ module VCAP::CloudController
       end
 
       private
-
-      def desired_instances(app)
-        app.started? ? app.instances : 0
-      end
-
-      def lrp_guid(app)
-        "#{app.guid}-#{app.version}"
-      end
 
       def logger
         @logger ||= Steno.logger("cc.diego_client")

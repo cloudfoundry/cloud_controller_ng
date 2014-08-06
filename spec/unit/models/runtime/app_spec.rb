@@ -1396,6 +1396,45 @@ module VCAP::CloudController
       end
     end
 
+    describe "#desired_instances" do
+      before do
+        @app = App.new
+        @app.instances = 10
+      end
+
+      context "when the app is started" do
+        before do
+          @app.state = "STARTED"
+        end
+
+        it "is the number of instances specified by the user" do
+          expect(@app.desired_instances).to eq(10)
+        end
+      end
+
+      context "when the app is not started" do
+        before do
+          @app.state = "PENDING"
+        end
+
+        it "is zero" do
+          expect(@app.desired_instances).to eq(0)
+        end
+      end
+    end
+
+    describe "versioned_guid" do
+      before do
+        @app = App.new
+        @app.guid = "appguid"
+        @app.version = "versionuuid"
+      end
+
+      it "is the app's guid qualified by its version" do
+        expect(@app.versioned_guid).to eq("appguid-versionuuid")
+      end
+    end
+
     describe "uris" do
       it "should return the uris on the app" do
         app = AppFactory.make(:space => space)
