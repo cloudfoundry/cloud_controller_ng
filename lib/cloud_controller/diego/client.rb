@@ -1,4 +1,5 @@
 require "cloud_controller/diego/desire_app_message"
+require "cloud_controller/diego/staging_request"
 require "cloud_controller/diego/unavailable"
 require "cloud_controller/diego/environment"
 
@@ -40,7 +41,8 @@ module VCAP::CloudController
 
         logger.info("staging.begin", :app_guid => app.guid)
 
-        @message_bus.publish("diego.staging.start", staging_request(app))
+        staging_request = StagingRequest.new(app, @blobstore_url_generator, @buildpack_entry_generator).to_h
+        @message_bus.publish("diego.staging.start", staging_request)
       end
 
       def desire_request(app)
@@ -107,21 +109,6 @@ module VCAP::CloudController
       end
 
       private
-
-      def staging_request(app)
-        {
-          :app_id => app.guid,
-          :task_id => app.staging_task_id,
-          :memory_mb => app.memory,
-          :disk_mb => app.disk_quota,
-          :file_descriptors => app.file_descriptors,
-          :environment => Environment.new(app).to_a,
-          :stack => app.stack.name,
-          :build_artifacts_cache_download_uri => @blobstore_url_generator.buildpack_cache_download_url(app),
-          :app_bits_download_uri => @blobstore_url_generator.app_package_download_url(app),
-          :buildpacks => @buildpack_entry_generator.buildpack_entries(app)
-        }
-      end
 
       def desired_instances(app)
         app.started? ? app.instances : 0

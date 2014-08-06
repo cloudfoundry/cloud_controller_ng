@@ -23,10 +23,10 @@ module VCAP::CloudController::Diego
 
     let(:blobstore_url_generator) do
       double("blobstore_url_generator",
-             :perma_droplet_download_url => "app_uri",
-             :buildpack_cache_download_url => "http://buildpack-artifacts-cache.com",
-             :app_package_download_url => "http://app-package.com",
-             :admin_buildpack_download_url => "https://example.com"
+        :perma_droplet_download_url => "app_uri",
+        :buildpack_cache_download_url => "http://buildpack-artifacts-cache.com",
+        :app_package_download_url => "http://app-package.com",
+        :admin_buildpack_download_url => "https://example.com"
       )
     end
 
@@ -114,16 +114,16 @@ module VCAP::CloudController::Diego
         client.send_stage_request(app, staging_task_id)
 
         expected_message = {
-            :app_id => app.guid,
-            :task_id => staging_task_id,
-            :memory_mb => app.memory,
-            :disk_mb => app.disk_quota,
-            :file_descriptors => app.file_descriptors,
-            :environment => Environment.new(app).to_a,
-            :stack => app.stack.name,
-            :build_artifacts_cache_download_uri => "http://buildpack-artifacts-cache.com",
-            :app_bits_download_uri => "http://app-package.com",
-            :buildpacks => BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app)
+          :app_id => app.guid,
+          :task_id => staging_task_id,
+          :memory_mb => app.memory,
+          :disk_mb => app.disk_quota,
+          :file_descriptors => app.file_descriptors,
+          :environment => Environment.new(app).to_a,
+          :stack => app.stack.name,
+          :build_artifacts_cache_download_uri => "http://buildpack-artifacts-cache.com",
+          :app_bits_download_uri => "http://app-package.com",
+          :buildpacks => BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app)
         }
 
         expect(message_bus.published_messages.size).to eq(1)
@@ -143,18 +143,18 @@ module VCAP::CloudController::Diego
           before do
             stub_request(:get, "http://some-tps-addr:5151/lrps/#{app.guid}-#{app.version}").to_return(
               status: 200,
-              body: [{ process_guid: "abc", instance_guid: "123", index: 0, state: 'running', since_in_ns: '1257894000000000001' },
-                { process_guid: "abc", instance_guid: "456", index: 1, state: 'starting', since_in_ns: '1257895000000000001' },
-                { process_guid: "abc", instance_guid: "789", index: 1, state: 'crashed', since_in_ns: '1257896000000000001' }].to_json)
+              body: [{process_guid: "abc", instance_guid: "123", index: 0, state: 'running', since_in_ns: '1257894000000000001'},
+                {process_guid: "abc", instance_guid: "456", index: 1, state: 'starting', since_in_ns: '1257895000000000001'},
+                {process_guid: "abc", instance_guid: "789", index: 1, state: 'crashed', since_in_ns: '1257896000000000001'}].to_json)
 
             allow(service_registry).to receive(:tps_addrs).and_return(['http://some-tps-addr:5151'])
           end
 
           it "reports each instance's index, state, since, process_guid, instance_guid" do
             expect(client.lrp_instances(app)).to eq([
-              { process_guid: "abc", instance_guid: "123", index: 0, state: "RUNNING", since: 1257894000 },
-              { process_guid: "abc", instance_guid: "456", index: 1, state: "STARTING", since: 1257895000 },
-              { process_guid: "abc", instance_guid: "789", index: 1, state: "CRASHED", since: 1257896000 }
+              {process_guid: "abc", instance_guid: "123", index: 0, state: "RUNNING", since: 1257894000},
+              {process_guid: "abc", instance_guid: "456", index: 1, state: "STARTING", since: 1257895000},
+              {process_guid: "abc", instance_guid: "789", index: 1, state: "CRASHED", since: 1257896000}
             ])
           end
         end
