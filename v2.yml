@@ -612,3 +612,18 @@
   name: DiegoDisabled
   http_code: 400
   message: Diego has not been enabled.
+
+330000:
+  name: FeatureFlagNotFound
+  http_code: 404
+  message: "The feature flag could not be found: %s"
+
+330001:
+  name: FeatureFlagInvalid
+  http_code: 400
+  message: "The feature flag is invalid: %s"
+
+330002:
+  name: FeatureDisabled
+  http_code: 412
+  message: "%s"
