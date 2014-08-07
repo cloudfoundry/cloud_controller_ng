@@ -10,8 +10,8 @@ module VCAP::CloudController
         @stager_pool = stager_pool
       end
 
-      def needs_staging?
-        @app.needs_staging?
+      def requires_restage?
+        false
       end
 
       def stage

@@ -114,6 +114,7 @@ module VCAP::CloudController
 
           context "when its state has changed" do
             let(:changes) { {:state => "anything"} }
+
             it 'uses the diego stager to do staging' do
               subject
               expect(diego_client).to have_received(:send_stage_request).with(app, "foo-bar")
@@ -124,7 +125,6 @@ module VCAP::CloudController
         context "when the app is already staged" do
           before do
             app.mark_as_staged
-            allow(app).to receive(:detected_start_command) { "/run" }
           end
 
           context "when the state changes" do
@@ -135,10 +135,32 @@ module VCAP::CloudController
                 allow(app).to receive(:started?) { true }
               end
 
-              it "should start the app with specified number of instances" do
-                expect(Dea::Client).not_to receive(:start)
-                expect(diego_client).to receive(:send_desire_request).with(app)
-                subject
+              context "when the app requires a migration from the DEA" do
+                before do
+                  app.command = nil
+                  app.current_droplet.detected_start_command = ""
+                end
+
+                it "restages the app" do
+                  subject
+                  expect(diego_client).to have_received(:send_stage_request).with(app, "foo-bar")
+                end
+
+                it "marks the app as needing staging" do
+                  expect { subject }.to change(app, :pending?).to(true)
+                end
+              end
+
+              context "when the app is ready to run" do
+                before do
+                  app.command = "/run"
+                end
+
+                it "should start the app with specified number of instances" do
+                  expect(Dea::Client).not_to receive(:start)
+                  expect(diego_client).to receive(:send_desire_request).with(app)
+                  subject
+                end
               end
             end
 
@@ -154,7 +176,6 @@ module VCAP::CloudController
               end
             end
           end
-
         end
 
         context "when the desired instance count change" do

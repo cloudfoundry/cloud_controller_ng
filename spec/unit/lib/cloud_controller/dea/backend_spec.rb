@@ -31,25 +31,9 @@ module VCAP::CloudController
         allow(Client).to receive(:message_bus).and_return(message_bus)
       end
 
-      describe "#needs_staging?" do
-        context "when the app thinks it needs to be staged" do
-          before do
-            allow(app).to receive(:needs_staging?).and_return(true)
-          end
-
-          it "returns true" do
-            expect(backend.needs_staging?).to eq(true)
-          end
-        end
-
-        context "when the app thinks it does not need to be staged" do
-          before do
-            allow(app).to receive(:needs_staging?).and_return(false)
-          end
-
-          it "returns false" do
-            expect(backend.needs_staging?).to eq(false)
-          end
+      describe "#requires_restage?" do
+        it "returns false" do
+          expect(backend.requires_restage?).to eq(false)
         end
       end
 

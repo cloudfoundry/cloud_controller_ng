@@ -15,40 +15,24 @@ module VCAP::CloudController
         Backend.new(app, diego_client)
       end
 
-      describe "#needs_staging?" do
-        context "when the app thinks it needs to be staged" do
+      describe "#requires_restage?" do
+        context "when the app has a start command" do
           before do
-            allow(app).to receive(:needs_staging?).and_return(true)
+            allow(app).to receive(:detected_start_command).and_return("fake-start-command")
           end
 
-          it "returns true" do
-            expect(backend.needs_staging?).to eq(true)
+          it "returns false because it has enough information to run the app" do
+            expect(backend.requires_restage?).to eq(false)
           end
         end
 
-        context "when the app thinks it does not need to be staged" do
+        context "when the app does not have a start command" do
           before do
-            allow(app).to receive(:needs_staging?).and_return(false)
+            allow(app).to receive(:detected_start_command).and_return("")
           end
 
-          context "and the app has a start command" do
-            before do
-              allow(app).to receive(:detected_start_command).and_return("fake-start-command")
-            end
-
-            it "returns false because it has enough information to run the app" do
-              expect(backend.needs_staging?).to eq(false)
-            end
-          end
-
-          context "when the app does not have a start command" do
-            before do
-              allow(app).to receive(:detected_start_command).and_return("")
-            end
-
-            it "assumes the app was previously staged with a DEA and needs restaging to detect its start command" do
-              expect(backend.needs_staging?).to eq(true)
-            end
+          it "assumes the app was previously staged with a DEA and needs restaging to detect its start command" do
+            expect(backend.requires_restage?).to eq(true)
           end
         end
       end

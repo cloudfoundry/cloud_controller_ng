@@ -53,13 +53,16 @@ module VCAP::CloudController
       end
 
       def react_to_state_change(app)
-        staging_backend = @backends.find_one_to_stage(app)
-
         if !app.started?
           @backends.find_one_to_run(app).stop
-        elsif staging_backend.needs_staging?
-          validate_app_for_staging(app)
+          return
+        end
 
+        staging_backend = @backends.find_one_to_stage(app)
+        app.mark_for_restaging if staging_backend.requires_restage?
+
+        if app.needs_staging?
+          validate_app_for_staging(app)
           staging_backend.stage
         else
           @backends.find_one_to_run(app).start
