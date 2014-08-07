@@ -88,7 +88,7 @@ module VCAP::CloudController
       private
 
       def logger
-        @logger ||= Steno.logger("cc.diego_client")
+        @logger ||= Steno.logger("cc.diego.client")
       end
     end
   end
