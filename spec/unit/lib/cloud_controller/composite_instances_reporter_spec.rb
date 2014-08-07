@@ -13,17 +13,11 @@ module VCAP::CloudController
       allow(Diego::InstancesReporter).to receive(:new).and_return(diego_reporter)
     end
 
-    let(:app) { VCAP::CloudController::AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
-    let(:is_diego_app) { true }
+    let(:app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
 
-    before do
-      allow(diego_client).to receive(:running_enabled?).and_return(is_diego_app)
-    end
 
     describe 'single app operations' do
       context 'with a legacy app' do
-        let(:is_diego_app) { false }
-
         it 'uses the legacy reporter' do
           expect(dea_reporter).to receive(:number_of_starting_and_running_instances_for_app).with(app)
           subject.number_of_starting_and_running_instances_for_app(app)
@@ -40,7 +34,9 @@ module VCAP::CloudController
       end
 
       context 'with a diego app' do
-        let(:is_diego_app) { true }
+        before do
+          app.environment_json = {"CF_DIEGO_RUN_BETA" => "true"}
+        end
 
         it 'uses the diego reporter' do
           expect(diego_reporter).to receive(:number_of_starting_and_running_instances_for_app).with(app)
@@ -60,8 +56,6 @@ module VCAP::CloudController
 
     describe 'bulk app operations' do
       context 'only legacy apps' do
-        let(:is_diego_app) { false }
-
         it 'returns a hash using legacy reporter' do
           expect(dea_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([app]).and_return({})
           allow(diego_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([]).and_return({})
@@ -71,7 +65,9 @@ module VCAP::CloudController
       end
 
       context 'only diego apps' do
-        let(:is_diego_app) { true }
+        before do
+          app.environment_json = {"CF_DIEGO_RUN_BETA" => "true"}
+        end
 
         it 'returns a hash using legacy reporter' do
           expect(diego_reporter).to receive(:number_of_starting_and_running_instances_for_apps).with([app]).and_return({})
@@ -83,7 +79,11 @@ module VCAP::CloudController
 
       context 'a mix of legacy and diego apps' do
         let(:apps) do
-          3.times.map { VCAP::CloudController::AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
+            [
+              AppFactory.make(package_hash: 'abc', package_state: 'STAGED', environment_json: {"CF_DIEGO_RUN_BETA" => "true"}),
+              AppFactory.make(package_hash: 'abc', package_state: 'STAGED'),
+              AppFactory.make(package_hash: 'abc', package_state: 'STAGED', environment_json: {"CF_DIEGO_RUN_BETA" => "true"}),
+          ]
         end
 
         let(:diego_report) do
@@ -92,10 +92,6 @@ module VCAP::CloudController
 
         let(:legacy_report) do
           {apps[1] => 7}
-        end
-
-        before do
-          allow(diego_client).to receive(:running_enabled?) { |app| app != apps[1] }
         end
 
         it 'associates the apps with the correct client' do
