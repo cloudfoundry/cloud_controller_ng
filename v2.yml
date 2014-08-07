@@ -607,3 +607,8 @@
   name: OrgQuotaTotalRoutesExceeded
   http_code: 400
   message: "You have exceeded the total routes for your organization's quota."
+
+320001:
+  name: DiegoDisabled
+  http_code: 400
+  message: Diego has not been enabled.
