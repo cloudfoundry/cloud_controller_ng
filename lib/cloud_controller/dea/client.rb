@@ -131,6 +131,7 @@ module VCAP::CloudController
             stager_pool.reserve_app_memory(dea_id, app.memory)
           else
             logger.error "dea-client.no-resources-available", message: scrub_sensitive_fields(start_message)
+            raise Errors::ApiError.new_from_details("NoAvailableDEAFound", index)
           end
         end
 
