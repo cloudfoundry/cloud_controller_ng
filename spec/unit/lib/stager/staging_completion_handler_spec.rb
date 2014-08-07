@@ -46,7 +46,6 @@ module VCAP::CloudController
     before do
       allow(Steno).to receive(:logger).and_return(logger)
       allow(Dea::Client).to receive(:start)
-      allow(diego_client).to receive(:running_enabled?).and_return(false)
 
       staged_app.add_new_droplet("lol")
     end
@@ -84,10 +83,6 @@ module VCAP::CloudController
         end
 
         context "when running in diego is not enabled" do
-          before do
-            allow(diego_client).to receive(:running_enabled?).and_return(false)
-          end
-
           it "starts the app instances" do
             expect(Dea::Client).to receive(:start) do |received_app, received_hash|
               expect(received_app.guid).to eq(app_id)
@@ -111,9 +106,7 @@ module VCAP::CloudController
         end
 
         context "when running in diego is enabled" do
-          before do
-            allow(diego_client).to receive(:running_enabled?).and_return(true)
-          end
+          let(:environment) { {"CF_DIEGO_RUN_BETA" => "true"} }
 
           it "desires the app using the diego client" do
             expect(Dea::Client).not_to receive(:start)

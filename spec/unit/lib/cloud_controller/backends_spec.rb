@@ -34,34 +34,38 @@ module VCAP::CloudController
       before do
         allow(Dea::Backend).to receive(:new).and_call_original
         allow(Diego::Backend).to receive(:new).and_call_original
-        allow(diego_client).to receive(:staging_enabled?).with(app).and_return(diego)
-        @backend = backends.find_one_to_stage(app)
+      end
+
+      subject(:backend) do
+        backends.find_one_to_stage(app)
       end
 
       context "when the app is configured to stage on Diego" do
-        let(:diego) do
-          true
+        before do
+          allow(app).to receive(:stage_with_diego?).and_return(true)
         end
 
         it "finds a Diego::Backend" do
-          expect(@backend).to be_a(Diego::Backend)
+          expect(backend).to be_a(Diego::Backend)
         end
 
         it "instantiates the backend with the correct dependencies" do
+          backend
           expect(Diego::Backend).to have_received(:new).with(app, diego_client)
         end
       end
 
       context "when the app is not configured to stage on Diego" do
-        let(:diego) do
-          false
+        before do
+          allow(app).to receive(:stage_with_diego?).and_return(false)
         end
 
         it "finds a DEA::Backend" do
-          expect(@backend).to be_a(Dea::Backend)
+          expect(backend).to be_a(Dea::Backend)
         end
 
         it "instantiates the backend with the correct dependencies" do
+          backend
           expect(Dea::Backend).to have_received(:new).with(app, config, message_bus, dea_pool, stager_pool)
         end
       end
@@ -71,34 +75,38 @@ module VCAP::CloudController
       before do
         allow(Dea::Backend).to receive(:new).and_call_original
         allow(Diego::Backend).to receive(:new).and_call_original
-        allow(diego_client).to receive(:running_enabled?).with(app).and_return(diego)
-        @backend = backends.find_one_to_run(app)
+      end
+
+      subject(:backend) do
+        backends.find_one_to_run(app)
       end
 
       context "when the app is configured to run on Diego" do
-        let(:diego) do
-          true
+        before do
+          allow(app).to receive(:run_with_diego?).and_return(true)
         end
 
         it "finds a Diego::Backend" do
-          expect(@backend).to be_a(Diego::Backend)
+          expect(backend).to be_a(Diego::Backend)
         end
 
         it "instantiates the backend with the correct dependencies" do
+          backend
           expect(Diego::Backend).to have_received(:new).with(app, diego_client)
         end
       end
 
       context "when the app is not configured to run on Diego" do
-        let(:diego) do
-          false
+        before do
+          allow(app).to receive(:run_with_diego?).and_return(false)
         end
 
         it "finds a DEA::Backend" do
-          expect(@backend).to be_a(Dea::Backend)
+          expect(backend).to be_a(Dea::Backend)
         end
 
         it "instantiates the backend with the correct dependencies" do
+          backend
           expect(Dea::Backend).to have_received(:new).with(app, config, message_bus, dea_pool, stager_pool)
         end
       end

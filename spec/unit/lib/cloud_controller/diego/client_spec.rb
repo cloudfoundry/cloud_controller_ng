@@ -106,6 +106,16 @@ module VCAP::CloudController::Diego
           expect(nats_message[:message]).to match_json(expected_message)
         end
       end
+
+      context "when the operator has disabled diego" do
+        let(:enabled) { false }
+
+        it "explodes with an API error that is propagated to cf users" do
+          expect {
+            client.send_desire_request(app)
+          }.to raise_error(VCAP::Errors::ApiError, /Diego has not been enabled/)
+        end
+      end
     end
 
     describe "staging an app" do
@@ -137,6 +147,16 @@ module VCAP::CloudController::Diego
         expect {
           client.send_stage_request(app)
         }.to change { app.refresh; app.staging_task_id }.to("unique-staging-task-id")
+      end
+
+      context "when the operator has disabled diego" do
+        let(:enabled) { false }
+
+        it "explodes with an API error that is propagated to cf users" do
+          expect {
+            client.send_stage_request(app)
+          }.to raise_error(VCAP::Errors::ApiError, /Diego has not been enabled/)
+        end
       end
     end
 

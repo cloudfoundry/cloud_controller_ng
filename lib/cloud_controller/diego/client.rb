@@ -18,20 +18,16 @@ module VCAP::CloudController
         @service_registry.run!
       end
 
-      def running_enabled?(app)
-        @enabled && app.run_with_diego?
-      end
-
-      def staging_enabled?(app)
-        @enabled && app.stage_with_diego?
-      end
-
       def send_desire_request(app)
+        @enabled or raise VCAP::Errors::ApiError.new_from_details("DiegoDisabled")
+
         logger.info("desire.app.begin", :app_guid => app.guid)
         @message_bus.publish("diego.desire.app", desire_request(app).to_json)
       end
 
       def send_stage_request(app)
+        @enabled or raise VCAP::Errors::ApiError.new_from_details("DiegoDisabled")
+
         app.update(staging_task_id: VCAP.secure_uuid)
 
         logger.info("staging.begin", :app_guid => app.guid)
