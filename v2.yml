@@ -344,9 +344,9 @@
   message: "The app package could not be found: %s"
 
 150003:
-  name: NoAvailableDEAFound
-  http_code: 404
-  message: "Instance #%s can not find a available DEA to start since APP's requirements is not met"
+  name: InsufficientRunningResourcesAvailable
+  http_code: 503
+  message: "One or more instances could not be started because of insufficient running resources."
 
 160001:
   name: AppBitsUploadInvalid
