@@ -19,12 +19,11 @@ module VCAP::CloudController
       end
 
       def running_enabled?(app)
-        @enabled && (app.environment_json || {})["CF_DIEGO_RUN_BETA"] == "true"
+        @enabled && app.run_with_diego?
       end
 
       def staging_enabled?(app)
-        return false unless @enabled
-        running_enabled?(app) || ((app.environment_json || {})["CF_DIEGO_BETA"] == "true")
+        @enabled && app.stage_with_diego?
       end
 
       def send_desire_request(app)

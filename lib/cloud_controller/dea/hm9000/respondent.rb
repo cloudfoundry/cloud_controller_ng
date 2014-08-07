@@ -109,7 +109,7 @@ module VCAP::CloudController
             return false, "App not found"
           end
 
-          if app.environment_json && app.environment_json["CF_DIEGO_RUN_BETA"] == "true"
+          if app.run_with_diego?
             return false, "App is participating in DIEGO BETA"
           end
 

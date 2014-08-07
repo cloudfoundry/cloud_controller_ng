@@ -144,10 +144,18 @@ module VCAP::CloudController
 
       # make this conditional for when we remove the diego column later.
       if self.class.columns.include?(:diego)
-        self.diego = has_diego_run_beta_env?
+        self.diego = run_with_diego?
       end
 
       super
+    end
+
+    def run_with_diego?
+      !!(environment_json && environment_json["CF_DIEGO_RUN_BETA"] == "true")
+    end
+
+    def stage_with_diego?
+      run_with_diego? || !!(environment_json && environment_json["CF_DIEGO_BETA"] == "true")
     end
 
     def version_needs_to_be_updated?
@@ -596,10 +604,6 @@ module VCAP::CloudController
     def footprint_changed?
       (column_changed?(:production) || column_changed?(:memory) ||
         column_changed?(:instances))
-    end
-
-    def has_diego_run_beta_env?
-      !!(environment_json && environment_json["CF_DIEGO_RUN_BETA"] == "true")
     end
 
     class << self
