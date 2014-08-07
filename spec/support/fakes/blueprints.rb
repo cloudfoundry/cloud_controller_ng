@@ -320,7 +320,7 @@ module VCAP::CloudController
   end
 
   FeatureFlag.blueprint do
-    name { Sham.name }
+    name { 'user_org_creation' }
     enabled { false }
   end
 

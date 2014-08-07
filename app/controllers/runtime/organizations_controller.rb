@@ -59,5 +59,18 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    private
+
+    def before_create
+      return if SecurityContext.admin?
+      FeatureFlag.raise_unless_enabled!('user_org_creation', 'User organization creation is disabled')
+    end
+
+    def after_create(organization)
+      return if SecurityContext.admin?
+      organization.add_user(user)
+      organization.add_manager(user)
+    end
   end
 end

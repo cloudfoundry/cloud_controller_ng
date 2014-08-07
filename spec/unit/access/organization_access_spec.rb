@@ -5,6 +5,7 @@ module VCAP::CloudController
     before do
       token = {'scope' => 'cloud_controller.read cloud_controller.write'}
       allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
+      FeatureFlag.make(name: 'user_org_creation', enabled: false)
     end
 
     subject(:access) { OrganizationAccess.new(double(:context, user: user, roles: roles)) }
@@ -19,7 +20,7 @@ module VCAP::CloudController
 
       context 'changing the name' do
         before { object.name = 'my new name' }
-        it { is_expected.to be_able_to :update, object }
+        it { is_expected.to allow_op_on_object :update, object }
       end
 
       context 'with a suspended organization' do
@@ -34,7 +35,20 @@ module VCAP::CloudController
     end
 
     context 'a user not in the organization' do
-      it_behaves_like :no_access
+      context 'when the user_org_creation feature flag is not enabled' do
+        it_behaves_like :no_access
+      end
+
+      context 'when the user_org_creation feature flag is enabled' do
+        before do
+          FeatureFlag.find(name: 'user_org_creation').update(enabled: true)
+        end
+
+        it { is_expected.to allow_op_on_object :create, object }
+        it { is_expected.not_to allow_op_on_object :read, object }
+        it { is_expected.not_to allow_op_on_object :update, object }
+        it { is_expected.not_to allow_op_on_object :delete, object }
+      end
     end
 
     context 'a billing manager for the organization' do
@@ -46,15 +60,15 @@ module VCAP::CloudController
       before { object.add_manager(user) }
 
       context 'with an active organization' do
-        it { is_expected.not_to be_able_to :create, object }
-        it { is_expected.to be_able_to :read, object }
-        it { is_expected.to be_able_to :update, object }
-        it { is_expected.not_to be_able_to :delete, object }
+        it { is_expected.not_to allow_op_on_object :create, object }
+        it { is_expected.to allow_op_on_object :read, object }
+        it { is_expected.to allow_op_on_object :update, object }
+        it { is_expected.not_to allow_op_on_object :delete, object }
       end
 
       context 'changing the name' do
         before { object.name = 'my new name' }
-        it { is_expected.to be_able_to :update, object }
+        it { is_expected.to allow_op_on_object :update, object }
       end
 
       context 'with a suspended organization' do
