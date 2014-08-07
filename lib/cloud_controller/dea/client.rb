@@ -110,15 +110,26 @@ module VCAP::CloudController
 
         # @param [Enumerable, #each] indices an Enumerable of indices / indexes
         def start_instances(app, indices)
+          insufficient_resources_error = false
           indices.each do |idx|
-            start_instance_at_index(app, idx)
+            begin
+              start_instance_at_index(app, idx)
+            rescue Errors::ApiError => e
+              if e.name == "InsufficientRunningResourcesAvailable"
+                insufficient_resources_error = true
+              else
+                raise e
+              end
+            end
           end
+
+          raise Errors::ApiError.new_from_details("InsufficientRunningResourcesAvailable") if insufficient_resources_error
         end
 
         def start_instance_at_index(app, index)
           start_message = Dea::StartAppMessage.new(app, index, config, @blobstore_url_generator)
 
-          if !start_message.has_app_package?
+          unless start_message.has_app_package?
             logger.error "dea-client.no-package-found", guid: app.guid
             raise Errors::ApiError.new_from_details("AppPackageNotFound", app.guid)
           end
@@ -131,6 +142,7 @@ module VCAP::CloudController
             stager_pool.reserve_app_memory(dea_id, app.memory)
           else
             logger.error "dea-client.no-resources-available", message: scrub_sensitive_fields(start_message)
+            raise Errors::ApiError.new_from_details("InsufficientRunningResourcesAvailable")
           end
         end
 

@@ -79,6 +79,27 @@ module VCAP::CloudController
 
         Dea::Client.start_instances(app, [1, 2])
       end
+
+      context "when the DEAs have insufficient capacity to start all the indices" do
+        it "attempts to find DEAs for all indices and raises an InsufficientRunningResourcesAvailable error" do
+          app.instances = 4
+          expect(dea_pool).to receive(:find_dea).and_return(nil, nil, "dea_123")
+          expect(dea_pool).to receive(:mark_app_started).once.with(dea_id: "dea_123", app_id: app.guid)
+          expect(dea_pool).to receive(:reserve_app_memory).once.with("dea_123", app.memory)
+          expect(stager_pool).to receive(:reserve_app_memory).once.with("dea_123", app.memory)
+
+          expect(message_bus).to receive(:publish).once.with(
+            "dea.dea_123.start",
+            hash_including(
+              :index => 3,
+            )
+          )
+
+          expect {
+            Dea::Client.start_instances(app, [1, 2, 3])
+          }.to raise_error Errors::ApiError, "One or more instances could not be started because of insufficient running resources."
+        end
+      end
     end
 
     describe "start_instance_at_index" do
@@ -99,18 +120,6 @@ module VCAP::CloudController
         Dea::Client.start_instance_at_index(app, 1)
       end
 
-      it "should not log passwords" do
-        logger = double(Steno)
-        allow(Dea::Client).to receive(:logger).and_return(logger)
-
-        expect(dea_pool).to receive(:find_dea).once.and_return(nil)
-        expect(logger).to receive(:error) { |msg, data|
-          expect(data[:message]).not_to include(:services, :env, :executableUri)
-        }.once
-
-        Dea::Client.start_instance_at_index(app, 1)
-      end
-
       context "when droplet is missing" do
         let(:blobstore_url_generator) do
           double("blobstore_url_generator", :droplet_download_url => nil)
@@ -120,6 +129,22 @@ module VCAP::CloudController
           expect {
             Dea::Client.start_instance_at_index(app, 1)
           }.to raise_error Errors::ApiError, "The app package could not be found: #{app.guid}"
+        end
+      end
+
+      context "when no DEA is available" do
+        it "raises a InsufficientRunningResourcesAvailable error and logs without passwords" do
+          logger = double(Steno)
+          allow(Dea::Client).to receive(:logger).and_return(logger)
+
+          expect(dea_pool).to receive(:find_dea).once.and_return(nil)
+          expect(logger).to receive(:error) { |msg, data|
+            expect(data[:message]).not_to include(:services, :env, :executableUri)
+          }.once
+
+          expect {
+            Dea::Client.start_instance_at_index(app, 1)
+          }.to raise_error Errors::ApiError, "One or more instances could not be started because of insufficient running resources."
         end
       end
     end
@@ -172,14 +197,20 @@ module VCAP::CloudController
       it "includes memory in find_dea request" do
         app.instances = 1
         app.memory = 512
-        expect(dea_pool).to receive(:find_dea).with(include(mem: 512))
+        expect(dea_pool).to receive(:find_dea).with(include(mem: 512)).and_return("abc")
+        expect(dea_pool).to receive(:mark_app_started).with(dea_id: "abc", app_id: app.guid)
+        expect(dea_pool).to receive(:reserve_app_memory).with("abc", app.memory)
+        expect(stager_pool).to receive(:reserve_app_memory).with("abc", app.memory)
         Dea::Client.start(app)
       end
 
       it "includes disk in find_dea request" do
         app.instances = 1
         app.disk_quota = 13
-        expect(dea_pool).to receive(:find_dea).with(include(disk: 13))
+        expect(dea_pool).to receive(:find_dea).with(include(disk: 13)).and_return("abc")
+        expect(dea_pool).to receive(:mark_app_started).with(dea_id: "abc", app_id: app.guid)
+        expect(dea_pool).to receive(:reserve_app_memory).with("abc", app.memory)
+        expect(stager_pool).to receive(:reserve_app_memory).with("abc", app.memory)
         Dea::Client.start(app)
       end
     end
