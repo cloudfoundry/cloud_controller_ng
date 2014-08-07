@@ -13,7 +13,7 @@ module VCAP::CloudController
       end
 
       def stage
-       @diego_client.send_stage_request(@app, VCAP.secure_uuid)
+       @diego_client.send_stage_request(@app)
       end
 
       def scale

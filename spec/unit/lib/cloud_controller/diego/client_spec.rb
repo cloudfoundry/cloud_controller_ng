@@ -110,12 +110,11 @@ module VCAP::CloudController::Diego
 
     describe "staging an app" do
       it "sends a nats message with the appropriate staging subject and payload" do
-        staging_task_id = "bogus id"
-        client.send_stage_request(app, staging_task_id)
+        client.send_stage_request(app)
 
         expected_message = {
           "app_id" => app.guid,
-          "task_id" => staging_task_id,
+          "task_id" => app.staging_task_id,
           "memory_mb" => app.memory,
           "disk_mb" => app.disk_quota,
           "file_descriptors" => app.file_descriptors,
@@ -130,6 +129,14 @@ module VCAP::CloudController::Diego
         nats_message = message_bus.published_messages.first
         expect(nats_message[:subject]).to eq("diego.staging.start")
         expect(nats_message[:message]).to eq(expected_message)
+      end
+
+      it "updates the app's staging task id so the staging response can be identified" do
+        allow(VCAP).to receive(:secure_uuid).and_return("unique-staging-task-id")
+
+        expect {
+          client.send_stage_request(app)
+        }.to change { app.refresh; app.staging_task_id }.to("unique-staging-task-id")
       end
     end
 

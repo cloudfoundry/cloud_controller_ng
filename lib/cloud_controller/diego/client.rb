@@ -32,8 +32,8 @@ module VCAP::CloudController
         @message_bus.publish("diego.desire.app", desire_request(app).to_json)
       end
 
-      def send_stage_request(app, staging_task_id)
-        app.update(staging_task_id: staging_task_id)
+      def send_stage_request(app)
+        app.update(staging_task_id: VCAP.secure_uuid)
 
         logger.info("staging.begin", :app_guid => app.guid)
 

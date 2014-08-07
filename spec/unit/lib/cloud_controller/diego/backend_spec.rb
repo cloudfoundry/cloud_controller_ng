@@ -40,13 +40,12 @@ module VCAP::CloudController
       describe "#stage" do
         before do
           allow(diego_client).to receive(:send_stage_request)
-          allow(VCAP).to receive(:secure_uuid).and_return("fake-secure-uuid")
 
           backend.stage
         end
 
-        it "notifies Diego that the app needs staging with a unique staging task id" do
-          expect(diego_client).to have_received(:send_stage_request).with(app, "fake-secure-uuid")
+        it "notifies Diego that the app needs staging" do
+          expect(diego_client).to have_received(:send_stage_request).with(app)
         end
       end
 

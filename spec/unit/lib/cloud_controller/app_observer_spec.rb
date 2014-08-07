@@ -98,11 +98,10 @@ module VCAP::CloudController
         let(:config_hash) { { :diego => true} }
 
         before do
-          allow(VCAP).to receive(:secure_uuid).and_return("foo-bar")
           allow(app).to receive_messages(previous_changes: changes)
 
           allow(app).to receive(:started?).and_return(true)
-          allow(diego_client).to receive(:send_stage_request).with(app, "foo-bar").and_return(nil)
+          allow(diego_client).to receive(:send_stage_request).with(app)
         end
 
         let(:environment_json) { {"CF_DIEGO_BETA"=>"true", "CF_DIEGO_RUN_BETA"=>"true"} }
@@ -117,7 +116,7 @@ module VCAP::CloudController
 
             it 'uses the diego stager to do staging' do
               subject
-              expect(diego_client).to have_received(:send_stage_request).with(app, "foo-bar")
+              expect(diego_client).to have_received(:send_stage_request).with(app)
             end
           end
         end
@@ -143,7 +142,7 @@ module VCAP::CloudController
 
                 it "restages the app" do
                   subject
-                  expect(diego_client).to have_received(:send_stage_request).with(app, "foo-bar")
+                  expect(diego_client).to have_received(:send_stage_request).with(app)
                 end
 
                 it "marks the app as needing staging" do
