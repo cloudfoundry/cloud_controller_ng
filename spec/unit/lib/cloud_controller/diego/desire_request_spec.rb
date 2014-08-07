@@ -29,11 +29,12 @@ module VCAP::CloudController
       end
 
       before do
-        allow(Environment).to receive(:new).with(app).and_return([{name: "fake", value: "environment"}])
+        environment = instance_double(Environment, as_json: [{"name" => "fake", "value" => "environment"}])
+        allow(Environment).to receive(:new).with(app).and_return(environment)
       end
 
       describe "#as_json" do
-        it "returns the correct DesireAppMessage for an application" do
+        it "returns a messsage with the information nsync needs to desire the app" do
           expect(desire_request.as_json).to eq(
             "disk_mb" => 222,
             "droplet_uri" => "fake-droplet_uri",
@@ -56,7 +57,7 @@ module VCAP::CloudController
           end
 
           it "omits health_check_timeout_in_seconds" do
-            expect(desire_request.as_json).not_to have_key(:health_check_timeout_in_seconds)
+            expect(desire_request.as_json).not_to have_key("health_check_timeout_in_seconds")
           end
         end
       end

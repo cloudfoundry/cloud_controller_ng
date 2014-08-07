@@ -14,7 +14,7 @@ module VCAP::CloudController
           "memory_mb" => @app.memory,
           "disk_mb" => @app.disk_quota,
           "file_descriptors" => @app.file_descriptors,
-          "environment" => Environment.new(@app).to_a,
+          "environment" => Environment.new(@app).as_json,
           "stack" => @app.stack.name,
           "build_artifacts_cache_download_uri" => @blobstore_url_generator.buildpack_cache_download_url(@app),
           "app_bits_download_uri" => @blobstore_url_generator.app_package_download_url(@app),
