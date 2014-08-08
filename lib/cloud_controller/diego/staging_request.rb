@@ -1,3 +1,5 @@
+require "cloud_controller/diego/environment"
+
 module VCAP::CloudController
   module Diego
     class StagingRequest

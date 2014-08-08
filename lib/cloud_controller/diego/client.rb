@@ -1,7 +1,5 @@
-require "cloud_controller/diego/desire_request"
-require "cloud_controller/diego/staging_request"
+require "cloud_controller/diego/messenger"
 require "cloud_controller/diego/unavailable"
-require "cloud_controller/diego/environment"
 
 module VCAP::CloudController
   module Diego
@@ -11,7 +9,7 @@ module VCAP::CloudController
         @message_bus = message_bus
         @service_registry = service_registry
         @blobstore_url_generator = blobstore_url_generator
-        @buildpack_entry_generator = BuildpackEntryGenerator.new(@blobstore_url_generator)
+        @messenger = Messenger.new(enabled, message_bus, blobstore_url_generator)
       end
 
       def connect!
@@ -19,25 +17,15 @@ module VCAP::CloudController
       end
 
       def send_desire_request(app)
-        @enabled or raise VCAP::Errors::ApiError.new_from_details("DiegoDisabled")
-
-        logger.info("desire.app.begin", :app_guid => app.guid)
-        @message_bus.publish("diego.desire.app", desire_request(app).to_json)
+        @messenger.send_desire_request(app)
       end
 
       def send_stage_request(app)
-        @enabled or raise VCAP::Errors::ApiError.new_from_details("DiegoDisabled")
-
-        app.update(staging_task_id: VCAP.secure_uuid)
-
-        logger.info("staging.begin", :app_guid => app.guid)
-
-        staging_request = StagingRequest.new(app, @blobstore_url_generator, @buildpack_entry_generator)
-        @message_bus.publish("diego.staging.start", staging_request.as_json)
+        @messenger.send_stage_request(app)
       end
 
       def desire_request(app)
-        DesireRequest.new(app, @blobstore_url_generator)
+        @messenger.desire_request(app)
       end
 
       def lrp_instances(app)
