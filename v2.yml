@@ -124,9 +124,9 @@
   message: "Missing service auth token: %s"
 
 60001:
-  name: ServiceInstanceNameInvalid
+  name: ServiceInstanceNameEmpty
   http_code: 400
-  message: "The service instance name is invalid: %s"
+  message: "Service instance name is required."
 
 60002:
   name: ServiceInstanceNameTaken
