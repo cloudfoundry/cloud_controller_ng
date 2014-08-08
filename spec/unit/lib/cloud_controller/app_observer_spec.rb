@@ -10,7 +10,7 @@ module VCAP::CloudController
     let(:config_hash) { { staging: { timeout_in_seconds: staging_timeout } } }
     let(:blobstore_url_generator) { double(:blobstore_url_generator, :droplet_download_url => "download-url") }
     let(:tps_reporter) { double(:tps_reporter) }
-    let(:diego_messenger) { Diego::Messenger.new(config_hash, message_bus, blobstore_url_generator) }
+    let(:diego_messenger) { Diego::Traditional::Messenger.new(config_hash, message_bus, blobstore_url_generator) }
     let(:backends) { Backends.new(config_hash, message_bus, dea_pool, stager_pool) }
 
     before do

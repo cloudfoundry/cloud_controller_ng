@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     describe Backend do
       let(:messenger) do
-        instance_double(Messenger, send_desire_request: nil)
+        instance_double(Traditional::Messenger, send_desire_request: nil)
       end
 
       let(:app) do
