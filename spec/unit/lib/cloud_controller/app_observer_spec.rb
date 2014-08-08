@@ -11,9 +11,10 @@ module VCAP::CloudController
     let(:blobstore_url_generator) { double(:blobstore_url_generator, :droplet_download_url => "download-url") }
     let(:tps_reporter) { double(:tps_reporter) }
     let(:diego_client) { Diego::Client.new(config_hash, message_bus, tps_reporter, blobstore_url_generator) }
-    let(:backends) { Backends.new(config_hash, message_bus, dea_pool, stager_pool, diego_client) }
+    let(:backends) { Backends.new(config_hash, message_bus, dea_pool, stager_pool) }
 
     before do
+      allow(CloudController::DependencyLocator.instance).to receive(:diego_client).and_return(diego_client)
       Dea::Client.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
       AppObserver.configure(backends)
     end

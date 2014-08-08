@@ -20,9 +20,8 @@ class BackgroundJobEnvironment
         # so we are passing in no-op objects for these arguments
         no_op_staging_pool = Object.new
         no_op_dea_pool = Object.new
-        diego_client = CloudController::DependencyLocator.instance.diego_client
 
-        backends = VCAP::CloudController::Backends.new(@config, message_bus, no_op_dea_pool, no_op_staging_pool, diego_client)
+        backends = VCAP::CloudController::Backends.new(@config, message_bus, no_op_dea_pool, no_op_staging_pool)
         VCAP::CloudController::AppObserver.configure(backends)
 
         blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator

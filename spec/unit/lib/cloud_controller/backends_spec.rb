@@ -27,15 +27,16 @@ module VCAP::CloudController
     end
 
     subject(:backends) do
-      Backends.new(config, message_bus, dea_pool, stager_pool, diego_client)
+      Backends.new(config, message_bus, dea_pool, stager_pool)
+    end
+
+    before do
+      allow(CloudController::DependencyLocator.instance).to receive(:diego_client).and_return(diego_client)
+      allow(Dea::Backend).to receive(:new).and_call_original
+      allow(Diego::Backend).to receive(:new).and_call_original
     end
 
     describe "#find_one_to_stage" do
-      before do
-        allow(Dea::Backend).to receive(:new).and_call_original
-        allow(Diego::Backend).to receive(:new).and_call_original
-      end
-
       subject(:backend) do
         backends.find_one_to_stage(app)
       end
@@ -72,11 +73,6 @@ module VCAP::CloudController
     end
 
     describe "#find_one_to_run" do
-      before do
-        allow(Dea::Backend).to receive(:new).and_call_original
-        allow(Diego::Backend).to receive(:new).and_call_original
-      end
-
       subject(:backend) do
         backends.find_one_to_run(app)
       end

@@ -145,8 +145,7 @@ module VCAP::CloudController
                                     @test_config,
                                     message_bus,
                                     instance_of(Dea::Pool),
-                                    instance_of(Dea::StagerPool),
-                                    instance_of(Diego::Client))
+                                    instance_of(Dea::StagerPool))
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
       end

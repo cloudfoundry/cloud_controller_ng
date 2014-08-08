@@ -3,12 +3,12 @@ require "cloud_controller/diego/backend"
 
 module VCAP::CloudController
   class Backends
-    def initialize(config, message_bus, dea_pool, stager_pool, diego_client)
+    def initialize(config, message_bus, dea_pool, stager_pool)
       @config = config
       @message_bus = message_bus
       @dea_pool = dea_pool
       @stager_pool = stager_pool
-      @diego_client = diego_client
+      @diego_client = CloudController::DependencyLocator.instance.diego_client
     end
 
     def find_one_to_stage(app)
