@@ -38,7 +38,7 @@ module VCAP::CloudController
         if service_instance_name_errors.include?(:max_length)
           return Errors::ApiError.new_from_details("ServiceInstanceNameTooLong")
         else
-          return Errors::ApiError.new_from_details("ServiceInstanceNameInvalid", attributes['name'])
+          return Errors::ApiError.new_from_details("ServiceInstanceNameEmpty", attributes['name'])
         end
       end
 
