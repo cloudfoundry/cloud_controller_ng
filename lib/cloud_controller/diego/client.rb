@@ -1,31 +1,14 @@
-require "cloud_controller/diego/messenger"
 require "cloud_controller/diego/unavailable"
 
 module VCAP::CloudController
   module Diego
     class Client
-      def initialize(enabled, message_bus, service_registry, blobstore_url_generator)
-        @enabled = enabled
-        @message_bus = message_bus
+      def initialize(service_registry)
         @service_registry = service_registry
-        @blobstore_url_generator = blobstore_url_generator
-        @messenger = Messenger.new(enabled, message_bus, blobstore_url_generator)
       end
 
       def connect!
         @service_registry.run!
-      end
-
-      def send_desire_request(app)
-        @messenger.send_desire_request(app)
-      end
-
-      def send_stage_request(app)
-        @messenger.send_stage_request(app)
-      end
-
-      def desire_request(app)
-        @messenger.desire_request(app)
       end
 
       def lrp_instances(app)

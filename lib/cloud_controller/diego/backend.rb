@@ -1,9 +1,9 @@
 module VCAP::CloudController
   module Diego
     class Backend
-      def initialize(app, diego_client)
+      def initialize(app, messenger)
         @app = app
-        @diego_client = diego_client
+        @messenger = messenger
       end
 
       def requires_restage?
@@ -13,19 +13,19 @@ module VCAP::CloudController
       end
 
       def stage
-       @diego_client.send_stage_request(@app)
+       @messenger.send_stage_request(@app)
       end
 
       def scale
-        @diego_client.send_desire_request(@app)
+        @messenger.send_desire_request(@app)
       end
 
       def start(_={})
-        @diego_client.send_desire_request(@app)
+        @messenger.send_desire_request(@app)
       end
 
       def stop
-        @diego_client.send_desire_request(@app)
+        @messenger.send_desire_request(@app)
       end
     end
   end

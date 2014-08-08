@@ -10,11 +10,11 @@ module VCAP::CloudController
     let(:config_hash) { { staging: { timeout_in_seconds: staging_timeout } } }
     let(:blobstore_url_generator) { double(:blobstore_url_generator, :droplet_download_url => "download-url") }
     let(:tps_reporter) { double(:tps_reporter) }
-    let(:diego_client) { Diego::Client.new(config_hash, message_bus, tps_reporter, blobstore_url_generator) }
+    let(:diego_messenger) { Diego::Messenger.new(config_hash, message_bus, blobstore_url_generator) }
     let(:backends) { Backends.new(config_hash, message_bus, dea_pool, stager_pool) }
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:diego_client).and_return(diego_client)
+      allow(CloudController::DependencyLocator.instance).to receive(:diego_messenger).and_return(diego_messenger)
       Dea::Client.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
       AppObserver.configure(backends)
     end
@@ -30,7 +30,7 @@ module VCAP::CloudController
           before { app.environment_json = environment_json }
 
           it "stops the application" do
-            expect(diego_client).to receive(:send_desire_request).with(app)
+            expect(diego_messenger).to receive(:send_desire_request).with(app)
             AppObserver.deleted(app)
             expect(message_bus.published_messages).to be_empty
           end
@@ -102,7 +102,7 @@ module VCAP::CloudController
           allow(app).to receive_messages(previous_changes: changes)
 
           allow(app).to receive(:started?).and_return(true)
-          allow(diego_client).to receive(:send_stage_request).with(app)
+          allow(diego_messenger).to receive(:send_stage_request).with(app)
         end
 
         let(:environment_json) { {"CF_DIEGO_BETA"=>"true", "CF_DIEGO_RUN_BETA"=>"true"} }
@@ -117,7 +117,7 @@ module VCAP::CloudController
 
             it 'uses the diego stager to do staging' do
               subject
-              expect(diego_client).to have_received(:send_stage_request).with(app)
+              expect(diego_messenger).to have_received(:send_stage_request).with(app)
             end
           end
         end
@@ -143,7 +143,7 @@ module VCAP::CloudController
 
                 it "restages the app" do
                   subject
-                  expect(diego_client).to have_received(:send_stage_request).with(app)
+                  expect(diego_messenger).to have_received(:send_stage_request).with(app)
                 end
 
                 it "marks the app as needing staging" do
@@ -158,7 +158,7 @@ module VCAP::CloudController
 
                 it "should start the app with specified number of instances" do
                   expect(Dea::Client).not_to receive(:start)
-                  expect(diego_client).to receive(:send_desire_request).with(app)
+                  expect(diego_messenger).to receive(:send_desire_request).with(app)
                   subject
                 end
               end
@@ -171,7 +171,7 @@ module VCAP::CloudController
 
               it "should stop the app" do
                 expect(Dea::Client).not_to receive(:start)
-                expect(diego_client).to receive(:send_desire_request).with(app)
+                expect(diego_messenger).to receive(:send_desire_request).with(app)
                 subject
               end
             end
@@ -189,7 +189,7 @@ module VCAP::CloudController
 
               it "should redesire the app" do
                 expect(Dea::Client).not_to receive(:change_running_instances)
-                expect(diego_client).to receive(:send_desire_request).with(app)
+                expect(diego_messenger).to receive(:send_desire_request).with(app)
                 subject
               end
 
@@ -202,7 +202,7 @@ module VCAP::CloudController
 
                 it "should start more instances of the old version" do
                   expect(Dea::Client).not_to receive(:change_running_instances)
-                  expect(diego_client).to receive(:send_desire_request).with(app)
+                  expect(diego_messenger).to receive(:send_desire_request).with(app)
                   subject
                 end
               end
@@ -217,7 +217,7 @@ module VCAP::CloudController
 
               it "should redesire the app" do
                 expect(Dea::Client).not_to receive(:change_running_instances)
-                expect(diego_client).to receive(:send_desire_request).with(app)
+                expect(diego_messenger).to receive(:send_desire_request).with(app)
                 subject
               end
             end
@@ -232,7 +232,7 @@ module VCAP::CloudController
 
             it "should not redesire the app" do
               expect(Dea::Client).not_to receive(:change_running_instances)
-              expect(diego_client).not_to receive(:send_desire_request)
+              expect(diego_messenger).not_to receive(:send_desire_request)
               subject
             end
           end

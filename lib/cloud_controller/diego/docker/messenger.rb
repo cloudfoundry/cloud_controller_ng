@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Diego
     module Docker
-      class Client
+      class Messenger
         def initialize(message_bus)
           @message_bus = message_bus
         end

@@ -3,7 +3,9 @@ require "spec_helper"
 module VCAP::CloudController
   describe Backends do
     let(:config) do
-      instance_double(Config)
+      {
+        diego: "fake-diego-config"
+      }
     end
 
     let(:message_bus) do
@@ -18,8 +20,12 @@ module VCAP::CloudController
       instance_double(Dea::StagerPool)
     end
 
-    let(:diego_client) do
-      instance_double(Diego::Client)
+    let(:blobstore_url_generator) do
+      instance_double(CloudController::Blobstore::UrlGenerator)
+    end
+
+    let(:messenger) do
+      instance_double(Diego::Messenger)
     end
 
     let(:app) do
@@ -31,9 +37,10 @@ module VCAP::CloudController
     end
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:diego_client).and_return(diego_client)
+      allow(CloudController::DependencyLocator.instance).to receive(:diego_messenger).and_return(messenger)
       allow(Dea::Backend).to receive(:new).and_call_original
       allow(Diego::Backend).to receive(:new).and_call_original
+      allow(Diego::Messenger).to receive(:new).and_call_original
     end
 
     describe "#find_one_to_stage" do
@@ -52,7 +59,7 @@ module VCAP::CloudController
 
         it "instantiates the backend with the correct dependencies" do
           backend
-          expect(Diego::Backend).to have_received(:new).with(app, diego_client)
+          expect(Diego::Backend).to have_received(:new).with(app, messenger)
         end
       end
 
@@ -88,7 +95,7 @@ module VCAP::CloudController
 
         it "instantiates the backend with the correct dependencies" do
           backend
-          expect(Diego::Backend).to have_received(:new).with(app, diego_client)
+          expect(Diego::Backend).to have_received(:new).with(app, messenger)
         end
       end
 

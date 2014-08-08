@@ -2,9 +2,9 @@ module VCAP::CloudController
   class StagingCompletionHandler
     attr_reader :message_bus
 
-    def initialize(message_bus, diego_client)
+    def initialize(message_bus, diego_messenger)
       @message_bus = message_bus
-      @diego_client = diego_client
+      @diego_messenger = diego_messenger
     end
 
     StagingResponseSchema = Membrane::SchemaParser.parse do
@@ -59,7 +59,7 @@ module VCAP::CloudController
       app.current_droplet.update_start_command(payload["detected_start_command"])
 
       if app.run_with_diego?
-        @diego_client.send_desire_request(app)
+        @diego_messenger.send_desire_request(app)
       else
         Dea::Client.start(app, instances_to_start: app.instances)
       end

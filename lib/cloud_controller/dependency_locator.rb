@@ -6,6 +6,8 @@ require "cloud_controller/upload_handler"
 require "cloud_controller/blob_sender/ngx_blob_sender"
 require "cloud_controller/blob_sender/default_blob_sender"
 require "cloud_controller/blob_sender/missing_blob_handler"
+require "cloud_controller/diego/client"
+require "cloud_controller/diego/messenger"
 
 module CloudController
   class DependencyLocator
@@ -154,7 +156,11 @@ module CloudController
     end
 
     def diego_client
-      @diego_client ||= Diego::Client.new(config[:diego], message_bus, Diego::ServiceRegistry.new(message_bus), blobstore_url_generator)
+      @diego_client ||= Diego::Client.new(Diego::ServiceRegistry.new(message_bus))
+    end
+
+    def diego_messenger
+      @diego_messenger ||= Diego::Messenger.new(config[:diego], message_bus, blobstore_url_generator)
     end
 
     def instances_reporter

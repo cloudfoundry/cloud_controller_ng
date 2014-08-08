@@ -219,14 +219,18 @@ module VCAP::CloudController
         @message_bus = message_bus
         stager_pool = Dea::StagerPool.new(@config, message_bus)
         dea_pool = Dea::Pool.new(message_bus)
-        blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
+        dependency_locator = CloudController::DependencyLocator.instance
 
-        diego_client = CloudController::DependencyLocator.instance.diego_client
+        blobstore_url_generator = dependency_locator.blobstore_url_generator
+
+        diego_client = dependency_locator.diego_client
         diego_client.connect!
+
+        diego_messenger = dependency_locator.diego_messenger
 
         Dea::Client.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 
-        StagingCompletionHandler.new(message_bus, diego_client).subscribe!
+        StagingCompletionHandler.new(message_bus, diego_messenger).subscribe!
 
         backends = Backends.new(@config, message_bus, dea_pool, stager_pool)
         AppObserver.configure(backends)

@@ -3,8 +3,8 @@ require "spec_helper"
 module VCAP::CloudController
   module Diego
     describe Backend do
-      let(:diego_client) do
-        instance_double(Client, send_desire_request: nil)
+      let(:messenger) do
+        instance_double(Messenger, send_desire_request: nil)
       end
 
       let(:app) do
@@ -12,7 +12,7 @@ module VCAP::CloudController
       end
 
       subject(:backend) do
-        Backend.new(app, diego_client)
+        Backend.new(app, messenger)
       end
 
       describe "#requires_restage?" do
@@ -39,13 +39,13 @@ module VCAP::CloudController
 
       describe "#stage" do
         before do
-          allow(diego_client).to receive(:send_stage_request)
+          allow(messenger).to receive(:send_stage_request)
 
           backend.stage
         end
 
         it "notifies Diego that the app needs staging" do
-          expect(diego_client).to have_received(:send_stage_request).with(app)
+          expect(messenger).to have_received(:send_stage_request).with(app)
         end
       end
 
@@ -55,7 +55,7 @@ module VCAP::CloudController
         end
 
         it "desires an app, relying on its state to convey the change" do
-          expect(diego_client).to have_received(:send_desire_request).with(app)
+          expect(messenger).to have_received(:send_desire_request).with(app)
         end
       end
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
         end
 
         it "desires an app, relying on its state to convey the change" do
-          expect(diego_client).to have_received(:send_desire_request).with(app)
+          expect(messenger).to have_received(:send_desire_request).with(app)
         end
 
         it "matches the interface of the Dea::Backend even if it doesn't use all the provided arguments" do
@@ -79,7 +79,7 @@ module VCAP::CloudController
         end
 
         it "desires an app, relying on its state to convey the change" do
-          expect(diego_client).to have_received(:send_desire_request).with(app)
+          expect(messenger).to have_received(:send_desire_request).with(app)
         end
       end
     end

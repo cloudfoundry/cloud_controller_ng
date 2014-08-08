@@ -39,9 +39,9 @@ module VCAP::CloudController
       fail_response.except("task_id")
     end
 
-    let(:diego_client) { double(:diego_client) }
+    let(:diego_messenger) { instance_double(Diego::Messenger) }
 
-    subject { StagingCompletionHandler.new(message_bus, diego_client) }
+    subject { StagingCompletionHandler.new(message_bus, diego_messenger) }
 
     before do
       allow(Steno).to receive(:logger).and_return(logger)
@@ -88,7 +88,7 @@ module VCAP::CloudController
               expect(received_app.guid).to eq(app_id)
               expect(received_hash).to  eq({:instances_to_start => 3})
             end
-            expect(diego_client).not_to receive(:send_desire_request)
+            expect(diego_messenger).not_to receive(:send_desire_request)
             publish_staging_result(success_response)
           end
 
@@ -110,7 +110,7 @@ module VCAP::CloudController
 
           it "desires the app using the diego client" do
             expect(Dea::Client).not_to receive(:start)
-            expect(diego_client).to receive(:send_desire_request) do |received_app|
+            expect(diego_messenger).to receive(:send_desire_request) do |received_app|
               expect(received_app.guid).to eq(app_id)
             end
             publish_staging_result(success_response)

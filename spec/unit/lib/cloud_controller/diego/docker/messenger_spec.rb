@@ -1,9 +1,9 @@
 require "spec_helper"
-require "cloud_controller/diego/docker/client"
+require "cloud_controller/diego/docker/messenger"
 
 module VCAP::CloudController
   module Diego::Docker
-    describe Client do
+    describe Messenger do
       describe "#send_stage_request" do
         let(:message_bus) do
           instance_double(CfMessageBus::MessageBus, publish: nil)
@@ -13,12 +13,12 @@ module VCAP::CloudController
           VCAP::CloudController::AppFactory.make(docker_image: "fake/docker_image")
         end
 
-        subject(:client) do
-          Client.new(message_bus)
+        subject(:messenger) do
+          Messenger.new(message_bus)
         end
 
         it "uses the correct subject and the fields needed to stage an image" do
-          client.send_stage_request(app)
+          messenger.send_stage_request(app)
 
           expected_message = {
             "app_id" => app.guid,
@@ -37,7 +37,7 @@ module VCAP::CloudController
           allow(VCAP).to receive(:secure_uuid).and_return("unique-staging-task-id")
 
           expect {
-            client.send_stage_request(app)
+            messenger.send_stage_request(app)
           }.to change { app.refresh; app.staging_task_id }.to("unique-staging-task-id")
         end
       end

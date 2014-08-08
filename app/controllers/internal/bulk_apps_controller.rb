@@ -25,12 +25,13 @@ module VCAP::CloudController
       staged_apps_query = Diego::StagedAppsQuery.new(batch_size, last_id)
       staged_apps = staged_apps_query.all
 
-      diego_client = ::CloudController::DependencyLocator.instance.diego_client
+      dependency_locator = ::CloudController::DependencyLocator.instance
+      diego_messenger = dependency_locator.diego_messenger
 
       apps = []
       id_for_next_token = nil
       staged_apps.each do |app|
-        apps << diego_client.desire_request(app).as_json
+        apps << diego_messenger.desire_request(app).as_json
         id_for_next_token = app.id
       end
 
