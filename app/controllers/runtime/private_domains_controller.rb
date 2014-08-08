@@ -26,5 +26,11 @@ module VCAP::CloudController
     def self.not_found_exception_name
       :DomainNotFound
     end
+
+    private
+
+    def before_create
+      FeatureFlag.raise_unless_enabled!('private_domain_creation', 'Private domain creation is disabled')
+    end
   end
 end

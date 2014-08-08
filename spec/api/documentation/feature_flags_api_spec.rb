@@ -15,19 +15,28 @@ resource "Feature Flags (experimental)", :type => :api do
   end
 
   get "/v2/config/feature_flags" do
-    let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make }
-
     example "Get all feature flags" do
+      VCAP::CloudController::FeatureFlag.create(name: "private_domain_creation", enabled: false)
+
       client.get "/v2/config/feature_flags", {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(1)
+      expect(parsed_response.length).to eq(2)
       expect(parsed_response).to include(
         {
-          'name'          => feature_flag.name,
+          'name'          => 'user_org_creation',
           'default_value' => false,
-          'enabled'       => feature_flag.enabled,
-          'url'           => "/v2/config/feature_flags/#{feature_flag.name}"
+          'enabled'       => false,
+          'overridden'    => false,
+          'url'           => '/v2/config/feature_flags/user_org_creation'
+        })
+      expect(parsed_response).to include(
+        {
+          'name'          => 'private_domain_creation',
+          'default_value' => true,
+          'enabled'       => false,
+          'overridden'    => true,
+          'url'           => '/v2/config/feature_flags/private_domain_creation'
         })
     end
   end
@@ -45,6 +54,7 @@ resource "Feature Flags (experimental)", :type => :api do
           'name'          => 'user_org_creation',
           'default_value' => false,
           'enabled'       => true,
+          'overridden'    => true,
           'url'           => '/v2/config/feature_flags/user_org_creation'
         })
     end
@@ -62,8 +72,20 @@ resource "Feature Flags (experimental)", :type => :api do
           'name'          => 'user_org_creation',
           'default_value' => false,
           'enabled'       => false,
+          'overridden'    => false,
           'url'           => '/v2/config/feature_flags/user_org_creation'
         })
+    end
+  end
+
+  delete "/v2/config/feature_flags/:name" do
+    include_context "name_parameter"
+
+    example "Unset a feature flag" do
+      VCAP::CloudController::FeatureFlag.create(name: "private_domain_creation", enabled: false)
+      client.delete "/v2/config/feature_flags/private_domain_creation", "{}", headers
+      expect(status).to eq(204)
+      expect(VCAP::CloudController::FeatureFlag.find(name: "private_domain_creation")).to be_nil
     end
   end
 end

@@ -22,6 +22,11 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
+    def before_create
+      return unless request_attrs['owning_organization_guid']
+      FeatureFlag.raise_unless_enabled!('private_domain_creation', 'Private domain creation is disabled')
+    end
+
     deprecated_endpoint(path)
     define_messages
     define_routes

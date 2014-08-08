@@ -2,6 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe FeatureFlag, type: :model do
+    let(:valid_flags) { [:user_org_creation, :private_domain_creation] }
     let(:feature_flag) { FeatureFlag.make }
 
     it { is_expected.to have_timestamp_columns }
@@ -109,6 +110,12 @@ module VCAP::CloudController
             end
           end
         end
+      end
+    end
+
+    describe 'valid feature flags' do
+      it 'includes the expected flags' do
+        expect(FeatureFlag::DEFAULT_FLAGS.keys).to eq(valid_flags)
       end
     end
   end

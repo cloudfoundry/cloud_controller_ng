@@ -5,8 +5,9 @@ module VCAP::CloudController
     end
 
     DEFAULT_FLAGS = {
-      user_org_creation: false
-    }
+      user_org_creation: false,
+      private_domain_creation: true
+    }.freeze
 
     export_attributes :name, :enabled
     import_attributes :name, :enabled

@@ -22,5 +22,38 @@ module VCAP::CloudController
         })
       end
     end
+
+    describe "Creating" do
+      let(:owning_org) { Organization.make }
+      let(:request_body) do
+        MultiJson.dump({ name: "blah.com", owning_organization_guid: owning_org.guid })
+      end
+
+      context "when private_domain_creation feature_flag is disabled" do
+        before do
+          FeatureFlag.make(name: "private_domain_creation", enabled: false)
+        end
+
+        it "returns FeatureDisabled" do
+          post "/v2/private_domains", request_body, admin_headers
+
+          expect(last_response.status).to eq(412)
+          expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
+          expect(decoded_response["description"]).to match(/Private domain creation is disabled/)
+        end
+      end
+
+      context "when private_domain_creation feature_flag is enabled" do
+        before do
+          FeatureFlag.make(name: "private_domain_creation", enabled: true)
+        end
+
+        it "works normally" do
+          post "/v2/private_domains", request_body, admin_headers
+
+          expect(last_response.status).to eq(201)
+        end
+      end
+    end
   end
 end

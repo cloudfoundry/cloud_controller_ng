@@ -23,6 +23,7 @@ module VCAP::CloudController
           name:          key.to_s,
           enabled:       current_value,
           default_value: default_value,
+          overridden:    db_feature_flags.has_key?(key),
           url:           "#{FeatureFlagsController.path}/#{key.to_s}",
         }
       end
@@ -48,6 +49,7 @@ module VCAP::CloudController
 
       feature_flag = FeatureFlag.find(name: name)
       response[:enabled] = feature_flag.enabled if feature_flag
+      response[:overridden] = !feature_flag.nil?
 
       [
         HTTP::OK,
@@ -76,9 +78,21 @@ module VCAP::CloudController
             name:          feature_flag.name,
             enabled:       feature_flag.enabled,
             default_value: FeatureFlag::DEFAULT_FLAGS[feature_flag.name.to_sym],
+            overridden:    !feature_flag.nil?,
             url:           "#{FeatureFlagsController.path}/#{feature_flag.name}",
           }, pretty: true)
       ]
+    end
+
+    delete "#{path}/:name", :delete
+    def delete(name)
+      validate_access(:delete, model, user, roles)
+      feature_flag = FeatureFlag.find(name: name)
+
+      raise self.class.not_found_exception(name) unless feature_flag
+
+      feature_flag.destroy
+      [HTTP::NO_CONTENT, nil]
     end
   end
 end

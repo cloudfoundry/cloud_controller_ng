@@ -12,19 +12,19 @@ module VCAP::CloudController
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-          name: {type: "string", required: true},
-          wildcard: {type: "bool", default: true},
-          owning_organization_guid: {type: "string"},
-          space_guids: {type: "[string]"}
+          name:                     { type: "string", required: true },
+          wildcard:                 { type: "bool", default: true },
+          owning_organization_guid: { type: "string" },
+          space_guids:              { type: "[string]" }
         })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-          name: {type: "string"},
-          wildcard: {type: "bool"},
-          owning_organization_guid: {type: "string"},
-          space_guids: {type: "[string]"}
+          name:                     { type: "string" },
+          wildcard:                 { type: "bool" },
+          owning_organization_guid: { type: "string" },
+          space_guids:              { type: "[string]" }
         })
       end
     end
@@ -55,9 +55,9 @@ module VCAP::CloudController
           let(:enumeration_expectation_a) { [@obj_a, @shared_domain] }
 
           include_examples "permission enumeration", "OrgManager",
-            :name => 'domain',
-            :path => "/v2/domains",
-            :enumerate => 2
+            name:      "domain",
+            path:      "/v2/domains",
+            enumerate: 2
         end
 
         describe "OrgUser" do
@@ -66,9 +66,9 @@ module VCAP::CloudController
           let(:enumeration_expectation_a) { [@shared_domain] }
 
           include_examples "permission enumeration", "OrgUser",
-            :name => 'domain',
-            :path => "/v2/domains",
-            :enumerate => 1
+            name:      "domain",
+            path:      "/v2/domains",
+            enumerate: 1
         end
 
         describe "BillingManager" do
@@ -77,9 +77,9 @@ module VCAP::CloudController
           let(:enumeration_expectation_a) { [@shared_domain] }
 
           include_examples "permission enumeration", "BillingManager",
-            :name => 'domain',
-            :path => "/v2/domains",
-            :enumerate => 1
+            name:      "domain",
+            path:      "/v2/domains",
+            enumerate: 1
         end
 
         describe "Auditor" do
@@ -88,9 +88,9 @@ module VCAP::CloudController
           let(:enumeration_expectation_a) { [@obj_a, @shared_domain] }
 
           include_examples "permission enumeration", "Auditor",
-            :name => 'domain',
-            :path => "/v2/domains",
-            :enumerate => 2
+            name:      "domain",
+            path:      "/v2/domains",
+            enumerate: 2
         end
       end
 
@@ -98,8 +98,8 @@ module VCAP::CloudController
         describe "PUT /v2/domains/:system_domain" do
           it "does not allow modification of the shared domain by an org manager" do
             put "/v2/domains/#{@shared_domain.guid}",
-                MultiJson.dump(name: Sham.domain),
-                json_headers(headers_for(@org_a_manager))
+              MultiJson.dump(name: Sham.domain),
+              json_headers(headers_for(@org_a_manager))
             expect(last_response.status).to eq(403)
           end
         end
@@ -171,6 +171,53 @@ module VCAP::CloudController
           expect(decoded_response["entity"]["name"]).to eq name
           expect(decoded_response["entity"]["owning_organization_guid"]).to eq organization.guid
           expect(last_response).to be_a_deprecated_response
+        end
+      end
+    end
+
+    context "testing feature flags with deprecated domains endpoint" do
+      let(:owning_org) { Organization.make }
+      let(:request_body) do
+        MultiJson.dump({ name: "blah.com", owning_organization_guid: owning_org.guid })
+      end
+
+      context "when domain_creation feature_flag is disabled" do
+        before do
+          FeatureFlag.make(name: "private_domain_creation", enabled: false)
+        end
+
+        context "when creating a private domain" do
+          it "returns FeatureDisabled" do
+            post "/v2/domains", request_body, admin_headers
+
+            expect(last_response.status).to eq(412)
+            expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
+            expect(decoded_response["description"]).to match(/Private domain creation is disabled/)
+          end
+        end
+
+        context "when creating a shared domain" do
+          let(:request_body) do
+            MultiJson.dump({ name: "shared-domain.com" })
+          end
+
+          it "works normally" do
+            post "/v2/domains", request_body, admin_headers
+
+            expect(last_response.status).to eq(201)
+          end
+        end
+      end
+
+      context "when domain_creation feature_flag is enabled" do
+        before do
+          FeatureFlag.make(name: "private_domain_creation", enabled: true)
+        end
+
+        it "works normally" do
+          post "/v2/domains", request_body, admin_headers
+
+          expect(last_response.status).to eq(201)
         end
       end
     end
