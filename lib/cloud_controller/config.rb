@@ -1,6 +1,7 @@
 require "vcap/config"
 require "cloud_controller/account_capacity"
 require "uri"
+require "cloud_controller/diego/traditional/staging_completion_handler"
 
 # Config template for cloud controller
 module VCAP::CloudController
@@ -230,7 +231,7 @@ module VCAP::CloudController
 
         Dea::Client.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 
-        StagingCompletionHandler.new(message_bus, diego_messenger).subscribe!
+        Diego::Traditional::StagingCompletionHandler.new(message_bus, diego_messenger).subscribe!
 
         backends = Backends.new(@config, message_bus, dea_pool, stager_pool)
         AppObserver.configure(backends)

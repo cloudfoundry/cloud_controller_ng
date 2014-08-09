@@ -175,7 +175,7 @@ module VCAP::CloudController
       end
 
       it "starts the staging task completion handler" do
-        expect_any_instance_of(StagingCompletionHandler).to receive(:subscribe!)
+        expect_any_instance_of(Diego::Traditional::StagingCompletionHandler).to receive(:subscribe!)
 
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)

@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  describe StagingCompletionHandler do
+  describe Diego::Traditional::StagingCompletionHandler do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
 
     let(:environment) { {} }
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
     let(:diego_messenger) { instance_double(Diego::Messenger) }
 
-    subject { StagingCompletionHandler.new(message_bus, diego_messenger) }
+    subject { Diego::Traditional::StagingCompletionHandler.new(message_bus, diego_messenger) }
 
     before do
       allow(Steno).to receive(:logger).and_return(logger)
