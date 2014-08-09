@@ -7,7 +7,8 @@ require "cloud_controller/blob_sender/ngx_blob_sender"
 require "cloud_controller/blob_sender/default_blob_sender"
 require "cloud_controller/blob_sender/missing_blob_handler"
 require "cloud_controller/diego/client"
-require "cloud_controller/diego/traditional/messenger"
+require "cloud_controller/diego/messenger"
+require "cloud_controller/diego/traditional/protocol"
 
 module CloudController
   class DependencyLocator
@@ -159,8 +160,12 @@ module CloudController
       @diego_client ||= Diego::Client.new(Diego::ServiceRegistry.new(message_bus))
     end
 
+    def diego_traditional_protocol
+      @diego_traditional_protocol ||= Diego::Traditional::Protocol.new(blobstore_url_generator)
+    end
+
     def diego_messenger
-      @diego_messenger ||= Diego::Traditional::Messenger.new(config[:diego], message_bus, blobstore_url_generator)
+      @diego_messenger ||= Diego::Messenger.new(config[:diego], message_bus, diego_traditional_protocol)
     end
 
     def instances_reporter

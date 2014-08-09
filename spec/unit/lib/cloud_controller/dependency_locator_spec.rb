@@ -317,7 +317,7 @@ describe CloudController::DependencyLocator do
 
   describe "#diego_messenger" do
     it "returns the diego messenger" do
-      expect(locator.diego_messenger).to be_an_instance_of(VCAP::CloudController::Diego::Traditional::Messenger)
+      expect(locator.diego_messenger).to be_an_instance_of(VCAP::CloudController::Diego::Messenger)
     end
   end
 

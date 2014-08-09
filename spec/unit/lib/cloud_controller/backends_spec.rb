@@ -25,7 +25,7 @@ module VCAP::CloudController
     end
 
     let(:messenger) do
-      instance_double(Diego::Traditional::Messenger)
+      instance_double(Diego::Messenger)
     end
 
     let(:app) do
@@ -40,7 +40,7 @@ module VCAP::CloudController
       allow(CloudController::DependencyLocator.instance).to receive(:diego_messenger).and_return(messenger)
       allow(Dea::Backend).to receive(:new).and_call_original
       allow(Diego::Backend).to receive(:new).and_call_original
-      allow(Diego::Traditional::Messenger).to receive(:new).and_call_original
+      allow(Diego::Messenger).to receive(:new).and_call_original
     end
 
     describe "#find_one_to_stage" do

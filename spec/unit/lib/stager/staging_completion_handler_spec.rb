@@ -39,7 +39,7 @@ module VCAP::CloudController
       fail_response.except("task_id")
     end
 
-    let(:diego_messenger) { instance_double(Diego::Traditional::Messenger) }
+    let(:diego_messenger) { instance_double(Diego::Messenger) }
 
     subject { StagingCompletionHandler.new(message_bus, diego_messenger) }
 
