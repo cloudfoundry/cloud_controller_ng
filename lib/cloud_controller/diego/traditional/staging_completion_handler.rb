@@ -67,7 +67,7 @@ module VCAP::CloudController
           app = App.find(guid: payload["app_id"])
 
           if app == nil
-            logger.warn(
+            logger.info(
               "diego.staging.unknown-app",
               :response => payload,
             )
@@ -76,7 +76,7 @@ module VCAP::CloudController
           end
 
           if payload["task_id"] != app.staging_task_id
-            logger.error(
+            logger.info(
               "diego.staging.not-current",
               :response => payload,
               :current => app.staging_task_id,

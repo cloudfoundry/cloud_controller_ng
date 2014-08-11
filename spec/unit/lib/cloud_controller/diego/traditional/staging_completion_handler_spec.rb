@@ -173,8 +173,8 @@ module VCAP::CloudController
             expect(Dea::Client).not_to have_received(:start)
           end
 
-          it "only logs a warning for the CF operator since the app may have been deleted by the CF user" do
-            expect(logger).to have_received(:warn).with("diego.staging.unknown-app", response: success_response)
+          it "logs info for the CF operator since the app may have been deleted by the CF user" do
+            expect(logger).to have_received(:info).with("diego.staging.unknown-app", response: success_response)
           end
         end
 
@@ -189,8 +189,8 @@ module VCAP::CloudController
             expect(Dea::Client).not_to have_received(:start)
           end
 
-          it "logs an error for the CF operator and returns" do
-            expect(logger).to have_received(:error).with("diego.staging.not-current", response: success_response, current: staged_app.staging_task_id)
+          it "logs info for the CF operator since the user may have attempted a second concurrent push and returns" do
+            expect(logger).to have_received(:info).with("diego.staging.not-current", response: success_response, current: staged_app.staging_task_id)
           end
         end
 
