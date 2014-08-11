@@ -36,6 +36,48 @@ module VCAP::CloudController
 
       subject(:messenger) { Messenger.new(enabled, message_bus, protocol) }
 
+      describe "staging an app" do
+        it "sends a nats message with the appropriate staging subject and payload" do
+          messenger.send_stage_request(app)
+
+          expected_message = {
+            "app_id" => app.guid,
+            "task_id" => app.staging_task_id,
+            "memory_mb" => app.memory,
+            "disk_mb" => app.disk_quota,
+            "file_descriptors" => app.file_descriptors,
+            "environment" => Environment.new(app).as_json,
+            "stack" => app.stack.name,
+            "build_artifacts_cache_download_uri" => "http://buildpack-artifacts-cache.com",
+            "app_bits_download_uri" => "http://app-package.com",
+            "buildpacks" => Traditional::BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app)
+          }
+
+          expect(message_bus.published_messages.size).to eq(1)
+          nats_message = message_bus.published_messages.first
+          expect(nats_message[:subject]).to eq("diego.staging.start")
+          expect(nats_message[:message]).to match_json(expected_message)
+        end
+
+        it "updates the app's staging task id so the staging response can be identified" do
+          allow(VCAP).to receive(:secure_uuid).and_return("unique-staging-task-id")
+
+          expect {
+            messenger.send_stage_request(app)
+          }.to change { app.refresh; app.staging_task_id }.to("unique-staging-task-id")
+        end
+
+        context "when the operator has disabled diego" do
+          let(:enabled) { false }
+
+          it "explodes with an API error that is propagated to cf users" do
+            expect {
+              messenger.send_stage_request(app)
+            }.to raise_error(VCAP::Errors::ApiError, /Diego has not been enabled/)
+          end
+        end
+      end
+
       describe "desiring an app" do
         let(:expected_message) do
           {
@@ -106,48 +148,6 @@ module VCAP::CloudController
           it "explodes with an API error that is propagated to cf users" do
             expect {
               messenger.send_desire_request(app)
-            }.to raise_error(VCAP::Errors::ApiError, /Diego has not been enabled/)
-          end
-        end
-      end
-
-      describe "staging an app" do
-        it "sends a nats message with the appropriate staging subject and payload" do
-          messenger.send_stage_request(app)
-
-          expected_message = {
-            "app_id" => app.guid,
-            "task_id" => app.staging_task_id,
-            "memory_mb" => app.memory,
-            "disk_mb" => app.disk_quota,
-            "file_descriptors" => app.file_descriptors,
-            "environment" => Environment.new(app).as_json,
-            "stack" => app.stack.name,
-            "build_artifacts_cache_download_uri" => "http://buildpack-artifacts-cache.com",
-            "app_bits_download_uri" => "http://app-package.com",
-            "buildpacks" => Traditional::BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app)
-          }
-
-          expect(message_bus.published_messages.size).to eq(1)
-          nats_message = message_bus.published_messages.first
-          expect(nats_message[:subject]).to eq("diego.staging.start")
-          expect(nats_message[:message]).to match_json(expected_message)
-        end
-
-        it "updates the app's staging task id so the staging response can be identified" do
-          allow(VCAP).to receive(:secure_uuid).and_return("unique-staging-task-id")
-
-          expect {
-            messenger.send_stage_request(app)
-          }.to change { app.refresh; app.staging_task_id }.to("unique-staging-task-id")
-        end
-
-        context "when the operator has disabled diego" do
-          let(:enabled) { false }
-
-          it "explodes with an API error that is propagated to cf users" do
-            expect {
-              messenger.send_stage_request(app)
             }.to raise_error(VCAP::Errors::ApiError, /Diego has not been enabled/)
           end
         end
