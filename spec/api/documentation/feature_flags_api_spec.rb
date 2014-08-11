@@ -12,11 +12,12 @@ resource "Feature Flags (experimental)", :type => :api do
 
   shared_context "updatable_fields" do
     field :enabled, "The state of the feature flag.", required: true, example_values: [true, false]
+    field :error_message, "The custom error message for the feature flag.", example_values: ["error message"]
   end
 
   get "/v2/config/feature_flags" do
     example "Get all feature flags" do
-      VCAP::CloudController::FeatureFlag.create(name: "private_domain_creation", enabled: false)
+      VCAP::CloudController::FeatureFlag.create(name: "private_domain_creation", enabled: false, error_message: "foobar")
 
       client.get "/v2/config/feature_flags", {}, headers
 
@@ -27,6 +28,7 @@ resource "Feature Flags (experimental)", :type => :api do
           'name'          => 'user_org_creation',
           'default_value' => false,
           'enabled'       => false,
+          'error_message' => nil,
           'overridden'    => false,
           'url'           => '/v2/config/feature_flags/user_org_creation'
         })
@@ -36,6 +38,7 @@ resource "Feature Flags (experimental)", :type => :api do
           'default_value' => true,
           'enabled'       => false,
           'overridden'    => true,
+          'error_message' => 'foobar',
           'url'           => '/v2/config/feature_flags/private_domain_creation'
         })
     end
@@ -53,6 +56,7 @@ resource "Feature Flags (experimental)", :type => :api do
           'default_value' => false,
           'enabled'       => false,
           'overridden'    => false,
+          'error_message' => nil,
           'url'           => '/v2/config/feature_flags/user_org_creation'
         })
     end
@@ -70,6 +74,7 @@ resource "Feature Flags (experimental)", :type => :api do
           'default_value' => true,
           'enabled'       => true,
           'overridden'    => false,
+          'error_message' => nil,
           'url'           => '/v2/config/feature_flags/private_domain_creation'
         })
     end
@@ -89,6 +94,7 @@ resource "Feature Flags (experimental)", :type => :api do
           'default_value' => false,
           'enabled'       => true,
           'overridden'    => true,
+          'error_message' => nil,
           'url'           => '/v2/config/feature_flags/user_org_creation'
         })
     end

@@ -24,7 +24,7 @@ module VCAP::CloudController
 
     def before_create
       return unless request_attrs['owning_organization_guid']
-      FeatureFlag.raise_unless_enabled!('private_domain_creation', 'Private domain creation is disabled')
+      FeatureFlag.raise_unless_enabled!('private_domain_creation')
     end
 
     deprecated_endpoint(path)

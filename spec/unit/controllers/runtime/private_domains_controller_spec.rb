@@ -39,7 +39,7 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(412)
           expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
-          expect(decoded_response["description"]).to match(/Private domain creation is disabled/)
+          expect(decoded_response["description"]).to match(/Feature Disabled/)
         end
       end
 

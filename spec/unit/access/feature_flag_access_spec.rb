@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe FeatureFlagAccess, type: :access do
+    let(:token) { { 'scope' => 'cloud_controller.read cloud_controller.write' } }
     before do
-      token = { 'scope' => 'cloud_controller.read cloud_controller.write' }
       allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
@@ -17,14 +17,23 @@ module VCAP::CloudController
       it_behaves_like :full_access
     end
 
-    context 'a user that is not an admin (defensive)' do
+    context 'a user that has cloud_controller.read' do
+      let(:token) { { 'scope' => 'cloud_controller.read'} }
+
+      it_behaves_like :read_only
+    end
+
+    context 'a user that does not have cloud_controller.read' do
+      let(:token) { { 'scope' => ''} }
+
       it_behaves_like :no_access
-      it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::FeatureFlag }
     end
 
     context 'a user that isnt logged in (defensive)' do
+      let(:token) { { 'scope' => ''} }
       let(:user) { nil }
       let(:roles) { double(:roles, admin?: false, none?: true, present?: false) }
+
       it_behaves_like :no_access
       it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::FeatureFlag }
     end

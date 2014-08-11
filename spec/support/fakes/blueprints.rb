@@ -25,6 +25,7 @@ Sham.define do
   instance_index      { |index| index }
   unique_id           { |index| "unique-id-#{index}" }
   status              { |_| %w[active suspended cancelled].sample(1).first }
+  error_message       { |index| "error-message-#{index}" }
 end
 
 module VCAP::CloudController
@@ -322,6 +323,7 @@ module VCAP::CloudController
   FeatureFlag.blueprint do
     name { 'user_org_creation' }
     enabled { false }
+    error_message { Sham.error_message }
   end
 
   TestModel.blueprint do

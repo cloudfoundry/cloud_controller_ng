@@ -2,38 +2,38 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe FeatureFlagsController, type: :controller do
-
     describe 'PUT /v2/config/feature_flags/:name' do
       context 'when the user is an admin' do
         context 'and the flag is in the default feature flags' do
           context 'and the flag was NOT previously set' do
             it 'sets the feature flag to the specified value' do
-              put '/v2/config/feature_flags/user_org_creation', MultiJson.dump({ enabled: true }), admin_headers
+              put '/v2/config/feature_flags/user_org_creation', MultiJson.dump({ enabled: true, error_message: 'foobar' }), admin_headers
 
               expect(last_response.status).to eq(200)
               expect(decoded_response['name']).to eq('user_org_creation')
               expect(decoded_response['enabled']).to be true
               expect(decoded_response['overridden']).to be true
+              expect(decoded_response['error_message']).to eq('foobar')
               expect(decoded_response['default_value']).to be false
               expect(decoded_response['url']).to eq('/v2/config/feature_flags/user_org_creation')
             end
           end
 
           context 'and the flag was previously set' do
-            before { FeatureFlag.make(name: 'user_org_creation', enabled: false) }
+            before { FeatureFlag.make(name: 'user_org_creation', enabled: false, error_message: 'foobar') }
 
             it 'sets the feature flag to the specified value' do
-              put '/v2/config/feature_flags/user_org_creation', MultiJson.dump({ enabled: true }), admin_headers
+              put '/v2/config/feature_flags/user_org_creation', MultiJson.dump({ enabled: true, error_message: 'baz' }), admin_headers
 
               expect(last_response.status).to eq(200)
               expect(decoded_response['name']).to eq('user_org_creation')
               expect(decoded_response['enabled']).to be true
+              expect(decoded_response['error_message']).to eq('baz')
               expect(decoded_response['overridden']).to be true
               expect(decoded_response['default_value']).to be false
               expect(decoded_response['url']).to eq('/v2/config/feature_flags/user_org_creation')
             end
           end
-
         end
 
         context 'and the flag is not a default feature flag' do
@@ -69,8 +69,6 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/config/feature_flags' do
-      it_behaves_like 'an admin only endpoint', path: '/v2/config/feature_flags'
-
       before do
         stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
           flag1: false,
@@ -91,6 +89,7 @@ module VCAP::CloudController
               'default_value' => false,
               'overridden'    => false,
               'enabled'       => false,
+              'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag1'
             })
           expect(decoded_response).to include(
@@ -99,6 +98,7 @@ module VCAP::CloudController
               'default_value' => true,
               'overridden'    => false,
               'enabled'       => true,
+              'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag2'
             })
           expect(decoded_response).to include(
@@ -107,13 +107,14 @@ module VCAP::CloudController
               'default_value' => false,
               'overridden'    => false,
               'enabled'       => false,
+              'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag3'
             })
         end
       end
 
       context 'when there are overrides' do
-        before { FeatureFlag.make(name: 'flag1', enabled: true) }
+        before { FeatureFlag.make(name: 'flag1', enabled: true, error_message: 'custom_error_message') }
 
         it 'returns the defaults, overridden where needed' do
           get '/v2/config/feature_flags', '{}', admin_headers
@@ -126,6 +127,7 @@ module VCAP::CloudController
               'default_value' => false,
               'overridden'    => true,
               'enabled'       => true,
+              'error_message' => 'custom_error_message',
               'url'           => '/v2/config/feature_flags/flag1'
             })
           expect(decoded_response).to include(
@@ -134,6 +136,7 @@ module VCAP::CloudController
               'default_value' => true,
               'overridden'    => false,
               'enabled'       => true,
+              'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag2'
             })
           expect(decoded_response).to include(
@@ -142,6 +145,7 @@ module VCAP::CloudController
               'default_value' => false,
               'overridden'    => false,
               'enabled'       => false,
+              'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag3'
             })
         end
@@ -149,8 +153,6 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/config/feature_flags/:name' do
-      it_behaves_like 'an admin only endpoint', path: '/v2/config/feature_flags/flag1'
-
       before do
         stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
           flag1: false,
@@ -168,13 +170,14 @@ module VCAP::CloudController
               'default_value' => false,
               'overridden'    => false,
               'enabled'       => false,
+              'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag1'
             })
         end
       end
 
       context 'when there are overrides' do
-        before { FeatureFlag.make(name: 'flag1', enabled: true) }
+        before { FeatureFlag.make(name: 'flag1', enabled: true, error_message: nil) }
 
         it 'returns the overridden value' do
           get '/v2/config/feature_flags/flag1', '{}', admin_headers
@@ -186,6 +189,7 @@ module VCAP::CloudController
               'default_value' => false,
               'overridden'    => true,
               'enabled'       => true,
+              'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag1'
             })
         end

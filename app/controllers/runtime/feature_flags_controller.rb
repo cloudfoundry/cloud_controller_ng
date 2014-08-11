@@ -55,6 +55,7 @@ module VCAP::CloudController
       feature_flag ||= FeatureFlag.new(name: name)
 
       feature_flag.enabled = feature_flag_attributes['enabled']
+      feature_flag.error_message = feature_flag_attributes['error_message']
       feature_flag.save
 
       [

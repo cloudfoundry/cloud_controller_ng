@@ -30,7 +30,7 @@ module VCAP::CloudController
     private
 
     def before_create
-      FeatureFlag.raise_unless_enabled!('private_domain_creation', 'Private domain creation is disabled')
+      FeatureFlag.raise_unless_enabled!('private_domain_creation')
     end
   end
 end

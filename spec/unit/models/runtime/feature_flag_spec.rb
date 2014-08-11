@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'spec_helper'
 
 module VCAP::CloudController
@@ -35,11 +36,57 @@ module VCAP::CloudController
           end
         end
       end
+      
+      describe 'error message' do
+        subject(:feature_flag) { FeatureFlag.make }
+
+        it 'shoud allow standard ascii characters' do
+          feature_flag.error_message = "A -_- word 2!?()\'\'&+."
+          expect {
+            feature_flag.save
+          }.to_not raise_error
+        end
+
+        it 'should allow backslash characters' do
+          feature_flag.error_message = "a\\word"
+          expect {
+            feature_flag.save
+          }.to_not raise_error
+        end
+
+        it 'should allow unicode characters' do
+          feature_flag.error_message = "防御力¡"
+          expect {
+            feature_flag.save
+          }.to_not raise_error
+        end
+
+        it 'should not allow newline characters' do
+          feature_flag.error_message = "one\ntwo"
+          expect {
+            feature_flag.save
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it 'should not allow escape characters' do
+          feature_flag.error_message = "a\e word"
+          expect {
+            feature_flag.save
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it 'should allow an empty error_message' do
+          feature_flag.error_message = nil
+          expect {
+            feature_flag.save
+          }.to_not raise_error
+        end
+      end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :enabled }
-      it { is_expected.to import_attributes :name, :enabled }
+      it { is_expected.to export_attributes :name, :enabled, :error_message }
+      it { is_expected.to import_attributes :name, :enabled, :error_message }
     end
 
     describe '.enabled?' do
@@ -72,8 +119,6 @@ module VCAP::CloudController
     end
 
     describe '.raise_unless_enabled!' do
-      let(:message) { 'some message' }
-
       context 'when the flag is enabled' do
         before do
           feature_flag.enabled = true
@@ -81,7 +126,7 @@ module VCAP::CloudController
         end
 
         it 'does not raise an error' do
-          expect { FeatureFlag.raise_unless_enabled!(feature_flag.name, message) }.to_not raise_error
+          expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to_not raise_error
         end
       end
 
@@ -91,24 +136,36 @@ module VCAP::CloudController
           feature_flag.save
         end
 
-        it 'raises FeatureDisabled' do
-          expect { FeatureFlag.raise_unless_enabled!(feature_flag.name, message) }.to raise_error(VCAP::Errors::ApiError) do |error|
-            expect(error.name).to eq('FeatureDisabled')
-            expect(error.message).to eq(message)
+        context 'and there is no custom error message defined' do
+          before do
+            feature_flag.update(error_message: nil)
+          end
+
+          it 'raises FeatureDisabled with feature flag name' do
+            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(VCAP::Errors::ApiError) do |error|
+              expect(error.name).to eq('FeatureDisabled')
+              expect(error.message).to eq("Feature Disabled: #{feature_flag.name}")
+            end
           end
         end
 
         context 'and there is a custom operator defined error message' do
-          before do
-            TestConfig.override(feature_disabled_message: 'my custom error message')
-          end
+          let(:feature_flag) { FeatureFlag.make(error_message: "foobar") }
 
           it 'raises FeatureDisabled with the custom error message' do
-            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name, message) }.to raise_error(VCAP::Errors::ApiError) do |error|
+            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(VCAP::Errors::ApiError) do |error|
               expect(error.name).to eq('FeatureDisabled')
-              expect(error.message).to eq("#{message}: my custom error message")
+              expect(error.message).to eq("Feature Disabled: #{feature_flag.error_message}")
             end
           end
+        end
+      end
+
+      context 'when the flag does not exist' do
+        it 'blows up somehow' do
+          expect {
+            FeatureFlag.raise_unless_enabled!('bogus_feature_flag')
+          }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
         end
       end
     end

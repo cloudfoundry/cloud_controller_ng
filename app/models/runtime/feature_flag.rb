@@ -1,5 +1,6 @@
 module VCAP::CloudController
   class FeatureFlag < Sequel::Model
+    FF_ERROR_MESSAGE_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
     class UndefinedFeatureFlagError < StandardError
     end
@@ -9,8 +10,8 @@ module VCAP::CloudController
       private_domain_creation: true
     }.freeze
 
-    export_attributes :name, :enabled
-    import_attributes :name, :enabled
+    export_attributes :name, :enabled, :error_message
+    import_attributes :name, :enabled, :error_message
 
     def validate
       validates_presence :name
@@ -18,6 +19,7 @@ module VCAP::CloudController
       validates_presence :enabled
 
       validates_includes DEFAULT_FLAGS.keys.map(&:to_s), :name
+      validates_format FF_ERROR_MESSAGE_REGEX, :error_message if error_message
     end
 
     def self.enabled?(feature_flag_name)
@@ -29,13 +31,18 @@ module VCAP::CloudController
       raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"
     end
 
-    def self.raise_unless_enabled!(feature_flag_name, message)
-      error_message = message
-      if Config.config[:feature_disabled_message]
-        error_message = "#{error_message}: #{Config.config[:feature_disabled_message]}"
+    def self.raise_unless_enabled!(feature_flag_name)
+      feature_flag = FeatureFlag.find(name: feature_flag_name)
+
+      err_message = feature_flag_name
+
+      if feature_flag && feature_flag.error_message
+        err_message = feature_flag.error_message
       end
 
-      raise VCAP::Errors::ApiError.new_from_details('FeatureDisabled', error_message) if !enabled?(feature_flag_name)
+      raise VCAP::Errors::ApiError.new_from_details('FeatureDisabled', err_message) if !enabled?(feature_flag_name)
+    rescue KeyError
+      raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"
     end
   end
 end

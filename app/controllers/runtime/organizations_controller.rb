@@ -64,7 +64,7 @@ module VCAP::CloudController
 
     def before_create
       return if SecurityContext.admin?
-      FeatureFlag.raise_unless_enabled!('user_org_creation', 'User organization creation is disabled')
+      FeatureFlag.raise_unless_enabled!('user_org_creation')
     end
 
     def after_create(organization)
