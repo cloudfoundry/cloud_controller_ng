@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     let(:staged_app) { App.make(instances: 3, staging_task_id: "the-staging-task-id", environment_json: environment) }
 
-    let(:logger) { FakeLogger.new([]) }
+    let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
 
     let(:app_id) { staged_app.guid }
 
@@ -16,10 +16,10 @@ module VCAP::CloudController
 
     let(:success_response) do
       {
-          "app_id" => app_id,
-          "task_id" => staged_app.staging_task_id,
-          "detected_buildpack" => 'INTERCAL',
-          "buildpack_key" => buildpack.key,
+        "app_id" => app_id,
+        "task_id" => staged_app.staging_task_id,
+        "detected_buildpack" => "INTERCAL",
+        "buildpack_key" => buildpack.key,
       }
     end
 
@@ -39,12 +39,12 @@ module VCAP::CloudController
       fail_response.except("task_id")
     end
 
-    let(:diego_messenger) { instance_double(Diego::Messenger) }
+    let(:diego_messenger) { instance_double(Diego::Messenger, send_desire_request: nil) }
 
     subject { Diego::Traditional::StagingCompletionHandler.new(message_bus, diego_messenger) }
 
     before do
-      allow(Steno).to receive(:logger).and_return(logger)
+      allow(Steno).to receive(:logger).with("cc.stager").and_return(logger)
       allow(Dea::Client).to receive(:start)
 
       staged_app.add_new_droplet("lol")
@@ -86,7 +86,7 @@ module VCAP::CloudController
           it "starts the app instances" do
             expect(Dea::Client).to receive(:start) do |received_app, received_hash|
               expect(received_app.guid).to eq(app_id)
-              expect(received_hash).to  eq({:instances_to_start => 3})
+              expect(received_hash).to eq({:instances_to_start => 3})
             end
             expect(diego_messenger).not_to receive(:send_desire_request)
             publish_staging_result(success_response)
@@ -94,7 +94,7 @@ module VCAP::CloudController
 
           it 'logs the staging result' do
             publish_staging_result(success_response)
-            expect(logger.log_messages).to include("diego.staging.finished")
+            expect(logger).to have_received(:info).with("diego.staging.finished", response: success_response)
           end
 
           it 'should update the app with the detected buildpack' do
@@ -164,16 +164,47 @@ module VCAP::CloudController
         context "when staging references an unknown app" do
           let(:app_id) { "ooh ooh ah ah" }
 
-          it "should not attempt to start anything" do
-            expect(Dea::Client).not_to receive(:start)
+          before do
             publish_staging_result(success_response)
+          end
+
+          it "should not attempt to start anything" do
+            expect(diego_messenger).not_to have_received(:send_desire_request)
+            expect(Dea::Client).not_to have_received(:start)
+          end
+
+          it "only logs a warning for the CF operator since the app may have been deleted by the CF user" do
+            expect(logger).to have_received(:warn).with("diego.staging.unknown-app", response: success_response)
+          end
+        end
+
+        context "when the task_id is invalid" do
+          before do
+            success_response["task_id"] = 'another-task-id'
+            publish_staging_result(success_response)
+          end
+
+          it "should not attempt to start anything" do
+            expect(diego_messenger).not_to have_received(:send_desire_request)
+            expect(Dea::Client).not_to have_received(:start)
+          end
+
+          it "logs an error for the CF operator and returns" do
+            expect(logger).to have_received(:error).with("diego.staging.not-current", response: success_response, current: staged_app.staging_task_id)
           end
         end
 
         context "with a malformed success message" do
-          it "should not start anything" do
-            expect(Dea::Client).not_to receive(:start)
+          before do
             publish_staging_result(malformed_success_response)
+          end
+
+          it "should not start anything" do
+            expect(Dea::Client).not_to have_received(:start)
+          end
+
+          it "logs an error for the CF operator" do
+            expect(logger).to have_received(:error).with("diego.staging.invalid-message", payload: malformed_success_response, error: "{ detected_buildpack => Missing key }")
           end
         end
 
