@@ -1,3 +1,5 @@
+require "presenters/api/feature_flag_presenter"
+
 module VCAP::CloudController
   class FeatureFlagsController < RestController::ModelController
     def self.path
@@ -13,19 +15,12 @@ module VCAP::CloudController
       validate_access(:index, model, user, roles)
 
       db_feature_flags = {}
-      FeatureFlag.all.each { |feature| db_feature_flags[feature.name.to_sym] = feature.enabled }
+      FeatureFlag.all.each { |feature| db_feature_flags[feature.name.to_sym] = feature }
 
       feature_flags = FeatureFlag::DEFAULT_FLAGS.keys.map do |key|
-        default_value = FeatureFlag::DEFAULT_FLAGS[key]
-        current_value = db_feature_flags.fetch(key, default_value)
+        feature_flag = db_feature_flags[key]
 
-        {
-          name:          key.to_s,
-          enabled:       current_value,
-          default_value: default_value,
-          overridden:    db_feature_flags.has_key?(key),
-          url:           "#{FeatureFlagsController.path}/#{key.to_s}",
-        }
+        FeatureFlagPresenter.new(feature_flag, key, self.class.path).to_hash
       end
 
       [
@@ -40,20 +35,11 @@ module VCAP::CloudController
 
       raise self.class.not_found_exception(name) unless FeatureFlag::DEFAULT_FLAGS.has_key?(name.to_sym)
 
-      response = {
-        name:          name,
-        enabled:       FeatureFlag::DEFAULT_FLAGS[name.to_sym],
-        default_value: FeatureFlag::DEFAULT_FLAGS[name.to_sym],
-        url:           "#{FeatureFlagsController.path}/#{name}",
-      }
-
       feature_flag = FeatureFlag.find(name: name)
-      response[:enabled] = feature_flag.enabled if feature_flag
-      response[:overridden] = !feature_flag.nil?
 
       [
         HTTP::OK,
-        MultiJson.dump(response, pretty: true)
+        FeatureFlagPresenter.new(feature_flag, name, self.class.path).to_json
       ]
     end
 
@@ -73,14 +59,7 @@ module VCAP::CloudController
 
       [
         HTTP::OK,
-        MultiJson.dump(
-          {
-            name:          feature_flag.name,
-            enabled:       feature_flag.enabled,
-            default_value: FeatureFlag::DEFAULT_FLAGS[feature_flag.name.to_sym],
-            overridden:    !feature_flag.nil?,
-            url:           "#{FeatureFlagsController.path}/#{feature_flag.name}",
-          }, pretty: true)
+        FeatureFlagPresenter.new(feature_flag, name, self.class.path).to_json
       ]
     end
 
