@@ -468,6 +468,11 @@ module VCAP::CloudController
       buildpack.url if buildpack.custom?
     end
 
+    def docker_image=(value)
+      super
+      self.package_hash = value
+    end
+
     def package_hash=(hash)
       super(hash)
       mark_for_restaging if column_changed?(:package_hash)

@@ -1859,6 +1859,24 @@ module VCAP::CloudController
       end
     end
 
+    describe "docker_image" do
+      subject(:app) do
+        App.new
+      end
+
+      it "sets the package hash to the image name any time the image is set" do
+        expect {
+          app.docker_image = "foo/bar"
+        }.to change { app.package_hash }.to("foo/bar")
+      end
+
+      it "preserves its existing behavior as a setter" do
+        expect {
+          app.docker_image = "foo/bar"
+        }.to change { app.docker_image }.to("foo/bar")
+      end
+    end
+
     describe "diego flag" do
       subject { AppFactory.make }
 
