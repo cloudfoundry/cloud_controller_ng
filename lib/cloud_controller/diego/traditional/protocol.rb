@@ -50,7 +50,6 @@ module VCAP::CloudController
 
           message["health_check_timeout_in_seconds"] = app.health_check_timeout if app.health_check_timeout
           message
-          message
         end
       end
     end
