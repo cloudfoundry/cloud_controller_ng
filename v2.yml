@@ -626,4 +626,4 @@
 330002:
   name: FeatureDisabled
   http_code: 412
-  message: "%s"
+  message: "Feature Disabled: %s"
