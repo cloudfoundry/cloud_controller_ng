@@ -7,16 +7,15 @@ module VCAP::CloudController
         def initialize(message_bus, diego_messenger)
           @message_bus = message_bus
           @diego_messenger = diego_messenger
-        end
-
-        StagingResponseSchema = Membrane::SchemaParser.parse do
-          {
-            "app_id" => String,
-            "task_id" => String,
-            "buildpack_key" => String,
-            "detected_buildpack" => String,
-            optional("detected_start_command") => String,
-          }
+          @staging_response_schema = Membrane::SchemaParser.parse do
+            {
+              "app_id" => String,
+              "task_id" => String,
+              "buildpack_key" => String,
+              "detected_buildpack" => String,
+              optional("detected_start_command") => String,
+            }
+          end
         end
 
         def subscribe!
@@ -31,10 +30,6 @@ module VCAP::CloudController
           end
         end
 
-        def logger
-          @logger ||= Steno.logger("cc.stager")
-        end
-
         private
 
         def handle_failure(logger, payload)
@@ -45,9 +40,10 @@ module VCAP::CloudController
           Loggregator.emit_error(app.guid, "Failed to stage application: #{payload["error"]}")
         end
 
+
         def handle_success(logger, payload)
           begin
-            StagingResponseSchema.validate(payload)
+            @staging_response_schema.validate(payload)
           rescue Membrane::SchemaValidationError => e
             logger.error("diego.staging.invalid-message", payload: payload, error: e.to_s)
             return
@@ -90,6 +86,10 @@ module VCAP::CloudController
           end
 
           app
+        end
+
+        def logger
+          @logger ||= Steno.logger("cc.stager")
         end
       end
     end
