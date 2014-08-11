@@ -7,7 +7,7 @@ resource "Feature Flags (experimental)", :type => :api do
   authenticated_request
 
   shared_context "name_parameter" do
-    parameter :name, "The name of the Feature Flag"
+    parameter :name, "The name of the feature flag"
   end
 
   shared_context "updatable_fields" do
@@ -41,29 +41,9 @@ resource "Feature Flags (experimental)", :type => :api do
     end
   end
 
-  put "/v2/config/feature_flags/user_org_creation" do
-    include_context "name_parameter"
-    include_context "updatable_fields"
-
-    example "Enable a feature flag" do
-      client.put "/v2/config/feature_flags/user_org_creation", fields_json, headers
-
-      expect(status).to eq(200)
-      expect(parsed_response).to eq(
-        {
-          'name'          => 'user_org_creation',
-          'default_value' => false,
-          'enabled'       => true,
-          'overridden'    => true,
-          'url'           => '/v2/config/feature_flags/user_org_creation'
-        })
-    end
-  end
-
   get "/v2/config/feature_flags/user_org_creation" do
-    include_context "name_parameter"
-
-    example "Get a feature flag" do
+    example "Get the User Org Creation feature flag" do
+      explanation "When enabled, any user can create an organization via the API."
       client.get "/v2/config/feature_flags/user_org_creation", {}, headers
 
       expect(status).to eq(200)
@@ -73,6 +53,42 @@ resource "Feature Flags (experimental)", :type => :api do
           'default_value' => false,
           'enabled'       => false,
           'overridden'    => false,
+          'url'           => '/v2/config/feature_flags/user_org_creation'
+        })
+    end
+  end
+
+  get "/v2/config/feature_flags/private_domain_creation" do
+    example "Get the Private Domain Creation feature flag" do
+      explanation "When enabled, an organization manager can create private domains for that organization."
+      client.get "/v2/config/feature_flags/private_domain_creation", {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+        {
+          'name'          => 'private_domain_creation',
+          'default_value' => true,
+          'enabled'       => true,
+          'overridden'    => false,
+          'url'           => '/v2/config/feature_flags/private_domain_creation'
+        })
+    end
+  end
+
+  put "/v2/config/feature_flags/:name" do
+    include_context "name_parameter"
+    include_context "updatable_fields"
+
+    example "Set a feature flag" do
+      client.put "/v2/config/feature_flags/user_org_creation", fields_json, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+        {
+          'name'          => 'user_org_creation',
+          'default_value' => false,
+          'enabled'       => true,
+          'overridden'    => true,
           'url'           => '/v2/config/feature_flags/user_org_creation'
         })
     end
