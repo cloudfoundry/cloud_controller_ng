@@ -96,10 +96,84 @@ module VCAP::CloudController
     describe "update app" do
       let(:update_hash) { {} }
 
-      let(:app_obj) { AppFactory.make(:detected_buildpack => "buildpack-name") }
+      let(:app_obj) { AppFactory.make(:instances => 1) }
 
       def update_app
         put "/v2/apps/#{app_obj.guid}", MultiJson.dump(update_hash), json_headers(admin_headers)
+      end
+
+      describe "app_scaling feature flag" do
+        let(:developer) { make_developer_for_space(app_obj.space) }
+
+        context "when the flag is enabled" do
+          before { FeatureFlag.make(name: "app_scaling", enabled: true) }
+
+          it "allows updating memory" do
+            put "/v2/apps/#{app_obj.guid}", '{ "memory": 2 }', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(201)
+          end
+
+          it "allows updating disk_quota" do
+            put "/v2/apps/#{app_obj.guid}", '{ "disk_quota": 2 }', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(201)
+          end
+
+          it "allows updating instances" do
+            put "/v2/apps/#{app_obj.guid}", '{ "instances": 2 }', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        context "when the flag is disabled" do
+          before { FeatureFlag.make(name: "app_scaling", enabled: false) }
+
+          context "and the user is an admin" do
+            it "allows updating memory" do
+              put "/v2/apps/#{app_obj.guid}", '{ "memory": 2 }', json_headers(admin_headers)
+              expect(last_response.status).to eq(201)
+            end
+
+            it "allows updating disk_quota" do
+              put "/v2/apps/#{app_obj.guid}", '{ "disk_quota": 2 }', json_headers(admin_headers)
+              expect(last_response.status).to eq(201)
+            end
+
+            it "allows updating instances" do
+              put "/v2/apps/#{app_obj.guid}", '{ "instances": 2 }', json_headers(admin_headers)
+              expect(last_response.status).to eq(201)
+            end
+          end
+
+          context "and the user is not an admin" do
+            it "does not allow updating memory" do
+              put "/v2/apps/#{app_obj.guid}", '{ "memory": 2 }', json_headers(headers_for(developer))
+              expect(last_response.status).to eq(412)
+              expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
+            end
+
+            it "does not allow updating disk_quota" do
+              put "/v2/apps/#{app_obj.guid}", '{ "disk_quota": 2 }', json_headers(headers_for(developer))
+              expect(last_response.status).to eq(412)
+              expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
+            end
+
+            it "does not allow updating instances" do
+              put "/v2/apps/#{app_obj.guid}", '{ "instances": 2 }', json_headers(headers_for(developer))
+              expect(last_response.status).to eq(412)
+              expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
+            end
+
+            it "allows unchanged fields to be specified" do
+              put "/v2/apps/#{app_obj.guid}", '{ "instances": 1 }', json_headers(headers_for(developer))
+              expect(last_response.status).to eq(201)
+            end
+
+            it "allows changing other fields" do
+              put "/v2/apps/#{app_obj.guid}", '{ "buildpack": "http://foo.git" }', json_headers(headers_for(developer))
+              expect(last_response.status).to eq(201)
+            end
+          end
+        end
       end
 
       describe "events" do

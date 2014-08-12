@@ -93,6 +93,23 @@ module VCAP::CloudController
       record_app_create_value if request_attrs
     end
 
+    def before_update(app)
+      if attempts_to_scale? app
+        FeatureFlag.raise_unless_enabled!("app_scaling") unless SecurityContext.admin?
+      end
+    end
+
+    def attempts_to_scale?(app)
+      attempts_to_change_key?(app.instances, "instances") ||
+        attempts_to_change_key?(app.memory, "memory") ||
+        attempts_to_change_key?(app.disk_quota, "disk_quota")
+    end
+
+    def attempts_to_change_key?(current_value, key)
+      return false unless @request_attrs.has_key?(key)
+      current_value != @request_attrs[key]
+    end
+
     def after_update(app)
       stager_response = app.last_stager_response
       if stager_response.respond_to?(:streaming_log_url) && stager_response.streaming_log_url

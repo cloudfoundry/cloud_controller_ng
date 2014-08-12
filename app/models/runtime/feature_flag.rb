@@ -8,7 +8,8 @@ module VCAP::CloudController
     DEFAULT_FLAGS = {
       user_org_creation: false,
       private_domain_creation: true,
-      app_bits_upload: true
+      app_bits_upload: true,
+      app_scaling: true
     }.freeze
 
     export_attributes :name, :enabled, :error_message
