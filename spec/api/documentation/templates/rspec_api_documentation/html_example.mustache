@@ -110,6 +110,8 @@
               <tr>
                 <th>Name</th>
                 <th>Description</th>
+                <th>Valid Values</th>
+                <th>Example Values</th>
               </tr>
             </thead>
             <tbody>
@@ -125,6 +127,20 @@
                 </td>
                 <td>
                   <span class="description">{{ description }}</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                    {{# valid_values }}
+                    <li>{{ . }}</li>
+                    {{/ valid_values }}
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                    {{# example_values }}
+                    <li>{{ . }}</li>
+                    {{/ example_values }}
+                  </ul>
                 </td>
               </tr>
               {{/ parameters }}

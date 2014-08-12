@@ -15,6 +15,7 @@ module VCAP::CloudController
 
     put "#{path_guid}/bits", :upload
     def upload(guid)
+      FeatureFlag.raise_unless_enabled!('app_bits_upload') unless SecurityContext.admin?
       app = find_guid_and_validate_access(:update, guid)
 
       raise Errors::ApiError.new_from_details("AppBitsUploadInvalid", "missing :resources") unless params["resources"]

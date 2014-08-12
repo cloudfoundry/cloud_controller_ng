@@ -7,11 +7,11 @@ resource "Feature Flags (experimental)", :type => :api do
   authenticated_request
 
   shared_context "name_parameter" do
-    parameter :name, "The name of the feature flag"
+    parameter :name, "The name of the feature flag", valid_values: ["user_org_creation", "app_bits_upload", "private_domain_creation"]
   end
 
   shared_context "updatable_fields" do
-    field :enabled, "The state of the feature flag.", required: true, example_values: [true, false]
+    field :enabled, "The state of the feature flag.", required: true, valid_values: [true, false]
     field :error_message, "The custom error message for the feature flag.", example_values: ["error message"]
   end
 
@@ -22,7 +22,7 @@ resource "Feature Flags (experimental)", :type => :api do
       client.get "/v2/config/feature_flags", {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(2)
+      expect(parsed_response.length).to eq(3)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -34,12 +34,39 @@ resource "Feature Flags (experimental)", :type => :api do
         })
       expect(parsed_response).to include(
         {
+          'name'          => 'app_bits_upload',
+          'default_value' => true,
+          'enabled'       => true,
+          'overridden'    => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/app_bits_upload'
+        })
+      expect(parsed_response).to include(
+        {
           'name'          => 'private_domain_creation',
           'default_value' => true,
           'enabled'       => false,
           'overridden'    => true,
           'error_message' => 'foobar',
           'url'           => '/v2/config/feature_flags/private_domain_creation'
+        })
+    end
+  end
+
+  get "/v2/config/feature_flags/app_bits_upload" do
+    example "Get the App Bits Upload feature flag" do
+      explanation "When disabled, only admin users can upload app bits"
+      client.get "/v2/config/feature_flags/app_bits_upload", {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+        {
+          'name'          => 'app_bits_upload',
+          'default_value' => true,
+          'enabled'       => true,
+          'overridden'    => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/app_bits_upload'
         })
     end
   end
