@@ -115,6 +115,19 @@ module VCAP::CloudController
           context "when its state has changed" do
             let(:changes) { {:state => "anything"} }
 
+            context "when docker_image is present" do
+              before do
+                allow(app).to receive(:docker_image).and_return("fake-docker-image")
+              end
+
+              it "validates for staging" do
+                expect {
+                  subject
+                }.not_to raise_error
+
+              end
+            end
+
             it 'uses the diego stager to do staging' do
               subject
               expect(diego_messenger).to have_received(:send_stage_request).with(app)
@@ -344,6 +357,17 @@ module VCAP::CloudController
                   end
 
                   it_behaves_like "it stages"
+                end
+              end
+
+              context "when docker_image is present" do
+                let(:app) { AppFactory.make docker_image: "fake-image" }
+
+                it "raises" do
+                  expect {
+                    subject
+                  }.to raise_error(Errors::ApiError, /Diego has not been enabled/)
+
                 end
               end
             end

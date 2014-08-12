@@ -4,7 +4,7 @@ module VCAP::CloudController
   describe Backends do
     let(:config) do
       {
-        diego: "fake-diego-config"
+        diego: true
       }
     end
 
@@ -28,8 +28,31 @@ module VCAP::CloudController
       instance_double(Diego::Messenger)
     end
 
+    let(:package_hash) do
+      'fake-package-hash'
+    end
+
+    let(:custom_buildpacks_enabled?) do
+      false
+    end
+
+    let (:buildpack) do
+      instance_double(AutoDetectionBuildpack,
+          custom?: false
+      )
+    end
+
+    let(:docker_image) do
+      nil
+    end
+
     let(:app) do
-      instance_double(App)
+      instance_double(App,
+        docker_image: docker_image,
+        package_hash: package_hash,
+        buildpack: buildpack,
+        custom_buildpacks_enabled?: custom_buildpacks_enabled?,
+      )
     end
 
     subject(:backends) do
@@ -41,6 +64,54 @@ module VCAP::CloudController
       allow(Dea::Backend).to receive(:new).and_call_original
       allow(Diego::Backend).to receive(:new).and_call_original
       allow(Diego::Messenger).to receive(:new).and_call_original
+    end
+
+    describe "#validate_app_for_staging" do
+
+      context "when the app package hash is blank" do
+        let(:package_hash) { '' }
+
+        it "raises" do
+          expect {
+            subject.validate_app_for_staging(app)
+          }.to raise_error(Errors::ApiError, /app package is invalid/)
+        end
+      end
+
+      context "when a custom buildpack is specified" do
+        let (:buildpack) do
+          instance_double(CustomBuildpack, custom?: true)
+        end
+
+        context "and custom buildpacks are disabled" do
+          it "raises" do
+            expect {
+              subject.validate_app_for_staging(app)
+            }.to raise_error(Errors::ApiError, /Custom buildpacks are disabled/)
+          end
+
+        end
+      end
+
+      context "if diego flag is not set" do
+        let(:config) do
+          {
+            diego: false
+          }
+        end
+
+        context "and the app has a docker_image" do
+          let(:docker_image) do
+            'fake-docker-image'
+          end
+
+          it "raises" do
+            expect {
+              subject.validate_app_for_staging(app)
+            }.to raise_error(Errors::ApiError, /Diego has not been enabled/)
+          end
+        end
+      end
     end
 
     describe "#find_one_to_stage" do

@@ -42,16 +42,6 @@ module VCAP::CloudController
         Jobs::Enqueuer.new(delete_job, queue: "cc-generic").enqueue()
       end
 
-      def validate_app_for_staging(app)
-        if app.package_hash.nil? || app.package_hash.empty?
-          raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
-        end
-
-        if app.buildpack.custom? && !app.custom_buildpacks_enabled?
-          raise Errors::ApiError.new_from_details("CustomBuildpacksDisabled")
-        end
-      end
-
       def react_to_state_change(app)
         if !app.started?
           @backends.find_one_to_run(app).stop
@@ -62,7 +52,7 @@ module VCAP::CloudController
         app.mark_for_restaging if staging_backend.requires_restage?
 
         if app.needs_staging?
-          validate_app_for_staging(app)
+          @backends.validate_app_for_staging(app)
           staging_backend.stage
         else
           @backends.find_one_to_run(app).start
