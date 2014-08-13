@@ -16,9 +16,16 @@ module VCAP::CloudController
           expect{ subject.owning_organization = Organization.make }.not_to raise_error
         end
 
-        it "fails when there are existing routes" do
-          route = Route.make
-          expect{ route.domain.owning_organization = Organization.make }.to raise_error VCAP::Errors::ApiError, /delete the routes associations/
+        context "when there are existing routes" do
+          it "succeeds when the organization is the same" do
+            route = Route.make(space: Space.make(organization: domain.owning_organization), domain: domain)
+            expect{ route.domain.owning_organization = domain.owning_organization }.to_not raise_error
+          end
+
+          it "fails when the organization changes" do
+            route = Route.make
+            expect{ route.domain.owning_organization = Organization.make }.to raise_error VCAP::Errors::ApiError, /delete the routes associations/
+          end
         end
       end
     end
