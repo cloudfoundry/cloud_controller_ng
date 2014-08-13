@@ -208,7 +208,7 @@ module VCAP::CloudController
         before { test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "get_binary_buildpack", key: 'xyz', position: 0 }) }
 
         it "returns NOT AUTHORIZED (403) users without correct basic auth" do
-          get "/v2/buildpacks/#{test_buildpack.guid}/download", {}
+          get "/v2/buildpacks/#{test_buildpack.guid}/download", '{}'
           expect(last_response.status).to eq(403)
         end
 

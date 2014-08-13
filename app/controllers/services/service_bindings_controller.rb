@@ -8,8 +8,12 @@ module VCAP::CloudController
       attribute :binding_options, Hash, :default => {}
     end
 
+    get path,      :enumerate
+    get path_guid, :read
+
     query_parameters :app_guid, :service_instance_guid
 
+    post path, :create
     def create
       json_msg = self.class::CreateMessage.decode(body)
 
@@ -27,7 +31,7 @@ module VCAP::CloudController
       validate_app(app_guid)
 
       binding = ServiceBinding.new(@request_attrs)
-      validate_access(:create, binding, user, roles)
+      validate_access(:create, binding)
 
       if binding.valid?
         binding.bind!
@@ -41,6 +45,7 @@ module VCAP::CloudController
       ]
     end
 
+    delete path_guid, :delete    
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
@@ -73,6 +78,5 @@ module VCAP::CloudController
     end
 
     define_messages
-    define_routes
   end
 end

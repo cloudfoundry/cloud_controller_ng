@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     get path, :enumerate
     def enumerate
-      validate_access(:index, model, user, roles)
+      validate_access(:index, model)
 
       db_feature_flags = {}
       FeatureFlag.all.each { |feature| db_feature_flags[feature.name.to_sym] = feature }
@@ -31,7 +31,7 @@ module VCAP::CloudController
 
     get "#{path}/:name", :read
     def read(name)
-      validate_access(:read, model, user, roles)
+      validate_access(:read, model)
 
       raise self.class.not_found_exception(name) unless FeatureFlag::DEFAULT_FLAGS.has_key?(name.to_sym)
 
@@ -45,7 +45,7 @@ module VCAP::CloudController
 
     put "#{path}/:name", :update_feature_flag
     def update_feature_flag(name)
-      validate_access(:update, model, user, roles)
+      validate_access(:update, model)
 
       raise self.class.not_found_exception(name) unless FeatureFlag::DEFAULT_FLAGS.has_key?(name.to_sym)
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
     delete "#{path}/:name", :delete
     def delete(name)
-      validate_access(:delete, model, user, roles)
+      validate_access(:delete, model)
       feature_flag = FeatureFlag.find(name: name)
 
       raise self.class.not_found_exception(name) unless feature_flag

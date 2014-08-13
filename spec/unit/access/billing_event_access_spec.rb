@@ -2,15 +2,14 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe BillingEventAccess, type: :access do
+    subject(:access) { BillingEventAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+
     before do
       TestConfig.override({ :billing_event_writing_enabled => true })
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
     end
 
-    subject(:access) { BillingEventAccess.new(double(:context, user: user, roles: roles)) }
     let(:user) { VCAP::CloudController::User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
     let(:org) { VCAP::CloudController::Organization.make(billing_enabled: true) }
     let(:space) { VCAP::CloudController::Space.make(:organization => org) }
     let(:app) { VCAP::CloudController::AppFactory.make(:space => space) }
@@ -48,7 +47,6 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
       it_behaves_like :no_access
     end
   end

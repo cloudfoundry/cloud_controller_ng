@@ -2,20 +2,37 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe RouteAccess, type: :access do
-    before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
-    end
+    subject(:access) { RouteAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
 
-    subject(:access) { RouteAccess.new(double(:context, user: user, roles: roles)) }
     let(:user) { VCAP::CloudController::User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(:organization => org) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(:owning_organization => org) }
+    let(:app) { VCAP::CloudController::AppFactory.make(space: space) }
     let(:object) { VCAP::CloudController::Route.make(:domain => domain, :space => space) }
 
-    it_should_behave_like :admin_full_access
+    before do
+      SecurityContext.set(user, token)
+    end
+
+    after do
+      SecurityContext.clear
+    end
+
+    context 'admin' do
+      include_context :admin_setup
+      it_behaves_like :full_access
+
+      context 'changing the space' do
+        it 'succeeds even if not a space developer in the new space' do
+          new_space = Space.make(organization: object.space.organization)
+
+          object.space = new_space
+          expect(subject.update?(object)).to be_truthy
+        end
+      end
+    end
 
     context 'organization manager' do
       before { org.add_manager(user) }
@@ -43,7 +60,7 @@ module VCAP::CloudController
         space.add_manager(user)
       end
 
-      it_behaves_like :full_access
+      it_behaves_like :read_only
     end
 
     context 'space developer' do
@@ -53,6 +70,23 @@ module VCAP::CloudController
       end
 
       it_behaves_like :full_access
+
+      context 'changing the space' do
+        it 'succeeds if a space developer in the new space' do
+          new_space = Space.make(organization: object.space.organization)
+          new_space.add_developer(user)
+
+          object.space = new_space
+          expect(subject.update?(object)).to be_truthy
+        end
+
+        it 'fails if not a space developer in the new space' do
+          new_space = Space.make(organization: object.space.organization)
+
+          object.space = new_space
+          expect(subject.update?(object)).to be_falsey
+        end
+      end
     end
 
     context 'space auditor' do
@@ -89,14 +123,13 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
       it_behaves_like :no_access
     end
 
     context 'any user using client without cloud_controller.write' do
+      let(:token) {{'scope' => ['cloud_controller.read']}}
+
       before do
-        token = { 'scope' => 'cloud_controller.read'}
-        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
         org.add_billing_manager(user)
@@ -110,9 +143,9 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
+      let(:token) {{'scope' => []}}
+
       before do
-        token = { 'scope' => ''}
-        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
         org.add_billing_manager(user)

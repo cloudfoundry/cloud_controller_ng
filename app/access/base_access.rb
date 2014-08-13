@@ -4,7 +4,7 @@ module VCAP::CloudController
 
     # Only if the token has the appropriate scope, use these methods to check if the user is authorized to access the resource
 
-    def create?(object)
+    def create?(object, params=nil)
       admin_user?
     end
 
@@ -13,7 +13,11 @@ module VCAP::CloudController
       @ok_read = (admin_user? || object_is_visible_to_user?(object, context.user))
     end
 
-    def update?(object)
+    def read_for_update?(object, params=nil)
+      admin_user?
+    end
+
+    def update?(object, params=nil)
       admin_user?
     end
 
@@ -33,6 +37,10 @@ module VCAP::CloudController
     end
 
     def create_with_token?(_)
+      admin_user? || has_write_scope?
+    end
+
+    def read_for_update_with_token?(_)
       admin_user? || has_write_scope?
     end
 

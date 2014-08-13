@@ -1,17 +1,23 @@
 module VCAP::CloudController
   class ServiceInstanceAccess < BaseAccess
-    def create?(service_instance)
+    def create?(service_instance, params=nil)
       return true if admin_user?
       return false if service_instance.in_suspended_org?
-      service_instance.space.developers.include?(context.user)
+      service_instance.space.developers.include?(context.user) && allowed?(service_instance)
     end
 
-    def update?(service_instance)
-      create?(service_instance)
+    def read_for_update?(service_instance, params=nil)
+      create?(service_instance, params)
+    end
+
+    def update?(service_instance, params=nil)
+      create?(service_instance, params)
     end
 
     def delete?(service_instance)
-      create?(service_instance)
+      return true if admin_user?
+      return false if service_instance.in_suspended_org?
+      service_instance.space.developers.include?(context.user)
     end
 
     def read_permissions?(service_instance)
@@ -22,6 +28,19 @@ module VCAP::CloudController
       read_with_token?(service_instance) || has_read_permissions_scope?
     end
 
+    def allowed?(service_instance)
+      return true if admin_user?
+
+      case (service_instance.type)
+      when 'managed_service_instance'
+        ManagedServiceInstanceAccess.new(context).allowed?(service_instance)
+      when 'user_provided_service_instance'
+        UserProvidedServiceInstanceAccess.new(context).allowed?(service_instance)
+      else
+        false
+      end
+    end
+
     private
 
     def has_read_permissions_scope?
@@ -29,9 +48,9 @@ module VCAP::CloudController
     end
   end
 
-  class ManagedServiceInstanceAccess < ServiceInstanceAccess
-  end
-
   class UserProvidedServiceInstanceAccess < ServiceInstanceAccess
+    def allowed?(service_instance)
+      true
+    end
   end
 end

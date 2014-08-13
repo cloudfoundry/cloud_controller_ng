@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class BuildpackAccess < BaseAccess
-    def upload?(_)
+    def upload?(*_)
       admin_user?
     end
 

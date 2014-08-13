@@ -11,7 +11,7 @@ module VCAP::CloudController
     post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", :reset
 
     def reset
-      validate_access(:reset, model, user, roles)
+      validate_access(:reset, model)
 
       repository = Repositories::Runtime::AppUsageEventRepository.new
       repository.purge_and_reseed_started_apps!

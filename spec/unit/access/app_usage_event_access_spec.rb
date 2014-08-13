@@ -2,15 +2,18 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe AppUsageEventAccess, type: :access do
+    subject(:access) { AppUsageEventAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    let(:user) { VCAP::CloudController::User.make }
+    let(:object) { VCAP::CloudController::AppUsageEvent.make }
+
     before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
+      SecurityContext.set(user, token)
     end
 
-    subject(:access) { AppUsageEventAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:object) { VCAP::CloudController::AppUsageEvent.make }
+    after do
+      SecurityContext.clear
+    end
 
     context 'an admin' do
       include_context :admin_setup
@@ -24,9 +27,15 @@ module VCAP::CloudController
       it { is_expected.not_to allow_op_on_object :reset, VCAP::CloudController::AppUsageEvent }
     end
 
+    context 'using a client without cloud_controller.read' do
+      let(:token) { {'scope' => []}}
+      it_behaves_like :no_access
+      it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::AppUsageEvent }
+      it { is_expected.not_to allow_op_on_object :reset, VCAP::CloudController::AppUsageEvent }
+    end
+
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
       it_behaves_like :no_access
       it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::AppUsageEvent }
       it { is_expected.not_to allow_op_on_object :reset, VCAP::CloudController::AppUsageEvent }

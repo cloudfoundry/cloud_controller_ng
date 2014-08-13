@@ -2,15 +2,18 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe ServiceUsageEventAccess, type: :access do
+    subject(:access) { ServiceUsageEventAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    let(:user) { VCAP::CloudController::User.make }
+    let(:object) { VCAP::CloudController::ServiceUsageEvent.make }
+
     before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
+      SecurityContext.set(user, token)
     end
 
-    subject(:access) { ServiceUsageEventAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:object) { VCAP::CloudController::ServiceUsageEvent.make }
+    after do
+      SecurityContext.clear
+    end
 
     context 'an admin' do
       include_context :admin_setup
@@ -26,7 +29,6 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
       it_behaves_like :no_access
       it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::ServiceUsageEvent }
       it { is_expected.not_to allow_op_on_object :reset, VCAP::CloudController::ServiceUsageEvent }

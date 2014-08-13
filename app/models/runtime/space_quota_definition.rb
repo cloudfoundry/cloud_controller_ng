@@ -1,6 +1,8 @@
 module VCAP::CloudController
   class SpaceQuotaDefinition < Sequel::Model
-    many_to_one :organization
+    class OrganizationAlreadySet < RuntimeError; end
+
+    many_to_one :organization, before_set: :validate_change_organization
     one_to_many :spaces
 
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
@@ -18,6 +20,10 @@ module VCAP::CloudController
       validates_presence :memory_limit
       validates_presence :organization
       validates_unique [:organization_id, :name]
+    end
+
+    def validate_change_organization(new_org)
+      raise OrganizationAlreadySet unless organization.nil? || organization.guid == new_org.guid
     end
 
     def self.user_visibility_filter(user)

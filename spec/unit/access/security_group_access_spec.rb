@@ -2,15 +2,18 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe SecurityGroupAccess, type: :access do
+    subject(:access) { SecurityGroupAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    let(:user) { User.make }
+    let(:object) { SecurityGroup.make }
+
     before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(SecurityContext).to receive(:token).and_return(token)
+      SecurityContext.set(user, token)
     end
 
-    subject(:access) { SecurityGroupAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:object) { SecurityGroup.make }
+    after do
+      SecurityContext.clear
+    end
 
     context 'admin' do
       it_should_behave_like :admin_full_access
@@ -18,6 +21,7 @@ module VCAP::CloudController
 
     context 'non admin' do
       it_should_behave_like :no_access
+      it { is_expected.not_to allow_op_on_object :index, object }
     end
   end
 end

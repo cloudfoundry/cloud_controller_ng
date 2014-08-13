@@ -16,7 +16,8 @@ module VCAP::CloudController
     one_to_many :app_events,
                 dataset: -> { VCAP::CloudController::AppEvent.filter(app: apps) }
 
-    one_to_many :private_domains, key: :owning_organization_id
+    one_to_many :private_domains, key: :owning_organization_id,
+                before_add: proc { |org, private_domain| private_domain.addable_to_organization!(org)}
     one_to_many :service_plan_visibilities
     many_to_one :quota_definition
 
@@ -45,7 +46,8 @@ module VCAP::CloudController
                   end
                 }
 
-    one_to_many :space_quota_definitions
+    one_to_many :space_quota_definitions,
+                before_add: proc { |org, quota| quota.organization.id == org.id }
 
     add_association_dependencies spaces: :destroy,
       service_instances: :destroy,
@@ -117,21 +119,7 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_unique   :name
-      validate_only_admin_can_update(:billing_enabled)
-      validate_only_admin_can_update(:quota_definition_id)
       validates_format ORG_NAME_REGEX, :name
-    end
-
-    def validate_only_admin_can_enable_on_new(field_name)
-      if new? && !!public_send(field_name)
-        require_admin_for(field_name)
-      end
-    end
-
-    def validate_only_admin_can_update(field_name)
-      if !new? && column_changed?(field_name)
-        require_admin_for(field_name)
-      end
     end
 
     def add_default_quota
@@ -161,11 +149,6 @@ module VCAP::CloudController
     end
 
     private
-    def require_admin_for(field_name)
-      unless VCAP::CloudController::SecurityContext.admin?
-        errors.add(field_name, :not_authorized)
-      end
-    end
 
     def memory_remaining
       memory_used = apps_dataset.sum(Sequel.*(:memory, :instances)) || 0

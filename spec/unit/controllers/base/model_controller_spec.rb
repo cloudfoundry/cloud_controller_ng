@@ -5,6 +5,51 @@ module VCAP::CloudController
   describe RestController::ModelController do
     let(:user) { User.make(active: true) }
 
+    describe "#validate_access" do
+      let(:access_context) { Security::AccessContext.new }
+      let(:obj) {double("test object")}
+      let(:fields) {{ "key" => 1 }}
+
+      before do
+        allow(Security::AccessContext).to receive(:new).and_return(access_context)
+
+        dep = {object_renderer: nil, collection_renderer: nil}
+        @model_controller = RestController::ModelController.new(
+          nil, FakeLogger.new([]), nil, {}, nil, nil, dep
+        )
+      end
+
+      it "checks if you can access an object" do
+        expect(access_context).to receive(:cannot?).with(:read_for_update_with_token, obj).ordered.and_return(false)
+        expect(access_context).to receive(:cannot?).with(:read_for_update, obj, fields).ordered.and_return(false)
+        @model_controller.validate_access(:read_for_update, obj, fields)
+
+        expect(access_context).to receive(:cannot?).with(:update_with_token, obj).ordered.and_return(false)
+        expect(access_context).to receive(:cannot?).with(:update, obj, fields).ordered.and_return(false)
+        @model_controller.validate_access(:update, obj, fields)
+      end
+
+      context "raises an error when it fails" do
+        it "on operation_with_token" do
+          expect(access_context).to receive(:cannot?).with(:read_for_update_with_token, obj).ordered.and_return(true)
+          expect{@model_controller.validate_access(:read_for_update, obj)}.to raise_error VCAP::Errors::ApiError
+
+          expect(access_context).to receive(:cannot?).with(:update_with_token, obj).ordered.and_return(true)
+          expect{@model_controller.validate_access(:update, obj)}.to raise_error VCAP::Errors::ApiError
+        end
+
+        it "on operation" do
+          expect(access_context).to receive(:cannot?).with(:read_for_update_with_token, obj).ordered.and_return(false)
+          expect(access_context).to receive(:cannot?).with(:read_for_update, obj, fields).ordered.and_return(true)
+          expect{@model_controller.validate_access(:read_for_update, obj, fields)}.to raise_error VCAP::Errors::ApiError
+
+          expect(access_context).to receive(:cannot?).with(:update_with_token, obj).ordered.and_return(false)
+          expect(access_context).to receive(:cannot?).with(:update, obj, fields).ordered.and_return(true)
+          expect{@model_controller.validate_access(:update, obj, fields)}.to raise_error VCAP::Errors::ApiError
+        end
+      end
+    end
+
     describe "common model controller behavior" do
       before do
         get "/v2/test_models", "", headers
@@ -70,10 +115,12 @@ module VCAP::CloudController
         expect_any_instance_of(TestModelsController).to receive(:before_create).with(no_args) do
           calls << :before_create
         end
+
         expect(TestModel).to receive(:create_from_hash) {
           calls << :create_from_hash
           TestModel.make
         }
+
         expect_any_instance_of(TestModelsController).to receive(:after_create).with(instance_of(TestModel)) do
           calls << :after_create
         end
@@ -110,6 +157,12 @@ module VCAP::CloudController
         expect(decoded_response["metadata"]["url"]).to eq(url)
         expect(decoded_response["entity"]["unique_value"]).to eq("foobar")
       end
+
+      it "allows extra fields to be included" do
+        post "/v2/test_models", MultiJson.dump({extra_field: true, required_attr: true, unique_value: "foobar"}), admin_headers
+
+        expect(last_response.status).to eq(201)
+      end
     end
 
     describe "#read" do
@@ -138,6 +191,7 @@ module VCAP::CloudController
 
     describe "#update" do
       let!(:model) { TestModel.make }
+      let(:fields) {{"unique_value" => "something"}}
 
       it "updates the data" do
         expect(model.updated_at).to be_nil
@@ -163,7 +217,7 @@ module VCAP::CloudController
       end
 
       it "returns not authorized if the user does not have access " do
-        put "/v2/test_models/#{model.guid}", MultiJson.dump({unique_value: "something"}), headers_for(user)
+        put "/v2/test_models/#{model.guid}", MultiJson.dump(fields), headers_for(user)
 
         expect(model.reload.unique_value).not_to eq("something")
         expect(decoded_response["code"]).to eq(10003)
@@ -175,7 +229,7 @@ module VCAP::CloudController
         expect(model).to receive(:lock!).ordered
         expect(model).to receive(:update_from_hash).ordered.and_call_original
 
-        put "/v2/test_models/#{model.guid}", MultiJson.dump({unique_value: "something"}), admin_headers
+        put "/v2/test_models/#{model.guid}", MultiJson.dump(fields), admin_headers
       end
 
       it "calls the hooks in the right order" do
@@ -184,17 +238,26 @@ module VCAP::CloudController
         expect_any_instance_of(TestModelsController).to receive(:before_update).with(model) do
           calls << :before_update
         end
+
+        expect_any_instance_of(TestModelsController).to receive(:validate_access).with(:read_for_update, model, fields) {
+          calls << :read_for_update
+        }
+
         expect_any_instance_of(TestModel).to receive(:update_from_hash) do
           calls << :update_from_hash
           model
         end
+
+        expect_any_instance_of(TestModelsController).to receive(:validate_access).with(:update, model, fields) {
+          calls << :update
+        }
+
         expect_any_instance_of(TestModelsController).to receive(:after_update).with(instance_of(TestModel)) do
           calls << :after_update
         end
 
-        put "/v2/test_models/#{model.guid}", MultiJson.dump({unique_value: "new value"}), admin_headers
-
-        expect(calls).to eq([:before_update, :update_from_hash, :after_update])
+        put "/v2/test_models/#{model.guid}", MultiJson.dump(fields), admin_headers
+        expect(calls).to eq([:before_update, :read_for_update, :update_from_hash, :update, :after_update])
       end
     end
 
@@ -304,13 +367,14 @@ module VCAP::CloudController
       let!(:model3) { TestModel.make(created_at: timestamp + 2.seconds) }
 
       it "paginates the dataset with query params" do
+        expect_any_instance_of(TestModelsController).to receive(:validate_access).with(:index, TestModel)
         expect_any_instance_of(RestController::PaginatedCollectionRenderer)
-          .to receive(:render_json).with(
-            TestModelsController,
-            anything,
-            anything,
-            anything,
-            anything,
+        .to receive(:render_json).with(
+          TestModelsController,
+          anything,
+          anything,
+          anything,
+          anything,
         ).and_call_original
 
         get "/v2/test_models", "", admin_headers
@@ -418,7 +482,7 @@ module VCAP::CloudController
         end
 
         it "returns not found for updates" do
-          put "/v2/test_models/99999", {}, admin_headers
+          put "/v2/test_models/99999", '{}', admin_headers
           expect(last_response.status).to eq(404)
           expect(decoded_response["code"]).to eq 999999999
           expect(decoded_response["description"]).to match(/Test Model Not Found/)
@@ -487,6 +551,63 @@ module VCAP::CloudController
     end
 
     describe "associated collections" do
+      describe "permissions" do
+        let(:model) { TestModel.make }
+        let(:associated_model1) { TestModelManyToOne.make }
+        let(:associated_model2) { TestModelManyToOne.make(test_model: model) }
+
+        context "when adding an associated object" do
+          it "succeeds when user has access to both objects" do
+            put "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model1.guid}", '{}', admin_headers
+
+            expect(last_response.status).to eq(201)
+            model.reload
+            expect(model.test_model_many_to_ones).to include(associated_model1)
+          end
+        end
+
+        context "when removing an associated object" do
+          it "succeeds when user has access to both objects in the association" do
+            associated_model2.save
+            expect(model.test_model_many_to_ones).to_not be_empty
+
+            delete "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model2.guid}", '{}', admin_headers
+
+            expect(last_response.status).to eq(201)
+            model.reload
+            expect(model.test_model_many_to_ones).to be_empty
+          end
+        end
+
+        context "user does not have access to the root association" do
+          context "because read_for_update? denies access" do
+            it "fails" do
+              expect_any_instance_of(TestModelAccess).to receive(:read_for_update?).with(
+                instance_of(TestModel), { 'test_model_many_to_one' => associated_model1.guid }).and_return(false)
+
+              put "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model1.guid}", '{}', admin_headers
+
+              expect(last_response.status).to eq(403)
+              model.reload
+              expect(model.test_model_many_to_ones).to_not include(associated_model1)
+            end
+          end
+
+          context "because update? denies access" do
+            it "fails" do
+              expect_any_instance_of(TestModelAccess).to receive(:update?).with(
+                instance_of(TestModel), { 'test_model_many_to_one' => associated_model1.guid }).and_return(false)
+
+              put "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model1.guid}", '{}', admin_headers
+
+              expect(last_response.status).to eq(403)
+              model.reload
+              expect(model.test_model_many_to_ones).to_not include(associated_model1)
+            end
+          end
+        end
+      end
+
       describe "to_many" do
         let(:model) { TestModel.make }
         let(:associated_model1) { TestModelManyToMany.make }
@@ -557,6 +678,12 @@ module VCAP::CloudController
               expect(decoded_response["total_results"]).to eq(2)
               found_guids = decoded_response["resources"].collect {|resource| resource["metadata"]["guid"]}
               expect(found_guids).to match_array([associated_model1.guid, associated_model2.guid])
+            end
+
+            it "fails when you do not have access to the associated model" do
+              allow_any_instance_of(TestModelManyToOneAccess).to receive(:index?).with(TestModelManyToOne).and_return(false)
+              get "/v2/test_models/#{model.guid}/test_model_many_to_ones", "", admin_headers
+              expect(last_response.status).to eq(403)
             end
           end
 

@@ -7,8 +7,14 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { is_expected.to have_associated :organization }
-      it { is_expected.to have_associated :spaces }
+      it { is_expected.to have_associated :organization, associated_instance: ->(space_quota) { space_quota.organization } }
+      it { is_expected.to have_associated :spaces, associated_instance: ->(space_quota) {Space.make(organization: space_quota.organization)} }
+
+      context "organization" do
+        it "fails when changing" do
+          expect{SpaceQuotaDefinition.make.organization = Organization.make}.to raise_error SpaceQuotaDefinition::OrganizationAlreadySet
+        end
+      end
     end
 
     describe "Validations" do
@@ -28,7 +34,7 @@ module VCAP::CloudController
 
     describe "#destroy" do
       it "nullifies space_quota_definition on space" do
-        space  = Space.make
+        space  = Space.make(organization: space_quota_definition.organization)
         space.space_quota_definition = space_quota_definition
         space.save
         expect { space_quota_definition.destroy }.to change { space.reload.space_quota_definition }.from(space_quota_definition).to(nil)

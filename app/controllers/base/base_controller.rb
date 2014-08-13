@@ -1,6 +1,7 @@
 require "cloud_controller/rest_controller/common_params"
 require "cloud_controller/rest_controller/messages"
 require "cloud_controller/rest_controller/routes"
+require "cloud_controller/security/access_context"
 
 module VCAP::CloudController::RestController
 
@@ -46,6 +47,7 @@ module VCAP::CloudController::RestController
       common_params = CommonParams.new(logger)
       @opts    = common_params.parse(params)
       @sinatra = sinatra
+      @access_context = Security::AccessContext.new
 
       inject_dependencies(dependencies)
     end
@@ -89,14 +91,14 @@ module VCAP::CloudController::RestController
     #
     # @return [User] User object for the currently active user
     def user
-      VCAP::CloudController::SecurityContext.current_user
+      @access_context.user
     end
 
     # Fetch the current roles in a Roles object.
     #
     # @return [Roles] Roles object that can be queried for roles
     def roles
-      VCAP::CloudController::SecurityContext.roles
+      @access_context.roles
     end
 
     # see Sinatra::Base#send_file

@@ -2,14 +2,10 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe ServiceBindingAccess, type: :access do
-    before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
-    end
+    subject(:access) { ServiceBindingAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
 
-    subject(:access) { ServiceBindingAccess.new(double(:context, user: user, roles: roles)) }
     let(:user) { VCAP::CloudController::User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
     let(:service) { VCAP::CloudController::Service.make }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(:organization => org) }
@@ -17,6 +13,14 @@ module VCAP::CloudController
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:space => space) }
 
     let(:object) { VCAP::CloudController::ServiceBinding.make(:app => app, :service_instance => service_instance) }
+
+    before do
+      SecurityContext.set(user, token)
+    end
+
+    after do
+      SecurityContext.clear
+    end
 
     it_should_behave_like :admin_full_access
 
@@ -26,7 +30,6 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
       it_behaves_like :no_access
     end
 
@@ -74,10 +77,10 @@ module VCAP::CloudController
         space.add_developer(user)
       end
 
-      it { is_expected.to be_able_to :create, object }
-      it { is_expected.to be_able_to :read, object }
-      it { is_expected.not_to be_able_to :update, object }
-      it { is_expected.to be_able_to :delete, object }
+      it { is_expected.to allow_op_on_object :create, object }
+      it { is_expected.to allow_op_on_object :read, object }
+      it { is_expected.not_to allow_op_on_object :read_for_update, object }
+      it { is_expected.to allow_op_on_object :delete, object }
 
       context 'when the organization is suspended' do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
@@ -86,9 +89,8 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.write' do
+      let(:token) {{'scope' => ['cloud_controller.read']}}
       before do
-        token = { 'scope' => 'cloud_controller.read'}
-        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
         org.add_billing_manager(user)
@@ -102,9 +104,8 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
+      let(:token) {{'scope' => []}}
       before do
-        token = { 'scope' => ''}
-        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
         org.add_billing_manager(user)

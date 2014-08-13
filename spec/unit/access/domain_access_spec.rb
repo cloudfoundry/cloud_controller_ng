@@ -2,26 +2,56 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe DomainAccess, type: :access do
-    before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(SecurityContext).to receive(:token).and_return(token)
-    end
+    subject(:access) { DomainAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
 
     let(:user) { User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
     let(:org) { Organization.make }
     let(:space) { Space.make(:organization => org) }
 
-    subject(:access) { DomainAccess.new(double(:context, user: user, roles: roles)) }
+    let(:object) { Domain.make }
+
+    before do
+      SecurityContext.set(user, token)
+    end
+
+    after do
+      SecurityContext.clear
+    end
 
     context 'when the domain is a private domain' do
-      let(:object) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:object) { PrivateDomain.make(owning_organization: org) }
 
-      it_behaves_like :admin_full_access
+      context 'admin' do
+        include_context :admin_setup
+        it_behaves_like :full_access
+
+        context 'changing organization' do
+          it 'succeeds even if not an org manager in the new org' do
+            object.owning_organization = Organization.make
+            object.owning_organization.add_user(user)
+            expect(subject.update?(object)).to be_truthy
+          end
+        end
+      end
 
       context 'organization manager' do
         before { org.add_manager(user) }
         it_behaves_like :full_access
+
+        context 'changing organization' do
+          it 'succeeds if an org manager in the new org' do
+            object.owning_organization = Organization.make
+            object.owning_organization.add_manager(user)
+            expect(subject.update?(object)).to be_truthy
+          end
+
+          it 'fails if not an org manager in the new org' do
+            object.owning_organization = Organization.make
+            object.owning_organization.add_user(user)
+            expect(subject.update?(object)).to be_falsey
+          end
+        end
       end
 
       context 'organization auditor' do
@@ -59,14 +89,13 @@ module VCAP::CloudController
 
       context 'a user that isnt logged in (defensive)' do
         let(:user) { nil }
-        let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
         it_behaves_like :no_access
       end
 
       context 'any user using client without cloud_controller.write' do
+        let(:token) {{'scope' => ['cloud_controller.read']}}
+
         before do
-          token = { 'scope' => 'cloud_controller.read'}
-          allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
           org.add_user(user)
           org.add_manager(user)
           org.add_billing_manager(user)
@@ -80,9 +109,9 @@ module VCAP::CloudController
       end
 
       context 'any user using client without cloud_controller.read' do
+        let(:token) {{'scope' => []}}
+
         before do
-          token = { 'scope' => ''}
-          allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
           org.add_user(user)
           org.add_manager(user)
           org.add_billing_manager(user)
@@ -97,21 +126,22 @@ module VCAP::CloudController
     end
 
     context 'when the domain is a shared domain' do
-      let(:object) { VCAP::CloudController::SharedDomain.make }
+      let(:object) { SharedDomain.make }
 
       it_behaves_like :admin_full_access
       it_behaves_like :read_only
 
       context 'a user that isnt logged in (defensive)' do
         let(:user) { nil }
-        let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
+        let(:token) {{'scope' => []}}
+
         it_behaves_like :no_access
       end
 
       context 'any user using client without cloud_controller.read' do
+        let(:token) {{'scope' => []}}
+
         before do
-          token = { 'scope' => ''}
-          allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
           org.add_user(user)
           org.add_manager(user)
           org.add_billing_manager(user)

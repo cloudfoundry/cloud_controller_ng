@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe "Associations" do
       it { is_expected.to have_associated :spaces }
-      it { is_expected.to have_associated :private_domains }
+      it { is_expected.to have_associated :private_domains, associated_instance: ->(org) { PrivateDomain.make(owning_organization: org) } }
       it { is_expected.to have_associated :service_plan_visibilities }
       it { is_expected.to have_associated :quota_definition }
       it { is_expected.to have_associated :domains, class: SharedDomain }
@@ -15,7 +15,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :managers, class: User }
       it { is_expected.to have_associated :billing_managers, class: User }
       it { is_expected.to have_associated :auditors, class: User }
-      it { is_expected.to have_associated :space_quota_definitions }
+      it { is_expected.to have_associated :space_quota_definitions, associated_instance: ->(org) { SpaceQuotaDefinition.make(organization: org) } }
 
       it "has associated apps" do
         app = App.make
@@ -115,42 +115,35 @@ module VCAP::CloudController
         end
       end
 
-      describe "billing_enabled" do
-        let(:organization) { Organization.make(billing_enabled: false) }
-        context "as an admin" do
-          before { allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true) }
-          it "allows updating" do
-            organization.billing_enabled = true
-            expect(organization).to be_valid
-          end
+      describe "space_quota_definitions" do
+        it "adds when in this org" do
+          org = Organization.make
+          quota = SpaceQuotaDefinition.make(organization: org)
+
+          expect { org.add_space_quota_definition(quota) }.to_not raise_error
         end
 
-        context "as a non-admin" do
-          before { allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(false) }
-          it "disallows updating" do
-            organization.billing_enabled = true
-            expect(organization).not_to be_valid
-          end
+        it "does not add when quota is in a different org" do
+          org = Organization.make
+          quota = SpaceQuotaDefinition.make
+
+          expect { org.add_space_quota_definition(quota) }.to raise_error
         end
       end
 
-      describe "quota_definition" do
-        let(:organization) { Organization.make(billing_enabled: false) }
-        let(:new_quota_definition) { QuotaDefinition.make }
-        context "as an admin" do
-          before { allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true) }
-          it "allows updating" do
-            organization.quota_definition = new_quota_definition
-            expect(organization).to be_valid
-          end
+      describe "private_domains" do
+        it "adds the domain when it belongs to this org" do
+          org = Organization.make
+          domain = PrivateDomain.make(owning_organization: org)
+
+          expect { org.add_private_domain(domain) }.to_not raise_error
         end
 
-        context "as a non-admin" do
-          before { allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(false) }
-          it "disallows updating" do
-            organization.quota_definition = new_quota_definition
-            expect(organization).not_to be_valid
-          end
+        it "does not add the domain when it belongs to a different org" do
+          org = Organization.make
+          domain = PrivateDomain.make
+
+          expect { org.add_private_domain(domain) }.to raise_error
         end
       end
     end

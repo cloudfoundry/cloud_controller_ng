@@ -2,28 +2,37 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe AppAccess, type: :access do
-    before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
-    end
-
-    subject(:access) { AppAccess.new(double(:context, user: user, roles: roles)) }
+    subject(:access) { AppAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
     let(:user) { VCAP::CloudController::User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(:organization => org) }
     let(:object) { VCAP::CloudController::AppFactory.make(:space => space) }
 
-    context 'admin' do
-      before do
-        allow(roles).to receive(:admin?).and_return(true)
-      end
+    before do
+      SecurityContext.set(user, token)
+    end
 
-      it_should_behave_like :admin_full_access
+    after do
+      SecurityContext.clear
+    end
+
+    context 'admin' do
+      include_context :admin_setup
+
+      it_behaves_like :full_access
 
       it 'allows user to :read_env' do
         expect(subject).to allow_op_on_object(:read_env, object)
       end
+
+      context 'when the space changes' do
+        it 'succeeds when not developer in the new space' do
+          object.space = Space.make
+          expect(subject.update?(object, nil)).to be_truthy
+        end
+      end
+
     end
 
     context 'space developer' do
@@ -38,10 +47,22 @@ module VCAP::CloudController
       end
 
       context 'when the organization is suspended' do
-        before { allow(object).to receive(:in_suspended_org?).and_return(true) }
+        before { object.space.organization.status = 'suspended' }
         it_behaves_like :read_only
       end
 
+      context 'when the space changes' do
+        it 'succeeds as a developer in the new space' do
+          object.space = Space.make(organization: org)
+          object.space.add_developer(user)
+          expect(subject.update?(object, nil)).to be_truthy
+        end
+
+        it 'fails when not developer in the new space' do
+          object.space = Space.make
+          expect(subject.update?(object, nil)).to be_falsey
+        end
+      end
     end
 
     context 'organization manager' do
@@ -105,9 +126,9 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.write' do
+      let(:token) {{'scope' => ['cloud_controller.read']}}
+
       before do
-        token = { 'scope' => 'cloud_controller.read'}
-        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
         org.add_billing_manager(user)
@@ -121,9 +142,9 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
+      let(:token) {{'scope' => []}}
+
       before do
-        token = { 'scope' => ''}
-        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
         org.add_billing_manager(user)

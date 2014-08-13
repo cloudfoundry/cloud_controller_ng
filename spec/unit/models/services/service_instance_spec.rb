@@ -34,6 +34,13 @@ module VCAP::CloudController
           expect(found_instance2.service_plan).to_not eq(service_plan)
         end
       end
+
+      describe "changing space" do
+        it "fails when existing service bindings are in a different space" do
+          service_instance.add_service_binding(ServiceBinding.make(service_instance: service_instance))
+          expect{service_instance.space = Space.make}.to raise_error ServiceInstance::InvalidServiceBinding
+        end
+      end
     end
 
     describe "#create" do

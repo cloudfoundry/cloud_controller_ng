@@ -16,7 +16,7 @@ module VCAP::CloudController
     query_parameters :name
 
     def create
-      validate_access(:create, ServiceBroker, user, roles)
+      validate_access(:create, ServiceBroker)
       params = CreateMessage.decode(body).extract
       broker = ServiceBroker.new(params)
 
@@ -36,7 +36,7 @@ module VCAP::CloudController
     end
 
     def update(guid)
-      validate_access(:update, ServiceBroker, user, roles)
+      validate_access(:update, ServiceBroker)
       params = UpdateMessage.decode(body).extract
       broker = ServiceBroker.find(guid: guid)
       return HTTP::NOT_FOUND unless broker
@@ -57,7 +57,7 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      validate_access(:delete, ServiceBroker, user, roles)
+      validate_access(:delete, ServiceBroker)
       broker = ServiceBroker.find(:guid => guid)
       return HTTP::NOT_FOUND unless broker
       VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker).execute!

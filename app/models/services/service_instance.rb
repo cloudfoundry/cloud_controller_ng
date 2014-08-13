@@ -17,7 +17,7 @@ module VCAP::CloudController
            }
 
     one_to_many :service_bindings, :before_add => :validate_service_binding
-    many_to_one :space
+    many_to_one :space, :after_set => :validate_space
 
     many_to_one :service_plan_sti_eager_load,
                 class: "VCAP::CloudController::ServicePlan",
@@ -132,6 +132,10 @@ module VCAP::CloudController
       if service_binding && service_binding.app.space != space
         raise InvalidServiceBinding.new(service_binding.id)
       end
+    end
+
+    def validate_space(space)
+       service_bindings.each{ |binding| validate_service_binding(binding) }
     end
 
     def service_instance_usage_event_repository

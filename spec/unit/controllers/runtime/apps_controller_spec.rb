@@ -278,7 +278,7 @@ module VCAP::CloudController
 
         context 'when the user is not a space developer' do
           it 'returns a JSON payload indicating they do not have permission to manage this instance' do
-            get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(auditor, {scopes: ['cloud_controller.read']}))
+            get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(auditor, {scopes: ['cloud_controller.read']}))
             expect(last_response.status).to eql(403)
             expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
           end
@@ -286,7 +286,7 @@ module VCAP::CloudController
 
         context 'when the user has only the cloud_controller.read scope' do
           it 'returns successfully' do
-            get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
+            get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
             expect(last_response.status).to eql(200)
             expect(parse(last_response.body)).to have_key("system_env_json")
             expect(parse(last_response.body)).to have_key("environment_json")
@@ -298,7 +298,7 @@ module VCAP::CloudController
           let!(:service_binding) { ServiceBinding.make(app: app_obj, service_instance: service_instance) }
 
           it 'returns system environment with VCAP_SERVICES'do
-            get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
+            get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
             expect(last_response.status).to eql(200)
 
             expect(decoded_response["system_env_json"].size).to eq(1)
@@ -348,7 +348,7 @@ module VCAP::CloudController
         let(:app_obj) { AppFactory.make(detected_buildpack: "buildpack-name") }
 
         it 'returns access denied' do
-          get "/v2/apps/#{app_obj.guid}/env", {}, json_headers(headers_for(developer))
+          get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer))
           expect(last_response.status).to eql(403)
         end
       end

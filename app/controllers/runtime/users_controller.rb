@@ -29,19 +29,6 @@ module VCAP::CloudController
       end
     end
 
-    def read(guid)
-      # only admins should have unfettered access to all users
-      # UserAccess allows all to read so org and space user lists show all users in those lists
-      raise Errors::ApiError.new_from_details("NotAuthorized") unless roles.admin?
-      super
-    end
-
-    def enumerate
-      raise Errors::ApiError.new_from_details("NotAuthenticated") unless user
-      raise Errors::ApiError.new_from_details("NotAuthorized") unless roles.admin?
-      super
-    end
-
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end

@@ -16,16 +16,6 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
-    def read(_)
-      raise Errors::ApiError.new_from_details("NotAuthorized") unless roles.admin?
-      super
-    end
-
-    def enumerate
-      raise Errors::ApiError.new_from_details("NotAuthorized") unless roles.admin?
-      super
-    end
-
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)
       if name_errors && name_errors.include?(:unique)

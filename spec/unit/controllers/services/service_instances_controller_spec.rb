@@ -641,7 +641,7 @@ module VCAP::CloudController
       end
 
       it "returns space quota exceeded message correctly" do
-        space.space_quota_definition = SpaceQuotaDefinition.make(total_services: 0)
+        space.space_quota_definition = SpaceQuotaDefinition.make(total_services: 0, organization: space.organization)
         space.save
         service_instance_params = {
           name: "name",
@@ -655,7 +655,7 @@ module VCAP::CloudController
       end
 
       it "returns service plan not allowed by space quota message correctly" do
-        space.space_quota_definition = SpaceQuotaDefinition.make(non_basic_services_allowed: false)
+        space.space_quota_definition = SpaceQuotaDefinition.make(non_basic_services_allowed: false, organization: space.organization)
         space.save
         service_instance_params = {
           name: "name",

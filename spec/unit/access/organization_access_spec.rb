@@ -2,30 +2,63 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe OrganizationAccess, type: :access do
+    subject(:access) { OrganizationAccess.new(Security::AccessContext.new) }
+    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
+    let(:user) { VCAP::CloudController::User.make }
+    let(:object) { VCAP::CloudController::Organization.make }
+
     before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
       FeatureFlag.make(name: 'user_org_creation', enabled: false)
+      SecurityContext.set(user, token)
     end
 
-    subject(:access) { OrganizationAccess.new(double(:context, user: user, roles: roles)) }
-    let(:object) { VCAP::CloudController::Organization.make }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
+    after do
+      SecurityContext.clear
+    end
 
-    it_should_behave_like :admin_full_access
-
-    context 'an admin of the organization' do
+    context 'admin' do
       include_context :admin_setup
+      it_behaves_like :full_access
 
-      context 'changing the name' do
-        before { object.name = 'my new name' }
+      it 'can set billing_enabled' do
+        object.billing_enabled = !object.billing_enabled
+        expect(subject.update?(object)).to be_truthy
+      end
+
+      it 'can set quota_definition' do
+        object.quota_definition = QuotaDefinition.make
+        expect(subject.update?(object)).to be_truthy
+      end
+    end
+
+    context 'a manager for the organization' do
+      before do
+        object.add_manager(user)
+        object.add_manager(User.make)
+      end
+
+      context 'with an active organization' do
+        it { is_expected.not_to allow_op_on_object :create, object }
+        it { is_expected.not_to allow_op_on_object :delete, object }
+        it { is_expected.to allow_op_on_object :read, object }
+        it { is_expected.to allow_op_on_object :read_for_update, object }
         it { is_expected.to allow_op_on_object :update, object }
+        it { is_expected.to allow_op_on_object :index, object.class }
       end
 
       context 'with a suspended organization' do
-        before { object.set(status: 'suspended') }
-        it_behaves_like :full_access
+        before { object.status = 'suspended' }
+        it_behaves_like :read_only
+      end
+
+      it 'cannot set billing_enabled' do
+        object.billing_enabled = !object.billing_enabled
+        expect(subject.read_for_update?(object, { 'billing_enabled' => 1 })).to be_falsey
+      end
+
+      it 'cannot set quota_definition' do
+        object.quota_definition = QuotaDefinition.make
+        expect(subject.read_for_update?(object, { 'quota_definition_guid' => 1 })).to be_falsey
       end
     end
 
@@ -56,36 +89,15 @@ module VCAP::CloudController
       it_behaves_like :read_only
     end
 
-    context 'a manager for the organization' do
-      before { object.add_manager(user) }
-
-      context 'with an active organization' do
-        it { is_expected.not_to allow_op_on_object :create, object }
-        it { is_expected.to allow_op_on_object :read, object }
-        it { is_expected.to allow_op_on_object :update, object }
-        it { is_expected.not_to allow_op_on_object :delete, object }
-      end
-
-      context 'changing the name' do
-        before { object.name = 'my new name' }
-        it { is_expected.to allow_op_on_object :update, object }
-      end
-
-      context 'with a suspended organization' do
-        before { object.set(status: 'suspended') }
-        it_behaves_like :read_only
-      end
-    end
-
     context 'an auditor for the organization' do
       before { object.add_auditor(user) }
       it_behaves_like :read_only
     end
 
     context 'any user using client without cloud_controller.write' do
+      let(:token) { { 'scope' => ['cloud_controller.read'] } }
+
       before do
-        token = { 'scope' => 'cloud_controller.read'}
-        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         object.add_user(user)
         object.add_manager(user)
         object.add_billing_manager(user)
@@ -96,9 +108,9 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
+      let(:token) { { 'scope' => [] } }
+
       before do
-        token = { 'scope' => ''}
-        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         object.add_user(user)
         object.add_manager(user)
         object.add_billing_manager(user)

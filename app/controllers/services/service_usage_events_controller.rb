@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     post '/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances', :reset
     def reset
-      validate_access(:reset, model, user, roles)
+      validate_access(:reset, model)
 
       repository = Repositories::Services::ServiceUsageEventRepository.new
       repository.purge_and_reseed_service_instances!

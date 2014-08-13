@@ -62,7 +62,7 @@ module VCAP::CloudController
       end
 
       it "returns NOT AUTHORIZED (403) for non admins" do
-        put "/v2/buildpacks/#{buildpack2.guid}", {}, headers_for(user)
+        put "/v2/buildpacks/#{buildpack2.guid}", '{}', headers_for(user)
         expect(last_response.status).to eq(403)
       end
     end
@@ -76,7 +76,7 @@ module VCAP::CloudController
       after { Delayed::Worker.delay_jobs = true }
 
       it "returns NOT AUTHORIZED (403) for non admins" do
-        delete "/v2/buildpacks/#{buildpack1.guid}", {}, headers_for(user)
+        delete "/v2/buildpacks/#{buildpack1.guid}", '{}', headers_for(user)
         expect(last_response.status).to eq(403)
       end
 

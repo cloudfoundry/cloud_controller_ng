@@ -1,14 +1,14 @@
 module VCAP::CloudController
   class ServiceUsageEventAccess < BaseAccess
-    def index?(object_class)
+    def index?(*_)
       admin_user?
     end
 
-    def reset?(object_class)
+    def reset?(*_)
       admin_user?
     end
 
-    def reset_with_token?(object_class)
+    def reset_with_token?(_)
       admin_user?
     end
   end

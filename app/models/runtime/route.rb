@@ -6,7 +6,7 @@ module VCAP::CloudController
     class InvalidAppRelation < VCAP::Errors::InvalidRelation; end
 
     many_to_one :domain
-    many_to_one :space
+    many_to_one :space, after_set: :validate_changed_space
 
     many_to_many :apps,
       before_add:   :validate_app,
@@ -62,6 +62,11 @@ module VCAP::CloudController
       end
     end
 
+    def validate_changed_space(new_space)
+      apps.each{ |app| validate(app) }
+      domain && domain.addable_to_organization!(new_space.organization)
+    end
+
     def self.user_visibility_filter(user)
       orgs = Organization.filter(Sequel.or(
         managers: [user],
@@ -98,12 +103,18 @@ module VCAP::CloudController
     end
 
     def validate_domain
-      return unless domain
+        errors.add(:domain, :invalid_relation) if !valid_domain
+    end
+
+    def valid_domain
+      return true unless domain
 
       if (domain.shared? && !host.present?) ||
         (space && !domain.usable_by_organization?(space.organization))
-        errors.add(:domain, :invalid_relation)
+        return false
       end
+
+      true
     end
 
     def validate_total_routes

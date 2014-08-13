@@ -18,7 +18,7 @@ module VCAP::CloudController
     one_to_many :service_bindings
     one_to_many :events, :class => VCAP::CloudController::AppEvent
     many_to_one :admin_buildpack, class: VCAP::CloudController::Buildpack
-    many_to_one :space
+    many_to_one :space, after_set: :validate_space
     many_to_one :stack
     many_to_many :routes, before_add: :validate_route, after_add: :mark_routes_changed, after_remove: :mark_routes_changed
 
@@ -337,6 +337,13 @@ module VCAP::CloudController
     def database_uri
       service_uris = service_bindings.map { |binding| binding.credentials["uri"] }.compact
       DatabaseUriGenerator.new(service_uris).database_uri
+    end
+
+    def validate_space(space)
+      objection = Errors::InvalidRouteRelation.new(space.guid)
+
+      raise objection unless routes.all?{ |route| route.space_id == space.id }
+      service_bindings.each{ |binding| binding.validate_app_and_service_instance(self, binding.service_instance)}
     end
 
     def validate_route(route)

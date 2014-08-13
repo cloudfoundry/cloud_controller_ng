@@ -6,8 +6,65 @@ module VCAP::CloudController
 
     describe "Associations" do
       it { is_expected.to have_associated :domain }
-      it { is_expected.to have_associated :space }
+      it { is_expected.to have_associated :space, associated_instance: ->(route) { Space.make(organization: route.domain.owning_organization) } }
       it { is_expected.to have_associated :apps, associated_instance: ->(route) { App.make(space: route.space) } }
+
+      context "changing space" do
+        context "apps" do
+          it "succeeds with no apps" do
+            route = Route.make(domain: SharedDomain.make)
+            expect { route.space = Space.make }.not_to raise_error
+          end
+
+          it "fails with apps in a different space" do
+            route = Route.make(space: AppFactory.make.space)
+            expect { route.space = Space.make }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
+          end
+        end
+
+        context "with domain" do
+          it "succeeds if its a shared domain" do
+            route = Route.make(domain: SharedDomain.make)
+            expect { route.space = Space.make }.not_to raise_error
+          end
+
+          context "private domain" do
+            let(:org) { Organization.make }
+            let(:domain) { PrivateDomain.make(owning_organization: org) }
+            let(:route) { Route.make(domain: domain, space: Space.make(organization: org)) }
+
+            it "succeeds if in the same organization" do
+              expect { route.space = Space.make(organization: org) }.not_to raise_error
+            end
+
+            it "fails if in a different organization" do
+              expect { route.space = Space.make }.to raise_error
+            end
+          end
+        end
+      end
+
+      context "changing domain" do
+        it "succeeds if it's a shared domain" do
+          route        = Route.make(domain: SharedDomain.make)
+          route.domain = SharedDomain.make
+          expect { route.save }.not_to raise_error
+        end
+
+        context "private domain" do
+          it "succeeds if in the same organization" do
+            route        = Route.make(domain: SharedDomain.make)
+            route.domain = PrivateDomain.make(owning_organization: route.space.organization)
+            expect { route.save }.not_to raise_error
+          end
+
+          it "fails if in a different organization" do
+            route        = Route.make(domain: SharedDomain.make)
+            route.domain = PrivateDomain.make
+            expect { route.save }.to raise_error
+          end
+        end
+      end
     end
 
     describe "Validations" do
@@ -39,16 +96,18 @@ module VCAP::CloudController
         end
 
         it "should allow an empty host" do
-          Route.make(:space => space,
-            :domain         => domain,
-            :host           => "")
+          Route.make(
+            :space  => space,
+            :domain => domain,
+            :host   => "")
         end
 
         it "should not allow a blank host" do
           expect {
-            Route.make(:space => space,
-              :domain         => domain,
-              :host           => " ")
+            Route.make(
+              :space  => space,
+              :domain => domain,
+              :host   => " ")
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
@@ -104,7 +163,7 @@ module VCAP::CloudController
         end
 
         context "for space quotas" do
-          let(:space_quota) { QuotaDefinition.make }
+          let(:space_quota) { SpaceQuotaDefinition.make(organization: subject.space.organization) }
 
           context "on create" do
             context "when not exceeding total allowed routes" do
@@ -145,7 +204,7 @@ module VCAP::CloudController
         end
 
         describe "quota evaluation order" do
-          let(:space_quota) { QuotaDefinition.make }
+          let(:space_quota) { SpaceQuotaDefinition.make(organization: subject.space.organization) }
 
           before do
             org_quota.total_routes   = 0
@@ -209,14 +268,15 @@ module VCAP::CloudController
             :domain => domain,
             :space  => space,
           )
-          expect(r.as_summary_json).to eq({
-            :guid   => r.guid,
-            :host   => r.host,
-            :domain => {
-              :guid => r.domain.guid,
-              :name => r.domain.name
-            }
-          })
+          expect(r.as_summary_json).to eq(
+            {
+              :guid   => r.guid,
+              :host   => r.host,
+              :domain => {
+                :guid => r.domain.guid,
+                :name => r.domain.name
+              }
+            })
         end
       end
 

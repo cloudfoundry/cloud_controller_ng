@@ -1,13 +1,17 @@
 module VCAP::CloudController
   class AppAccess < BaseAccess
-    def create?(app)
+    def create?(app, params=nil)
       return true if admin_user?
       return false if app.in_suspended_org?
       app.space.developers.include?(context.user)
     end
 
-    def update?(app)
-      create?(app)
+    def read_for_update?(app, params=nil)
+      create?(app, params)
+    end
+
+    def update?(app, params=nil)
+      create?(app, params)
     end
 
     def delete?(app)
@@ -15,8 +19,8 @@ module VCAP::CloudController
     end
 
     def read_env?(app)
-     return true if admin_user?
-     app.space.developers.include?(context.user)
+      return true if admin_user?
+      app.space.developers.include?(context.user)
     end
 
     def read_env_with_token?(app)

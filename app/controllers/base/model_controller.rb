@@ -3,7 +3,6 @@ module VCAP::CloudController::RestController
   # Wraps models and presents collection and per object rest end points
   class ModelController < BaseController
     include Routes
-    include ::Allowy::Context
 
     def inject_dependencies(dependencies)
       super
@@ -24,7 +23,7 @@ module VCAP::CloudController::RestController
       obj = nil
       model.db.transaction do
         obj = model.create_from_hash(request_attrs)
-        validate_access(:create, obj, user, roles)
+        validate_access(:create, obj, request_attrs)
       end
 
       after_create(obj)
@@ -41,7 +40,8 @@ module VCAP::CloudController::RestController
     # @param [String] guid The GUID of the object to read.
     def read(guid)
       logger.debug "cc.read", model: self.class.model_class_name, guid: guid
-      obj = find_guid_and_validate_access(:read, guid)
+      obj = find_guid(guid)
+      validate_access(:read, obj)
       object_renderer.render_json(self.class, obj, @opts)
     end
 
@@ -49,30 +49,25 @@ module VCAP::CloudController::RestController
     #
     # @param [String] guid The GUID of the object to update.
     def update(guid)
-      obj = find_for_update(guid)
+      json_msg = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(stringify_keys: true)
+      logger.debug "cc.update", guid: guid, attributes: request_attrs
+      raise InvalidRequest unless request_attrs
+
+      obj = find_guid(guid)
 
       before_update(obj)
 
       model.db.transaction do
         obj.lock!
+        validate_access(:read_for_update, obj, request_attrs)
         obj.update_from_hash(request_attrs)
+        validate_access(:update, obj, request_attrs)
       end
 
       after_update(obj)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
-    end
-
-    def find_for_update(guid)
-      obj = find_guid_and_validate_access(:update, guid)
-
-      json_msg = self.class::UpdateMessage.decode(body)
-      @request_attrs = json_msg.extract(stringify_keys: true)
-
-      logger.debug "cc.update", guid: guid, attributes: request_attrs
-
-      raise InvalidRequest unless request_attrs
-      obj
     end
 
     def do_delete(obj)
@@ -89,7 +84,7 @@ module VCAP::CloudController::RestController
 
     # Enumerate operation
     def enumerate
-      validate_access(:index, model, user, roles)
+      validate_access(:index, model)
 
       collection_renderer.render_json(
         self.class,
@@ -113,7 +108,8 @@ module VCAP::CloudController::RestController
     def enumerate_related(guid, name)
       logger.debug "cc.enumerate.related", guid: guid, association: name
 
-      obj = find_guid_and_validate_access(:read, guid)
+      obj = find_guid(guid)
+      validate_access(:read, obj)
 
       associated_model = obj.class.association_reflection(name).associated_class
 
@@ -121,15 +117,17 @@ module VCAP::CloudController::RestController
 
       associated_path = "#{self.class.url_for_guid(guid)}/#{name}"
 
+      validate_access(:index, associated_model)
+      
       filtered_dataset =
-        Query.filtered_dataset_from_query_params(
-          associated_model,
-          obj.user_visible_relationship_dataset(name,
-                                                VCAP::CloudController::SecurityContext.current_user,
-                                                SecurityContext.admin?),
-          associated_controller.query_parameters,
-          @opts
-        )
+      Query.filtered_dataset_from_query_params(
+        associated_model,
+        obj.user_visible_relationship_dataset(name,
+                                              VCAP::CloudController::SecurityContext.current_user,
+                                              SecurityContext.admin?),
+        associated_controller.query_parameters,
+        @opts
+      )
 
       collection_renderer.render_json(
         associated_controller,
@@ -165,7 +163,7 @@ module VCAP::CloudController::RestController
       do_related("remove", guid, name, other_guid)
     end
 
-    # Remove a related object.
+    # Add or Remove a related object.
     #
     # @param [String] verb The type of operation to perform.
     #
@@ -183,11 +181,15 @@ module VCAP::CloudController::RestController
 
       @request_attrs = {singular_name => other_guid}
 
-      obj = find_guid_and_validate_access(:update, guid)
+      obj = find_guid(guid)
 
       before_update(obj)
 
-      obj.send("#{verb}_#{singular_name}_by_guid", other_guid)
+      model.db.transaction do
+        validate_access(:read_for_update, obj, request_attrs)
+        obj.send("#{verb}_#{singular_name}_by_guid", other_guid)
+        validate_access(:update, obj, request_attrs)
+      end
 
       after_update(obj)
 
@@ -206,13 +208,14 @@ module VCAP::CloudController::RestController
     # @param [User] user The user for which to validate access.
     #
     # @param [Roles] The roles for the current user or client.
-    def validate_access(op, obj, user, roles)
-      if cannot?("#{op}_with_token".to_sym, obj)
+    def validate_access(op, obj, *args)
+      if @access_context.cannot?("#{op}_with_token".to_sym, obj)
+        logger.info("allowy.access-denied.insufficient-scope", op: "#{op}_with_token", obj: obj, user: user, roles: roles)
         raise VCAP::Errors::ApiError.new_from_details('InsufficientScope')
       end
 
-      if cannot?(op, obj)
-        logger.info("allowy.access-denied", op: op, obj: obj, user: user, roles: roles)
+      if @access_context.cannot?(op, obj, *args)
+        logger.info("allowy.access-denied.not-authorized", op: op, obj: obj, user: user, roles: roles)
         raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
       end
     end
@@ -267,9 +270,14 @@ module VCAP::CloudController::RestController
     # @return [Sequel::Model] The sequel model for the object, only if
     # the use has access.
     def find_guid_and_validate_access(op, guid, find_model = model)
+      obj = find_guid(guid, find_model)
+      validate_access(op, obj)
+      obj
+    end
+
+    def find_guid(guid, find_model = model)
       obj = find_model.find(guid: guid)
       raise self.class.not_found_exception(guid) if obj.nil?
-      validate_access(op, obj, user, roles)
       obj
     end
 

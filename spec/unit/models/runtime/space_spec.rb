@@ -49,10 +49,16 @@ module VCAP::CloudController
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
+
+      context "organization" do
+        it "fails when changing" do
+          expect{Space.make.organization = Organization.make}.to raise_error Space::OrganizationAlreadySet
+        end
+      end
     end
 
     describe "Associations" do
-      it { is_expected.to have_associated :organization }
+      it { is_expected.to have_associated :organization, associated_instance: ->(space) { space.organization } }
       it { is_expected.to have_associated :apps }
       it { is_expected.to have_associated :events }
       it { is_expected.to have_associated :service_instances, class: UserProvidedServiceInstance }
@@ -61,7 +67,21 @@ module VCAP::CloudController
       it { is_expected.to have_associated :security_groups }
       it { is_expected.to have_associated :default_users, class: User }
       it { is_expected.to have_associated :domains, class: SharedDomain }
-      it { is_expected.to have_associated :space_quota_definition }
+      it { is_expected.to have_associated :space_quota_definition, associated_instance: ->(space) {SpaceQuotaDefinition.make(organization: space.organization)} }
+
+      describe "space_quota_definition" do
+        subject(:space) { Space.make }
+
+        it "fails when the space quota is from another organization" do
+          new_quota = SpaceQuotaDefinition.make
+          space.space_quota_definition = new_quota
+          expect{ space.save }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it "allows nil" do
+          expect{space.space_quota_definition = nil }.not_to raise_error
+        end
+      end
 
       describe "domains" do
         subject(:space) { Space.make(organization: organization) }
@@ -320,18 +340,15 @@ module VCAP::CloudController
     end
 
     describe "#has_remaining_memory" do
-      let(:quota) do
-        SpaceQuotaDefinition.make(:memory_limit => 500)
-      end
+      let(:space_quota) {SpaceQuotaDefinition.make(:memory_limit => 500)}
+      let(:space) {Space.make(space_quota_definition: space_quota, organization: space_quota.organization)}
 
       it "returns true if there is enough memory remaining when no apps are running" do
-        space = Space.make(:space_quota_definition => quota)
         expect(space.has_remaining_memory(500)).to eq(true)
         expect(space.has_remaining_memory(501)).to eq(false)
       end
 
       it "returns true if there is enough memory remaining when apps are consuming memory" do
-        space = Space.make(:space_quota_definition => quota)
         AppFactory.make(:space => space,
                         :memory => 200,
                         :instances => 2)

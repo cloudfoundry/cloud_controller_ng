@@ -33,6 +33,7 @@ module VCAP::CloudController
   class TestModelDestroyDepAccess < BaseAccess; end
   class TestModelNullifyDepAccess < BaseAccess; end
   class TestModelManyToOneAccess < BaseAccess; end
+  class TestModelManyToManyAccess < BaseAccess; end
 
   class TestModelsController < RestController::ModelController
     define_attributes do
@@ -49,7 +50,9 @@ module VCAP::CloudController
     define_routes
 
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      obj = find_guid(guid)
+      validate_access(:delete, obj)
+      do_delete(obj)
     end
 
     def self.translate_validation_exception(e, attributes)

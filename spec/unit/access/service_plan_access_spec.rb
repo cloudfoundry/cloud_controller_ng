@@ -2,17 +2,20 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe ServicePlanAccess, type: :access do
+    subject(:access) { ServicePlanAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+
+    let(:user) { VCAP::CloudController::User.make }
+    let(:service) { VCAP::CloudController::Service.make }
+    let(:object) { VCAP::CloudController::ServicePlan.make(:service => service) }
+
     before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
+      SecurityContext.set(user, token)
     end
 
-    subject(:access) { ServicePlanAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:service) { VCAP::CloudController::Service.make }
-
-    let(:object) { VCAP::CloudController::ServicePlan.make(:service => service) }
+    after do
+      SecurityContext.clear
+    end
 
     it_should_behave_like :admin_full_access
 
@@ -22,15 +25,11 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
       it_behaves_like :no_access
     end
 
     context 'any user using client without cloud_controller.read' do
-      before do
-        token = { 'scope' => ''}
-        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
-      end
+      let(:token) { {'scope' => []}}
 
       it_behaves_like :no_access
     end

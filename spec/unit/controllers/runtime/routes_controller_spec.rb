@@ -29,7 +29,17 @@ module VCAP::CloudController
     end
 
     describe "Permissions" do
-      shared_examples "route permissions" do
+      context "with a custom domain" do
+        include_context "permissions"
+
+        before do
+          @domain_a = PrivateDomain.make(:owning_organization => @org_a)
+          @obj_a = Route.make(:domain => @domain_a, :space => @space_a)
+
+          @domain_b = PrivateDomain.make(:owning_organization => @org_b)
+          @obj_b = Route.make(:domain => @domain_b, :space => @space_b)
+        end
+
         describe "Org Level Permissions" do
           describe "OrgManager" do
             let(:member_a) { @org_a_manager }
@@ -104,24 +114,10 @@ module VCAP::CloudController
           end
         end
       end
-
-      context "with a custom domain" do
-        include_context "permissions"
-
-        before do
-          @domain_a = PrivateDomain.make(:owning_organization => @org_a)
-          @obj_a = Route.make(:domain => @domain_a, :space => @space_a)
-
-          @domain_b = PrivateDomain.make(:owning_organization => @org_b)
-          @obj_b = Route.make(:domain => @domain_b, :space => @space_b)
-        end
-
-        include_examples "route permissions"
-      end
     end
 
     describe "Validation messages" do
-      let(:domain) { Domain.make}
+      let(:domain) { SharedDomain.make}
       let(:space)  { Space.make }
 
       it "returns the RouteHostTaken message" do
@@ -135,7 +131,7 @@ module VCAP::CloudController
       end
 
       it "returns the SpaceQuotaTotalRoutesExceeded message" do
-        quota_definition = SpaceQuotaDefinition.make(total_routes: 0)
+        quota_definition = SpaceQuotaDefinition.make(total_routes: 0, organization: space.organization)
         space.space_quota_definition = quota_definition
         space.save
 

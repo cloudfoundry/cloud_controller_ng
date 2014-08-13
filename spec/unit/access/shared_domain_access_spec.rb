@@ -2,26 +2,28 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe SharedDomainAccess, type: :access do
+    subject(:access) { SharedDomainAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+
+    let(:user) { VCAP::CloudController::User.make }
+    let(:object) { VCAP::CloudController::SharedDomain.new }
+
     before do
-      token = {'scope' => scope }
-      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
+      SecurityContext.set(user, token)
     end
 
-    subject(:access) { SharedDomainAccess.new(double(:context, user: user, roles: roles)) }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
-    let(:object) { VCAP::CloudController::SharedDomain.new }
-    let(:scope) { 'cloud_controller.read cloud_controller.write cloud_controller.admin' }
+    after do
+      SecurityContext.clear
+    end
 
     it_should_behave_like :admin_full_access
 
     context 'a logged in user' do
-      let(:scope) { 'cloud_controller.read cloud_controller.write' }
       it_behaves_like :read_only
     end
 
     context 'any user using client without cloud_controller.read' do
-      let(:scope) { '' }
+      let(:token) {{ 'scope' => [] }}
       it_behaves_like :no_access
     end
   end

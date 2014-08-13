@@ -126,7 +126,7 @@ module VCAP::CloudController
         let(:domain) { PrivateDomain.make(owning_organization: organization) }
 
         it "has its GUID and URL in the response body" do
-          get "/v2/domains/#{domain.guid}", {}, json_headers(headers_for(user))
+          get "/v2/domains/#{domain.guid}", '{}', json_headers(headers_for(user))
 
           expect(last_response.status).to eq 200
           expect(decoded_response["entity"]["owning_organization_guid"]).to eq organization.guid
@@ -139,7 +139,7 @@ module VCAP::CloudController
         let(:domain) { SharedDomain.make }
 
         it "has its GUID as null, and no url key in the response body" do
-          get "/v2/domains/#{domain.guid}", {}, json_headers(admin_headers)
+          get "/v2/domains/#{domain.guid}", '{}', json_headers(admin_headers)
 
           expect(last_response.status).to eq(200)
 

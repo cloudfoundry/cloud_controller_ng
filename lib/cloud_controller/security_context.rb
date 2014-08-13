@@ -14,10 +14,6 @@ module VCAP::CloudController
       Thread.current[:vcap_user]
     end
 
-    def self.admin_or_system?
-      admin? || current_user.nil?
-    end
-
     def self.admin?
       roles.admin?
     end

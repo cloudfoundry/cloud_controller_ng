@@ -2,21 +2,48 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe ServiceInstanceAccess, type: :access do
-    before do
-      token = {'scope' => 'cloud_controller.read cloud_controller.write'}
-      allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
-    end
-
-    subject(:access) { ServiceInstanceAccess.new(double(:context, user: user, roles: roles)) }
+    subject(:access) { ServiceInstanceAccess.new(Security::AccessContext.new) }
+    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
     let(:user) { VCAP::CloudController::User.make }
-    let(:roles) { double(:roles, :admin? => false, :none? => false, :present? => true) }
+
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(:organization => org) }
     let(:service) { VCAP::CloudController::Service.make }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(:service => service) }
     let(:object) { VCAP::CloudController::ManagedServiceInstance.make(:service_plan => service_plan, :space => space) }
 
-    it_should_behave_like :admin_full_access
+    before do
+      SecurityContext.set(user, token)
+    end
+
+    after do
+      SecurityContext.clear
+    end
+
+    context 'admin' do
+      include_context :admin_setup
+      it_behaves_like :full_access
+
+      context 'managed service instance' do
+        it 'does not delegate to the ManagedServiceInstanceAccess' do
+          expect_any_instance_of(ManagedServiceInstanceAccess).not_to receive(:allowed?).with(object)
+          subject.create?(object)
+          subject.read_for_update?(object)
+          subject.update?(object)
+        end
+      end
+
+      context 'user provided service instance' do
+        let(:object) {VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+
+        it 'does not delegate to the UserProvidedServiceInstanceAccess' do
+          expect_any_instance_of(UserProvidedServiceInstanceAccess).not_to receive(:allowed?).with(object)
+          subject.create?(object)
+          subject.read_for_update?(object)
+          subject.update?(object)
+        end
+      end
+    end
 
     context 'space developer' do
       before do
@@ -33,7 +60,6 @@ module VCAP::CloudController
       it 'allows the user to read the permissions of the service instance' do
         expect(subject).to allow_op_on_object(:read_permissions, object)
       end
-
     end
 
     context 'space auditor' do
@@ -118,7 +144,8 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
+      let(:token) {{ 'scope' => [] }}
+
       it_behaves_like :no_access
 
       it 'does not allow the user to read the permissions of the service instance' do
@@ -127,9 +154,9 @@ module VCAP::CloudController
     end
 
     describe 'a user with full org and space permissions using a client with limited scope' do
+      let(:token) {{'scope' => scope}}
+
       before do
-        token = { 'scope' => scope }
-        allow(VCAP::CloudController::SecurityContext).to receive(:token).and_return(token)
         org.add_user(user)
         org.add_manager(user)
         org.add_billing_manager(user)
@@ -140,13 +167,13 @@ module VCAP::CloudController
       end
 
       context 'with only cloud_controller.read scope' do
-        let(:scope) { 'cloud_controller.read' }
+        let(:scope) { ['cloud_controller.read'] }
         it_behaves_like :read_only
         it { is_expected.to allow_op_on_object(:read_permissions, object) }
       end
 
       context 'with only cloud_controller_service_permissions.read scope' do
-       let(:scope) { 'cloud_controller_service_permissions.read' }
+        let(:scope) { ['cloud_controller_service_permissions.read'] }
 
         it 'allows the user to read the permissions of the service instance' do
           expect(subject).to allow_op_on_object(:read_permissions, object)
@@ -157,10 +184,28 @@ module VCAP::CloudController
       end
 
       context 'with no cloud_controller scopes' do
-        let(:scope) { '' }
+        let(:scope) { [] }
 
         it_behaves_like :no_access
         it { is_expected.not_to allow_op_on_object(:read_permissions, object) }
+      end
+    end
+
+    describe "#allowed?" do
+      context 'managed service instance' do
+        it 'delegates to the ManagedServiceInstanceAccess' do
+          expect_any_instance_of(ManagedServiceInstanceAccess).to receive(:allowed?).with(object)
+          subject.allowed?(object)
+        end
+      end
+
+      context 'user provided service instance' do
+        let(:object) {VCAP::CloudController::UserProvidedServiceInstance.make(:space => space) }
+
+        it 'delegates to the UserProvidedServiceInstanceAccess' do
+          expect_any_instance_of(UserProvidedServiceInstanceAccess).to receive(:allowed?).with(object)
+          subject.allowed?(object)
+        end
       end
     end
   end
