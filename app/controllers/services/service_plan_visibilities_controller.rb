@@ -5,6 +5,8 @@ module VCAP::CloudController
       to_one :organization
     end
 
+    query_parameters :organization_guid, :service_plan_guid
+
     def self.translate_validation_exception(e, attributes)
       associations_errors = e.errors.on([:organization_id, :service_plan_id])
       if associations_errors && associations_errors.include?(:unique)

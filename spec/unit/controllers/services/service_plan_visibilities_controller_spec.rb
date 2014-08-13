@@ -46,5 +46,10 @@ module VCAP::CloudController
       user_sees_empty_enumerate("SpaceManager",   :@space_a_manager,       :@space_b_manager)
       user_sees_empty_enumerate("SpaceAuditor",   :@space_a_auditor,       :@space_b_auditor)
     end
+
+    describe "Query Parameters" do
+      it { expect(described_class).to be_queryable_by(:organization_guid) }
+      it { expect(described_class).to be_queryable_by(:service_plan_guid) }
+    end
   end
 end
