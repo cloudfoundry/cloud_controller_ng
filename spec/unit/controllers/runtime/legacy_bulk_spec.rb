@@ -139,6 +139,21 @@ module VCAP::CloudController
           }
           expect(decoded_response["results"].size).to eq(0)
         end
+
+        it "returns results not including diego apps" do
+          environment = {
+            "CF_DIEGO_RUN_BETA" => "true"
+          }
+          app = AppFactory.make(environment_json: environment)
+
+          get "/bulk/apps", {
+            "batch_size" => 20,
+            "bulk_token" => "{}",
+          }
+          expect(last_response.status).to eq(200)
+          expect(decoded_response["results"]).to_not include(app.guid)
+          expect(decoded_response["results"].size).to eq(5)
+        end
       end
     end
 

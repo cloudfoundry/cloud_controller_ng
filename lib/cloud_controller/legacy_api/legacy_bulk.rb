@@ -77,7 +77,7 @@ module VCAP::CloudController
       App.where(
           ["id > ?", last_id],
           "deleted_at IS NULL"
-      ).order(:id).limit(batch_size).each do |app|
+      ).where(diego: false).order(:id).limit(batch_size).each do |app|
         hash = {}
         export_attributes = [
           :instances,
