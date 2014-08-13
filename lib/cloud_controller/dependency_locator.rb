@@ -15,9 +15,14 @@ module CloudController
     include Singleton
     include VCAP::CloudController
 
-    def initialize(config = VCAP::CloudController::Config.config, message_bus = VCAP::CloudController::Config.message_bus)
+    attr_reader :backends
+
+    def initialize(config = VCAP::CloudController::Config.config,
+                   message_bus = VCAP::CloudController::Config.message_bus,
+                  backends=VCAP::CloudController::Config.backends)
       @config = config
       @message_bus = message_bus
+      @backends = backends
     end
 
     def health_manager_client
@@ -160,13 +165,6 @@ module CloudController
       @diego_client ||= Diego::Client.new(Diego::ServiceRegistry.new(message_bus))
     end
 
-    def diego_traditional_protocol
-      @diego_traditional_protocol ||= Diego::Traditional::Protocol.new(blobstore_url_generator)
-    end
-
-    def diego_messenger
-      @diego_messenger ||= Diego::Messenger.new(config[:diego], message_bus, diego_traditional_protocol)
-    end
 
     def instances_reporter
       @instances_reporter ||= VCAP::CloudController::CompositeInstancesReporter.new(diego_client, health_manager_client)

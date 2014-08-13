@@ -2,9 +2,9 @@ module VCAP::CloudController
   module Diego
     module Docker
       class StagingCompletionHandler
-        def initialize(message_bus, messenger)
+        def initialize(message_bus, backends)
           @message_bus = message_bus
-          @messenger = messenger
+          @backends = backends
         end
 
         def subscribe!
@@ -19,7 +19,7 @@ module VCAP::CloudController
                 else
                   app.mark_as_staged
                   app.save
-                  @messenger.send_desire_request(app)
+                  @backends.find_one_to_run(app).start
                 end
               else
                 logger.info(

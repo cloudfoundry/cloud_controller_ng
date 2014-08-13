@@ -14,7 +14,7 @@ module VCAP::CloudController
     let(:backends) { Backends.new(config_hash, message_bus, dea_pool, stager_pool) }
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:diego_messenger).and_return(diego_messenger)
+      allow(Diego::Messenger).to receive(:new).and_return(diego_messenger)
       Dea::Client.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
       AppObserver.configure(backends)
     end

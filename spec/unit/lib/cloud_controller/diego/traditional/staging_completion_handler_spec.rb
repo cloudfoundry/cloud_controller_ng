@@ -39,9 +39,13 @@ module VCAP::CloudController
       fail_response.except("task_id")
     end
 
-    let(:diego_messenger) { instance_double(Diego::Messenger, send_desire_request: nil) }
+    let(:backend) do
+      instance_double(Diego::Backend, start: nil)
+    end
 
-    subject { Diego::Traditional::StagingCompletionHandler.new(message_bus, diego_messenger) }
+    let(:backends) { instance_double(Backends, find_one_to_run: backend) }
+
+    subject { Diego::Traditional::StagingCompletionHandler.new(message_bus, backends) }
 
     before do
       allow(Steno).to receive(:logger).with("cc.stager").and_return(logger)
@@ -84,11 +88,11 @@ module VCAP::CloudController
 
         context "when running in diego is not enabled" do
           it "starts the app instances" do
-            expect(Dea::Client).to receive(:start) do |received_app, received_hash|
+            expect(backends).to receive(:find_one_to_run) do |received_app|
               expect(received_app.guid).to eq(app_id)
-              expect(received_hash).to eq({:instances_to_start => 3})
+              backend
             end
-            expect(diego_messenger).not_to receive(:send_desire_request)
+            expect(backend).to receive(:start)
             publish_staging_result(success_response)
           end
 
@@ -109,10 +113,11 @@ module VCAP::CloudController
           let(:environment) { {"CF_DIEGO_RUN_BETA" => "true"} }
 
           it "desires the app using the diego client" do
-            expect(Dea::Client).not_to receive(:start)
-            expect(diego_messenger).to receive(:send_desire_request) do |received_app|
+            expect(backends).to receive(:find_one_to_run) do |received_app|
               expect(received_app.guid).to eq(app_id)
+              backend
             end
+            expect(backend).to receive(:start)
             publish_staging_result(success_response)
           end
         end
@@ -169,7 +174,7 @@ module VCAP::CloudController
           end
 
           it "should not attempt to start anything" do
-            expect(diego_messenger).not_to have_received(:send_desire_request)
+            expect(backend).not_to have_received(:start)
             expect(Dea::Client).not_to have_received(:start)
           end
 
@@ -185,7 +190,7 @@ module VCAP::CloudController
           end
 
           it "should not attempt to start anything" do
-            expect(diego_messenger).not_to have_received(:send_desire_request)
+            expect(backend).not_to have_received(:start)
             expect(Dea::Client).not_to have_received(:start)
           end
 

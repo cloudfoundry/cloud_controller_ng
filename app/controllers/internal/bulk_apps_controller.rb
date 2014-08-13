@@ -26,13 +26,19 @@ module VCAP::CloudController
       staged_apps = staged_apps_query.all
 
       dependency_locator = ::CloudController::DependencyLocator.instance
-      diego_traditional_protocol = dependency_locator.diego_traditional_protocol
+      backends = dependency_locator.backends
 
       apps = []
       id_for_next_token = nil
       staged_apps.each do |app|
-        apps << diego_traditional_protocol.desire_app_message(app).as_json
-        id_for_next_token = app.id
+        msg = backends.find_one_to_run(app).desire_app_message
+
+        # Todo: This will be addressed in story #76741262, "Nsync's bulk endpoint should include docker-based apps"
+        # for now do NOT include docker apps
+        if !msg.has_key?("docker_image")
+          apps << msg
+          id_for_next_token = app.id
+        end
       end
 
       MultiJson.dump(

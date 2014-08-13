@@ -1,5 +1,7 @@
 require "cloud_controller/dea/backend"
 require "cloud_controller/diego/backend"
+require "cloud_controller/diego/traditional/protocol"
+require "cloud_controller/diego/docker/protocol"
 
 module VCAP::CloudController
   class Backends
@@ -25,18 +27,43 @@ module VCAP::CloudController
     end
 
     def find_one_to_stage(app)
-      app.stage_with_diego? ? diego_backend(app) : dea_backend(app)
+      if app.stage_with_diego?
+        if app.docker_image.present?
+          diego_docker_backend(app)
+        else
+          diego_traditional_backend(app)
+        end
+      else
+        dea_backend(app)
+      end
     end
 
     def find_one_to_run(app)
-      app.run_with_diego? ? diego_backend(app) : dea_backend(app)
+      if app.run_with_diego?
+        if app.docker_image.present?
+          diego_docker_backend(app)
+        else
+          diego_traditional_backend(app)
+        end
+      else
+        dea_backend(app)
+      end
     end
 
     private
 
-    def diego_backend(app)
+    def diego_docker_backend(app)
+      protocol = Diego::Docker::Protocol.new
+      messenger = Diego::Messenger.new(@config[:diego], @message_bus, protocol)
+      Diego::Backend.new(app, messenger, protocol)
+    end
+
+    def diego_traditional_backend(app)
       dependency_locator = CloudController::DependencyLocator.instance
-      Diego::Backend.new(app, dependency_locator.diego_messenger)
+      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator)
+      messenger = Diego::Messenger.new(@config[:diego], @message_bus, protocol)
+
+      Diego::Backend.new(app, messenger, protocol)
     end
 
     def dea_backend(app)

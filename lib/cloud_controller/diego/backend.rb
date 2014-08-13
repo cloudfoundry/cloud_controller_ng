@@ -1,9 +1,10 @@
 module VCAP::CloudController
   module Diego
     class Backend
-      def initialize(app, messenger)
+      def initialize(app, messenger, protocol)
         @app = app
         @messenger = messenger
+        @protocol = protocol
       end
 
       def requires_restage?
@@ -26,6 +27,10 @@ module VCAP::CloudController
 
       def stop
         @messenger.send_desire_request(@app)
+      end
+
+      def desire_app_message
+        @protocol.desire_app_message(@app)
       end
     end
   end

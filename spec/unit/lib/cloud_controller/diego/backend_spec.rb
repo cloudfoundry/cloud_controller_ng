@@ -11,8 +11,12 @@ module VCAP::CloudController
         instance_double(App)
       end
 
+      let (:protocol) do
+        instance_double(Diego::Traditional::Protocol, desire_app_message: {})
+      end
+
       subject(:backend) do
-        Backend.new(app, messenger)
+        Backend.new(app, messenger, protocol)
       end
 
       describe "#requires_restage?" do
@@ -80,6 +84,13 @@ module VCAP::CloudController
 
         it "desires an app, relying on its state to convey the change" do
           expect(messenger).to have_received(:send_desire_request).with(app)
+        end
+      end
+
+      describe "#desire_app_message" do
+        it "gets the procotol's desire_app_message" do
+          expect(backend.desire_app_message).to eq({})
+          expect(protocol).to have_received(:desire_app_message).with(app)
         end
       end
     end

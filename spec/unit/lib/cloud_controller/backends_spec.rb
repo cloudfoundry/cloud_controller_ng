@@ -60,7 +60,7 @@ module VCAP::CloudController
     end
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:diego_messenger).and_return(messenger)
+      allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator).and_return(blobstore_url_generator)
       allow(Dea::Backend).to receive(:new).and_call_original
       allow(Diego::Backend).to receive(:new).and_call_original
       allow(Diego::Messenger).to receive(:new).and_call_original
@@ -128,9 +128,24 @@ module VCAP::CloudController
           expect(backend).to be_a(Diego::Backend)
         end
 
-        it "instantiates the backend with the correct dependencies" do
-          backend
-          expect(Diego::Backend).to have_received(:new).with(app, messenger)
+        context "and the app is traditional" do
+          it "instantiates the backend with the traditional protocol" do
+            expect(Diego::Traditional::Protocol).to receive(:new).with(blobstore_url_generator)
+            backend
+            expect(Diego::Backend).to have_received(:new)
+          end
+        end
+
+        context "and the app is docker based" do
+          let(:docker_image) do
+            "fake-docker-image"
+          end
+
+          it "instantiates the backend with the docker protocol" do
+            expect(Diego::Docker::Protocol).to receive(:new)
+            backend
+            expect(Diego::Backend).to have_received(:new)
+          end
         end
       end
 
@@ -164,9 +179,24 @@ module VCAP::CloudController
           expect(backend).to be_a(Diego::Backend)
         end
 
-        it "instantiates the backend with the correct dependencies" do
-          backend
-          expect(Diego::Backend).to have_received(:new).with(app, messenger)
+        context "and the app is traditional" do
+          it "instantiates the backend with the correct dependencies" do
+            expect(Diego::Traditional::Protocol).to receive(:new).with(blobstore_url_generator)
+            backend
+            expect(Diego::Backend).to have_received(:new)
+          end
+        end
+
+        context "and the app has a docker image" do
+          let(:docker_image) do
+            "fake-docker-image"
+          end
+
+          it "instantiates the backend with the correct dependencies" do
+            expect(Diego::Docker::Protocol).to receive(:new)
+            backend
+            expect(Diego::Backend).to have_received(:new)
+          end
         end
       end
 

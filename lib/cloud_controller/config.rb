@@ -2,6 +2,7 @@ require "vcap/config"
 require "cloud_controller/account_capacity"
 require "uri"
 require "cloud_controller/diego/traditional/staging_completion_handler"
+require "cloud_controller/diego/docker/staging_completion_handler"
 
 # Config template for cloud controller
 module VCAP::CloudController
@@ -201,7 +202,7 @@ module VCAP::CloudController
         merge_defaults(config)
       end
 
-      attr_reader :config, :message_bus
+      attr_reader :config, :message_bus, :backends
 
       def configure_components(config)
         @config = config
@@ -220,6 +221,7 @@ module VCAP::CloudController
         @message_bus = message_bus
         stager_pool = Dea::StagerPool.new(@config, message_bus)
         dea_pool = Dea::Pool.new(message_bus)
+        @backends = Backends.new(@config, message_bus, dea_pool, stager_pool)
         dependency_locator = CloudController::DependencyLocator.instance
 
         blobstore_url_generator = dependency_locator.blobstore_url_generator
@@ -227,13 +229,11 @@ module VCAP::CloudController
         diego_client = dependency_locator.diego_client
         diego_client.connect!
 
-        diego_messenger = dependency_locator.diego_messenger
-
         Dea::Client.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 
-        Diego::Traditional::StagingCompletionHandler.new(message_bus, diego_messenger).subscribe!
+        Diego::Traditional::StagingCompletionHandler.new(message_bus, @backends).subscribe!
+        Diego::Docker::StagingCompletionHandler.new(message_bus, @backends).subscribe!
 
-        backends = Backends.new(@config, message_bus, dea_pool, stager_pool)
         AppObserver.configure(backends)
 
         LegacyBulk.configure(@config, message_bus)

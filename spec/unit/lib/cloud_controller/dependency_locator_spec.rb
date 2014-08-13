@@ -2,8 +2,9 @@ require "spec_helper"
 require "cloud_controller/dependency_locator"
 
 describe CloudController::DependencyLocator do
-  subject(:locator) { CloudController::DependencyLocator.send(:new, config) }
+  subject(:locator) { CloudController::DependencyLocator.send(:new, config, message_bus) }
 
+  let(:message_bus) { VCAP::CloudController::Config.message_bus }
   let(:config) { TestConfig.config }
 
   describe "#health_manager_client" do
@@ -315,10 +316,11 @@ describe CloudController::DependencyLocator do
     end
   end
 
-  describe "#diego_messenger" do
-    it "returns the diego messenger" do
-      expect(locator.diego_messenger).to be_an_instance_of(VCAP::CloudController::Diego::Messenger)
+  describe "#backends" do
+    it "returns the backends" do
+      expect(locator.backends).to be_an_instance_of(VCAP::CloudController::Backends)
     end
+
   end
 
   describe "#instances_reporter" do

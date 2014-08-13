@@ -19,16 +19,18 @@ module VCAP::CloudController
           message_bus
         end
 
-        let(:messenger) do
-          instance_double(Diego::Messenger, send_desire_request: nil)
+        let(:backend) do
+          instance_double(Diego::Backend, start: nil)
         end
+
+        let(:backends) { instance_double(Backends, find_one_to_run: backend) }
 
         let(:app) do
           AppFactory.make(staging_task_id: "fake-staging-task-id")
         end
 
         subject(:handler) do
-          StagingCompletionHandler.new(message_bus, messenger)
+          StagingCompletionHandler.new(message_bus, backends)
         end
 
         before do
@@ -57,7 +59,8 @@ module VCAP::CloudController
 
           it "sends desires the app on Diego" do
             handler.subscribe!
-            expect(messenger).to have_received(:send_desire_request).with(app)
+            expect(backends).to have_received(:find_one_to_run).with(app)
+            expect(backend).to have_received(:start)
           end
 
           context "when the app_id is invalid" do
@@ -70,7 +73,8 @@ module VCAP::CloudController
             it "returns without sending a desire request for the app" do
               handler.subscribe!
 
-              expect(messenger).not_to have_received(:send_desire_request)
+              expect(backends).not_to have_received(:find_one_to_run)
+              expect(backend).not_to have_received(:start)
             end
 
             it "logs info about an unknown app for the CF operator" do
@@ -95,7 +99,8 @@ module VCAP::CloudController
             it "returns without sending a desired request for the app" do
               handler.subscribe!
 
-              expect(messenger).not_to have_received(:send_desire_request)
+              expect(backends).not_to have_received(:find_one_to_run)
+              expect(backend).not_to have_received(:start)
             end
 
             it "logs info about an invalid task id for the CF operator and returns" do
@@ -134,7 +139,8 @@ module VCAP::CloudController
           it "returns without sending a desired request for the app" do
             handler.subscribe!
 
-            expect(messenger).not_to have_received(:send_desire_request)
+            expect(backends).not_to have_received(:find_one_to_run)
+            expect(backend).not_to have_received(:start)
           end
         end
       end

@@ -4,9 +4,9 @@ module VCAP::CloudController
       class StagingCompletionHandler
         attr_reader :message_bus
 
-        def initialize(message_bus, diego_messenger)
+        def initialize(message_bus, backends)
           @message_bus = message_bus
-          @diego_messenger = diego_messenger
+          @backends = backends
           @staging_response_schema = Membrane::SchemaParser.parse do
             {
               "app_id" => String,
@@ -56,11 +56,7 @@ module VCAP::CloudController
           app.update_detected_buildpack(payload["detected_buildpack"], payload["buildpack_key"])
           app.current_droplet.update_start_command(payload["detected_start_command"])
 
-          if app.run_with_diego?
-            @diego_messenger.send_desire_request(app)
-          else
-            Dea::Client.start(app, instances_to_start: app.instances)
-          end
+          @backends.find_one_to_run(app).start
         end
 
         def get_app(logger, payload)
