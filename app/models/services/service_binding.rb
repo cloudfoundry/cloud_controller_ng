@@ -1,7 +1,6 @@
 module VCAP::CloudController
   class ServiceBinding < Sequel::Model
     class InvalidAppAndServiceRelation < StandardError; end
-    class InvalidLoggingServiceBinding < StandardError; end
 
     many_to_one :app
     many_to_one :service_instance
@@ -32,10 +31,8 @@ module VCAP::CloudController
     def validate_logging_service_binding
       return if syslog_drain_url.blank?
 
-      error_msg = "Service is not advertised as a logging service. Please contact the service provider."
       service_advertised_as_logging_service = service_instance.service_plan.service.requires.include?("syslog_drain")
-
-      raise InvalidLoggingServiceBinding.new(error_msg) unless service_advertised_as_logging_service
+      raise VCAP::Errors::ApiError.new_from_details("InvalidLoggingServiceBinding") unless service_advertised_as_logging_service
     end
 
     def validate_app_and_service_instance(app, service_instance)
