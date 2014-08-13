@@ -34,5 +34,11 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    private
+
+    def before_create
+      FeatureFlag.raise_unless_enabled!('route_creation')
+    end
   end
 end

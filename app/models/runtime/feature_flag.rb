@@ -9,7 +9,8 @@ module VCAP::CloudController
       user_org_creation: false,
       private_domain_creation: true,
       app_bits_upload: true,
-      app_scaling: true
+      app_scaling: true,
+      route_creation: true,
     }.freeze
 
     export_attributes :name, :enabled, :error_message

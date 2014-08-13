@@ -7,7 +7,8 @@ resource "Feature Flags (experimental)", :type => :api do
   authenticated_request
 
   shared_context "name_parameter" do
-    parameter :name, "The name of the feature flag", valid_values: ["user_org_creation", "app_bits_upload", "private_domain_creation", "app_scaling"]
+    parameter :name, "The name of the feature flag",
+      valid_values: ["user_org_creation", "app_bits_upload", "private_domain_creation", "app_scaling", "route_creation"]
   end
 
   shared_context "updatable_fields" do
@@ -22,7 +23,7 @@ resource "Feature Flags (experimental)", :type => :api do
       client.get "/v2/config/feature_flags", {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(4)
+      expect(parsed_response.length).to eq(5)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -58,6 +59,15 @@ resource "Feature Flags (experimental)", :type => :api do
           'overridden'    => true,
           'error_message' => 'foobar',
           'url'           => '/v2/config/feature_flags/private_domain_creation'
+        })
+      expect(parsed_response).to include(
+        {
+          'name'          => 'route_creation',
+          'default_value' => true,
+          'enabled'       => true,
+          'overridden'    => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/route_creation'
         })
     end
   end
@@ -130,6 +140,24 @@ resource "Feature Flags (experimental)", :type => :api do
           'overridden'    => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/private_domain_creation'
+        })
+    end
+  end
+
+  get "/v2/config/feature_flags/route_creation" do
+    example "Get the Route Creation feature flag" do
+      explanation "When enabled, a space developer can create routes in a space. When disabled, no users can create routes."
+      client.get "/v2/config/feature_flags/route_creation", {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+        {
+          'name'          => 'route_creation',
+          'default_value' => true,
+          'enabled'       => true,
+          'overridden'    => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/route_creation'
         })
     end
   end
