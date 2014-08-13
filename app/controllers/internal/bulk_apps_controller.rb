@@ -32,13 +32,8 @@ module VCAP::CloudController
       id_for_next_token = nil
       staged_apps.each do |app|
         msg = backends.find_one_to_run(app).desire_app_message
-
-        # Todo: This will be addressed in story #76741262, "Nsync's bulk endpoint should include docker-based apps"
-        # for now do NOT include docker apps
-        if !msg.has_key?("docker_image")
-          apps << msg
-          id_for_next_token = app.id
-        end
+        apps << msg
+        id_for_next_token = app.id
       end
 
       MultiJson.dump(

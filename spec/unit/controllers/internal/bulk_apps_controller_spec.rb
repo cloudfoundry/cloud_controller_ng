@@ -207,7 +207,7 @@ module VCAP::CloudController
           expect(decoded_response["apps"].size).to eq(0)
         end
 
-        it "does not return docker apps" do
+        it "does return docker apps" do
           app = make_diego_app(id: 6, state: "STARTED", docker_image: "fake-docker-image")
           app.save
 
@@ -217,7 +217,7 @@ module VCAP::CloudController
           }
 
           expect(last_response.status).to eq(200)
-          expect(decoded_response["apps"].size).to eq(App.count - 1)
+          expect(decoded_response["apps"].size).to eq(App.count)
         end
 
         it "does not return unstaged apps" do
