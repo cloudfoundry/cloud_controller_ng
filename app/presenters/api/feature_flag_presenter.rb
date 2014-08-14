@@ -12,8 +12,6 @@ class FeatureFlagPresenter < ApiPresenter
     {
       name: @name,
       enabled: @object.nil? ? default_value : @object.enabled,
-      overridden: !@object.nil?,
-      default_value: default_value,
       error_message: @object.nil? ? nil : @object.error_message,
       url: "#{@path}/#{@name}"
     }

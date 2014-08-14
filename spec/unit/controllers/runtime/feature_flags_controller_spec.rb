@@ -12,9 +12,7 @@ module VCAP::CloudController
               expect(last_response.status).to eq(200)
               expect(decoded_response['name']).to eq('user_org_creation')
               expect(decoded_response['enabled']).to be true
-              expect(decoded_response['overridden']).to be true
               expect(decoded_response['error_message']).to eq('foobar')
-              expect(decoded_response['default_value']).to be false
               expect(decoded_response['url']).to eq('/v2/config/feature_flags/user_org_creation')
             end
           end
@@ -29,8 +27,6 @@ module VCAP::CloudController
               expect(decoded_response['name']).to eq('user_org_creation')
               expect(decoded_response['enabled']).to be true
               expect(decoded_response['error_message']).to eq('baz')
-              expect(decoded_response['overridden']).to be true
-              expect(decoded_response['default_value']).to be false
               expect(decoded_response['url']).to eq('/v2/config/feature_flags/user_org_creation')
             end
           end
@@ -86,8 +82,6 @@ module VCAP::CloudController
           expect(decoded_response).to include(
             {
               'name'          => 'flag1',
-              'default_value' => false,
-              'overridden'    => false,
               'enabled'       => false,
               'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag1'
@@ -95,8 +89,6 @@ module VCAP::CloudController
           expect(decoded_response).to include(
             {
               'name'          => 'flag2',
-              'default_value' => true,
-              'overridden'    => false,
               'enabled'       => true,
               'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag2'
@@ -104,8 +96,6 @@ module VCAP::CloudController
           expect(decoded_response).to include(
             {
               'name'          => 'flag3',
-              'default_value' => false,
-              'overridden'    => false,
               'enabled'       => false,
               'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag3'
@@ -124,8 +114,6 @@ module VCAP::CloudController
           expect(decoded_response).to include(
             {
               'name'          => 'flag1',
-              'default_value' => false,
-              'overridden'    => true,
               'enabled'       => true,
               'error_message' => 'custom_error_message',
               'url'           => '/v2/config/feature_flags/flag1'
@@ -133,8 +121,6 @@ module VCAP::CloudController
           expect(decoded_response).to include(
             {
               'name'          => 'flag2',
-              'default_value' => true,
-              'overridden'    => false,
               'enabled'       => true,
               'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag2'
@@ -142,8 +128,6 @@ module VCAP::CloudController
           expect(decoded_response).to include(
             {
               'name'          => 'flag3',
-              'default_value' => false,
-              'overridden'    => false,
               'enabled'       => false,
               'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag3'
@@ -167,8 +151,6 @@ module VCAP::CloudController
           expect(decoded_response).to eq(
             {
               'name'          => 'flag1',
-              'default_value' => false,
-              'overridden'    => false,
               'enabled'       => false,
               'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag1'
@@ -186,8 +168,6 @@ module VCAP::CloudController
           expect(decoded_response).to eq(
             {
               'name'          => 'flag1',
-              'default_value' => false,
-              'overridden'    => true,
               'enabled'       => true,
               'error_message' => nil,
               'url'           => '/v2/config/feature_flags/flag1'

@@ -27,45 +27,35 @@ resource "Feature Flags (experimental)", :type => :api do
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
-          'default_value' => false,
           'enabled'       => false,
           'error_message' => nil,
-          'overridden'    => false,
           'url'           => '/v2/config/feature_flags/user_org_creation'
         })
       expect(parsed_response).to include(
         {
           'name'          => 'app_bits_upload',
-          'default_value' => true,
           'enabled'       => true,
-          'overridden'    => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/app_bits_upload'
         })
       expect(parsed_response).to include(
         {
           'name'          => 'app_scaling',
-          'default_value' => true,
           'enabled'       => true,
-          'overridden'    => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/app_scaling'
         })
       expect(parsed_response).to include(
         {
           'name'          => 'private_domain_creation',
-          'default_value' => true,
           'enabled'       => false,
-          'overridden'    => true,
           'error_message' => 'foobar',
           'url'           => '/v2/config/feature_flags/private_domain_creation'
         })
       expect(parsed_response).to include(
         {
           'name'          => 'route_creation',
-          'default_value' => true,
           'enabled'       => true,
-          'overridden'    => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/route_creation'
         })
@@ -81,9 +71,7 @@ resource "Feature Flags (experimental)", :type => :api do
       expect(parsed_response).to eq(
         {
           'name'          => 'app_bits_upload',
-          'default_value' => true,
           'enabled'       => true,
-          'overridden'    => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/app_bits_upload'
         })
@@ -99,9 +87,7 @@ resource "Feature Flags (experimental)", :type => :api do
       expect(parsed_response).to eq(
         {
           'name'          => 'app_scaling',
-          'default_value' => true,
           'enabled'       => true,
-          'overridden'    => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/app_scaling'
         })
@@ -117,9 +103,7 @@ resource "Feature Flags (experimental)", :type => :api do
       expect(parsed_response).to eq(
         {
           'name'          => 'user_org_creation',
-          'default_value' => false,
           'enabled'       => false,
-          'overridden'    => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/user_org_creation'
         })
@@ -135,9 +119,7 @@ resource "Feature Flags (experimental)", :type => :api do
       expect(parsed_response).to eq(
         {
           'name'          => 'private_domain_creation',
-          'default_value' => true,
           'enabled'       => true,
-          'overridden'    => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/private_domain_creation'
         })
@@ -153,9 +135,7 @@ resource "Feature Flags (experimental)", :type => :api do
       expect(parsed_response).to eq(
         {
           'name'          => 'route_creation',
-          'default_value' => true,
           'enabled'       => true,
-          'overridden'    => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/route_creation'
         })
@@ -173,9 +153,7 @@ resource "Feature Flags (experimental)", :type => :api do
       expect(parsed_response).to eq(
         {
           'name'          => 'user_org_creation',
-          'default_value' => false,
           'enabled'       => true,
-          'overridden'    => true,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/user_org_creation'
         })
