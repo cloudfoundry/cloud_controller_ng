@@ -79,7 +79,7 @@ module VCAP::CloudController
 
     export_attributes :name, :organization_guid, :space_quota_definition_guid
 
-    import_attributes :name, :organization_guid, :developer_guids, :space_quota_definition_guid,
+    import_attributes :name, :organization_guid, :developer_guids,
       :manager_guids, :auditor_guids, :security_group_guids
 
     strip_attributes  :name

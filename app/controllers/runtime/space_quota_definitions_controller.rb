@@ -9,7 +9,7 @@ module VCAP::CloudController
       attribute  :instance_memory_limit,      Integer, default: nil
 
       to_one     :organization
-      to_many    :spaces
+      to_many    :spaces, exclude_in: [:create, :update]
     end
 
     def self.translate_validation_exception(e, attributes)

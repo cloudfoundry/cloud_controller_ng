@@ -5,8 +5,7 @@ module VCAP::CloudController
     subject(:access) { SpaceAccess.new(Security::AccessContext.new) }
     let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
     let(:org) { VCAP::CloudController::Organization.make }
-    let(:space_quota_definition) { SpaceQuotaDefinition.make(:organization => org) }
-    let(:object) { VCAP::CloudController::Space.make(:organization => org, :space_quota_definition => space_quota_definition) }
+    let(:object) { VCAP::CloudController::Space.make(organization: org) }
 
     let(:user) { VCAP::CloudController::User.make }
 
@@ -46,11 +45,6 @@ module VCAP::CloudController
         before { object.organization.status = 'suspended' }
 
         it_behaves_like :read_only
-      end
-
-      it 'fails when changing the space quota definition' do
-        object.space_quota_definition = SpaceQuotaDefinition.make(organization: org)
-        expect(subject.read_for_update?(object, { 'space_quota_definition_guid' => 'whatever' })).to be_falsey
       end
     end
 
