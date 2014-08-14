@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class QuotaDefinitionAccess < BaseAccess
-    def read?(_)
+    def index?(_)
       admin_user?
     end
   end
