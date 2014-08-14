@@ -630,5 +630,5 @@
 
 330002:
   name: FeatureDisabled
-  http_code: 412
+  http_code: 403
   message: "Feature Disabled: %s"
