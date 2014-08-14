@@ -193,6 +193,8 @@ module VCAP::CloudController
         ],
 
         optional(:app_bits_upload_grace_period_in_seconds) => Integer,
+
+        optional(:default_locale) => String
       }
     end
 
@@ -273,6 +275,7 @@ module VCAP::CloudController
         config[:app_bits_upload_grace_period_in_seconds] ||= 0
         config[:db] ||= {}
         config[:db][:database] ||= ENV["DB_CONNECTION_STRING"]
+        config[:default_locale] ||= "en_US"
         sanitize(config)
       end
 

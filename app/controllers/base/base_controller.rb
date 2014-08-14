@@ -72,6 +72,7 @@ module VCAP::CloudController::RestController
     # body string], or just a body string.
     def dispatch(op, *args)
       logger.debug "cc.dispatch", endpoint: op, args: args
+      I18n.locale = env['HTTP_ACCEPT_LANGUAGE']
       check_authentication(op)
       send(op, *args)
     rescue Sequel::ValidationFailed => e

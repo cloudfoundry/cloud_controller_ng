@@ -277,7 +277,6 @@ module VCAP::CloudController
       let (:argv_options) { [] }
 
       before do
-        allow_any_instance_of(Runner).to receive(:parse_config)
         allow_any_instance_of(Runner).to receive(:deprecation_warning)
       end
 
@@ -296,10 +295,10 @@ module VCAP::CloudController
         describe "Configuration File" do
           ["-c", "--config"].each do |flag|
             describe flag do
-              let (:argv_options) { [flag, "config/minimal_config.yml"] }
+              let (:argv_options) { [flag, config_file.path] }
 
               it "should set the configuration file" do
-                expect(subject.config_file).to eq("config/minimal_config.yml")
+                expect(subject.config_file).to eq(config_file.path)
               end
             end
           end
@@ -323,6 +322,10 @@ module VCAP::CloudController
             end
           end
         end
+      end
+
+      it "should initialize the i18n framework" do
+        expect(I18n.default_locale).to eq(:en_US)
       end
     end
 

@@ -14,6 +14,11 @@ module VCAP::CloudController
       end
       define_route :get, "/test_endpoint", :test_endpoint
 
+      def test_i18n
+        "#{I18n.locale}"
+      end
+      define_route :get, "/test_i18n", :test_i18n
+
       def test_validation_error
         raise Sequel::ValidationFailed.new("error")
       end
@@ -130,6 +135,13 @@ module VCAP::CloudController
         it 'delegates #redirect to the injected sinatra' do
           expect(sinatra).to receive(:redirect).with('redirect_url')
           app.redirect('redirect_url')
+        end
+      end
+
+      describe "internationalization" do
+        it "should record the locale during dispatching the request" do
+          get "/test_i18n", "", headers_for(user).merge({'HTTP_ACCEPT_LANGUAGE' => 'never_Neverland'})
+          expect(last_response.body).to eq("never_Neverland")
         end
       end
 

@@ -270,6 +270,7 @@ DEPENDENCIES
   fakefs
   fog
   httpclient
+  i18n
   loggregator_emitter (~> 3.0)
   machinist (~> 1.0.6)
   membrane (~> 1.0)
