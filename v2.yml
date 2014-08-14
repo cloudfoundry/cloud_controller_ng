@@ -508,6 +508,11 @@
   http_code: 400
   message: "The service broker url is taken: %s"
 
+270004:
+  name: ServiceBrokerNotFound
+  http_code: 404
+  message: "The service broker was not found: %s"
+
 270010:
   name: ServiceBrokerNotRemovable
   http_code: 400
