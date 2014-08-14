@@ -16,7 +16,7 @@ module VCAP::CloudController
         'protocol' => 'icmp',
         'type' => 0,
         'code' => 0,
-        'destination' => '0.0.0.0/0'
+        'destination' => '0.0.0.0/0',
       }.merge(attrs)
     end
 
@@ -54,97 +54,35 @@ module VCAP::CloudController
             end
           end
         end
+      end
 
-        describe 'bad' do
-          context 'when the ports contains non-integers' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => 'asdf') }
-
-            it 'is not valid' do
-              expect(subject).to_not be_valid
-              expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
-            end
-          end
-
-          context 'when the range is degenerate' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '1-1') }
-
-            it 'is not valid' do
-              expect(subject).to_not be_valid
-              expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
-            end
-          end
-
-          context 'when the range is not increasing' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '8-1') }
-
-            it 'is not valid' do
-              expect(subject).to_not be_valid
-              expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
-            end
-          end
-
-          context 'when the range is not valid' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '-1') }
-
-            it 'is not valid' do
-              expect(subject).to_not be_valid
-              expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
-            end
-          end
-
-          context 'when the range contains invalid ports' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '0-7') }
-
-            it 'is not valid' do
-              expect(subject).to_not be_valid
-              expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
-            end
-          end
-
-          context 'when the ports field contains two different formats' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '1-7,1') }
-
-            it 'is not valid' do
-              expect(subject).to_not be_valid
-              expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
-            end
-          end
-
-          context 'when the ports list contains an invalid port' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => '1,5,65536') }
-
-            it 'is not valid' do
-              expect(subject).to_not be_valid
-              expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid ports'
-            end
-          end
-
-          context 'when the ports range contains space padding' do
-            let(:rule) { build_transport_rule('protocol' => protocol, 'ports' => ' 1 - 4 ') }
+      context 'validates log' do
+        describe 'good' do
+          context 'when log is a boolean' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'log' => true) }
 
             it 'is valid' do
               expect(subject).to be_valid
             end
           end
 
-          context 'when it is missing' do
-            let(:rule) do
-              default_rule = build_transport_rule()
-              default_rule.delete('ports')
-              default_rule
+          context 'when log is not present' do
+            let(:rule) { build_transport_rule('protocol' => protocol)  }
+
+            it 'is valid' do
+              expect(subject).to be_valid
             end
+          end
+        end
+
+        describe 'bad' do
+          context 'when the log is non-boolean' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'log' => 3) }
 
             it 'is not valid' do
-              expect(subject).not_to be_valid
+              expect(subject).to_not be_valid
               expect(subject.errors[:rules].length).to eq 1
-              expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'ports\''
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid log'
             end
           end
         end
@@ -638,6 +576,38 @@ module VCAP::CloudController
                     expect(subject).not_to be_valid
                     expect(subject.errors[:rules].length).to eq 1
                     expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+                  end
+                end
+              end
+            end
+
+            context 'validates log' do
+              describe 'good' do
+                context 'when log is a boolean' do
+                  let(:rule) { build_all_rule('log' => true) }
+
+                  it 'is valid' do
+                    expect(subject).to be_valid
+                  end
+                end
+
+                context 'when log is not present' do
+                  let(:rule) { build_all_rule  }
+
+                  it 'is valid' do
+                    expect(subject).to be_valid
+                  end
+                end
+              end
+
+              describe 'bad' do
+                context 'when the log is non-boolean' do
+                  let(:rule) { build_all_rule('log' => 3) }
+
+                  it 'is not valid' do
+                    expect(subject).to_not be_valid
+                    expect(subject.errors[:rules].length).to eq 1
+                    expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid log'
                   end
                 end
               end

@@ -20,8 +20,9 @@ resource "Security Groups", :type => :api do
     field :rules, "The egress rules for apps that belong to this security group.", default: [],
       example_values: [[
         {protocol: "icmp", destination: "0.0.0.0/0", type: 0, code: 1},
-        {protocol: "tcp", destination: "0.0.0.0/0", ports: "2048-3000"},
+        {protocol: "tcp", destination: "0.0.0.0/0", ports: "2048-3000", log: true},
         {protocol: "udp", destination: "0.0.0.0/0", ports: "53, 5353"},
+        {protocol: "all", destination: "0.0.0.0/0"},
         ]]
     field :space_guids, "The list of associated spaces.", default: []
   end

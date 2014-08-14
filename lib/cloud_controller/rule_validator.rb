@@ -1,9 +1,12 @@
 module CloudController
   class RuleValidator
-    RULE_FIELDS = ["protocol", "destination"].map(&:freeze).freeze
+    class_attribute :required_fields, :optional_fields
+
+    self.required_fields = ["protocol", "destination"]
+    self.optional_fields = ["log"]
 
     def self.validate(rule)
-      errs = validate_fields(rule, RULE_FIELDS)
+      errs = validate_fields(rule)
       return errs unless errs.empty?
 
       destination = rule['destination']
@@ -11,14 +14,18 @@ module CloudController
         errs << "contains invalid destination"
       end
 
+      if rule.has_key?('log') && !validate_boolean(rule['log'])
+        errs << "contains invalid log value"
+      end
+
       errs
     end
 
     private
 
-    def self.validate_fields(rule, fields)
-      errs = (fields - rule.keys).map { |field| "missing required field '#{field}'" }
-      errs += (rule.keys - fields).map { |key| "contains the invalid field '#{key}'" }
+    def self.validate_fields(rule)
+      errs = (required_fields - rule.keys).map { |field| "missing required field '#{field}'" }
+      errs += (rule.keys - (required_fields + optional_fields)).map { |key| "contains the invalid field '#{key}'" }
     end
 
     def self.validate_destination(destination)
@@ -38,6 +45,10 @@ module CloudController
 
     rescue NetAddr::ValidationError
       return false
+    end
+
+    def self.validate_boolean(bool)
+      !!bool == bool
     end
   end
 end

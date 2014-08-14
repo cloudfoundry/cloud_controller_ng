@@ -1,9 +1,9 @@
 module CloudController
   class ICMPRuleValidator < RuleValidator
-    ICMP_RULE_FIELDS = ["protocol", "code", "type", "destination"].map(&:freeze).freeze
+    self.required_fields += ["code", "type"]
 
     def self.validate(rule)
-      errs = validate_fields(rule, ICMP_RULE_FIELDS)
+      errs = super
       return errs unless errs.empty?
 
       icmp_type = rule['type']
@@ -14,11 +14,6 @@ module CloudController
       icmp_code = rule['code']
       unless validate_icmp_control_message(icmp_code)
         errs << "contains invalid code"
-      end
-
-      destination = rule['destination']
-      unless validate_destination(destination)
-        errs << "contains invalid destination"
       end
 
       errs
