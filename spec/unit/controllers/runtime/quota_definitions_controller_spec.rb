@@ -30,7 +30,7 @@ module VCAP::CloudController
         })
       end
     end
-
+    
     describe "permissions" do
       let(:quota_attributes) do
         {
@@ -75,11 +75,6 @@ module VCAP::CloudController
 
         it "does not allow creation of a quota def" do
           post "/v2/quota_definitions", MultiJson.dump(quota_attributes), json_headers(headers)
-          expect(last_response.status).to eq(403)
-        end
-
-        it "does not allow indexing of quota definitions" do
-          get "/v2/quota_definitions", {}, headers
           expect(last_response.status).to eq(403)
         end
 

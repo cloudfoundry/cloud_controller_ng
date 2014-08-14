@@ -25,7 +25,6 @@ module VCAP::CloudController
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
       it_behaves_like :no_access
-      it { is_expected.not_to allow_op_on_object :index, object.class }
     end
 
     context 'any user using client without cloud_controller.read' do

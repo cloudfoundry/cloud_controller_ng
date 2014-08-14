@@ -39,5 +39,9 @@ module VCAP::CloudController
     def self.default
       self[:name => @default_quota_name]
     end
+
+    def self.user_visibility_filter(user)
+      full_dataset_filter
+    end
   end
 end
