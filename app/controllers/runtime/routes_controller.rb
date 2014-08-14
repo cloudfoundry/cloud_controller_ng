@@ -38,6 +38,7 @@ module VCAP::CloudController
     private
 
     def before_create
+      return if SecurityContext.admin?
       FeatureFlag.raise_unless_enabled!('route_creation')
     end
   end

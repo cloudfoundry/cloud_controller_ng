@@ -161,15 +161,22 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/routes' do
+      let(:space) {Space.make}
+      let(:user) {User.make}
+      let(:req) {{
+                   domain_guid: SharedDomain.make.guid,
+                   space_guid:  space.guid,
+                   host:        'example'
+      }}
+
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
       context 'when route_creation feature flag is enabled' do
         it 'works for the happy path' do
-          req = {
-            domain_guid: SharedDomain.make.guid,
-            space_guid:  Space.make.guid,
-            host:        'example'
-          }
-
-          post '/v2/routes', MultiJson.dump(req), admin_headers
+          post '/v2/routes', MultiJson.dump(req), headers_for(user)
 
           expect(last_response.status).to eq(201)
         end
@@ -178,14 +185,15 @@ module VCAP::CloudController
       context 'when route_creation feature flag is disabled' do
         before { FeatureFlag.make(name: 'route_creation', enabled: false) }
 
-        it 'returns FeatureDisabled' do
-          req = {
-            domain_guid: SharedDomain.make.guid,
-            space_guid:  Space.make.guid,
-            host:        'example'
-          }
-
+        it 'an admin is allowed' do
           post '/v2/routes', MultiJson.dump(req), admin_headers
+
+          expect(last_response.status).to eq(201)
+        end
+
+
+        it 'returns FeatureDisabled for users' do
+          post '/v2/routes', MultiJson.dump(req), headers_for(user)
 
           expect(last_response.status).to eq(412)
           expect(decoded_response['error_code']).to match(/FeatureDisabled/)
