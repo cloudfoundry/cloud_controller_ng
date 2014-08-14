@@ -28,6 +28,11 @@ module VCAP::CloudController
       let(:request_body) do
         MultiJson.dump({ name: "blah.com", owning_organization_guid: owning_org.guid })
       end
+      let(:user) { User.make }
+
+      before do
+        owning_org.add_manager(user)
+      end
 
       context "when private_domain_creation feature_flag is disabled" do
         before do
@@ -35,11 +40,19 @@ module VCAP::CloudController
         end
 
         it "returns FeatureDisabled" do
-          post "/v2/private_domains", request_body, admin_headers
+          post "/v2/private_domains", request_body, headers_for(user)
 
           expect(last_response.status).to eq(412)
           expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
           expect(decoded_response["description"]).to match(/Feature Disabled/)
+        end
+
+        context "when the user is an admin" do
+          it "works normally" do
+            post "/v2/private_domains", request_body, admin_headers
+
+            expect(last_response.status).to eq(201)
+          end
         end
       end
 
@@ -49,7 +62,7 @@ module VCAP::CloudController
         end
 
         it "works normally" do
-          post "/v2/private_domains", request_body, admin_headers
+          post "/v2/private_domains", request_body, headers_for(user)
 
           expect(last_response.status).to eq(201)
         end
