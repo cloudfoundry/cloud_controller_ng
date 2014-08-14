@@ -78,9 +78,9 @@ module VCAP::CloudController
           expect(last_response.status).to eq(403)
         end
 
-        it "does allow read of a quota def" do
+        it "does not allow read of a quota def" do
           get "/v2/quota_definitions/#{existing_quota.guid}", {}, headers
-          expect(last_response.status).to eq(200)
+          expect(last_response.status).to eq(403)
         end
 
         it "does not allow update of a quota def" do
