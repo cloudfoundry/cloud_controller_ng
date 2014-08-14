@@ -42,7 +42,7 @@ module VCAP::CloudController
         it "returns FeatureDisabled" do
           post "/v2/private_domains", request_body, headers_for(user)
 
-          expect(last_response.status).to eq(412)
+          expect(last_response.status).to eq(403)
           expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
           expect(decoded_response["description"]).to match(/Feature Disabled/)
         end

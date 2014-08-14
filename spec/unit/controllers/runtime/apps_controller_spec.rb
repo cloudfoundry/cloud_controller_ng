@@ -147,19 +147,19 @@ module VCAP::CloudController
           context "and the user is not an admin" do
             it "does not allow updating memory" do
               put "/v2/apps/#{app_obj.guid}", '{ "memory": 2 }', json_headers(headers_for(developer))
-              expect(last_response.status).to eq(412)
+              expect(last_response.status).to eq(403)
               expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
             end
 
             it "does not allow updating disk_quota" do
               put "/v2/apps/#{app_obj.guid}", '{ "disk_quota": 2 }', json_headers(headers_for(developer))
-              expect(last_response.status).to eq(412)
+              expect(last_response.status).to eq(403)
               expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
             end
 
             it "does not allow updating instances" do
               put "/v2/apps/#{app_obj.guid}", '{ "instances": 2 }', json_headers(headers_for(developer))
-              expect(last_response.status).to eq(412)
+              expect(last_response.status).to eq(403)
               expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
             end
 

@@ -50,7 +50,7 @@ module VCAP::CloudController
       it "returns FeatureDisabled unless the user is an admin" do
         user = User.make(:admin => false, :active => true)
         send(:put, "/v2/resource_match", "[]", json_headers(headers_for(user)))
-        expect(last_response.status).to eq(412)
+        expect(last_response.status).to eq(403)
         expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
         expect(decoded_response["description"]).to match(/Feature Disabled/)
       end

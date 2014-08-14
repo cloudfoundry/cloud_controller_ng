@@ -136,7 +136,7 @@ module VCAP::CloudController
           it 'returns FeatureDisabled' do
             post '/v2/organizations', MultiJson.dump({ name: 'my-org-name' }), headers_for(user)
 
-            expect(last_response.status).to eq(412)
+            expect(last_response.status).to eq(403)
             expect(decoded_response['error_code']).to match(/FeatureDisabled/)
             expect(decoded_response['description']).to match(/Feature Disabled/)
           end
@@ -182,7 +182,7 @@ module VCAP::CloudController
         end
       end
     end
-    
+
     describe 'GET /v2/organizations/:guid/domains' do
       let(:organization) { Organization.make }
       let(:manager) { make_manager_for_org(organization) }
