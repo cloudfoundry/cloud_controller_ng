@@ -323,10 +323,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      it "should initialize the i18n framework" do
-        expect(I18n.default_locale).to eq(:en_US)
-      end
     end
 
     describe "#start_thin_server" do
@@ -360,6 +356,22 @@ module VCAP::CloudController
         start_thin_server
 
         expect(thin_server).to have_received(:start!)
+      end
+    end
+
+    describe "internationalization" do
+      let(:config_file) do
+        config = YAML.load_file(valid_config_file_path)
+        config["default_locale"] = "never_Neverland"
+        file = Tempfile.new("config")
+        file.write(YAML.dump(config))
+        file.rewind
+        file
+      end
+
+      it "initializes the i18n framework with the correct locale" do
+        expect(Errors::ApiError).to receive(:setup_i18n).with(anything, "never_Neverland")
+        subject.run!
       end
     end
 

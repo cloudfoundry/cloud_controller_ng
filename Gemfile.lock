@@ -108,7 +108,7 @@ GEM
     formatador (0.2.4)
     http_parser.rb (0.6.0)
     httpclient (2.3.4.1)
-    i18n (0.6.9)
+    i18n (0.6.11)
     json (1.8.1)
     json_pure (1.8.1)
     loggregator_emitter (3.0.0)

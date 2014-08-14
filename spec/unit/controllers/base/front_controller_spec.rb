@@ -8,6 +8,27 @@ module VCAP::CloudController
       end
     end
 
+    describe "setting the locale" do
+      before do
+        I18n.default_locale = :metropolis
+        I18n.locale = :metropolis
+      end
+
+      context "When the Accept-Language header is set" do
+        it "sets the locale based on the Accept-Language header" do
+          get "/test_endpoint", "", {"HTTP_ACCEPT_LANGUAGE" => "gotham_City"}
+          expect(I18n.locale).to eq(:gotham_City)
+        end
+      end
+
+      context "when the Accept-Language header is not set" do
+        it "maintains the default locale" do
+          get "/test_endpoint", "", {}
+          expect(I18n.locale).to eq(:metropolis)
+        end
+      end
+    end
+
     describe "validating the auth token" do
       let(:user_id) { Sham.guid }
       let(:token_info) { {} }

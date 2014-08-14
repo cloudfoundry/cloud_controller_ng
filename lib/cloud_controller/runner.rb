@@ -29,15 +29,13 @@ module VCAP::CloudController
       parse_options!
       parse_config
       
-      init_i18n
+      setup_i18n
 
       @log_counter = Steno::Sink::Counter.new
     end
 
-    def init_i18n
-      I18n.default_locale = @config[:default_locale]
-      I18n::Backend::Simple.send(:include, I18n::Backend::Fallbacks)
-      I18n.load_path = Dir[File.expand_path("../../../vendor/errors/i18n/*.yml", __FILE__)]
+    def setup_i18n
+      Errors::ApiError.setup_i18n(Dir[File.expand_path("../../../vendor/errors/i18n/*.yml", __FILE__)], @config[:default_locale])
     end
 
     def logger
