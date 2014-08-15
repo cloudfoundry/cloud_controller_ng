@@ -7,7 +7,7 @@ namespace :jobs do
 
   desc "Start a delayed_job worker that works on jobs that require access to local resources."
   task :local do
-    CloudController::DelayedWorker.new(queues: [LocalQueue.new(config).to_s]).start_working
+    CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::LocalQueue.new(config).to_s]).start_working
   end
 
   desc "Start a delayed_job worker."

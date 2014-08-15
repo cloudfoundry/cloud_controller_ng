@@ -36,7 +36,7 @@ module VCAP::CloudController
         end
 
         buildpack_job = VCAP::CloudController::Jobs::Runtime::BuildpackInstaller.new(buildpack_name, buildpack_file, buildpack)
-        job = VCAP::CloudController::Jobs::Enqueuer.new(buildpack_job, queue: LocalQueue.new(config)).enqueue()
+        job = VCAP::CloudController::Jobs::Enqueuer.new(buildpack_job, queue: VCAP::CloudController::Jobs::LocalQueue.new(config)).enqueue()
       end
     end
 

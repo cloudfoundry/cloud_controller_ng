@@ -14,9 +14,5 @@ require "jobs/enqueuer"
 require "jobs/exception_catching_job"
 require "jobs/request_job"
 require "jobs/timeout_job"
+require "jobs/local_queue"
 
-class LocalQueue < Struct.new(:config)
-  def to_s
-    "cc-#{config[:name]}-#{config[:index]}"
-  end
-end

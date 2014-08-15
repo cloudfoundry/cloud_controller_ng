@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       it "enqueues a job to install a buildpack" do
         expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with("buildpack1", "abuildpack.zip", {}).and_return(job)
-        expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(LocalQueue)).and_return(enqueuer)
+        expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(Jobs::LocalQueue)).and_return(enqueuer)
         expect(enqueuer).to receive(:enqueue)
         expect(Dir).to receive(:[]).with("/var/vcap/packages/mybuildpackpkg/*.zip").and_return(["abuildpack.zip"])
         expect(File).to receive(:file?).with("abuildpack.zip").and_return(true)
@@ -41,12 +41,12 @@ module VCAP::CloudController
         }
 
         expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with("buildpack1", "abuildpack.zip", {}).ordered.and_return(job)
-        expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(LocalQueue)).ordered.and_return(enqueuer)
+        expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(Jobs::LocalQueue)).ordered.and_return(enqueuer)
         expect(Dir).to receive(:[]).with("/var/vcap/packages/mybuildpackpkg/*.zip").and_return(["abuildpack.zip"])
         expect(File).to receive(:file?).with("abuildpack.zip").and_return(true)
 
         expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with("buildpack2", "otherbp.zip", {}).ordered.and_return(job2)
-        expect(Jobs::Enqueuer).to receive(:new).with(job2, queue: instance_of(LocalQueue)).ordered.and_return(enqueuer)
+        expect(Jobs::Enqueuer).to receive(:new).with(job2, queue: instance_of(Jobs::LocalQueue)).ordered.and_return(enqueuer)
         expect(Dir).to receive(:[]).with("/var/vcap/packages/myotherpkg/*.zip").and_return(["otherbp.zip"])
         expect(File).to receive(:file?).with("otherbp.zip").and_return(true)
 
@@ -83,7 +83,7 @@ module VCAP::CloudController
 
         it "uses the file override" do
           expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with("buildpack1", "another.zip", {}).and_return(job)
-          expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(LocalQueue)).and_return(enqueuer)
+          expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(Jobs::LocalQueue)).and_return(enqueuer)
           expect(enqueuer).to receive(:enqueue)
           expect(File).to receive(:file?).with("another.zip").and_return(true)
 
@@ -100,7 +100,7 @@ module VCAP::CloudController
           TestConfig.config[:install_buildpacks][0].delete("package")
 
           expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with("buildpack1", "another.zip", {}).and_return(job)
-          expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(LocalQueue)).and_return(enqueuer)
+          expect(Jobs::Enqueuer).to receive(:new).with(job, queue: instance_of(Jobs::LocalQueue)).and_return(enqueuer)
           expect(enqueuer).to receive(:enqueue)
           expect(File).to receive(:file?).with("another.zip").and_return(true)
 

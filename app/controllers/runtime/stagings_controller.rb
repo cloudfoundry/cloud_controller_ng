@@ -47,7 +47,7 @@ module VCAP::CloudController
       droplet_upload_job = Jobs::Runtime::DropletUpload.new(upload_path, app.id)
 
       if async?
-        job = Jobs::Enqueuer.new(droplet_upload_job, queue: LocalQueue.new(config)).enqueue()
+        job = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue()
         external_domain = Array(config[:external_domain]).first
         [HTTP::OK, JobPresenter.new(job, "#{config[:external_protocol]}://#{external_domain}").to_json]
       else
@@ -82,7 +82,7 @@ module VCAP::CloudController
       check_file_md5
 
       blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, app.guid, :buildpack_cache_blobstore)
-      Jobs::Enqueuer.new(blobstore_upload, queue: LocalQueue.new(config)).enqueue()
+      Jobs::Enqueuer.new(blobstore_upload, queue: Jobs::LocalQueue.new(config)).enqueue()
       HTTP::OK
     end
 
