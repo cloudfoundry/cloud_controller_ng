@@ -85,6 +85,27 @@ module VCAP::CloudController
             expect(last_response.status).to eq(403)
             expect(MultiJson.load(last_response.body)['description']).to eq("You are not authorized to perform the requested action")
           end
+
+          it 'prevents a developer from moving a service to another space' do
+            plan = ServicePlan.make
+            req = MultiJson.dump(
+              :name => 'foo',
+              :space_guid => @space_a.guid,
+              :service_plan_guid => plan.guid
+            )
+            post "/v2/service_instances", req, json_headers(headers_for(member_a))
+
+            instance_guid = JSON.parse(last_response.body)['metadata']['guid']
+
+            move_req = MultiJson.dump(
+              :space_guid => @space_b.guid,
+            )
+
+            put "/v2/service_instances/#{instance_guid}", move_req, json_headers(headers_for(member_a))
+
+            expect(last_response.status).to eq(403)
+            expect(MultiJson.load(last_response.body)['description']).to eq("You are not authorized to perform the requested action")
+          end
         end
 
         describe "private plans" do
