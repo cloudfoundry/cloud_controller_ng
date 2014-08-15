@@ -56,12 +56,25 @@ module CloudController
       def staging_uri(path)
         return nil unless path
 
-        URI::HTTP.build(
-          host: @blobstore_options[:blobstore_host],
-          port: @blobstore_options[:blobstore_port],
-          userinfo: [@blobstore_options[:user], @blobstore_options[:password]],
-          path: path,
-        ).to_s
+        begin
+          URI::HTTP.build(
+            host: @blobstore_options[:blobstore_host],
+            port: @blobstore_options[:blobstore_port],
+            userinfo: [@blobstore_options[:user], @blobstore_options[:password]],
+            path: path,
+          ).to_s
+        rescue URI::InvalidComponentError
+          URI::HTTP.build(
+            host: @blobstore_options[:blobstore_host],
+            port: @blobstore_options[:blobstore_port],
+            userinfo: [encode_userinfo(@blobstore_options[:user]), encode_userinfo(@blobstore_options[:password])],
+            path: path,
+          ).to_s
+        end
+      end
+
+      def encode_userinfo(info)
+        URI::escape(info, "%#{URI::REGEXP::PATTERN::RESERVED}")
       end
     end
   end
