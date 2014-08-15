@@ -3,6 +3,7 @@ module VCAP::CloudController
     def create?(route, params=nil)
       return true if admin_user?
       return false if route.in_suspended_org?
+      FeatureFlag.raise_unless_enabled!('route_creation')
       route.space.developers.include?(context.user)
     end
 

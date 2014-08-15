@@ -22,6 +22,9 @@ module VCAP::CloudController
 
     context 'admin' do
       include_context :admin_setup
+
+      before { FeatureFlag.make(name: "route_creation", enabled: false) }
+
       it_behaves_like :full_access
 
       context 'changing the space' do
@@ -85,6 +88,14 @@ module VCAP::CloudController
 
           object.space = new_space
           expect(subject.update?(object)).to be_falsey
+        end
+      end
+
+      context 'when the route_creation feature flag is disabled' do
+        it 'raises when attempting to create a route' do
+          FeatureFlag.make(name: "route_creation", enabled: false, error_message: nil)
+
+          expect { subject.create?(object) }.to raise_error(VCAP::Errors::ApiError, /route_creation/)
         end
       end
     end

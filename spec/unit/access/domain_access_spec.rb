@@ -24,6 +24,9 @@ module VCAP::CloudController
 
       context 'admin' do
         include_context :admin_setup
+
+        before { FeatureFlag.make(name: "private_domain_creation", enabled: false) }
+
         it_behaves_like :full_access
 
         context 'changing organization' do
@@ -50,6 +53,13 @@ module VCAP::CloudController
             object.owning_organization = Organization.make
             object.owning_organization.add_user(user)
             expect(subject.update?(object)).to be_falsey
+          end
+        end
+
+        context 'when private_domain_creation FeatureFlag is disabled' do
+          it 'cannot create a private domain' do
+            FeatureFlag.make(name: "private_domain_creation", enabled: false, error_message: nil)
+            expect{subject.create?(object)}.to raise_error(VCAP::Errors::ApiError, /private_domain_creation/)
           end
         end
       end

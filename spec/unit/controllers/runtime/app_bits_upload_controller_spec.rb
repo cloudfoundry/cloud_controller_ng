@@ -41,7 +41,7 @@ module VCAP::CloudController
           let(:req_body) { {resources: "[]", application: valid_zip} }
 
           before do
-            FeatureFlag.make(name: 'app_bits_upload', enabled: false)
+            FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
             make_request
             app_obj.refresh
           end
@@ -49,7 +49,7 @@ module VCAP::CloudController
           it "returns FeatureDisabled and does not upload" do
             expect(last_response.status).to eq(403)
             expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
-            expect(decoded_response["description"]).to match(/Feature Disabled/)
+            expect(decoded_response["description"]).to match(/app_bits_upload/)
 
             expect(app_obj.package_hash).to be_nil
           end

@@ -54,6 +54,6 @@ module VCAP::CloudController
         expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
         expect(decoded_response["description"]).to match(/Feature Disabled/)
       end
-      end
+    end
   end
 end

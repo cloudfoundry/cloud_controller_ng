@@ -153,71 +153,31 @@ module VCAP::CloudController
     end
 
     describe "POST /v2/domains" do
-      context "with a private domain (shared domain is meta programmed tested)" do
+      context "as an org manager" do
         let(:user) { User.make }
         let(:organization) { Organization.make }
+
+        let(:request_body) do
+          MultiJson.dump({ name: "blah.com", owning_organization_guid: organization.guid })
+        end
 
         before do
           organization.add_user(user)
           organization.add_manager(user)
-          organization.add_billing_manager(user)
-          organization.add_auditor(user)
         end
 
-        it "creates a domain with the specified name and owning organization" do
-          name = Sham.domain
-          post "/v2/domains", MultiJson.dump(name: name, owning_organization_guid: organization.guid), json_headers(headers_for(user))
-          expect(last_response.status).to eq 201
-          expect(decoded_response["entity"]["name"]).to eq name
-          expect(decoded_response["entity"]["owning_organization_guid"]).to eq organization.guid
-          expect(last_response).to be_a_deprecated_response
-        end
-      end
-    end
+        context "when domain_creation feature_flag is disabled" do
+          before do
+            FeatureFlag.make(name: "private_domain_creation", enabled: false, error_message: nil)
+          end
 
-    context "testing feature flags with deprecated domains endpoint" do
-      let(:owning_org) { Organization.make }
-      let(:request_body) do
-        MultiJson.dump({ name: "blah.com", owning_organization_guid: owning_org.guid })
-      end
-
-      context "when domain_creation feature_flag is disabled" do
-        before do
-          FeatureFlag.make(name: "private_domain_creation", enabled: false)
-        end
-
-        context "when creating a private domain" do
           it "returns FeatureDisabled" do
-            post "/v2/domains", request_body, admin_headers
+            post "/v2/domains", request_body, headers_for(user)
 
             expect(last_response.status).to eq(403)
             expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
-            expect(decoded_response["description"]).to match(/Feature Disabled/)
+            expect(decoded_response["description"]).to match(/private_domain_creation/)
           end
-        end
-
-        context "when creating a shared domain" do
-          let(:request_body) do
-            MultiJson.dump({ name: "shared-domain.com" })
-          end
-
-          it "works normally" do
-            post "/v2/domains", request_body, admin_headers
-
-            expect(last_response.status).to eq(201)
-          end
-        end
-      end
-
-      context "when domain_creation feature_flag is enabled" do
-        before do
-          FeatureFlag.make(name: "private_domain_creation", enabled: true)
-        end
-
-        it "works normally" do
-          post "/v2/domains", request_body, admin_headers
-
-          expect(last_response.status).to eq(201)
         end
       end
     end

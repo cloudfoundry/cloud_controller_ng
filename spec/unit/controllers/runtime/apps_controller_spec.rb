@@ -13,46 +13,46 @@ module VCAP::CloudController
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-          buildpack: {type: "string"},
-          command: {type: "string"},
-          console: {type: "bool", default: false},
-          debug: {type: "string"},
-          disk_quota: {type: "integer"},
-          environment_json: {type: "hash", default: {}},
-          health_check_timeout: { type: "integer" },
-          instances: {type: "integer", default: 1},
-          memory: {type: "integer"},
-          name: {type: "string", required: true},
-          production: {type: "bool", default: false},
-          state: {type: "string", default: "STOPPED"},
-          event_guids: {type: "[string]"},
-          route_guids: {type: "[string]"},
-          space_guid: {type: "string", required: true},
-          stack_guid: {type: "string"},
-          docker_image: {type: "string", required: false},
+                                                               buildpack: {type: "string"},
+                                                               command: {type: "string"},
+                                                               console: {type: "bool", default: false},
+                                                               debug: {type: "string"},
+                                                               disk_quota: {type: "integer"},
+                                                               environment_json: {type: "hash", default: {}},
+                                                               health_check_timeout: { type: "integer" },
+                                                               instances: {type: "integer", default: 1},
+                                                               memory: {type: "integer"},
+                                                               name: {type: "string", required: true},
+                                                               production: {type: "bool", default: false},
+                                                               state: {type: "string", default: "STOPPED"},
+                                                               event_guids: {type: "[string]"},
+                                                               route_guids: {type: "[string]"},
+                                                               space_guid: {type: "string", required: true},
+                                                               stack_guid: {type: "string"},
+                                                               docker_image: {type: "string", required: false},
         })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-          buildpack: {type: "string"},
-          command: {type: "string"},
-          console: {type: "bool"},
-          debug: {type: "string"},
-          disk_quota: {type: "integer"},
-          environment_json: {type: "hash"},
-          health_check_timeout: {type: "integer"},
-          instances: {type: "integer"},
-          memory: {type: "integer"},
-          name: {type: "string"},
-          production: {type: "bool"},
-          state: {type: "string"},
-          event_guids: {type: "[string]"},
-          route_guids: {type: "[string]"},
-          service_binding_guids: {type: "[string]"},
-          space_guid: {type: "string"},
-          stack_guid: {type: "string"},
-          docker_image: {type: "string"},
+                                                               buildpack: {type: "string"},
+                                                               command: {type: "string"},
+                                                               console: {type: "bool"},
+                                                               debug: {type: "string"},
+                                                               disk_quota: {type: "integer"},
+                                                               environment_json: {type: "hash"},
+                                                               health_check_timeout: {type: "integer"},
+                                                               instances: {type: "integer"},
+                                                               memory: {type: "integer"},
+                                                               name: {type: "string"},
+                                                               production: {type: "bool"},
+                                                               state: {type: "string"},
+                                                               event_guids: {type: "[string]"},
+                                                               route_guids: {type: "[string]"},
+                                                               service_binding_guids: {type: "[string]"},
+                                                               space_guid: {type: "string"},
+                                                               stack_guid: {type: "string"},
+                                                               docker_image: {type: "string"},
         })
       end
     end
@@ -112,66 +112,16 @@ module VCAP::CloudController
             put "/v2/apps/#{app_obj.guid}", '{ "memory": 2 }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
           end
-
-          it "allows updating disk_quota" do
-            put "/v2/apps/#{app_obj.guid}", '{ "disk_quota": 2 }', json_headers(headers_for(developer))
-            expect(last_response.status).to eq(201)
-          end
-
-          it "allows updating instances" do
-            put "/v2/apps/#{app_obj.guid}", '{ "instances": 2 }', json_headers(headers_for(developer))
-            expect(last_response.status).to eq(201)
-          end
         end
 
         context "when the flag is disabled" do
-          before { FeatureFlag.make(name: "app_scaling", enabled: false) }
+          before { FeatureFlag.make(name: "app_scaling", enabled: false, error_message: nil) }
 
-          context "and the user is an admin" do
-            it "allows updating memory" do
-              put "/v2/apps/#{app_obj.guid}", '{ "memory": 2 }', json_headers(admin_headers)
-              expect(last_response.status).to eq(201)
-            end
-
-            it "allows updating disk_quota" do
-              put "/v2/apps/#{app_obj.guid}", '{ "disk_quota": 2 }', json_headers(admin_headers)
-              expect(last_response.status).to eq(201)
-            end
-
-            it "allows updating instances" do
-              put "/v2/apps/#{app_obj.guid}", '{ "instances": 2 }', json_headers(admin_headers)
-              expect(last_response.status).to eq(201)
-            end
-          end
-
-          context "and the user is not an admin" do
-            it "does not allow updating memory" do
-              put "/v2/apps/#{app_obj.guid}", '{ "memory": 2 }', json_headers(headers_for(developer))
-              expect(last_response.status).to eq(403)
-              expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
-            end
-
-            it "does not allow updating disk_quota" do
-              put "/v2/apps/#{app_obj.guid}", '{ "disk_quota": 2 }', json_headers(headers_for(developer))
-              expect(last_response.status).to eq(403)
-              expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
-            end
-
-            it "does not allow updating instances" do
-              put "/v2/apps/#{app_obj.guid}", '{ "instances": 2 }', json_headers(headers_for(developer))
-              expect(last_response.status).to eq(403)
-              expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
-            end
-
-            it "allows unchanged fields to be specified" do
-              put "/v2/apps/#{app_obj.guid}", '{ "instances": 1 }', json_headers(headers_for(developer))
-              expect(last_response.status).to eq(201)
-            end
-
-            it "allows changing other fields" do
-              put "/v2/apps/#{app_obj.guid}", '{ "buildpack": "http://foo.git" }', json_headers(headers_for(developer))
-              expect(last_response.status).to eq(201)
-            end
+          it "fails with the proper error code and message" do
+            put "/v2/apps/#{app_obj.guid}", '{ "memory": 2 }', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(403)
+            expect(decoded_response["error_code"]).to match(/FeatureDisabled/)
+            expect(decoded_response["description"]).to match(/app_scaling/)
           end
         end
       end
@@ -375,8 +325,8 @@ module VCAP::CloudController
       context "when app will be staged", isolation: :truncation do
         let(:app_obj) do
           AppFactory.make(:package_hash => "abc", :state => "STOPPED",
-                           :droplet_hash => nil, :package_state => "PENDING",
-                           :instances => 1)
+                          :droplet_hash => nil, :package_state => "PENDING",
+                          :instances => 1)
         end
 
         let(:stager_response) do
@@ -456,7 +406,7 @@ module VCAP::CloudController
         )
         get "#{@app_url}/routes", {}, @headers_for_user
         expect(decoded_response["resources"].map { |r|
-          r["metadata"]["guid"]
+                 r["metadata"]["guid"]
         }.sort).to eq([bar_route.guid, route.guid].sort)
 
         expect(Dea::Client).to receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|

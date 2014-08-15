@@ -137,8 +137,7 @@ module VCAP::CloudController
             post '/v2/organizations', MultiJson.dump({ name: 'my-org-name' }), headers_for(user)
 
             expect(last_response.status).to eq(403)
-            expect(decoded_response['error_code']).to match(/FeatureDisabled/)
-            expect(decoded_response['description']).to match(/Feature Disabled/)
+            expect(decoded_response['error_code']).to match(/CF-NotAuthorized/)
           end
         end
 
@@ -168,16 +167,6 @@ module VCAP::CloudController
             org = Organization.find(name: 'my-org-name')
             expect(org.managers).to eq([user])
             expect(org.users).to eq([user])
-          end
-        end
-
-        context 'as an admin' do
-          it 'does not add creator as an org manager' do
-            post '/v2/organizations', MultiJson.dump({ name: 'my-org-name' }), admin_headers
-
-            expect(last_response.status).to eq(201)
-            org = Organization.find(name: 'my-org-name')
-            expect(org.managers.count).to eq(0)
           end
         end
       end

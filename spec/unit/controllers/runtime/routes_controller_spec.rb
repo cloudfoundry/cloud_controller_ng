@@ -174,30 +174,15 @@ module VCAP::CloudController
         space.add_developer(user)
       end
 
-      context 'when route_creation feature flag is enabled' do
-        it 'works for the happy path' do
-          post '/v2/routes', MultiJson.dump(req), headers_for(user)
-
-          expect(last_response.status).to eq(201)
-        end
-      end
-
       context 'when route_creation feature flag is disabled' do
-        before { FeatureFlag.make(name: 'route_creation', enabled: false) }
-
-        it 'an admin is allowed' do
-          post '/v2/routes', MultiJson.dump(req), admin_headers
-
-          expect(last_response.status).to eq(201)
-        end
-
+        before { FeatureFlag.make(name: 'route_creation', enabled: false, error_message: nil) }
 
         it 'returns FeatureDisabled for users' do
           post '/v2/routes', MultiJson.dump(req), headers_for(user)
 
           expect(last_response.status).to eq(403)
           expect(decoded_response['error_code']).to match(/FeatureDisabled/)
-          expect(decoded_response['description']).to match(/Feature Disabled/)
+          expect(decoded_response['description']).to match(/route_creation/)
         end
       end
     end

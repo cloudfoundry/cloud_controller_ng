@@ -20,10 +20,13 @@ module VCAP::CloudController
     context 'admin' do
       include_context :admin_setup
 
+      before {FeatureFlag.make(name: 'app_bits_upload', enabled: false)}
+
       it_behaves_like :full_access
 
-      it 'allows user to :read_env' do
+      it 'admin always allowed' do
         expect(subject).to allow_op_on_object(:read_env, object)
+        expect(subject).to allow_op_on_object(:upload, object)
       end
 
       context 'when the space changes' do
@@ -32,7 +35,6 @@ module VCAP::CloudController
           expect(subject.update?(object, nil)).to be_truthy
         end
       end
-
     end
 
     context 'space developer' do
@@ -44,6 +46,13 @@ module VCAP::CloudController
 
       it 'allows user to :read_env' do
         expect(subject).to allow_op_on_object(:read_env, object)
+      end
+
+      context 'app_bits_upload FeatureFlag' do
+        it 'disallows when enabled' do
+          FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
+          expect{ subject.upload?(object) }.to raise_error(VCAP::Errors::ApiError, /app_bits_upload/)
+        end
       end
 
       context 'when the organization is suspended' do
@@ -61,6 +70,23 @@ module VCAP::CloudController
         it 'fails when not developer in the new space' do
           object.space = Space.make
           expect(subject.update?(object, nil)).to be_falsey
+        end
+      end
+
+      context "when the app_scaling featureflag is disabled" do
+        before { FeatureFlag.make(name: "app_scaling", enabled: false, error_message: nil) }
+        it "cannot scale" do
+          expect{ subject.read_for_update?(object, {"memory" => 2}) }.to raise_error(VCAP::Errors::ApiError, /app_scaling/)
+          expect{ subject.read_for_update?(object, {"disk_quota" => 2}) }.to raise_error(VCAP::Errors::ApiError, /app_scaling/)
+          expect{ subject.read_for_update?(object, {"instances" => 2}) }.to raise_error(VCAP::Errors::ApiError, /app_scaling/)
+        end
+
+        it "allows unchanged fields to be specified" do
+          expect{ subject.read_for_update?(object, {"instances" => 1}) }.to_not raise_error
+        end
+
+        it "allows changing other fields" do
+          expect(subject.read_for_update?(object, {"buildpack" => "http://foo.git"})).to be_truthy
         end
       end
     end
