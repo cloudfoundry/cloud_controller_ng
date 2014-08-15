@@ -471,15 +471,15 @@ module VCAP::CloudController
         end
 
         it "should remove the space developer roles from the user" do
-          expect { org.remove_user_recursive(user) }.to change{ user.spaces }.from([space_1, space_2]).to([])
+          expect { org.remove_user_recursive(user) }.to change{ user.spaces.length}.from(2).to(0)
         end
 
         it "should remove the space manager roles from the user" do
-          expect { org.remove_user_recursive(user) }.to change{ user.managed_spaces }.from([space_1, space_2]).to([])
+          expect { org.remove_user_recursive(user) }.to change{ user.managed_spaces.length}.from(2).to(0)
         end
 
         it "should remove the space audited roles from the user" do
-          expect { org.remove_user_recursive(user) }.to change{ user.audited_spaces }.from([space_1, space_2]).to([])
+          expect { org.remove_user_recursive(user) }.to change{ user.audited_spaces.length}.from(2).to(0)
         end
 
         it "should remove the user from each spaces developer role" do
