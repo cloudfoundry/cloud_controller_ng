@@ -110,6 +110,17 @@ module VCAP::CloudController
       end
     end
 
+    def self.url_for_guid(guid)
+      object = ServiceInstance.where(guid: guid).first
+
+      if object.class == UserProvidedServiceInstance
+        user_provided_path = VCAP::CloudController::UserProvidedServiceInstancesController.path
+        return "#{user_provided_path}/#{guid}"
+      else
+        return "#{path}/#{guid}"
+      end
+    end
+
     def read(guid)
       logger.debug "cc.read", model: :ServiceInstance, guid: guid
 

@@ -174,6 +174,15 @@ module VCAP::CloudController
             expect(managed_service_instance_response.fetch('entity').fetch('space_url')).to be
             expect(managed_service_instance_response.fetch('entity').fetch('service_bindings_url')).to be
           end
+
+          it 'includes the correct service binding url' do
+            get "/v2/spaces/#{space.guid}/service_instances", {return_user_provided_service_instances: true}, headers_for(developer)
+            service_instances_response = decoded_response.fetch('resources')
+            user_provided_service_instance_response = service_instances_response.detect {|si|
+              si.fetch('metadata').fetch('guid') == user_provided_service_instance.guid
+            }
+            expect(user_provided_service_instance_response.fetch('entity').fetch('service_bindings_url')).to include('user_provided_service_instance')
+          end
         end
 
         describe 'when return_user_provided_service_instances flag is not present' do

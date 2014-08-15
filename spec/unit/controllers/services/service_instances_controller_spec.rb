@@ -421,6 +421,12 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_instance.guid)
         end
+
+        it "returns the bindings URL with user_provided_service_instance" do
+          get "v2/service_instances/#{service_instance.guid}", {}, admin_headers
+          expect(last_response.status).to eq(200)
+          expect(decoded_response.fetch('entity').fetch('service_bindings_url')).to include("user_provided_service_instances")
+        end
       end
     end
 
