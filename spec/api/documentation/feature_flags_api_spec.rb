@@ -64,7 +64,7 @@ resource "Feature Flags (experimental)", :type => :api do
 
   get "/v2/config/feature_flags/app_bits_upload" do
     example "Get the App Bits Upload feature flag" do
-      explanation "When disabled, only admin users can upload app bits"
+      explanation "When enabled, space developers can upload app bits. When disabled, only admin users can upload app bits"
       client.get "/v2/config/feature_flags/app_bits_upload", {}, headers
 
       expect(status).to eq(200)
@@ -80,7 +80,7 @@ resource "Feature Flags (experimental)", :type => :api do
 
   get "/v2/config/feature_flags/app_scaling" do
     example "Get the App Scaling feature flag" do
-      explanation "When disabled, only admin users can perform scaling operations (i.e. change memory, disk or instances)"
+      explanation "When enabled, space developers can perform scaling operations (i.e. change memory, disk or instances). When disabled, only admin users can perform scaling operations."
       client.get "/v2/config/feature_flags/app_scaling", {}, headers
 
       expect(status).to eq(200)
@@ -96,7 +96,7 @@ resource "Feature Flags (experimental)", :type => :api do
 
   get "/v2/config/feature_flags/user_org_creation" do
     example "Get the User Org Creation feature flag" do
-      explanation "When enabled, any user can create an organization via the API."
+      explanation "When enabled, any user can create an organization via the API. When disabled, only admin users can create organizations via the API."
       client.get "/v2/config/feature_flags/user_org_creation", {}, headers
 
       expect(status).to eq(200)
@@ -112,7 +112,7 @@ resource "Feature Flags (experimental)", :type => :api do
 
   get "/v2/config/feature_flags/private_domain_creation" do
     example "Get the Private Domain Creation feature flag" do
-      explanation "When enabled, an organization manager can create private domains for that organization."
+      explanation "When enabled, an organization manager can create private domains for that organization. When disabled, only admin users can create private domains."
       client.get "/v2/config/feature_flags/private_domain_creation", {}, headers
 
       expect(status).to eq(200)
@@ -128,7 +128,7 @@ resource "Feature Flags (experimental)", :type => :api do
 
   get "/v2/config/feature_flags/route_creation" do
     example "Get the Route Creation feature flag" do
-      explanation "When enabled, a space developer can create routes in a space. When disabled, no users can create routes."
+      explanation "When enabled, a space developer can create routes in a space. When disabled, only admin users can create routes."
       client.get "/v2/config/feature_flags/route_creation", {}, headers
 
       expect(status).to eq(200)
