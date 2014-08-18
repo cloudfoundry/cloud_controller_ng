@@ -93,12 +93,13 @@ module VCAP::CloudController
               subject.validate_app_for_staging(app)
             }.to raise_error(Errors::ApiError, /Custom buildpacks are disabled/)
           end
-
         end
+
         context "and a docker image is specified" do
           let(:docker_image) do
             'fake-docker-image'
           end
+
           it "raises" do
             expect {
               subject.validate_app_for_staging(app)
