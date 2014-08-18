@@ -150,6 +150,16 @@ resource "Spaces", :type => :api do
       standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, outer_model: :space, path: :service_instances
     end
 
+    describe "Services" do
+      before do
+        some_service = VCAP::CloudController::Service.make(:active => true)
+        service_plan = VCAP::CloudController::ServicePlan.make(:service => some_service, public: false)
+        VCAP::CloudController::ServicePlanVisibility.make(service_plan: some_service.service_plans.first, organization: space.organization)
+      end
+
+      standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :space, path: :service
+    end
+
     describe "Events" do
       before do
         user = VCAP::CloudController::User.make

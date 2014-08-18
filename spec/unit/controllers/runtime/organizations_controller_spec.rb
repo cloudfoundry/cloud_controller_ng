@@ -172,6 +172,86 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET', '/v2/organizations/:guid/services' do
+      let(:other_org) { Organization.make }
+      let(:space_one) { Space.make(organization: org) }
+      let(:user) { make_developer_for_space(space_one) }
+      let (:headers) do
+        headers_for(user)
+      end
+
+      before do
+        user.add_organization(other_org)
+        space_one.add_developer(user)
+      end
+
+      def decoded_guids
+        decoded_response['resources'].map { |r| r['metadata']['guid'] }
+      end
+
+      context 'with an offering that has private plans' do
+        before(:each) do
+          @service = Service.make(:active => true)
+          @service_plan = ServicePlan.make(:service => @service, public: false)
+          ServicePlanVisibility.make(service_plan: @service.service_plans.first, organization: org)
+        end
+
+        it "should remove the offering when the org does not have access to any of the service's plans" do
+          get "/v2/organizations/#{other_org.guid}/services", {}, headers
+          expect(last_response).to be_ok
+          expect(decoded_guids).not_to include(@service.guid)
+        end
+
+        it "should return the offering when the org has access to one of the service's plans" do
+          get "/v2/organizations/#{org.guid}/services", {}, headers
+          expect(last_response).to be_ok
+          expect(decoded_guids).to include(@service.guid)
+        end
+
+        it 'should include plans that are visible to the org' do
+          get "/v2/organizations/#{org.guid}/services?inline-relations-depth=1", {}, headers
+
+          expect(last_response).to be_ok
+          service = decoded_response.fetch('resources').fetch(0)
+          service_plans = service.fetch('entity').fetch('service_plans')
+          expect(service_plans.length).to eq(1)
+          expect(service_plans.first.fetch('metadata').fetch('guid')).to eq(@service_plan.guid)
+          expect(service_plans.first.fetch('metadata').fetch('url')).to eq("/v2/service_plans/#{@service_plan.guid}")
+        end
+
+        it 'should exclude plans that are not visible to the org' do
+          public_service_plan = ServicePlan.make(service: @service, public: true)
+
+          get "/v2/organizations/#{other_org.guid}/services?inline-relations-depth=1", {}, headers
+
+          expect(last_response).to be_ok
+          service = decoded_response.fetch('resources').fetch(0)
+          service_plans = service.fetch('entity').fetch('service_plans')
+          expect(service_plans.length).to eq(1)
+          expect(service_plans.first.fetch('metadata').fetch('guid')).to eq(public_service_plan.guid)
+        end
+      end
+
+      describe 'get /v2/organizations/:guid/services?q=active:<t|f>' do
+        before(:each) do
+          @active = 3.times.map { Service.make(:active => true).tap{|svc| ServicePlan.make(:service => svc) } }
+          @inactive = 2.times.map { Service.make(:active => false).tap{|svc| ServicePlan.make(:service => svc) } }
+        end
+
+        it 'can remove inactive services' do
+          get "/v2/organizations/#{org.guid}/services?q=active:t", {}, headers
+          expect(last_response).to be_ok
+          expect(decoded_guids).to match_array(@active.map(&:guid))
+        end
+
+        it 'can only get inactive services' do
+          get "/v2/organizations/#{org.guid}/services?q=active:f", {}, headers
+          expect(last_response).to be_ok
+          expect(decoded_guids).to match_array(@inactive.map(&:guid))
+        end
+      end
+    end
+
     describe 'GET /v2/organizations/:guid/domains' do
       let(:organization) { Organization.make }
       let(:manager) { make_manager_for_org(organization) }

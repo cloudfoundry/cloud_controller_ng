@@ -138,5 +138,16 @@ resource "Organizations", :type => :api do
       nested_model_associate :auditor, :organization
       nested_model_remove :auditor, :organization
     end
+
+    describe "Services" do
+      before do
+        some_service = VCAP::CloudController::Service.make(:active => true)
+        service_plan = VCAP::CloudController::ServicePlan.make(:service => some_service, public: false)
+        space = VCAP::CloudController::Space.make(organization: organization)
+        VCAP::CloudController::ServicePlanVisibility.make(service_plan: some_service.service_plans.first, organization: space.organization)
+      end
+
+      standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :organization, path: :service
+    end
   end
 end

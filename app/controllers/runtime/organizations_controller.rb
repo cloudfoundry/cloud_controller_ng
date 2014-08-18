@@ -34,6 +34,38 @@ module VCAP::CloudController
       end
     end
 
+    get "/v2/organizations/:guid/services", :enumerate_services
+    def enumerate_services(guid)
+      logger.debug "cc.enumerate.related", guid: guid, association: "services"
+
+      org = find_guid_and_validate_access(:read, guid)
+
+      associated_controller, associated_model = ServicesController, Service
+
+      filtered_dataset = Query.filtered_dataset_from_query_params(
+        associated_model,
+        associated_model.organization_visible(org),
+        associated_controller.query_parameters,
+        @opts,
+      )
+
+      associated_path = "#{self.class.url_for_guid(guid)}/services"
+
+      opts = @opts.merge(
+        additional_visibility_filters: {
+          service_plans: proc { |ds| ds.organization_visible(org) },
+        }
+      )
+
+      collection_renderer.render_json(
+        associated_controller,
+        filtered_dataset,
+        associated_path,
+        opts,
+        {},
+      )
+    end
+
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
