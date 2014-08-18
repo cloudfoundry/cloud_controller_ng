@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource "Services Plans", type: :api do
+resource "Service Plans", type: :api do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let(:service) { VCAP::CloudController::Service.make }
   let(:service_guid) { service.guid }
