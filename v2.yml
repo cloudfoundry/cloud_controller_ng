@@ -642,3 +642,8 @@
   name: FeatureDisabled
   http_code: 403
   message: "Feature Disabled: %s"
+
+340001:
+  name: UserProvidedServiceInstanceNotFound
+  http_code: 404
+  message: "The service instance could not be found: %s"
