@@ -14,6 +14,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:active) }
       it { expect(described_class).to be_queryable_by(:service_guid) }
       it { expect(described_class).to be_queryable_by(:service_instance_guid) }
+      it { expect(described_class).to be_queryable_by(:service_broker_guid) }
     end
 
     describe "Attributes" do
@@ -143,13 +144,13 @@ module VCAP::CloudController
       before do
         @services = {
           :public => [
-            ServicePlan.make(active: true, public: true),
-            ServicePlan.make(active: true, public: true),
-            ServicePlan.make(active: false, public: true)
+            ServicePlan.make(:v2, active: true, public: true),
+            ServicePlan.make(:v2, active: true, public: true),
+            ServicePlan.make(:v2, active: false, public: true)
           ],
           :private => [
-            ServicePlan.make(active: true, public: false),
-            ServicePlan.make(active: false, public: false)
+            ServicePlan.make(:v2, active: true, public: false),
+            ServicePlan.make(:v2, active: false, public: false)
           ]
         }
       end
@@ -162,6 +163,46 @@ module VCAP::CloudController
           plans = ServicePlan.all
           expected_plan_guids = plans.map(&:guid)
           expected_service_guids = plans.map(&:service).map(&:guid).uniq
+
+          returned_plan_guids = decoded_response.fetch('resources').map do |res|
+            res['metadata']['guid']
+          end
+
+          returned_service_guids = decoded_response.fetch('resources').map do |res|
+            res['entity']['service_guid']
+          end
+
+          expect(returned_plan_guids).to match_array expected_plan_guids
+          expect(returned_service_guids).to match_array expected_service_guids
+        end
+
+        it 'can query by service plan guid' do
+          service = @services[:public][0].service
+          get "/v2/service_plans?q=service_guid:#{service.guid}", {}, admin_headers
+          expect(last_response.status).to eq 200
+
+          expected_plan_guids = service.service_plans.map(&:guid)
+          expected_service_guids = [service.guid]
+
+          returned_plan_guids = decoded_response.fetch('resources').map do |res|
+            res['metadata']['guid']
+          end
+
+          returned_service_guids = decoded_response.fetch('resources').map do |res|
+            res['entity']['service_guid']
+          end
+
+          expect(returned_plan_guids).to match_array expected_plan_guids
+          expect(returned_service_guids).to match_array expected_service_guids
+        end
+
+        it 'can query by service broker guid' do
+          service = @services[:public][0].service
+          get "/v2/service_plans?q=service_broker_guid:#{service.service_broker.guid}", {}, admin_headers
+          expect(last_response.status).to eq 200
+
+          expected_plan_guids = service.service_plans.map(&:guid)
+          expected_service_guids = [service.guid]
 
           returned_plan_guids = decoded_response.fetch('resources').map do |res|
             res['metadata']['guid']

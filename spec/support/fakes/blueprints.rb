@@ -174,6 +174,15 @@ module VCAP::CloudController
     active            { true }
   end
 
+  ServicePlan.blueprint(:v2) do
+    name              { Sham.name }
+    free              { false }
+    description       { Sham.description }
+    service           { Service.make(:v2) }
+    unique_id         { SecureRandom.uuid }
+    active            { true }
+  end
+
   ServicePlanVisibility.blueprint do
     service_plan { ServicePlan.make }
     organization { Organization.make }
