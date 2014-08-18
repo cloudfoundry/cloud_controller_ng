@@ -92,10 +92,16 @@ module VCAP::CloudController
       end
 
       context 'when the route_creation feature flag is disabled' do
-        it 'raises when attempting to create a route' do
-          FeatureFlag.make(name: "route_creation", enabled: false, error_message: nil)
+        before { FeatureFlag.make(name: "route_creation", enabled: false, error_message: nil) }
 
+        it 'raises when attempting to create a route' do
           expect { subject.create?(object) }.to raise_error(VCAP::Errors::ApiError, /route_creation/)
+        end
+
+        it 'allows all other actions' do
+          expect(subject.read_for_update?(object)).to be_truthy
+          expect(subject.update?(object)).to be_truthy
+          expect(subject.delete?(object)).to be_truthy
         end
       end
     end
