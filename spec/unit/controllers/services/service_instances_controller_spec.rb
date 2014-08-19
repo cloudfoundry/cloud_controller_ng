@@ -360,6 +360,7 @@ module VCAP::CloudController
 
           it 'returns a 404' do
             expect(last_response.status).to eq(404)
+            expect(decoded_response['code']).to eq(110003)
           end
         end
       end

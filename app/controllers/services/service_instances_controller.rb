@@ -62,7 +62,9 @@ module VCAP::CloudController
       raise Errors::ApiError.new_from_details("InvalidRequest") unless request_attrs
 
       # Make sure the service plan exists before checking permissions
-      find_guid(service_plan_guid, ServicePlan)
+      if ServicePlan.find(guid: service_plan_guid).nil?
+        raise ServicePlansController.not_found_exception(service_plan_guid)
+      end
 
       raise Errors::ApiError.new_from_details("NotAuthorized") unless current_user_can_manage_plan(service_plan_guid)
 
