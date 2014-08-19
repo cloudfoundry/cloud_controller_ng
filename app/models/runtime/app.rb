@@ -476,6 +476,7 @@ module VCAP::CloudController
     end
 
     def docker_image=(value)
+      value = fill_docker_string(value)
       super
       self.package_hash = value
     end
@@ -552,6 +553,18 @@ module VCAP::CloudController
     end
 
     private
+
+    # there's no concrete schema for what constitutes a valid docker 
+    # repo/image reference online at the moment, so make a best effort to turn
+    # the passed value into a complete, plausible docker image reference:
+    # registry-name:registry-port/[scope-name/]repo-name:tag-name
+    def fill_docker_string(value)    
+      segs = value.split('/')
+      if not segs.last.include?(':')
+        segs[-1] = segs.last + ':latest'
+      end
+      segs.join('/')
+    end
 
     def metadata_deserialized
       deserialized_values[:metadata]
