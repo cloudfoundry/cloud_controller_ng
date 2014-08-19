@@ -65,7 +65,7 @@ resource "Apps", :type => :api do
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :app
-        expect(parsed_response['entity']['docker_image']).to eq("cloudfoundry/hello")
+        expect(parsed_response['entity']['docker_image']).to eq("cloudfoundry/hello:latest")
         expect(parsed_response['entity']['environment_json']).to match(diego_environment)
 
         app_guid = parsed_response['metadata']['guid']

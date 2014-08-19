@@ -1883,14 +1883,52 @@ module VCAP::CloudController
 
       it "sets the package hash to the image name any time the image is set" do
         expect {
-          app.docker_image = "foo/bar"
-        }.to change { app.package_hash }.to("foo/bar")
+          app.docker_image = "foo/bar:latest"
+        }.to change { app.package_hash }.to("foo/bar:latest")
       end
 
       it "preserves its existing behavior as a setter" do
         expect {
-          app.docker_image = "foo/bar"
-        }.to change { app.docker_image }.to("foo/bar")
+          app.docker_image = "foo/bar:latest"
+        }.to change { app.docker_image }.to("foo/bar:latest")
+      end
+
+      user_docker_images = [
+        "bar", 
+        "foo/bar",
+        "foo/bar/baz",
+        "fake.registry.com/bar", 
+        "fake.registry.com/foo/bar",
+        "fake.registry.com/foo/bar/baz",
+        "fake.registry.com:5000/bar",
+        "fake.registry.com:5000/foo/bar",
+        "fake.registry.com:5000/foo/bar/baz",
+      ]
+
+      user_docker_images.each do |partial_ref|
+        complete_ref = partial_ref + ":0.1"
+        it "keeps the user specified tag :0.1 on #{complete_ref}" do
+          expect {
+            app.docker_image = complete_ref
+          }.to change { app.docker_image }.to end_with(":0.1")
+        end
+      end
+
+      user_docker_images.each do |partial_ref|
+        complete_ref = partial_ref + ":latest"
+        it "keeps the user specified tag :latest on #{complete_ref}" do
+          expect {
+            app.docker_image = complete_ref
+          }.to change { app.docker_image }.to end_with(":latest")
+        end
+      end
+
+      user_docker_images.each do |partial_ref|
+        it "inserts the tag :latest on #{partial_ref}" do
+          expect {
+            app.docker_image = partial_ref
+          }.to change { app.docker_image }.to end_with(":latest")
+        end
       end
     end
 
