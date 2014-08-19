@@ -345,6 +345,23 @@ module VCAP::CloudController
           end
 
         end
+
+        context 'when the service_plan does not exist' do
+          before do
+            req = MultiJson.dump(
+              :name => 'foo',
+              :space_guid => space.guid,
+              :service_plan_guid => 'bad-guid'
+            )
+            headers = json_headers(headers_for(developer))
+
+            post "/v2/service_instances", req, headers
+          end
+
+          it 'returns a 404' do
+            expect(last_response.status).to eq(404)
+          end
+        end
       end
 
       context 'with a v1 service' do

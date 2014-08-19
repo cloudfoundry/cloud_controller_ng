@@ -54,12 +54,17 @@ module VCAP::CloudController
 
       @request_attrs = json_msg.extract(:stringify_keys => true)
 
+      service_plan_guid = request_attrs['service_plan_guid']
+
       logger.debug "cc.create", :model => self.class.model_class_name,
         :attributes => request_attrs
 
       raise Errors::ApiError.new_from_details("InvalidRequest") unless request_attrs
 
-      raise Errors::ApiError.new_from_details("NotAuthorized") unless current_user_can_manage_plan(request_attrs['service_plan_guid'])
+      # Make sure the service plan exists before checking permissions
+      find_guid(service_plan_guid, ServicePlan)
+
+      raise Errors::ApiError.new_from_details("NotAuthorized") unless current_user_can_manage_plan(service_plan_guid)
 
       organization = requested_space.organization
 
