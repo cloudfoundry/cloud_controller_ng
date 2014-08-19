@@ -3,7 +3,7 @@ module VCAP::CloudController
     module Runtime
       class EventsCleanup < Struct.new(:cutoff_age_in_days)
         def perform
-          old_events = Event.where("created_at < ?", cutoff_time)
+          old_events = Event.where("created_at < CURRENT_TIMESTAMP - INTERVAL '? DAY'", cutoff_age_in_days)
           logger = Steno.logger("cc.background")
           logger.info("Cleaning up #{old_events.count} Event rows")
           old_events.delete
@@ -15,12 +15,6 @@ module VCAP::CloudController
 
         def max_attempts
           1
-        end
-
-        private
-
-        def cutoff_time
-          Time.now - cutoff_age_in_days.days
         end
       end
     end

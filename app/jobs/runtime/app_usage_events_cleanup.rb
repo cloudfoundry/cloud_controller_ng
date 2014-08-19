@@ -8,9 +8,8 @@ module VCAP::CloudController
           logger = Steno.logger("cc.background")
           logger.info("Cleaning up old AppUsageEvent rows")
 
-
           repository = Repositories::Runtime::AppUsageEventRepository.new
-          deleted_count = repository.delete_events_created_before(cutoff_time)
+          deleted_count = repository.delete_events_older_than(cutoff_age_in_days)
 
           logger.info("Cleaned up #{deleted_count} AppUsageEvent rows")
         end
@@ -21,12 +20,6 @@ module VCAP::CloudController
 
         def max_attempts
           1
-        end
-
-        private
-
-        def cutoff_time
-          Time.now - cutoff_age_in_days.days
         end
       end
     end

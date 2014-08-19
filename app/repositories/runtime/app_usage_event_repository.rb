@@ -47,8 +47,8 @@ module VCAP::CloudController
           AppUsageEvent.insert(column_map.keys, usage_query)
         end
 
-        def delete_events_created_before(cutoff_time)
-          old_app_usage_events = AppUsageEvent.dataset.where("created_at < ?", cutoff_time)
+        def delete_events_older_than(cutoff_age_in_days)
+          old_app_usage_events = AppUsageEvent.dataset.where("created_at < CURRENT_TIMESTAMP - INTERVAL '? DAY'", cutoff_age_in_days)
           count_to_delete = old_app_usage_events.count
           old_app_usage_events.delete
           count_to_delete
