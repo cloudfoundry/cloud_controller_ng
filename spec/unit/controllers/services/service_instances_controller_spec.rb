@@ -602,7 +602,7 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(space) }
 
       context 'when the user is a member of the space this instance exists in' do
-        let(:instance)  { ServiceInstance.make(space: space) }
+        let(:instance)  { ManagedServiceInstance.make(space: space) }
 
         context 'when the user has only the cloud_controller.read scope' do
           it 'returns a JSON payload indicating they have permission to manage this instance' do
@@ -630,7 +630,7 @@ module VCAP::CloudController
       end
 
       context 'when the user is NOT a member of the space this instance exists in' do
-        let(:instance)  { ServiceInstance.make }
+        let(:instance)  { ManagedServiceInstance.make }
 
         it 'returns a JSON payload indicating the user does not have permission to manage this instance' do
           get "/v2/service_instances/#{instance.guid}/permissions", {}, json_headers(headers_for(developer))
@@ -640,7 +640,7 @@ module VCAP::CloudController
       end
 
       context 'when the user has not authenticated with Cloud Controller' do
-        let(:instance)  { ServiceInstance.make }
+        let(:instance)  { ManagedServiceInstance.make }
         let(:developer) { nil }
 
         it 'returns an error saying that the user is not authenticated' do

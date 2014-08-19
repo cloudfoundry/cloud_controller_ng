@@ -38,7 +38,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :droplets }
       it do
         is_expected.to have_associated :service_bindings, associated_instance: ->(app) {
-          service_instance = ServiceInstance.make(space: app.space)
+          service_instance = ManagedServiceInstance.make(space: app.space)
           ServiceBinding.make(service_instance: service_instance)
         }
       end

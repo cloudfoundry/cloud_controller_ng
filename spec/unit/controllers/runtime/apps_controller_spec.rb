@@ -304,7 +304,7 @@ module VCAP::CloudController
       end
 
       context 'when the user has not authenticated with Cloud Controller' do
-        let(:instance)  { ServiceInstance.make }
+        let(:instance)  { ManagedServiceInstance.make }
         let(:developer) { nil }
 
         it 'returns an error saying that the user is not authenticated' do
