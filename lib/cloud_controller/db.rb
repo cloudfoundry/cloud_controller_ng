@@ -52,6 +52,8 @@ Sequel::Model.plugin :dirty
 Sequel::Model.plugin :timestamps
 Sequel::Model.plugin :validation_helpers
 
+Sequel::Database.extension(:current_datetime_timestamp)
+
 # monkey patch sequel to make it easier to map validation failures to custom
 # exceptions, e.g.
 #

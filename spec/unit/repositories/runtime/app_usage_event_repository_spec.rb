@@ -170,17 +170,20 @@ module VCAP::CloudController
         end
 
         it "will delete events created before the specified cutoff time" do
-          future_time = Time.now + 5.minutes
-          Timecop.travel(future_time) do
-            app = App.make
-            repository.create_from_app(app)
+          app = App.make
+          event = repository.create_from_app(app)
+          event.created_at = Time.now + 5.minutes
+          event.save
 
-            cutoff_time = future_time - 1.minute
+          cutoff_time = event.created_at
+          expect {
             repository.delete_events_created_before(cutoff_time)
+          }.to change {
+            AppUsageEvent.count
+          }.to (1)
 
-            expect(AppUsageEvent.where("created_at < ?", cutoff_time).count).to equal(0)
-            expect(AppUsageEvent.last).to match_app(app)
-          end
+          expect(AppUsageEvent.where("created_at < ?", cutoff_time).count).to equal(0)
+          expect(AppUsageEvent.last).to match_app(app)
         end
       end
     end
