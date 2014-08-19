@@ -40,8 +40,6 @@ case $1 in
     echo $$ > $PIDFILE
     chown vcap:vcap $PIDFILE
 
-    source $CC_JOB_DIR/bin/handle_nfs_or_local_blobstore.sh
-
     /var/vcap/packages/syslog_aggregator/setup_syslog_forwarder.sh $CONFIG_DIR
 
     cd $CC_PACKAGE_DIR/cloud_controller_ng

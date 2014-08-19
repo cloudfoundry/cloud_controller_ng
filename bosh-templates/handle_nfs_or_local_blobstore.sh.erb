@@ -1,15 +1,13 @@
 <% if properties.nfs_server.address %>
 
 NFS_SHARE=/var/vcap/nfs
-modprobe nfs
 mkdir -p $NFS_SHARE
-chown vcap:vcap $NFS_SHARE
 
 cp -f /etc/default/nfs-common /etc/default/nfs-common.orig
 cp -f $CC_JOB_DIR/config/nfs-common /etc/default/nfs-common
 
 cp -f $CC_JOB_DIR/config/idmapd.conf /etc/idmapd.conf
-/etc/init.d/idmapd restart
+service idmapd restart
 
 if grep -qs $NFS_SHARE /proc/mounts; then
   echo "Found NFS mount, unmounting..."
