@@ -159,15 +159,4 @@ resource "Feature Flags (experimental)", :type => :api do
         })
     end
   end
-
-  delete "/v2/config/feature_flags/:name" do
-    include_context "name_parameter"
-
-    example "Unset a feature flag" do
-      VCAP::CloudController::FeatureFlag.create(name: "private_domain_creation", enabled: false)
-      client.delete "/v2/config/feature_flags/private_domain_creation", "{}", headers
-      expect(status).to eq(204)
-      expect(VCAP::CloudController::FeatureFlag.find(name: "private_domain_creation")).to be_nil
-    end
-  end
 end

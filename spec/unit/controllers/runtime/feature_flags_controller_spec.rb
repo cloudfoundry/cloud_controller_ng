@@ -185,40 +185,5 @@ module VCAP::CloudController
         end
       end
     end
-
-    describe 'DELETE /v2/config/feature_flags/:name' do
-      context 'when the user is an admin' do
-        context 'and the flag is set' do
-          before { FeatureFlag.make(name: 'user_org_creation', enabled: false) }
-
-          it 'unsets the flag' do
-            delete '/v2/config/feature_flags/user_org_creation', MultiJson.dump({}), admin_headers
-
-            expect(last_response.status).to eq(204)
-            expect(FeatureFlag.find(name: "user_org_creation")).to be_nil
-          end
-        end
-
-        context 'and the flag is not set' do
-          it 'returns a 404' do
-            delete '/v2/config/feature_flags/user_org_creation', {}, admin_headers
-
-            expect(last_response.status).to eq(404)
-            expect(decoded_response['description']).to match(/feature flag could not be found/)
-            expect(decoded_response['error_code']).to match(/FeatureFlagNotFound/)
-          end
-        end
-      end
-
-      context 'when the user is not an admin' do
-        it 'returns a 403' do
-          delete '/v2/config/feature_flags/user_org_creation', MultiJson.dump({}), headers_for(User.make)
-
-          expect(last_response.status).to eq(403)
-          expect(decoded_response['description']).to match(/not authorized/)
-          expect(decoded_response['error_code']).to match(/NotAuthorized/)
-        end
-      end
-    end
   end
 end

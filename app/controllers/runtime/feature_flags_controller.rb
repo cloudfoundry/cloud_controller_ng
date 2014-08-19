@@ -63,16 +63,5 @@ module VCAP::CloudController
         FeatureFlagPresenter.new(feature_flag, name, self.class.path).to_json
       ]
     end
-
-    delete "#{path}/:name", :delete
-    def delete(name)
-      validate_access(:delete, model)
-      feature_flag = FeatureFlag.find(name: name)
-
-      raise self.class.not_found_exception(name) unless feature_flag
-
-      feature_flag.destroy
-      [HTTP::NO_CONTENT, nil]
-    end
   end
 end
