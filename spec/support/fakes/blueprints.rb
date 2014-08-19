@@ -329,6 +329,16 @@ module VCAP::CloudController
     organization { Organization.make }
   end
 
+  EnvironmentVariableGroup.blueprint do
+    name { "runtime" }
+    environment_json do
+      {
+        "MOTD" => "Because of your smile, you make life more beautiful.",
+        "COROPRATE_PROXY_SERVER" => "abc:8080",
+      }
+    end
+  end
+
   FeatureFlag.blueprint do
     name { 'user_org_creation' }
     enabled { false }
