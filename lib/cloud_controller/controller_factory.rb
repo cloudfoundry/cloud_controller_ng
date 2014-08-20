@@ -48,6 +48,10 @@ module CloudController
                                 { app_event_repository: dependency_locator.app_event_repository }
                               when 'SpacesController'
                                 { space_event_repository: dependency_locator.space_event_repository }
+                              when 'AppUsageEventsController'
+                                {
+                                  collection_renderer: dependency_locator.large_paginated_collection_renderer,
+                                }
                               when 'BillingEventsController'
                                 {
                                   object_renderer:     nil, # no object rendering

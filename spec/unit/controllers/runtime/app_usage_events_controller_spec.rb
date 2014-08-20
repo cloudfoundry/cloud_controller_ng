@@ -65,7 +65,7 @@ module VCAP::CloudController
       before do
         # Truncate in mysql causes an implicit commit.
         # This stub will cause the same behavior, but not commit.
-        allow(AppUsageEvent.dataset).to receive(:truncate) do 
+        allow(AppUsageEvent.dataset).to receive(:truncate) do
           AppUsageEvent.dataset.delete
         end
       end
