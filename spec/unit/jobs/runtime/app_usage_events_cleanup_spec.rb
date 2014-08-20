@@ -22,30 +22,17 @@ module VCAP::CloudController
 
       describe "#perform" do
         it "deletes events created before the pruning threshold" do
-          Timecop.freeze do
-            event_before_threshold = AppUsageEvent.make(created_at: (cutoff_age_in_days + 1).days.ago)
-            expect {
-              job.perform
-            }.to change { event_before_threshold.exists? }.to(false)
-          end
-        end
-
-        it "keeps events created  at the pruning threshold" do
-          Timecop.freeze do
-            event_at_threshold = AppUsageEvent.make(created_at: cutoff_age_in_days.days.ago)
-            expect {
-              job.perform
-            }.not_to change { event_at_threshold.exists? }.from(true)
-          end
+          event_before_threshold = AppUsageEvent.make(created_at: (cutoff_age_in_days + 1).days.ago)
+          expect {
+            job.perform
+          }.to change { event_before_threshold.exists? }.to(false)
         end
 
         it "keeps events created after the pruning threshold" do
-          Timecop.freeze do
-            event_after_threshold = AppUsageEvent.make(created_at: (cutoff_age_in_days - 1).days.ago)
-            expect {
-              job.perform
-            }.not_to change { event_after_threshold.exists? }.from(true)
-          end
+          event_after_threshold = AppUsageEvent.make(created_at: (cutoff_age_in_days - 1).days.ago)
+          expect {
+            job.perform
+          }.not_to change { event_after_threshold.exists? }.from(true)
         end
 
         it "knows its job name" do
