@@ -224,28 +224,6 @@ module CloudController
           expect(uri.path).to eql "/staging/droplets/#{app.guid}/upload"
         end
 
-        context "when the user and/or password are supplied encoded" do
-          let(:username) { "f%40t%3A%25a" }
-          let(:password) { "m%40%2Fn!" }
-
-          it "preserves encoded values" do
-            uri = URI.parse(url_generator.droplet_upload_url(app))
-            expect(uri.user).to eql "f%40t%3A%25a"
-            expect(uri.password).to eql "m%40%2Fn!"
-          end
-        end
-
-        context "when the username and/or password have special characters" do
-          let(:username) { "f@t:%a" }
-          let(:password) { "m@/n!" }
-
-          it "urlencodes reserved characters" do
-            uri = URI.parse(url_generator.droplet_upload_url(app))
-            expect(uri.user).to eql "f%40t%3A%25a"
-            expect(uri.password).to eql "m%40%2Fn!"
-          end
-        end
-
         it "gives out url for buidpack cache" do
           uri = URI.parse(url_generator.buildpack_cache_upload_url(app))
           expect(uri.host).to eql blobstore_host

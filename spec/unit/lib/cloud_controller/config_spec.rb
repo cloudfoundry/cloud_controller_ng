@@ -87,6 +87,31 @@ module VCAP::CloudController
           it "preserves the value for app_bits_upload_grace_period_in_seconds" do
             expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(600)
           end
+
+          it "preserves the value of the staging auth user/password" do
+            expect(config[:staging][:auth][:user]).to eq("user")
+            expect(config[:staging][:auth][:password]).to eq("password")
+          end
+
+          context "when the staging auth is already url encoded" do
+            let(:tmpdir) { Dir.mktmpdir }
+            let (:config_from_file) { Config.from_file(File.join(tmpdir, "overridden_with_urlencoded_values.yml")) }
+
+            before do
+              config_hash = YAML.load_file(File.join(Paths::FIXTURES, "config/minimal_config.yml"))
+              config_hash["staging"]["auth"]["user"] = "f%40t%3A%25a"
+              config_hash["staging"]["auth"]["password"] = "m%40%2Fn!"
+
+              File.open(File.join(tmpdir, "overridden_with_urlencoded_values.yml"), "w") do |f|
+                YAML.dump(config_hash, f)
+              end
+            end
+
+            it "preserves the url-encoded values" do
+              config_from_file[:staging][:auth][:user] = "f%40t%3A%25a"
+              config_from_file[:staging][:auth][:password] = "m%40%2Fn!"
+            end
+          end
         end
 
         context "and the values are invalid" do
@@ -96,6 +121,8 @@ module VCAP::CloudController
           before do
             config_hash = YAML.load_file(File.join(Paths::FIXTURES, "config/minimal_config.yml"))
             config_hash["app_bits_upload_grace_period_in_seconds"] = -2345
+            config_hash["staging"]["auth"]["user"] = "f@t:%a"
+            config_hash["staging"]["auth"]["password"] = "m@/n!"
 
             File.open(File.join(tmpdir, "incorrect_overridden_config.yml"), "w") do |f|
               YAML.dump(config_hash, f)
@@ -108,6 +135,11 @@ module VCAP::CloudController
 
           it "reset the negative value of app_bits_upload_grace_period_in_seconds to 0" do
             expect(config_from_file[:app_bits_upload_grace_period_in_seconds]).to eq(0)
+          end
+
+          it "URL-encodes staging auth as neccesary" do
+            expect(config_from_file[:staging][:auth][:user]).to eq("f%40t%3A%25a")
+            expect(config_from_file[:staging][:auth][:password]).to eq("m%40%2Fn!")
           end
         end
       end
