@@ -11,14 +11,18 @@ module VCAP::CloudController
 
       context "changing space" do
         context "apps" do
-          it "succeeds with no apps" do
-            route = Route.make(domain: SharedDomain.make)
+          it "succeeds with no mapped apps" do
+            route = Route.make(space: AppFactory.make.space, domain: SharedDomain.make)
+
             expect { route.space = Space.make }.not_to raise_error
           end
 
-          it "fails with apps in a different space" do
-            route = Route.make(space: AppFactory.make.space)
-            expect { route.space = Space.make }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
+          it "fails when changing the space when there are apps mapped to it" do
+            app = AppFactory.make
+            route = Route.make(space: app.space, domain: SharedDomain.make)
+            app.add_route(route)
+
+            expect { route.space = Space.make }.to raise_error(Route::InvalidAppRelation)
           end
         end
 
@@ -38,7 +42,7 @@ module VCAP::CloudController
             end
 
             it "fails if in a different organization" do
-              expect { route.space = Space.make }.to raise_error
+              expect { route.space = Space.make }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
             end
           end
         end
