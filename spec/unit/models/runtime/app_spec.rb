@@ -67,6 +67,7 @@ module VCAP::CloudController
         expect_validator(InstancesPolicy)
         expect_validator(HealthCheckPolicy)
         expect_validator(CustomBuildpackPolicy)
+        expect_validator(DockerPolicy)
       end
 
       describe "org and space quota validator policies" do
@@ -1930,6 +1931,23 @@ module VCAP::CloudController
             app.docker_image = partial_ref
           }.to change { app.docker_image }.to end_with(":latest")
         end
+      end
+
+      it "does not allow a docker_image and an admin buildpack" do
+        admin_buildpack = VCAP::CloudController::Buildpack.make
+        app.buildpack = admin_buildpack.name
+        expect {
+          app.docker_image = "foo/bar"
+          app.save
+        }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
+      end
+
+      it "does not allow a docker_image and a custom buildpack" do
+        app.buildpack = "git://user@github.com:repo"
+        expect {
+          app.docker_image = "foo/bar"
+          app.save
+        }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
       end
     end
 
