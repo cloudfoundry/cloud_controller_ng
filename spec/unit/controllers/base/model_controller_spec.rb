@@ -461,6 +461,13 @@ module VCAP::CloudController
           expect(decoded_response["total_results"]).to eq(1)
           expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(model2.guid)
         end
+
+        it "returns matching results when querying with multiple parameters" do
+          get escape_query("/v2/test_models?q=created_at<#{model3.created_at.utc.iso8601}&q=created_at>#{model1.created_at.utc.iso8601}"), "", admin_headers
+
+          expect(decoded_response["total_results"]).to eq(1)
+          expect(decoded_response["resources"][0]["metadata"]["guid"]).to eq(model2.guid)
+        end
       end
     end
 

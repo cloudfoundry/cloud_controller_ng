@@ -192,7 +192,7 @@ module ApiDsl
 
     def standard_list_parameters(controller)
       if controller.query_parameters.size > 0
-        query_parameter_description = "Parameters used to filter the result set. (Format as url_encode('q=filter1_name:value;filter2_name:value'))."
+        query_parameter_description = "Parameters used to filter the result set. (Format as url_encode('q=filter1_name:value&q=filter2_name:value'))."
         query_parameter_description += " Valid filters: #{controller.query_parameters.to_a.join(", ")}"
         request_parameter :q, query_parameter_description
       end

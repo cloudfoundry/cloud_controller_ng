@@ -27,7 +27,7 @@ module VCAP::RestAPI
       @model = model
       @ds = ds
       @queryable_attributes = queryable_attributes
-      @query = query_params[:q]
+      @query = Array(query_params[:q])
     end
 
     # Return the dataset associated with the query.  Note that this does not
@@ -73,12 +73,16 @@ module VCAP::RestAPI
     end
 
     def parse
-      v = SecureRandom.uuid
-      query.gsub!(";;", v)
-      segments = query.split(";")
-      segments.each {|segment| segment.gsub!(v, ";")}
+      @@v ||= SecureRandom.uuid
+      segments = []
+
+      query.each do |q|
+        q.gsub!(";;", @@v)
+        segments.concat(q.split(";"))
+      end
 
       segments.collect do |segment|
+        segment.gsub!(@@v, ";")
         key, comparison, value = segment.split(/(:|>=|<=|<|>| IN )/, 2)
 
         comparison = "=" if comparison == ":"

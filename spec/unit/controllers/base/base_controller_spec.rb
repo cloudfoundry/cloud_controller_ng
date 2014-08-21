@@ -122,7 +122,8 @@ module VCAP::CloudController
       end
 
       describe '#redirect' do
-        let(:sinatra) { double('sinatra') }
+        let(:request) { double('request', query_string: '') }
+        let(:sinatra) { double('sinatra', request: request) }
         let(:app) do
           described_class.new(
             double(:config),

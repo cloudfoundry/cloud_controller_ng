@@ -19,8 +19,7 @@ module VCAP::CloudController
     allow_unauthenticated_access only: :enumerate
     def enumerate
       return super if SecurityContext.valid_token?
-
-      single_filter = @opts[:q]
+      single_filter = @opts[:q][0] if @opts[:q]
       service_guid = single_filter.split(':')[1] if single_filter && single_filter.start_with?('service_guid')
 
       plans = ServicePlan.where(active: true, public: true)
@@ -61,7 +60,7 @@ module VCAP::CloudController
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      single_filter = opts[:q]
+      single_filter = opts[:q][0] if opts[:q]
 
       if single_filter && single_filter.start_with?('service_broker_guid')
         service_broker_guid = single_filter.split(':')[1]

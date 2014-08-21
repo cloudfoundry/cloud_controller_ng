@@ -176,6 +176,13 @@ module VCAP::RestAPI
             @queryable_attributes, :q => q)
           expect(ds.all).to eq([Author[:num_val => 5, :str_val => "str 4"]])
         end
+
+        it "should support multiple 'q' parameters" do
+          q = ["num_val:5", "str_val:str 4"]
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+          expect(ds.all).to eq([Author[:num_val => 5, :str_val => "str 4"]])
+        end
       end
 
       describe "without a key" do

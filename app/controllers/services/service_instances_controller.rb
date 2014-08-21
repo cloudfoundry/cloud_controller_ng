@@ -152,7 +152,7 @@ module VCAP::CloudController
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      single_filter = opts[:q]
+      single_filter = opts[:q][0] if opts[:q]
 
       if single_filter && single_filter.start_with?('organization_guid')
         org_guid = single_filter.split(':')[1]

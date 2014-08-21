@@ -370,7 +370,7 @@ module VCAP::CloudController
         shared_domain = SharedDomain.make
 
         expect {
-          @eager_loaded_orgs = Organization.eager(:domains).where(id: [org1.id, org2.id]).limit(2).all
+          @eager_loaded_orgs = Organization.eager(:domains).where(id: [org1.id, org2.id]).order_by(:id).all
         }.to have_queried_db_times(/domains/i, 1)
 
         expect {

@@ -33,6 +33,10 @@ module VCAP::CloudController::RestController
       it "discards other params" do
         expect(common_params.parse({"foo" => "bar"})).to eq({})
       end
+
+      it "handles multiple q params" do
+        expect(common_params.parse({"q" => "a"}, "q=a&q=b")).to eq({q: ["a", "b"]})
+      end
     end
   end
 end
