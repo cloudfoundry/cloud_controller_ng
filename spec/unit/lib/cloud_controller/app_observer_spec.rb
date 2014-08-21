@@ -117,6 +117,7 @@ module VCAP::CloudController
 
             context "when docker_image is present" do
               before do
+                allow(app).to receive(:auto_buildpack?).and_return(true)
                 allow(app).to receive(:docker_image).and_return("fake-docker-image")
               end
 
@@ -124,7 +125,6 @@ module VCAP::CloudController
                 expect {
                   subject
                 }.not_to raise_error
-
               end
             end
 
