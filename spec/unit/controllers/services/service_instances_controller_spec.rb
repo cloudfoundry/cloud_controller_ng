@@ -359,8 +359,9 @@ module VCAP::CloudController
           end
 
           it 'returns a 404' do
-            expect(last_response.status).to eq(404)
-            expect(decoded_response['code']).to eq(110003)
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['code']).to eq(60003)
+            expect(decoded_response['description']).to include("not a valid service plan")
           end
         end
       end
