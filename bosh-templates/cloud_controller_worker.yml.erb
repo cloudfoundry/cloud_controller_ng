@@ -228,6 +228,7 @@ uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 <% end %>
 
 diego: <%= p("cc.diego") %>
+diego_docker: <%= p("cc.diego_docker") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>

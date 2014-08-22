@@ -136,6 +136,7 @@ uaa_client_secret: 'some-sekret'
 uaa_client_scope: openid,cloud_controller_service_permissions.read
 
 diego: false
+diego_docker: false
 
 renderer:
   max_results_per_page: 100
