@@ -499,7 +499,9 @@ module VCAP::CloudController
 
     def current_droplet
       return nil unless droplet_hash
-      current_saved_droplet || Droplet.new(app: self, droplet_hash: self.droplet_hash)
+      # The droplet may not be in the droplet table as we did not backfill
+      # existing droplets when creating the table.
+      current_saved_droplet || Droplet.create(app: self, droplet_hash: self.droplet_hash)
     end
 
     def start!
@@ -554,11 +556,11 @@ module VCAP::CloudController
 
     private
 
-    # there's no concrete schema for what constitutes a valid docker 
+    # there's no concrete schema for what constitutes a valid docker
     # repo/image reference online at the moment, so make a best effort to turn
     # the passed value into a complete, plausible docker image reference:
     # registry-name:registry-port/[scope-name/]repo-name:tag-name
-    def fill_docker_string(value)    
+    def fill_docker_string(value)
       segs = value.split('/')
       if not segs.last.include?(':')
         segs[-1] = segs.last + ':latest'

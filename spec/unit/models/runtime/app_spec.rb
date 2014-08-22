@@ -536,9 +536,10 @@ module VCAP::CloudController
             subject.droplets_dataset.destroy
           end
 
-          it "knows its current droplet" do
+          it "knows its current droplet and persists it to the database" do
             expect(subject.current_droplet).to be_instance_of(Droplet)
             expect(subject.current_droplet.droplet_hash).to eq("A-hash")
+            expect(Droplet.find(droplet_hash: "A-hash")).not_to be_nil
           end
         end
 
@@ -1529,7 +1530,7 @@ module VCAP::CloudController
 
       context "when AppObserver.updated fails" do
         let(:undo_app) {double(:undo_app_changes, :undo => true)}
-        
+
         it "should undo any change", isolation: :truncation do
           app = AppFactory.make
           allow(UndoAppChanges).to receive(:new).with(app).and_return(undo_app)
