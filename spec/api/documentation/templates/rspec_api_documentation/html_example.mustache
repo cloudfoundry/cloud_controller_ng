@@ -126,7 +126,12 @@
                 {{/ scope }}
                 </td>
                 <td>
-                  <span class="description">{{ description }}</span>
+                  {{^ description_html}}
+                    <span class="description">{{ description }}</span>
+                  {{/ description_html}}
+                  {{# description_html}}
+                    <span class="description">{{{ description_html }}}</span>
+                  {{/ description_html}}
                 </td>
                 <td>
                   <ul class="valid_values">

@@ -1,5 +1,6 @@
 require "spec_helper"
 require "rspec_api_documentation/dsl"
+require "cgi"
 
 resource "Events", :type => :api do
   DOCUMENTED_EVENT_TYPES = %w[app.crash audit.app.update audit.app.create audit.app.delete-request audit.space.create audit.space.update audit.space.delete-request]
@@ -88,7 +89,6 @@ resource "Events", :type => :api do
                                :actee_name => test_app.name,
                                :space_guid => test_app.space.guid,
                                :metadata => { "request" => expected_app_request }
-
     end
 
     example "List App Exited Events" do
@@ -105,7 +105,6 @@ resource "Events", :type => :api do
                                :actee_name => test_app.name,
                                :space_guid => test_app.space.guid,
                                :metadata => droplet_exited_payload
-
     end
 
     example "List App Update Events" do
@@ -124,7 +123,6 @@ resource "Events", :type => :api do
                                :metadata => {
                                  "request" => expected_app_request,
                                }
-
     end
 
     example "List App Delete Events" do
@@ -141,6 +139,24 @@ resource "Events", :type => :api do
                                :actee_name => test_app.name,
                                :space_guid => test_app.space.guid,
                                :metadata => { "request" => { "recursive" => false } }
+    end
+
+    example "List events associated with an App since January 1, 2014" do
+      app_event_repository.record_app_create(test_app, test_user, test_user_email, app_request)
+      app_event_repository.record_app_update(test_app, test_user, test_user_email, app_request)
+      app_event_repository.record_app_delete_request(test_app, test_user, test_user_email, false)
+
+      client.get "/v2/events?q=actee:#{test_app.guid}&q=#{CGI.escape('timestamp>2014-01-01 00:00:00-04:00')}", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "app",
+                               :actee => test_app.guid,
+                               :actee_name => test_app.name,
+                               :space_guid => test_app.space.guid,
+                               :metadata => { "request" => expected_app_request }
     end
 
     example "List Space Create Events" do
