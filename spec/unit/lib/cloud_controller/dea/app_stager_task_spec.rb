@@ -700,6 +700,35 @@ module VCAP::CloudController
           {"protocol"=>"tcp","ports"=>"8080-9090","destination"=>"198.41.191.48/1"}
         ])
       end
+
+      describe "evironment variables" do
+        before do
+          app.environment_json   = { 'KEY' => 'value' }
+        end
+
+        it "includes app environment variables" do
+          request = staging_task.staging_request
+          expect(request[:properties][:environment]).to eq(['KEY=value'])
+        end
+
+        it "includes environment variables from staging environment variable group" do
+          group = EnvironmentVariableGroup.staging
+          group.environment_json = { 'STAGINGKEY' => 'staging_value' }
+          group.save
+
+          request = staging_task.staging_request
+          expect(request[:properties][:environment]).to match_array(['KEY=value', 'STAGINGKEY=staging_value'])
+        end
+
+        it "prefers app environment variables when they conflict with staging group variables" do
+          group = EnvironmentVariableGroup.staging
+          group.environment_json = { 'KEY' => 'staging_value' }
+          group.save
+
+          request = staging_task.staging_request
+          expect(request[:properties][:environment]).to match_array(['KEY=value'])
+        end
+      end
     end
   end
 end
