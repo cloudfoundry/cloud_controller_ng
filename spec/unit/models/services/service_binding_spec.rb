@@ -131,7 +131,10 @@ module VCAP::CloudController
             service_binding = ServiceBinding.make(:service_instance => service_instance)
             service_binding.syslog_drain_url = "http://this.is.a.mean.url.com"
             service_binding.save
-          }.to raise_error(VCAP::Errors::ApiError, /Service is not advertised as a logging service. Please contact the service provider./)
+          }.to raise_error { |error|
+              expect(error).to be_a(VCAP::Errors::ApiError)
+              expect(error.code).to eq(90006)
+          }
         end
 
         it "should allow a non syslog_drain with a nil syslog drain url" do
