@@ -23,8 +23,12 @@ module VCAP::CloudController
             fds:  app.file_descriptors
         }
 
+        staging_env = EnvironmentVariableGroup.running.environment_json
+        app_env     = app.environment_json || {}
+        env         = staging_env.merge(app_env).map { |k, v| "#{k}=#{v}" }
+        self[:env]  = env
+
         self[:cc_partition]         = config[:cc_partition]
-        self[:env]                  = (app.environment_json || {}).map { |k, v| "#{k}=#{v}" }
         self[:console]              = app.console
         self[:debug]                = app.debug
         self[:start_command]        = app.command
