@@ -251,7 +251,7 @@
 90006:
   name: InvalidLoggingServiceBinding
   http_code: 502
-  message: "Service is not advertised as a logging service. Please contact the service provider."
+  message: "The service is attempting to stream logs from your application, but is not registered as a logging service. Please contact the service provider."
 
 100001:
   name: AppInvalid
