@@ -144,7 +144,6 @@ resource "Events", :type => :api do
     example "List events associated with an App since January 1, 2014" do
       app_event_repository.record_app_create(test_app, test_user, test_user_email, app_request)
       app_event_repository.record_app_update(test_app, test_user, test_user_email, app_request)
-      app_event_repository.record_app_delete_request(test_app, test_user, test_user_email, false)
 
       client.get "/v2/events?q=actee:#{test_app.guid}&q=#{CGI.escape('timestamp>2014-01-01 00:00:00-04:00')}", {}, headers
       expect(status).to eq(200)
