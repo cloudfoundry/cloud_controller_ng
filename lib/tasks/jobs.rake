@@ -6,13 +6,15 @@ namespace :jobs do
   end
 
   desc "Start a delayed_job worker that works on jobs that require access to local resources."
-  task :local do
-    CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::LocalQueue.new(config).to_s]).start_working
+  task :local, [:name] do |t, args|
+    CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::LocalQueue.new(config).to_s],
+                                       name: args.name).start_working
   end
 
   desc "Start a delayed_job worker."
-  task :generic do
-    CloudController::DelayedWorker.new(queues: ['cc-generic']).start_working
+  task :generic, [:name] do |t, args|
+    CloudController::DelayedWorker.new(queues: ['cc-generic'],
+                                       name: args.name).start_working
   end
 
   class CloudController::DelayedWorker
@@ -21,6 +23,7 @@ namespace :jobs do
         min_priority: ENV['MIN_PRIORITY'],
         max_priority: ENV['MAX_PRIORITY'],
         queues: options.fetch(:queues),
+        worker_name: options[:name],
         quiet: false
       }
     end
@@ -31,7 +34,9 @@ namespace :jobs do
       Delayed::Worker.max_attempts = 3
       logger = Steno.logger("cc-worker")
       logger.info("Starting job with options #{@queue_options}")
-      Delayed::Worker.new(@queue_options).start
+      worker = Delayed::Worker.new(@queue_options)
+      worker.name = @queue_options[:worker_name]
+      worker.start
     end
   end
 end
