@@ -40,6 +40,16 @@ module VCAP::CloudController::RestController
         end
       end
 
+      context "when order_by has multiple values" do
+        let(:opts) do
+          {order_by: ["field", "id"]}
+        end
+
+        it "orders by the specified column" do
+          expect(sql).to eq(normalize_quotes "SELECT * FROM `test_models` ORDER BY `field` ASC, `id` ASC")
+        end
+      end
+
       context "when order_direction is specified" do
         let(:opts) do
           {order_direction: "desc"}

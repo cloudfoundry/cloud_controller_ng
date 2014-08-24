@@ -74,7 +74,7 @@ module VCAP::CloudController
         space2 = Space.make(organization: org2)
 
         expect {
-          @eager_loaded_domains = Domain.eager(:spaces_sti_eager_load).where(id: [domain1.id, domain2.id]).limit(2).all
+          @eager_loaded_domains = Domain.eager(:spaces_sti_eager_load).where(id: [domain1.id, domain2.id]).order_by(:id).all
         }.to have_queried_db_times(/domains/i, 1)
 
         expect {

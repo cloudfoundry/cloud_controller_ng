@@ -1,7 +1,7 @@
 module VCAP::CloudController::RestController
   class OrderApplicator
     def initialize(opts)
-      @order_by = (opts[:order_by] || :id).to_sym # symbols
+      @order_by = Array(opts[:order_by] || :id).map(&:to_sym) # symbols
       @order_direction = opts[:order_direction] || "asc"
     end
 
@@ -9,9 +9,9 @@ module VCAP::CloudController::RestController
       validate!
 
       if descending?
-        dataset.order(Sequel.desc(@order_by))
+        @order_by.inject(dataset){|ds, col| ds.order_more(Sequel.desc(col))}
       else
-        dataset.order(Sequel.asc(@order_by))
+        @order_by.inject(dataset){|ds, col| ds.order_more(Sequel.asc(col))}
       end
     end
 

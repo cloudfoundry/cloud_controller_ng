@@ -4,7 +4,7 @@ module VCAP::CloudController
 
     def initialize(*args)
       super
-      @opts.merge!(order_by: :timestamp)
+      @opts.merge!(order_by: [:timestamp, :id])
     end
 
     def delete(guid)
