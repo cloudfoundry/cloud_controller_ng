@@ -3,7 +3,9 @@ require "spec_helper"
 describe DockerPolicy do
   describe "env" do
     let(:app) { VCAP::CloudController::AppFactory.make }
-    subject(:validator) { DockerPolicy.new(app) }
+    let(:diego_enabled) { true }
+    let(:docker_enabled) { true }
+    subject(:validator) { DockerPolicy.new(app, diego_enabled, docker_enabled) }
 
     it "disallows a custom buildpack and a docker_image" do
       app.docker_image = 'fake-image'
@@ -18,6 +20,24 @@ describe DockerPolicy do
       app.buildpack = admin_buildpack.name
 
       expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::INVALID_ERROR_MSG)
+    end
+
+    context "when diego is disabled" do
+      let(:diego_enabled) { false }
+
+      it "disallows a docker_image" do
+        app.docker_image = 'fake-image'
+        expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::DISABLED_ERROR_MSG)
+      end
+    end
+
+    context "when docker is disabled" do
+      let(:docker_enabled) { false }
+
+      it "disallows a docker_image" do
+        app.docker_image = 'fake-image'
+        expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::DISABLED_ERROR_MSG)
+      end
     end
 
     it "allows a docker_image without a buildpack" do

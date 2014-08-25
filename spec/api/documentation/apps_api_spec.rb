@@ -37,6 +37,12 @@ resource "Apps", :type => :api do
     standard_model_get :app, nested_associations: [:stack, :space]
     standard_model_delete_without_async :app
 
+    before do
+      allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+      allow(VCAP::CloudController::Config.config).to receive(:[]).with(:diego).and_return true
+      allow(VCAP::CloudController::Config.config).to receive(:[]).with(:diego_docker).and_return true
+    end
+
     def after_standard_model_delete(guid)
       event = VCAP::CloudController::Event.find(:type => "audit.app.delete-request", :actee => guid)
       audited_event event

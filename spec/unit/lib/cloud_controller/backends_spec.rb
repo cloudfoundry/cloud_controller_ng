@@ -118,6 +118,7 @@ module VCAP::CloudController
 
         before do
           allow(app).to receive(:auto_buildpack?).and_return(false)
+          allow(Buildpack).to receive(:count).and_return(1)
         end
 
         context "and custom buildpacks are disabled" do
