@@ -17,6 +17,7 @@ module VCAP::CloudController
       allow(Diego::Messenger).to receive(:new).and_return(diego_messenger)
       Dea::Client.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
       AppObserver.configure(backends)
+      Buildpack.make
     end
 
     describe ".deleted" do

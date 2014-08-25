@@ -28,6 +28,10 @@ module VCAP::CloudController
       if app.docker_image.present? && app.buildpack.custom?
         raise Errors::ApiError.new_from_details("DiegoDockerBuildpackConflict")
       end
+
+      if Buildpack.count == 0 && app.buildpack.custom? == false
+        raise Errors::ApiError.new_from_details("NoBuildpacksFound")
+      end
     end
 
     def find_one_to_stage(app)

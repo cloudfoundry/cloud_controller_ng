@@ -127,6 +127,30 @@ module VCAP::CloudController
           end
         end
       end
+
+      context "when there are no buildpacks installed on the system" do
+        before { Buildpack.dataset.delete }
+
+        context "and a custom buildpack is NOT specified" do
+          it "raises NoBuildpacksFound" do
+            expect {
+              subject.validate_app_for_staging(app)
+            }.to raise_error(Errors::ApiError, /There are no buildpacks available/)
+          end
+        end
+
+        context "and a custom buildpack is specified" do
+          let(:buildpack) do
+            instance_double(CustomBuildpack, custom?: true)
+          end
+
+          it "does not raise" do
+            expect {
+              subject.validate_app_for_staging(app)
+            }.not_to raise_error
+          end
+        end
+      end
     end
 
     describe "#find_one_to_stage" do

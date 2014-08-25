@@ -322,6 +322,8 @@ module VCAP::CloudController
     end
 
     describe "staging" do
+      before { Buildpack.make }
+
       context "when app will be staged", isolation: :truncation do
         let(:app_obj) do
           AppFactory.make(:package_hash => "abc", :state => "STOPPED",
