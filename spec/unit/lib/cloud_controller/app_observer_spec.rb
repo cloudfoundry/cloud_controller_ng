@@ -360,17 +360,6 @@ module VCAP::CloudController
                   it_behaves_like "it stages"
                 end
               end
-
-              context "when docker_image is present" do
-                let(:app) { AppFactory.make docker_image: "fake-image" }
-
-                it "raises" do
-                  expect {
-                    subject
-                  }.to raise_error(Errors::ApiError, /Diego has not been enabled/)
-
-                end
-              end
             end
 
             context "when the app is already staged" do
