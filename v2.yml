@@ -378,6 +378,11 @@
   http_code: 400
   message: "App staging failed in the buildpack release phase"
 
+170006:
+  name: NoBuildpacksFound
+  http_code: 400
+  message: "There are no buildpacks available"
+
 180001:
   name: SnapshotNotFound
   http_code: 404
