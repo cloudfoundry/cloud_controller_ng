@@ -113,3 +113,9 @@ default_staging_security_groups:
 - non_allowed
 default_running_security_groups:
 - non_allowed
+
+allowed_cors_domains:
+- http://andrea.corr
+- http://caroline.corr
+- http://jim.corr
+- http://sharon.corr

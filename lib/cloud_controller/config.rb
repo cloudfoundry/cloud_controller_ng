@@ -194,7 +194,8 @@ module VCAP::CloudController
 
         optional(:app_bits_upload_grace_period_in_seconds) => Integer,
 
-        optional(:default_locale) => String
+        optional(:default_locale) => String,
+        optional(:allowed_cors_domains) => [ String ]
       }
     end
 
@@ -276,6 +277,7 @@ module VCAP::CloudController
         config[:db] ||= {}
         config[:db][:database] ||= ENV["DB_CONNECTION_STRING"]
         config[:default_locale] ||= "en_US"
+        config[:allowed_cors_domains] ||= []
         sanitize(config)
       end
 

@@ -46,6 +46,10 @@ module VCAP::CloudController
         it "sets a default value for database" do
           expect(config[:db][:database]).to eq(ENV["DB_CONNECTION_STRING"])
         end
+
+        it "sets a default value for allowed_cors_domains" do
+          expect(config[:allowed_cors_domains]).to eq([])
+        end
       end
 
       context "when config values are provided" do
@@ -91,6 +95,10 @@ module VCAP::CloudController
           it "preserves the value of the staging auth user/password" do
             expect(config[:staging][:auth][:user]).to eq("user")
             expect(config[:staging][:auth][:password]).to eq("password")
+          end
+
+          it "preserves the value of the allowed cross-origin domains" do
+            expect(config[:allowed_cors_domains]).to eq(["http://andrea.corr", "http://caroline.corr", "http://jim.corr", "http://sharon.corr"])
           end
 
           context "when the staging auth is already url encoded" do
