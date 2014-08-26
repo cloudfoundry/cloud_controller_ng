@@ -1,3 +1,5 @@
+require "presenters/api/job_presenter"
+
 module VCAP::CloudController::RestController
 
   # Wraps models and presents collection and per object rest end points
@@ -118,7 +120,7 @@ module VCAP::CloudController::RestController
       associated_path = "#{self.class.url_for_guid(guid)}/#{name}"
 
       validate_access(:index, associated_model)
-      
+
       filtered_dataset =
       Query.filtered_dataset_from_query_params(
         associated_model,

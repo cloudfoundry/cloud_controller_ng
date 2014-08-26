@@ -1,3 +1,5 @@
+require "presenters/message_bus/service_binding_presenter"
+
 module VCAP::CloudController
   module Dea
     class StartAppMessage < Hash

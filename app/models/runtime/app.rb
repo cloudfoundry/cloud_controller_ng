@@ -4,6 +4,7 @@ require "cloud_controller/undo_app_changes"
 require "cloud_controller/errors/application_missing"
 require "cloud_controller/errors/invalid_route_relation"
 require "repositories/runtime/app_usage_event_repository"
+require "presenters/message_bus/service_binding_presenter"
 
 require_relative "buildpack"
 

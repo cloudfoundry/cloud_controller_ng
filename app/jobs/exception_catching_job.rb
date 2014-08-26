@@ -1,3 +1,5 @@
+require "presenters/error_presenter"
+
 module VCAP::CloudController
   module Jobs
     class ExceptionCatchingJob < Struct.new(:handler)
