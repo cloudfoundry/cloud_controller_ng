@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class Organization < Sequel::Model
     ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    ORG_STATUS_VALUES = %w[active suspended]
 
     one_to_many :spaces
 
@@ -120,6 +121,7 @@ module VCAP::CloudController
       validates_presence :name
       validates_unique   :name
       validates_format ORG_NAME_REGEX, :name
+      validates_includes ORG_STATUS_VALUES, :status, :allow_missing => true
     end
 
     def add_default_quota

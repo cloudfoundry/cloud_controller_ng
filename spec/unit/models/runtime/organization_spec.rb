@@ -146,6 +146,34 @@ module VCAP::CloudController
           expect { org.add_private_domain(domain) }.to raise_error
         end
       end
+
+      describe "status" do
+        subject(:org) { Organization.make }
+
+        it "should allow 'active' and 'suspended'" do
+          ["active", "suspended"].each do |status|
+            org.status = status
+            expect {
+              org.save
+            }.not_to raise_error
+            expect(org.status).to eq(status)
+          end
+        end
+
+        it "should not allow arbitrary status values" do
+          org.status = "unknown"
+          expect {
+            org.save
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it "should not allow a nil status" do
+          org.status = nil
+          expect {
+            org.save
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+      end
     end
 
     describe "Serialization" do
@@ -165,12 +193,6 @@ module VCAP::CloudController
         subject(:org) { Organization.make(status: "suspended") }
         it("is not active") { expect(org).not_to be_active }
         it("is suspended") { expect(org).to be_suspended }
-      end
-
-      describe "when status == unknown" do
-        subject(:org) { Organization.make(status: "unknown") }
-        it("is not active") { expect(org).not_to be_active }
-        it("is not suspended") { expect(org).not_to be_suspended }
       end
     end
 
