@@ -29,7 +29,6 @@ require "sequel_plugins/sequel_plugins"
 require "vcap/sequel_add_association_dependencies_monkeypatch"
 require "access/access"
 
-
 require "cloud_controller/jobs"
 require "cloud_controller/background_job_environment"
 require "cloud_controller/db_migrator"

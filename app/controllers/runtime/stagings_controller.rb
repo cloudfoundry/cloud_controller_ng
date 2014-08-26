@@ -1,5 +1,6 @@
 require "cloudfront-signer"
 require "cloud_controller/blobstore/client"
+require 'presenters/api/staging_job_presenter'
 
 module VCAP::CloudController
   class StagingsController < RestController::BaseController
@@ -48,12 +49,17 @@ module VCAP::CloudController
 
       if async?
         job = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue()
-        external_domain = Array(config[:external_domain]).first
-        [HTTP::OK, JobPresenter.new(job, "#{config[:external_protocol]}://#{external_domain}").to_json]
+        [HTTP::OK, StagingJobPresenter.new(job).to_json]
       else
         droplet_upload_job.perform
         HTTP::OK
       end
+    end
+
+    get "#{STAGING_PATH}/jobs/:guid", :find_job
+    def find_job(guid)
+      job = Delayed::Job[:guid => guid]
+      StagingJobPresenter.new(job).to_json
     end
 
     get "#{DROPLET_PATH}/:guid/download", :download_droplet

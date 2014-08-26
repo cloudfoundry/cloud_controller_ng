@@ -2,6 +2,10 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource "Jobs", type: :api do
+  let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
+
+  authenticated_request
+
   get "/v2/jobs/:guid" do
     class FakeJob
       def perform
@@ -32,12 +36,10 @@ resource "Jobs", type: :api do
       before { VCAP::CloudController::Jobs::Enqueuer.new(KnownFailingJob.new).enqueue }
 
       example "Retrieve Job with known failure" do
-        explanation "This is an unauthenticated access to get the job's error status with specified guid."
-
         guid = Delayed::Job.last.guid
         Delayed::Worker.new.work_off
 
-        client.get "/v2/jobs/#{guid}"
+        client.get "/v2/jobs/#{guid}", {}, headers
         expect(status).to eq 200
         expect(parsed_response).to include("entity")
         expect(parsed_response["entity"]).to include("error")
@@ -64,13 +66,11 @@ resource "Jobs", type: :api do
       before { VCAP::CloudController::Jobs::Enqueuer.new(UnknownFailingJob.new).enqueue }
 
       example "Retrieve Job with unknown failure" do
-        explanation "This is an unauthenticated access to get the job's error status with specified guid."
-
         job_last = Delayed::Job.last
         guid = job_last.guid
         Delayed::Worker.new.work_off
 
-        client.get "/v2/jobs/#{guid}"
+        client.get "/v2/jobs/#{guid}", {}, headers
         expect(status).to eq 200
         expect(parsed_response).to include("entity")
         expect(parsed_response["entity"]).to include("error")
@@ -94,11 +94,9 @@ resource "Jobs", type: :api do
       before { VCAP::CloudController::Jobs::Enqueuer.new(SuccessfulJob.new).enqueue }
 
       example "Retrieve Job that is queued" do
-        explanation "This is an unauthenticated access to get the job's status with specified guid."
-
         guid = Delayed::Job.last.guid
 
-        client.get "/v2/jobs/#{guid}"
+        client.get "/v2/jobs/#{guid}", {}, headers
         expect(status).to eq 200
         expect(parsed_response).to include("entity")
         expect(parsed_response["entity"]).to include("status")
@@ -112,12 +110,10 @@ resource "Jobs", type: :api do
       before { VCAP::CloudController::Jobs::Enqueuer.new(SuccessfulJob.new).enqueue }
 
       example "Retrieve Job that was successful" do
-        explanation "This is an unauthenticated access to get the job's status with specified guid."
-
         guid = Delayed::Job.last.guid
         Delayed::Worker.new.work_off
 
-        client.get "/v2/jobs/#{guid}"
+        client.get "/v2/jobs/#{guid}", {}, headers
         expect(status).to eq 200
         expect(parsed_response).to include("entity")
         expect(parsed_response["entity"]).to include("status")

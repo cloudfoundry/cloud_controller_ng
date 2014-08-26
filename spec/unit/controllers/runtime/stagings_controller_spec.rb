@@ -223,27 +223,25 @@ module VCAP::CloudController
           expect(last_response.status).to eq 200
         end
 
-        it "returns a JSON body with full url to query for job's status" do
+        it "returns a JSON body with full url and basic auth to query for job's status" do
+          TestConfig.config[:external_domain] = ["www.example.com", TestConfig.config[:external_domain]]
+
           post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
+
           job = Delayed::Job.last
           config = VCAP::CloudController::Config.config
-          expect(decoded_response.fetch('metadata').fetch('url')).to eql("http://#{config.fetch(:external_domain)}/v2/jobs/#{job.guid}")
+          user = config[:staging][:auth][:user]
+          password = config[:staging][:auth][:password]
+          polling_url = "http://#{user}:#{password}@#{config[:external_domain].first}/staging/jobs/#{job.guid}"
+
+          expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
         end
-        
+
         it "returns a JSON body with full url containing the correct external_protocol" do
           TestConfig.config[:external_protocol] = "https"
           post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
           job = Delayed::Job.last
           expect(decoded_response.fetch('metadata').fetch('url')).to start_with("https://")
-        end
-
-        it "returns a JSON body with full url to query for job's status even Cloud Controller has multiple external domains" do
-          TestConfig.config[:external_domain] = ["www.example.com", TestConfig.config[:external_domain]]
-          config = VCAP::CloudController::Config.config
-          post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
-          job = Delayed::Job.last
-          config[:external_domain] = ["www.example.com", config[:external_domain]]
-          expect(decoded_response.fetch('metadata').fetch('url')).to eql("http://www.example.com/v2/jobs/#{job.guid}")
         end
 
         context "with an invalid app" do
@@ -504,6 +502,33 @@ module VCAP::CloudController
         it "should return an error" do
           get "/staging/buildpack_cache/bad"
           expect(last_response.status).to eq(404)
+        end
+      end
+    end
+
+    describe "GET /staging/jobs/:guid" do
+      let(:job) { Delayed::Job.enqueue double(:perform => nil) }
+      let(:job_guid) { job.guid }
+
+      context "when authorized" do
+        before do
+          authorize staging_user, staging_password
+        end
+
+        it "returns the job" do
+          get "/staging/jobs/#{job_guid}"
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response(symbolize_keys: true)).to eq(StagingJobPresenter.new(job).to_hash)
+          expect(decoded_response["metadata"]["guid"]).to eq(job_guid)
+        end
+      end
+
+      context "when not authorized" do
+        it "returns a 403 unauthorized" do
+          get "/staging/jobs/#{job_guid}"
+
+          expect(last_response.status).to eq(403)
         end
       end
     end

@@ -13,7 +13,7 @@ class JobPresenter < ApiPresenter
     {
       guid: @object.guid,
       created_at: @object.created_at.iso8601,
-      url: [@url_host_name, "v2/jobs/#{@object.guid}"].join("/")
+      url: status_url
     }
   end
 
@@ -32,6 +32,10 @@ class JobPresenter < ApiPresenter
   end
 
   private
+
+  def status_url
+    [@url_host_name, "v2/jobs/#{@object.guid}"].join("/")
+  end
 
   def error_details
     if job_has_exception?
