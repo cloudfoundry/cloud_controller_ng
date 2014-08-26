@@ -52,7 +52,7 @@ module VCAP::CloudController
         package_hash: package_hash,
         buildpack: buildpack,
         custom_buildpacks_enabled?: custom_buildpacks_enabled?,
-        auto_buildpack?: true,
+        buildpack_specified?: true,
       )
     end
 
@@ -85,7 +85,7 @@ module VCAP::CloudController
         end
 
         before do
-          allow(app).to receive(:auto_buildpack?).and_return(false)
+          allow(app).to receive(:buildpack_specified?).and_return(false)
         end
 
         context "and custom buildpacks are disabled" do
@@ -117,7 +117,7 @@ module VCAP::CloudController
         let (:buildpack) { instance_double(Buildpack, custom?: false) }
 
         before do
-          allow(app).to receive(:auto_buildpack?).and_return(false)
+          allow(app).to receive(:buildpack_specified?).and_return(false)
           allow(Buildpack).to receive(:count).and_return(1)
         end
 
