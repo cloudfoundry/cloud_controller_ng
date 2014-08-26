@@ -118,6 +118,7 @@ module VCAP::CloudController
 
             context "when docker_image is present" do
               before do
+                allow(app).to receive(:buildpack_specified?).and_return(true)
                 allow(app).to receive(:docker_image).and_return("fake-docker-image")
               end
 
@@ -125,7 +126,6 @@ module VCAP::CloudController
                 expect {
                   subject
                 }.not_to raise_error
-
               end
             end
 
@@ -358,17 +358,6 @@ module VCAP::CloudController
                   end
 
                   it_behaves_like "it stages"
-                end
-              end
-
-              context "when docker_image is present" do
-                let(:app) { AppFactory.make docker_image: "fake-image" }
-
-                it "raises" do
-                  expect {
-                    subject
-                  }.to raise_error(Errors::ApiError, /Diego has not been enabled/)
-
                 end
               end
             end

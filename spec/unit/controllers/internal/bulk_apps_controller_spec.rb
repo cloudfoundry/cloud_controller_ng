@@ -207,17 +207,25 @@ module VCAP::CloudController
           expect(decoded_response["apps"].size).to eq(0)
         end
 
-        it "does return docker apps" do
-          app = make_diego_app(id: 6, state: "STARTED", docker_image: "fake-docker-image")
-          app.save
+        context "when docker is enabled" do
+          before do
+          allow(Config.config).to receive(:[]).with(anything).and_call_original
+          allow(Config.config).to receive(:[]).with(:diego).and_return true
+          allow(Config.config).to receive(:[]).with(:diego_docker).and_return true
+        end
 
-          get "/internal/bulk/apps", {
-            "batch_size" => App.count,
-            "token" => "{}",
-          }
+          it "does return docker apps" do
+            app = make_diego_app(id: 6, state: "STARTED", docker_image: "fake-docker-image")
+            app.save
 
-          expect(last_response.status).to eq(200)
-          expect(decoded_response["apps"].size).to eq(App.count)
+            get "/internal/bulk/apps", {
+              "batch_size" => App.count,
+              "token" => "{}",
+            }
+
+            expect(last_response.status).to eq(200)
+            expect(decoded_response["apps"].size).to eq(App.count)
+          end
         end
 
         it "does not return unstaged apps" do

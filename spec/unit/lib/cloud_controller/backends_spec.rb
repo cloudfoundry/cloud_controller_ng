@@ -52,6 +52,7 @@ module VCAP::CloudController
         package_hash: package_hash,
         buildpack: buildpack,
         custom_buildpacks_enabled?: custom_buildpacks_enabled?,
+        buildpack_specified?: true,
       )
     end
 
@@ -83,6 +84,10 @@ module VCAP::CloudController
           instance_double(CustomBuildpack, custom?: true)
         end
 
+        before do
+          allow(app).to receive(:buildpack_specified?).and_return(false)
+        end
+
         context "and custom buildpacks are disabled" do
           let(:custom_buildpacks_enabled?) do
             false
@@ -92,6 +97,39 @@ module VCAP::CloudController
             expect {
               subject.validate_app_for_staging(app)
             }.to raise_error(Errors::ApiError, /Custom buildpacks are disabled/)
+          end
+        end
+
+        context "and a docker image is specified" do
+          let(:docker_image) do
+            'fake-docker-image'
+          end
+
+          it "raises" do
+            expect {
+              subject.validate_app_for_staging(app)
+            }.to raise_error(Errors::ApiError, /You cannot specify a custom buildpack and a docker image at the same time/)
+          end
+        end
+      end
+
+      context "when an admin buildpack is specified" do
+        let (:buildpack) { instance_double(Buildpack, custom?: false) }
+
+        before do
+          allow(app).to receive(:buildpack_specified?).and_return(false)
+          allow(Buildpack).to receive(:count).and_return(1)
+        end
+
+        context "and custom buildpacks are disabled" do
+          let(:custom_buildpacks_enabled?) do
+            false
+          end
+
+          it "does not raise" do
+            expect {
+              subject.validate_app_for_staging(app)
+            }.to_not raise_error()
           end
         end
 
