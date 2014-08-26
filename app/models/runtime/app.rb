@@ -94,7 +94,8 @@ module VCAP::CloudController
           MaxInstanceMemoryPolicy.new(self, space && space.space_quota_definition, :space_instance_memory_limit_exceeded),
           InstancesPolicy.new(self),
           HealthCheckPolicy.new(self, health_check_timeout),
-          CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?)
+          CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?),
+          DockerPolicy.new(self),
       ]
     end
 
@@ -469,6 +470,10 @@ module VCAP::CloudController
       elsif buildpack_name != "" #git url case
         super(buildpack_name)
       end
+    end
+
+    def auto_buildpack?
+      buildpack.is_a?(AutoDetectionBuildpack)
     end
 
     def custom_buildpack_url
