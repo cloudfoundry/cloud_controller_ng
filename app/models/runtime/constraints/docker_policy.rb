@@ -1,6 +1,6 @@
 class DockerPolicy
-  INVALID_ERROR_MSG = "incompatible with buildpack"
-  DISABLED_ERROR_MSG = "not supported with diego or docker disabled"
+  BUILDPACK_DETECTED_ERROR_MSG = "incompatible with buildpack"
+  DOCKER_DISABLED_ERROR_MSG = "not supported with diego or docker disabled"
 
   def initialize(app, diego_enabled, docker_enabled)
     @diego_enabled = diego_enabled
@@ -11,11 +11,11 @@ class DockerPolicy
 
   def validate
     return unless @app.docker_image.present?
-    if !@app.auto_buildpack?
-      @errors.add(:docker_image, INVALID_ERROR_MSG)
+    if !@app.buildpack_specified?
+      @errors.add(:docker_image, BUILDPACK_DETECTED_ERROR_MSG)
     end
     if !@diego_enabled || !@docker_enabled
-      @errors.add(:docker_image, DISABLED_ERROR_MSG)
+      @errors.add(:docker_image, DOCKER_DISABLED_ERROR_MSG)
     end
   end
 end

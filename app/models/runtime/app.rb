@@ -472,7 +472,7 @@ module VCAP::CloudController
       end
     end
 
-    def auto_buildpack?
+    def buildpack_specified?
       buildpack.is_a?(AutoDetectionBuildpack)
     end
 

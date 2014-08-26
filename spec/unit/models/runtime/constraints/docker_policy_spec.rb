@@ -11,7 +11,7 @@ describe DockerPolicy do
       app.docker_image = 'fake-image'
       app.buildpack = "git://user@github.com:repo"
 
-      expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::INVALID_ERROR_MSG)
+      expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::BUILDPACK_DETECTED_ERROR_MSG)
     end
 
     it "disallows an admin buildpack and a docker_image" do
@@ -19,7 +19,7 @@ describe DockerPolicy do
       app.docker_image = 'fake-image'
       app.buildpack = admin_buildpack.name
 
-      expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::INVALID_ERROR_MSG)
+      expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::BUILDPACK_DETECTED_ERROR_MSG)
     end
 
     context "when diego is disabled" do
@@ -27,7 +27,7 @@ describe DockerPolicy do
 
       it "disallows a docker_image" do
         app.docker_image = 'fake-image'
-        expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::DISABLED_ERROR_MSG)
+        expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::DOCKER_DISABLED_ERROR_MSG)
       end
     end
 
@@ -36,7 +36,7 @@ describe DockerPolicy do
 
       it "disallows a docker_image" do
         app.docker_image = 'fake-image'
-        expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::DISABLED_ERROR_MSG)
+        expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::DOCKER_DISABLED_ERROR_MSG)
       end
     end
 

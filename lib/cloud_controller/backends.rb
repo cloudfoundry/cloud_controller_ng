@@ -25,7 +25,7 @@ module VCAP::CloudController
         raise Errors::ApiError.new_from_details("CustomBuildpacksDisabled")
       end
 
-      if app.docker_image.present? && !app.auto_buildpack?
+      if app.docker_image.present? && !app.buildpack_specified?
         raise Errors::ApiError.new_from_details("DiegoDockerBuildpackConflict")
       end
 
