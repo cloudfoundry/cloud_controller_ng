@@ -128,6 +128,11 @@ resource "Apps", :type => :api do
     include_context "guid_parameter"
     let(:app_obj) { VCAP::CloudController::AppFactory.make(detected_buildpack: "buildpack-name", environment_json: {env_var: "env_val"})}
 
+    before do
+      VCAP::CloudController::EnvironmentVariableGroup.make name: :staging, environment_json: { STAGING_ENV: 'staging_value' }
+      VCAP::CloudController::EnvironmentVariableGroup.make name: :running, environment_json: { RUNNING_ENV: 'running_value' }
+    end
+
     example "Get the env for an App" do
       explanation <<-EOD
         Get the environment variables for an App using the app guid. Restricted to SpaceDeveloper role.
@@ -135,6 +140,13 @@ resource "Apps", :type => :api do
 
       client.get "/v2/apps/#{app_obj.guid}/env", {}, headers
       expect(status).to eq(200)
+
+      expect(parsed_response).to have_key('staging_env_json')
+      expect(parsed_response['staging_env_json']['STAGING_ENV']).to eq('staging_value')
+
+      expect(parsed_response).to have_key('running_env_json')
+      expect(parsed_response['running_env_json']['RUNNING_ENV']).to eq('running_value')
+
       expect(parsed_response).to have_key('system_env_json')
       expect(parsed_response).to have_key('environment_json')
     end

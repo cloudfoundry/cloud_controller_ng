@@ -267,8 +267,11 @@ module VCAP::CloudController
           it 'returns successfully' do
             get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
             expect(last_response.status).to eql(200)
-            expect(parse(last_response.body)).to have_key("system_env_json")
-            expect(parse(last_response.body)).to have_key("environment_json")
+            parsed_body = parse(last_response.body)
+            expect(parsed_body).to have_key("staging_env_json")
+            expect(parsed_body).to have_key("running_env_json")
+            expect(parsed_body).to have_key("environment_json")
+            expect(parsed_body).to have_key("system_env_json")
           end
         end
 
@@ -282,6 +285,36 @@ module VCAP::CloudController
 
             expect(decoded_response["system_env_json"].size).to eq(1)
             expect(decoded_response["system_env_json"]).to have_key("VCAP_SERVICES")
+          end
+        end
+
+        context 'when the staging env variable group is set' do
+          before do
+            EnvironmentVariableGroup.make name: :staging, environment_json: { POTATO: 'delicious' }
+          end
+
+          it 'returns staging_env_json with those variables'do
+            get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
+            expect(last_response.status).to eql(200)
+
+            expect(decoded_response["staging_env_json"].size).to eq(1)
+            expect(decoded_response["staging_env_json"]).to have_key("POTATO")
+            expect(decoded_response["staging_env_json"]["POTATO"]).to eq("delicious")
+          end
+        end
+
+        context 'when the running env variable group is set' do
+          before do
+            EnvironmentVariableGroup.make name: :running, environment_json: { PIE: 'sweet' }
+          end
+
+          it 'returns staging_env_json with those variables'do
+            get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
+            expect(last_response.status).to eql(200)
+
+            expect(decoded_response["running_env_json"].size).to eq(1)
+            expect(decoded_response["running_env_json"]).to have_key("PIE")
+            expect(decoded_response["running_env_json"]["PIE"]).to eq("sweet")
           end
         end
 
