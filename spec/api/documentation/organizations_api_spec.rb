@@ -4,6 +4,7 @@ require "rspec_api_documentation/dsl"
 resource "Organizations", :type => :api do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let(:organization) { VCAP::CloudController::Organization.make }
+  let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make }
   let(:guid) { organization.guid }
 
   authenticated_request
@@ -16,6 +17,7 @@ resource "Organizations", :type => :api do
     shared_context "updatable_fields" do |opts|
       field :name, "The name of the organization", required: opts[:required], example_values: ["my-org-name"]
       field :status, "Status of the organization"
+      field :quota_definition_guid, "The guid of quota to associate with this organization", example_values: ['org-quota-def-guid']
       field :billing_enabled, "If billing is enabled for this organization", deprecated: true
     end
 
@@ -26,7 +28,7 @@ resource "Organizations", :type => :api do
     post "/v2/organizations/" do
       include_context "updatable_fields", required: true
       example "Creating an Organization" do
-        client.post "/v2/organizations", MultiJson.dump(required_fields, pretty: true), headers
+        client.post "/v2/organizations", MultiJson.dump(required_fields.merge(quota_definition_guid: quota_definition.guid), pretty: true), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :organization
@@ -40,7 +42,7 @@ resource "Organizations", :type => :api do
       let(:new_name) { "New Organization Name" }
 
       example "Update an Organization" do
-        client.put "/v2/organizations/#{guid}", MultiJson.dump({ name: new_name }, pretty: true), headers
+        client.put "/v2/organizations/#{guid}", MultiJson.dump({ name: new_name, quota_definition_guid: quota_definition.guid }, pretty: true), headers
         expect(status).to eq 201
         standard_entity_response parsed_response, :organization, name: new_name
       end
