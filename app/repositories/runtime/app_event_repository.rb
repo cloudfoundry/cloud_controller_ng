@@ -2,81 +2,66 @@ module VCAP::CloudController
   module Repositories
     module Runtime
       class AppEventRepository
+        SYSTEM_ACTOR_HASH = { guid: "system", type: "system", name: "system" }
+
         def create_app_exit_event(app, droplet_exited_payload)
           Loggregator.emit(app.guid, "App instance exited with guid #{app.guid} payload: #{droplet_exited_payload}")
 
-          Event.create(
-            space: app.space,
-            type: "app.crash",
-            actee: app.guid,
-            actee_type: "app",
-            actee_name: app.name,
-            actor: app.guid,
-            actor_type: "app",
-            actor_name: app.name,
-            timestamp: Time.now,
-            metadata: droplet_exited_payload.slice(
-              "instance", "index", "exit_status", "exit_description", "reason"
-            )
-          )
+          actor = { name: app.name, guid: app.guid, type: "app" }
+          metadata = droplet_exited_payload.slice("instance", "index", "exit_status", "exit_description", "reason")
+          create_app_audit_event("app.crash", app, actor, metadata)
         end
 
         def record_app_update(app, actor, actor_name, request_attrs)
           Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{App.audit_hash(request_attrs)})")
 
-          Event.create(
-            space: app.space,
-            type: "audit.app.update",
-            actee: app.guid,
-            actee_type: "app",
-            actee_name: app.name,
-            actor: actor.guid,
-            actor_type: "user",
-            actor_name: actor_name,
-            timestamp: Time.now,
-            metadata: {
-              request: App.audit_hash(request_attrs)
-            }
-          )
+          actor = { name: actor_name, guid: actor.guid, type: "user" }
+          metadata = { request: App.audit_hash(request_attrs) }
+          create_app_audit_event("audit.app.update", app, actor, metadata)
         end
 
         def record_app_create(app, actor, actor_name, request_attrs)
           Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
 
-          opts = {
-            type: "audit.app.create",
-            actee: app.nil? ? "0" : app.guid,
-            actee_type: "app",
-            actee_name: app.name,
-            actor: actor.guid,
-            actor_type: "user",
-            actor_name: actor_name,
-            timestamp: Time.now,
-            metadata: {
-              request: App.audit_hash(request_attrs)
-            }
-          }
-          opts[:space] = app.space unless app.nil?
-
-          Event.create(opts)
+          actor = { name: actor_name, guid: actor.guid, type: "user" }
+          metadata = { request: App.audit_hash(request_attrs) }
+          create_app_audit_event("audit.app.create", app, actor, metadata)
         end
 
         def record_app_delete_request(deleting_app, actor, actor_name, recursive)
           Loggregator.emit(deleting_app.guid, "Deleted app with guid #{deleting_app.guid}")
 
+          actor = { name: actor_name, guid: actor.guid, type: "user" }
+          metadata = { request: { recursive: recursive } }
+          create_app_audit_event("audit.app.delete-request", deleting_app, actor, metadata)
+        end
+
+        def record_map_route(app, route, actor, actor_name)
+          actor_hash = actor.nil? ? SYSTEM_ACTOR_HASH : { guid: actor.guid, name: actor_name, type: "user" }
+          metadata = { route_guid: route.guid }
+          create_app_audit_event("audit.app.map-route", app, actor_hash, metadata)
+        end
+
+        def record_unmap_route(app, route, actor, actor_name)
+          actor_hash = actor.nil? ? SYSTEM_ACTOR_HASH : { guid: actor.guid, name: actor_name, type: "user" }
+          metadata = { route_guid: route.guid }
+          create_app_audit_event("audit.app.unmap-route", app, actor_hash, metadata)
+        end
+
+        private
+
+        def create_app_audit_event(type, app, actor, metadata)
           Event.create(
-            space: deleting_app.space,
-            type: "audit.app.delete-request",
-            actee: deleting_app.guid,
-            actee_type: "app",
-            actee_name: deleting_app.name,
-            actor: actor.guid,
-            actor_type: "user",
-            actor_name: actor_name,
+            space: app.space,
+            type: type,
             timestamp: Time.now,
-            metadata: {
-              request: { recursive: recursive }
-            }
+            actee: app.guid,
+            actee_type: "app",
+            actee_name: app.name,
+            actor: actor[:guid],
+            actor_type: actor[:type],
+            actor_name: actor[:name],
+            metadata: metadata
           )
         end
       end

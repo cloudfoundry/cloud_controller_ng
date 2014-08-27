@@ -339,7 +339,7 @@ module VCAP::CloudController
         route = Route.make(app_guids: [app.guid], space: app.space)
         app   = route.apps.first
 
-        expect(app).to receive(:mark_routes_changed).and_call_original
+        expect(app).to receive(:handle_remove_route).and_call_original
         route.destroy
       end
     end
@@ -351,17 +351,21 @@ module VCAP::CloudController
       end
 
       describe "when adding an app" do
-        it "marks the apps routes as changed" do
-          expect(app).to receive(:mark_routes_changed).and_call_original
-          route.add_app(app)
+        it "marks the apps routes as changed and creates an audit event" do
+          expect(app).to receive(:handle_add_route).and_call_original
+          expect {
+            route.add_app(app)
+          }.to change { Event.count }.by(1)
         end
       end
 
       describe "when removing an app" do
-        it "marks the apps routes as changed" do
+        it "marks the apps routes as changed and creates an audit event" do
           route.add_app(app)
-          expect(app).to receive(:mark_routes_changed).and_call_original
-          route.remove_app(app)
+          expect(app).to receive(:handle_remove_route).and_call_original
+          expect {
+            route.remove_app(app)
+          }.to change { Event.count }.by(1)
         end
       end
     end

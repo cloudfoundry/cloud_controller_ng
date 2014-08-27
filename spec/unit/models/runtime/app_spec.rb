@@ -1292,6 +1292,22 @@ module VCAP::CloudController
             expect { app.add_route(route) }.to change(app, :version)
             expect { app.remove_route(route) }.to change(app, :version)
           end
+
+          context "audit events" do
+            let(:app_event_repository) { Repositories::Runtime::AppEventRepository.new }
+
+            before do
+              allow(Repositories::Runtime::AppEventRepository).to receive(:new).and_return(app_event_repository)
+            end
+
+            it "creates audit events for both adding routes" do
+              expect(app_event_repository).to receive(:record_map_route).ordered.and_call_original
+              expect { app.add_route(route) }.to change { Event.count }.by(1)
+
+              expect(app_event_repository).to receive(:record_unmap_route).ordered.and_call_original
+              expect { app.remove_route(route) }.to change { Event.count }.by(1)
+            end
+          end
         end
       end
     end
@@ -1896,10 +1912,10 @@ module VCAP::CloudController
       end
 
       user_docker_images = [
-        "bar", 
+        "bar",
         "foo/bar",
         "foo/bar/baz",
-        "fake.registry.com/bar", 
+        "fake.registry.com/bar",
         "fake.registry.com/foo/bar",
         "fake.registry.com/foo/bar/baz",
         "fake.registry.com:5000/bar",

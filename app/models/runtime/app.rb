@@ -21,7 +21,7 @@ module VCAP::CloudController
     many_to_one :admin_buildpack, class: VCAP::CloudController::Buildpack
     many_to_one :space, after_set: :validate_space
     many_to_one :stack
-    many_to_many :routes, before_add: :validate_route, after_add: :mark_routes_changed, after_remove: :mark_routes_changed
+    many_to_many :routes, before_add: :validate_route, after_add: :handle_add_route, after_remove: :handle_remove_route
 
     one_to_one :current_saved_droplet,
       :class => "::VCAP::CloudController::Droplet",
@@ -553,14 +553,26 @@ module VCAP::CloudController
       super(opts)
     end
 
+    def handle_add_route(route)
+      mark_routes_changed(route)
+      app_event_repository = Repositories::Runtime::AppEventRepository.new
+      app_event_repository.record_map_route(self, route, SecurityContext.current_user, SecurityContext.current_user_email)
+    end
+
+    def handle_remove_route(route)
+      mark_routes_changed(route)
+      app_event_repository = Repositories::Runtime::AppEventRepository.new
+      app_event_repository.record_unmap_route(self, route, SecurityContext.current_user, SecurityContext.current_user_email)
+    end
+
+    private
+
     def mark_routes_changed(_ = nil)
       @routes_changed = true
 
       set_new_version
       save
     end
-
-    private
 
     # there's no concrete schema for what constitutes a valid docker
     # repo/image reference online at the moment, so make a best effort to turn

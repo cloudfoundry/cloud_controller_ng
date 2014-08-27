@@ -161,6 +161,78 @@ module VCAP::CloudController
           app_event_repository.create_app_exit_event(exiting_app, droplet_exited_payload)
         end
       end
+
+      describe ".record_map_route" do
+        let(:app) { AppFactory.make }
+        let(:route) { Route.make }
+
+        context "and the actor exists" do
+          let(:user) { User.make }
+          let(:user_email) { "foo@example.com" }
+
+          it "creates a new app.map_route audit event" do
+            event = app_event_repository.record_map_route(app, route, user, user_email)
+            expect(event.type).to eq("audit.app.map-route")
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_type).to eq("user")
+            expect(event.actee_type).to eq("app")
+            expect(event.actee).to eq(app.guid)
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+          end
+        end
+
+        context "and the actor is nil" do
+          let(:user) { nil }
+          let(:user_email) { "" }
+
+          it "creates a new app.map_route audit event with system as the actor" do
+            event = app_event_repository.record_map_route(app, route, user, user_email)
+            expect(event.type).to eq("audit.app.map-route")
+            expect(event.actor).to eq("system")
+            expect(event.actor_type).to eq("system")
+            expect(event.actor_name).to eq("system")
+            expect(event.actee_type).to eq("app")
+            expect(event.actee).to eq(app.guid)
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+          end
+        end
+      end
+
+      describe ".record_unmap_route" do
+        let(:app) { AppFactory.make }
+        let(:route) { Route.make }
+
+        context "and the actor exists" do
+          let(:user) { User.make }
+          let(:user_email) { "foo@example.com" }
+
+          it "creates a new app.unmap_route audit event" do
+            event = app_event_repository.record_unmap_route(app, route, user, user_email)
+            expect(event.type).to eq("audit.app.unmap-route")
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_type).to eq("user")
+            expect(event.actee_type).to eq("app")
+            expect(event.actee).to eq(app.guid)
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+          end
+        end
+
+        context "and the actor is nil" do
+          let(:user) { nil }
+          let(:user_email) { "" }
+
+          it "creates a new app.unmap_route audit event with system as the actor" do
+            event = app_event_repository.record_unmap_route(app, route, user, user_email)
+            expect(event.type).to eq("audit.app.unmap-route")
+            expect(event.actor).to eq("system")
+            expect(event.actor_type).to eq("system")
+            expect(event.actor_name).to eq("system")
+            expect(event.actee_type).to eq("app")
+            expect(event.actee).to eq(app.guid)
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+          end
+        end
+      end
     end
   end
 end
