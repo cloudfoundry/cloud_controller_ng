@@ -6,25 +6,40 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { is_expected.to have_associated :owning_organization, class: Organization }
       it { is_expected.to have_associated :routes }
+      context "owning_organization" do
+        let(:org) { Organization.make }
+        it { is_expected.to have_associated :owning_organization, test_instance: Domain.make(owning_organization: org), associated_instance: ->(domain) { org } }
+      end
 
       context "changing owning_organization" do
-        subject(:domain) { PrivateDomain.make }
-
-        it "succeeds when there are no existing routes" do
-          expect{ subject.owning_organization = Organization.make }.not_to raise_error
-        end
-
-        context "when there are existing routes" do
-          it "succeeds when the organization is the same" do
-            route = Route.make(space: Space.make(organization: domain.owning_organization), domain: domain)
-            expect{ route.domain.owning_organization = domain.owning_organization }.to_not raise_error
+        context "shared domains" do
+          it "prevents converting a shared domain into a private domain" do
+            shared = SharedDomain.make
+            expect { shared.owning_organization = Organization.make }.to raise_error(VCAP::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
-          it "fails when the organization changes" do
-            route = Route.make
-            expect{ route.domain.owning_organization = Organization.make }.to raise_error VCAP::Errors::ApiError, /delete the routes associations/
+          it "succeeds when setting the org to the same thing" do
+            shared = SharedDomain.make
+            expect { shared.owning_organization = nil }.to_not raise_error
+          end
+        end
+
+        context "private domains" do
+          it "prevents converting a private domain into a shared domain" do
+            private_domain = PrivateDomain.make
+            expect { private_domain.owning_organization = nil }.to raise_error(VCAP::Errors::ApiError, /the owning organization cannot be changed/)
+          end
+
+          it "prevents changing orgs on a private domain" do
+            private_domain = PrivateDomain.make
+            expect { private_domain.owning_organization = Organization.make }.to raise_error(VCAP::Errors::ApiError, /the owning organization cannot be changed/)
+          end
+
+          it "succeeds when setting the org to the same thing" do
+            org = Organization.make
+            private_domain = PrivateDomain.make(owning_organization: org)
+            expect { private_domain.owning_organization = org }.to_not raise_error
           end
         end
       end

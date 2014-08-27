@@ -199,19 +199,6 @@ module VCAP::CloudController
           expect(system_domain.owning_organization).to eq(system_org)
         end
 
-        it "updates the system domain if the system domain exists" do
-          system_org = Organization.find(name: "the-system-org")
-          system_domain = PrivateDomain.create(
-            name: config[:system_domain],
-            owning_organization: system_org
-          )
-          Route.make(space: Space.make(organization: system_org), domain: system_domain)
-          Seeds.create_seed_domains(config, system_org)
-
-          system_domain = Domain.find(name: config[:system_domain])
-          expect(system_domain.owning_organization).to eq(system_org)
-        end
-
         it "warns if the system domain exists but has different attributes from the seed" do
           mock_logger = double(:info => nil)
           allow(Steno).to receive(:logger).and_return(mock_logger)

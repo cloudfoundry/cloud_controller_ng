@@ -12,18 +12,6 @@ module VCAP::CloudController
         space = Space.make(organization: private_domain.owning_organization)
         expect(private_domain.spaces).to include(space.reload)
       end
-
-      context "changing owning_organization" do
-        it "succeeds when there are no existing routes" do
-          expect{ private_domain.owning_organization = Organization.make }.not_to raise_error
-        end
-
-        it "fails when there are existing routes" do
-          route = Route.make
-          expect{ route.domain.owning_organization = Organization.make }.to raise_error VCAP::Errors::ApiError, /delete the routes associations/
-        end
-      end
-
     end
 
     describe "Serialization" do

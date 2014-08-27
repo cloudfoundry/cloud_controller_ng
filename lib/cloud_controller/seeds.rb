@@ -62,16 +62,14 @@ module VCAP::CloudController
         unless config[:app_domains].include?(config[:system_domain])
           raise 'The organization that owns the system domain cannot be nil' unless system_org
 
-          domain = Domain.find(:name => config[:system_domain])
-          desired_attrs = { owning_organization: system_org }
+          domain = Domain.find(name: config[:system_domain])
 
           if domain
-            domain.set(desired_attrs)
-            if domain.modified?
+            if domain.owning_organization != system_org
               Steno.logger("cc.seeds").warn("seeds.system-domain.collision", organization: domain.owning_organization)
             end
           else
-            PrivateDomain.create(desired_attrs.merge(:name => config[:system_domain]))
+            PrivateDomain.create({owning_organization: system_org, name: config[:system_domain]})
           end
         end
       end

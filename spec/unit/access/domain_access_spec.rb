@@ -28,33 +28,11 @@ module VCAP::CloudController
         before { FeatureFlag.make(name: "private_domain_creation", enabled: false) }
 
         it_behaves_like :full_access
-
-        context 'changing organization' do
-          it 'succeeds even if not an org manager in the new org' do
-            object.owning_organization = Organization.make
-            object.owning_organization.add_user(user)
-            expect(subject.update?(object)).to be_truthy
-          end
-        end
       end
 
       context 'organization manager' do
         before { org.add_manager(user) }
         it_behaves_like :full_access
-
-        context 'changing organization' do
-          it 'succeeds if an org manager in the new org' do
-            object.owning_organization = Organization.make
-            object.owning_organization.add_manager(user)
-            expect(subject.update?(object)).to be_truthy
-          end
-
-          it 'fails if not an org manager in the new org' do
-            object.owning_organization = Organization.make
-            object.owning_organization.add_user(user)
-            expect(subject.update?(object)).to be_falsey
-          end
-        end
 
         context 'when private_domain_creation FeatureFlag is disabled' do
           it 'cannot create a private domain' do

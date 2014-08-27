@@ -3,7 +3,8 @@ RSpec::Matchers.define :have_associated do |association, options = {}|
     "have associated #{association}"
   end
   match do |_|
-    instance = described_class.make
+    instance = options[:test_instance]
+    instance ||= described_class.make
     associated_instance = get_associated_instance(instance, association, options)
 
     if association[-1] == "s"

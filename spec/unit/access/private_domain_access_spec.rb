@@ -23,14 +23,6 @@ module VCAP::CloudController
       before { FeatureFlag.make(name: "private_domain_creation", enabled: false) }
 
       it_behaves_like :full_access
-
-      context 'changing organization' do
-        it 'succeeds even if not an org manager in the new org' do
-          object.owning_organization = Organization.make
-          object.owning_organization.add_user(user)
-          expect(subject.update?(object)).to be_truthy
-        end
-      end
     end
 
     context "organization manager" do
@@ -40,20 +32,6 @@ module VCAP::CloudController
       context "when the organization is suspended" do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
         it_behaves_like :read_only
-      end
-
-      context 'changing organization' do
-        it 'succeeds if an org manager in the new org' do
-          object.owning_organization = Organization.make
-          object.owning_organization.add_manager(user)
-          expect(subject.update?(object)).to be_truthy
-        end
-
-        it 'fails if not an org manager in the new org' do
-          object.owning_organization = Organization.make
-          object.owning_organization.add_user(user)
-          expect(subject.update?(object)).to be_falsey
-        end
       end
 
       context 'when private_domain_creation FeatureFlag is disabled' do

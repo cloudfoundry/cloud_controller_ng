@@ -129,9 +129,8 @@ module VCAP::CloudController
     private
 
     def validate_change_owning_organization(organization)
-      return if owning_organization.nil?
-      return if organization.id == owning_organization.id
-      raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "routes", "Domain") unless routes.empty?
+      return if self.new? || owning_organization == organization
+      raise VCAP::Errors::ApiError.new_from_details('DomainInvalid', 'the owning organization cannot be changed')
     end
 
     def intermediate_domains
