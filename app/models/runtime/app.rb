@@ -35,7 +35,7 @@ module VCAP::CloudController
                       :environment_json, :memory, :instances, :disk_quota,
                       :state, :version, :command, :console, :debug,
                       :staging_task_id, :package_state, :health_check_timeout,
-                      :staging_failed_reason, :docker_image
+                      :staging_failed_reason, :docker_image, :package_updated_at
 
     import_attributes :name, :production,
                       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
@@ -490,6 +490,7 @@ module VCAP::CloudController
     def package_hash=(hash)
       super(hash)
       mark_for_restaging if column_changed?(:package_hash)
+      self.package_updated_at = Sequel.datetime_class.now
     end
 
     def stack=(stack)

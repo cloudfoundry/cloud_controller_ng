@@ -34,11 +34,12 @@ resource 'Apps', :type => :api do
     field :console, "Open the console port for the app (at $CONSOLE_PORT).", deprecated: true, default: false, valid_values: [true, false]
     field :debug, "Open the debug port for the app (at $DEBUG_PORT).", deprecated: true, default: false, valid_values: [true, false]
     field :package_state, "The current state of the package. One of PENDING, STAGED or FAILED.", valid_values: %w[PENDING STAGED FAILED]
-  
+    field :package_updated_at, "Time when the package was last updated"
+
     field :system_env_json, "environment_json for system variables, contains vcap_services by default, a hash containing key/value pairs of the names and information of the services associated with your app."
     field :staging_task_id, "Staging task id",required: false
     field :running_instances, "The number of instances of the app that are currently running."
-    field :available_domain, "List of available domains configured for the app" 
+    field :available_domain, "List of available domains configured for the app"
     field :routes, "List of routes configured for the app",required: false
     field :version, "Version guid of the app"
     field :services, "List of services that are bound to the app"
@@ -82,7 +83,7 @@ resource 'Spaces', :type => :api do
       app_obj.add_route(route1)
       service_binding.save
       client.get "/v2/spaces/#{space.guid}/summary", {} , headers
-      
+
       expect(status).to eq 200
       expect(parsed_response["guid"]).to eq(space.guid)
       expect(parsed_response["name"]).to eq(space.name)

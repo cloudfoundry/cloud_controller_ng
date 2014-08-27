@@ -376,7 +376,7 @@ module VCAP::CloudController
                                     :environment_json, :memory, :instances, :disk_quota,
                                     :state, :version, :command, :console, :debug,
                                     :staging_task_id, :package_state, :health_check_timeout,
-                                    :staging_failed_reason, :docker_image }
+                                    :staging_failed_reason, :docker_image, :package_updated_at }
       it { is_expected.to import_attributes :name, :production,
                                     :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                                     :environment_json, :memory, :instances, :disk_quota,
@@ -1101,6 +1101,14 @@ module VCAP::CloudController
         app.package_hash = "def"
         expect(app.package_state).to eq("PENDING")
         expect(app.package_hash).to eq("def")
+      end
+
+      it "should set the package updated at to the current date" do
+        app.package_updated_at = nil
+        expect {
+          app.package_hash = "def"
+        }.to change { app.package_updated_at }
+        expect(app.package_hash).to_not be_nil
       end
 
       it "should not set the state to PENDING if the hash remains the same" do
