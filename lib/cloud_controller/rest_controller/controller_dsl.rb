@@ -18,7 +18,15 @@ module VCAP::CloudController::RestController
       end
     end
 
-    class ToManyAttribute < ToRelationshipAttribute; end
+    class ToManyAttribute < ToRelationshipAttribute
+      attr_reader :route_for
+
+      def initialize(name, opts = {})
+        @route_for = opts[:route_for] || [:get, :put, :delete]
+        super
+      end
+    end
+
     class ToOneAttribute < ToRelationshipAttribute; end
 
     def initialize(controller)

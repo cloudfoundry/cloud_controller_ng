@@ -108,6 +108,12 @@ module VCAP::CloudController
       end
     end
 
+    describe "Associations" do
+      it do
+        expect(described_class).to have_nested_routes({ service_instances: [:get, :put, :delete] })
+      end
+    end
+
     let(:developer) { make_developer_for_space(Space.make) }
 
     describe "non public service plans" do

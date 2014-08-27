@@ -133,6 +133,12 @@ module VCAP::CloudController
       end
     end
 
+    describe "Associations" do
+      it do
+        expect(described_class).to have_nested_routes({ spaces: [:get, :put, :delete] })
+      end
+    end
+
     describe "errors" do
       let(:org) { Organization.make }
 

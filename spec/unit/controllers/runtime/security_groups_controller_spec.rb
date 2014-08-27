@@ -28,6 +28,14 @@ module VCAP::CloudController
       end
     end
 
+    describe "Associations" do
+      describe "nested routes" do
+        it do
+          expect(described_class).to have_nested_routes({ spaces: [:get, :put, :delete] })
+        end
+      end
+    end
+
     describe "errors" do
       it "returns SecurityGroupInvalid" do
         post '/v2/security_groups', '{"name":"one\ntwo"}', json_headers(admin_headers)

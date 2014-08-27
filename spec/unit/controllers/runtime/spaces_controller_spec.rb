@@ -131,6 +131,56 @@ module VCAP::CloudController
       end
     end
 
+    describe "Associations" do
+      it do
+        expect(described_class).to have_nested_routes(
+          {
+            developers:        [:get, :put, :delete],
+            managers:          [:get, :put, :delete],
+            auditors:          [:get, :put, :delete],
+            apps:              [:get, :put, :delete],
+            routes:            [:get, :put, :delete],
+            domains:           [:get, :put, :delete],
+            service_instances: [:get, :put, :delete],
+            app_events:        [:get, :put, :delete],
+            events:            [:get, :put, :delete],
+            security_groups:   [:get, :put, :delete],
+          })
+      end
+
+      describe "app_events associations" do
+        it "does not return app_events with inline-relations-depth=0" do
+          space = Space.make
+          get "/v2/spaces/#{space.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
+          expect(entity).to have_key("app_events_url")
+          expect(entity).to_not have_key("app_events")
+        end
+
+        it "does not return app_events with inline-relations-depth=1 since app_events dataset is relatively expensive to query" do
+          space = Space.make
+          get "/v2/spaces/#{space.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+          expect(entity).to have_key("app_events_url")
+          expect(entity).to_not have_key("app_events")
+        end
+      end
+
+      describe "events associations" do
+        it "does not return events with inline-relations-depth=0" do
+          space = Space.make
+          get "/v2/spaces/#{space.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
+          expect(entity).to have_key("events_url")
+          expect(entity).to_not have_key("events")
+        end
+
+        it "does not return events with inline-relations-depth=1 since events dataset is relatively expensive to query" do
+          space = Space.make
+          get "/v2/spaces/#{space.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+          expect(entity).to have_key("events_url")
+          expect(entity).to_not have_key("events")
+        end
+      end
+    end
+
     describe 'GET /v2/spaces/:guid/service_instances' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
@@ -507,38 +557,6 @@ module VCAP::CloudController
         expect(event.space_guid).to eq(space_guid)
         expect(event.actor_name).to eq(SecurityContext.current_user_email)
         expect(event.organization_guid).to eq(organization_guid)
-      end
-    end
-
-    describe "app_events associations" do
-      it "does not return app_events with inline-relations-depth=0" do
-        space = Space.make
-        get "/v2/spaces/#{space.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
-        expect(entity).to have_key("app_events_url")
-        expect(entity).to_not have_key("app_events")
-      end
-
-      it "does not return app_events with inline-relations-depth=1 since app_events dataset is relatively expensive to query" do
-        space = Space.make
-        get "/v2/spaces/#{space.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
-        expect(entity).to have_key("app_events_url")
-        expect(entity).to_not have_key("app_events")
-      end
-    end
-
-    describe "events associations" do
-      it "does not return events with inline-relations-depth=0" do
-        space = Space.make
-        get "/v2/spaces/#{space.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
-        expect(entity).to have_key("events_url")
-        expect(entity).to_not have_key("events")
-      end
-
-      it "does not return events with inline-relations-depth=1 since events dataset is relatively expensive to query" do
-        space = Space.make
-        get "/v2/spaces/#{space.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
-        expect(entity).to have_key("events_url")
-        expect(entity).to_not have_key("events")
       end
     end
 

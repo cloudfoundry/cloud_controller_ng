@@ -6,21 +6,21 @@ module VCAP::CloudController
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
-          name: {type: "string", required: true},
-          credentials: {type: "hash", default: {}},
-          syslog_drain_url: {type: "string", default: ""},
-          space_guid: {type: "string", required: true},
-          service_binding_guids: {type: "[string]"}
+          name:                  { type: "string", required: true },
+          credentials:           { type: "hash", default: {} },
+          syslog_drain_url:      { type: "string", default: "" },
+          space_guid:            { type: "string", required: true },
+          service_binding_guids: { type: "[string]" }
         })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-          name: {type: "string"},
-          credentials: {type: "hash"},
-          syslog_drain_url: {type: "string"},
-          space_guid: {type: "string"},
-          service_binding_guids: {type: "[string]"}
+          name:                  { type: "string" },
+          credentials:           { type: "hash" },
+          syslog_drain_url:      { type: "string" },
+          space_guid:            { type: "string" },
+          service_binding_guids: { type: "[string]" }
         })
       end
     end
@@ -74,6 +74,12 @@ module VCAP::CloudController
                            :path => "/v2/user_provided_service_instances",
                            :enumerate => 1
         end
+      end
+    end
+
+    describe "Associations" do
+      it do
+        expect(described_class).to have_nested_routes({ service_bindings: [:get, :put, :delete] })
       end
     end
   end

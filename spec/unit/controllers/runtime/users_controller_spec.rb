@@ -45,6 +45,22 @@ module VCAP::CloudController
       end
     end
 
+    describe "Associations" do
+      it do
+        expect(described_class).to have_nested_routes(
+          {
+            spaces:                        [:get, :put, :delete],
+            organizations:                 [:get, :put, :delete],
+            managed_organizations:         [:get, :put, :delete],
+            billing_managed_organizations: [:get, :put, :delete],
+            audited_organizations:         [:get, :put, :delete],
+            managed_spaces:                [:get, :put, :delete],
+            audited_spaces:                [:get, :put, :delete],
+          }
+        )
+      end
+    end
+
     describe 'permissions' do
       include_context "permissions"
       before do

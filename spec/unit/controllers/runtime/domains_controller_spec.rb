@@ -29,6 +29,12 @@ module VCAP::CloudController
       end
     end
 
+    describe "Associations" do
+      it do
+        expect(described_class).to have_nested_routes({ spaces: [:get, :put, :delete] })
+      end
+    end
+
     context "without seeded domains" do
       before do
         Domain.dataset.destroy # Seeded domains get in the way

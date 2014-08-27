@@ -183,6 +183,12 @@ module VCAP::CloudController
       end
     end
 
+    describe "Associations" do
+      it do
+        expect(described_class).to have_nested_routes({ service_bindings: [:get, :put, :delete] })
+      end
+    end
+
     describe 'POST', '/v2/service_instances' do
       context 'with a v2 service' do
         let(:space) { Space.make }

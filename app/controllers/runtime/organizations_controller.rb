@@ -1,18 +1,19 @@
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
     define_attributes do
-      attribute :name, String
-      attribute :billing_enabled, Message::Boolean, :default => false
-      attribute :status, String, default: 'active'
+      attribute :name,            String
+      attribute :billing_enabled, Message::Boolean, default: false
+      attribute :status,          String, default: 'active'
+
       to_one    :quota_definition, optional_in: :create
-      to_many   :spaces, exclude_in: :create
-      to_many   :domains, exclude_in: [:create, :update]
-      to_many   :private_domains, exclude_in: [:create, :update]
+      to_many   :spaces,           exclude_in: :create
+      to_many   :domains,          exclude_in: [:create, :update], route_for: [:get, :delete]
+      to_many   :private_domains,  exclude_in: [:create, :update], route_for: :get
       to_many   :users
       to_many   :managers
       to_many   :billing_managers
       to_many   :auditors
-      to_many   :app_events, :link_only => true
+      to_many   :app_events, link_only: true
       to_many   :space_quota_definitions, exclude_in: :create
     end
 

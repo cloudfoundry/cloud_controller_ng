@@ -160,6 +160,12 @@ module VCAP::CloudController
       end
     end
 
+    describe "Associations" do
+      it do
+        expect(described_class).to have_nested_routes({ apps: [:get, :put, :delete] })
+      end
+    end
+
     describe 'POST /v2/routes' do
       let(:space) {Space.make}
       let(:user) {User.make}

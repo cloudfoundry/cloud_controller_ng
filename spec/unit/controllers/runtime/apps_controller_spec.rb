@@ -12,48 +12,77 @@ module VCAP::CloudController
 
     describe "Attributes" do
       it do
-        expect(described_class).to have_creatable_attributes({
-                                                               buildpack: {type: "string"},
-                                                               command: {type: "string"},
-                                                               console: {type: "bool", default: false},
-                                                               debug: {type: "string"},
-                                                               disk_quota: {type: "integer"},
-                                                               environment_json: {type: "hash", default: {}},
-                                                               health_check_timeout: { type: "integer" },
-                                                               instances: {type: "integer", default: 1},
-                                                               memory: {type: "integer"},
-                                                               name: {type: "string", required: true},
-                                                               production: {type: "bool", default: false},
-                                                               state: {type: "string", default: "STOPPED"},
-                                                               event_guids: {type: "[string]"},
-                                                               route_guids: {type: "[string]"},
-                                                               space_guid: {type: "string", required: true},
-                                                               stack_guid: {type: "string"},
-                                                               docker_image: {type: "string", required: false},
-        })
+        expect(described_class).to have_creatable_attributes(
+          {
+            buildpack:            { type: "string" },
+            command:              { type: "string" },
+            console:              { type: "bool", default: false },
+            debug:                { type: "string" },
+            disk_quota:           { type: "integer" },
+            environment_json:     { type: "hash", default: {} },
+            health_check_timeout: { type: "integer" },
+            instances:            { type: "integer", default: 1 },
+            memory:               { type: "integer" },
+            name:                 { type: "string", required: true },
+            production:           { type: "bool", default: false },
+            state:                { type: "string", default: "STOPPED" },
+            event_guids:          { type: "[string]" },
+            route_guids:          { type: "[string]" },
+            space_guid:           { type: "string", required: true },
+            stack_guid:           { type: "string" },
+            docker_image:         { type: "string", required: false },
+          })
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
-                                                               buildpack: {type: "string"},
-                                                               command: {type: "string"},
-                                                               console: {type: "bool"},
-                                                               debug: {type: "string"},
-                                                               disk_quota: {type: "integer"},
-                                                               environment_json: {type: "hash"},
-                                                               health_check_timeout: {type: "integer"},
-                                                               instances: {type: "integer"},
-                                                               memory: {type: "integer"},
-                                                               name: {type: "string"},
-                                                               production: {type: "bool"},
-                                                               state: {type: "string"},
-                                                               event_guids: {type: "[string]"},
-                                                               route_guids: {type: "[string]"},
-                                                               service_binding_guids: {type: "[string]"},
-                                                               space_guid: {type: "string"},
-                                                               stack_guid: {type: "string"},
-                                                               docker_image: {type: "string"},
-        })
+        expect(described_class).to have_updatable_attributes(
+          {
+            buildpack:             { type: "string" },
+            command:               { type: "string" },
+            console:               { type: "bool" },
+            debug:                 { type: "string" },
+            disk_quota:            { type: "integer" },
+            environment_json:      { type: "hash" },
+            health_check_timeout:  { type: "integer" },
+            instances:             { type: "integer" },
+            memory:                { type: "integer" },
+            name:                  { type: "string" },
+            production:            { type: "bool" },
+            state:                 { type: "string" },
+            event_guids:           { type: "[string]" },
+            route_guids:           { type: "[string]" },
+            service_binding_guids: { type: "[string]" },
+            space_guid:            { type: "string" },
+            stack_guid:            { type: "string" },
+            docker_image:          { type: "string" },
+          })
+      end
+    end
+
+    describe "Associations" do
+      it do
+        expect(described_class).to have_nested_routes(
+          {
+            events:           [:get, :put, :delete],
+            service_bindings: [:get, :put, :delete],
+            routes:           [:get, :put, :delete],
+          })
+      end
+
+      describe "events associations (via AppEvents)" do
+        it "does not return events with inline-relations-depth=0" do
+          app = App.make
+          get "/v2/apps/#{app.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
+          expect(entity).to have_key("events_url")
+          expect(entity).to_not have_key("events")
+        end
+
+        it "does not return events with inline-relations-depth=1 since app_events dataset is relatively expensive to query" do
+          app = App.make
+          get "/v2/apps/#{app.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+          expect(entity).to have_key("events_url")
+          expect(entity).to_not have_key("events")
+        end
       end
     end
 
@@ -601,22 +630,6 @@ module VCAP::CloudController
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match /Invalid app state provided/
         expect(decoded_response["code"]).to eq(100001)
-      end
-    end
-
-    describe "events associations (via AppEvents)" do
-      it "does not return events with inline-relations-depth=0" do
-        app = App.make
-        get "/v2/apps/#{app.guid}?inline-relations-depth=0", {}, json_headers(admin_headers)
-        expect(entity).to have_key("events_url")
-        expect(entity).to_not have_key("events")
-      end
-
-      it "does not return events with inline-relations-depth=1 since app_events dataset is relatively expensive to query" do
-        app = App.make
-        get "/v2/apps/#{app.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
-        expect(entity).to have_key("events_url")
-        expect(entity).to_not have_key("events")
       end
     end
   end

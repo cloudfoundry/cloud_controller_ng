@@ -120,6 +120,24 @@ module VCAP::CloudController
       end
     end
 
+    describe "Associations" do
+      it do
+        expect(described_class).to have_nested_routes(
+          {
+            spaces:                  [:get, :put, :delete],
+            domains:                 [:get, :delete],
+            private_domains:         :get,
+            users:                   [:get, :put, :delete],
+            managers:                [:get, :put, :delete],
+            billing_managers:        [:get, :put, :delete],
+            auditors:                [:get, :put, :delete],
+            app_events:              [:get, :put, :delete],
+            space_quota_definitions: [:get, :put, :delete],
+          }
+        )
+      end
+    end
+
     describe 'POST /v2/organizations' do
       context 'when user_org_creation feature_flag is disabled' do
         before do
