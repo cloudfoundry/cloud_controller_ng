@@ -45,19 +45,19 @@ module VCAP::CloudController
     end
 
     def self.get_thread_info
-      threadqueue = EM.instance_variable_get(:@threadqueue)
-      resultqueue = EM.instance_variable_get(:@resultqueue)
+      threadqueue = EM.instance_variable_get(:@threadqueue) || []
+      resultqueue = EM.instance_variable_get(:@resultqueue) || []
       {
         thread_count: Thread.list.size,
         event_machine: {
           connection_count: EventMachine.connection_count,
           threadqueue: {
-            size: threadqueue ? threadqueue.size : 0,
-            num_waiting: threadqueue ? threadqueue.num_waiting : 0,
+            size: threadqueue.size,
+            num_waiting: threadqueue.is_a?(Array) ? 0 : threadqueue.num_waiting,
           },
           resultqueue: {
-            size: resultqueue ? resultqueue.size : 0,
-            num_waiting: resultqueue ? resultqueue.num_waiting : 0,
+            size: resultqueue.size,
+            num_waiting: resultqueue.is_a?(Array) ? 0 : resultqueue.num_waiting,
           },
         },
       }

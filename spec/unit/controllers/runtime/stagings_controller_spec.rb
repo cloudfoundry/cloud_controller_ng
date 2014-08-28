@@ -319,7 +319,7 @@ module VCAP::CloudController
             before { TestConfig.config[:nginx][:use_nginx] = false }
 
             it "should return the droplet" do
-              Tempfile.new(app_obj.guid) do |f|
+              Tempfile.create(app_obj.guid) do |f|
                 f.write("droplet contents")
                 f.close
                 CloudController::DropletUploader.new(app_obj, blobstore).upload(f.path)

@@ -75,6 +75,7 @@ module VCAP::CloudController
 
       context "when the app_scaling featureflag is disabled" do
         before { FeatureFlag.make(name: "app_scaling", enabled: false, error_message: nil) }
+
         it "cannot scale" do
           expect{ subject.read_for_update?(object, {"memory" => 2}) }.to raise_error(VCAP::Errors::ApiError, /app_scaling/)
           expect{ subject.read_for_update?(object, {"disk_quota" => 2}) }.to raise_error(VCAP::Errors::ApiError, /app_scaling/)
