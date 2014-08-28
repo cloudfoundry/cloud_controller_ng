@@ -43,6 +43,14 @@ module VCAP::CloudController
           subject.update?(object)
         end
       end
+
+      context 'when the service_instance_creation feature flag is not set' do
+        before do
+          FeatureFlag.make(name: 'service_instance_creation', enabled: false, error_message: nil)
+        end
+
+        it_behaves_like :full_access
+      end
     end
 
     context 'space developer' do
@@ -59,6 +67,17 @@ module VCAP::CloudController
 
       it 'allows the user to read the permissions of the service instance' do
         expect(subject).to allow_op_on_object(:read_permissions, object)
+      end
+
+      context 'when the service_instance_creation feature flag is not set' do
+        before do
+          FeatureFlag.make(name: 'service_instance_creation', enabled: false, error_message: nil)
+        end
+
+        it 'allows all operations except create' do
+          expect(subject).to_not allow_op_on_object(:create, object)
+          expect(subject).to allow_op_on_object(:update, object)
+        end
       end
     end
 

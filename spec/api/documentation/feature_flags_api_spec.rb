@@ -23,7 +23,7 @@ resource "Feature Flags", :type => :api do
       client.get "/v2/config/feature_flags", {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(5)
+      expect(parsed_response.length).to eq(6)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -58,6 +58,13 @@ resource "Feature Flags", :type => :api do
           'enabled'       => true,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/route_creation'
+        })
+      expect(parsed_response).to include(
+        {
+          'name'          => 'service_instance_creation',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/service_instance_creation'
         })
     end
   end
@@ -138,6 +145,22 @@ resource "Feature Flags", :type => :api do
           'enabled'       => true,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/route_creation'
+        })
+    end
+  end
+
+  get "/v2/config/feature_flags/service_instance_creation" do
+    example "Get the Service Instance Creation feature flag" do
+      explanation "When enabled, a space developer can create service instances in a space. When disabled, only admin users can create service instances."
+      client.get "/v2/config/feature_flags/service_instance_creation", {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+        {
+          'name'          => 'service_instance_creation',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/service_instance_creation'
         })
     end
   end

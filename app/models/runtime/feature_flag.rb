@@ -11,6 +11,7 @@ module VCAP::CloudController
       app_bits_upload: true,
       app_scaling: true,
       route_creation: true,
+      service_instance_creation: true,
     }.freeze
 
     export_attributes :name, :enabled, :error_message
