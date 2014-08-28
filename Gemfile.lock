@@ -20,19 +20,19 @@ GIT
       vcap-concurrency
 
 GIT
-  remote: https://github.com/cloudfoundry/cf-uaa-lib.git
-  revision: 81e5e4d622338b3332ce24840e6b40d47b161849
-  ref: 81e5e4d6
-  specs:
-    cf-uaa-lib (2.1.0)
-      multi_json
-
-GIT
   remote: https://github.com/cloudfoundry/vcap-concurrency.git
   revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
   ref: 2a5b0179
   specs:
     vcap-concurrency (0.1.0)
+
+GIT
+  remote: https://github.com/jfmyers9/cf-uaa-lib.git
+  revision: c1e63b5660b1755fc7d526ced247e9c3cc70a49a
+  ref: c1e63b5660b1755fc7d526ced247e9c3cc70a49a
+  specs:
+    cf-uaa-lib (3.1.0)
+      multi_json
 
 GIT
   remote: https://github.com/zipmark/rspec_api_documentation.git
@@ -268,7 +268,7 @@ DEPENDENCIES
   bcrypt-ruby
   cf-message-bus!
   cf-registrar (~> 1.0.1)!
-  cf-uaa-lib (~> 2.1.0)!
+  cf-uaa-lib (~> 3.1.0)!
   clockwork
   cloudfront-signer
   codeclimate-test-reporter
