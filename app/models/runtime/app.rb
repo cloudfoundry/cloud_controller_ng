@@ -12,6 +12,14 @@ module VCAP::CloudController
   # rubocop:disable ClassLength
   class App < Sequel::Model
     plugin :serialization
+    plugin :after_initialize
+
+    def after_initialize
+      default_instances = db_schema[:instances][:default].to_i
+
+      self.instances ||=  default_instances
+      self.memory ||= VCAP::CloudController::Config.config[:default_app_memory]
+    end
 
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
@@ -362,27 +370,8 @@ module VCAP::CloudController
       !VCAP::CloudController::Config.config[:disable_custom_buildpacks]
     end
 
-    def requested_instances
-      default_instances = db_schema[:instances][:default].to_i
-      instances ? instances : default_instances
-    end
-
     def max_app_disk_in_mb
       VCAP::CloudController::Config.config[:maximum_app_disk_in_mb]
-    end
-
-    def requested_memory
-      memory ? memory : VCAP::CloudController::Config.config[:default_app_memory]
-    end
-
-    def additional_memory_requested
-      total_requested_memory = requested_memory * requested_instances
-
-      return total_requested_memory if new?
-
-      app = app_from_db
-      total_existing_memory = app[:memory] * app[:instances]
-      total_requested_memory - total_existing_memory
     end
 
     # We need to overide this ourselves because we are really doing a
@@ -589,16 +578,6 @@ module VCAP::CloudController
 
     def metadata_deserialized
       deserialized_values[:metadata]
-    end
-
-    def app_from_db
-      error_message = "Expected app record not found in database with guid %s"
-      app_from_db = self.class.find(guid: guid)
-      if app_from_db.nil?
-        self.class.logger.fatal("app.find.missing", guid: guid, self: inspect)
-        raise Errors::ApplicationMissing, error_message % guid
-      end
-      app_from_db
     end
 
     WHITELIST_SERVICE_KEYS = %W[name label tags plan credentials syslog_drain_url].freeze

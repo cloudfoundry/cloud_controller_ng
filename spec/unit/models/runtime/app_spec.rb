@@ -33,6 +33,20 @@ module VCAP::CloudController
       VCAP::CloudController::Seeds.create_seed_stacks
     end
 
+    describe 'Creation' do
+      let(:app) { App.new }
+
+      it 'has a default instances' do
+        schema_default = App.db_schema[:instances][:default].to_i
+        expect(app.instances).to eq(schema_default)
+      end
+
+      it 'has a default memory' do
+        allow(VCAP::CloudController::Config.config).to receive(:[]).with(:default_app_memory).and_return(873565)
+        expect(app.memory).to eq(873565)
+      end
+    end
+
     describe "Associations" do
       it { is_expected.to have_timestamp_columns }
       it { is_expected.to have_associated :droplets }
@@ -275,10 +289,6 @@ module VCAP::CloudController
       describe "quota" do
         let(:quota) do
           QuotaDefinition.make(:memory_limit => 128)
-        end
-
-        it "has a default requested instances" do
-          expect(App.new.requested_instances).to be
         end
 
         context "app update" do
@@ -1891,15 +1901,6 @@ module VCAP::CloudController
     describe "file_descriptors" do
       subject { AppFactory.make }
       its(:file_descriptors) { should == 16_384 }
-    end
-
-    describe "additional_memory_requested" do
-      subject(:app) { AppFactory.make }
-
-      it "raises error if the app is deleted" do
-        app.delete
-        expect { app.save }.to raise_error(Errors::ApplicationMissing)
-      end
     end
 
     describe "docker_image" do
