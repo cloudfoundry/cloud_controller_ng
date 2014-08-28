@@ -152,7 +152,7 @@ module VCAP::CloudController
     private
 
     def memory_remaining
-      memory_used = apps_dataset.sum(Sequel.*(:memory, :instances)) || 0
+      memory_used = apps_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
       quota_definition.memory_limit - memory_used
     end
   end

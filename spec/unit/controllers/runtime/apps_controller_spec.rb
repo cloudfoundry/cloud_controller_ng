@@ -568,7 +568,7 @@ module VCAP::CloudController
 
     describe "Validation messages" do
       let(:space) { Space.make }
-      let!(:app_obj) { App.make(space: space) }
+      let!(:app_obj) { App.make(space: space, state: 'STARTED', package_hash: 'some-made-up-package-hash') }
 
       it "returns duplicate app name message correctly" do
         existing_app = App.make(space: space)
