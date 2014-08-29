@@ -19,19 +19,19 @@ GIT
       vcap-concurrency
 
 GIT
+  remote: https://github.com/cloudfoundry/cf-uaa-lib.git
+  revision: b1e11235dc6cd7d8d4680e005526de37201305ea
+  ref: b1e11235dc6cd7d8d4680e005526de37201305ea
+  specs:
+    cf-uaa-lib (3.1.0)
+      multi_json
+
+GIT
   remote: https://github.com/cloudfoundry/vcap-concurrency.git
   revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
   ref: 2a5b0179
   specs:
     vcap-concurrency (0.1.0)
-
-GIT
-  remote: https://github.com/jfmyers9/cf-uaa-lib.git
-  revision: c1e63b5660b1755fc7d526ced247e9c3cc70a49a
-  ref: c1e63b5660b1755fc7d526ced247e9c3cc70a49a
-  specs:
-    cf-uaa-lib (3.1.0)
-      multi_json
 
 GIT
   remote: https://github.com/zipmark/rspec_api_documentation.git
@@ -147,7 +147,7 @@ GEM
     parallel (1.2.4)
     parallel_tests (1.0.6)
       parallel
-    parser (2.2.0.pre.4)
+    parser (2.1.9)
       ast (>= 1.1, < 3.0)
       slop (~> 3.4, >= 3.4.5)
     pg (0.17.1)
