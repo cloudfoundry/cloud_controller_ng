@@ -49,22 +49,33 @@ module VCAP::CloudController
       end
 
       context "changing domain" do
-        it "succeeds if it's a shared domain" do
-          route        = Route.make(domain: SharedDomain.make)
-          route.domain = SharedDomain.make
-          expect { route.save }.not_to raise_error
-        end
-
-        context "private domain" do
-          it "succeeds if in the same organization" do
-            route        = Route.make(domain: SharedDomain.make)
-            route.domain = PrivateDomain.make(owning_organization: route.space.organization)
+        context "when shared" do
+          it "succeeds if it's the same domain" do
+            domain = SharedDomain.make
+            route        = Route.make(domain: domain)
+            route.domain = route.domain = domain
             expect { route.save }.not_to raise_error
           end
 
-          it "fails if in a different organization" do
+          it "fails if it's different" do
             route        = Route.make(domain: SharedDomain.make)
-            route.domain = PrivateDomain.make
+            route.domain = SharedDomain.make
+            expect { route.save }.to raise_error
+          end
+        end
+
+        context "when private" do
+          let(:space) {Space.make}
+          let(:domain) {PrivateDomain.make(owning_organization: space.organization)}
+          it "succeeds if it is the same domain" do
+            route = Route.make(space: space, domain: domain)
+            route.domain = domain
+            expect { route.save }.not_to raise_error
+          end
+
+          it "fails if its a different domain" do
+            route        = Route.make(space: space, domain: domain)
+            route.domain = PrivateDomain.make(owning_organization: space.organization)
             expect { route.save }.to raise_error
           end
         end
@@ -103,7 +114,8 @@ module VCAP::CloudController
           Route.make(
             :space  => space,
             :domain => domain,
-            :host   => "")
+            :host   => ""
+          )
         end
 
         it "should not allow a blank host" do
@@ -111,7 +123,8 @@ module VCAP::CloudController
             Route.make(
               :space  => space,
               :domain => domain,
-              :host   => " ")
+              :host   => " "
+            )
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
@@ -280,7 +293,7 @@ module VCAP::CloudController
                 :guid => r.domain.guid,
                 :name => r.domain.name
               }
-            })
+          })
         end
       end
 

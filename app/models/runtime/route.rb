@@ -111,7 +111,10 @@ module VCAP::CloudController
     end
 
     def valid_domain
-      return true unless domain
+      return false if domain.nil?
+
+      domain_change = column_change(:domain_id)
+      return false if !new? && domain_change && domain_change[0] != domain_change[1]
 
       if (domain.shared? && !host.present?) ||
         (space && !domain.usable_by_organization?(space.organization))

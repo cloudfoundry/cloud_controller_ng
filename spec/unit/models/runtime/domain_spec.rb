@@ -6,10 +6,15 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { is_expected.to have_associated :routes }
+      context "routes" do
+        let(:space) { Space.make }
+        it { is_expected.to have_associated :routes, associated_instance: ->(domain) { Route.make(space: space, domain: domain) } }
+      end
+
       context "owning_organization" do
         let(:org) { Organization.make }
-        it { is_expected.to have_associated :owning_organization, test_instance: Domain.make(owning_organization: org), associated_instance: ->(domain) { org } }
+        it { is_expected.to have_associated :owning_organization, test_instance: Domain.make(owning_organization: org),
+          associated_instance: ->(domain) { org } }
       end
 
       context "changing owning_organization" do
