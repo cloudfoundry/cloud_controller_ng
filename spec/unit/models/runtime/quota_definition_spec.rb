@@ -22,13 +22,22 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :memory_limit }
       it { is_expected.to validate_uniqueness :name }
 
-      describe "memory_limit" do
-        it "cannot be less than zero" do
+      describe "memory_limits" do
+        it "total memory_limit cannot be less than zero" do
           quota_definition.memory_limit = -1
           expect(quota_definition).not_to be_valid
           expect(quota_definition.errors.on(:memory_limit)).to include(:less_than_zero)
 
           quota_definition.memory_limit = 0
+          expect(quota_definition).to be_valid
+        end
+
+        it "instance_memory_limit cannot be less than zero" do
+          quota_definition.instance_memory_limit = -2
+          expect(quota_definition).not_to be_valid
+          expect(quota_definition.errors.on(:instance_memory_limit)).to include(:invalid_instance_memory_limit)
+
+          quota_definition.instance_memory_limit = -1
           expect(quota_definition).to be_valid
         end
       end
