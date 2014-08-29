@@ -623,6 +623,11 @@
   http_code: 400
   message: "You have exceeded the total routes for your organization's quota."
 
+310007:
+  name: SpaceQuotaDefinitionNotFound
+  http_code: 404
+  message: "Space Quota Definition could not be found: %s"
+
 320001:
   name: DiegoDisabled
   http_code: 400
