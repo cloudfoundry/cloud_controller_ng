@@ -50,7 +50,10 @@ module VCAP::CloudController
         :uaa => {
           :url                => String,
           :resource_id        => String,
-          optional(:symmetric_secret)   => String
+          optional(:symmetric_secret)   => String,
+          optional(:connection_opts) => {
+            optional(:skip_ssl_validation) => bool
+          }
         },
 
         :logging => {
@@ -301,7 +304,7 @@ module VCAP::CloudController
       end
 
       def escape_userinfo(value)
-        URI::escape(value, "%#{URI::REGEXP::PATTERN::RESERVED}") 
+        URI::escape(value, "%#{URI::REGEXP::PATTERN::RESERVED}")
       end
 
       def valid_in_userinfo?(value)

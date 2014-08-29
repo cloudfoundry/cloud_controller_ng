@@ -22,7 +22,7 @@ gem 'httpclient'
 gem 'steno'
 gem 'cloudfront-signer'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
-gem 'cf-uaa-lib', '~> 2.1.0', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: '81e5e4d6'
+gem 'cf-uaa-lib', '~> 3.1.0', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: 'b1e11235dc6cd7d8d4680e005526de37201305ea'
 gem 'cf-message-bus', git: 'https://github.com/cloudfoundry/cf-message-bus.git'
 gem 'vcap_common', '~> 4.0'
 gem 'cf-registrar', '~> 1.0.1', git: 'https://github.com/cloudfoundry/cf-registrar.git'
@@ -44,7 +44,6 @@ end
 
 group :test do
   gem 'codeclimate-test-reporter', require: false
-  gem 'debugger'
   gem 'fakefs', require: 'fakefs/safe'
   gem 'machinist', '~> 1.0.6'
   gem 'parallel_tests'

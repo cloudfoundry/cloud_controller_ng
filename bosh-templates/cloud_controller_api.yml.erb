@@ -143,6 +143,8 @@ uaa:
   <% if_p("uaa.cc.token_secret") do |token_secret| %>
   symmetric_secret: "<%= token_secret %>"
   <% end %>
+  connection_opts:
+    skip_ssl_validation: <%= p("cc.uaa_skip_ssl_validation") %>
   verification_key: <%= p("uaa.jwt.verification_key") ? ("|\n      " + p("uaa.jwt.verification_key").gsub("\n", "\n      ")) : '~' %>
 
 # App staging parameters

@@ -8,7 +8,7 @@ module VCAP::CloudController
       it "raises if the file does not exist" do
         expect {
           Config.from_file("nonexistent.yml")
-        }.to raise_error(Errno::ENOENT, /No such file or directory - nonexistent.yml/)
+        }.to raise_error(Errno::ENOENT, /No such file or directory @ rb_sysopen - nonexistent.yml/)
       end
     end
 

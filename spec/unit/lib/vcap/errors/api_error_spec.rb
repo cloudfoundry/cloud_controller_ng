@@ -91,6 +91,16 @@ module VCAP::Errors
         I18n.locale = :en_US
         expect(api_error_with_translation_missing.message).to eq("Before foo bar after.")
       end
+
+      context "when initializing an api_error without new_from_details" do
+        let(:api_error) { ApiError.new }
+
+        it "should not explode" do
+          expect {
+            api_error.message
+          }.not_to raise_error
+        end
+      end
     end
 
     context "with details" do
