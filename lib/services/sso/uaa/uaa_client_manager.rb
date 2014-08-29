@@ -90,7 +90,7 @@ module VCAP::Services::SSO::UAA
 
     def scim
       @opts.fetch(:scim) do
-        CF::UAA::Scim.new(uaa_target, token_info.auth_header, uaa_connection_opts)
+        CF::UAA::Scim.new(uaa_target, token_info.auth_header)
       end
     end
 
@@ -98,13 +98,9 @@ module VCAP::Services::SSO::UAA
       VCAP::CloudController::Config.config[:uaa][:url]
     end
 
-    def uaa_connection_opts
-      VCAP::CloudController::Config.config[:uaa][:connection_opts]
-    end
-
     def issuer
       uaa_client, uaa_client_secret = issuer_client_config
-      CF::UAA::TokenIssuer.new(uaa_target, uaa_client, uaa_client_secret, uaa_connection_opts)
+      CF::UAA::TokenIssuer.new(uaa_target, uaa_client, uaa_client_secret)
     end
 
     def token_info

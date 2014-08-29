@@ -2,16 +2,13 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe Varz do
-    let(:threadqueue) { double(EventMachine::Queue, size: 20, num_waiting: 0) }
-    let(:resultqueue) { double(EventMachine::Queue, size: 0, num_waiting: 1) }
-
     before do
       allow(EventMachine).to receive(:connection_count).and_return(123)
 
       allow(EventMachine).to receive(:instance_variable_get) do |instance_var|
         case instance_var
-        when :@threadqueue then threadqueue
-        when :@resultqueue then resultqueue
+        when :@threadqueue then double(EventMachine::Queue, size: 20, num_waiting: 0)
+        when :@resultqueue then double(EventMachine::Queue, size: 0, num_waiting: 1)
         else raise "Unexpected call: #{instance_var}"
         end
       end
@@ -139,28 +136,29 @@ module VCAP::CloudController
         Varz.update_thread_info
       end
 
-      it 'should contain EventMachine data' do
+      it 'should contain thread count' do
         VCAP::Component.varz.synchronize do
           expect(VCAP::Component.varz[:thread_info][:thread_count]).to eq(Thread.list.size)
-          expect(VCAP::Component.varz[:thread_info][:event_machine][:connection_count]).to eq(123)
-          expect(VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:size]).to eq(20)
-          expect(VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:num_waiting]).to eq(0)
-          expect(VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:size]).to eq(0)
-          expect(VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:num_waiting]).to eq(1)
         end
       end
 
-      context "when resultqueue and/or threadqueue is not a queue" do
-        let(:resultqueue) { [] }
-        let(:threadqueue) { nil }
+      it 'should contain EventMachine connection count' do
+        VCAP::Component.varz.synchronize do
+          expect(VCAP::Component.varz[:thread_info][:event_machine][:connection_count]).to eq(123)
+        end
+      end
 
-        it "does not blow up" do
-          VCAP::Component.varz.synchronize do
-            expect(VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:size]).to eq(0)
-            expect(VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:num_waiting]).to eq(0)
-            expect(VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:size]).to eq(0)
-            expect(VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:num_waiting]).to eq(0)
-          end
+      it 'should contain EventMachine @threadqueue size and num_waiting' do
+        VCAP::Component.varz.synchronize do
+          expect(VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:size]).to eq(20)
+          expect(VCAP::Component.varz[:thread_info][:event_machine][:threadqueue][:num_waiting]).to eq(0)
+        end
+      end
+
+      it 'should contain EventMachine @resultqueue size and num_waiting' do
+        VCAP::Component.varz.synchronize do
+          expect(VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:size]).to eq(0)
+          expect(VCAP::Component.varz[:thread_info][:event_machine][:resultqueue][:num_waiting]).to eq(1)
         end
       end
     end

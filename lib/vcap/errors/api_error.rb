@@ -21,8 +21,6 @@ module VCAP
       end
 
       def message
-        return unless args || details
-
         formatted_args = args.map do |arg|
           (arg.is_a? Array) ? arg.map(&:to_s).join(', ') : arg.to_s
         end
