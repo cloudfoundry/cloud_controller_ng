@@ -57,7 +57,7 @@ module VCAP::CloudController
       space_quota_definitions: :destroy
 
     define_user_group :users
-    define_user_group :managers, 
+    define_user_group :managers,
                       reciprocal: :managed_organizations,
                       before_remove: proc { |org, user| org.manager_guids.count > 1 }
     define_user_group :billing_managers, reciprocal: :billing_managed_organizations
@@ -136,6 +136,16 @@ module VCAP::CloudController
     def billing_enabled?
       billing_enabled
     end
+
+    def quota_definition_guid_with_existence_check=(value)
+      qd = QuotaDefinition[:guid => value]
+      if qd.nil?
+        err_msg = Errors::ApiError.new_from_details("QuotaDefinitionNotFound", value).message
+        raise Errors::ApiError.new_from_details("OrganizationInvalid", err_msg)
+      end
+      self.quota_definition_guid_without_existence_check = value
+    end
+    alias_method_chain "quota_definition_guid=", "existence_check"
 
     private
 
