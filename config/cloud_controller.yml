@@ -64,6 +64,8 @@ uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
+  connection_opts:
+    skip_ssl_validation: false
 
 cc_partition: ng
 

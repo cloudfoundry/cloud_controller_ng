@@ -14,6 +14,7 @@ module VCAP::CloudController
       allow_any_instance_of(MessageBus::Configurer).to receive(:go).and_return(message_bus)
       allow(VCAP::Component).to receive(:register)
       allow(EM).to receive(:run).and_yield
+      allow(EM).to receive(:add_timer).and_yield
       allow(VCAP::CloudController::Varz).to receive(:setup_updates)
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
       allow(registrar).to receive_messages(:message_bus => message_bus)
