@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Environment Variable Groups (Experimental)', :type => :api do
+resource 'Environment Variable Groups', :type => :api do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:staging_group) { VCAP::CloudController::EnvironmentVariableGroup.staging }
   let(:running_group) { VCAP::CloudController::EnvironmentVariableGroup.running }
