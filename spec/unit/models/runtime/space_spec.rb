@@ -263,7 +263,7 @@ module VCAP::CloudController
           expect(space).to be_in_suspended_org
         end
       end
-      
+
       context "when in an unsuspended organization" do
         before { allow(org).to receive(:suspended?).and_return(false) }
         it "is false" do
@@ -369,6 +369,31 @@ module VCAP::CloudController
 
         expect(spaces).to include(space1)
         expect(spaces).to_not include(space2)
+      end
+    end
+
+    describe "space_quota_definition=" do
+      let(:space) { Space.make }
+
+      context "when the space quota defitinion exists" do
+        let(:space_quota_definition) { SpaceQuotaDefinition.make }
+        let(:space_quota_definition_guid) { space_quota_definition.guid }
+
+        it "updates the association" do
+          space.space_quota_definition_guid = space_quota_definition_guid
+          expect(space.space_quota_definition).to eq space_quota_definition
+        end
+      end
+
+      context "when the space quota defitinion does not exist" do
+        let(:space_quota_definition_guid) { 'something-that-doesnt-exist' }
+
+        it "raises an error" do
+          expect {
+            space.space_quota_definition_guid = space_quota_definition_guid
+            space.save
+          }.to raise_error(VCAP::Errors::ApiError, /Space Quota Definition could not be found: #{space_quota_definition_guid}/)
+        end
       end
     end
   end
