@@ -527,7 +527,6 @@ module VCAP::CloudController
     end
 
     describe "creating an organization" do
-
       context "when a quota is not specified" do
         let(:org) {Organization.create_from_hash(name: 'myorg')}
 
@@ -537,7 +536,10 @@ module VCAP::CloudController
         end
 
         context "when the default quota does not exist" do
-          before { QuotaDefinition.default.destroy }
+          before do
+            QuotaDefinition.default.organizations.each(&:destroy)
+            QuotaDefinition.default.destroy
+          end
 
           it "raises an exception" do
             expect{org.save}.to raise_error(VCAP::Errors::ApiError, /Quota Definition could not be found: default/)
@@ -571,3 +573,4 @@ module VCAP::CloudController
     end
   end
 end
+

@@ -417,7 +417,10 @@ module VCAP::CloudController
     end
 
     describe "when the default quota does not exist" do
-      before { QuotaDefinition.default.destroy }
+      before do
+        QuotaDefinition.default.organizations.each(&:destroy)
+        QuotaDefinition.default.destroy
+      end
 
       it "returns an OrganizationInvalid message" do
         post "/v2/organizations", MultiJson.dump({name: "gotcha"}), admin_headers

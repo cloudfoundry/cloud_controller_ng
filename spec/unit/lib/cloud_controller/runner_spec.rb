@@ -120,6 +120,7 @@ module VCAP::CloudController
         context "when the insert seed flag is passed in" do
           let(:argv) { ["-s"] }
           before do
+            Organization.dataset.destroy
             QuotaDefinition.dataset.destroy
             SecurityGroup.dataset.destroy
             allow(Stack).to receive(:configure)
