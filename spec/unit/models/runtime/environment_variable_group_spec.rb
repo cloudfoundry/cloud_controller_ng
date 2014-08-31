@@ -2,7 +2,7 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe EnvironmentVariableGroup, type: :model do
-    subject(:env_group) { EnvironmentVariableGroup.make(name: "something") }
+    subject(:env_group) { EnvironmentVariableGroup.make }
 
     it { is_expected.to have_timestamp_columns }
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
     describe "environment_json is encrypted" do
       let(:env) { {"jesse" => "awesome"} }
       let(:long_env) { {"many_os" => "o" * 10_000} }
-      let!(:var_group) { EnvironmentVariableGroup.make(environment_json: env, name: "test") }
+      let!(:var_group) { EnvironmentVariableGroup.make(environment_json: env) }
       let(:last_row) { EnvironmentVariableGroup.dataset.naked.order_by(:id).last }
 
       it "is encrypted" do
@@ -83,7 +83,7 @@ module VCAP::CloudController
       end
 
       it "salt is unique for each variable group" do
-        var_group2 = EnvironmentVariableGroup.make(environment_json: env, name: "runtime2")
+        var_group2 = EnvironmentVariableGroup.make(environment_json: env)
         expect(var_group.salt).not_to eq var_group2.salt
       end
 
@@ -92,7 +92,7 @@ module VCAP::CloudController
       end
 
       it "works with long serialized environments" do
-        var_group = EnvironmentVariableGroup.make(environment_json: long_env, name: "runtime2")
+        var_group = EnvironmentVariableGroup.make(environment_json: long_env)
         var_group.reload
         expect(var_group.environment_json).to eq(long_env)
       end

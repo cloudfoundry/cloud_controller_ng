@@ -330,7 +330,7 @@ module VCAP::CloudController
   end
 
   EnvironmentVariableGroup.blueprint do
-    name { "runtime" }
+    name { "runtime-#{Sham.instance_index}" }
     environment_json do
       {
         "MOTD" => "Because of your smile, you make life more beautiful.",
