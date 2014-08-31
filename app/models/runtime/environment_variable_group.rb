@@ -3,6 +3,8 @@ module VCAP::CloudController
     import_attributes :environment_json
     export_attributes :name, :environment_json
 
+    encrypt :environment_json, salt: :salt
+
     def self.running
       find_by_name(:running)
     end
@@ -11,23 +13,19 @@ module VCAP::CloudController
       find_by_name(:staging)
     end
 
-    def environment_json=(env)
-      generate_salt
-      super VCAP::CloudController::Encryptor.encrypt(MultiJson.dump(env), salt)
+    def environment_json_with_serialization=(env)
+      self.environment_json_without_serialization = MultiJson.dump(env)
     end
+    alias_method_chain :environment_json=, "serialization"
 
-    def environment_json
-      raw_value = super
-      return {} unless raw_value
-
-      MultiJson.load(VCAP::CloudController::Encryptor.decrypt(raw_value, salt))
+    def environment_json_with_serialization
+      string = environment_json_without_serialization
+      return {} if string.blank?
+      MultiJson.load string
     end
+    alias_method_chain :environment_json, "serialization"
 
     private
-
-    def generate_salt
-      self.salt ||= VCAP::CloudController::Encryptor.generate_salt.freeze
-    end
 
     def self.find_by_name(group)
       EnvironmentVariableGroup.find_or_create(:name => group.to_s)
