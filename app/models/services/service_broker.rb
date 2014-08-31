@@ -1,8 +1,5 @@
 module VCAP::CloudController
   class ServiceBroker < Sequel::Model
-  end
-
-  class ServiceBroker
     one_to_many :services
     one_to_many :service_dashboard_client
 
@@ -14,6 +11,8 @@ module VCAP::CloudController
 
     many_to_many :service_plans, :join_table => :services, :right_key => :id, :right_primary_key => :service_id
 
+    encrypt :auth_password, salt: :salt
+
     def validate
       validates_presence :name
       validates_presence :broker_url
@@ -22,26 +21,6 @@ module VCAP::CloudController
       validates_unique :name
       validates_unique :broker_url
       validates_url :broker_url
-    end
-
-    def auth_password
-      return unless super
-      VCAP::CloudController::Encryptor.decrypt(super, salt)
-    end
-
-    def auth_password=(value)
-      generate_salt
-
-      # Encryptor cannot encrypt an empty string
-      if value.blank?
-        super(nil)
-      else
-        super(VCAP::CloudController::Encryptor.encrypt(value, salt))
-      end
-    end
-
-    def generate_salt
-      self.salt ||= VCAP::CloudController::Encryptor.generate_salt
     end
 
     def client
