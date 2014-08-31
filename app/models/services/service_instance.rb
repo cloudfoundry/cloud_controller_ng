@@ -44,6 +44,8 @@ module VCAP::CloudController
 
     add_association_dependencies :service_bindings => :destroy
 
+    encrypt :credentials, salt: :salt
+
     def self.user_visibility_filter(user)
       Sequel.or([
         [:space, user.spaces_dataset],
@@ -90,23 +92,17 @@ module VCAP::CloudController
       super(opts)
     end
 
-    def credentials=(val)
-      if val
-        json = MultiJson.dump(val)
-        generate_salt
-        encrypted_string = VCAP::CloudController::Encryptor.encrypt(json, salt)
-        super(encrypted_string)
-      else
-        super(nil)
-        self.salt = nil
-      end
+    def credentials_with_serialization=(val)
+      self.credentials_without_serialization = MultiJson.dump(val)
     end
+    alias_method_chain :credentials=, "serialization"
 
-    def credentials
-      return if super.blank?
-      json = VCAP::CloudController::Encryptor.decrypt(super, salt)
-      MultiJson.load(json) if json
+    def credentials_with_serialization
+      string = credentials_without_serialization
+      return if string.blank?
+      MultiJson.load string
     end
+    alias_method_chain :credentials, "serialization"
 
     def in_suspended_org?
       space.in_suspended_org?
@@ -123,10 +119,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def generate_salt
-      self.salt ||= VCAP::CloudController::Encryptor.generate_salt
-    end
 
     def validate_service_binding(service_binding)
       if service_binding && service_binding.app.space != space
