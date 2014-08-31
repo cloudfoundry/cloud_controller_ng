@@ -7,6 +7,8 @@ module VCAP::CloudController
 
     many_to_one   :service, :key => [:label, :provider], :primary_key => [:label, :provider]
 
+    encrypt :token, salt: :salt
+
     def validate
       validates_presence :label
       validates_presence :provider
@@ -16,20 +18,6 @@ module VCAP::CloudController
 
     def token_matches?(unencrypted_token)
       token == unencrypted_token
-    end
-
-    def token=(value)
-      generate_salt
-      super(VCAP::CloudController::Encryptor.encrypt(value, salt))
-    end
-
-    def token
-      return unless super
-      VCAP::CloudController::Encryptor.decrypt(super, salt)
-    end
-
-    def generate_salt
-      self.salt ||= VCAP::CloudController::Encryptor.generate_salt
     end
   end
 end
