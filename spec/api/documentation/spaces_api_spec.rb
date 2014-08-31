@@ -13,9 +13,20 @@ resource "Spaces", :type => :api do
   end
 
   describe "Standard endpoints" do
-    shared_context "updatable_fields" do |opts|
+    shared_context "createable_fields" do |opts|
       field :name, "The name of the space", required: opts[:required], example_values: %w(development demo production)
       field :organization_guid, "The guid of the associated organization", required: opts[:required], example_values: [Sham.guid]
+      field :developer_guids, "The list of the associated developers"
+      field :manager_guids, "The list of the associated managers"
+      field :auditor_guids, "The list of the associated auditors"
+      field :domain_guids, "The list of the associated domains"
+      field :security_group_guids, "The list of the associated security groups"
+      field :space_quota_definition, "The guid of the associated space quota definition"
+    end
+
+    shared_context "updatable_fields" do |opts|
+      field :name, "The name of the space", example_values: %w(development demo production)
+      field :organization_guid, "The guid of the associated organization", example_values: [Sham.guid]
       field :developer_guids, "The list of the associated developers"
       field :manager_guids, "The list of the associated managers"
       field :auditor_guids, "The list of the associated auditors"
@@ -33,7 +44,7 @@ resource "Spaces", :type => :api do
     end
 
     post "/v2/spaces/" do
-      include_context "updatable_fields", required: true
+      include_context "createable_fields", required: true
       example "Creating a Space" do
         organization_guid = VCAP::CloudController::Organization.make.guid
         client.post "/v2/spaces", MultiJson.dump(required_fields.merge(organization_guid: organization_guid), pretty: true), headers
