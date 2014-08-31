@@ -56,6 +56,8 @@ module VCAP::CloudController
 
     serialize_attributes :json, :metadata
 
+    encrypt :environment_json, salt: :salt, column: :encrypted_environment_json
+
     APP_STATES = %w[STOPPED STARTED].map(&:freeze).freeze
     PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
     STAGING_FAILED_REASONS = %w[StagingError NoAppDetectedError BuildpackCompileFailed BuildpackReleaseFailed].map(&:freeze).freeze
@@ -303,23 +305,17 @@ module VCAP::CloudController
       self.metadata && self.metadata["debug"]
     end
 
-    # We sadly have to do this ourselves because the serialization plugin
-    # doesn't play nice with the dirty plugin, and we want the dirty plugin
-    # more
-    def environment_json=(env)
-      json = MultiJson.dump(env)
-      generate_salt
-      self.encrypted_environment_json =
-          VCAP::CloudController::Encryptor.encrypt(json, salt)
+    def environment_json_with_serialization=(env)
+      self.environment_json_without_serialization = MultiJson.dump(env)
     end
+    alias_method_chain :environment_json=, "serialization"
 
-    def environment_json
-      return unless encrypted_environment_json
-
-      MultiJson.load(
-          VCAP::CloudController::Encryptor.decrypt(
-              encrypted_environment_json, salt))
+    def environment_json_with_serialization
+      string = environment_json_without_serialization
+      return if string.blank?
+      MultiJson.load string
     end
+    alias_method_chain :environment_json, "serialization"
 
     def system_env_json
       vcap_services
@@ -599,10 +595,6 @@ module VCAP::CloudController
         services_hash[binding[:label]] << service
       end
       {"VCAP_SERVICES" => services_hash}
-    end
-
-    def generate_salt
-      self.salt ||= VCAP::CloudController::Encryptor.generate_salt.freeze
     end
 
     def app_usage_event_repository

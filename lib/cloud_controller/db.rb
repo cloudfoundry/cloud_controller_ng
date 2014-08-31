@@ -54,6 +54,10 @@ Sequel::Model.plugin :validation_helpers
 
 Sequel::Database.extension(:current_datetime_timestamp)
 
+require "cloud_controller/encryptor"
+Sequel::Model.include VCAP::CloudController::Encryptor::FieldEncryptor
+
+
 # monkey patch sequel to make it easier to map validation failures to custom
 # exceptions, e.g.
 #
