@@ -6,6 +6,11 @@ module VCAP::CloudController
 
     it { is_expected.to have_timestamp_columns }
 
+    it_behaves_like "a model with an encrypted attribute" do
+      let(:encrypted_attr) { :environment_json }
+      let(:attr_salt) { :salt }
+    end
+
     describe "Serialization" do
       it { is_expected.to export_attributes :name, :environment_json }
       it { is_expected.to import_attributes :environment_json }
@@ -67,29 +72,8 @@ module VCAP::CloudController
       end
     end
 
-    describe "environment_json is encrypted" do
-      let(:env) { {"jesse" => "awesome"} }
+    describe "environment_json encryption" do
       let(:long_env) { {"many_os" => "o" * 10_000} }
-      let!(:var_group) { EnvironmentVariableGroup.make(environment_json: env) }
-      let(:last_row) { EnvironmentVariableGroup.dataset.naked.order_by(:id).last }
-
-      it "is encrypted" do
-        expect(last_row[:encrypted_environment_json]).not_to eq MultiJson.dump(env).to_s
-      end
-
-      it "is decrypted" do
-        var_group.reload
-        expect(var_group.environment_json).to eq env
-      end
-
-      it "salt is unique for each variable group" do
-        var_group2 = EnvironmentVariableGroup.make(environment_json: env)
-        expect(var_group.salt).not_to eq var_group2.salt
-      end
-
-      it "must have a salt of length 8" do
-        expect(var_group.salt.length).to eq 8
-      end
 
       it "works with long serialized environments" do
         var_group = EnvironmentVariableGroup.make(environment_json: long_env)

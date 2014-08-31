@@ -67,6 +67,7 @@ module VCAP::CloudController
       end
 
       let(:encrypted_attr) { :credentials }
+      let(:attr_salt) { :salt }
     end
 
     describe "bad relationships" do

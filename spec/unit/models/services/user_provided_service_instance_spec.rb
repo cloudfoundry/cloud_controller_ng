@@ -14,6 +14,7 @@ module VCAP::CloudController
       end
 
       let(:encrypted_attr) { :credentials }
+      let(:attr_salt) { :salt }
     end
 
     it { is_expected.to have_timestamp_columns }

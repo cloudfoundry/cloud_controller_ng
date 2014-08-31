@@ -33,6 +33,13 @@ module VCAP::CloudController
       VCAP::CloudController::Seeds.create_seed_stacks
     end
 
+    it_behaves_like 'a model with an encrypted attribute' do
+      let(:value_to_encrypt) { '{"foo":"bar"}' }
+      let(:encrypted_attr) { :environment_json_without_serialization }
+      let(:storage_column) { :encrypted_environment_json }
+      let(:attr_salt) { :salt }
+    end
+
     describe 'Creation' do
       let(:app) { App.new }
 

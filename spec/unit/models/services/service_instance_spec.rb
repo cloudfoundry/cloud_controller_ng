@@ -134,6 +134,7 @@ module VCAP::CloudController
 
     it_behaves_like "a model with an encrypted attribute" do
       let(:encrypted_attr) { :credentials }
+      let(:attr_salt) { :salt }
     end
 
     describe "#type" do

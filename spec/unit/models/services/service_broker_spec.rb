@@ -11,6 +11,7 @@ module VCAP::CloudController
 
     it_behaves_like 'a model with an encrypted attribute' do
       let(:encrypted_attr) { :auth_password }
+      let(:attr_salt) { :salt }
     end
 
     it { is_expected.to have_timestamp_columns }
