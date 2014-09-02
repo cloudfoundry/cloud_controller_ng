@@ -392,7 +392,7 @@ module VCAP::CloudController
           expect {
             space.space_quota_definition_guid = space_quota_definition_guid
             space.save
-          }.to raise_error(VCAP::Errors::ApiError, /Space Quota Definition could not be found: #{space_quota_definition_guid}/)
+         }.to raise_error(VCAP::Errors::ApiError, /Invalid relation: Could not find VCAP::CloudController::SpaceQuotaDefinition with guid: #{space_quota_definition_guid}/)
         end
       end
     end

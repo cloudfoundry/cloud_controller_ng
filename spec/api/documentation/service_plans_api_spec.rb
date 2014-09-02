@@ -35,7 +35,7 @@ resource "Service Plans", type: :api do
 
     put "/v2/service_plans" do
       example "Updating a Service Plan (deprecated)" do
-        client.put "/v2/service_plans/#{guid}", fields_json, headers
+        client.put "/v2/service_plans/#{guid}", fields_json(service_guid: service_guid), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :service_plans

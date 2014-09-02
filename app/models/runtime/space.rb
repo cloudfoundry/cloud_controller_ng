@@ -131,16 +131,6 @@ module VCAP::CloudController
       )
     end
 
-    def space_quota_definition_guid_with_existence_check=(value)
-      sqd = SpaceQuotaDefinition[:guid => value]
-      if sqd.nil?
-        err_msg = Errors::ApiError.new_from_details("SpaceQuotaDefinitionNotFound", value).message
-        raise Errors::ApiError.new_from_details("SpaceInvalid", err_msg)
-      end
-      self.space_quota_definition_guid_without_existence_check = value
-    end
-    alias_method_chain :space_quota_definition_guid=, :existence_check
-
     def has_remaining_memory(mem)
       return true unless space_quota_definition
       memory_remaining >= mem

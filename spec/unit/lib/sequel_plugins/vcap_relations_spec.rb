@@ -133,6 +133,14 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@o.dogs).to include(d2)
       expect(@o.dogs.length).to eq(1)
     end
+
+    it "raises an error on add using the <relation>_guids=" do
+      expect { @o.dog_guids = ["bogus-guid"] }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+    end
+
+    it "raises an error using the remove_<relation>_by_guid" do
+      expect { @o.remove_dog_by_guid('bogus-guid') }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+    end
   end
 
   describe ".many_to_many" do
@@ -281,6 +289,14 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@n2.dogs).to include(@d1)
       expect(@d1.names.length).to eq(1)
     end
+
+    it "raises an error on add using the <relation>_guids=" do
+      expect { @d1.name_guids = ["bogus-guid"] }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+    end
+
+    it "raises an error using the remove_<relation>_by_guid" do
+      expect { @d1.remove_name_by_guid('bogus-guid') }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+    end
   end
 
   describe "#has_one_to_many?" do
@@ -420,6 +436,17 @@ describe "Sequel::Plugins::VcapRelations" do
         expect {
           bottom.middle_guid = "hello"
         }.to raise_error(NoMethodError)
+      end
+    end
+
+    context "when an invalid guid is passed" do
+      def initialize_relations
+        bottom_klass.many_to_one :middle
+      end
+
+      it "raises an error" do
+        bottom = bottoms.first
+        expect { bottom.middle_guid = 'bogus-guid' }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
       end
     end
   end
