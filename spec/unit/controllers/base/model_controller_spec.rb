@@ -630,7 +630,7 @@ module VCAP::CloudController
           end
 
           context "with existing models in the association" do
-            before { model.add_test_model_many_to_many associated_model1 }
+            before { model.add_test_model_many_to_many(associated_model1) }
 
             it "replaces existing associated models" do
               put "/v2/test_models/#{model.guid}", MultiJson.dump({test_model_many_to_many_guids: [associated_model2.guid]}), admin_headers
@@ -647,12 +647,12 @@ module VCAP::CloudController
               expect(model.test_model_many_to_manies).not_to include(associated_model1)
             end
 
-            it "ignores invalid guids" do
+            it "fails invalid guids" do
               put "/v2/test_models/#{model.guid}", MultiJson.dump({test_model_many_to_many_guids: [associated_model2.guid, 'abcd']}), admin_headers
-              expect(last_response.status).to eq(201)
+              expect(last_response.status).to eq(400)
               model.reload
               expect(model.test_model_many_to_manies.length).to eq(1)
-              expect(model.test_model_many_to_manies).to include(associated_model2)
+              expect(model.test_model_many_to_manies).to include(associated_model1)
             end
           end
         end
