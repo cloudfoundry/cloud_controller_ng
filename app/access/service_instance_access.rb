@@ -2,7 +2,7 @@ module VCAP::CloudController
   class ServiceInstanceAccess < BaseAccess
     def create?(service_instance, params=nil)
       return true if admin_user?
-      return false unless FeatureFlag.enabled?('service_instance_creation')
+      FeatureFlag.raise_unless_enabled!('service_instance_creation')
       return false if service_instance.in_suspended_org?
       service_instance.space.developers.include?(context.user) && allowed?(service_instance)
     end

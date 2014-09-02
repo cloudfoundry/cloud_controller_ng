@@ -75,8 +75,7 @@ module VCAP::CloudController
         end
 
         it 'allows all operations except create' do
-          expect(subject).to_not allow_op_on_object(:create, object)
-          expect(subject).to allow_op_on_object(:update, object)
+          expect{subject.create?(object)}.to raise_error(VCAP::Errors::ApiError, /service_instance_creation/)
         end
       end
     end
