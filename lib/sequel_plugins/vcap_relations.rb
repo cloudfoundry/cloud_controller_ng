@@ -107,9 +107,13 @@ module Sequel::Plugins::VcapRelations
       end
 
       define_method("#{guid_attr}=") do |val|
-        ar = self.class.association_reflection(name)
-        other = ar.associated_class[:guid => val]
-        return if (other.nil? && !val.nil?)
+        other = nil
+
+        if !val.nil?
+          ar = self.class.association_reflection(name)
+          other = ar.associated_class[:guid => val]
+          raise VCAP::Errors::ApiError.new_from_details("InvalidRelation", "Could not find #{ar.associated_class.name} with guid: #{val}") if other.nil?
+        end
         send("#{name}=", other)
       end
     end
