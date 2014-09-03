@@ -287,6 +287,50 @@ module CloudController
               expect(client.exists?(key)).to be false
             end
           end
+
+          context "handling failures" do
+            context "when retries is 0" do
+              it "fails if the underlying operation fails" do
+                expect(client.files).to receive(:create).once.and_raise(SystemCallError.new("o no"))
+
+                path = File.join(local_dir, "some_file")
+                FileUtils.touch(path)
+                key = "gonnafail"
+
+                expect { client.cp_to_blobstore(path, key, 0) }.to raise_error SystemCallError, /o no/
+              end
+            end
+
+            context "when retries is greater than zero" do
+              context "and the underlying blobstore eventually succeeds" do
+                it "succeeds" do
+                  called = 0
+                  expect(client.files).to receive(:create).exactly(3).times do |_|
+                    called += 1
+                    raise SystemCallError.new("o no") if called <= 2
+                  end
+
+                  path = File.join(local_dir, "some_file")
+                  FileUtils.touch(path)
+                  key = "gonnafailnotgonnafail"
+
+                  expect { client.cp_to_blobstore(path, key, 2) }.not_to raise_error
+                end
+              end
+
+              context "and the underlying blobstore fails more than the requested number of retries" do
+                it "fails" do
+                  expect(client.files).to receive(:create).exactly(3).times.and_raise(SystemCallError.new("o no"))
+
+                  path = File.join(local_dir, "some_file")
+                  FileUtils.touch(path)
+                  key = "gonnafailnotgonnafail2"
+
+                  expect { client.cp_to_blobstore(path, key, 2) }.to raise_error SystemCallError, /o no/
+                end
+              end
+            end
+          end
         end
 
         describe "#delete" do
