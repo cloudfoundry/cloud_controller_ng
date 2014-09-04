@@ -3,6 +3,11 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
+    def inject_dependencies(dependencies)
+      super
+      @app_event_repository = dependencies.fetch(:app_event_repository)
+    end
+
     post "#{path_guid}/restage", :restage
 
     def restage(guid)
@@ -13,6 +18,7 @@ module VCAP::CloudController
       end
 
       app.restage!
+      @app_event_repository.record_app_restage(app, SecurityContext.current_user, SecurityContext.current_user_email)
 
       [
           HTTP::CREATED,

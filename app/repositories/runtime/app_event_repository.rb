@@ -48,6 +48,11 @@ module VCAP::CloudController
           create_app_audit_event("audit.app.unmap-route", app, actor_hash, metadata)
         end
 
+        def record_app_restage(app, actor, actor_name)
+          actor_hash = { name: actor_name, guid: actor.guid, type: "user" }
+          create_app_audit_event("audit.app.restage", app, actor_hash, {})
+        end
+
         private
 
         def create_app_audit_event(type, app, actor, metadata)

@@ -44,7 +44,7 @@ module CloudController
                                   blob_sender:               dependency_locator.blob_sender,
                                   config:                    @config,
                                 }
-                              when 'AppsController'
+                              when 'AppsController', 'RestagesController'
                                 { app_event_repository: dependency_locator.app_event_repository }
                               when 'SpacesController'
                                 { space_event_repository: dependency_locator.space_event_repository }

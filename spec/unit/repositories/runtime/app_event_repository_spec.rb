@@ -233,6 +233,22 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe ".record_restage" do
+        let(:app) { AppFactory.make }
+        let(:user) { User.make }
+        let(:user_email) { "user@example.com" }
+
+        it "creates a new app.restage event" do
+          event = app_event_repository.record_app_restage(app, user, user_email)
+          expect(event.type).to eq("audit.app.restage")
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq("user")
+          expect(event.actee).to eq(app.guid)
+          expect(event.actor_name).to eq("user@example.com")
+          expect(event.actee_type).to eq("app")
+        end
+      end
     end
   end
 end

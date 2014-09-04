@@ -2,6 +2,8 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe RestagesController do
+    let(:app_event_repository) { CloudController::DependencyLocator.instance.app_event_repository }
+
     describe "POST /v2/apps/:id/restage" do
       let(:package_state) { "STAGED" }
       let!(:application) { AppFactory.make(:package_hash => "abc", :package_state => package_state) }
@@ -48,6 +50,34 @@ module VCAP::CloudController
             expect(last_response.status).to eq(400)
             parsed_response = MultiJson.load(last_response.body)
             expect(parsed_response["code"]).to eq(170002)
+          end
+        end
+
+        describe "events" do
+          before do
+            allow(app_event_repository).to receive(:record_app_restage).and_call_original
+          end
+
+          context "when the restage completes without error" do
+            it "generates an audit.app.restage event" do
+              restage_request
+
+              expect(last_response.status).to eq(201)
+              expect(app_event_repository).to have_received(:record_app_restage).with(application, account, SecurityContext.current_user_email)
+            end
+          end
+
+          context "when the restage fails due to an error" do
+            before do
+              allow_any_instance_of(App).to receive(:restage!).and_raise("Error saving")
+            end
+
+            it "does not generate an audit.app.restage event" do
+              restage_request
+
+              expect(last_response.status).to eq(500)
+              expect(app_event_repository).to_not have_received(:record_app_restage)
+            end
           end
         end
       end
