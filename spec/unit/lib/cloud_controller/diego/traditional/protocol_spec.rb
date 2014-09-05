@@ -73,11 +73,12 @@ module VCAP::CloudController
         describe "#desire_app_message" do
           let(:app) do
             instance_double(App,
-              detected_start_command: "fake-detected_start_command",
+              execution_metadata: "staging-metadata",
               desired_instances: 111,
               disk_quota: 222,
               file_descriptors: 333,
               guid: "fake-guid",
+              command: "the-custom-command",
               health_check_timeout: 444,
               memory: 555,
               stack: instance_double(Stack, name: "fake-stack"),
@@ -107,7 +108,8 @@ module VCAP::CloudController
               "num_instances" => 111,
               "process_guid" => "fake-versioned_guid",
               "stack" => "fake-stack",
-              "start_command" => "fake-detected_start_command",
+              "start_command" => "the-custom-command",
+              "execution_metadata" => "staging-metadata",
               "routes" => ["fake-uris"],
             )
           end

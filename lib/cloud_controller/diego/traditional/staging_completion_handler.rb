@@ -13,7 +13,7 @@ module VCAP::CloudController
               "task_id" => String,
               "buildpack_key" => String,
               "detected_buildpack" => String,
-              optional("detected_start_command") => String,
+              "execution_metadata" => String,
             }
           end
         end
@@ -54,7 +54,7 @@ module VCAP::CloudController
 
           app.mark_as_staged
           app.update_detected_buildpack(payload["detected_buildpack"], payload["buildpack_key"])
-          app.current_droplet.update_start_command(payload["detected_start_command"])
+          app.current_droplet.update_execution_metadata(payload["execution_metadata"])
 
           @backends.find_one_to_run(app).start
         end

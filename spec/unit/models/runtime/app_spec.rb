@@ -570,7 +570,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "#detected_start_command" do
+    describe "#execution_metadata" do
       subject do
         App.make(
           package_hash: "package-hash",
@@ -579,33 +579,25 @@ module VCAP::CloudController
         )
       end
 
-      context "when the app has a user-specified start command" do
-        before { subject.command = "my command" }
-
-        it "returns that command" do
-          expect(subject.detected_start_command).to eq("my command")
-        end
-      end
-
       context "when the app has a current droplet" do
         before do
           subject.add_droplet(Droplet.new(
             app: subject,
             droplet_hash: "the-droplet-hash",
-            detected_start_command: "droplet's command",
+            execution_metadata: "some-staging-metadata",
           ))
           subject.droplet_hash = "the-droplet-hash"
         end
 
-        it "returns that droplet's detected start command" do
-          expect(subject.detected_start_command).to eq("droplet's command")
+        it "returns that droplet's staging metadata" do
+          expect(subject.execution_metadata).to eq("some-staging-metadata")
         end
       end
 
       context "when the app does not have a current droplet" do
         it "returns the empty string" do
           expect(subject.current_droplet).to be_nil
-          expect(subject.detected_start_command).to eq("")
+          expect(subject.execution_metadata).to eq("")
         end
       end
     end

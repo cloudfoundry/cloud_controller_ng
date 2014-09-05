@@ -43,11 +43,12 @@ module VCAP::CloudController
       blobstore.blob(new_blobstore_key) || blobstore.blob(old_blobstore_key)
     end
 
-    def update_start_command(detected_start_command)
-      update(detected_start_command: detected_start_command)
+    def update_execution_metadata(metadata)
+      update(execution_metadata: metadata)
     end
 
     private
+
     def blobstore
       CloudController::DependencyLocator.instance.droplet_blobstore
     end

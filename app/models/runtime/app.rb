@@ -278,10 +278,8 @@ module VCAP::CloudController
       self.metadata && self.metadata["command"]
     end
 
-    def detected_start_command
-      cmd = command
-      cmd ||= current_droplet && current_droplet.detected_start_command
-      cmd.nil? ? '' : cmd
+    def execution_metadata
+      (current_droplet && current_droplet.execution_metadata) || ""
     end
 
     def console=(c)

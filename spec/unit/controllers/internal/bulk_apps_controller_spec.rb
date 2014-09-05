@@ -132,7 +132,8 @@ module VCAP::CloudController
             "routes" => ["arsenio.lo-mein.com", "conan.doe-mane.com"],
             "droplet_uri" => "http://blobsto.re/droplet",
             "stack" => "stack-6",
-            "start_command" => "start-command-6"
+            "start_command" => "start-command-6",
+            "execution_metadata" => ""
           })
 
           last_response_app_env = last_response_app["environment"]

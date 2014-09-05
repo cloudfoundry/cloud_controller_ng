@@ -16,7 +16,6 @@ module VCAP::CloudController
         before do
           5.times do |i|
             app = make_diego_app(id: i+1, state: "STARTED")
-            app.current_droplet.update_start_command("fake-start-command-#{i}")
             app.add_route(Route.make(space: app.space))
           end
         end

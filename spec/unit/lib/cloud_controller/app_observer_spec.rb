@@ -152,7 +152,7 @@ module VCAP::CloudController
               context "when the app requires a migration from the DEA" do
                 before do
                   app.command = nil
-                  app.current_droplet.detected_start_command = ""
+                  app.current_droplet.execution_metadata = ""
                 end
 
                 it "restages the app" do
