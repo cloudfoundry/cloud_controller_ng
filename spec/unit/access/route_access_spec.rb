@@ -26,6 +26,7 @@ module VCAP::CloudController
       before { FeatureFlag.make(name: "route_creation", enabled: false) }
 
       it_behaves_like :full_access
+      it { is_expected.to allow_op_on_object :reserved, nil }
 
       context 'changing the space' do
         it 'succeeds even if not a space developer in the new space' do
@@ -140,7 +141,9 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
+      let(:token) { nil }
       it_behaves_like :no_access
+      it { is_expected.not_to allow_op_on_object :reserved, nil }
     end
 
     context 'any user using client without cloud_controller.write' do
@@ -157,6 +160,7 @@ module VCAP::CloudController
       end
 
       it_behaves_like :read_only
+      it { is_expected.to allow_op_on_object :reserved, nil }
     end
 
     context 'any user using client without cloud_controller.read' do
@@ -173,6 +177,7 @@ module VCAP::CloudController
       end
 
       it_behaves_like :no_access
+      it { is_expected.not_to allow_op_on_object :reserved, nil }
     end
   end
 end

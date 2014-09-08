@@ -20,5 +20,14 @@ module VCAP::CloudController
     def delete?(route)
       update?(route)
     end
+
+    def reserved?(_)
+      logged_in?
+    end
+
+    def reserved_with_token?(_)
+      admin_user? || has_read_scope?
+    end
+
   end
 end

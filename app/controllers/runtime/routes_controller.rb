@@ -32,6 +32,17 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
+    get "#{path}/reserved/domain/:domain_guid/host/:host", :route_reserved
+    def route_reserved(domain_guid, host)
+      validate_access(:reserved, model)
+      domain = Domain[guid: domain_guid]
+      if domain
+        count = Route.where(domain: domain, host: host).count
+        return [HTTP::NO_CONTENT, nil] if count > 0
+      end
+      [HTTP::NOT_FOUND, nil]
+    end
+
     define_messages
     define_routes
   end

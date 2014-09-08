@@ -192,5 +192,34 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "GET /v2/routes/reserved/domain/:domain_guid/host/:hostname" do
+      let(:user) {User.make}
+
+      context "when the domain does not exist" do
+        it "returns a NOT_FOUND (404)" do
+          get '/v2/routes/reserved/domain/nothere/host/myhost', nil, headers_for(user)
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      context "when the domain exists" do
+        let(:route) {Route.make}
+
+        context "when the hostname is not reserved" do
+          it "returns a NOT_FOUND (404)" do
+            get "/v2/routes/reserved/domain/#{route.domain_guid}/host/myhost", nil, headers_for(user)
+            expect(last_response.status).to eq(404)
+          end
+        end
+
+        context "when the hostname is reserved" do
+          it "returns a NO_CONTENT (204)" do
+            get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}", nil, headers_for(user)
+            expect(last_response.status).to eq(204)
+          end
+        end
+      end
+    end
   end
 end

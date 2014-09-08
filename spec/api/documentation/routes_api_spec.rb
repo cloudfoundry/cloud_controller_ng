@@ -61,4 +61,17 @@ resource "Routes", :type => :api do
       nested_model_remove :app, :route
     end
   end
+
+  describe "Reserved Routes" do
+    get "/v2/routes/reserved/domain/:domain_guid/host/:host" do
+      request_parameter :domain_guid, "The guid of a domain"
+      request_parameter :host, "The host portion of the route"
+
+      example "Check a Route exists" do
+        client.get "/v2/routes/reserved/domain/#{domain.guid}/host/#{route.host}", {}, headers
+        expect(status).to eq 204
+      end
+    end
+
+  end
 end
