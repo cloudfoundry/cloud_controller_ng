@@ -161,5 +161,13 @@ module VCAP::CloudController
         expect(decoded_response["error_code"]).to match(/SpaceQuotaDefinitionNameTaken/)
       end
     end
+
+    describe "#delete" do
+      it "succeeds when no spaces are associated" do
+        quota = SpaceQuotaDefinition.make
+        delete "/v2/space_quota_definitions/#{quota.guid}", "", admin_headers
+        expect(last_response.status).to eq(204)
+      end
+    end
   end
 end
