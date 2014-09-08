@@ -138,9 +138,13 @@ module VCAP::CloudController
     describe "#destroy" do
       let(:stack) { Stack.make }
 
-      it "destroys the apps" do
-        app = AppFactory.make(:stack => stack)
-        expect { stack.destroy }.to change { App.where(:id => app.id).count }.by(-1)
+      it "succeeds if there are no apps" do
+        expect { stack.destroy }.not_to raise_error
+      end
+
+      it "fails if there are apps" do
+        AppFactory.make(:stack => stack)
+        expect { stack.destroy }.to raise_error VCAP::Errors::ApiError, /Please delete the app associations for your stack/
       end
     end
   end

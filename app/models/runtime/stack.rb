@@ -5,8 +5,6 @@ module VCAP::CloudController
 
     one_to_many :apps
 
-    add_association_dependencies :apps => :destroy
-
     plugin :serialization
 
     export_attributes :name, :description
@@ -18,6 +16,12 @@ module VCAP::CloudController
       validates_presence :name
       validates_presence :description
       validates_unique   :name
+    end
+
+    def before_destroy
+      if apps.present?
+        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "app", "stack")
+      end
     end
 
     def self.configure(file_path)
