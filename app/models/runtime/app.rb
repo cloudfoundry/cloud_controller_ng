@@ -457,7 +457,7 @@ module VCAP::CloudController
     end
 
     def buildpack_specified?
-      buildpack.is_a?(AutoDetectionBuildpack)
+      !buildpack.is_a?(AutoDetectionBuildpack)
     end
 
     def custom_buildpack_url

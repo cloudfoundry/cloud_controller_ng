@@ -11,9 +11,11 @@ class DockerPolicy
 
   def validate
     return unless @app.docker_image.present?
-    if !@app.buildpack_specified?
+
+    if @app.buildpack_specified?
       @errors.add(:docker_image, BUILDPACK_DETECTED_ERROR_MSG)
     end
+
     if !@diego_enabled || !@docker_enabled
       @errors.add(:docker_image, DOCKER_DISABLED_ERROR_MSG)
     end
