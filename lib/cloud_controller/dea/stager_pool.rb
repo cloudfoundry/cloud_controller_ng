@@ -5,16 +5,19 @@ module VCAP::CloudController
     class StagerPool
       attr_reader :config, :message_bus
 
-      def initialize(config, message_bus)
+      def initialize(config, message_bus, blobstore_url_generator)
         @config = config
         @message_bus = message_bus
         @stager_advertisements = []
+        @blobstore_url_generator = blobstore_url_generator
         register_subscriptions
       end
 
       def process_advertise_message(msg)
         mutex.synchronize do
           advertisement = NatsMessages::StagerAdvertisement.new(msg)
+
+          publish_buildpacks unless stager_in_pool?(advertisement.stager_id)
 
           remove_advertisement_for_id(advertisement.stager_id)
           @stager_advertisements << advertisement
@@ -43,6 +46,14 @@ module VCAP::CloudController
         end
       end
 
+      def publish_buildpacks
+        message_bus.publish("buildpacks", admin_buildpacks)
+      end
+
+      def admin_buildpacks
+        AdminBuildpacksPresenter.new(@blobstore_url_generator).to_staging_message_array
+      end
+
       def validate_stack_availability(stack)
         unless @stager_advertisements.any? { |ad| ad.has_stack?(stack) }
           raise Errors::ApiError.new_from_details("StackNotFound", "The requested app stack #{stack} is not available on this system.")
@@ -59,6 +70,10 @@ module VCAP::CloudController
 
       def prune_stale_advertisements
         @stager_advertisements.delete_if { |ad| ad.expired? }
+      end
+
+      def stager_in_pool?(id)
+        @stager_advertisements.map(&:stager_id).include? id
       end
 
       def remove_advertisement_for_id(id)
