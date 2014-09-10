@@ -1,0 +1,6 @@
+---
+en_US:
+  AppInvalid:
+    invalid_instance_number: "The app is invalid: Number of instances less than 1"
+    invalid_app_state: "Invalid app state provided"
+    default: "The app is invalid: %s"
