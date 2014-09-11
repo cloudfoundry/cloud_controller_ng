@@ -638,6 +638,11 @@
   http_code: 400
   message: "You cannot specify a custom buildpack and a docker image at the same time."
 
+320003:
+  name: DockerDisabled
+  http_code: 400
+  message: Docker support has not been enabled.
+
 330000:
   name: FeatureFlagNotFound
   http_code: 404
