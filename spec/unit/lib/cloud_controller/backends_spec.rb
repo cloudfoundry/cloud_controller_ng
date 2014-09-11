@@ -122,10 +122,10 @@ module VCAP::CloudController
         end
       end
 
-      context "if diego flag is not set" do
+      context "if diego docker flag is not set" do
         let(:config) do
           {
-            diego: false
+            diego_docker: false
           }
         end
 
@@ -137,7 +137,7 @@ module VCAP::CloudController
           it "raises" do
             expect {
               subject.validate_app_for_staging(app)
-            }.to raise_error(Errors::ApiError, /Diego has not been enabled/)
+            }.to raise_error(Errors::ApiError, /Docker support has not been enabled/)
           end
         end
       end

@@ -117,6 +117,8 @@ module VCAP::CloudController
             let(:changes) { {:state => "anything"} }
 
             context "when docker_image is present" do
+              let(:config_hash) { { :diego => true, :diego_docker => true } }
+
               before do
                 allow(app).to receive(:buildpack_specified?).and_return(false)
                 allow(app).to receive(:docker_image).and_return("fake-docker-image")

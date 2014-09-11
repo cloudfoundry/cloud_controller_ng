@@ -1973,35 +1973,6 @@ module VCAP::CloudController
           app.save
         }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
       end
-
-      context "when diego is disabled" do
-        before do
-          allow(Config.config).to receive(:[]).with(anything).and_call_original
-          allow(Config.config).to receive(:[]).with(:diego).and_return false
-        end
-
-        it "does not allow a docker_image" do
-          expect {
-            app.docker_image = "foo/bar"
-            app.save
-          }.to raise_error(Sequel::ValidationFailed, /not supported with diego or docker disabled/)
-        end
-      end
-
-      context "when docker is disabled" do
-        before do
-          allow(Config.config).to receive(:[]).with(anything).and_call_original
-          allow(Config.config).to receive(:[]).with(:diego).and_return true
-          allow(Config.config).to receive(:[]).with(:diego_docker).and_return false
-        end
-
-        it "does not allow a docker_image" do
-          expect {
-            app.docker_image = "foo/bar"
-            app.save
-          }.to raise_error(Sequel::ValidationFailed, /not supported with diego or docker disabled/)
-        end
-      end
     end
 
     describe "diego flag" do
