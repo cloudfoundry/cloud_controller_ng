@@ -17,16 +17,12 @@ module VCAP::CloudController
         raise Errors::ApiError.new_from_details("DiegoDisabled")
       end
 
-      if app.package_hash.nil? || app.package_hash.empty?
+      if app.package_hash.blank?
         raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
       end
 
       if app.buildpack.custom? && !app.custom_buildpacks_enabled?
         raise Errors::ApiError.new_from_details("CustomBuildpacksDisabled")
-      end
-
-      if app.docker_image.present? && app.buildpack_specified?
-        raise Errors::ApiError.new_from_details("DiegoDockerBuildpackConflict")
       end
 
       if Buildpack.count == 0 && app.buildpack.custom? == false
