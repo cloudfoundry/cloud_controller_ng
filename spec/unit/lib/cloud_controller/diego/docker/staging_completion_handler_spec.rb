@@ -73,13 +73,12 @@ module VCAP::CloudController
             end
 
             it "creates a droplet with the metadata" do
-                handler.subscribe!
+              handler.subscribe!
 
-                app.reload
-                expect(app.current_droplet.execution_metadata).to eq('"{\"cmd\":[\"start\"]}"')
+              app.reload
+              expect(app.current_droplet.execution_metadata).to eq('"{\"cmd\":[\"start\"]}"')
             end
           end
-
 
           context "when the app_id is invalid" do
             let(:payload) do
