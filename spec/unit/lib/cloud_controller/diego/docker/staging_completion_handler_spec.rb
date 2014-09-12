@@ -63,6 +63,23 @@ module VCAP::CloudController
             expect(backend).to have_received(:start)
           end
 
+          context "when it receives execution metadata" do
+            let(:payload) do
+              {
+                "app_id" => app.guid,
+                "task_id" => app.staging_task_id,
+                "execution_metadata" => '"{\"cmd\":[\"start\"]}"',
+              }
+            end
+
+            it "creates a droplet with the metadata" do
+              handler.subscribe!
+
+              app.reload
+              expect(app.current_droplet.execution_metadata).to eq('"{\"cmd\":[\"start\"]}"')
+            end
+          end
+
           context "when the app_id is invalid" do
             let(:payload) do
               {

@@ -1,3 +1,5 @@
+require 'securerandom'
+
 module VCAP::CloudController
   module Diego
     module Docker
@@ -17,8 +19,7 @@ module VCAP::CloudController
                   app.mark_as_failed_to_stage # app.save is called in mark_as_failed_to_stage
                   Loggregator.emit_error(app.guid, "Failed to stage Docker application: #{payload["error"]}")
                 else
-                  app.mark_as_staged
-                  app.save
+                  save_staging_result(app, payload)
                   @backends.find_one_to_run(app).start
                 end
               else
@@ -38,6 +39,15 @@ module VCAP::CloudController
         end
 
         private
+
+        def save_staging_result(app, payload)
+          app.mark_as_staged
+          if payload.key?('execution_metadata')
+            app.add_new_droplet(SecureRandom.hex) # placeholder until image ID is obtained during staging
+            app.current_droplet.update_execution_metadata(payload["execution_metadata"])
+          end
+          app.save
+        end
 
         def logger
           @logger ||= Steno.logger("cc.docker.stager")
