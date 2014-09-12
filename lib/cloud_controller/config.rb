@@ -195,14 +195,29 @@ module VCAP::CloudController
         optional(:app_bits_upload_grace_period_in_seconds) => Integer,
 
         optional(:default_locale) => String,
-        optional(:allowed_cors_domains) => [ String ]
+        optional(:allowed_cors_domains) => [ String ],
+
+        optional(:diego) => {
+          optional(:staging) => enum(
+            "disabled",
+            "optional",
+            "required",
+          ),
+          optional(:running) => enum(
+            "disabled",
+            "optional",
+            "required",
+          )
+        }
       }
     end
 
     class << self
       def from_file(file_name)
         config = super(file_name)
-        merge_defaults(config)
+        merge_defaults(config).tap do |c|
+          validate!(c)
+        end
       end
 
       attr_reader :config, :message_bus, :backends
@@ -278,7 +293,20 @@ module VCAP::CloudController
         config[:db][:database] ||= ENV["DB_CONNECTION_STRING"]
         config[:default_locale] ||= "en_US"
         config[:allowed_cors_domains] ||= []
+        config[:diego] ||= {}
+        config[:diego][:staging] ||= "disabled"
+        config[:diego][:running] ||= "disabled"
+        config[:diego_docker] ||= false
         sanitize(config)
+      end
+
+      def validate!(config)
+        if (config[:diego][:staging] == 'disabled' && config[:diego][:running] != 'disabled') ||
+          (config[:diego][:staging] == 'optional' && config[:diego][:running] == 'required') ||
+          (config[:diego][:running] == 'disabled' && config[:diego_docker])
+
+          raise "Invalid diego configuration"
+        end
       end
 
       private

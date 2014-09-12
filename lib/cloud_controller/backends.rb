@@ -31,47 +31,62 @@ module VCAP::CloudController
     end
 
     def find_one_to_stage(app)
-      if app.stage_with_diego?
-        if app.docker_image.present?
-          diego_docker_backend(app)
-        else
-          diego_traditional_backend(app)
-        end
-      else
-        dea_backend(app)
+      case @config[:diego][:staging]
+      when 'required'
+        diego_backend(app)
+      when 'disabled'
+        app.stage_with_diego? ?
+          raise_diego_disabled :
+          dea_backend(app)
+      when 'optional'
+        app.stage_with_diego? ?
+          diego_backend(app) :
+          dea_backend(app)
       end
     end
 
     def find_one_to_run(app)
-      if app.run_with_diego?
-        if app.docker_image.present?
-          diego_docker_backend(app)
-        else
-          diego_traditional_backend(app)
-        end
-      else
-        dea_backend(app)
+      case @config[:diego][:running]
+      when 'required'
+        diego_backend(app)
+      when 'disabled'
+        app.run_with_diego? ?
+          raise_diego_disabled :
+          dea_backend(app)
+      when 'optional'
+        app.run_with_diego? ?
+          diego_backend(app) :
+          dea_backend(app)
       end
     end
 
     private
 
+    def diego_backend(app)
+      app.docker_image.present? ?
+        diego_docker_backend(app) :
+        diego_traditional_backend(app)
+    end
+
     def diego_docker_backend(app)
       protocol = Diego::Docker::Protocol.new
-      messenger = Diego::Messenger.new(@config[:diego], @message_bus, protocol)
+      messenger = Diego::Messenger.new(@message_bus, protocol)
       Diego::Backend.new(app, messenger, protocol)
     end
 
     def diego_traditional_backend(app)
       dependency_locator = CloudController::DependencyLocator.instance
       protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator)
-      messenger = Diego::Messenger.new(@config[:diego], @message_bus, protocol)
-
+      messenger = Diego::Messenger.new(@message_bus, protocol)
       Diego::Backend.new(app, messenger, protocol)
     end
 
     def dea_backend(app)
       Dea::Backend.new(app, @config, @message_bus, @dea_pool, @stager_pool)
+    end
+
+    def raise_diego_disabled
+      raise VCAP::Errors::ApiError.new_from_details("DiegoDisabled")
     end
   end
 end

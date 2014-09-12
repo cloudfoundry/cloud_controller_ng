@@ -3,7 +3,6 @@ require "spec_helper"
 module VCAP::CloudController
   module Diego
     describe Messenger do
-      let(:enabled) { true }
       let(:message_bus) { CfMessageBus::MockMessageBus.new }
 
       let(:domain) { SharedDomain.make(name: "some-domain.com") }
@@ -34,7 +33,7 @@ module VCAP::CloudController
         Traditional::Protocol.new(blobstore_url_generator)
       end
 
-      subject(:messenger) { Messenger.new(enabled, message_bus, protocol) }
+      subject(:messenger) { Messenger.new(message_bus, protocol) }
 
       describe "staging an app" do
         it "sends a nats message with the appropriate staging subject and payload" do
@@ -65,16 +64,6 @@ module VCAP::CloudController
           expect {
             messenger.send_stage_request(app)
           }.to change { app.refresh; app.staging_task_id }.to("unique-staging-task-id")
-        end
-
-        context "when the operator has disabled diego" do
-          let(:enabled) { false }
-
-          it "explodes with an API error that is propagated to cf users" do
-            expect {
-              messenger.send_stage_request(app)
-            }.to raise_error(VCAP::Errors::ApiError, /Diego has not been enabled/)
-          end
         end
       end
 
@@ -128,16 +117,6 @@ module VCAP::CloudController
             nats_message = message_bus.published_messages.first
             expect(nats_message[:subject]).to eq("diego.desire.app")
             expect(nats_message[:message]).to match_json(expected_message)
-          end
-        end
-
-        context "when the operator has disabled diego" do
-          let(:enabled) { false }
-
-          it "explodes with an API error that is propagated to cf users" do
-            expect {
-              messenger.send_desire_request(app)
-            }.to raise_error(VCAP::Errors::ApiError, /Diego has not been enabled/)
           end
         end
       end

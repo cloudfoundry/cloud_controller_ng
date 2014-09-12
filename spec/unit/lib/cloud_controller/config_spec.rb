@@ -10,6 +10,12 @@ module VCAP::CloudController
           Config.from_file("nonexistent.yml")
         }.to raise_error(Errno::ENOENT, /No such file or directory - nonexistent.yml/)
       end
+
+      it "raises if the config is invalid" do
+        expect {
+          Config.from_file(File.join(Paths::FIXTURES, "config/invalid_diego.yml"))
+        }.to raise_error /Invalid.*diego/
+      end
     end
 
     describe ".merge_defaults" do
@@ -49,6 +55,12 @@ module VCAP::CloudController
 
         it "sets a default value for allowed_cors_domains" do
           expect(config[:allowed_cors_domains]).to eq([])
+        end
+
+        it "disables diego" do
+          expect(config[:diego][:staging]).to eq("disabled")
+          expect(config[:diego][:running]).to eq("disabled")
+          expect(config[:diego_docker]).to eq(false)
         end
       end
 
@@ -99,6 +111,12 @@ module VCAP::CloudController
 
           it "preserves the value of the allowed cross-origin domains" do
             expect(config[:allowed_cors_domains]).to eq(["http://andrea.corr", "http://caroline.corr", "http://jim.corr", "http://sharon.corr"])
+          end
+
+          it "preserves the diego configuration from the file" do
+            expect(config[:diego][:staging]).to eq("required")
+            expect(config[:diego][:running]).to eq("optional")
+            expect(config[:diego_docker]).to eq(true)
           end
 
           context "when the staging auth is already url encoded" do
@@ -295,6 +313,84 @@ module VCAP::CloudController
         it "enables GC profiling" do
           Config.configure_components(config)
           expect(GC::Profiler.enabled?).to eq(true)
+        end
+      end
+    end
+
+    describe ".validate(hash)" do
+      invalid_configs = [
+        {
+          diego: {staging: 'disabled', running: 'optional'},
+          diego_docker: false,
+        },
+        {
+          diego: {staging: 'disabled', running: 'required'},
+          diego_docker: false,
+        },
+        {
+          diego: {staging: 'optional', running: 'required'},
+          diego_docker: false,
+        },
+
+        {
+          diego: {staging: 'disabled', running: 'disabled'},
+          diego_docker: true,
+        },
+        {
+          diego: {staging: 'optional', running: 'disabled'},
+          diego_docker: true,
+        },
+        {
+          diego: {staging: 'disabled', running: 'optional'},
+          diego_docker: true,
+        },
+      ]
+
+      valid_configs = [
+        {
+          diego: {staging: 'disabled', running: 'disabled'},
+          diego_docker: false,
+        },
+        {
+          diego: {staging: 'optional', running: 'disabled'},
+          diego_docker: false,
+        },
+        {
+          diego: {staging: 'required', running: 'disabled'},
+          diego_docker: false,
+        },
+        {
+          diego: {staging: 'optional', running: 'optional'},
+          diego_docker: true,
+        },
+      ]
+
+      base_config = {
+        staging: {
+          auth: {
+            user: "the-user",
+            password: "the-password",
+          }
+        }
+      }
+
+      it "forbids invalid diego configurations" do
+        invalid_configs.each do |invalid_config|
+          invalid_config.merge!(base_config)
+
+          expect {
+            Config.validate!(Config.merge_defaults(invalid_config))
+          }.to raise_error /Invalid.*diego/
+        end
+      end
+
+      it "allows valid diego configurations" do
+        valid_configs.each do |valid_config|
+          valid_config.merge!(base_config)
+
+          expect {
+            Config.validate!(Config.merge_defaults(valid_config))
+          }.not_to raise_error
         end
       end
     end

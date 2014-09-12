@@ -39,7 +39,10 @@ resource "Apps", :type => :api do
 
     before do
       allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-      allow(VCAP::CloudController::Config.config).to receive(:[]).with(:diego).and_return true
+      allow(VCAP::CloudController::Config.config).to receive(:[]).with(:diego).and_return(
+        staging: 'optional',
+        running: 'optional',
+      )
       allow(VCAP::CloudController::Config.config).to receive(:[]).with(:diego_docker).and_return true
     end
 

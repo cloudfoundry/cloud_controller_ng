@@ -4,7 +4,11 @@ module VCAP::CloudController
   describe Backends do
     let(:config) do
       {
-        diego: true
+        diego: {
+          staging: 'optional',
+          running: 'optional',
+        },
+        diego_docker: true
       }
     end
 
@@ -122,11 +126,9 @@ module VCAP::CloudController
         end
       end
 
-      context "if diego docker flag is not set" do
-        let(:config) do
-          {
-            diego_docker: false
-          }
+      context "if diego docker support is not enabled" do
+        before do
+          config[:diego_docker] = false
         end
 
         context "and the app has a docker_image" do
@@ -200,6 +202,16 @@ module VCAP::CloudController
             expect(Diego::Backend).to have_received(:new)
           end
         end
+
+        context "when the operator has disabled diego staging" do
+          before { config[:diego][:staging] = 'disabled' }
+
+          it "explodes with an API error that is propagated to cf users" do
+            expect {
+              backend
+            }.to raise_error(VCAP::Errors::ApiError, /Diego has not been enabled/)
+          end
+        end
       end
 
       context "when the app is not configured to stage on Diego" do
@@ -207,13 +219,23 @@ module VCAP::CloudController
           allow(app).to receive(:stage_with_diego?).and_return(false)
         end
 
-        it "finds a DEA::Backend" do
-          expect(backend).to be_a(Dea::Backend)
+        context "when diego staging is required" do
+          before { config[:diego][:staging] = 'required' }
+
+          it "finds a Diego::Backend" do
+            expect(backend).to be_a(Diego::Backend)
+          end
         end
 
-        it "instantiates the backend with the correct dependencies" do
-          backend
-          expect(Dea::Backend).to have_received(:new).with(app, config, message_bus, dea_pool, stager_pool)
+        context "when diego staging is not required" do
+          it "finds a DEA::Backend" do
+            expect(backend).to be_a(Dea::Backend)
+          end
+
+          it "instantiates the backend with the correct dependencies" do
+            backend
+            expect(Dea::Backend).to have_received(:new).with(app, config, message_bus, dea_pool, stager_pool)
+          end
         end
       end
     end
@@ -251,6 +273,16 @@ module VCAP::CloudController
             expect(Diego::Backend).to have_received(:new)
           end
         end
+
+        context "when the operator has disabled diego running" do
+          before { config[:diego][:running] = 'disabled' }
+
+          it "explodes with an API error that is propagated to cf users" do
+            expect {
+              backend
+            }.to raise_error(VCAP::Errors::ApiError, /Diego has not been enabled/)
+          end
+        end
       end
 
       context "when the app is not configured to run on Diego" do
@@ -258,13 +290,23 @@ module VCAP::CloudController
           allow(app).to receive(:run_with_diego?).and_return(false)
         end
 
-        it "finds a DEA::Backend" do
-          expect(backend).to be_a(Dea::Backend)
+        context "when diego running is required" do
+          before { config[:diego][:running] = 'required' }
+
+          it "finds a Diego::Backend" do
+            expect(backend).to be_a(Diego::Backend)
+          end
         end
 
-        it "instantiates the backend with the correct dependencies" do
-          backend
-          expect(Dea::Backend).to have_received(:new).with(app, config, message_bus, dea_pool, stager_pool)
+        context "when diego running is not required" do
+          it "finds a DEA::Backend" do
+            expect(backend).to be_a(Dea::Backend)
+          end
+
+          it "instantiates the backend with the correct dependencies" do
+            backend
+            expect(Dea::Backend).to have_received(:new).with(app, config, message_bus, dea_pool, stager_pool)
+          end
         end
       end
     end
