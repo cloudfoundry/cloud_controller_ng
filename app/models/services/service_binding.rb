@@ -28,6 +28,7 @@ module VCAP::CloudController
       validate_logging_service_binding if service_instance.respond_to?(:service_plan)
 
       validate_app_and_service_instance(app, service_instance)
+      validate_cannot_change_binding
     end
 
     def validate_logging_service_binding
@@ -44,6 +45,16 @@ module VCAP::CloudController
             "'#{app.space.name}' '#{service_instance.space.name}'")
         end
       end
+    end
+
+    def validate_cannot_change_binding
+      return if new?
+
+      app_change = column_change(:app_id)
+      errors.add(:app, :invalid_relation) if app_change && app_change[0] != app_change[1]
+
+      service_change = column_change(:service_instance_id)
+      errors.add(:service_instance, :invalid_relation) if service_change && service_change[0] != service_change[1]
     end
 
     def to_hash(opts={})

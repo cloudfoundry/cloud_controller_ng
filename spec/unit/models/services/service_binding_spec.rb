@@ -11,8 +11,8 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe "Associations" do
-      it { is_expected.to have_associated :app }
-      it { is_expected.to have_associated :service_instance }
+      it { is_expected.to have_associated :app, associated_instance: ->(binding) { App.make(space:binding.space) } }
+      it { is_expected.to have_associated :service_instance, associated_instance: ->(binding) { ServiceInstance.make(space: binding.space) } }
     end
 
     describe "Validations" do
@@ -20,6 +20,34 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :service_instance }
       it { is_expected.to validate_db_presence :credentials }
       it { is_expected.to validate_uniqueness [:app_id, :service_instance_id] }
+
+      describe "changing the binding after creation" do
+        subject(:binding) { ServiceBinding.make }
+
+        describe "the associated app" do
+          it "allows changing to the same app" do
+            binding.app = binding.app
+            expect { binding.save }.not_to raise_error
+          end
+
+          it "does not allow changing app after it has been set" do
+            binding.app = App.make( space: binding.app.space )
+            expect { binding.save }.to raise_error Sequel::ValidationFailed, /app/
+          end
+        end
+
+        describe "the associated service instance" do
+          it "allows changing to the same service instance" do
+            binding.service_instance = binding.service_instance
+            expect { binding.save }.not_to raise_error
+          end
+
+          it "does not allow changing service_instance after it has been set" do
+            binding.service_instance = ServiceInstance.make( space: binding.app.space )
+            expect { binding.save }.to raise_error Sequel::ValidationFailed, /service_instance/
+          end
+        end
+      end
     end
 
     describe "Serialization" do

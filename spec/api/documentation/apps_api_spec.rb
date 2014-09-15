@@ -108,7 +108,6 @@ resource "Apps", :type => :api do
       let(:associated_service_binding_guid) { associated_service_binding.guid }
 
       standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :app
-      nested_model_associate :service_binding, :app
       nested_model_remove :service_binding, :app
     end
 

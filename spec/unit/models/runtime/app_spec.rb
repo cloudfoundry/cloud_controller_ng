@@ -60,7 +60,7 @@ module VCAP::CloudController
       it do
         is_expected.to have_associated :service_bindings, associated_instance: ->(app) {
           service_instance = ManagedServiceInstance.make(space: app.space)
-          ServiceBinding.make(service_instance: service_instance)
+          ServiceBinding.make(service_instance: service_instance, app: app)
         }
       end
       it { is_expected.to have_associated :events, class: AppEvent }
