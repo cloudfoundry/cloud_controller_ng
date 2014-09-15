@@ -2,13 +2,11 @@ module VCAP::CloudController
   module Dea
     module NatsMessages
       class Advertisement
-        ADVERTISEMENT_EXPIRATION = 10.freeze
-
         attr_reader :stats
 
-        def initialize(stats)
+        def initialize(stats, expires)
           @stats = stats
-          @updated_at = Time.now
+          @expiration = expires
         end
 
         def available_memory
@@ -23,8 +21,8 @@ module VCAP::CloudController
           stats["available_disk"]
         end
 
-        def expired?
-          (Time.now.to_i - @updated_at.to_i) > ADVERTISEMENT_EXPIRATION
+        def expired?(now)
+          now.to_i >= @expiration
         end
 
         def meets_needs?(mem, stack)

@@ -44,11 +44,27 @@ module VCAP::CloudController
           Timecop.freeze do
             subject.process_advertise_message(staging_advertise_msg)
 
-            Timecop.travel(10)
+            Timecop.travel(9)
             expect(subject.find_stager("stack-name", 1024, 0)).to eq("staging-id")
 
             Timecop.travel(1)
             expect(subject.find_stager("stack-name", 1024, 0)).to be_nil
+          end
+        end
+
+        context "when an the expiration timeout is specified" do
+          before { TestConfig.override({dea_advertisement_timeout_in_seconds: 15})}
+
+          it "purges expired DEAs" do
+            Timecop.freeze do
+              subject.process_advertise_message(staging_advertise_msg)
+
+              Timecop.travel(11)
+              expect(subject.find_stager("stack-name", 1024, 0)).to eq("staging-id")
+
+              Timecop.travel(5)
+              expect(subject.find_stager("stack-name", 1024, 0)).to be_nil
+            end
           end
         end
       end

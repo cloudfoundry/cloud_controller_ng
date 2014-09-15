@@ -16,8 +16,9 @@ module VCAP::CloudController
             }
         }
       end
+      let(:expires) {Time.now.to_i + 10}
 
-      subject(:ad) { DeaAdvertisement.new(message) }
+      subject(:ad) { DeaAdvertisement.new(message, expires) }
 
       describe "#dea_id" do
         its(:dea_id) { should eq "staging-id" }
@@ -37,23 +38,23 @@ module VCAP::CloudController
 
       describe "#expired?" do
         let(:now) { Time.now }
-        context "when the time since the advertisment is greater than 10 seconds" do
-          it "returns false" do
+        context "when the time since the advertisment is greater than or equal 10 seconds" do
+          it "returns true" do
             Timecop.freeze now do
               ad
               Timecop.travel now + 11.seconds do
-                expect(ad).to be_expired
+                expect(ad).to be_expired(Time.now)
               end
             end
           end
         end
 
-        context "when the time since the advertisment is less than or equal to 10 seconds" do
+        context "when the time since the advertisment is less than 10 seconds" do
           it "returns false" do
             Timecop.freeze now do
               ad
-              Timecop.travel now + 10.seconds do
-                expect(ad).to_not be_expired
+              Timecop.travel now + 9.seconds do
+                expect(ad).to_not be_expired(Time.now)
               end
             end
           end

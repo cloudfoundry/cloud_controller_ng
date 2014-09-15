@@ -3,7 +3,7 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::Dea::Pool do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    subject { Dea::Pool.new(message_bus) }
+    subject { Dea::Pool.new(TestConfig.config, message_bus) }
 
     describe "#register_subscriptions" do
       let(:dea_advertise_msg) do
@@ -190,7 +190,7 @@ module VCAP::CloudController
         end
       end
 
-      describe "dea advertisement expiration (10sec)" do
+      describe "dea advertisement expiration" do
         it "only finds deas with that have not expired" do
           Timecop.freeze do
             subject.process_advertise_message(dea_advertise_msg)
@@ -200,6 +200,21 @@ module VCAP::CloudController
 
             Timecop.travel(2)
             expect(subject.find_dea(mem: 1024, stack: "stack", app_id: "app-id")).to be_nil
+          end
+        end
+
+        context "when the expiration timeout is specified" do
+          before { TestConfig.override({dea_advertisement_timeout_in_seconds: 15})}
+          it "only finds deas with that have not expired" do
+            Timecop.freeze do
+              subject.process_advertise_message(dea_advertise_msg)
+
+              Timecop.travel(13)
+              expect(subject.find_dea(mem: 1024, stack: "stack", app_id: "app-id")).to eq("dea-id")
+
+              Timecop.travel(2)
+              expect(subject.find_dea(mem: 1024, stack: "stack", app_id: "app-id")).to be_nil
+            end
           end
         end
       end

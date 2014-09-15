@@ -62,6 +62,10 @@ module VCAP::CloudController
           expect(config[:diego][:running]).to eq("disabled")
           expect(config[:diego_docker]).to eq(false)
         end
+
+        it "sets a default value for advertisement_timeout_in_seconds" do
+          expect(config[:dea_advertisement_timeout_in_seconds]).to eq(10)
+        end
       end
 
       context "when config values are provided" do

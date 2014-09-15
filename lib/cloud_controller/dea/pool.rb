@@ -4,7 +4,8 @@ require "cloud_controller/dea/eligible_advertisement_filter"
 module VCAP::CloudController
   module Dea
     class Pool
-      def initialize(message_bus)
+      def initialize(config, message_bus)
+        @advertise_timeout = config[:dea_advertisement_timeout_in_seconds]
         @message_bus = message_bus
         @dea_advertisements = []
       end
@@ -20,16 +21,16 @@ module VCAP::CloudController
       end
 
       def process_advertise_message(message)
-        mutex.synchronize do
-          advertisement = NatsMessages::DeaAdvertisement.new(message)
+        advertisement = NatsMessages::DeaAdvertisement.new(message, Time.now.to_i + @advertise_timeout)
 
+        mutex.synchronize do
           remove_advertisement_for_id(advertisement.dea_id)
           @dea_advertisements << advertisement
         end
       end
 
       def process_shutdown_message(message)
-        fake_advertisement = NatsMessages::DeaAdvertisement.new(message)
+        fake_advertisement = NatsMessages::DeaAdvertisement.new(message, Time.now.to_i + @advertise_timeout)
 
         mutex.synchronize do
           remove_advertisement_for_id(fake_advertisement.dea_id)
@@ -68,7 +69,8 @@ module VCAP::CloudController
       attr_reader :message_bus
 
       def prune_stale_deas
-        @dea_advertisements.delete_if { |ad| ad.expired? }
+        now = Time.now.to_i
+        @dea_advertisements.delete_if { |ad| ad.expired?(now) }
       end
 
       def remove_advertisement_for_id(id)
