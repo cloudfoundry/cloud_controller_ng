@@ -26,7 +26,7 @@ module VCAP::CloudController
         let(:instances_reporter) { double(:instances_reporter) }
 
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:instances_reporter).and_return(instances_reporter)
+          CloudController::DependencyLocator.instance.register(:instances_reporter, instances_reporter)
           allow(instances_reporter).to receive(:stats_for_app).and_return(stats)
         end
 

@@ -48,6 +48,8 @@ module VCAP::CloudController
     context "Buildpack binaries" do
       let (:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: "upload_binary_buildpack", position: 0 }) }
 
+      before { CloudController::DependencyLocator.instance.register(:upload_handler, UploadHandler.new(TestConfig.config)) }
+
       context "/v2/buildpacks/:guid/bits" do
         before do
           Delayed::Worker.delay_jobs = false

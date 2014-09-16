@@ -140,18 +140,18 @@ module VCAP::CloudController
         :resource_pool => {
           optional(:maximum_size) => Integer,
           optional(:minimum_size) => Integer,
-          optional(:resource_directory_key) => String,
+          :resource_directory_key => String,
           :fog_connection => Hash
         },
 
         :packages => {
           optional(:max_package_size) => Integer,
-          optional(:app_package_directory_key) => String,
+          :app_package_directory_key => String,
           :fog_connection => Hash
         },
 
         :droplets => {
-          optional(:droplet_directory_key) => String,
+          :droplet_directory_key => String,
           :fog_connection => Hash
         },
 
@@ -222,7 +222,7 @@ module VCAP::CloudController
         end
       end
 
-      attr_reader :config, :message_bus, :backends
+      attr_reader :config, :message_bus
 
       def configure_components(config)
         @config = config
@@ -240,18 +240,27 @@ module VCAP::CloudController
       def configure_components_depending_on_message_bus(message_bus)
         @message_bus = message_bus
         dependency_locator = CloudController::DependencyLocator.instance
+        dependency_locator.config = @config
+        hm_client = Dea::HM9000::Client.new(@message_bus, @config)
+        dependency_locator.register(:health_manager_client, hm_client)
+        diego_client = Diego::Client.new(Diego::ServiceRegistry.new(message_bus))
+        dependency_locator.register(:diego_client, diego_client)
+        dependency_locator.register(:upload_handler, UploadHandler.new(config))
+        dependency_locator.register(:app_event_repository, Repositories::Runtime::AppEventRepository.new)
+        dependency_locator.register(:instances_reporter, CompositeInstancesReporter.new(diego_client, hm_client))
+
         blobstore_url_generator = dependency_locator.blobstore_url_generator
         stager_pool = Dea::StagerPool.new(@config, message_bus, blobstore_url_generator)
         dea_pool = Dea::Pool.new(@config, message_bus)
-        @backends = Backends.new(@config, message_bus, dea_pool, stager_pool)
+        backends = Backends.new(@config, message_bus, dea_pool, stager_pool)
+        dependency_locator.register(:backends, backends)
 
-        diego_client = dependency_locator.diego_client
         diego_client.connect!
 
         Dea::Client.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 
-        Diego::Traditional::StagingCompletionHandler.new(message_bus, @backends).subscribe!
-        Diego::Docker::StagingCompletionHandler.new(message_bus, @backends).subscribe!
+        Diego::Traditional::StagingCompletionHandler.new(message_bus, backends).subscribe!
+        Diego::Docker::StagingCompletionHandler.new(message_bus, backends).subscribe!
 
         AppObserver.configure(backends)
 
@@ -331,7 +340,7 @@ module VCAP::CloudController
       end
 
       def escape_userinfo(value)
-        URI::escape(value, "%#{URI::REGEXP::PATTERN::RESERVED}") 
+        URI::escape(value, "%#{URI::REGEXP::PATTERN::RESERVED}")
       end
 
       def valid_in_userinfo?(value)

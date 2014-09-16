@@ -2,7 +2,8 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::AppsController do
-    let(:app_event_repository) { CloudController::DependencyLocator.instance.app_event_repository }
+    let(:app_event_repository) { Repositories::Runtime::AppEventRepository.new }
+    before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 
     describe "Query Parameters" do
       it { expect(described_class).to be_queryable_by(:name) }

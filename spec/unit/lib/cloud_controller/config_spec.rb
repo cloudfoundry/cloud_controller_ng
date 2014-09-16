@@ -178,10 +178,34 @@ module VCAP::CloudController
     describe ".configure_components" do
       before do
         @test_config = {
-            packages: {},
-            droplets: {},
+            packages: {
+              fog_connection: {},
+              app_package_directory_key: 'app_key',
+            },
+            droplets: {
+              fog_connection: {},
+              droplet_directory_key: 'droplet_key',
+            },
+            buildpacks: {
+              fog_connection: {},
+              buildpack_directory_key: 'bp_key',
+            },
+            resource_pool: {
+              minimum_size: 0,
+              maximum_size: 0,
+              fog_connection: {},
+              resource_directory_key: 'resource_key',
+            },
             cc_partition: "ng",
             bulk_api: {},
+            external_host: 'host',
+            external_port: 1234,
+            staging: {
+              auth: {
+                user: 'user',
+                password: 'password',
+                },
+            },
         }
       end
 

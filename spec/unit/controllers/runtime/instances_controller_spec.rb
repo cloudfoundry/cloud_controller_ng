@@ -2,6 +2,12 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::InstancesController do
+    let(:instances_reporter) { double(:instances_reporter) }
+
+    before do
+      CloudController::DependencyLocator.instance.register(:instances_reporter, instances_reporter)
+    end
+
     describe "GET /v2/apps/:id/instances" do
       before :each do
         @app = AppFactory.make(:package_hash => "abc", :package_state => "STAGED")
@@ -11,11 +17,6 @@ module VCAP::CloudController
 
       context "as a developer" do
         let(:user) { @developer }
-        let(:instances_reporter) { double(:instances_reporter) }
-
-        before do
-          allow(CloudController::DependencyLocator.instance).to receive(:instances_reporter).and_return(instances_reporter)
-        end
 
         it "returns 400 when there is an error finding the instances" do
           @app.state = "STOPPED"

@@ -33,8 +33,9 @@ module TestConfig
 
     VCAP::CloudController::Config.configure_components(config)
     VCAP::CloudController::Config.configure_components_depending_on_message_bus(message_bus)
-    # reset the dependency locator
-    CloudController::DependencyLocator.instance.send(:initialize)
+
+    # configure the dependency locator
+    CloudController::DependencyLocator.instance.config = config
 
     stacks_file = File.join(Paths::FIXTURES, "config/stacks.yml")
     VCAP::CloudController::Stack.configure(stacks_file)

@@ -19,7 +19,7 @@ module VCAP::CloudController
         end
 
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:instances_reporter).and_return(instances_reporter)
+          CloudController::DependencyLocator.instance.register(:instances_reporter, instances_reporter)
           allow(instances_reporter).to receive(:crashed_instances_for_app).and_return(crashed_instances)
         end
 

@@ -2,10 +2,11 @@ require "spec_helper"
 require "cloud_controller/dependency_locator"
 
 describe CloudController::DependencyLocator do
-  subject(:locator) { CloudController::DependencyLocator.send(:new, config, message_bus) }
+  subject(:locator) { CloudController::DependencyLocator.instance }
 
-  let(:message_bus) { VCAP::CloudController::Config.message_bus }
   let(:config) { TestConfig.config }
+
+  before { locator.config = config }
 
   describe "#health_manager_client" do
     it "should return the hm9000 client" do

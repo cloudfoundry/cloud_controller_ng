@@ -72,6 +72,7 @@ default_quota_definition: default
 
 
 resource_pool:
+  resource_directory_key: "cc-resources"
   fog_connection:
     provider: Local
 
