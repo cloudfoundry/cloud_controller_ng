@@ -1,25 +1,26 @@
 module VCAP::CloudController
   class AppsController < RestController::ModelController
     define_attributes do
-      attribute  :buildpack,           String,     :default => nil
-      attribute  :command,             String,     :default => nil
-      attribute  :console,             Message::Boolean, :default => false
-      attribute  :docker_image,        String,     :default => nil
-      attribute  :debug,               String,     :default => nil
-      attribute  :disk_quota,          Integer,    :default => nil
-      attribute  :environment_json,    Hash,       :default => {}
-      attribute  :health_check_timeout, Integer,   :default => nil
-      attribute  :instances,           Integer,    :default => 1
-      attribute  :memory,              Integer,    :default => nil
-      attribute  :name,                String
-      attribute  :production,          Message::Boolean,    :default => false
-      attribute  :state,               String,     :default => "STOPPED"
+      attribute  :buildpack,            String,           :default => nil
+      attribute  :command,              String,           :default => nil
+      attribute  :console,              Message::Boolean, :default => false
+      attribute  :docker_image,         String,           :default => nil
+      attribute  :debug,                String,           :default => nil
+      attribute  :disk_quota,           Integer,          :default => nil
+      attribute  :environment_json,     Hash,             :default => {}
+      attribute  :execution_metadata,   Hash,             :default => {}, :exclude_in => [:create, :update]
+      attribute  :health_check_timeout, Integer,          :default => nil
+      attribute  :instances,            Integer,          :default => 1
+      attribute  :memory,               Integer,          :default => nil
+      attribute  :name,                 String
+      attribute  :production,           Message::Boolean, :default => false
+      attribute  :state,                String,           :default => "STOPPED"
 
       to_one     :space
-      to_one     :stack,               :optional_in => :create
+      to_one     :stack,                :optional_in => :create
 
-      to_many    :events,              :link_only => true
-      to_many    :service_bindings,    :exclude_in => :create
+      to_many    :events,               :link_only => true
+      to_many    :service_bindings,     :exclude_in => :create
       to_many    :routes
     end
 

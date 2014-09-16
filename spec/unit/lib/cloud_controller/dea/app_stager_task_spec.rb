@@ -31,6 +31,7 @@ module VCAP::CloudController
         "task_log" => "task-log",
         "task_streaming_log_url" => task_streaming_log_url,
         "detected_buildpack" => nil,
+        "execution_metadata" => nil,
         "buildpack_key" => nil,
         "error" => first_reply_json_error,
         "droplet_sha1" => nil
@@ -40,6 +41,7 @@ module VCAP::CloudController
     let(:reply_json_error) { nil }
     let(:reply_error_info) { nil }
     let(:detected_buildpack) { nil }
+    let(:execution_metadata) { { "start_command" => "wait_for_godot" } }
     let(:buildpack_key) { nil }
 
     let(:reply_json) do
@@ -49,6 +51,7 @@ module VCAP::CloudController
         "task_streaming_log_url" => nil,
         "detected_buildpack" => detected_buildpack,
         "buildpack_key" => buildpack_key,
+        "execution_metadata" => execution_metadata,
         "error" => reply_json_error,
         "error_info" => reply_error_info,
         "droplet_sha1" => "droplet-sha1"
@@ -169,6 +172,10 @@ module VCAP::CloudController
             expect { stage }.to_not change { app.staged? }.from(false)
           end
 
+          it "does not save the execution metadata" do
+            expect { stage }.to_not change { app.execution_metadata }.from({})
+          end
+
           it "does not save the detected buildpack" do
             expect { stage }.to_not change { app.detected_buildpack }.from(nil)
           end
@@ -209,6 +216,12 @@ module VCAP::CloudController
             }.to_not change { app.detected_buildpack_guid }.from(nil)
           end
 
+          it "does not save the execution metadata" do
+            expect {
+              ignore_staging_error { stage }
+            }.to_not change { app.execution_metadata }.from({})
+          end
+
           it "does not call provided callback (not yet)" do
             callback_called = false
             ignore_staging_error { stage { callback_called = true } }
@@ -239,6 +252,10 @@ module VCAP::CloudController
             expect {
               ignore_staging_error { stage }
             }.to_not change { app.detected_buildpack_guid }.from(nil)
+          end
+
+          it "does not save the execution metadata" do
+            expect { ignore_staging_error { stage } }.to_not change { app.execution_metadata }.from({})
           end
 
           it "does not call provided callback (not yet)" do
@@ -293,6 +310,47 @@ module VCAP::CloudController
 
             it "saves the detected buildpack" do
               expect { stage }.to change { app.refresh.detected_buildpack }.from(nil)
+            end
+
+            context "and the droplet has been uploaded" do
+              it "saves the execution metadata" do
+                app.droplet_hash = "Abc"
+                expect { stage }.to change {
+                  app.current_droplet.refresh
+                  app.execution_metadata
+                }.from({}).to({ "start_command" => "wait_for_godot" })
+              end
+            end
+
+            context "when the droplet somehow has not been uploaded (defensive)" do
+              it "does not change the start command" do
+                expect { stage }.not_to change {
+                  app.execution_metadata
+                }.from({})
+              end
+            end
+
+            context "when execution_metadata is not returned" do
+              let(:reply_json) do
+                {
+                  "task_id" => "task-id",
+                  "task_log" => "task-log",
+                  "task_streaming_log_url" => nil,
+                  "detected_buildpack" => detected_buildpack,
+                  "buildpack_key" => buildpack_key,
+                  "error" => reply_json_error,
+                  "error_info" => reply_error_info,
+                  "droplet_sha1" => "droplet-sha1"
+                }
+              end
+
+              it "does not change the execution metadata" do
+                app.droplet_hash = "Abc"
+                expect { stage }.not_to change {
+                  app.current_droplet.refresh
+                  app.execution_metadata
+                }.from({})
+              end
             end
 
             context "when an admin buildpack is used" do
@@ -368,6 +426,12 @@ module VCAP::CloudController
               }.to_not change { app.detected_buildpack }.from(nil)
             end
 
+            it "does not save the execution metadata" do
+              expect {
+                ignore_staging_error { stage }
+              }.to_not change { app.execution_metadata }.from({})
+            end
+
             it "does not call provided callback" do
               callback_called = false
               ignore_staging_error do
@@ -398,8 +462,12 @@ module VCAP::CloudController
             expect { stage }.to_not change { app.detected_buildpack }.from(nil)
           end
 
-          it "does not save the detected buidlpack guid" do
+          it "does not save the detected buildpack guid" do
             expect { stage }.to_not change { app.detected_buildpack_guid }.from(nil)
+          end
+
+          it "does not save the execution metadata" do
+            expect { stage }.to_not change { app.execution_metadata }.from({})
           end
 
           it "does not call provided callback (not yet)" do
@@ -441,6 +509,10 @@ module VCAP::CloudController
 
           it "does not save the detected buildpack guid" do
             expect { stage }.to_not change { app.detected_buildpack_guid }.from(nil)
+          end
+
+          it "does not save the execution metadata" do
+            expect { stage }.to_not change { app.execution_metadata }.from({})
           end
 
           it "does not call provided callback (not yet)" do

@@ -1,6 +1,8 @@
 module VCAP::CloudController
   class Droplet < Sequel::Model
+    plugin :serialization
     many_to_one :app
+    serialize_attributes :json, :execution_metadata
 
     def validate
       validates_presence :app

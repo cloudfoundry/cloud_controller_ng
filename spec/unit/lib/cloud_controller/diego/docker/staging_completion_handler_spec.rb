@@ -68,7 +68,7 @@ module VCAP::CloudController
               {
                 "app_id" => app.guid,
                 "task_id" => app.staging_task_id,
-                "execution_metadata" => '"{\"cmd\":[\"start\"]}"',
+                "execution_metadata" => { "cmd" => ["start"] },
               }
             end
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
               handler.subscribe!
 
               app.reload
-              expect(app.current_droplet.execution_metadata).to eq('"{\"cmd\":[\"start\"]}"')
+              expect(app.current_droplet.execution_metadata).to eq({ "cmd" => ["start"] })
             end
           end
 

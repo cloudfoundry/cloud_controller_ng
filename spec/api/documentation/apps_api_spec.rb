@@ -14,7 +14,7 @@ resource "Apps", :type => :api do
     parameter :guid, "The guid of the App"
   end
 
-  shared_context "updatable_fields" do |opts|
+  shared_context "fields" do |opts|
     field :name, "The name of the app.", required: opts[:required], example_values: ["my_super_app"]
     field :memory, "The amount of memory each instance should have. In megabytes.", required: opts[:required], example_values: [1_024, 512]
     field :instances, "The number of instances of the app to run. To ensure optimal availability, ensure there are at least 2 instances.", required: opts[:required], example_values: [2, 6, 10]
@@ -22,7 +22,8 @@ resource "Apps", :type => :api do
     field :space_guid, "The guid of the associated space.", required: opts[:required], example_values: [Sham.guid]
     field :stack_guid, "The guid of the associated stack.", default: "Uses the default system stack."
     field :state, "The current desired state of the app. One of STOPPED or STARTED.", default: "STOPPED", valid_values: %w[STOPPED STARTED] # nice to validate this eventually..
-    field :command, "The command to start an app after it is staged (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT')."
+    field :command, "The command to start an app after it is staged (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT'). Applies to the next time this app is staged."
+    field :execution_metadata, "The execution metadata returned by staging", readonly: true, example_values: ['{"start_command": "node app.js"}']
     field :buildpack, "Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.", default: "", example_values: ["", "https://github.com/virtualstaticvoid/heroku-buildpack-r.git", "an_example_installed_buildpack"]
     field :health_check_timeout, "Timeout for health checking of an staged app when starting up"
     field :docker_image, "Name of the Docker image containing the app", default: nil, experimental: true, example_values: ["cloudfoundry/helloworld", "registry.example.com:5000/user/repository/tag"]
@@ -33,6 +34,7 @@ resource "Apps", :type => :api do
   end
 
   describe "Standard endpoints" do
+    include_context "fields", required: false
     standard_model_list :app, VCAP::CloudController::AppsController
     standard_model_get :app, nested_associations: [:stack, :space]
     standard_model_delete_without_async :app
@@ -52,7 +54,7 @@ resource "Apps", :type => :api do
     end
 
     post "/v2/apps/" do
-      include_context "updatable_fields", required: true
+      include_context "fields", required: true
       example "Creating an App" do
         space_guid = VCAP::CloudController::Space.make.guid
         client.post "/v2/apps", MultiJson.dump(required_fields.merge(space_guid: space_guid), pretty: true), headers
@@ -84,7 +86,7 @@ resource "Apps", :type => :api do
 
     put "/v2/apps/:guid" do
       include_context "guid_parameter"
-      include_context "updatable_fields", required: false
+      include_context "fields", required: false
       example "Updating an App" do
         new_attributes = {name: 'new_name'}
 

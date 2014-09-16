@@ -66,6 +66,16 @@ module VCAP::CloudController
       end
     end
 
+    describe "execution metadata" do
+      subject { Droplet.make }
+
+      it "saves and restores hashes" do
+        subject.update_execution_metadata({"foo" => 3})
+        subject.reload
+        expect(subject.execution_metadata).to eq({"foo" => 3})
+      end
+    end
+
     describe "blobstore key" do
       it "combines app guid and the given digests" do
         expect(Droplet.droplet_key("abc", "xyz")).to eql("abc/xyz")
