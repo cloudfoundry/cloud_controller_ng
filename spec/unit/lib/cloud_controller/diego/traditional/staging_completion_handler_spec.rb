@@ -20,7 +20,7 @@ module VCAP::CloudController
         "task_id" => staged_app.staging_task_id,
         "detected_buildpack" => "INTERCAL",
         "buildpack_key" => buildpack.key,
-        "execution_metadata" => {"command" => [""]},
+        "execution_metadata" => "{command: [""]}",
       }
     end
 
@@ -77,12 +77,12 @@ module VCAP::CloudController
         end
 
         context "when staging metadata is returned" do
-          before { success_response["execution_metadata"] = { "metakey" => "some-metadata" } }
+          before { success_response["execution_metadata"] = "some-metadata"}
 
           it "updates the droplet with the returned start command" do
             publish_staging_result(success_response)
             staged_app.reload
-            expect(staged_app.current_droplet.execution_metadata).to eq({ "metakey" => "some-metadata" })
+            expect(staged_app.current_droplet.execution_metadata).to eq("some-metadata")
             expect(staged_app.current_droplet.droplet_hash).to eq("lol")
           end
         end
