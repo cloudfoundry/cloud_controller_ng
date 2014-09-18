@@ -57,7 +57,7 @@ module VCAP::CloudController
           },
           resultqueue: {
             size: resultqueue ? resultqueue.size : 0,
-            num_waiting: resultqueue ? resultqueue.num_waiting : 0,
+            num_waiting: (resultqueue and !resultqueue.empty?) ? resultqueue.num_waiting : 0,
           },
         },
       }
