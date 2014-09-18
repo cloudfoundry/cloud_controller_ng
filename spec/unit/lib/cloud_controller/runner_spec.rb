@@ -430,5 +430,33 @@ module VCAP::CloudController
         end
       end
     end
+    describe "#configurable public host" do
+
+      context "when the public host is given" do
+        let(:config_file) do
+          config = YAML.load_file(valid_config_file_path)
+          # add public_host
+          config["public_host"] = 'my_public_host'
+          file = Tempfile.new("config")
+          file.write(YAML.dump(config))
+          file.rewind
+          file
+        end
+        it "it should register public_host to router & vcap" do
+          expect(registrar).to receive(:register_with_router)
+          expect(VCAP::Component).to receive(:register).with(hash_including(:host => 'my_public_host'))
+          subject.run!
+        end
+      end
+      context "when the public host is not given" do
+        it "it should register external ip to router & vcap" do
+          expect(VCAP).to receive(:local_ip).and_return("some_local_ip")
+          expect(registrar).to receive(:register_with_router)
+          expect(VCAP::Component).to receive(:register).with(hash_including(:host => 'some_local_ip'))
+          subject.run!
+        end
+      end
+
+    end
   end
 end

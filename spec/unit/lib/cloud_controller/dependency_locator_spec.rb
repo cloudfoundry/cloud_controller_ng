@@ -210,6 +210,33 @@ describe CloudController::DependencyLocator do
     end
   end
 
+  describe "#blobstore_url_generator_with_public_host" do
+    let(:my_config) do
+      {
+          external_host: "external.host",
+          public_host: "public.host"
+      }
+    end
+
+    before do
+      TestConfig.override(my_config)
+    end
+
+    it "creates blobstore_url_generator with the host, port, and blobstores with public host" do
+      connection_options = {
+          blobstore_host: "public.host",
+      }
+      expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
+        with(hash_including(connection_options),
+             instance_of(CloudController::Blobstore::Client),
+             instance_of(CloudController::Blobstore::Client),
+             instance_of(CloudController::Blobstore::Client),
+             instance_of(CloudController::Blobstore::Client)
+      )
+      locator.blobstore_url_generator
+    end
+  end
+
   describe "#app_event_repository" do
     subject { locator.app_event_repository }
 
