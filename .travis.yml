@@ -24,7 +24,7 @@ services:
   - postgresql
 
 after_script: # and this only on success, fail the whole build if it fails
-  - "[ $TRAVIS_TEST_RESULT == 0 ] && travis-artifacts upload --path doc/api --target-path api_docs/$TRAVIS_BUILD_ID && echo https://s3-us-west-1.amazonaws.com/cc-travis-api-doc/api_docs/$TRAVIS_BUILD_ID/index.html"
+  - "[ $TRAVIS_TEST_RESULT == 0 -a $(git rev-parse --abbrev-ref HEAD) == 'master' ] && travis-artifacts upload --path doc/api --target-path api_docs/$TRAVIS_BUILD_ID && echo https://s3-us-west-1.amazonaws.com/cc-travis-api-doc/api_docs/$TRAVIS_BUILD_ID/index.html"
 
 env:
   global:
