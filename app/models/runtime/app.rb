@@ -43,7 +43,7 @@ module VCAP::CloudController
                       :environment_json, :memory, :instances, :disk_quota,
                       :state, :version, :command, :console, :debug,
                       :staging_task_id, :package_state, :health_check_timeout,
-                      :staging_failed_reason, :docker_image, :package_updated_at
+                      :staging_failed_reason, :docker_image, :package_updated_at, :detected_start_command
 
     import_attributes :name, :production,
                       :space_guid, :stack_guid, :buildpack, :detected_buildpack,
@@ -280,6 +280,10 @@ module VCAP::CloudController
 
     def execution_metadata
       (current_droplet && current_droplet.execution_metadata) || ""
+    end
+
+    def detected_start_command
+      (current_droplet && current_droplet.detected_start_command) || ""
     end
 
     def console=(c)

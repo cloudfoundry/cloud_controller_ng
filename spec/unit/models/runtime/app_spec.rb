@@ -393,7 +393,7 @@ module VCAP::CloudController
                                     :environment_json, :memory, :instances, :disk_quota,
                                     :state, :version, :command, :console, :debug,
                                     :staging_task_id, :package_state, :health_check_timeout,
-                                    :staging_failed_reason, :docker_image, :package_updated_at }
+                                    :staging_failed_reason, :docker_image, :package_updated_at, :detected_start_command }
       it { is_expected.to import_attributes :name, :production,
                                     :space_guid, :stack_guid, :buildpack, :detected_buildpack,
                                     :environment_json, :memory, :instances, :disk_quota,
@@ -598,6 +598,38 @@ module VCAP::CloudController
         it "returns the empty string" do
           expect(subject.current_droplet).to be_nil
           expect(subject.execution_metadata).to eq("")
+        end
+      end
+    end
+
+    describe "#detected_start_command" do
+      subject do
+        App.make(
+          package_hash: "package-hash",
+          instances: 1,
+          package_state: "STAGED",
+        )
+      end
+
+      context "when the app has a current droplet" do
+        before do
+          subject.add_droplet(Droplet.new(
+            app: subject,
+            droplet_hash: "the-droplet-hash",
+            detected_start_command: "run-my-app",
+          ))
+          subject.droplet_hash = "the-droplet-hash"
+        end
+
+        it "returns that droplet's detected start command" do
+          expect(subject.detected_start_command).to eq("run-my-app")
+        end
+      end
+
+      context "when the app does not have a current droplet" do
+        it "returns the empty string" do
+          expect(subject.current_droplet).to be_nil
+          expect(subject.detected_start_command).to eq("")
         end
       end
     end

@@ -47,6 +47,10 @@ module VCAP::CloudController
       update(execution_metadata: metadata)
     end
 
+    def update_detected_start_command(metadata)
+      update(detected_start_command: metadata)
+    end
+
     private
 
     def blobstore
