@@ -2,8 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::UsersController do
-    it_behaves_like "an admin only endpoint", path: "/v2/users"
-
     describe "Query Parameters" do
       it { expect(described_class).to be_queryable_by(:space_guid) }
       it { expect(described_class).to be_queryable_by(:organization_guid) }
@@ -86,6 +84,22 @@ module VCAP::CloudController
                          :path => "/v2/users",
                          :enumerate => Proc.new { User.count },
                          :permissions_overlap => true
+      end
+    end
+
+    describe 'GET /v2/users/:guid/organizations' do
+      let(:mgr) { User.make }
+      let(:user) { User.make }
+      let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [user.guid]) }
+
+      it 'allows the user' do
+        get "/v2/users/#{user.guid}/organizations", '', headers_for(user)
+        expect(last_response.status).to eq(200)
+      end
+
+      it 'disallows a different user' do
+        get "/v2/users/#{mgr.guid}/organizations", '', headers_for(user)
+        expect(last_response.status).to eq(403)
       end
     end
   end

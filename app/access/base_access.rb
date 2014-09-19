@@ -25,7 +25,7 @@ module VCAP::CloudController
       admin_user?
     end
 
-    def index?(object_class)
+    def index?(object_class, params=nil)
       # This can return true because the index endpoints filter objects based on user visibilities
       true
     end

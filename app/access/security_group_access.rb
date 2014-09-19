@@ -4,7 +4,7 @@ module VCAP::CloudController
       admin_user?
     end
 
-    def index?(_)
+    def index?(_, params=nil)
       admin_user?
     end
   end

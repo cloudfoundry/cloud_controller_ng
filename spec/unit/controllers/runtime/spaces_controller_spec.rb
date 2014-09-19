@@ -553,6 +553,23 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/spaces/:guid/users' do
+      let(:mgr) { User.make }
+      let(:user) { User.make }
+      let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
+      let(:space) { Space.make(organization: org, manager_guids: [mgr.guid], developer_guids: [user.guid]) }
+
+      it 'allows space managers' do
+        get "/v2/spaces/#{space.guid}/developers", '', headers_for(mgr)
+        expect(last_response.status).to eq(200)
+      end
+
+      it 'allows space developers' do
+        get "/v2/spaces/#{space.guid}/developers", '', headers_for(user)
+        expect(last_response.status).to eq(200)
+      end
+    end
+
     describe "Deprecated endpoints" do
       let!(:domain) { SharedDomain.make }
       describe "DELETE /v2/spaces/:guid/domains/:shared_domain" do

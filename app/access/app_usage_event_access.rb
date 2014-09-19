@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class AppUsageEventAccess < BaseAccess
-    def index?(object_class)
+    def index?(object_class, params=nil)
       admin_user?
     end
 

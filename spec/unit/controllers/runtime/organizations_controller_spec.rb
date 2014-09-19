@@ -416,6 +416,22 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/organizations/:guid/users' do
+      let(:mgr) { User.make }
+      let(:user) { User.make }
+      let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
+
+      it 'allows org managers' do
+        get "/v2/organizations/#{org.guid}/users", '', headers_for(mgr)
+        expect(last_response.status).to eq(200)
+      end
+
+      it 'allows org users' do
+        get "/v2/organizations/#{org.guid}/users", '', headers_for(user)
+        expect(last_response.status).to eq(200)
+      end
+    end
+
     describe "when the default quota does not exist" do
       before do
         QuotaDefinition.default.organizations.each(&:destroy)

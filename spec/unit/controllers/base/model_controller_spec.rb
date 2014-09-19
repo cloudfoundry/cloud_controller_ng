@@ -688,7 +688,8 @@ module VCAP::CloudController
             end
 
             it "fails when you do not have access to the associated model" do
-              allow_any_instance_of(TestModelManyToOneAccess).to receive(:index?).with(TestModelManyToOne).and_return(false)
+              allow_any_instance_of(TestModelManyToOneAccess).to receive(:index?).
+                with(TestModelManyToOne, {related_obj: instance_of(TestModel), related_model: TestModel}).and_return(false)
               get "/v2/test_models/#{model.guid}/test_model_many_to_ones", "", admin_headers
               expect(last_response.status).to eq(403)
             end

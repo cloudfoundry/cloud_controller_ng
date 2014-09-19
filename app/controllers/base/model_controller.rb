@@ -119,7 +119,7 @@ module VCAP::CloudController::RestController
 
       associated_path = "#{self.class.url_for_guid(guid)}/#{name}"
 
-      validate_access(:index, associated_model)
+      validate_access(:index, associated_model, {related_obj: obj, related_model: model})
 
       filtered_dataset =
       Query.filtered_dataset_from_query_params(

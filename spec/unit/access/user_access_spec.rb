@@ -17,9 +17,21 @@ module VCAP::CloudController
 
     it_should_behave_like :admin_full_access
 
-    context 'for a logged in user' do
-      it_behaves_like :no_access
-      it { should_not allow_op_on_object :index, object.class }
+    context 'a user' do
+      context 'has no_access to other users' do
+        it_behaves_like :no_access
+      end
+
+      context 'has read access' do
+        let(:user) { object }
+        it { is_expected.not_to allow_op_on_object :create, object }
+        it { is_expected.to allow_op_on_object :read, object }
+        it { is_expected.not_to allow_op_on_object :read_for_update, object }
+        # update only runs if read_for_update succeeds
+        it { is_expected.not_to allow_op_on_object :update, object }
+        it { is_expected.not_to allow_op_on_object :delete, object }
+        it { is_expected.not_to allow_op_on_object :index, object.class }
+      end
     end
 
     context 'for a non-logged in user' do
