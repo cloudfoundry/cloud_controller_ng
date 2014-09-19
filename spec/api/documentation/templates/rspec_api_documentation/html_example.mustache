@@ -17,7 +17,7 @@
       }
 
       pre {
-        white-space: pre-wrap;
+        white-space: pre;
       }
 
       td.required .name:after {
@@ -94,7 +94,12 @@
               <td>
                 <ul class="example_values">
                 {{# example_values }}
+                  {{# render_example_pre_tag }}
+                    <li><pre>{{ . }}</pre></li>
+                  {{/ render_example_pre_tag }}
+                  {{^ render_example_pre_tag }}
                     <li>{{ . }}</li>
+                  {{/ render_example_pre_tag }}
                 {{/ example_values }}
                 </ul>
               </td>
