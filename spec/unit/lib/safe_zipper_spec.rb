@@ -97,6 +97,17 @@ describe SafeZipper do
         end
       end
     end
+
+    describe "permissions" do
+      let(:zip_path) { File.expand_path("../../fixtures/with_permissions.zip", File.dirname(__FILE__)) }
+
+      it "unzips the files with the right permissions" do
+        unzip
+        expect(File.stat("#{zip_destination}/1").mode).to eq 0100744
+        expect(File.stat("#{zip_destination}/2").mode).to eq 0100755
+        expect(File.stat("#{zip_destination}/3").mode).to eq 0100777
+      end
+    end
   end
 
   describe ".zip" do
