@@ -52,9 +52,19 @@ module VCAP::CloudController
           app = get_app(logger, payload)
           return if app.nil?
 
-          app.mark_as_staged
-          app.update_detected_buildpack(payload["detected_buildpack"], payload["buildpack_key"])
-          app.current_droplet.update_execution_metadata(payload["execution_metadata"])
+          app.class.db.transaction do
+            app.lock!
+            app.mark_as_staged
+            app.update_detected_buildpack(payload["detected_buildpack"], payload["buildpack_key"])
+
+            droplet = app.current_droplet
+            droplet.lock!
+            droplet.update_execution_metadata(payload["execution_metadata"])
+            if payload.has_key?("detected_start_command")
+              droplet.update_detected_start_command(payload["detected_start_command"]["web"])
+            end
+            app.save_changes
+          end
 
           @backends.find_one_to_run(app).start
         end
@@ -63,7 +73,7 @@ module VCAP::CloudController
           app = App.find(guid: payload["app_id"])
 
           if app == nil
-            logger.info(
+            logger.error(
               "diego.staging.unknown-app",
               :response => payload,
             )
@@ -72,7 +82,7 @@ module VCAP::CloudController
           end
 
           if payload["task_id"] != app.staging_task_id
-            logger.info(
+            logger.warn(
               "diego.staging.not-current",
               :response => payload,
               :current => app.staging_task_id,
