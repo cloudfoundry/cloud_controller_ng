@@ -69,27 +69,15 @@ module CloudController
 
       describe "#create_package" do
         subject(:local_app_bits) { LocalAppBits.new(root_path, 123) }
-        let(:path) { "/tmp/safezipper/package.zip" }
-
-        before do
-          allow(SafeZipper).to receive(:zip)
-          allow(File).to receive(:new).and_return(double(:file, path: path, hexdigest: "some_sha"))
-          allow(FileUtils).to receive(:chmod_R)
-        end
 
         it "should zip up the file and yield the open stream of it" do
+          path = "/tmp/safezipper/package.zip"
+          expect(SafeZipper).to receive(:zip).with(uncompressed_path, path)
+          expect(File).to receive(:new).with(path).and_return(double(:file, path: path, hexdigest: "some_sha"))
+
           package = local_app_bits.create_package
           expect(package.path).to eq path
           expect(package.hexdigest).to eq "some_sha"
-
-          expect(SafeZipper).to have_received(:zip).with(uncompressed_path, path)
-          expect(File).to have_received(:new).with(path)
-        end
-
-        it "should give all the files 0744 permission mode before zipping" do
-          local_app_bits.create_package
-
-          expect(FileUtils).to have_received(:chmod_R).with(0744, uncompressed_path)
         end
 
         it "its zip destination should be outside the source" do

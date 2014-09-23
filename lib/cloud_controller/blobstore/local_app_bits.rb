@@ -29,7 +29,6 @@ module CloudController
 
       def create_package
         destination = File.join(@root_path, PACKAGE_NAME)
-        FileUtils.chmod_R(0744, uncompressed_path)
         SafeZipper.zip(uncompressed_path, destination)
         File.new(destination)
       end
