@@ -212,7 +212,7 @@ module VCAP::CloudController
     def router_registrar
       @registrar ||= Cf::Registrar.new(
           message_bus_servers: @config[:message_bus_servers],
-          host: @config[:external_host],
+          host: @config[:public_host] ||= @config[:external_host],
           port: @config[:external_port],
           uri: @config[:external_domain],
           tags: {:component => "CloudController"},
@@ -223,7 +223,7 @@ module VCAP::CloudController
     def register_with_collector(message_bus)
       VCAP::Component.register(
           :type => 'CloudController',
-          :host => @config[:external_host],
+          :host => @config[:public_host] ||= @config[:external_host],
           :port => @config[:varz_port],
           :user => @config[:varz_user],
           :password => @config[:varz_password],
