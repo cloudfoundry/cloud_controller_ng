@@ -2010,17 +2010,29 @@ module VCAP::CloudController
     describe "diego flag" do
       subject { AppFactory.make }
 
-      it "becomes true when the CF_DIEGO_RUN_BETA environment variable is set and saved" do
-        expect(subject.diego).to eq(false)
+      context "when the CF_DIEGO_RUN_BETA environment variable is set and saved" do
+        it "becomes a diego app" do
+          expect(subject.diego).to eq(false)
 
-        subject.environment_json = {"CF_DIEGO_RUN_BETA" => "true"}
+          subject.environment_json = {"CF_DIEGO_RUN_BETA" => "true"}
 
-        expect(subject.diego).to eq(false)
+          expect(subject.diego).to eq(false)
 
-        subject.save
-        subject.refresh
+          subject.save
+          subject.refresh
 
-        expect(subject.diego).to eq(true)
+          expect(subject.diego).to eq(true)
+        end
+      end
+
+      context "when the configuration requires diego for running" do
+        before do
+          TestConfig.override(diego: { staging: "required", running: "required" })
+        end
+
+        it "gets created as a diego app" do
+          expect(subject.diego).to be(true)
+        end
       end
     end
   end
