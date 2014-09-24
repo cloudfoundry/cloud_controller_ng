@@ -14,7 +14,7 @@ module VCAP::CloudController
         # Public host is the address CC_ng exposed to others to connect,
         # it may be different from the local ip of CC_ng.
         # You can leave it nil unless you are running CC_ng inside Docker.
-        optional(:public_host) => String,
+        optional(:public_host) => enum(String, NilClass),
         :external_protocol => String,
         :info => {
           :name            => String,
