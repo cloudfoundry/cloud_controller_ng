@@ -33,6 +33,22 @@ module VCAP::CloudController
       expect(Droplet.new(app: app, droplet_hash: Sham.guid).save).to be
     end
 
+    it "supports long start commands (for mysql compat)" do
+      long_start_command = "o" * 10_000
+      droplet = Droplet.make
+
+      expect { droplet.update_detected_start_command(long_start_command) }.to_not raise_error
+      expect(droplet.detected_start_command).to eq(long_start_command)
+    end
+
+    it "supports long execution metadata (for mysql compat)" do
+      long_execution_metadata = "o" * 10_000
+      droplet = Droplet.make
+
+      expect { droplet.update_execution_metadata(long_execution_metadata) }.to_not raise_error
+      expect(droplet.execution_metadata).to eq(long_execution_metadata)
+    end
+
     it "has a create_at timestamp used in ordering droplets for an app" do
       app.add_new_droplet("hash_1")
       app.save
