@@ -267,6 +267,8 @@ module VCAP::CloudController
         LegacyBulk.configure(@config, message_bus)
 
         BulkApi.configure(@config)
+
+        SyslogDrainUrlsController.configure(@config)
       end
 
       def config_dir

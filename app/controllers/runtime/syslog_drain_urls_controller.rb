@@ -20,18 +20,27 @@ module VCAP::CloudController
     get '/v2/syslog_drain_urls', :list
     def list
       id_for_next_token = nil
-      drain_urls = App.where("id > ?", last_id).order(:id).limit(batch_size).inject({}) do |hash, app|
-        drains = app.service_bindings.map(&:syslog_drain_url).reject { |s| s.nil? }
-        hash[app.guid] = drains unless drains.empty?
+      apps_with_bindings = App.
+        select_all(:apps).
+        join(:service_bindings, app_id: :id).
+        where("apps.id > ?", last_id).
+        where("syslog_drain_url IS NOT NULL").
+        order(:app_id).
+        distinct(:app_id).
+        limit(batch_size)
+
+      drain_urls = apps_with_bindings.inject({}) do |hash, app|
+        drains = app.service_bindings.map(&:syslog_drain_url)
+        hash[app.guid] = drains
         id_for_next_token = app.id
         hash
       end
 
-      [HTTP::OK, {}, MultiJson.dump({results: drain_urls, bulk_token: {id: id_for_next_token}}, pretty: true)]
+      [HTTP::OK, {}, MultiJson.dump({results: drain_urls, next_id: id_for_next_token}, pretty: true)]
     end
 
     def last_id
-      Integer(MultiJson.load(params.fetch("bulk_token", '{"id": 0}')).fetch("id", 0))
+      Integer(params.fetch("next_id",  0))
     end
 
     def batch_size

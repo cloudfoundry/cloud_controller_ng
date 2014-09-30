@@ -3,8 +3,10 @@ require "spec_helper"
 module VCAP::CloudController
   describe SyslogDrainUrlsController do
     let(:app_obj) { AppFactory.make }
-    let(:instance) { UserProvidedServiceInstance.make(space: app_obj.space) }
-    let!(:binding_with_drain) { ServiceBinding.make(syslog_drain_url: 'fishfinger', app: app_obj, service_instance: instance) }
+    let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
+    let(:instance2) { UserProvidedServiceInstance.make(space: app_obj.space) }
+    let!(:binding_with_drain1) { ServiceBinding.make(syslog_drain_url: 'fishfinger', app: app_obj, service_instance: instance1) }
+    let!(:binding_with_drain2) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj, service_instance: instance2) }
 
     before do
       @bulk_user = "bulk_user"
@@ -27,11 +29,12 @@ module VCAP::CloudController
         before do
           authorize @bulk_user, @bulk_password
         end
+
         it "returns a list of syslog drain urls" do
           get '/v2/syslog_drain_urls', '{}'
           expect(last_response).to be_successful
           expect(decoded_results).to eq({
-            app_obj.guid => [ 'fishfinger' ]
+            app_obj.guid => [ 'fishfinger', 'foobar' ]
           })
         end
 
@@ -44,7 +47,7 @@ module VCAP::CloudController
           end
         end
 
-        context "when an app bindings with no syslog_drain_url" do
+        context "when an app's bindings have no syslog_drain_url" do
           let(:binding) { ServiceBinding.make() }
           let!(:app_obj_no_drain) { binding.app }
 
@@ -79,7 +82,7 @@ module VCAP::CloudController
           it "returns non-intersecting results when token is supplied" do
             get "/v2/syslog_drain_urls", {
               "batch_size" => 2,
-              "bulk_token" => "{\"id\":0}",
+              "next_id" => 0
             }
 
             saved_results = decoded_response["results"].dup
@@ -87,7 +90,7 @@ module VCAP::CloudController
 
             get "/v2/syslog_drain_urls", {
               "batch_size" => 2,
-              "bulk_token" => MultiJson.dump(decoded_response["bulk_token"]),
+              "next_id" => decoded_response["next_id"],
             }
 
             new_results = decoded_response["results"].dup
@@ -102,24 +105,56 @@ module VCAP::CloudController
             apps = {}
             total_size = App.count
 
-            token = {}
+            token = 0
             while apps.size < total_size do
               get "/v2/syslog_drain_urls", {
                 "batch_size" => 2,
-                "bulk_token" => MultiJson.dump(token),
+                "next_id" => token,
               }
 
               expect(last_response.status).to eq(200)
-              token = decoded_response["bulk_token"]
+              token = decoded_response["next_id"]
               apps.merge!(decoded_response["results"])
             end
 
             expect(apps.size).to eq(total_size)
             get "/v2/syslog_drain_urls", {
               "batch_size" => 2,
-              "bulk_token" => MultiJson.dump(token),
+              "next_id" => token,
             }
             expect(decoded_response["results"].size).to eq(0)
+          end
+
+          context "when an app has no service_bindings" do
+            before do
+              App.order(:id).all[1].service_bindings_dataset.destroy
+            end
+
+            it "does not affect the paging results" do
+              get "/v2/syslog_drain_urls", {
+                "batch_size" => 2,
+                "next_id" => 0
+              }
+
+              saved_results = decoded_response["results"].dup
+              expect(saved_results.size).to eq(2)
+            end
+          end
+
+          context "when an app has no syslog_drain_urls" do
+            before do
+              App.order(:id).all[1].service_bindings.first.update(syslog_drain_url: nil)
+            end
+
+            it "does not affect the paging results" do
+              get "/v2/syslog_drain_urls", {
+                "batch_size" => 2,
+                "next_id" => 0
+              }
+
+              saved_results = decoded_response["results"].dup
+              expect(saved_results.size).to eq(2)
+            end
           end
         end
       end
