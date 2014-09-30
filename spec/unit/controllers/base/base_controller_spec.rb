@@ -177,15 +177,15 @@ module VCAP::CloudController
         end
 
         context 'when the endpoint requires basic auth' do
-          it "returns NotAuthorized if username and password are not provided" do
+          it "returns NotAuthenticated if username and password are not provided" do
             get "/test_basic_auth"
-            expect(decoded_response["code"]).to eq 10003
+            expect(decoded_response["code"]).to eq 10002
           end
 
-          it "returns NotAuthorized if username and password are wrong" do
+          it "returns NotAuthenticated if username and password are wrong" do
             authorize "username", "letmein"
             get "/test_basic_auth"
-            expect(decoded_response["code"]).to eq 10003
+            expect(decoded_response["code"]).to eq 10002
           end
 
           it "does not raise NotAuthorized if username and password is correct" do

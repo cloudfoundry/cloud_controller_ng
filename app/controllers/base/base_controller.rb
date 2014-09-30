@@ -242,7 +242,7 @@ module VCAP::CloudController::RestController
         controller.before path do
           auth = Rack::Auth::Basic::Request.new(env)
           unless auth.provided? && auth.basic? && auth.credentials == block.call
-            raise Errors::ApiError.new_from_details("NotAuthorized")
+            raise Errors::ApiError.new_from_details("NotAuthenticated")
           end
         end
       end

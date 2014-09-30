@@ -67,10 +67,10 @@ module VCAP::CloudController
     after { FileUtils.rm_rf(workspace) }
 
     shared_examples "staging bad auth" do |verb, path|
-      it "should return 403 for bad credentials" do
+      it "should return 401 for bad credentials" do
         authorize "hacker", "sw0rdf1sh"
         send(verb, "/staging/#{path}/#{app_obj.guid}")
-        expect(last_response.status).to eq(403)
+        expect(last_response.status).to eq(401)
       end
     end
 
@@ -525,10 +525,10 @@ module VCAP::CloudController
       end
 
       context "when not authorized" do
-        it "returns a 403 unauthorized" do
+        it "returns a 401 unauthorized" do
           get "/staging/jobs/#{job_guid}"
 
-          expect(last_response.status).to eq(403)
+          expect(last_response.status).to eq(401)
         end
       end
     end

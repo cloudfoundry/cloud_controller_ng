@@ -1,20 +1,11 @@
 module VCAP::CloudController
-  class SyslogDrainUrlsController < RestController::ModelController
-    # Endpoint does its own (non-standard) auth
+  class SyslogDrainUrlsController < RestController::BaseController
+    # Endpoint does its own basic auth
     allow_unauthenticated_access
-    class << self
-      attr_reader :config
 
-      def configure(config)
-        @config = config[:bulk_api].merge(:cc_partition => config.fetch(:cc_partition))
-      end
-
-      def credentials
-        [
-          config[:auth_user],
-          config[:auth_password],
-        ]
-      end
+    authenticate_basic_auth('/v2/syslog_drain_urls') do
+      [VCAP::CloudController::Config.config[:bulk_api][:auth_user],
+       VCAP::CloudController::Config.config[:bulk_api][:auth_password]]
     end
 
     get '/v2/syslog_drain_urls', :list
@@ -27,7 +18,9 @@ module VCAP::CloudController
         where("syslog_drain_url IS NOT NULL").
         order(:app_id).
         distinct(:app_id).
-        limit(batch_size)
+        limit(batch_size).
+        eager(:service_bindings).
+        all
 
       drain_urls = apps_with_bindings.inject({}) do |hash, app|
         drains = app.service_bindings.map(&:syslog_drain_url)
@@ -39,6 +32,8 @@ module VCAP::CloudController
       [HTTP::OK, {}, MultiJson.dump({results: drain_urls, next_id: id_for_next_token}, pretty: true)]
     end
 
+    private
+
     def last_id
       Integer(params.fetch("next_id",  0))
     end
@@ -46,14 +41,5 @@ module VCAP::CloudController
     def batch_size
       Integer(params.fetch("batch_size", 50))
     end
-
-    def initialize(*)
-      super
-      auth = Rack::Auth::Basic::Request.new(env)
-      unless auth.provided? && auth.basic? && auth.credentials == self.class.credentials
-        raise Errors::ApiError.new_from_details("NotAuthenticated")
-      end
-    end
-
   end
 end

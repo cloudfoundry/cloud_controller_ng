@@ -46,7 +46,7 @@ module VCAP::CloudController
     after { FileUtils.rm_rf(tmpdir) }
 
     context "Buildpack binaries" do
-      let (:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: "upload_binary_buildpack", position: 0 }) }
+      let(:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: "upload_binary_buildpack", position: 0 }) }
 
       before { CloudController::DependencyLocator.instance.register(:upload_handler, UploadHandler.new(TestConfig.config)) }
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
 
         let(:upload_body) { { :buildpack => valid_zip, :buildpack_name => valid_zip.path } }
 
-        it "returns NOT AUTHORIZED (403) for non admins" do
+        it "returns FORBIDDEN (403) for non admins" do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", upload_body, headers_for(user)
           expect(last_response.status).to eq(403)
         end
@@ -177,7 +177,7 @@ module VCAP::CloudController
         end
 
         context "when the same bits are uploaded twice" do
-          let (:test_buildpack2) { VCAP::CloudController::Buildpack.create_from_hash({ name: "buildpack2", position: 0 }) }
+          let(:test_buildpack2) { VCAP::CloudController::Buildpack.create_from_hash({ name: "buildpack2", position: 0 }) }
           before do
             put "/v2/buildpacks/#{test_buildpack.guid}/bits", { :buildpack => valid_zip2 }, admin_headers
             put "/v2/buildpacks/#{test_buildpack2.guid}/bits", { :buildpack => valid_zip2 }, admin_headers
@@ -207,11 +207,11 @@ module VCAP::CloudController
         })
         end
 
-        before { test_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: "get_binary_buildpack", key: 'xyz', position: 0 }) }
+        before { VCAP::CloudController::Buildpack.create_from_hash({ name: "get_binary_buildpack", key: 'xyz', position: 0 }) }
 
-        it "returns NOT AUTHORIZED (403) users without correct basic auth" do
+        it "returns NOT AUTHENTICATED (401) users without correct basic auth" do
           get "/v2/buildpacks/#{test_buildpack.guid}/download", '{}'
-          expect(last_response.status).to eq(403)
+          expect(last_response.status).to eq(401)
         end
 
         it "lets users with correct basic auth retrieve the bits for a specific buildpack" do

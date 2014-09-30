@@ -2,6 +2,8 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe SyslogDrainUrlsController do
+    let(:bulk_user) { "bulk_user" }
+    let(:bulk_password) { "bulk_password" }
     let(:app_obj) { AppFactory.make }
     let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
     let(:instance2) { UserProvidedServiceInstance.make(space: app_obj.space) }
@@ -9,10 +11,8 @@ module VCAP::CloudController
     let!(:binding_with_drain2) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj, service_instance: instance2) }
 
     before do
-      @bulk_user = "bulk_user"
-      @bulk_password = "bulk_password"
-
-      described_class.configure(TestConfig.config)
+      TestConfig.config[:bulk_api][:auth_user] = bulk_user
+      TestConfig.config[:bulk_api][:auth_password] = bulk_password
     end
 
     describe "GET /v2/syslog_drain_urls" do
@@ -27,7 +27,7 @@ module VCAP::CloudController
 
       describe "when the user is authenticated" do
         before do
-          authorize @bulk_user, @bulk_password
+          authorize bulk_user, bulk_password
         end
 
         it "returns a list of syslog drain urls" do
@@ -64,7 +64,7 @@ module VCAP::CloudController
 
         describe "paging" do
           before do
-            8.times do
+            3.times do
               app_obj = AppFactory.make
               instance = UserProvidedServiceInstance.make(space: app_obj.space)
               ServiceBinding.make(syslog_drain_url: 'fishfinger', app: app_obj, service_instance: instance)
@@ -72,7 +72,7 @@ module VCAP::CloudController
           end
 
           it "respects the batch_size parameter" do
-            [3,5].each do |size|
+            [1,3].each do |size|
               get "/v2/syslog_drain_urls", { "batch_size" => size }
               expect(last_response).to be_successful
               expect(decoded_results.size).to eq(size)
