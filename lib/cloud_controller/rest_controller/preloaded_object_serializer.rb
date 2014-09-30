@@ -126,6 +126,7 @@ module VCAP::CloudController::RestController
                   unless orphans[associated_model_instance.guid]
                     orphans[associated_model_instance.guid] = to_hash(associated_controller, associated_model_instance, opts, depth + 1, parents, orphans)
                   end
+                  associated_model_instance.guid
                 end
               end
             end
@@ -153,7 +154,7 @@ module VCAP::CloudController::RestController
   end
 
   class EntityOnlyPreloadedObjectSerializer < PreloadedObjectSerializer
-    def to_hash(controller, obj, opts, depth, parents, orhpans=nil)
+    def to_hash(controller, obj, opts, depth, parents, orphans=nil)
       obj.to_hash.merge(relations_hash(controller, obj, opts, depth, parents, orphans))
     end
   end
