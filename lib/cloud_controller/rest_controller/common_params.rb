@@ -17,6 +17,9 @@ module VCAP::CloudController::RestController
         ["results-per-page", Integer],
         ["q", String],
         ["order-direction", String],
+        ["orphan-relations",       Integer ],
+        ["exclude-relations",      String  ],
+        ["include-relations",      String  ],
 
       ].each do |key, klass|
         val = params[key]
