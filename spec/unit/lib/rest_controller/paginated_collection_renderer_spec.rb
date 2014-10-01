@@ -24,11 +24,17 @@ module VCAP::CloudController::RestController
       let(:opts) do
         {
             results_per_page: results_per_page,
-            inline_relations_depth: inline_relations_depth
+            inline_relations_depth: inline_relations_depth,
+            orphan_relations: orphan_relations,
+            exclude_relations: exclude_relations,
+            include_relations: include_relations
         }
       end
       let(:inline_relations_depth) { nil }
       let(:results_per_page) { nil }
+      let(:orphan_relations) { nil }
+      let(:exclude_relations) { nil }
+      let(:include_relations) { nil }
 
       subject(:render_json_call) do
         paginated_collection_renderer.render_json(controller, dataset, "/v2/cars", opts, {})
@@ -100,6 +106,66 @@ module VCAP::CloudController::RestController
         context 'is less than max inline_relations_depth' do
           let(:max_inline_relations_depth) { 10 }
           let(:inline_relations_depth) { 9 }
+
+          it 'renders json response' do
+            expect(render_json_call).to be_instance_of(String)
+          end
+        end
+      end
+
+      context 'when orphan_relations' do
+        context 'is disabled' do
+          let(:orphan_relations) { 0 }
+
+          it 'renders json response without orphans' do
+            result = render_json_call
+            expect(result).to be_instance_of(String)
+            orphans = JSON.parse(result)["orphans"]
+            expect(orphans).to be_nil
+          end
+        end
+
+        context 'is enabled' do
+          let(:orphan_relations) { 1 }
+
+          it 'renders json response with orphans' do
+            result = render_json_call
+            expect(result).to be_instance_of(String)
+            orphans = JSON.parse(result)["orphans"]
+            expect(orphans).not_to be_nil
+          end
+        end
+      end
+
+      context 'when exclude_relations' do
+        context 'is disabled' do
+          let(:exclude_relations) { nil }
+
+          it 'renders json response' do
+            expect(render_json_call).to be_instance_of(String)
+          end
+        end
+
+        context 'is enabled' do
+          let(:exclude_relations) { "relation1,relation2" }
+
+          it 'renders json response' do
+            expect(render_json_call).to be_instance_of(String)
+          end
+        end
+      end
+
+      context 'when include_relations' do
+        context 'is disabled' do
+          let(:include_relations) { nil }
+
+          it 'renders json response' do
+            expect(render_json_call).to be_instance_of(String)
+          end
+        end
+
+        context 'is enabled' do
+          let(:include_relations) { "relation1,relation2" }
 
           it 'renders json response' do
             expect(render_json_call).to be_instance_of(String)
