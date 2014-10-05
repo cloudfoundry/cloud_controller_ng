@@ -94,8 +94,8 @@ module VCAP::CloudController
       end
 
       def handle_first_response(response, error, promise)
-        check_staging_error!(response, error)
         ensure_staging_is_current!
+        check_staging_error!(response, error)
         promise.deliver(Response.new(response))
       rescue => e
         Loggregator.emit_error(@app.guid, "exception handling first response #{e.message}")
@@ -105,8 +105,8 @@ module VCAP::CloudController
 
       def handle_second_response(response, error)
         @multi_message_bus_request.ignore_subsequent_responses
-        check_staging_error!(response, error)
         ensure_staging_is_current!
+        check_staging_error!(response, error)
         process_response(response)
       rescue => e
         Loggregator.emit_error(@app.guid, "Encountered error: #{e.message}")
@@ -176,9 +176,13 @@ module VCAP::CloudController
 
       def staging_completion(stager_response)
         instance_was_started_by_dea = !!stager_response.droplet_hash
-        @app.mark_as_staged
-        @app.update_detected_buildpack(stager_response.detected_buildpack, stager_response.buildpack_key)
-        @app.current_droplet.update_detected_start_command(stager_response.detected_start_command) if @app.current_droplet
+        @app.db.transaction do
+          @app.lock!
+          @app.mark_as_staged
+          @app.update_detected_buildpack(stager_response.detected_buildpack, stager_response.buildpack_key)
+          @app.current_droplet.update_detected_start_command(stager_response.detected_start_command) if @app.current_droplet
+        end
+
         @dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
 
         @completion_callback.call(:started_instances => instance_was_started_by_dea ? 1 : 0) if @completion_callback
