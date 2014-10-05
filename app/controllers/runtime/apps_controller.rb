@@ -78,12 +78,12 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "service_bindings", app.class.table_name)
       end
 
+      app.destroy
       @app_event_repository.record_app_delete_request(
           app,
           SecurityContext.current_user,
           SecurityContext.current_user_email,
           recursive?)
-      app.destroy
 
       [ HTTP::NO_CONTENT, nil ]
     end

@@ -243,6 +243,14 @@ module VCAP::CloudController
 
           expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, admin_user, SecurityContext.current_user_email, true)
         end
+
+        it "does not record when the destroy fails" do
+          allow_any_instance_of(App).to receive(:destroy).and_raise("Error saving")
+          allow(app_event_repository).to receive(:record_app_delete_request).and_call_original
+
+          delete_app
+          expect(app_event_repository).not_to have_received(:record_app_delete_request)
+        end
       end
     end
 
