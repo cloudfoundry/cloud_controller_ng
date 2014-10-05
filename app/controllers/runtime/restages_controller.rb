@@ -13,11 +13,16 @@ module VCAP::CloudController
     def restage(guid)
       app = find_guid_and_validate_access(:read, guid)
 
-      if app.pending?
-        raise VCAP::Errors::ApiError.new_from_details("NotStaged")
+      model.db.transaction do
+        app.lock!
+
+        if app.pending?
+          raise VCAP::Errors::ApiError.new_from_details("NotStaged")
+        end
+
+        app.restage!
       end
 
-      app.restage!
       @app_event_repository.record_app_restage(app, SecurityContext.current_user, SecurityContext.current_user_email)
 
       [
