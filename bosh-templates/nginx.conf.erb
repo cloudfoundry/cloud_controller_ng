@@ -80,6 +80,15 @@ http {
     }
 <% end %>
 
+<% if p("cc.buildpacks.fog_connection.provider", "local").downcase == "local" %>
+    # used for x-accel-redirect uri://location/foo.txt
+    # nginx will serve the file root || location || foo.txt
+    location <%= "/#{p('cc.buildpacks.buildpack_directory_key')}/" %> {
+      internal;
+      root   <%= p(["cc.buildpacks.fog_connection.local_root", "cc.default_fog_connection.local_root"]) %>;
+    }
+<% end %>
+
     location ~ (/apps/.*/application|/v2/apps/.*/bits|/services/v\d+/configurations/.*/serialized/data|/v2/buildpacks/.*/bits) {
       # Pass altered request body to this location
       upload_pass   @cc_uploads;

@@ -29,7 +29,7 @@ module VCAP::CloudController
       if upload_buildpack.upload_buildpack(buildpack, uploaded_file, uploaded_filename)
         [HTTP::CREATED, object_renderer.render_json(self.class, buildpack, @opts)]
       else
-         [HTTP::NO_CONTENT, nil]
+        [HTTP::NO_CONTENT, nil]
       end
     ensure
       FileUtils.rm_f(uploaded_file) if uploaded_file
@@ -38,13 +38,14 @@ module VCAP::CloudController
     get "#{path_guid}/download", :download
     def download(guid)
       obj = Buildpack.find(guid: guid)
+
+      blob = buildpack_blobstore.blob(obj.key) if obj && obj.key
+      raise Errors::ApiError.new_from_details("NotFound", guid) unless blob
+
       if @buildpack_blobstore.local?
-        blob = buildpack_blobstore.blob(obj.key)
-        raise self.class.not_found_exception.new(guid) unless blob
-        return send_file blob.local_path
+        send_local_blob(blob)
       else
-        bits_uri = "#{bits_uri(obj.key)}"
-        return [HTTP::FOUND, {"Location" => bits_uri}, nil]
+        return [HTTP::FOUND, {"Location" => blob.download_url}, nil]
       end
     end
 
@@ -58,10 +59,14 @@ module VCAP::CloudController
       @upload_handler = dependencies[:upload_handler]
     end
 
-    def bits_uri(key)
-      blob = buildpack_blobstore.blob(key)
-      return nil unless blob
-      blob.download_url
+    def send_local_blob(blob)
+      if @config[:nginx][:use_nginx]
+        url = blob.download_url
+        logger.debug "nginx redirect #{url}"
+        return [200, {"X-Accel-Redirect" => url}, ""]
+      else
+        return send_file blob.local_path
+      end
     end
   end
 end

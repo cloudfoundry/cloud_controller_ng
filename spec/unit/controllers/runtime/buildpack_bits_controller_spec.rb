@@ -195,16 +195,20 @@ module VCAP::CloudController
       context "/v2/buildpacks/:guid/download" do
         let(:staging_user) { "user" }
         let(:staging_password) { "password" }
-        before do
-          TestConfig.override({
-            :staging => {
-              :timeout_in_seconds => 240,
-              :auth => {
-                :user => staging_user,
-                :password => staging_password
-              }
+        let(:staging_config) do
+          {
+            staging: {
+              timeout_in_seconds: 240,
+              auth: {
+                user: staging_user,
+                password: staging_password,
+              },
             },
-        })
+          }
+        end
+
+        before do
+          TestConfig.override(staging_config)
         end
 
         before { VCAP::CloudController::Buildpack.create_from_hash({ name: "get_binary_buildpack", key: 'xyz', position: 0 }) }
@@ -220,6 +224,43 @@ module VCAP::CloudController
           get "/v2/buildpacks/#{test_buildpack.guid}/download"
           expect(last_response.status).to eq(302)
           expect(last_response.header['Location']).to match(/cc-buildpacks/)
+        end
+
+        it "should return 404 for missing bits" do
+          authorize(staging_user, staging_password)
+          get "/v2/buildpacks/#{test_buildpack.guid}/download"
+          expect(last_response.status).to eq(404)
+        end
+
+        context "when blobstore is local" do
+          let(:buildpacks_root) {Dir.mktmpdir("buildpacks", tmpdir)}
+          let(:blobstore_config) do
+            {
+              buildpacks: {
+                buildpack_directory_key: "cc-buildpacks",
+                fog_connection: {
+                  provider: "Local",
+                  local_root: buildpacks_root,
+                },
+              },
+            }
+          end
+
+          context "when using nginx" do
+            before do
+              TestConfig.override(staging_config.merge(blobstore_config))
+              Fog.unmock!
+            end
+
+            it "redirects to correct nginx URL" do
+              put "/v2/buildpacks/#{test_buildpack.guid}/bits", { :buildpack => valid_zip }, admin_headers
+              authorize(staging_user, staging_password)
+              get "/v2/buildpacks/#{test_buildpack.guid}/download"
+              expect(last_response.status).to eq(200)
+              buildpack_bits = last_response.headers.fetch("X-Accel-Redirect")
+              expect(File.exists?(File.join(buildpacks_root, buildpack_bits))).to be_truthy
+            end
+          end
         end
       end
     end
