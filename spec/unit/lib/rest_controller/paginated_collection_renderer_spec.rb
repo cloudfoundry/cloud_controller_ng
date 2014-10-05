@@ -23,6 +23,7 @@ module VCAP::CloudController::RestController
     describe '#render_json' do
       let(:opts) do
         {
+            page: page,
             results_per_page: results_per_page,
             inline_relations_depth: inline_relations_depth,
             orphan_relations: orphan_relations,
@@ -30,6 +31,7 @@ module VCAP::CloudController::RestController
             include_relations: include_relations
         }
       end
+      let(:page) { nil }
       let(:inline_relations_depth) { nil }
       let(:results_per_page) { nil }
       let(:orphan_relations) { nil }
@@ -114,8 +116,35 @@ module VCAP::CloudController::RestController
       end
 
       context 'when orphan_relations' do
-        context 'is disabled' do
-          let(:orphan_relations) { 0 }
+        before do
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+        end
+
+        let(:page) { 2 }
+        let(:results_per_page) { 1 }
+
+        context 'is specified' do
+          let(:orphan_relations) { 1 }
+
+          it 'renders json response with orphans' do
+            result = render_json_call
+            expect(result).to be_instance_of(String)
+            orphans = JSON.parse(result)["orphans"]
+            expect(orphans).to eql({})
+          end
+
+          it 'includes orphan-relations in next_url and prev_url' do
+            prev_url = JSON.parse(render_json_call)["prev_url"]
+            next_url = JSON.parse(render_json_call)["next_url"]
+            expect(prev_url).to include("orphan-relations=#{orphan_relations}")
+            expect(next_url).to include("orphan-relations=#{orphan_relations}")
+          end
+        end
+
+        context 'is not specified' do
+          let(:orphan_relations) { nil }
 
           it 'renders json response without orphans' do
             result = render_json_call
@@ -123,52 +152,88 @@ module VCAP::CloudController::RestController
             orphans = JSON.parse(result)["orphans"]
             expect(orphans).to be_nil
           end
-        end
 
-        context 'is enabled' do
-          let(:orphan_relations) { 1 }
-
-          it 'renders json response with orphans' do
-            result = render_json_call
-            expect(result).to be_instance_of(String)
-            orphans = JSON.parse(result)["orphans"]
-            expect(orphans).not_to be_nil
+          it 'does not include orphan-relations in next_url and prev_url' do
+            prev_url = JSON.parse(render_json_call)["prev_url"]
+            next_url = JSON.parse(render_json_call)["next_url"]
+            expect(prev_url).to_not include("orphan-relations")
+            expect(next_url).to_not include("orphan-relations")
           end
         end
       end
 
-      context 'when exclude_relations' do
-        context 'is disabled' do
-          let(:exclude_relations) { nil }
-
-          it 'renders json response' do
-            expect(render_json_call).to be_instance_of(String)
-          end
+      context 'when exclude-relations' do
+        before do
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
         end
 
-        context 'is enabled' do
+        let(:opts) do
+          {
+            results_per_page: 1,
+            exclude_relations: exclude_relations,
+            page: 2
+          }
+        end
+
+        context 'is specified' do
           let(:exclude_relations) { "relation1,relation2" }
 
-          it 'renders json response' do
-            expect(render_json_call).to be_instance_of(String)
+          it 'includes exclude-relations in next_url and prev_url' do
+            prev_url = JSON.parse(render_json_call)["prev_url"]
+            next_url = JSON.parse(render_json_call)["next_url"]
+            expect(prev_url).to include("exclude-relations=#{exclude_relations}")
+            expect(next_url).to include("exclude-relations=#{exclude_relations}")
+          end
+        end
+
+        context 'is not specified' do
+          let(:exclude_relations) { nil }
+
+          it 'does not include exclude-relations in next_url and prev_url' do
+            prev_url = JSON.parse(render_json_call)["prev_url"]
+            next_url = JSON.parse(render_json_call)["next_url"]
+            expect(prev_url).to_not include("exclude-relations")
+            expect(next_url).to_not include("exclude-relations")
           end
         end
       end
 
-      context 'when include_relations' do
-        context 'is disabled' do
-          let(:include_relations) { nil }
+      context 'when include-relations' do
+        before do
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+        end
 
-          it 'renders json response' do
-            expect(render_json_call).to be_instance_of(String)
+        let(:opts) do
+          {
+            results_per_page: 1,
+            include_relations: include_relations,
+            page: 2
+          }
+        end
+
+        context 'is specified' do
+          let(:include_relations) { "relation1,relation2" }
+
+          it 'includes include-relations in next_url and prev_url' do
+            prev_url = JSON.parse(render_json_call)["prev_url"]
+            next_url = JSON.parse(render_json_call)["next_url"]
+            expect(prev_url).to include("include-relations=#{include_relations}")
+            expect(next_url).to include("include-relations=#{include_relations}")
           end
         end
 
-        context 'is enabled' do
-          let(:include_relations) { "relation1,relation2" }
+        context 'is not specified' do
+          let(:include_relations) { nil }
 
-          it 'renders json response' do
-            expect(render_json_call).to be_instance_of(String)
+          it 'does not include include-relations in next_url and prev_url' do
+            prev_url = JSON.parse(render_json_call)["prev_url"]
+            next_url = JSON.parse(render_json_call)["next_url"]
+            expect(prev_url).to_not include("include-relations")
+            expect(next_url).to_not include("include-relations")
           end
         end
       end
