@@ -17,7 +17,7 @@ module CloudController
 
     LARGE_COLLECTION_SIZE = 10_000
 
-    attr_writer :config
+    attr_accessor :config
 
     def initialize
       @config = VCAP::CloudController::Config.config

@@ -33,10 +33,11 @@ module VCAP::CloudController
     allow_unauthenticated_access
 
     class << self
-      attr_reader :config, :message_bus
+      attr_reader :config, :message_bus, :diego_enabled
 
       def configure(config, message_bus)
         @config = config[:bulk_api].merge(:cc_partition => config.fetch(:cc_partition))
+        @diego_enabled = config[:diego][:running] != 'disabled'
         @message_bus = message_bus
       end
 
@@ -67,17 +68,28 @@ module VCAP::CloudController
       end
     end
 
+    def bulk_apps_query(last_id,batch_size)
+      query = App.where(
+        ["id > ?", last_id],
+        "deleted_at IS NULL"
+      )
+
+      if self.class.diego_enabled
+       query = query.where(diego: false)
+      end
+
+      query.order(:id).limit(batch_size)
+    end
+
     def bulk_apps
       batch_size = Integer(params.fetch("batch_size"))
       bulk_token = MultiJson.load(params.fetch("bulk_token"))
       last_id = Integer(bulk_token["id"] || 0)
       id_for_next_token = nil
 
-      apps = {}
-      App.where(
-          ["id > ?", last_id],
-          "deleted_at IS NULL"
-      ).where(diego: false).order(:id).limit(batch_size).each do |app|
+      app_hashes = {}
+      query = bulk_apps_query(last_id,batch_size)
+      query.each do |app|
         hash = {}
         export_attributes = [
           :instances,
@@ -86,16 +98,19 @@ module VCAP::CloudController
           :package_state,
           :version
         ]
+
         export_attributes.each do |field|
           hash[field.to_s] = app.values.fetch(field)
         end
+
         hash["id"] = app.guid
         hash["updated_at"] = app.updated_at || app.created_at
-        apps[app.guid] = hash
+        app_hashes[app.guid] = hash
         id_for_next_token = app.id
       end
+
       BulkResponse.new(
-        :results => apps,
+        :results => app_hashes,
         :bulk_token => { "id" => id_for_next_token }
       ).encode
     rescue IndexError => e

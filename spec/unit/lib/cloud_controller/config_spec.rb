@@ -206,6 +206,10 @@ module VCAP::CloudController
                 password: 'password',
                 },
             },
+          diego: {
+            staging: 'optional',
+            running: 'optional',
+          },
         }
       end
 
