@@ -48,13 +48,24 @@ module VCAP::CloudController
         end
 
         context "when an app's bindings have no syslog_drain_url" do
-          let(:binding) { ServiceBinding.make() }
-          let!(:app_obj_no_drain) { binding.app }
+          let(:service_binding_with_no_drain) { ServiceBinding.make }
+          let!(:app_obj_no_drain) { service_binding_with_no_drain.app }
 
           it "does not include that app" do
             get '/v2/syslog_drain_urls', '{}'
             expect(last_response).to be_successful
             expect(decoded_results).not_to have_key(app_obj_no_drain.guid)
+          end
+        end
+
+        context "when an app's bindings have a blank syslog_drain_url" do
+          let(:service_binding_with_empty_drain) { ServiceBinding.make(syslog_drain_url: "") }
+          let!(:app_obj_empty_drain) { service_binding_with_empty_drain.app }
+
+          it "does not include that app" do
+            get '/v2/syslog_drain_urls', '{}'
+            expect(last_response).to be_successful
+            expect(decoded_results).not_to have_key(app_obj_empty_drain.guid)
           end
         end
 
