@@ -35,8 +35,6 @@ chown vcap:vcap $LOG_DIR
 echo $$ > $PIDFILE
 chown vcap:vcap $PIDFILE
 
-/var/vcap/packages/syslog_aggregator/setup_syslog_forwarder.sh $CONFIG_DIR
-
 cd $CC_PACKAGE_DIR/cloud_controller_ng
 exec chpst -u vcap:vcap bundle exec rake clock:start
 ;;

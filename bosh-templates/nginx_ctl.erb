@@ -29,8 +29,6 @@ case $1 in
       chpst -u vcap:vcap mkdir -p $STAGED_UPLOADS_DIR
     fi
 
-    /var/vcap/packages/syslog_aggregator/setup_syslog_forwarder.sh $CONFIG_DIR
-
     exec /var/vcap/packages/nginx/sbin/nginx \
          -c $CC_JOB_DIR/config/nginx.conf
     ;;
