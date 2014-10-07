@@ -312,12 +312,8 @@ module VCAP::CloudController
       end
 
       def validate!(config)
-        if (config[:diego][:staging] == 'disabled' && config[:diego][:running] != 'disabled') ||
-          (config[:diego][:staging] == 'optional' && config[:diego][:running] == 'required') ||
-          (config[:diego][:running] == 'disabled' && config[:diego_docker])
-
-          raise "Invalid diego configuration"
-        end
+        raise "Invalid diego configuration" unless (config[:diego][:staging] == 'disabled' || config[:diego][:staging] == 'optional')
+        raise "Invalid diego configuration" unless (config[:diego][:running] == 'disabled' || config[:diego][:running] == 'optional')
       end
 
       private

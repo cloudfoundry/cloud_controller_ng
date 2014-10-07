@@ -1,7 +1,7 @@
 ---
 diego:
   staging: disabled
-  running: optional
+  running: required
 
 diego_docker:
   false

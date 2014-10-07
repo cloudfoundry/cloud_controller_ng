@@ -129,7 +129,7 @@ allowed_cors_domains:
 - http://sharon.corr
 
 diego:
-  staging: required
+  staging: optional
   running: optional
 
 diego_docker: true
