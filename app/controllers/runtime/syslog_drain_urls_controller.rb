@@ -24,7 +24,7 @@ module VCAP::CloudController
         all
 
       drain_urls = apps_with_bindings.inject({}) do |hash, app|
-        drains = app.service_bindings.map(&:syslog_drain_url)
+        drains = app.service_bindings.map(&:syslog_drain_url).reject(&:blank?)
         hash[app.guid] = drains
         id_for_next_token = app.id
         hash
