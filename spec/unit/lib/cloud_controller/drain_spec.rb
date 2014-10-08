@@ -86,7 +86,6 @@ module VCAP::CloudController
       it "sends QUIT to the nginx process specified in the pid file" do
         drain.shutdown_nginx(pid_path)
         expect(Process).to have_received(:kill).with("QUIT", pid)
-
       end
 
       it "sleeps while it waits for the pid file to be deleted" do
@@ -115,7 +114,17 @@ module VCAP::CloudController
           expect(log).to match(/\w+ not running/)
         end
       end
+    end
 
+    describe "#shutdown_cc" do
+      before do
+        allow(Process).to receive(:kill).with("TERM", pid)
+      end
+
+      it "sends TERM to the cc process specified in the pid file" do
+        drain.shutdown_cc(pid_path)
+        expect(Process).to have_received(:kill).with("TERM", pid)
+      end
     end
 
     describe "#log_invocation" do

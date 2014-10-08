@@ -30,6 +30,10 @@ module VCAP
         wait_for_pid(pid_path, nginx_timeout, nginx_interval) # wait until nginx is shut down
       end
 
+      def shutdown_cc(pid_path)
+        send_signal(pid_path, "TERM", "cc_ng")
+      end
+
       private
 
       def send_signal(pidfile, signal, program)
