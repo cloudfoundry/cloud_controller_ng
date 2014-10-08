@@ -5,42 +5,17 @@ module VCAP::CloudController
   module Diego
     module Docker
       describe StagingCompletionHandler do
-        let(:logger) do
-          instance_double(Steno::Logger, info: nil, error: nil, warn: nil)
-        end
-
-        let(:payload) do
-          {}
-        end
-
-        let(:message_bus) do
-          message_bus = instance_double(CfMessageBus::MessageBus)
-          allow(message_bus).to receive(:subscribe).and_yield(payload)
-          message_bus
-        end
-
-        let(:backend) do
-          instance_double(Diego::Backend, start: nil)
-        end
-
+        let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
+        let(:backend) { instance_double(Diego::Backend, start: nil) }
         let(:backends) { instance_double(Backends, find_one_to_run: backend) }
+        let(:app) { AppFactory.make(staging_task_id: "fake-staging-task-id") }
+        let(:payload) { {} }
 
-        let(:app) do
-          AppFactory.make(staging_task_id: "fake-staging-task-id")
-        end
-
-        subject(:handler) do
-          StagingCompletionHandler.new(message_bus, backends)
-        end
+        subject(:handler) { StagingCompletionHandler.new(backends) }
 
         before do
           allow(Steno).to receive(:logger).with("cc.docker.stager").and_return(logger)
           allow(Loggregator).to receive(:emit_error)
-        end
-
-        it "subscribes to diego.docker.staging.finished responses" do
-          handler.subscribe!
-          expect(message_bus).to have_received(:subscribe).with("diego.docker.staging.finished", queue: "cc")
         end
 
         context "when it receives a success response" do
@@ -53,12 +28,15 @@ module VCAP::CloudController
 
           it "marks the app as staged" do
             expect {
-              handler.subscribe!
-            }.to change { app.reload.staged? }.to(true)
+              handler.staging_complete(payload)
+            }.to change {
+              app.reload.staged?
+            }.from(false).to(true)
           end
 
           it "sends desires the app on Diego" do
-            handler.subscribe!
+            handler.staging_complete(payload)
+
             expect(backends).to have_received(:find_one_to_run).with(app)
             expect(backend).to have_received(:start)
           end
@@ -74,7 +52,7 @@ module VCAP::CloudController
             end
 
             it "creates a droplet with the metadata" do
-              handler.subscribe!
+              handler.staging_complete(payload)
 
               app.reload
               expect(app.current_droplet.execution_metadata).to eq('"{\"cmd\":[\"start\"]}"')
@@ -85,26 +63,25 @@ module VCAP::CloudController
           context "when the app_id is invalid" do
             let(:payload) do
               {
-                "app_id" => "bad-app-id",
+                "app_id" => "bad-app-id"
               }
             end
 
             it "returns without sending a desire request for the app" do
-              handler.subscribe!
+              handler.staging_complete(payload)
 
               expect(backends).not_to have_received(:find_one_to_run)
               expect(backend).not_to have_received(:start)
             end
 
             it "logs info about an unknown app for the CF operator" do
-              handler.subscribe!
+              handler.staging_complete(payload)
 
               expect(logger).to have_received(:error).with(
                 "diego.docker.staging.unknown-app",
                 :response => payload
               )
             end
-
           end
 
           context "when the task_id is invalid" do
@@ -116,14 +93,14 @@ module VCAP::CloudController
             end
 
             it "returns without sending a desired request for the app" do
-              handler.subscribe!
+              handler.staging_complete(payload)
 
               expect(backends).not_to have_received(:find_one_to_run)
               expect(backend).not_to have_received(:start)
             end
 
             it "logs info about an invalid task id for the CF operator and returns" do
-              handler.subscribe!
+              handler.staging_complete(payload)
 
               expect(logger).to have_received(:warn).with(
                 "diego.docker.staging.not-current",
@@ -145,18 +122,20 @@ module VCAP::CloudController
 
           it "marks the app as failed to stage" do
             expect {
-              handler.subscribe!
-            }.to change { app.reload.package_state }.to("FAILED")
+              handler.staging_complete(payload)
+            }.to change {
+              app.reload.package_state
+            }.from("PENDING").to("FAILED")
           end
 
           it "logs an error for the CF user" do
-            handler.subscribe!
+            handler.staging_complete(payload)
 
             expect(Loggregator).to have_received(:emit_error).with(app.guid, /fake-error/)
           end
 
           it "returns without sending a desired request for the app" do
-            handler.subscribe!
+            handler.staging_complete(payload)
 
             expect(backends).not_to have_received(:find_one_to_run)
             expect(backend).not_to have_received(:start)

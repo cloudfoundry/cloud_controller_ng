@@ -4,43 +4,61 @@ module VCAP::CloudController
   module Diego
     module Docker
       class StagingCompletionHandler
-        def initialize(message_bus, backends)
-          @message_bus = message_bus
+
+        def initialize(backends)
           @backends = backends
         end
 
-        def subscribe!
-          @message_bus.subscribe("diego.docker.staging.finished", queue: "cc") do |payload|
-            app = App.find(guid: payload["app_id"])
+        def staging_complete(payload)
+          logger.info("diego.docker.staging.finished", :response => payload)
 
-            unless app.present?
-              logger.error(
-                "diego.docker.staging.unknown-app",
-                :response => payload,
-              )
-              return
-            end
-
-            if payload["task_id"] != app.staging_task_id
-              logger.warn(
-                "diego.docker.staging.not-current",
-                :response => payload,
-                :current => app.staging_task_id,
-              )
-              return
-            end
-
-            if payload["error"]
-              app.mark_as_failed_to_stage # app.save is called in mark_as_failed_to_stage
-              Loggregator.emit_error(app.guid, "Failed to stage Docker application: #{payload["error"]}")
-            else
-              save_staging_result(app, payload)
-              @backends.find_one_to_run(app).start
-            end
+          if payload["error"]
+            handle_failure(payload)
+          else
+            handle_success(payload)
           end
         end
 
         private
+
+        def handle_failure(payload)
+          app = get_app(payload)
+          return if app.nil?
+
+          app.mark_as_failed_to_stage
+          Loggregator.emit_error(app.guid, "Failed to stage Docker application: #{payload["error"]}")
+        end
+
+        def handle_success(payload)
+          app = get_app(payload)
+          return if app.nil?
+
+          save_staging_result(app, payload)
+          @backends.find_one_to_run(app).start
+        end
+
+        def get_app(payload)
+          app = App.find(guid: payload["app_id"])
+          if app == nil
+            logger.error("diego.docker.staging.unknown-app", :response => payload)
+            return
+          end
+
+          return app if staging_is_current(app, payload)
+          nil
+        end
+
+        def staging_is_current(app, payload)
+          if payload["task_id"] != app.staging_task_id
+            logger.warn(
+              "diego.docker.staging.not-current",
+              :response => payload,
+              :current => app.staging_task_id)
+            return false
+          end
+
+          return true
+        end
 
         def save_staging_result(app, payload)
           app.class.db.transaction do

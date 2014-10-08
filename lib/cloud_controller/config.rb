@@ -262,9 +262,6 @@ module VCAP::CloudController
 
         Dea::Client.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 
-        Diego::Traditional::StagingCompletionHandler.new(message_bus, backends).subscribe!
-        Diego::Docker::StagingCompletionHandler.new(message_bus, backends).subscribe!
-
         AppObserver.configure(backends)
 
         LegacyBulk.configure(@config, message_bus)

@@ -60,25 +60,27 @@ module VCAP::CloudController
       end
     end
 
-    private
-
     def diego_backend(app)
       app.docker_image.present? ?
         diego_docker_backend(app) :
         diego_traditional_backend(app)
     end
 
+    private
+
     def diego_docker_backend(app)
       protocol = Diego::Docker::Protocol.new
       messenger = Diego::Messenger.new(@message_bus, protocol)
-      Diego::Backend.new(app, messenger, protocol)
+      completion_handler = Diego::Docker::StagingCompletionHandler.new(self)
+      Diego::Backend.new(app, messenger, protocol, completion_handler)
     end
 
     def diego_traditional_backend(app)
       dependency_locator = CloudController::DependencyLocator.instance
       protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator)
       messenger = Diego::Messenger.new(@message_bus, protocol)
-      Diego::Backend.new(app, messenger, protocol)
+      completion_handler = Diego::Traditional::StagingCompletionHandler.new(self)
+      Diego::Backend.new(app, messenger, protocol, completion_handler)
     end
 
     def dea_backend(app)

@@ -69,6 +69,8 @@ module VCAP::CloudController
       allow(Dea::Backend).to receive(:new).and_call_original
       allow(Diego::Backend).to receive(:new).and_call_original
       allow(Diego::Messenger).to receive(:new).and_call_original
+      allow(Diego::Docker::StagingCompletionHandler).to receive(:new).and_call_original
+      allow(Diego::Traditional::StagingCompletionHandler).to receive(:new).and_call_original
     end
 
     describe "#validate_app_for_staging" do
@@ -307,6 +309,35 @@ module VCAP::CloudController
             backend
             expect(Dea::Backend).to have_received(:new).with(app, config, message_bus, dea_pool, stager_pool)
           end
+        end
+      end
+    end
+
+    describe "#diego_backend" do
+      subject(:backend) do
+        backends.diego_backend(app)
+      end
+
+      context "when the app is a docker image" do
+        let(:docker_image) { "some-docker-image" }
+
+        it "instantiates a diego backend with docker dependencies" do
+          expect(app.docker_image).to_not be_nil
+
+          expect(Diego::Docker::Protocol).to receive(:new)
+          expect(Diego::Docker::StagingCompletionHandler).to receive(:new).with(backends)
+          expect(backend).to be_a(Diego::Backend)
+        end
+      end
+
+      context "when the app is a traditional app" do
+
+        it "instantiates a diego backend with traditional dependencies" do
+          expect(app.docker_image).to be_nil
+
+          expect(Diego::Traditional::Protocol).to receive(:new)
+          expect(Diego::Traditional::StagingCompletionHandler).to receive(:new).with(backends)
+          expect(backend).to be_a(Diego::Backend)
         end
       end
     end

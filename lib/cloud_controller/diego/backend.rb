@@ -1,10 +1,11 @@
 module VCAP::CloudController
   module Diego
     class Backend
-      def initialize(app, messenger, protocol)
+      def initialize(app, messenger, protocol, completion_handler)
         @app = app
         @messenger = messenger
         @protocol = protocol
+        @completion_handler = completion_handler
       end
 
       def requires_restage?
@@ -15,6 +16,10 @@ module VCAP::CloudController
 
       def stage
        @messenger.send_stage_request(@app)
+      end
+
+      def staging_complete(staging_response)
+        @completion_handler.staging_complete(staging_response)
       end
 
       def scale

@@ -264,20 +264,6 @@ module VCAP::CloudController
         Dea::Client.dea_pool.register_subscriptions
       end
 
-      it "starts the legacy staging task completion handler" do
-        expect_any_instance_of(Diego::Traditional::StagingCompletionHandler).to receive(:subscribe!)
-
-        Config.configure_components(@test_config)
-        Config.configure_components_depending_on_message_bus(message_bus)
-      end
-
-      it "starts the docker staging task completion handler" do
-        expect_any_instance_of(Diego::Docker::StagingCompletionHandler).to receive(:subscribe!)
-
-        Config.configure_components(@test_config)
-        Config.configure_components_depending_on_message_bus(message_bus)
-      end
-
       it "sets the legacy bulk" do
         bulk_config = {bulk_api: {auth_user: "user", auth_password: "password"}}
         Config.configure_components(@test_config.merge(bulk_config))

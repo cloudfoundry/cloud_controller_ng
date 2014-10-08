@@ -15,8 +15,12 @@ module VCAP::CloudController
         instance_double(Diego::Traditional::Protocol, desire_app_message: {})
       end
 
+      let (:completion_handler) do
+        instance_double(Diego::Traditional::StagingCompletionHandler, staging_complete: nil)
+      end
+
       subject(:backend) do
-        Backend.new(app, messenger, protocol)
+        Backend.new(app, messenger, protocol, completion_handler)
       end
 
       describe "#requires_restage?" do
@@ -62,6 +66,22 @@ module VCAP::CloudController
 
         it "notifies Diego that the app needs staging" do
           expect(messenger).to have_received(:send_stage_request).with(app)
+        end
+      end
+
+      describe "#staging_complete" do
+        let (:staging_response) do
+          { app_id: "app-id", task_id: "task_id" }
+        end
+
+        before do
+          allow(completion_handler).to receive(:staging_complete)
+
+          backend.staging_complete(staging_response)
+        end
+
+        it "delegates to the staging completion handler" do
+          expect(completion_handler).to have_received(:staging_complete).with(staging_response)
         end
       end
 
