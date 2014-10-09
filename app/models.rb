@@ -41,6 +41,7 @@ require "models/runtime/space_routes"
 require "models/runtime/space_quota_definition"
 require "models/runtime/stack"
 require "models/runtime/user"
+require "models/runtime/locking"
 
 require "models/services/service"
 require "models/services/service_auth_token"

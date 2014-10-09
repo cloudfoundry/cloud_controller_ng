@@ -14,24 +14,19 @@ module VCAP::CloudController
       where(position: max(:position)).first
     end
 
-    def self.locked_last_position
-      last = at_last_position
-      last.lock!
-      last.position
-    end
-
     def before_save
       if new? || column_changed?(:position)
-      positioner = BuildpackPositioner.new
-      self.position = if new?
-                        if Buildpack.at_last_position.nil?
-                          1
+        Locking[name: 'buildpacks'].lock!
+        positioner = BuildpackPositioner.new
+        self.position = if new?
+                          if Buildpack.at_last_position.nil?
+                            1
+                          else
+                            positioner.position_for_create(position)
+                          end
                         else
-                          positioner.position_for_create(position)
+                          positioner.position_for_update(initial_value(:position), position)
                         end
-                      else
-                        positioner.position_for_update(initial_value(:position), position)
-                      end
       end
       super
     end

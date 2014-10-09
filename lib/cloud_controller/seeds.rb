@@ -7,6 +7,7 @@ module VCAP::CloudController
         create_seed_security_groups(config)
         system_org = create_seed_organizations(config)
         create_seed_domains(config, system_org)
+        create_seed_lockings
       end
 
       def create_seed_quota_definitions(config)
@@ -90,6 +91,10 @@ module VCAP::CloudController
 
           SecurityGroup.create(seed_security_group)
         end
+      end
+
+      def create_seed_lockings
+        Locking.find_or_create(name: 'buildpacks')
       end
     end
   end

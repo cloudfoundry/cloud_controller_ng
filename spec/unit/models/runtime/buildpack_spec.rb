@@ -175,11 +175,12 @@ module VCAP::CloudController
         end
       end
 
-      it "also locks the last position so that the moves don't race condition it" do
-        last = double(:last, position: 4)
-        allow(Buildpack).to receive(:at_last_position) { last }
-        expect(last).to receive(:lock!)
-        Buildpack.create(name: "new_buildpack", key: "abcdef", position: 2)
+      it "locks the buildpacks so we don't get duplicate positions", isolation: :truncation do
+        buildpacks_lock = double(:buildpacks_lock)
+        allow(Locking).to receive(:[]) { buildpacks_lock }
+        allow(Locking[name: 'buildpacks']).to receive(:lock!)
+        Buildpack.create(name: "another_buildpack", key: "abcdef")
+        expect(Locking[name: 'buildpacks']).to have_received(:lock!)
       end
 
       context "when other buildpacks exist" do
@@ -274,10 +275,12 @@ module VCAP::CloudController
         4.times.map { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
       end
 
-      it "locks the last position so that the moves don't race condition it" do
-        allow(Buildpack).to receive(:at_last_position) { buildpacks.last }
-        expect(buildpacks.last).to receive(:lock!)
-        buildpacks.first.update position: 2
+      it "locks the buildpacks so we don't get duplicate positions" do
+        buildpacks_lock = double(:buildpacks_lock)
+        allow(Locking).to receive(:[]) { buildpacks_lock }
+        allow(Locking[name: 'buildpacks']).to receive(:lock!)
+        buildpacks.last.update position: 1
+        expect(Locking[name: 'buildpacks']).to have_received(:lock!)
       end
 
       it "has to do a SELECT FOR UPDATE" do

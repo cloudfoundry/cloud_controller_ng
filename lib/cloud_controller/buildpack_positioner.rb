@@ -7,7 +7,7 @@ module VCAP::CloudController
     end
 
     def position_for_create(desired_position)
-      last_position = Buildpack.locked_last_position
+      last_position = Buildpack.at_last_position.position
       normalized_position = normalize_position_for_add(desired_position, last_position)
 
       if normalized_position <= last_position
@@ -17,7 +17,7 @@ module VCAP::CloudController
     end
 
     def position_for_update(current_position, desired_position)
-      last_position = Buildpack.locked_last_position
+      last_position = Buildpack.at_last_position.position
       normalized_position = normalize_position_for_move(desired_position, last_position)
 
       unless normalized_position == current_position
