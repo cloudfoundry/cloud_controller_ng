@@ -40,8 +40,6 @@ case $1 in
     echo $$ > $PIDFILE
     chown vcap:vcap $PIDFILE
 
-    /var/vcap/packages/syslog_aggregator/setup_syslog_forwarder.sh $CONFIG_DIR
-
     cd $CC_PACKAGE_DIR/cloud_controller_ng
     
     # Run the buildpack install only on the first CC Worker launch

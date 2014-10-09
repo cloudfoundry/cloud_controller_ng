@@ -67,8 +67,6 @@ case $1 in
 
     ulimit -c unlimited
 
-    /var/vcap/packages/syslog_aggregator/setup_syslog_forwarder.sh $CONFIG_DIR
-
     # Run the migrations only on the first CC launch
     <% if spec.index.to_i == 0 %>
       cd $CC_PACKAGE_DIR/cloud_controller_ng

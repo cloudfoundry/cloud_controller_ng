@@ -109,9 +109,7 @@ directories:<% p("cc.directories").each do |key, value| %>
 
 logging:
   file: /var/vcap/sys/log/cloud_controller_ng/cloud_controller_ng.log
-  <% if_p("syslog_aggregator.address") do %>
   syslog: vcap.cloud_controller_ng
-  <% end %>
   level: <%= p("cc.logging_level") %>
   max_retries: <%= p("cc.logging_max_retries") %>
 

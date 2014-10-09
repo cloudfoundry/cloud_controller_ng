@@ -42,8 +42,6 @@ case $1 in
 
     source $CC_JOB_DIR/bin/handle_nfs_or_local_blobstore.sh
 
-    /var/vcap/packages/syslog_aggregator/setup_syslog_forwarder.sh $CONFIG_DIR
-
     cd $CC_PACKAGE_DIR/cloud_controller_ng
     <% task_name = "jobs:generic" %>
     exec chpst -u vcap:vcap bundle exec rake <%= task_name %>[cc_global_worker.<%= spec.job.name %>.$INDEX]
