@@ -34,7 +34,7 @@ gem 'newrelic_rpm'
 gem 'clockwork', require: false
 
 group :db do
-  gem 'mysql2'
+  gem 'mysql2', '0.3.13'
   gem 'pg'
 end
 
