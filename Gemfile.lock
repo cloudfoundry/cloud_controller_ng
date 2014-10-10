@@ -1,5 +1,5 @@
 GIT
-  remote: https://github.com/cloudfoundry/cf-message-bus.git
+  remote: git://github.com/cloudfoundry/cf-message-bus.git
   revision: f463c0ff201abae2abaa2c6264e498d762aca0ed
   specs:
     cf-message-bus (0.3.0)
@@ -9,7 +9,7 @@ GIT
       yajl-ruby
 
 GIT
-  remote: https://github.com/cloudfoundry/cf-registrar.git
+  remote: git://github.com/cloudfoundry/cf-registrar.git
   revision: 49850ee876652a59dbd2d73dad726b3b808bb8f9
   specs:
     cf-registrar (1.0.1)
@@ -19,22 +19,22 @@ GIT
       vcap-concurrency
 
 GIT
-  remote: https://github.com/cloudfoundry/cf-uaa-lib.git
+  remote: git://github.com/cloudfoundry/cf-uaa-lib.git
   revision: b1e11235dc6cd7d8d4680e005526de37201305ea
-  ref: b1e11235dc6cd7d8d4680e005526de37201305ea
+  ref: b1e11235
   specs:
     cf-uaa-lib (3.1.0)
       multi_json
 
 GIT
-  remote: https://github.com/cloudfoundry/vcap-concurrency.git
+  remote: git://github.com/cloudfoundry/vcap-concurrency.git
   revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
   ref: 2a5b0179
   specs:
     vcap-concurrency (0.1.0)
 
 GIT
-  remote: https://github.com/zipmark/rspec_api_documentation.git
+  remote: git://github.com/zipmark/rspec_api_documentation.git
   revision: a282560fdc7253b50f0d20238bf8295e1f88d1d9
   specs:
     rspec_api_documentation (4.3.0)
