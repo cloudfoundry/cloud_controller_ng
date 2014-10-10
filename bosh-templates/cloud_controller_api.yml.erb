@@ -119,7 +119,7 @@ logging:
 loggregator:
   router: <%= host %>:<%= port %>
   shared_secret: <%= shared_secret %>
-  url: ws<%= "s" if p("logger_endpoint.use_ssl") %>://loggregator.<%= p("system_domain") %>:<%= p("logger_endpoint.port") %>
+  url: ws<%= "s" if p("logger_endpoint.use_ssl") %>://loggregator.<%= p("external_domain") %>:<%= p("logger_endpoint.port") %>
 <% end %>
 
 <% db = p("ccdb.databases").find { |db| db["tag"] == "cc" } %>
