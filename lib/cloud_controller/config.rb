@@ -85,6 +85,11 @@ module VCAP::CloudController
           :auth_password => String,
         },
 
+        :internal_api => {
+          :auth_user  => String,
+          :auth_password => String,
+        },
+
         :staging => {
           :timeout_in_seconds => Fixnum,
           optional(:minimum_staging_memory_mb) => Fixnum,
@@ -266,7 +271,7 @@ module VCAP::CloudController
 
         LegacyBulk.configure(@config, message_bus)
 
-        BulkApi.configure(@config)
+        InternalApi.configure(@config)
       end
 
       def config_dir

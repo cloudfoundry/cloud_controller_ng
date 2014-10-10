@@ -10,8 +10,8 @@ module VCAP::CloudController
     end
 
     before do
-      @bulk_user = "bulk_user"
-      @bulk_password = "bulk_password"
+      @internal_user = "internal_user"
+      @internal_password = "internal_password"
     end
 
     describe "GET", "/internal/bulk/apps" do
@@ -43,7 +43,7 @@ module VCAP::CloudController
 
       describe "with authentication" do
         before do
-          authorize @bulk_user, @bulk_password
+          authorize @internal_user, @internal_password
         end
 
         it "requires a token in query string" do

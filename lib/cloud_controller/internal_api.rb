@@ -1,7 +1,7 @@
 module VCAP::CloudController
-  module BulkApi
+  module InternalApi
     def configure(config)
-      @config = config[:bulk_api]
+      @config = config[:internal_api]
     end
     module_function :configure
 

@@ -28,12 +28,11 @@ module VCAP::CloudController
     end
 
     before do
-      @bulk_user = "bulk_user"
-      @bulk_password = "bulk_password"
-      authorize @bulk_user, @bulk_password
+      @internal_user = "internal_user"
+      @internal_password = "internal_password"
+      authorize @internal_user, @internal_password
 
       allow_any_instance_of(Backends).to receive(:diego_backend).and_return(backend)
-      # allow(backend).to receive(:start)
     end
 
     describe "authentication" do

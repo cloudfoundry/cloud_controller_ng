@@ -1,7 +1,7 @@
 require "sinatra"
 require "controllers/base/base_controller"
 require "cloud_controller/diego/client"
-require "cloud_controller/bulk_api"
+require "cloud_controller/internal_api"
 
 module VCAP::CloudController
   class StagingCompletionController < RestController::BaseController
@@ -12,7 +12,7 @@ module VCAP::CloudController
     def initialize(*)
       super
       auth = Rack::Auth::Basic::Request.new(env)
-      unless auth.provided? && auth.basic? && auth.credentials == BulkApi.credentials
+      unless auth.provided? && auth.basic? && auth.credentials == InternalApi.credentials
         raise Errors::ApiError.new_from_details("NotAuthenticated")
       end
     end

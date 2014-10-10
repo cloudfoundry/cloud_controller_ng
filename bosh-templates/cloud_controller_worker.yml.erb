@@ -82,6 +82,10 @@ bulk_api:
   auth_user: <%= p("cc.bulk_api_user") %>
   auth_password: "<%= p("cc.bulk_api_password") %>"
 
+internal_api:
+  auth_user: <%= p("cc.internal_api_user") %>
+  auth_password: "<%= p("cc.internal_api_password") %>"
+
 nginx:
   use_nginx: true
   instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
