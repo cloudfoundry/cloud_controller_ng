@@ -232,7 +232,9 @@ module VCAP::CloudController
           config = VCAP::CloudController::Config.config
           user = config[:staging][:auth][:user]
           password = config[:staging][:auth][:password]
-          polling_url = "http://#{user}:#{password}@#{config[:external_domain].first}/staging/jobs/#{job.guid}"
+          local_route = config[:local_route]
+          external_port = config[:external_port]
+          polling_url = "http://#{user}:#{password}@#{local_route}:#{external_port}/staging/jobs/#{job.guid}"
 
           expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
         end

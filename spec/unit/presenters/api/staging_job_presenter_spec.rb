@@ -12,7 +12,9 @@ describe StagingJobPresenter do
     it "creates a valid JSON with the correct url" do
       user = TestConfig.config[:staging][:auth][:user]
       password = TestConfig.config[:staging][:auth][:password]
-      polling_url = "http://#{user}:#{password}@#{TestConfig.config[:external_domain]}/staging/jobs/#{job.guid}"
+      local_route = TestConfig.config[:local_route]
+      external_port = TestConfig.config[:external_port]
+      polling_url = "http://#{user}:#{password}@#{local_route}:#{external_port}/staging/jobs/#{job.guid}"
 
       expect(StagingJobPresenter.new(job).to_hash).to eq(
         metadata: {
