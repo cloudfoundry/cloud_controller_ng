@@ -30,6 +30,10 @@ module VCAP::CloudController
         end
       end
 
+      def routes_changed(app)
+        @backends.find_one_to_run(app).update_routes()
+      end
+
       private
 
       def delete_buildpack_cache(app)

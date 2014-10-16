@@ -465,6 +465,17 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe ".routes_changed" do
+      let(:app) { App.make }
+      let(:backend) { double(VCAP::CloudController::Diego::Backend) }
+
+      it "calls update_routes" do
+        expect(backends).to receive(:find_one_to_run).with(app).and_return(backend)
+        expect(backend).to receive(:update_routes)
+        AppObserver.routes_changed(app)
+      end
+    end
   end
 
   def stager_config(fog_credentials)

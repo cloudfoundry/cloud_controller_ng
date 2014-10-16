@@ -34,6 +34,10 @@ module VCAP::CloudController
         @messenger.send_desire_request(@app)
       end
 
+      def update_routes
+        @messenger.send_desire_request(@app)
+      end
+
       def desire_app_message
         @protocol.desire_app_message(@app)
       end

@@ -36,6 +36,9 @@ module VCAP::CloudController
         app_stopper = AppStopper.new(@message_bus)
         app_stopper.publish_stop(droplet: @app.guid)
       end
+
+      def update_routes
+      end
     end
   end
 end

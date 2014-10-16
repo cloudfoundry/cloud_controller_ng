@@ -119,6 +119,16 @@ module VCAP::CloudController
         end
       end
 
+      describe "#update_routes" do
+        before do
+          backend.update_routes
+        end
+
+        it "desires an app, relying on its state to convey the change" do
+          expect(messenger).to have_received(:send_desire_request).with(app)
+        end
+      end
+
       describe "#desire_app_message" do
         it "gets the procotol's desire_app_message" do
           expect(backend.desire_app_message).to eq({})
