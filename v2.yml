@@ -353,6 +353,11 @@
   http_code: 400
   message: "The app upload is invalid: %s"
 
+160002:
+  name: AppBitsCopyInvalid
+  http_code: 400
+  message: "The app copy is invalid: %s"
+
 170001:
   name: StagingError
   http_code: 400
