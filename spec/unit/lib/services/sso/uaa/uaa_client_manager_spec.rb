@@ -17,7 +17,7 @@ module VCAP::Services::SSO::UAA
         token_info = double('info', auth_header: 'bearer BLAH')
         token_issuer = double('issuer', client_credentials_grant: token_info)
 
-        opts = VCAP::CloudController::Config.config[:uaa][:connection_opts]
+        opts = { skip_ssl_validation: false }
         allow(CF::UAA::TokenIssuer).to receive(:new).with('http://localhost:8080/uaa', 'cc-service-dashboards', 'some-sekret', opts).and_return(token_issuer)
 
         expect(creator.send(:scim)).to be_a(CF::UAA::Scim)
@@ -59,11 +59,13 @@ module VCAP::Services::SSO::UAA
       let(:auth_header) { 'bearer ACCESSTOKENSTUFF' }
       let(:token_info) { double('info', auth_header: auth_header) }
       let(:token_issuer) { double('issuer', client_credentials_grant: token_info) }
+      let(:skip_cert_verify) { false }
 
       before do
         stub_request(:post, tx_url)
+        VCAP::CloudController::Config.config[:skip_cert_verify] = skip_cert_verify
 
-        opts = VCAP::CloudController::Config.config[:uaa][:connection_opts]
+        opts = { skip_ssl_validation: skip_cert_verify }
         allow(CF::UAA::TokenIssuer).to receive(:new).with(uaa_uri, 'cc-service-dashboards', 'some-sekret', opts).
           and_return(token_issuer)
       end
@@ -290,9 +292,7 @@ module VCAP::Services::SSO::UAA
           end
 
           context 'and verifying ssl certs' do
-            before do
-              VCAP::CloudController::Config.config[:skip_cert_verify] = false
-            end
+            let(:skip_cert_verify) { false }
 
             it 'sets verify_mode to verify_peer' do
               changeset = [
@@ -307,9 +307,7 @@ module VCAP::Services::SSO::UAA
           end
 
           context 'and not verifying ssl certs' do
-            before do
-              VCAP::CloudController::Config.config[:skip_cert_verify] = true
-            end
+            let(:skip_cert_verify) { true }
 
             it 'sets verify_mode to verify_none' do
               changeset = [

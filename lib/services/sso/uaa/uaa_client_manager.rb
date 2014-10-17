@@ -99,7 +99,9 @@ module VCAP::Services::SSO::UAA
     end
 
     def uaa_connection_opts
-      VCAP::CloudController::Config.config[:uaa][:connection_opts]
+      {
+        skip_ssl_validation: !verify_certs?
+      }
     end
 
     def issuer
