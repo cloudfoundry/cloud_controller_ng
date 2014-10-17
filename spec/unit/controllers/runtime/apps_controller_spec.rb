@@ -273,7 +273,18 @@ module VCAP::CloudController
             expect(parsed_body).to have_key("running_env_json")
             expect(parsed_body).to have_key("environment_json")
             expect(parsed_body).to have_key("system_env_json")
+            expect(parsed_body).to have_key("application_env_json")
           end
+        end
+
+        it 'returns application environment with VCAP_APPLICATION' do
+          expected_vcap_application = MultiJson.load(MultiJson.dump(app_obj.vcap_application))
+
+          get "/v2/apps/#{app_obj.guid}/env", '{}', json_headers(headers_for(developer, {scopes: ['cloud_controller.read']}))
+          expect(last_response.status).to eql(200)
+
+          expect(decoded_response["application_env_json"]).to have_key("VCAP_APPLICATION")
+          expect(decoded_response["application_env_json"]["VCAP_APPLICATION"]).to eql(expected_vcap_application)
         end
 
         context 'when the user is space dev and has service instance bound to application' do

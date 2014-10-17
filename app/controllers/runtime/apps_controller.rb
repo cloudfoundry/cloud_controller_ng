@@ -29,12 +29,17 @@ module VCAP::CloudController
     get '/v2/apps/:guid/env', :read_env
     def read_env(guid)
       app = find_guid_and_validate_access(:read_env, guid, App)
-      [HTTP::OK, {}, MultiJson.dump({
-        staging_env_json: EnvironmentVariableGroup.staging.environment_json,
-        running_env_json: EnvironmentVariableGroup.running.environment_json,
-        environment_json: app.environment_json,
-        system_env_json: app.system_env_json,
-      }, pretty: true)]
+      [
+        HTTP::OK,
+        {},
+        MultiJson.dump({
+          staging_env_json:     EnvironmentVariableGroup.staging.environment_json,
+          running_env_json:     EnvironmentVariableGroup.running.environment_json,
+          environment_json:     app.environment_json,
+          system_env_json:      app.system_env_json,
+          application_env_json: { 'VCAP_APPLICATION' => app.vcap_application },
+        }, pretty: true)
+      ]
     end
 
     def self.translate_validation_exception(e, attributes)
