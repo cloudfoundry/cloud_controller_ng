@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 require 'uri'
 
-resource "Service Instances", :type => :api do
+resource "Service Instances", :type => [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
   let(:guid) { service_instance.guid }

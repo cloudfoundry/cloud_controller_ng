@@ -54,6 +54,7 @@ GEM
       activesupport (>= 3.2)
       i18n
     ast (2.0.0)
+    awesome_print (1.1.0)
     backports (3.6.3)
     bcrypt (3.1.7)
     bcrypt-ruby (3.1.5)
@@ -277,6 +278,7 @@ DEPENDENCIES
   activesupport (~> 3.0)
   addressable
   allowy
+  awesome_print
   bcrypt-ruby
   cf-message-bus!
   cf-registrar (~> 1.0.1)!

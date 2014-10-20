@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource "Users", type: :api do
+resource "Users", type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let!(:user) { VCAP::CloudController::User.make(default_space: space) }
   let(:guid) { user.guid }
@@ -134,7 +134,7 @@ resource "Users", type: :api do
       let(:associated_managed_organization_guid) { associated_managed_organization.guid }
       let(:managed_organization) { VCAP::CloudController::Organization.make }
       let(:managed_organization_guid) { managed_organization.guid }
-      
+
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :managed_organizations
       nested_model_associate :managed_organization, :user
       nested_model_remove :managed_organization, :user

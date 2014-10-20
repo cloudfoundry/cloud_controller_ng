@@ -40,6 +40,7 @@ end
 
 group :operations do
   gem 'pry'
+  gem 'awesome_print'
 end
 
 group :test do

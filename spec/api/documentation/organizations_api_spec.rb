@@ -1,7 +1,7 @@
 require "spec_helper"
 require "rspec_api_documentation/dsl"
 
-resource "Organizations", :type => :api do
+resource "Organizations", :type => [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let(:organization) { VCAP::CloudController::Organization.make }
   let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make }

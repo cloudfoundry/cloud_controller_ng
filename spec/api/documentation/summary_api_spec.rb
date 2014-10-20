@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Apps', :type => :api do
+resource 'Apps', :type => [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_obj) { VCAP::CloudController::AppFactory.make :space => space, :droplet_hash => nil, :package_state => "PENDING" }
@@ -61,7 +61,7 @@ resource 'Apps', :type => :api do
   end
 end
 
-resource 'Spaces', :type => :api do
+resource 'Spaces', :type => [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_obj) { VCAP::CloudController::AppFactory.make :space => space, :droplet_hash => nil, :package_state => "PENDING" }
@@ -94,7 +94,7 @@ resource 'Spaces', :type => :api do
   end
 end
 
-resource 'Organizations', :type => :api do
+resource 'Organizations', :type => [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:organization) { VCAP::CloudController::Organization.make }
   let!(:space) { VCAP::CloudController::Space.make(organization: organization) }
@@ -118,7 +118,7 @@ resource 'Organizations', :type => :api do
   end
 end
 
-resource 'Users', :type => :api do
+resource 'Users', :type => [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:user) { VCAP::CloudController::User.make }
 

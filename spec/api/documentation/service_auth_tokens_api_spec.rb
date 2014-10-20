@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource "ServiceAuthTokens (deprecated)", :type => :api do
+resource "ServiceAuthTokens (deprecated)", :type => [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   let(:guid) { VCAP::CloudController::ServiceAuthToken.first.guid }
   let!(:service_auth_tokens) { 3.times { VCAP::CloudController::ServiceAuthToken.make } }
