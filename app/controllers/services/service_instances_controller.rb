@@ -96,6 +96,19 @@ module VCAP::CloudController
       ]
     end
 
+    def update(guid)
+      json_msg = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(stringify_keys: true)
+
+      if @request_attrs["service_plan_guid"]
+        service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
+        plan = ServicePlan.find(guid: @request_attrs["service_plan_guid"])
+        service_instance.client.update_service_plan(service_instance, plan)
+      end
+
+      super(guid)
+    end
+
     class BulkUpdateMessage < VCAP::RestAPI::Message
       required :service_plan_guid, String
     end

@@ -224,6 +224,49 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    describe '#update_service_plan' do
+      let(:old_plan) { VCAP::CloudController::ServicePlan.make }
+      let(:new_plan) { VCAP::CloudController::ServicePlan.make }
+
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:instance) do
+        VCAP::CloudController::ManagedServiceInstance.new(
+          service_plan: old_plan,
+          space: space
+        )
+      end
+
+      let(:service_plan_guid) { new_plan.guid }
+
+      let(:path) { "/v2/service_instances/#{instance.guid}/" }
+
+      it 'makes a patch request with the new service plan' do
+        allow(http_client).to receive(:patch)
+        client.update_service_plan(instance, new_plan)
+
+        expect(http_client).to have_received(:patch).with(
+          anything(),
+          {
+            plan_id:	new_plan.broker_provided_id,
+            previous_values: {
+              plan_id: old_plan.broker_provided_id,
+              service_id: old_plan.service.broker_provided_id,
+              organization_id: instance.organization.guid,
+              space_id: instance.space.guid
+            }
+          }
+        )
+      end
+
+      it 'makes a patch request to the correct path' do
+        allow(http_client).to receive(:patch)
+
+        client.update_service_plan(instance, new_plan)
+
+        expect(http_client).to have_received(:patch).with(path, anything())
+      end
+    end
+
     describe '#bind' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
       let(:app) { VCAP::CloudController::App.make }

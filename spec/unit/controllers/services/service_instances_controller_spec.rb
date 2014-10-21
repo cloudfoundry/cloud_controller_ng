@@ -455,6 +455,36 @@ module VCAP::CloudController
       end
     end
 
+    describe 'PUT', '/v2/service_instances/:service_instance_guid' do
+      let(:old_service_plan)  { ServicePlan.make(:v2) }
+      let(:new_service_plan)  { ServicePlan.make(:v2) }
+      let(:service_instance)  { ManagedServiceInstance.make(service_plan: old_service_plan) }
+
+      let(:body) do
+        MultiJson.dump(
+          :service_plan_guid => new_service_plan.guid
+        )
+      end
+
+      let(:client) { double('client') }
+
+      before do
+        allow(client).to receive(:update_service_plan)
+        allow_any_instance_of(Service).to receive(:client).and_return(client)
+      end
+
+      it 'calls the service broker to update the plan' do
+        expect(client).to receive(:update_service_plan).with(service_instance, new_service_plan)
+        put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+      end
+
+      it 'updates the service plan in the database' do
+        put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+        expect(service_instance.reload.service_plan).to eq(new_service_plan)
+      end
+
+    end
+
     describe 'PUT', '/v2/service_plans/:service_plan_guid/services_instances' do
       let(:first_service_plan)  { ServicePlan.make }
       let(:second_service_plan) { ServicePlan.make }

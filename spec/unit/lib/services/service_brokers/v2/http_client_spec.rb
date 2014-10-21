@@ -441,6 +441,58 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    describe '#patch' do
+      let(:http_method) { :patch }
+      let(:message) do
+        {
+          :key1 => 'value1',
+          :key2 => 'value2'
+        }
+      end
+
+      describe 'http request' do
+        let(:make_request) { client.patch(path, message) }
+
+        before do
+          stub_request(:patch, full_url).to_return(status: 200, body: {}.to_json)
+        end
+
+        it 'makes the correct PATCH http request' do
+          make_request
+          expect(a_request(:patch, 'http://me:abc123@broker.example.com/the/path')).to have_been_made
+        end
+
+        it 'sets the Content-Type header to application/json' do
+          make_request
+          expect(a_request(:patch, full_url).
+            with(headers: { 'Content-Type' => 'application/json' })).
+            to have_been_made
+        end
+
+        it 'has a content body' do
+          make_request
+          expect(a_request(:patch, full_url).
+            with(body: {
+            'key1' => 'value1',
+            'key2' => 'value2'
+          }.to_json)).
+            to have_been_made
+        end
+
+        it_behaves_like 'a basic successful request'
+      end
+
+      describe 'handling errors' do
+        include_examples 'broker communication errors' do
+          let(:request) { client.patch(path, message) }
+        end
+      end
+
+      it_behaves_like 'timeout behavior' do
+        let(:request) { client.patch(path, message) }
+      end
+    end
+
     describe '#delete' do
       let(:http_method) { :delete }
       let(:message) do

@@ -69,6 +69,20 @@ module VCAP::Services::ServiceBrokers::V2
       raise VCAP::Errors::ApiError.new_from_details("ServiceInstanceDeprovisionFailed", e.message)
     end
 
+    def update_service_plan(instance, plan)
+      path = "/v2/service_instances/#{instance.guid}/"
+
+      @http_client.patch(path, {
+          plan_id:	plan.broker_provided_id,
+          previous_values: {
+            plan_id: instance.service_plan.broker_provided_id,
+            service_id: instance.service.broker_provided_id,
+            organization_id: instance.organization.guid,
+            space_id: instance.space.guid
+          }
+      })
+    end
+
     private
 
     def uri_for(path)

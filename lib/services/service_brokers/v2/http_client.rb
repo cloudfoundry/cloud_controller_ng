@@ -109,6 +109,10 @@ module VCAP::Services
         make_request(:put, uri_for(path), message.to_json, 'application/json')
       end
 
+      def patch(path, message)
+        make_request(:patch, uri_for(path), message.to_json, 'application/json')
+      end
+
       def delete(path, message)
         uri = uri_for(path)
         uri.query = message.to_query
