@@ -8,6 +8,8 @@ require "cloud_controller/blobstore/idempotent_directory"
 module CloudController
   module Blobstore
     class Client
+      class FileNotFound < StandardError
+      end
       def initialize(connection_config, directory_key, cdn=nil, root_dir=nil, min_size=nil, max_size=nil)
         @root_dir = root_dir
         @connection_config = connection_config
@@ -82,6 +84,19 @@ module CloudController
                     duration_seconds: duration,
                     size: size,
                     )
+      end
+
+      def cp_file_between_keys(source_key, destination_key)
+        source_file = file(source_key)
+        raise FileNotFound if source_file.nil?
+        source_file.copy(@directory_key, partitioned_key(destination_key))
+
+        dest_file = file(destination_key)
+
+        if local?
+          dest_file.public = 'public-read'
+        end
+        dest_file.save
       end
 
       def delete(key)

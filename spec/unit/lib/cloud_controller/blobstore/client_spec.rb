@@ -169,7 +169,6 @@ module CloudController
               client.cp_r_to_blobstore(path)
             end
           end
-
         end
 
         describe "returns a download uri" do
@@ -329,6 +328,67 @@ module CloudController
                   expect { client.cp_to_blobstore(path, key, 2) }.to raise_error SystemCallError, /o no/
                 end
               end
+            end
+          end
+        end
+
+        describe "#cp_file_between_keys" do
+          let(:src_key) { "abc123" }
+          let(:dest_key) { "xyz789" }
+
+          it "copies the file from the source key to the destination key" do
+            upload_tmpfile(client, src_key)
+            client.cp_file_between_keys(src_key, dest_key)
+
+            expect(client.exists?(dest_key)).to be true
+            expect(client.files).to have(2).item
+          end
+
+          context "when the source file is public" do
+            it "copies as a public file" do
+              allow(client).to receive(:local?) { true }
+              upload_tmpfile(client, src_key)
+
+              client.cp_file_between_keys(src_key, dest_key)
+              expect(client.blob(dest_key).public_url).to be
+            end
+          end
+
+          context "when the source file is private" do
+            it "does not have a public url" do
+              upload_tmpfile(client, src_key)
+              client.cp_file_between_keys(src_key, dest_key)
+              expect(client.blob(dest_key).public_url).to be_nil
+            end
+          end
+
+          context "when the destination key has a package already" do
+            before do
+              upload_tmpfile(client, src_key)
+              Tempfile.open("") do |tmpfile|
+                tmpfile.write("This should be deleted and replaced with new file")
+                tmpfile.close
+                client.cp_to_blobstore(tmpfile.path, dest_key)
+              end
+            end
+
+            it "removes the old package from the package blobstore" do
+              client.cp_file_between_keys(src_key, dest_key)
+              expect(client.files).to have(2).item
+
+              src_file_length = client.blob(dest_key).file.content_length
+              dest_file_length = client.blob(src_key).file.content_length
+              expect(dest_file_length).to eq(src_file_length)
+            end
+          end
+
+          context 'when the source key has no file associated with it' do
+            it 'does not attempt to copy over to the destination key' do
+              expect {
+                client.cp_file_between_keys(src_key, dest_key)
+              }.to raise_error(CloudController::Blobstore::Client::FileNotFound)
+
+              expect(client.files).to have(0).items
             end
           end
         end

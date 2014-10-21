@@ -37,6 +37,29 @@ module VCAP::CloudController
       raise
     end
 
+    post "#{path_guid}/copy_bits", :copy_app_bits
+    def copy_app_bits(dest_app_guid)
+      json_request = MultiJson.load(body)
+      source_app_guid = json_request["source_app_guid"]
+
+      raise Errors::ApiError.new_from_details("AppBitsCopyInvalid", "missing source_app_guid") unless source_app_guid
+
+      src_app = find_guid_and_validate_access(:upload, source_app_guid)
+      dest_app = find_guid_and_validate_access(:upload, dest_app_guid)
+
+      app_bits_copier = Jobs::Runtime::AppBitsCopier.new(src_app, dest_app)
+
+      if async?
+        job = Jobs::Enqueuer.new(app_bits_copier, queue: "cc-generic").enqueue
+        [HTTP::CREATED, JobPresenter.new(job).to_json]
+      else
+        app_bits_copier.perform
+        [HTTP::CREATED, "{}"]
+      end
+     rescue CloudController::Blobstore::Client::FileNotFound
+       raise Errors::ApiError.new_from_details("AppPackageNotFound", "missing source application bits")
+    end
+
     private
 
     def json_param(name)

@@ -243,3 +243,4 @@ resource "Apps", :type => :api do
     end
   end
 end
+

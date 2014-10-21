@@ -240,5 +240,124 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "POST /v2/apps/:guid/copy_bits" do
+      let(:dest_app) { AppFactory.make }
+      let(:src_app) { AppFactory.make }
+      let(:json_payload) { { "source_app_guid" => src_app.guid }.to_json }
+
+      class FakeCopier
+        def initialize(src_app, dest_app)
+          @src_app = src_app
+          @dest_app = dest_app
+          @@copies = []
+        end
+        def perform
+          FakeCopier.copies << [@src_app, @dest_app]
+        end
+
+        def self.copies
+          @@copies ||= []
+        end
+      end
+
+      context "when no source guid is sent" do
+        let(:json_payload) { "{}" }
+
+        it "fails to copy application bits" do
+          post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, admin_headers
+
+          expect(last_response.status).to eq(400)
+
+          expect(decoded_response["error_code"]).to match(/AppBitsCopyInvalid/)
+          expect(decoded_response["description"]).to match(/missing source_app_guid/)
+        end
+      end
+
+      context "when the source app has no bits" do
+        it "returns a 404 error message" do
+          post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, admin_headers
+          expect(last_response.status).to eq(404)
+
+          expect(decoded_response["error_code"]).to match(/AppPackageNotFound/)
+          expect(decoded_response["description"]).to match(/missing source application bits/)
+        end
+      end
+
+      context "when a source guid is supplied" do
+        context "when the async flag is not specified" do
+
+          it "copies application bits" do
+            stub_const("VCAP::CloudController::Jobs::Runtime::AppBitsCopier", FakeCopier)
+
+            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, admin_headers
+
+            expect(last_response.status).to eq(201)
+            expect(FakeCopier.copies).to eq([[src_app, dest_app]])
+          end
+        end
+
+        context "when the async flag is specified" do
+          it "returns a delayed job" do
+            expect {
+              post "/v2/apps/#{dest_app.guid}/copy_bits?async=true", json_payload, admin_headers
+            }.to change {
+              Delayed::Job.count
+            }.by(1)
+
+            job = Delayed::Job.last
+            expected_response = {
+              "metadata" => {
+                  "guid" => job.guid,
+                  "created_at" => job.created_at.iso8601,
+                  "url" => "/v2/jobs/#{job.guid}"
+              },
+              "entity" => {
+                  "guid" => job.guid,
+                  "status" => "queued"
+              }
+            }
+
+            expect(job.queue).to eq("cc-generic")
+            expect(last_response.status).to eq(201)
+            expect(decoded_response).to eq(expected_response)
+          end
+        end
+
+        context "validation permissions" do
+          it "allows an admin" do
+            stub_const("VCAP::CloudController::Jobs::Runtime::AppBitsCopier", FakeCopier)
+            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, admin_headers
+
+            expect(last_response.status).to eq(201)
+          end
+          it "disallows when not a developer of destination space" do
+            stub_const("VCAP::CloudController::Jobs::Runtime::AppBitsCopier", FakeCopier)
+            user = make_developer_for_space(src_app.space)
+
+            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, headers_for(user)
+
+            expect(last_response.status).to eq(403)
+          end
+          it "disallows when not a developer of source space" do
+            stub_const("VCAP::CloudController::Jobs::Runtime::AppBitsCopier", FakeCopier)
+            user = make_developer_for_space(dest_app.space)
+
+            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, headers_for(user)
+
+            expect(last_response.status).to eq(403)
+          end
+          it "allows when a developer of both spaces" do
+            stub_const("VCAP::CloudController::Jobs::Runtime::AppBitsCopier", FakeCopier)
+            user = make_developer_for_space(dest_app.space)
+            src_app.organization.add_user(user)
+            src_app.space.add_developer(user)
+
+            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, headers_for(user)
+            expect(last_response.status).to eq(201)
+          end
+        end
+      end
+    end
   end
 end
