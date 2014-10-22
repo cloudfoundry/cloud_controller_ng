@@ -55,7 +55,7 @@ case $1 in
     <% end %>
 
     <% task_name = "jobs:local"  %>
-    exec chpst -u vcap:vcap bundle exec rake <%= task_name %>[cc_api_worker.<%= spec.job.name %>.$INDEX]
+    exec chpst -u vcap:vcap bundle exec rake <%= task_name %>[cc_api_worker.<%= spec.job.name %>.<%= spec.index %>.$INDEX]
   ;;
 
   stop)
