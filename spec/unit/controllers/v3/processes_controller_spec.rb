@@ -44,5 +44,21 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "DELETE /v3/processes/:guid" do
+      it "returns a 404 when the process does not exist" do
+        delete "/v3/processes/bogus-guid", {}, admin_headers
+        expect(last_response.status).to eq(404)
+      end
+
+      context "permissions" do
+        it "returns a 404 for an unauthorized user" do
+          user = User.make
+          process = ProcessFactory.make
+          delete "/v3/processes/#{process.guid}", {}, headers_for(user)
+          expect(last_response.status).to eq(404)
+        end
+      end
+    end
   end
 end

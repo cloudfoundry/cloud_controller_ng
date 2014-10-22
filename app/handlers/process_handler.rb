@@ -33,6 +33,11 @@ module VCAP::CloudController
       process_from_model(process_model)
     end
 
+    def delete(process)
+      process_model = ProcessModel.find(guid: process.guid)
+      process_model.destroy if process_model
+    end
+
     private
 
     def process_from_model(model)

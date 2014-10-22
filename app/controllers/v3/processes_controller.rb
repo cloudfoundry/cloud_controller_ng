@@ -8,9 +8,11 @@ module VCAP::CloudController
     def show(guid)
       process_handler = ProcessHandler.new
       process = process_handler.find_by_guid(guid)
+
       if process.nil? || @access_context.cannot?(:read, process)
         raise VCAP::Errors::ApiError.new_from_details('NotFound')
       end
+
       process_presenter = ProcessPresenter.new(process).present
       [HTTP::OK, process_presenter.to_json]
     end
@@ -32,6 +34,19 @@ module VCAP::CloudController
       [HTTP::CREATED, process_presenter.to_json]
     rescue ProcessHandler::InvalidProcess => e
       raise VCAP::Errors::ApiError.new_from_details("UnprocessableEntity", e.message)
+    end
+
+    delete '/v3/processes/:guid', :delete
+    def delete(guid)
+      process_handler = ProcessHandler.new
+      process = process_handler.find_by_guid(guid)
+
+      if process.nil? || @access_context.cannot?(:delete, process)
+        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+      end
+
+      process_handler.delete(process)
+      [HTTP::NO_CONTENT]
     end
   end
 end

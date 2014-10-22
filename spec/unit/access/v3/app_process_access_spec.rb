@@ -56,16 +56,17 @@ module VCAP::CloudController
       end
     end
 
-    describe "create?" do
+    describe "create? and delete?" do
       let(:space) { Space.make }
-      let(:desired_process) { AppProcess.new({ space_guid: space.guid }) }
+      let(:process) { AppProcess.new({ space_guid: space.guid }) }
 
       context "admin user" do
         let(:admin) { true }
 
         it "allows the user to read" do
           access_control = AppProcessAccess.new(access_context)
-          expect(access_control.create?(desired_process)).to be_truthy
+          expect(access_control.create?(process)).to be_truthy
+          expect(access_control.delete?(process)).to be_truthy
         end
       end
 
@@ -80,7 +81,8 @@ module VCAP::CloudController
 
           it "allows the user to create" do
             access_control = AppProcessAccess.new(access_context)
-            expect(access_control.create?(desired_process)).to be_truthy
+            expect(access_control.create?(process)).to be_truthy
+            expect(access_control.delete?(process)).to be_truthy
           end
         end
 
@@ -94,7 +96,8 @@ module VCAP::CloudController
 
           it "disallows the user from creating" do
             access_control = AppProcessAccess.new(access_context)
-            expect(access_control.create?(desired_process)).to be_falsey
+            expect(access_control.create?(process)).to be_falsey
+            expect(access_control.delete?(process)).to be_falsey
           end
         end
 
@@ -103,7 +106,8 @@ module VCAP::CloudController
 
           it "disallows the user from creating" do
             access_control = AppProcessAccess.new(access_context)
-            expect(access_control.create?(desired_process)).to be_falsey
+            expect(access_control.create?(process)).to be_falsey
+            expect(access_control.delete?(process)).to be_falsey
           end
         end
 
@@ -118,7 +122,8 @@ module VCAP::CloudController
 
           it "disallows the user from creating" do
             access_control = AppProcessAccess.new(access_context)
-            expect(access_control.create?(desired_process)).to be_falsey
+            expect(access_control.create?(process)).to be_falsey
+            expect(access_control.delete?(process)).to be_falsey
           end
         end
       end

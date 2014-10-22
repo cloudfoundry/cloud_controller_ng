@@ -23,5 +23,9 @@ module VCAP::CloudController
 
       has_read_scope && user_visible
     end
+
+    def delete?(process)
+      create?(process)
+    end
   end
 end
