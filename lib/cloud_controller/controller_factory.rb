@@ -72,6 +72,10 @@ module CloudController
                                   package_blobstore:    dependency_locator.package_blobstore,
                                   missing_blob_handler: dependency_locator.missing_blob_handler,
                                 }
+                              when 'ProcessesController'
+                                {
+                                  process_handler: dependency_locator.process_handler,
+                                }
                               else
                                 {}
                             end

@@ -52,6 +52,42 @@ module VCAP::CloudController
         end
       end
 
+      context "when the process exists in the database" do
+        context "with a valid desired process" do
+          it "updates the existing process data model" do
+            process_model = ProcessFactory.make
+            process_handler = ProcessHandler.new
+            initial_process = process_handler.find_by_guid(process_model.guid)
+            changes = {
+              name: "my-super-awesome-name"
+            }
+            updated_process = process_handler.update(initial_process, changes)
+            expect {
+              process_handler.persist!(updated_process)
+            }.not_to change { ProcessModel.count }
+            process = process_handler.find_by_guid(process_model.guid)
+            expect(process.name).to eq("my-super-awesome-name")
+            expect(process.space_guid).to eq(initial_process.space_guid)
+          end
+
+          context "and then the original process is deleted from the database" do
+            it "raises a ProcessNotFound error" do
+              process_model = ProcessFactory.make
+              process_handler = ProcessHandler.new
+              initial_process = process_handler.find_by_guid(process_model.guid)
+              changes = {
+                name: "my-super-awesome-name"
+              }
+              updated_process = process_handler.update(initial_process, changes)
+              process_model.destroy
+              expect {
+                process_handler.persist!(updated_process)
+              }.to raise_error(ProcessHandler::ProcessNotFound)
+            end
+          end
+        end
+      end
+
       context "when the desired process is not valid" do
         it "raises a InvalidProcess error" do
           invalid_opts = {
@@ -68,7 +104,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "delete" do
+    describe "#delete" do
       context "when the process is persisted" do
         it "deletes the persisted process" do
           process_handler = ProcessHandler.new
@@ -89,6 +125,24 @@ module VCAP::CloudController
           }.to_not change { ProcessModel.count }
           expect(process_handler.find_by_guid(process.guid)).to be_nil
         end
+      end
+    end
+
+    describe "#update" do
+      it "returns a process domain object with the changes applied" do
+        process_handler = ProcessHandler.new
+        process = process_handler.new(valid_opts)
+        changes = {
+          name: "my-super-awesome-name",
+          stack_guid: "new-stacks"
+        }
+        updated_process = process_handler.update(process, changes)
+        expect(updated_process.name).to eq("my-super-awesome-name")
+        expect(updated_process.stack_guid).to eq("new-stacks")
+        expect(updated_process.space_guid).to eq(process.space_guid)
+        expect(updated_process.disk_quota).to eq(process.disk_quota)
+        expect(updated_process.memory).to eq(process.memory)
+        expect(updated_process.instances).to eq(process.instances)
       end
     end
   end

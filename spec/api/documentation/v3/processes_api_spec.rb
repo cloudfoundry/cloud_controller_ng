@@ -40,6 +40,47 @@ resource 'Processes (Experimental)', type: :api do
     end
   end
 
+  patch '/v3/processes/:guid' do
+    let(:process) { VCAP::CloudController::ProcessFactory.make }
+
+    parameter :name, "Name of process"
+    parameter :memory, "Amount of memory (MB) allocated to each instance"
+    parameter :instances, "Number of instances"
+    parameter :disk_quota, "Amount of disk space (MB) allocated to each instance"
+    parameter :space_guid, "Guid of associated Space"
+    parameter :stack_guid, "Guid of associated Stack"
+    parameter :state, "Desired state of process"
+    parameter :command, "Start command for process"
+    parameter :buildpack, "Buildpack used to stage process"
+    parameter :health_check_timeout, "Health check timeout for process"
+    parameter :docker_image, "Name of docker image containing process"
+    parameter :environment_json, "JSON key-value pairs for ENV variables"
+
+    let(:name) { "new_name" }
+    let(:memory) { 2555 }
+    let(:instances) { 1 }
+    let(:disk_quota) { 2048 }
+    let(:space_guid) { process.space.guid }
+    let(:stack_guid) { process.stack.guid }
+    let(:guid) { process.guid }
+
+    let(:raw_post) { params.to_json }
+
+    example "Updating a Process" do
+      do_request_with_error_handling
+      parsed_response = JSON.parse(response_body)
+
+      expect(response_status).to eq(200)
+      expect(parsed_response["guid"]).to eq(guid)
+
+      process.reload
+      expect(process.name).to eq("new_name")
+      expect(process.memory).to eq(2555)
+      expect(process.instances).to eq(1)
+      expect(process.disk_quota).to eq(2048)
+    end
+  end
+
   post "/v3/processes" do
     let(:space) { VCAP::CloudController::Space.make }
     let(:stack) { VCAP::CloudController::Stack.make }

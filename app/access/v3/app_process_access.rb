@@ -27,5 +27,9 @@ module VCAP::CloudController
     def delete?(process)
       create?(process)
     end
+
+    def update?(process)
+      create?(process)
+    end
   end
 end

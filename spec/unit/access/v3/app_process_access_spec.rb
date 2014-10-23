@@ -56,7 +56,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "create? and delete?" do
+    describe "create?, update?, and delete?" do
       let(:space) { Space.make }
       let(:process) { AppProcess.new({ space_guid: space.guid }) }
 
@@ -67,6 +67,7 @@ module VCAP::CloudController
           access_control = AppProcessAccess.new(access_context)
           expect(access_control.create?(process)).to be_truthy
           expect(access_control.delete?(process)).to be_truthy
+          expect(access_control.update?(process)).to be_truthy
         end
       end
 
@@ -83,6 +84,7 @@ module VCAP::CloudController
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.create?(process)).to be_truthy
             expect(access_control.delete?(process)).to be_truthy
+          expect(access_control.update?(process)).to be_truthy
           end
         end
 
@@ -98,6 +100,7 @@ module VCAP::CloudController
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.create?(process)).to be_falsey
             expect(access_control.delete?(process)).to be_falsey
+            expect(access_control.update?(process)).to be_falsey
           end
         end
 
@@ -108,6 +111,7 @@ module VCAP::CloudController
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.create?(process)).to be_falsey
             expect(access_control.delete?(process)).to be_falsey
+            expect(access_control.update?(process)).to be_falsey
           end
         end
 
@@ -124,6 +128,7 @@ module VCAP::CloudController
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.create?(process)).to be_falsey
             expect(access_control.delete?(process)).to be_falsey
+            expect(access_control.update?(process)).to be_falsey
           end
         end
       end

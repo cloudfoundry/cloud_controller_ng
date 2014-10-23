@@ -133,6 +133,10 @@ module CloudController
       Repositories::Runtime::SpaceEventRepository.new
     end
 
+    def process_handler
+      ProcessHandler.new
+    end
+
     def object_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new

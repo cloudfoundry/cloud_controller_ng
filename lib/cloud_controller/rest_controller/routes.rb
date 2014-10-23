@@ -20,7 +20,7 @@ module VCAP::CloudController::RestController
         end
       end
 
-      [:post, :get, :put, :delete].each do |verb|
+      [:post, :get, :put, :delete, :patch].each do |verb|
         define_method(verb) do |*args, &blk|
           (path, method) = *args
           define_route(verb, path, method, &blk)

@@ -60,5 +60,31 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "PATCH /v3/processes/:guid" do
+      it "returns a 404 when the process does not exist" do
+        patch "/v3/processes/bogus-guid", {}.to_json, admin_headers
+        expect(last_response.status).to eq(404)
+      end
+
+      context "permissions" do
+        let(:user) { User.make }
+        let(:process) { ProcessFactory.make }
+
+        it "returns a 404 when the user is unauthorized to update the initial process" do
+          patch "/v3/processes/#{process.guid}", {}.to_json, headers_for(user)
+          expect(last_response.status).to eq(404)
+        end
+
+        it "returns a 404 when the user is unauthorized to update to the desired state" do
+          process.space.organization.add_user(user)
+          process.space.add_developer(user)
+          space2 = Space.make
+
+          patch "/v3/processes/#{process.guid}", { "space_guid" => space2.guid }.to_json, headers_for(user)
+          expect(last_response.status).to eq(404)
+        end
+      end
+    end
   end
 end
