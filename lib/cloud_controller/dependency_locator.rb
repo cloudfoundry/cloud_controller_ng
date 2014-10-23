@@ -133,8 +133,8 @@ module CloudController
       Repositories::Runtime::SpaceEventRepository.new
     end
 
-    def process_handler
-      ProcessHandler.new
+    def process_repository
+      ProcessRepository.new
     end
 
     def object_renderer

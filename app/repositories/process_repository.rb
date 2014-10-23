@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class ProcessHandler
+  class ProcessRepository
     class InvalidProcess < StandardError; end
     class ProcessNotFound < StandardError; end
 

@@ -74,7 +74,7 @@ module CloudController
                                 }
                               when 'ProcessesController'
                                 {
-                                  process_handler: dependency_locator.process_handler,
+                                  process_repository: dependency_locator.process_repository,
                                 }
                               else
                                 {}
