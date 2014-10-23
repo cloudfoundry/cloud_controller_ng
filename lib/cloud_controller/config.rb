@@ -206,12 +206,10 @@ module VCAP::CloudController
           optional(:staging) => enum(
             "disabled",
             "optional",
-            "required",
           ),
           optional(:running) => enum(
             "disabled",
             "optional",
-            "required",
           )
         },
 
@@ -222,9 +220,7 @@ module VCAP::CloudController
     class << self
       def from_file(file_name)
         config = super(file_name)
-        merge_defaults(config).tap do |c|
-          validate!(c)
-        end
+        merge_defaults(config)
       end
 
       attr_reader :config, :message_bus
@@ -311,11 +307,6 @@ module VCAP::CloudController
         config[:diego_docker] ||= false
         config[:dea_advertisement_timeout_in_seconds] ||= 10
         sanitize(config)
-      end
-
-      def validate!(config)
-        raise "Invalid diego configuration" unless (config[:diego][:staging] == 'disabled' || config[:diego][:staging] == 'optional')
-        raise "Invalid diego configuration" unless (config[:diego][:running] == 'disabled' || config[:diego][:running] == 'optional')
       end
 
       private

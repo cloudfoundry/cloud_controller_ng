@@ -221,14 +221,6 @@ module VCAP::CloudController
           allow(app).to receive(:stage_with_diego?).and_return(false)
         end
 
-        context "when diego staging is required" do
-          before { config[:diego][:staging] = 'required' }
-
-          it "finds a Diego::Backend" do
-            expect(backend).to be_a(Diego::Backend)
-          end
-        end
-
         context "when diego staging is not required" do
           it "finds a DEA::Backend" do
             expect(backend).to be_a(Dea::Backend)
@@ -290,14 +282,6 @@ module VCAP::CloudController
       context "when the app is not configured to run on Diego" do
         before do
           allow(app).to receive(:run_with_diego?).and_return(false)
-        end
-
-        context "when diego running is required" do
-          before { config[:diego][:running] = 'required' }
-
-          it "finds a Diego::Backend" do
-            expect(backend).to be_a(Diego::Backend)
-          end
         end
 
         context "when diego running is not required" do

@@ -32,8 +32,6 @@ module VCAP::CloudController
 
     def find_one_to_stage(app)
       case @config[:diego][:staging]
-      when 'required'
-        diego_backend(app)
       when 'disabled'
         app.stage_with_diego? ?
           raise_diego_disabled :
@@ -47,8 +45,6 @@ module VCAP::CloudController
 
     def find_one_to_run(app)
       case @config[:diego][:running]
-      when 'required'
-        diego_backend(app)
       when 'disabled'
         app.run_with_diego? ?
           raise_diego_disabled :
