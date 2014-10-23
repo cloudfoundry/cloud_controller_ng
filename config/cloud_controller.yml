@@ -65,6 +65,9 @@ uaa:
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
 
+hm9000:
+  url: "http://localhost:5155"
+
 cc_partition: ng
 
 bulk_api:

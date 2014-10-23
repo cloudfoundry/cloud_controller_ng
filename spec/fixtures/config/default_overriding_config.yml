@@ -31,6 +31,9 @@ failed_jobs:
 default_app_memory: 1024 #mb
 maximum_health_check_timeout: 180
 
+hm9000:
+  url: "http://localhost:5155"
+
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"

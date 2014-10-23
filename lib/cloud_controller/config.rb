@@ -47,6 +47,10 @@ module VCAP::CloudController
           :url      => String
         },
 
+        :hm9000 => {
+          :url                => String
+        },
+
         :uaa => {
           :url                => String,
           :resource_id        => String,
@@ -242,7 +246,7 @@ module VCAP::CloudController
         @message_bus = message_bus
         dependency_locator = CloudController::DependencyLocator.instance
         dependency_locator.config = @config
-        hm_client = Dea::HM9000::Client.new(@message_bus, @config)
+        hm_client = Dea::HM9000::Client.new(@config)
         dependency_locator.register(:health_manager_client, hm_client)
         diego_client = Diego::Client.new(Diego::ServiceRegistry.new(message_bus))
         dependency_locator.register(:diego_client, diego_client)

@@ -4,10 +4,8 @@ module VCAP::CloudController
   module Dea
     module HM9000
       class Client
-        APP_STATE_BULK_MAX_APPS = 50
 
-        def initialize(message_bus, config)
-          @message_bus = message_bus
+        def initialize(config)
           @config = config
         end
 
@@ -48,30 +46,41 @@ module VCAP::CloudController
 
         private
 
+        def post_bulk_app_state(body)
+          uri = URI(@config[:hm9000][:url])
+          client = HTTPClient.new
+          username = @config[:internal_api][:auth_user]
+          password = @config[:internal_api][:auth_password]
+          client.set_auth(nil, username, password) if username && password
+          uri.path = '/bulk_app_state'
+          client.post(uri, body)
+        end
+
         def app_message(app)
           { droplet: app.guid, version: app.version }
         end
 
         def app_state_request(app)
-          make_request("app.state", app_message(app))
+          response = make_request([app_message(app)])
+          return unless response.is_a?(Hash)
+          response[app.guid]
         end
 
         def app_state_bulk_request(apps)
-          apps.each_slice(APP_STATE_BULK_MAX_APPS).reduce({}) do |result, slice|
-            result.merge(make_request("app.state.bulk", slice.map { |app| app_message(app) }) || {})
-          end
+          make_request(apps.map { |app| app_message(app) })
         end
 
-        def make_request(subject, message, timeout=2)
-          logger.info("requesting #{subject}", message: message)
-          responses = @message_bus.synchronous_request(subject, message, { timeout: timeout })
-          logger.info("received #{subject} response", { message: message, responses: responses })
-          return if responses.empty?
+        def make_request(message)
+          logger.info("requesting bulk_app_state", message: message)
 
-          response = responses.first
-          return if response.empty?
+          response = post_bulk_app_state(message.to_json)
 
-          response
+          return {} unless response.ok?
+
+          responses = JSON.parse(response.body)
+
+          logger.info("received bulk_app_state response", { message: message, responses: responses })
+          responses
         end
 
         def healthy_instance_count(app, response)
