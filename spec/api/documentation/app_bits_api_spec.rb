@@ -120,7 +120,9 @@ resource 'Apps', :type => :api do
     let(:dest_app) { VCAP::CloudController::AppFactory.make }
     let(:json_payload) { { :source_app_guid => src_app.guid }.to_json }
 
-    example "Copy the app bits for an App" do
+    field :source_app_guid, 'The guid for the source app', required: true
+
+    example "Copy the app bits for an App (Experimental)" do
       blobstore = double(:blobstore, cp_file_between_keys: nil)
       stub_const("CloudController::Blobstore::Client", double(:blobstore_client, new: blobstore))
 
