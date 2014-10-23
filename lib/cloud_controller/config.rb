@@ -246,7 +246,8 @@ module VCAP::CloudController
         @message_bus = message_bus
         dependency_locator = CloudController::DependencyLocator.instance
         dependency_locator.config = @config
-        hm_client = Dea::HM9000::Client.new(@config)
+        legacy_hm_client = Dea::HM9000::LegacyClient.new(@message_bus, @config)
+        hm_client = Dea::HM9000::Client.new(legacy_hm_client, @config)
         dependency_locator.register(:health_manager_client, hm_client)
         diego_client = Diego::Client.new(Diego::ServiceRegistry.new(message_bus))
         dependency_locator.register(:diego_client, diego_client)

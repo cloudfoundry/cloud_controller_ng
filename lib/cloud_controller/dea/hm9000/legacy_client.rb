@@ -3,18 +3,16 @@ require 'set'
 module VCAP::CloudController
   module Dea
     module HM9000
-      class Client
-        class UseDeprecatedNATSClient < StandardError; end
+      class LegacyClient
+        APP_STATE_BULK_MAX_APPS = 50
 
-        def initialize(legacy_client, config)
-          @legacy_client = legacy_client
+        def initialize(message_bus, config)
+          @message_bus = message_bus
           @config = config
         end
 
         def healthy_instances(app)
           healthy_instance_count(app, app_state_request(app))
-        rescue UseDeprecatedNATSClient
-          @legacy_client.healthy_instances(app)
         end
 
         def healthy_instances_bulk(apps)
@@ -24,8 +22,6 @@ module VCAP::CloudController
           apps.each_with_object({}) do |app, result|
             result[app.guid] = healthy_instance_count(app, response[app.guid])
           end
-        rescue UseDeprecatedNATSClient
-          @legacy_client.healthy_instances_bulk(apps)
         end
 
         def find_crashes(app)
@@ -37,8 +33,6 @@ module VCAP::CloudController
               result << {"instance" => instance["instance"], "since" => instance["state_timestamp"]}
             end
           end
-        rescue UseDeprecatedNATSClient
-          @legacy_client.find_crashes(app)
         end
 
         def find_flapping_indices(app)
@@ -50,48 +44,34 @@ module VCAP::CloudController
               result << {"index" => crash_count["instance_index"], "since" => crash_count["created_at"]}
             end
           end
-        rescue UseDeprecatedNATSClient
-          @legacy_client.find_flapping_indices(app)
         end
 
         private
-
-        def post_bulk_app_state(body)
-          uri = URI(@config[:hm9000][:url])
-          client = HTTPClient.new
-          username = @config[:internal_api][:auth_user]
-          password = @config[:internal_api][:auth_password]
-          client.set_auth(nil, username, password) if username && password
-          uri.path = '/bulk_app_state'
-          client.post(uri, body)
-        end
 
         def app_message(app)
           { droplet: app.guid, version: app.version }
         end
 
         def app_state_request(app)
-          response = make_request([app_message(app)])
-          return unless response.is_a?(Hash)
-          response[app.guid]
+          make_request("app.state", app_message(app))
         end
 
         def app_state_bulk_request(apps)
-          make_request(apps.map { |app| app_message(app) })
+          apps.each_slice(APP_STATE_BULK_MAX_APPS).reduce({}) do |result, slice|
+            result.merge(make_request("app.state.bulk", slice.map { |app| app_message(app) }) || {})
+          end
         end
 
-        def make_request(message)
-          logger.info("requesting bulk_app_state", message: message)
+        def make_request(subject, message, timeout=2)
+          logger.info("requesting #{subject}", message: message)
+          responses = @message_bus.synchronous_request(subject, message, { timeout: timeout })
+          logger.info("received #{subject} response", { message: message, responses: responses })
+          return if responses.empty?
 
-          response = post_bulk_app_state(message.to_json)
-          raise UseDeprecatedNATSClient if response.status == 404
+          response = responses.first
+          return if response.empty?
 
-          return {} unless response.ok?
-
-          responses = JSON.parse(response.body)
-
-          logger.info("received bulk_app_state response", { message: message, responses: responses })
-          responses
+          response
         end
 
         def healthy_instance_count(app, response)
