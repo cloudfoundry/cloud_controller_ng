@@ -10,11 +10,11 @@ module VCAP::CloudController
 
     export_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
-                      :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid
+                      :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable
 
     import_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
-                      :unique_id, :extra, :tags, :requires, :documentation_url
+                      :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable
 
     strip_attributes  :label, :provider
 

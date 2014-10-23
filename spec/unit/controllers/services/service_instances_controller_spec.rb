@@ -456,8 +456,9 @@ module VCAP::CloudController
     end
 
     describe 'PUT', '/v2/service_instances/:service_instance_guid' do
-      let(:old_service_plan)  { ServicePlan.make(:v2) }
-      let(:new_service_plan)  { ServicePlan.make(:v2) }
+      let(:service) { Service.make(plan_updateable: true) }
+      let(:old_service_plan)  { ServicePlan.make(:v2, service: service) }
+      let(:new_service_plan)  { ServicePlan.make(:v2, service: service) }
       let(:service_instance)  { ManagedServiceInstance.make(service_plan: old_service_plan) }
 
       let(:body) do
@@ -473,16 +474,51 @@ module VCAP::CloudController
         allow_any_instance_of(Service).to receive(:client).and_return(client)
       end
 
-      it 'calls the service broker to update the plan' do
-        expect(client).to receive(:update_service_plan).with(service_instance, new_service_plan)
-        put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+      context 'when the broker declared support for plan upgrades' do
+        it 'calls the service broker to update the plan' do
+          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+          expect(client).to have_received(:update_service_plan).with(service_instance, new_service_plan)
+        end
+
+        it 'updates the service plan in the database' do
+          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+          expect(service_instance.reload.service_plan).to eq(new_service_plan)
+        end
       end
 
-      it 'updates the service plan in the database' do
-        put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-        expect(service_instance.reload.service_plan).to eq(new_service_plan)
+      context 'When the broker did not declare support for plan upgrades' do
+        let(:old_service_plan) { ServicePlan.make(:v2) }
+        # let(:new_service_plan) { ServicePlan.make(:v2) }
+
+
+        it 'updates the service plan in the database' do
+          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+          expect(service_instance.reload.service_plan).to eq(old_service_plan)
+        end
+
+        it 'does not make an api call when the plan does not support upgrades' do
+          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+          expect(client).not_to have_received(:update_service_plan)
+        end
+
+        it 'returns a useful error to the user' do
+          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+          expect(last_response.body).to match /#{old_service_plan.service.label}/
+        end
       end
 
+      context 'When the user has read but not write permissions' do
+        let(:auditor) { User.make() }
+
+        before do
+          service_instance.space.organization.add_auditor(auditor)
+        end
+
+        it 'does not call out to the service broker' do
+          put "/v2/service_instances/#{service_instance.guid}", body, headers_for(auditor)
+          expect(client).not_to have_received(:update_service_plan)
+        end
+      end
     end
 
     describe 'PUT', '/v2/service_plans/:service_plan_guid/services_instances' do

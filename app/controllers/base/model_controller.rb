@@ -51,10 +51,8 @@ module VCAP::CloudController::RestController
     #
     # @param [String] guid The GUID of the object to update.
     def update(guid)
-      if (!@request_attrs)
-        json_msg = self.class::UpdateMessage.decode(body)
-        @request_attrs = json_msg.extract(stringify_keys: true)
-      end
+      json_msg = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(stringify_keys: true)
       logger.debug "cc.update", guid: guid, attributes: request_attrs
       raise InvalidRequest unless request_attrs
 

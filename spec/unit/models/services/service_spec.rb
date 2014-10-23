@@ -90,9 +90,9 @@ module VCAP::CloudController
 
     describe "Serialization" do
       it { is_expected.to export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
-                                    :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid }
+                                    :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable }
       it { is_expected.to import_attributes :label, :provider, :url, :description, :long_description, :version, :info_url,
-                                    :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url }
+                                    :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable }
     end
 
     it 'ensures that blank provider values will be treated as nil' do
