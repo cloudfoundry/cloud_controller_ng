@@ -31,12 +31,6 @@ module VCAP::CloudController
         allow(Client).to receive(:message_bus).and_return(message_bus)
       end
 
-      describe "#requires_restage?" do
-        it "returns false" do
-          expect(backend.requires_restage?).to eq(false)
-        end
-      end
-
       describe "#stage" do
         let(:stager_task) do
           double(AppStagerTask)

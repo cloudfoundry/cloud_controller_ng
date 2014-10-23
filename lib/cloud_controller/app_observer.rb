@@ -52,12 +52,9 @@ module VCAP::CloudController
           return
         end
 
-        staging_backend = @backends.find_one_to_stage(app)
-        app.mark_for_restaging if staging_backend.requires_restage?
-
         if app.needs_staging?
           @backends.validate_app_for_staging(app)
-          staging_backend.stage
+          @backends.find_one_to_stage(app).stage
         else
           @backends.find_one_to_run(app).start
         end

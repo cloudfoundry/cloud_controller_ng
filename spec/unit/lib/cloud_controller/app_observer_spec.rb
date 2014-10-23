@@ -161,22 +161,6 @@ module VCAP::CloudController
                 allow(app).to receive(:started?) { true }
               end
 
-              context "when the app requires a migration from the DEA" do
-                before do
-                  app.command = nil
-                  app.current_droplet.execution_metadata = ""
-                end
-
-                it "restages the app" do
-                  subject
-                  expect(diego_messenger).to have_received(:send_stage_request).with(app)
-                end
-
-                it "marks the app as needing staging" do
-                  expect { subject }.to change(app, :pending?).to(true)
-                end
-              end
-
               context "when the app is ready to run" do
                 before do
                   app.command = "/run"

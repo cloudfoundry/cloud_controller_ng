@@ -163,12 +163,11 @@ module VCAP::CloudController
     end
 
     def run_with_diego?
-      return true if Config.config[:diego][:running] == "required"
       !!(environment_json && environment_json["CF_DIEGO_RUN_BETA"] == "true")
     end
 
     def stage_with_diego?
-      run_with_diego? || !!(environment_json && environment_json["CF_DIEGO_STAGE_BETA"] == "true")
+      !!(environment_json && environment_json["CF_DIEGO_STAGE_BETA"] == "true")
     end
 
     def version_needs_to_be_updated?

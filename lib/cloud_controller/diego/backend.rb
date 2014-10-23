@@ -8,12 +8,6 @@ module VCAP::CloudController
         @completion_handler = completion_handler
       end
 
-      def requires_restage?
-        # The DEA staging process doesn't know to set the start command, this happens
-        # when an existing DEA based app is switched over to running on Diego
-        @app.execution_metadata.empty? && @app.command.blank?
-      end
-
       def stage
        @messenger.send_stage_request(@app)
       end

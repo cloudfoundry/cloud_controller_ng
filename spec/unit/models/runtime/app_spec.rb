@@ -2025,16 +2025,6 @@ module VCAP::CloudController
         end
       end
 
-      context "when the configuration requires diego for running" do
-        before do
-          TestConfig.override(diego: { staging: "required", running: "required" })
-        end
-
-        it "gets created as a diego app" do
-          expect(subject.diego).to be(true)
-        end
-      end
-
       context "when adding and removing routes", isolation: :truncation do
         let(:domain) do
           PrivateDomain.make :owning_organization => subject.space.organization

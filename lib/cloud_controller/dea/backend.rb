@@ -10,10 +10,6 @@ module VCAP::CloudController
         @stager_pool = stager_pool
       end
 
-      def requires_restage?
-        false
-      end
-
       def stage
         blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
         task = AppStagerTask.new(@config, @message_bus, @app, @dea_pool, @stager_pool, blobstore_url_generator)

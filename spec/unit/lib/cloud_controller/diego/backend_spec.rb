@@ -23,40 +23,6 @@ module VCAP::CloudController
         Backend.new(app, messenger, protocol, completion_handler)
       end
 
-      describe "#requires_restage?" do
-        context "when the app has staging metadata" do
-          before do
-            allow(app).to receive(:execution_metadata).and_return("fake-start-command")
-          end
-
-          it "returns false because it has enough information to run the app" do
-            expect(backend.requires_restage?).to eq(false)
-          end
-        end
-
-        context "when the app does not have staging metadata, but has a custom command" do
-          before do
-            allow(app).to receive(:execution_metadata).and_return("")
-            allow(app).to receive(:command).and_return("start")
-          end
-
-          it "assumes the app was previously staged with a DEA and needs restaging to detect its start command" do
-            expect(backend.requires_restage?).to eq(false)
-          end
-        end
-
-        context "when the app has neither staging metadata nor a custom command" do
-          before do
-            allow(app).to receive(:execution_metadata).and_return("")
-            allow(app).to receive(:command).and_return("")
-          end
-
-          it "assumes the app was previously staged with a DEA and needs restaging to detect its start command" do
-            expect(backend.requires_restage?).to eq(true)
-          end
-        end
-      end
-
       describe "#stage" do
         before do
           allow(messenger).to receive(:send_stage_request)
