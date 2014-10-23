@@ -14,7 +14,7 @@ module VCAP::CloudController
       it "raises if the config is invalid" do
         expect {
           Config.from_file(File.join(Paths::FIXTURES, "config/invalid_diego.yml"))
-        }.to raise_error /Invalid.*diego/
+        }.to raise_error /required doesn't validate/
       end
     end
 

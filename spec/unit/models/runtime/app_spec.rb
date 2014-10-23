@@ -2007,7 +2007,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "diego flag" do
+    describe "diego" do
       subject { AppFactory.make }
 
       context "when the CF_DIEGO_RUN_BETA environment variable is set and saved" do
@@ -2022,6 +2022,23 @@ module VCAP::CloudController
           subject.refresh
 
           expect(subject.diego).to eq(true)
+        end
+      end
+
+      context "when the CF_DIEGO_STAGE_BETA environment variable is set and saved" do
+        before do
+          subject.environment_json = {"CF_DIEGO_STAGE_BETA" => "true"}
+        end
+
+        it "stages with diego" do
+          expect(subject.stage_with_diego?).to eq(true)
+        end
+
+        it "remains a dea app" do
+          subject.save
+          subject.refresh
+
+          expect(subject.diego).to eq(false)
         end
       end
 
