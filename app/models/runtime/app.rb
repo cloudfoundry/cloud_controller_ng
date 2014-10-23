@@ -168,7 +168,7 @@ module VCAP::CloudController
     end
 
     def stage_with_diego?
-      run_with_diego? || !!(environment_json && environment_json["CF_DIEGO_BETA"] == "true")
+      run_with_diego? || !!(environment_json && environment_json["CF_DIEGO_STAGE_BETA"] == "true")
     end
 
     def version_needs_to_be_updated?
