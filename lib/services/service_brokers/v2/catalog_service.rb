@@ -3,7 +3,7 @@ module VCAP::Services::ServiceBrokers::V2
     include CatalogValidationHelper
 
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
-      :description, :bindable, :tags, :plans, :requires, :dashboard_client, :errors
+      :description, :bindable, :tags, :plans, :requires, :dashboard_client, :errors, :plan_updateable
 
     def initialize(service_broker, attrs)
       @service_broker     = service_broker
@@ -16,6 +16,7 @@ module VCAP::Services::ServiceBrokers::V2
       @requires           = attrs.fetch('requires', [])
       @plans_data         = attrs['plans']
       @dashboard_client   = attrs['dashboard_client']
+      @plan_updateable    = attrs['plan_updateable'] || false
       @errors             = VCAP::Services::ValidationErrors.new
       @plans              = []
 
