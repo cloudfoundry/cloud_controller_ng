@@ -33,15 +33,6 @@ module VCAP::CloudController
         if app && crashed_app?(decoded_message)
           app_event_repository = Repositories::Runtime::AppEventRepository.new
           app_event_repository.create_app_exit_event(app, decoded_message)
-
-          AppEvent.create(
-              app_id: app.id,
-              instance_guid: decoded_message["instance"],
-              instance_index: decoded_message["index"],
-              exit_status: decoded_message["exit_status"],
-              exit_description: decoded_message["exit_description"],
-              timestamp: Time.now
-          )
         end
       end
     end

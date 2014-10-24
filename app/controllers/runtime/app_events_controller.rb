@@ -8,6 +8,8 @@ module VCAP::CloudController
       attribute :timestamp, String
     end
 
+    deprecated_endpoint '/v2/app_events'
+
     query_parameters :timestamp, :app_guid
 
     def delete(guid)
