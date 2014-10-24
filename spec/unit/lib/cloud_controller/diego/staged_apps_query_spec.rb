@@ -6,7 +6,7 @@ module VCAP::CloudController
     describe StagedAppsQuery do
       def make_diego_app(options = {})
         AppFactory.make(options).tap do |app|
-          app.environment_json = (app.environment_json || {}).merge("CF_DIEGO_RUN_BETA" => "true")
+          app.environment_json = (app.environment_json || {}).merge("DIEGO_RUN_BETA" => "true")
           app.package_state = "STAGED"
           app.save
         end
@@ -115,7 +115,7 @@ module VCAP::CloudController
           expect(batch).not_to include(deleted_app)
         end
 
-        it "only includes apps that have CF_DIEGO_RUN_BETA set" do
+        it "only includes apps that have DIEGO_RUN_BETA set" do
           non_diego_app = make_diego_app(id: 6, state: "STARTED")
           non_diego_app.environment_json = {}
           non_diego_app.save

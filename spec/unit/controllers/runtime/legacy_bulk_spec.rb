@@ -152,7 +152,7 @@ module VCAP::CloudController
 
           it "includes diego apps" do
             environment = {
-              "CF_DIEGO_RUN_BETA" => "true"
+              "DIEGO_RUN_BETA" => "true"
             }
             app = AppFactory.make(environment_json: environment)
 
@@ -178,7 +178,7 @@ module VCAP::CloudController
 
           it "does not include diego apps" do
             environment = {
-              "CF_DIEGO_RUN_BETA" => "true"
+              "DIEGO_RUN_BETA" => "true"
             }
             app = AppFactory.make(environment_json: environment)
 

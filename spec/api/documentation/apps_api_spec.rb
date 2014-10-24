@@ -68,7 +68,7 @@ resource "Apps", :type => :api do
 
       example "Creating a Docker App (experimental)" do
         space_guid = VCAP::CloudController::Space.make.guid
-        diego_environment = { "CF_DIEGO_STAGE_BETA" => "true", "CF_DIEGO_RUN_BETA" => "true" }
+        diego_environment = { "DIEGO_STAGE_BETA" => "true", "DIEGO_RUN_BETA" => "true" }
 
         data = required_fields.merge(space_guid: space_guid, name: "docker_app", docker_image: "cloudfoundry/hello")
         data['environment_json'] = diego_environment

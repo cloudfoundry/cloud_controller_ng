@@ -35,7 +35,7 @@ module VCAP::CloudController
 
       context 'with a diego app' do
         before do
-          app.environment_json = {"CF_DIEGO_RUN_BETA" => "true"}
+          app.environment_json = {"DIEGO_RUN_BETA" => "true"}
         end
 
         it 'uses the diego reporter' do
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
       context 'only diego apps' do
         before do
-          app.environment_json = {"CF_DIEGO_RUN_BETA" => "true"}
+          app.environment_json = {"DIEGO_RUN_BETA" => "true"}
         end
 
         it 'returns a hash using legacy reporter' do
@@ -80,9 +80,9 @@ module VCAP::CloudController
       context 'a mix of legacy and diego apps' do
         let(:apps) do
             [
-              AppFactory.make(package_hash: 'abc', package_state: 'STAGED', environment_json: {"CF_DIEGO_RUN_BETA" => "true"}),
+              AppFactory.make(package_hash: 'abc', package_state: 'STAGED', environment_json: {"DIEGO_RUN_BETA" => "true"}),
               AppFactory.make(package_hash: 'abc', package_state: 'STAGED'),
-              AppFactory.make(package_hash: 'abc', package_state: 'STAGED', environment_json: {"CF_DIEGO_RUN_BETA" => "true"}),
+              AppFactory.make(package_hash: 'abc', package_state: 'STAGED', environment_json: {"DIEGO_RUN_BETA" => "true"}),
           ]
         end
 

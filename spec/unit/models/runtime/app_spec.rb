@@ -2010,11 +2010,11 @@ module VCAP::CloudController
     describe "diego" do
       subject { AppFactory.make }
 
-      context "when the CF_DIEGO_RUN_BETA environment variable is set and saved" do
+      context "when the DIEGO_RUN_BETA environment variable is set and saved" do
         it "becomes a diego app" do
           expect(subject.diego).to eq(false)
 
-          subject.environment_json = {"CF_DIEGO_RUN_BETA" => "true"}
+          subject.environment_json = {"DIEGO_RUN_BETA" => "true"}
 
           expect(subject.diego).to eq(false)
 
@@ -2025,9 +2025,9 @@ module VCAP::CloudController
         end
       end
 
-      context "when the CF_DIEGO_STAGE_BETA environment variable is set and saved" do
+      context "when the DIEGO_STAGE_BETA environment variable is set and saved" do
         before do
-          subject.environment_json = {"CF_DIEGO_STAGE_BETA" => "true"}
+          subject.environment_json = {"DIEGO_STAGE_BETA" => "true"}
         end
 
         it "stages with diego" do
@@ -2050,7 +2050,7 @@ module VCAP::CloudController
         let(:route) { Route.make :domain => domain, :space => subject.space }
 
         before do
-          subject.environment_json = {"CF_DIEGO_RUN_BETA" => "true"}
+          subject.environment_json = {"DIEGO_RUN_BETA" => "true"}
         end
 
         it "do not update the app's version" do

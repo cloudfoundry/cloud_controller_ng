@@ -101,7 +101,7 @@ module VCAP::CloudController
       end
 
       context "when running in diego is enabled" do
-        let(:environment) { {"CF_DIEGO_RUN_BETA" => "true"} }
+        let(:environment) { {"DIEGO_RUN_BETA" => "true"} }
 
         it "desires the app using the diego client" do
           expect(backends).to receive(:find_one_to_run) do |received_app|

@@ -36,7 +36,7 @@ module VCAP::CloudController
       describe "stopping the application" do
         context "when diego enabled" do
           let(:config_hash) { {:diego => { :staging => 'optional', :running => 'optional' } } }
-          let(:environment_json) { {"CF_DIEGO_STAGE_BETA" => "true", "CF_DIEGO_RUN_BETA" => "true"} }
+          let(:environment_json) { {"DIEGO_STAGE_BETA" => "true", "DIEGO_RUN_BETA" => "true"} }
 
           before { app.environment_json = environment_json }
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
           allow(diego_messenger).to receive(:send_stage_request).with(app)
         end
 
-        let(:environment_json) { {"CF_DIEGO_STAGE_BETA" => "true", "CF_DIEGO_RUN_BETA" => "true"} }
+        let(:environment_json) { {"DIEGO_STAGE_BETA" => "true", "DIEGO_RUN_BETA" => "true"} }
 
         context "when the app needs staging" do
           before do

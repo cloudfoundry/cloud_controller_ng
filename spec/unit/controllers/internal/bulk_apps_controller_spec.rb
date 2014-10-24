@@ -17,7 +17,7 @@ module VCAP::CloudController
     describe "GET", "/internal/bulk/apps" do
       def make_diego_app(options = {})
         AppFactory.make(options).tap do |app|
-          app.environment_json = (app.environment_json || {}).merge("CF_DIEGO_RUN_BETA" => "true")
+          app.environment_json = (app.environment_json || {}).merge("DIEGO_RUN_BETA" => "true")
           app.package_state = "STAGED"
           app.save
         end
@@ -113,7 +113,7 @@ module VCAP::CloudController
               environment_json: {
                   "env-key-3" => "env-value-3",
                   "env-key-4" => "env-value-4",
-                  "CF_DIEGO_RUN_BETA" => "true",
+                  "DIEGO_RUN_BETA" => "true",
               },
               file_descriptors: 16_384,
               instances: 4,
@@ -171,7 +171,7 @@ module VCAP::CloudController
             expect(last_response_app_env).to(be_any) { |e| e["name"] == "VCAP_SERVICES" }
             expect(last_response_app_env.find { |e| e["name"] == "env-key-3" }["value"]).to eq("env-value-3")
             expect(last_response_app_env.find { |e| e["name"] == "env-key-4" }["value"]).to eq("env-value-4")
-            expect(last_response_app_env.find { |e| e["name"] == "CF_DIEGO_RUN_BETA" }["value"]).to eq("true")
+            expect(last_response_app_env.find { |e| e["name"] == "DIEGO_RUN_BETA" }["value"]).to eq("true")
           end
 
           it "respects the batch_size parameter" do
@@ -294,9 +294,9 @@ module VCAP::CloudController
             expect(decoded_response["apps"].size).to eq(App.count - 1)
           end
 
-          it "only returns apps with CF_DIEGO_RUN_BETA" do
+          it "only returns apps with DIEGO_RUN_BETA" do
             make_diego_app(id: 6, state: "STARTED").tap do |a|
-              a.environment_json = {} # remove CF_DIEGO_RUN_BETA
+              a.environment_json = {} # remove DIEGO_RUN_BETA
               a.save
             end
 

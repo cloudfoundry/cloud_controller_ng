@@ -85,8 +85,8 @@ module VCAP::CloudController
           context "if the desired index is within the desired number of instances" do
             let(:start_instance_index) {1}
             context "if app is in STARTED state" do
-              context "and the CF_DIEGO_RUN_BETA flag is set" do
-                let(:environment) { {"CF_DIEGO_RUN_BETA" => "true"} }
+              context "and the DIEGO_RUN_BETA flag is set" do
+                let(:environment) { {"DIEGO_RUN_BETA" => "true"} }
 
                 it "should not send the start message" do
                   expect(dea_client).not_to receive(:start_instance_at_index)
@@ -94,7 +94,7 @@ module VCAP::CloudController
                 end
               end
               
-              context "and the CF_DIEGO_RUN_BETA flag is not set" do
+              context "and the DIEGO_RUN_BETA flag is not set" do
                 it "should send the start message" do
                   expect(dea_client).to receive(:start_instance_at_index) do |app_to_start, index_to_start|
                     expect(app_to_start).to eq(app)
