@@ -146,8 +146,9 @@ uaa:
   symmetric_secret: "<%= token_secret %>"
   <% end %>
   verification_key: <%= p("uaa.jwt.verification_key") ? ("|\n      " + p("uaa.jwt.verification_key").gsub("\n", "\n      ")) : '~' %>
+
 hm9000:
-  url: <%= p("hm9000.url", "http://hm9000.#{domain}") %>
+  url: <%= p("hm9000.url", "#{p('hm9000.no_ssl') ? 'http' : 'https'}://hm9000.#{domain}") %>
 
 # App staging parameters
 staging:
