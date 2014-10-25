@@ -9,7 +9,8 @@ module VCAP::CloudController
             :buildpack_cache_download_url => "http://buildpack-artifacts-cache.com",
             :app_package_download_url => "http://app-package.com",
             :perma_droplet_download_url => "fake-droplet_uri",
-
+            :buildpack_cache_upload_url => "http://buildpack-artifacts-cache.up.com",
+            :droplet_upload_url => "http://droplet-upload-uri",
           )
         end
 
@@ -53,8 +54,10 @@ module VCAP::CloudController
               "environment" => Environment.new(app).as_json,
               "stack" => app.stack.name,
               "build_artifacts_cache_download_uri" => "http://buildpack-artifacts-cache.com",
+              "build_artifacts_cache_upload_uri" => "http://buildpack-artifacts-cache.up.com",
               "app_bits_download_uri" => "http://app-package.com",
-              "buildpacks" => buildpack_entry_generator.buildpack_entries(app)
+              "buildpacks" => buildpack_entry_generator.buildpack_entries(app),
+              "droplet_upload_uri" => "http://droplet-upload-uri",
             )
           end
         end

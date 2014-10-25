@@ -25,7 +25,9 @@ module VCAP::CloudController
           :perma_droplet_download_url => "app_uri",
           :buildpack_cache_download_url => "http://buildpack-artifacts-cache.com",
           :app_package_download_url => "http://app-package.com",
-          :admin_buildpack_download_url => "https://example.com"
+          :admin_buildpack_download_url => "https://example.com",
+          :buildpack_cache_upload_url => "http://buildpack-artifacts-cache.up.com",
+          :droplet_upload_url => "http://droplet-upload-uri",
         )
       end
 
@@ -48,8 +50,10 @@ module VCAP::CloudController
             "environment" => Environment.new(app).as_json,
             "stack" => app.stack.name,
             "build_artifacts_cache_download_uri" => "http://buildpack-artifacts-cache.com",
+            "build_artifacts_cache_upload_uri" => "http://buildpack-artifacts-cache.up.com",
             "app_bits_download_uri" => "http://app-package.com",
-            "buildpacks" => Traditional::BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app)
+            "buildpacks" => Traditional::BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app),
+            "droplet_upload_uri" => "http://droplet-upload-uri",
           }
 
           expect(message_bus.published_messages.size).to eq(1)

@@ -27,9 +27,11 @@ module VCAP::CloudController
             "file_descriptors" => app.file_descriptors,
             "environment" => Environment.new(app).as_json,
             "stack" => app.stack.name,
-            "build_artifacts_cache_download_uri" => @blobstore_url_generator.buildpack_cache_download_url(app),
+            "buildpacks" => @buildpack_entry_generator.buildpack_entries(app),
             "app_bits_download_uri" => @blobstore_url_generator.app_package_download_url(app),
-            "buildpacks" => @buildpack_entry_generator.buildpack_entries(app)
+            "droplet_upload_uri" => @blobstore_url_generator.droplet_upload_url(@app),
+            "build_artifacts_cache_download_uri" => @blobstore_url_generator.buildpack_cache_download_url(app),
+            "build_artifacts_cache_upload_uri" => @blobstore_url_generator.buildpack_cache_upload_url(@app),
           }
         end
 
