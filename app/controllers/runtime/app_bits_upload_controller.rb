@@ -49,15 +49,8 @@ module VCAP::CloudController
 
       app_bits_copier = Jobs::Runtime::AppBitsCopier.new(src_app, dest_app)
 
-      if async?
-        job = Jobs::Enqueuer.new(app_bits_copier, queue: "cc-generic").enqueue
-        [HTTP::CREATED, JobPresenter.new(job).to_json]
-      else
-        app_bits_copier.perform
-        [HTTP::CREATED, "{}"]
-      end
-     rescue CloudController::Blobstore::Client::FileNotFound
-       raise Errors::ApiError.new_from_details("AppPackageNotFound", "missing source application bits")
+      job = Jobs::Enqueuer.new(app_bits_copier, queue: "cc-generic").enqueue
+      [HTTP::CREATED, JobPresenter.new(job).to_json]
     end
 
     private
