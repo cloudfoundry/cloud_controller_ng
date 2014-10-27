@@ -49,7 +49,7 @@ module VCAP::CloudController
             newest_by_time = AppStartEvent.create_from_app(app)
 
             newest_by_sequence = AppStartEvent.create_from_app(app)
-            newest_by_sequence.timestamp = Time.now - 3600
+            newest_by_sequence.timestamp = Time.current - 3600
             newest_by_sequence.save
 
             stop_event = AppStopEvent.create_from_app(app)

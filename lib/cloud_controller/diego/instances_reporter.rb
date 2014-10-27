@@ -106,7 +106,7 @@ module VCAP::CloudController
           unless reported_instances[i]
             reported_instances[i] = {
                 state: 'DOWN',
-                since: Time.now.to_i,
+                since: Time.current.to_i,
             }
           end
         end

@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     describe ".create" do
       let(:values) { {
-          timestamp: Time.now,
+        timestamp: Time.current,
           organization_guid: "abc",
           organization_name: "def",
       } }

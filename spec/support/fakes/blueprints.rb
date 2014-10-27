@@ -189,13 +189,13 @@ module VCAP::CloudController
   end
 
   BillingEvent.blueprint do
-    timestamp         { Time.now }
+    timestamp         { Time.current }
     organization_guid { Sham.guid }
     organization_name { Sham.name }
   end
 
   Event.blueprint do
-    timestamp  { Time.now }
+    timestamp  { Time.current }
     type       { Sham.name}
     actor      { Sham.guid }
     actor_type { Sham.name }
@@ -237,7 +237,7 @@ module VCAP::CloudController
     instance_index    { Sham.instance_index }
     exit_status       { Random.rand(256) }
     exit_description  { Sham.description }
-    timestamp         { Time.now }
+    timestamp         { Time.current }
   end
 
   ServiceCreateEvent.blueprint do

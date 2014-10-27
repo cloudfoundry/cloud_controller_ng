@@ -36,7 +36,7 @@ module CloudController
 
           it "is valid for an hour" do
             Timecop.freeze do
-              now = Time.now
+              now = Time.current
               expect(file).to receive(:url).with(now+3600)
               blob.download_url
             end

@@ -169,7 +169,7 @@ module VCAP::CloudController
         before do
           AppUsageEvent.dataset.delete
 
-          old = Time.now - 999.days
+          old = Time.current - 999.days
 
           3.times do
             event = repository.create_from_app(App.make)

@@ -74,7 +74,7 @@ module VCAP::CloudController
           DropletUpload.class_eval do
             def reschedule_at(_, _= nil)
               #induce the jobs to reschedule almost immediately instead of waiting around for the backoff algorithm
-              Time.now
+              Time.current
             end
           end
           DropletUpload.new(local_file.path, app.id)

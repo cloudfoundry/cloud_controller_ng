@@ -84,7 +84,7 @@ module VCAP::CloudController
         expect(last_response).to be_successful
         expect(AppUsageEvent.count).to eq(1)
         expect(AppUsageEvent.last).to match_app(app)
-        expect(AppUsageEvent.last.created_at).to be_within(5.seconds).of(Time.now)
+        expect(AppUsageEvent.last.created_at).to be_within(5.seconds).of(Time.current)
       end
 
       it "returns 403 as a non-admin" do

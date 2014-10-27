@@ -125,7 +125,7 @@ class VCAP::CloudController::ResourcePool
     logger.debug "resource_pool.download.starting",
       :destination => destination
 
-    start = Time.now
+    start = Time.current
 
     if @cdn && @cdn[:uri]
       logger.debug "resource_pool.download.using-cdn"
@@ -146,7 +146,7 @@ class VCAP::CloudController::ResourcePool
       end
     end
 
-    took = Time.now - start
+    took = Time.current - start
 
     logger.debug "resource_pool.download.complete", :took => took,
       :destination => destination

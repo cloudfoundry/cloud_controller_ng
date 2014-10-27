@@ -90,7 +90,7 @@ module VCAP::CloudController
             unless all_instances[index]
               all_instances[index] = {
                   state: "DOWN",
-                  since: Time.now.to_i,
+                  since: Time.current.to_i,
               }
             end
           end
@@ -234,7 +234,7 @@ module VCAP::CloudController
             unless stats[index]
               stats[index] = {
                   state: "DOWN",
-                  since: Time.now.to_i,
+                  since: Time.current.to_i,
               }
             end
           end

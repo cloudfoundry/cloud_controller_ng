@@ -107,7 +107,7 @@ module VCAP::CloudController
         end
 
         it "does not return deleted apps" do
-          deleted_app = make_diego_app(id: 6, state: "STARTED", deleted_at: DateTime.now)
+          deleted_app = make_diego_app(id: 6, state: "STARTED", deleted_at: DateTime.current)
 
           query = StagedAppsQuery.new(100, 0)
           batch = query.all

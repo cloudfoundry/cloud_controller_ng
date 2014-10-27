@@ -4,7 +4,7 @@ describe JobPresenter do
   describe "#to_hash" do
     let(:job) do
       job = Delayed::Job.enqueue double(:obj, perform: nil)
-      allow(job).to receive(:run_at) { Time.now.months_since(1) }
+      allow(job).to receive(:run_at) { Time.current.months_since(1) }
       job
     end
 
@@ -30,7 +30,7 @@ describe JobPresenter do
     context "when the job has started" do
       let(:job) do
         job = Delayed::Job.enqueue double(:obj, perform: nil)
-        allow(job).to receive(:locked_at) { Time.now }
+        allow(job).to receive(:locked_at) { Time.current }
         job
       end
 
