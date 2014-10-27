@@ -224,7 +224,9 @@ module VCAP::CloudController
     class << self
       def from_file(file_name)
         config = super(file_name)
-        merge_defaults(config)
+        merge_defaults(config).tap do |c|
+          validate!(c)
+        end
       end
 
       attr_reader :config, :message_bus
@@ -312,6 +314,12 @@ module VCAP::CloudController
         config[:diego_docker] ||= false
         config[:dea_advertisement_timeout_in_seconds] ||= 10
         sanitize(config)
+      end
+
+      def validate!(config)
+        if config[:diego][:staging] == 'disabled' && config[:diego][:running] != 'disabled'
+          raise "Invalid diego configuration"
+        end
       end
 
       private

@@ -334,5 +334,42 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe "diego config validation" do
+      base_config = {staging: {auth: {user: "user", password: "password"}}}
+
+      context "valid configurations" do
+        let(:valid_configs) do
+          [
+            {diego: {staging: "optional", running: "optional"}},
+            {diego: {staging: "optional", running: "disabled"}},
+            {diego: {staging: "disabled", running: "disabled"}},
+          ]
+        end
+
+        it "allows valid configurations" do
+          valid_configs.each do |config|
+            config.merge!(base_config)
+            expect {
+              Config.validate!(Config.merge_defaults(config))
+            }.to_not raise_error
+          end
+        end
+      end
+
+
+      context "invalid configurations" do
+        let(:invalid_config) do
+          {diego: {staging: "disabled", running: "optional"}}
+        end
+
+        it "raises a validation exception" do
+          invalid_config.merge!(base_config)
+          expect {
+            Config.validate!(Config.merge_defaults(invalid_config))
+          }.to raise_error /Invalid.*diego/
+        end
+      end
+    end
   end
 end

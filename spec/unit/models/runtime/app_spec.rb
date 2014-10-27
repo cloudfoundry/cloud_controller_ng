@@ -2011,17 +2011,21 @@ module VCAP::CloudController
       subject { AppFactory.make }
 
       context "when the DIEGO_RUN_BETA environment variable is set and saved" do
-        it "becomes a diego app" do
-          expect(subject.diego).to eq(false)
-
+        before do
           subject.environment_json = {"DIEGO_RUN_BETA" => "true"}
+        end
 
-          expect(subject.diego).to eq(false)
+        it "becomes a diego app" do
+          expect {
+            subject.save
+            subject.refresh
+          }.to change {
+            subject.diego
+          }.from(false).to(true)
+        end
 
-          subject.save
-          subject.refresh
-
-          expect(subject.diego).to eq(true)
+        it "stages with diego" do
+          expect(subject.stage_with_diego?).to eq(true)
         end
       end
 
@@ -2035,10 +2039,12 @@ module VCAP::CloudController
         end
 
         it "remains a dea app" do
-          subject.save
-          subject.refresh
-
-          expect(subject.diego).to eq(false)
+          expect {
+            subject.save
+            subject.refresh
+          }.to_not change {
+            subject.diego
+          }.from(false)
         end
       end
 
