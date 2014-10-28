@@ -519,6 +519,21 @@ module VCAP::CloudController
           expect(client).not_to have_received(:update_service_plan)
         end
       end
+
+      context 'when the requested plan does not exist' do
+        let(:body) do
+          MultiJson.dump(
+            :service_plan_guid => 'some-non-existing-plan'
+          )
+        end
+
+        it 'returns an InvalidRelationError' do
+          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+          expect(last_response.status).to eq 400
+          expect(last_response.body).to match 'InvalidRelation'
+          expect(service_instance.reload.service_plan).to eq(old_service_plan)
+        end
+      end
     end
 
     describe 'PUT', '/v2/service_plans/:service_plan_guid/services_instances' do

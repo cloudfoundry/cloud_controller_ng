@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
+require 'uri'
 
 resource "Service Instances", :type => :api do
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
@@ -26,6 +27,32 @@ resource "Service Instances", :type => :api do
 
         client.post '/v2/service_instances', MultiJson.dump(request_hash, pretty: true), headers
         expect(status).to eq(201)
+      end
+    end
+
+    put '/v2/service_instances/:guid' do
+      let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+      let(:service) { VCAP::CloudController::Service.make(service_broker: service_broker, plan_updateable: true) }
+      let(:new_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+      let(:old_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan) }
+
+      field :service_plan_guid, 'The new plan guid for the service instance', required: true, example_values: ['6c4bd80f-4593-41d1-a2c9-b20cb65ec76e']
+
+      before do
+        uri = URI(service_broker.broker_url)
+        uri.user = service_broker.auth_username
+        uri.password = service_broker.auth_password
+        uri.path += "/v2/service_instances/#{service_instance.guid}/"
+        stub_request(:patch, uri.to_s).to_return(:status => 200, :body => "", :headers => {})
+      end
+
+      example 'Updating the service plan a service instance' do
+        request_json = { service_plan_guid: new_plan.guid }.to_json
+        client.put "/v2/service_instances/#{service_instance.guid}", request_json, headers
+
+        expect(status).to eq 201
+        expect(service_instance.reload.service_plan.guid).to eq new_plan.guid
       end
     end
   end
