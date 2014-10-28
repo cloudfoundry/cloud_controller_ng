@@ -38,6 +38,7 @@ module VCAP::Services::ServiceBrokers
             extra:       catalog_service.metadata ? catalog_service.metadata.to_json : nil,
             active:      catalog_service.plans_present?,
             requires:    catalog_service.requires,
+            plan_updateable: catalog_service.plan_updateable,
           )
         end
       end

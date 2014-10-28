@@ -35,6 +35,20 @@ module VCAP::Services::ServiceBrokers::V2
       }.merge(opts.stringify_keys)
     end
 
+    describe '#initialize' do
+      it 'defaults @plan_updateable to false' do
+        attrs = build_valid_service_attrs
+        service = CatalogService.new(double('broker'), attrs)
+        expect(service.plan_updateable).to eq false
+      end
+
+      it 'sets @plan_updateable if it is provided in the hash' do
+        attrs = build_valid_service_attrs(plan_updateable: true)
+        service = CatalogService.new(double('broker'), attrs)
+        expect(service.plan_updateable).to eq true
+      end
+    end
+
     describe 'validations' do
       it 'validates that @broker_provided_id is a string' do
         attrs = build_valid_service_attrs(id: 123)
@@ -102,6 +116,14 @@ module VCAP::Services::ServiceBrokers::V2
         expect(service).not_to be_valid
 
         expect(service.errors.messages).to include 'Service "bindable" field is required'
+      end
+
+      it 'validates that @plan_updateable is a boolean' do
+        attrs = build_valid_service_attrs(plan_updateable: "true")
+        service = CatalogService.new(double('broker'), attrs)
+        expect(service).not_to be_valid
+
+        expect(service.errors.messages).to include 'Service "plan_updateable" field must be a boolean, but has value "true"'
       end
 
       it 'validates that @tags is an array of strings' do

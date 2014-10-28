@@ -37,6 +37,7 @@ module VCAP::Services::ServiceBrokers
             'dashboard_client' => dashboard_client_attrs,
             'tags'        => ['mysql', 'relational'],
             'requires'    => ['ultimate', 'power'],
+            'plan_updateable' => true,
             'plans'       => [
               {
                 'id'          => plan_id,
@@ -75,6 +76,7 @@ module VCAP::Services::ServiceBrokers
         expect(service.tags).to match_array(['mysql', 'relational'])
         expect(JSON.parse(service.extra)).to eq( {'foo' => 'bar'} )
         expect(service.requires).to eq(['ultimate', 'power'])
+        expect(service.plan_updateable).to eq true
       end
 
       context 'when catalog service metadata is nil' do
