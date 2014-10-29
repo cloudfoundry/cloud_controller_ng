@@ -23,10 +23,10 @@ module VCAP::CloudController
     def create
       creation_opts = MultiJson.load(body).symbolize_keys
 
-      desired_process = @process_repository.new(creation_opts)
+      desired_process = @process_repository.new_process(creation_opts)
 
       if @access_context.cannot?(:create, desired_process)
-        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+        raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
       end
 
       process = @process_repository.persist!(desired_process)
@@ -34,7 +34,9 @@ module VCAP::CloudController
       process_presenter = ProcessPresenter.new(process).present
       [HTTP::CREATED, process_presenter.to_json]
     rescue ProcessRepository::InvalidProcess => e
-      raise VCAP::Errors::ApiError.new_from_details("UnprocessableEntity", e.message)
+      raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', e.message)
+    rescue MultiJson::ParseError => e
+      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
     end
 
     patch '/v3/processes/:guid', :update
@@ -57,6 +59,9 @@ module VCAP::CloudController
 
       process_presenter = ProcessPresenter.new(process).present
       [HTTP::OK, process_presenter.to_json]
+
+    rescue MultiJson::ParseError => e
+      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
     end
 
     delete '/v3/processes/:guid', :delete
@@ -72,4 +77,3 @@ module VCAP::CloudController
     end
   end
 end
-
