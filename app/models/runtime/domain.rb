@@ -64,38 +64,31 @@ module VCAP::CloudController
       validates_format DOMAIN_REGEX, :name
       validates_length_range 3..255, :name
 
-      errors.add(:name, :overlapping_domain) if overlaps_domain_in_other_org?
-      errors.add(:name, :overlapping_domain) if overlaps_with_shared_domains?
+      errors.add(:name, :overlapping_domain) if name_overlaps?
     end
 
-    def overlaps_domain_in_other_org?
-      domains_to_check = intermediate_domains
-      return unless domains_to_check
-
-      overlapping_domains = Domain.dataset.filter(
-        :name => domains_to_check
-      ).exclude(:id => id)
-
-      if owning_organization
-        overlapping_domains = overlapping_domains.exclude(
-          :owning_organization => owning_organization
-        )
+    def name_overlaps?
+      return true unless intermediate_domains.all? do |suffix|
+        d = Domain.find(name: suffix)
+        d.nil? || d.owning_organization == owning_organization
       end
 
-      overlapping_domains.count != 0
-    end
-    
-    def overlaps_with_shared_domains?
-      if owning_organization
-        return true if Domain.dataset.filter(
-          Sequel.like(:name,"%.#{name}"),
-          owning_organization_id: nil
-        ).count > 0
+      return true if intermediate_domains.reject{|d| d == name}.any? do |suffix|
+        !!Domain.find(name: suffix)
       end
+
+      do_exclude = Domain.dataset
+      if owning_organization.nil?
+        do_exclude = Domain.dataset.exclude(:owning_organization_id => nil)
+      end
+
+      return true if do_exclude.filter(Sequel.like(:name, "%.#{name}")).count > 0
+
+      return false
     end
 
     def self.intermediate_domains(name)
-      return unless name and name =~ DOMAIN_REGEX
+      return [] unless name and name =~ DOMAIN_REGEX
 
       name.split(".").reverse.inject([]) do |a, e|
         a.push(a.empty? ? e : "#{e}.#{a.last}")

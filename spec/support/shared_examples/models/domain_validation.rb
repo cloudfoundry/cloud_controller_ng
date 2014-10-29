@@ -115,7 +115,7 @@ module VCAP::CloudController
 
         # this is kind of wonky behavior but it's pending further
         # simplification (i.e. only allowing top-level domains)
-        it { is_expected.to be_valid }
+        it { is_expected.to_not be_valid }
       end
 
       context "when the name is bar.foo.com and another org has foo.com" do
