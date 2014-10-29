@@ -62,7 +62,11 @@ module VCAP::CloudController::BrokerApiHelper
 
     get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
     response   = JSON.parse(last_response.body)
-    @plan_guid = response['resources'].first['entity']['service_plans'].find { |plan| plan['entity']['name']=='small' }['metadata']['guid']
+    service_plans = response['resources'].first['entity']['service_plans']
+    @plan_guid = service_plans.find { |plan| plan['entity']['name']=='small' }['metadata']['guid']
+
+    large_plan = service_plans.find { |plan| plan['entity']['name']=='large' }
+    @large_plan_guid = large_plan['metadata']['guid'] if large_plan
     make_all_plans_public
 
     WebMock.reset!
@@ -101,6 +105,16 @@ module VCAP::CloudController::BrokerApiHelper
 
     response = JSON.parse(last_response.body)
     @service_instance_guid = response['metadata']['guid']
+  end
+
+  def upgrade_service_instance
+    stub_request(:patch, %r(broker-url/v2/service_instances/[[:alnum:]-]+)).to_return(status: 200, body: {})
+    put("/v2/service_instances/#{@service_instance_guid}",
+    {
+      service_plan_guid: @large_plan_guid
+    }.to_json,
+    json_headers(admin_headers))
+
   end
 
   def create_app
