@@ -47,6 +47,8 @@ module VCAP::CloudController
         end
 
         context "when the process is not visible to the user" do
+          let(:token) { { 'scope' => ['cloud_controller.read'] } }
+
           it "disallows the user from reading" do
             allow(App).to receive(:user_visible).and_return(App.where(guid: nil))
             access_control = AppProcessAccess.new(access_context)
