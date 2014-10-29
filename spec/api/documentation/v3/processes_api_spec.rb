@@ -16,7 +16,7 @@ resource 'Processes (Experimental)', type: :api do
   end
 
   get '/v3/processes/:guid' do
-    let(:process) { VCAP::CloudController::ProcessModel.make }
+    let(:process) { VCAP::CloudController::AppFactory.make }
     let(:guid) { process.guid }
 
     example 'Get a Process' do
@@ -29,19 +29,19 @@ resource 'Processes (Experimental)', type: :api do
   end
 
   delete '/v3/processes/:guid' do
-    let!(:process) { VCAP::CloudController::ProcessModel.make }
+    let!(:process) { VCAP::CloudController::AppFactory.make }
     let(:guid) { process.guid }
 
     example 'Delete a Process' do
       expect {
         do_request_with_error_handling
-      }.to change{ VCAP::CloudController::ProcessModel.count }.by(-1)
+      }.to change{ VCAP::CloudController::App.count }.by(-1)
       expect(response_status).to eq(204)
     end
   end
 
   patch '/v3/processes/:guid' do
-    let(:process) { VCAP::CloudController::ProcessFactory.make }
+    let(:process) { VCAP::CloudController::AppFactory.make }
 
     parameter :name, "Name of process"
     parameter :memory, "Amount of memory (MB) allocated to each instance"
@@ -111,7 +111,7 @@ resource 'Processes (Experimental)', type: :api do
       example "Create a Process" do
         expect {
           do_request_with_error_handling
-        }.to change{ VCAP::CloudController::ProcessModel.count }.by(1)
+        }.to change{ VCAP::CloudController::App.count }.by(1)
         parsed_response = JSON.parse(response_body)
 
         expect(response_status).to eq(201)
@@ -126,7 +126,7 @@ resource 'Processes (Experimental)', type: :api do
       example "Create a Docker Process" do
         expect {
           do_request_with_error_handling
-        }.to change{ VCAP::CloudController::ProcessModel.count }.by(1)
+        }.to change{ VCAP::CloudController::App.count }.by(1)
         parsed_response = JSON.parse(response_body)
 
         expect(response_status).to eq(201)

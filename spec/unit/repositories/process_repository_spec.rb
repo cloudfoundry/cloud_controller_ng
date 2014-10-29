@@ -15,7 +15,7 @@ module VCAP::CloudController
     end
     describe "#find_by_guid" do
       it "find the process object by guid and returns a process" do
-        process_model = ProcessModel.make
+        process_model = AppFactory.make
         process_repository = ProcessRepository.new
         process = process_repository.find_by_guid(process_model.guid)
         expect(process.guid).to eq(process_model.guid)
@@ -34,7 +34,7 @@ module VCAP::CloudController
           expect {
             process = process_repository.new(valid_opts)
             expect(process.guid).to be(nil)
-          }.to_not change { ProcessModel.count }
+          }.to_not change { App.count }
       end
     end
 
@@ -47,7 +47,7 @@ module VCAP::CloudController
               desired_process = process_repository.new(valid_opts)
               process = process_repository.persist!(desired_process)
               expect(process.guid).to_not be(nil)
-            }.to change { ProcessModel.count }.by(1)
+            }.to change { App.count }.by(1)
           end
         end
       end
@@ -55,7 +55,7 @@ module VCAP::CloudController
       context "when the process exists in the database" do
         context "with a valid desired process" do
           it "updates the existing process data model" do
-            process_model = ProcessFactory.make
+            process_model = AppFactory.make
             process_repository = ProcessRepository.new
             initial_process = process_repository.find_by_guid(process_model.guid)
             changes = {
@@ -64,7 +64,7 @@ module VCAP::CloudController
             updated_process = process_repository.update(initial_process, changes)
             expect {
               process_repository.persist!(updated_process)
-            }.not_to change { ProcessModel.count }
+            }.not_to change { App.count }
             process = process_repository.find_by_guid(process_model.guid)
             expect(process.name).to eq("my-super-awesome-name")
             expect(process.space_guid).to eq(initial_process.space_guid)
@@ -72,7 +72,7 @@ module VCAP::CloudController
 
           context "and then the original process is deleted from the database" do
             it "raises a ProcessNotFound error" do
-              process_model = ProcessFactory.make
+              process_model = AppFactory.make
               process_repository = ProcessRepository.new
               initial_process = process_repository.find_by_guid(process_model.guid)
               changes = {
@@ -98,7 +98,7 @@ module VCAP::CloudController
             expect {
               desired_process = process_repository.new(invalid_opts)
               process_repository.persist!(desired_process)
-            }.to_not change { ProcessModel.count }
+            }.to_not change { App.count }
           }.to raise_error(ProcessRepository::InvalidProcess)
         end
       end
@@ -111,7 +111,7 @@ module VCAP::CloudController
           process = process_repository.persist!(process_repository.new(valid_opts))
           expect {
             process_repository.delete(process)
-          }.to change { ProcessModel.count }.by(-1)
+          }.to change { App.count }.by(-1)
           expect(process_repository.find_by_guid(process.guid)).to be_nil
         end
       end
@@ -122,7 +122,7 @@ module VCAP::CloudController
           process = process_repository.new(valid_opts)
           expect {
             process_repository.delete(process)
-          }.to_not change { ProcessModel.count }
+          }.to_not change { App.count }
           expect(process_repository.find_by_guid(process.guid)).to be_nil
         end
       end

@@ -6,7 +6,7 @@ module VCAP::CloudController
     it "presents process fields" do
       VCAP::CloudController::Space.make(guid: 'space-guid')
       VCAP::CloudController::Stack.make(guid: 'stack-guid')
-      process_model  = ProcessFactory.make
+      process_model  = AppFactory.make
       process = AppProcess.new(process_model)
 
       result = ProcessPresenter.new(process).present

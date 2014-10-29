@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:admin) { false }
     let(:user) { User.make }
     let(:roles) { double(:roles, admin?: admin) }
-    let(:process) { ProcessFactory.make }
+    let(:process) { AppFactory.make }
     let(:access_context) { double(:access_context, roles: roles, user: user) }
 
     before do
@@ -32,7 +32,7 @@ module VCAP::CloudController
           let(:token) {{ 'scope' => ['cloud_controller.read'] }}
 
           it "allows the user to read" do
-            allow(ProcessModel).to receive(:user_visible).and_return(ProcessModel.where(guid: process.guid))
+            allow(App).to receive(:user_visible).and_return(App.where(guid: process.guid))
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.read?(process)).to be_truthy
           end
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
         context "when the user has insufficient scope" do
           it "disallows the user from reading" do
-            allow(ProcessModel).to receive(:user_visible).and_return(ProcessModel.where(guid: process.guid))
+            allow(App).to receive(:user_visible).and_return(App.where(guid: process.guid))
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.read?(process)).to be_falsey
           end
@@ -48,7 +48,7 @@ module VCAP::CloudController
 
         context "when the process is not visible to the user" do
           it "disallows the user from reading" do
-            allow(ProcessModel).to receive(:user_visible).and_return(ProcessModel.where(guid: nil))
+            allow(App).to receive(:user_visible).and_return(App.where(guid: nil))
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.read?(process)).to be_falsey
           end

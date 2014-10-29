@@ -12,7 +12,7 @@ module VCAP::CloudController
       context "permissions" do
         it "returns a 404 for an unauthorized user" do
           user = User.make
-          process = ProcessModel.make
+          process = AppFactory.make
           get "/v3/processes/#{process.guid}", {}, headers_for(user)
           expect(last_response.status).to eq(404)
         end
@@ -54,7 +54,7 @@ module VCAP::CloudController
       context "permissions" do
         it "returns a 404 for an unauthorized user" do
           user = User.make
-          process = ProcessFactory.make
+          process = AppFactory.make
           delete "/v3/processes/#{process.guid}", {}, headers_for(user)
           expect(last_response.status).to eq(404)
         end
@@ -69,7 +69,7 @@ module VCAP::CloudController
 
       context "permissions" do
         let(:user) { User.make }
-        let(:process) { ProcessFactory.make }
+        let(:process) { AppFactory.make }
 
         it "returns a 404 when the user is unauthorized to update the initial process" do
           patch "/v3/processes/#{process.guid}", {}.to_json, headers_for(user)

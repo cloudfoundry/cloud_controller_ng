@@ -24,9 +24,9 @@ module VCAP::CloudController
       }.reject{ |_, v| v.nil? }
 
       process_model = if desired_process.guid
-                        ProcessModel.first!(guid: desired_process.guid).update(attributes)
+                        App.first!(guid: desired_process.guid).update(attributes)
                       else
-                        ProcessModel.create(attributes)
+                        App.create(attributes)
                       end
 
       process_from_model(process_model)
@@ -37,7 +37,7 @@ module VCAP::CloudController
     end
 
     def find_by_guid(guid)
-      process_model = ProcessModel.find(guid: guid)
+      process_model = App.find(guid: guid)
       return if process_model.nil?
       process_from_model(process_model)
     end
@@ -62,7 +62,7 @@ module VCAP::CloudController
     end
 
     def delete(process)
-      process_model = ProcessModel.find(guid: process.guid)
+      process_model = App.find(guid: process.guid)
       process_model.destroy if process_model
     end
 

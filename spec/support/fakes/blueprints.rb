@@ -29,13 +29,6 @@ Sham.define do
 end
 
 module VCAP::CloudController
-  ProcessModel.blueprint do
-    name              { Sham.name }
-    space             { VCAP::CloudController::Space.make }
-    stack             { VCAP::CloudController::Stack.make }
-    instances         { 1 }
-  end
-
   User.blueprint do
     guid              { Sham.uaa_id }
   end
