@@ -29,6 +29,10 @@ Sham.define do
 end
 
 module VCAP::CloudController
+  AppModel.blueprint do
+    guid              { Sham.guid }
+  end
+
   User.blueprint do
     guid              { Sham.uaa_id }
   end
