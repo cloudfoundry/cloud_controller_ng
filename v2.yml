@@ -53,6 +53,11 @@
   http_code: 403
   message: "Your token lacks the necessary scopes to access this resource."
 
+10008:
+  name: UnprocessableEntity
+  http_code: 422
+  message: "The request is semantically invalid: %s"
+
 20001:
   name: UserInvalid
   http_code: 400
