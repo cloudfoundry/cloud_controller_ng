@@ -32,5 +32,17 @@ module VCAP::CloudController
     rescue MultiJson::ParseError => e
       raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
     end
+
+    delete '/v3/apps/:guid', :delete
+    def delete(guid)
+      app_model = AppModel.find(guid: guid)
+
+      if app_model.nil? || @access_context.cannot?(:delete, app_model)
+        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+      end
+
+      app_model.destroy
+      [HTTP::NO_CONTENT]
+    end
   end
 end

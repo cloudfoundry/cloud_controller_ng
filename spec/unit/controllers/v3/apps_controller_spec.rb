@@ -112,5 +112,51 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#delete' do
+      context 'when the app does not exist' do
+        let(:guid) { 'ABC123' }
+
+        it 'raises an ApiError with a 404 code' do
+          expect {
+            apps_controller.delete(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the app does exist' do
+        let(:app_model) { AppModel.make }
+        let(:guid) { app_model.guid }
+
+        context 'when the user cannot access the app' do
+          before do
+            SecurityContext.set(user)
+          end
+
+          it 'raises a 404' do
+            expect {
+              apps_controller.delete(guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'NotFound'
+              expect(error.response_code).to eq 404
+            end
+          end
+        end
+
+        context 'when the user has access to the app' do
+          before do
+            SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
+          end
+
+          it 'returns a 204' do
+            response_code, _ = apps_controller.delete(guid)
+            expect(response_code).to eq 204
+          end
+        end
+      end
+    end
   end
 end

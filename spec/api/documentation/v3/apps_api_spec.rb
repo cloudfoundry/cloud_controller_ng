@@ -72,4 +72,23 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to match(expected_response)
     end
   end
+
+  delete '/v3/apps/:guid' do
+    let!(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:guid) { app_model.guid }
+    let(:space_guid) { app_model.space_guid }
+    let(:space) { VCAP::CloudController::Space.find(guid: space_guid) }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
+    example 'Delete an App' do
+      expect {
+        do_request_with_error_handling
+      }.to change{ VCAP::CloudController::AppModel.count }.by(-1)
+      expect(response_status).to eq(204)
+    end
+  end
 end

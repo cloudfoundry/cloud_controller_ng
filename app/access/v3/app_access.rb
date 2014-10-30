@@ -23,5 +23,9 @@ module VCAP::CloudController
 
       has_write_scope && is_space_developer && org_active
     end
+
+    def delete?(app_model)
+      create?(app_model)
+    end
   end
 end
