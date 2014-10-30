@@ -1,13 +1,14 @@
 module VCAP::CloudController
   class AppProcess
-    attr_reader :guid, :space_guid, :stack_guid, :disk_quota, :memory,
-      :instances, :state, :command, :buildpack, :health_check_timeout,
+    attr_reader :guid, :app_guid, :space_guid, :stack_guid, :disk_quota,
+      :memory, :instances, :state, :command, :buildpack, :health_check_timeout,
       :docker_image, :environment_json, :name
 
     attr_reader :changes
 
     def initialize(opts, changes={})
       @guid                 = opts[:guid]
+      @app_guid             = opts[:app_guid]
       @name                 = opts[:name]
       @space_guid           = opts[:space_guid]
       @stack_guid           = opts[:stack_guid]

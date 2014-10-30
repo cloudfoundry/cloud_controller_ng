@@ -20,8 +20,10 @@ module VCAP::CloudController
     end
 
     post '/v3/processes', :create
-    def create
+    post '/v3/apps/:app_guid/processes', :create
+    def create(app_guid=nil)
       creation_opts = MultiJson.load(body).symbolize_keys
+      creation_opts[:app_guid] = app_guid
 
       desired_process = @process_repository.new_process(creation_opts)
 

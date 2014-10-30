@@ -70,6 +70,7 @@ module VCAP::CloudController
     def attributes_for_process(process)
       {
         guid:                 process.guid,
+        app_guid:             process.app_guid,
         name:                 process.name,
         space_guid:           process.space_guid,
         stack_guid:           process.stack_guid,
@@ -88,6 +89,7 @@ module VCAP::CloudController
     def process_from_model(model)
       AppProcess.new({
         guid:                 model.values[:guid],
+        app_guid:             model.values[:app_guid],
         name:                 model.values[:name],
         space_guid:           model.space.guid,
         stack_guid:           model.stack.guid,
