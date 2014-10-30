@@ -488,8 +488,6 @@ module VCAP::CloudController
 
       context 'When the broker did not declare support for plan upgrades' do
         let(:old_service_plan) { ServicePlan.make(:v2) }
-        # let(:new_service_plan) { ServicePlan.make(:v2) }
-
 
         it 'updates the service plan in the database' do
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
@@ -503,7 +501,7 @@ module VCAP::CloudController
 
         it 'returns a useful error to the user' do
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(last_response.body).to match /#{old_service_plan.service.label}/
+          expect(last_response.body).to match /The service does not support changing plans/
         end
       end
 

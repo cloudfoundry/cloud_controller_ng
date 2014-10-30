@@ -105,7 +105,7 @@ module VCAP::CloudController
         if old_plan.service.plan_updateable
           service_instance.client.update_service_plan(service_instance, new_plan)
         else
-          raise VCAP::Errors::ApiError.new_from_details("ServicePlanNotUpdateable", old_plan.service.label)
+          raise VCAP::Errors::ApiError.new_from_details("ServicePlanNotUpdateable")
         end
       end
     end
