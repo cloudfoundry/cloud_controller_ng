@@ -20,11 +20,15 @@ resource 'Processes (Experimental)', type: :api do
     let(:guid) { process.guid }
 
     example 'Get a Process' do
+      expected_response = {
+        'guid'   => guid
+      }
+
       do_request_with_error_handling
-      parsed_response = JSON.parse(response_body)
+      parsed_response = MultiJson.load(response_body)
 
       expect(response_status).to eq(200)
-      expect(parsed_response['guid']).to eq(guid)
+      expect(parsed_response).to match(expected_response)
     end
   end
 
@@ -67,11 +71,14 @@ resource 'Processes (Experimental)', type: :api do
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
 
     example 'Updating a Process' do
+      expected_response = {
+        'guid' => guid,
+      }
       do_request_with_error_handling
       parsed_response = JSON.parse(response_body)
 
       expect(response_status).to eq(200)
-      expect(parsed_response['guid']).to eq(guid)
+      expect(parsed_response).to match(expected_response)
 
       process.reload
       expect(process.name).to eq('new_name')
@@ -109,13 +116,16 @@ resource 'Processes (Experimental)', type: :api do
 
     context 'without a docker image' do
       example 'Create a Process' do
+        expected_response = {
+          'guid' => /^[a-z0-9\-]+$/,
+        }
         expect {
           do_request_with_error_handling
         }.to change{ VCAP::CloudController::App.count }.by(1)
         parsed_response = JSON.parse(response_body)
 
         expect(response_status).to eq(201)
-        expect(parsed_response['guid']).to_not eq(nil)
+        expect(parsed_response).to match(expected_response)
       end
     end
 
@@ -124,13 +134,16 @@ resource 'Processes (Experimental)', type: :api do
       let(:docker_image) { 'cloudfoundry/hello' }
 
       example 'Create a Docker Process' do
+        expected_response = {
+          'guid' => /^[a-z0-9\-]+$/,
+        }
         expect {
           do_request_with_error_handling
         }.to change{ VCAP::CloudController::App.count }.by(1)
         parsed_response = JSON.parse(response_body)
 
         expect(response_status).to eq(201)
-        expect(parsed_response['guid']).to_not eq(nil)
+        expect(parsed_response).to match(expected_response)
       end
     end
   end

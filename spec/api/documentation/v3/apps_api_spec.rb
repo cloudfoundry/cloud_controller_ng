@@ -10,7 +10,7 @@ resource 'Apps (Experimental)', type: :api do
   def do_request_with_error_handling
     do_request
     if response_status == 500
-      error = MultiJson.dump(response_body)
+      error = MultiJson.load(response_body)
       ap error
       raise error['description']
     end
