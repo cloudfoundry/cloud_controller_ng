@@ -22,11 +22,14 @@ resource 'Apps (Experimental)', type: :api do
     let(:space_guid) { app_model.space_guid }
 
     example 'Get an App' do
+      process = VCAP::CloudController::AppFactory.make(app_guid: guid)
       expected_response = {
         'guid'   => guid,
         '_links' => {
           'self'      => { 'href' => "/v3/apps/#{guid}" },
-          'processes' => { 'href' => "/v3/apps/#{guid}/processes" },
+          'processes' => [
+            { 'href' => "/v3/processes/#{process.guid}" },
+          ],
           'space'     => { 'href' => "/v2/spaces/#{space_guid}" },
         }
       }
@@ -62,7 +65,7 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => expected_guid,
         '_links' => {
           'self'      => { 'href' => "/v3/apps/#{expected_guid}" },
-          'processes' => { 'href' => "/v3/apps/#{expected_guid}/processes" },
+          'processes' => [],
           'space'     => { 'href' => "/v2/spaces/#{space_guid}" },
         }
       }
