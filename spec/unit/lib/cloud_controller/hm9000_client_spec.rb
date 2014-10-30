@@ -47,24 +47,24 @@ module VCAP::CloudController
     let(:app2) { AppFactory.make(instances: 1) }
     let(:app0_request_should_fail) { false }
 
-    let(:hm9000_config) {
+    let(:hm9000_config) do
       {
         flapping_crash_count_threshold: 3,
         hm9000: {
-          url: "http://some-hm9000-api:9492"
+          url: "https://some-hm9000-api:9492"
         },
         internal_api: {
           auth_user: "myuser",
           auth_password: "mypass"
         }
       }
-    }
+    end
 
     let(:app_0_api_response) { generate_hm_api_response(app0, [{ index: 0, state: "RUNNING" }]) }
     let(:app_1_api_response) { generate_hm_api_response(app1, [{ index: 0, state: "CRASHED" }]) }
     let(:app_2_api_response) { generate_hm_api_response(app2, [{ index: 0, state: "RUNNING" }]) }
 
-    let(:hm9000_url) { "http://myuser:mypass@some-hm9000-api:9492" }
+    let(:hm9000_url) { "https://myuser:mypass@some-hm9000-api:9492" }
     let(:legacy_client) { double(:legacy_client) }
 
     subject(:hm9000_client) { VCAP::CloudController::Dea::HM9000::Client.new(legacy_client, hm9000_config) }
@@ -281,6 +281,58 @@ module VCAP::CloudController
           allow(legacy_client).to receive(:find_flapping_indices).with(app0).and_return(legacy_return_value)
           actual_return_value = hm9000_client.find_flapping_indices(app0)
           expect(actual_return_value).to eq(legacy_return_value)
+        end
+      end
+    end
+
+    describe "ssl certificate validation" do
+      context "when skip_cert_verify is true" do
+        let(:hm9000_config) do
+          {
+            skip_cert_verify: true,
+            flapping_crash_count_threshold: 3,
+            hm9000: {
+              url: "https://some-hm9000-api:9492"
+            },
+            internal_api: {
+              auth_user: "myuser",
+              auth_password: "mypass"
+            }
+          }
+        end
+
+        it "does not verify the cert" do
+          stub_request(:post, "#{hm9000_url}/bulk_app_state").
+            to_return(status: 200, body: {}.to_json)
+
+          expect_any_instance_of(HTTPClient::SSLConfig).to receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
+
+          subject.healthy_instances(app0)
+        end
+      end
+
+      context "when skip_cert_verify is false" do
+        let(:hm9000_config) do
+          {
+            skip_cert_verify: false,
+            flapping_crash_count_threshold: 3,
+            hm9000: {
+              url: "https://some-hm9000-api:9492"
+            },
+            internal_api: {
+              auth_user: "myuser",
+              auth_password: "mypass"
+            }
+          }
+        end
+
+        it "does not verify the cert" do
+          stub_request(:post, "#{hm9000_url}/bulk_app_state").
+            to_return(status: 200, body: {}.to_json)
+
+          expect_any_instance_of(HTTPClient::SSLConfig).to receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER)
+
+          subject.healthy_instances(app0)
         end
       end
     end

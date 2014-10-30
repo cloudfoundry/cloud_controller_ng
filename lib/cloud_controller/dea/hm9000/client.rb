@@ -57,12 +57,22 @@ module VCAP::CloudController
         private
 
         def post_bulk_app_state(body)
-          uri = URI(@config[:hm9000][:url])
-          client = HTTPClient.new
-          username = @config[:internal_api][:auth_user]
-          password = @config[:internal_api][:auth_password]
-          client.set_auth(nil, username, password) if username && password
+          uri              = URI(@config[:hm9000][:url])
+          username         = @config[:internal_api][:auth_user]
+          password         = @config[:internal_api][:auth_password]
+          skip_cert_verify = @config[:skip_cert_verify]
+          use_ssl          = uri.scheme.to_s.downcase == 'https'
+
           uri.path = '/bulk_app_state'
+
+          client = HTTPClient.new
+          if username && password
+            client.set_auth(nil, username, password)
+          end
+          if use_ssl
+            client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
+          end
+
           client.post(uri, body)
         end
 
