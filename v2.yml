@@ -306,7 +306,7 @@
 110004:
   name: ServicePlanNotUpdateable
   http_code: 400
-  message: "The service plan does not support upgrades: %s"
+  message: "The service does not support changing plans."
 
 120001:
   name: ServiceInvalid
