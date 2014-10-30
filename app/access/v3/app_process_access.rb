@@ -10,9 +10,9 @@ module VCAP::CloudController
       space = Space.find(guid: desired_process.space_guid)
       is_space_developer = space && space.developers.include?(context.user)
 
-      org_suspended = space && space.organization.suspended?
+      org_active = space && space.organization.active?
 
-      has_write_scope && is_space_developer && !org_suspended
+      has_write_scope && is_space_developer && org_active
     end
 
     def read?(process)

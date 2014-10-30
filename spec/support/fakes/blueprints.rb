@@ -30,7 +30,8 @@ end
 
 module VCAP::CloudController
   AppModel.blueprint do
-    guid              { Sham.guid }
+    guid       { Sham.guid }
+    space_guid { Space.make.guid }
   end
 
   User.blueprint do

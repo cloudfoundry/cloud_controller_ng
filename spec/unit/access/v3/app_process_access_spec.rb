@@ -17,7 +17,7 @@ module VCAP::CloudController
       SecurityContext.clear
     end
 
-    describe "read?" do
+    describe "#read?" do
       context "admin user" do
         let(:admin) { true }
 
@@ -58,7 +58,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "create?, update?, and delete?" do
+    describe "#create?, #update?, and #delete?" do
       let(:space) { Space.make }
       let(:process) { AppProcess.new({ space_guid: space.guid }) }
 
