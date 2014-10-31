@@ -86,7 +86,7 @@ module VCAP::CloudController
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.create?(process)).to be_truthy
             expect(access_control.delete?(process)).to be_truthy
-          expect(access_control.update?(process)).to be_truthy
+            expect(access_control.update?(process)).to be_truthy
           end
         end
 
