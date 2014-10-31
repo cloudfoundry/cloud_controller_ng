@@ -88,6 +88,5 @@ require "cloud_controller/install_buildpacks"
 require "cloud_controller/upload_buildpack"
 
 require "cloud_controller/errors/instances_unavailable"
-require "cloud_controller/composite_instances_reporter"
 
 require "services"

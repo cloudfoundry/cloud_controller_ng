@@ -21,12 +21,13 @@ module VCAP::CloudController
     let(:blobstore_url_generator) { double(:blobstore_url_generator, :droplet_download_url => "download-url") }
     let(:tps_reporter) { double(:tps_reporter) }
     let(:diego_messenger) { Diego::Messenger.new(message_bus, blobstore_url_generator) }
-    let(:backends) { Backends.new(config_hash, message_bus, dea_pool, stager_pool) }
+    let(:runners) { Runners.new(config_hash, message_bus, dea_pool, stager_pool) }
+    let(:stagers) { Stagers.new(config_hash, message_bus, dea_pool, stager_pool, runners) }
 
     before do
       allow(Diego::Messenger).to receive(:new).and_return(diego_messenger)
       Dea::Client.configure(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator)
-      AppObserver.configure(backends)
+      AppObserver.configure(stagers, runners)
       Buildpack.make
     end
 
@@ -452,11 +453,11 @@ module VCAP::CloudController
 
     describe ".routes_changed" do
       let(:app) { App.make }
-      let(:backend) { double(VCAP::CloudController::Diego::Backend) }
+      let(:runner) { double(VCAP::CloudController::Diego::Runner) }
 
       it "calls update_routes" do
-        expect(backends).to receive(:find_one_to_run).with(app).and_return(backend)
-        expect(backend).to receive(:update_routes)
+        expect(runners).to receive(:runner_for_app).with(app).and_return(runner)
+        expect(runner).to receive(:update_routes)
         AppObserver.routes_changed(app)
       end
     end

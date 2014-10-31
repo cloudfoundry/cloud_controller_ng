@@ -21,7 +21,7 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details("InstancesError", msg)
       end
 
-      instances = instances_reporter.all_instances_for_app(app)
+      instances = instances_reporters.all_instances_for_app(app)
       MultiJson.dump(instances)
     rescue Errors::InstancesUnavailable => e
       raise VCAP::Errors::ApiError.new_from_details("InstancesUnavailable", e.to_s)
@@ -37,11 +37,11 @@ module VCAP::CloudController
 
     protected
 
-    attr_reader :instances_reporter
+    attr_reader :instances_reporters
 
     def inject_dependencies(dependencies)
       super
-      @instances_reporter = dependencies.fetch(:instances_reporter)
+      @instances_reporters = dependencies.fetch(:instances_reporters)
     end
   end
 end

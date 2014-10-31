@@ -1,8 +1,8 @@
 module VCAP::CloudController
   module Diego
     class StagingCompletionHandlerBase
-      def initialize(backends, logger, logger_prefix)
-        @backends = backends
+      def initialize(runners, logger, logger_prefix)
+        @runners = runners
         @logger = logger
         @logger_prefix = logger_prefix
       end
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
         already_staged = save_staging_result(app, payload)
         if !already_staged
-           @backends.find_one_to_run(app).start
+           @runners.runner_for_app(app).start
         end
       end
 

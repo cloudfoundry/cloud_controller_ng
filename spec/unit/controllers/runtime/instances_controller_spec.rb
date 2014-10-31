@@ -2,10 +2,10 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe VCAP::CloudController::InstancesController do
-    let(:instances_reporter) { double(:instances_reporter) }
+    let(:instances_reporters) { double(:instances_reporters) }
 
     before do
-      CloudController::DependencyLocator.instance.register(:instances_reporter, instances_reporter)
+      CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
     end
 
     describe "GET /v2/apps/:id/instances" do
@@ -105,13 +105,13 @@ module VCAP::CloudController
               },
             }
 
-            allow(instances_reporter).to receive(:all_instances_for_app).and_return(instances)
+            allow(instances_reporters).to receive(:all_instances_for_app).and_return(instances)
 
             get("/v2/apps/#{@app.guid}/instances", {}, headers_for(user))
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
-            expect(instances_reporter).to have_received(:all_instances_for_app).with(
+            expect(instances_reporters).to have_received(:all_instances_for_app).with(
                 satisfy {|requested_app| requested_app.guid == @app.guid})
           end
 
@@ -123,7 +123,7 @@ module VCAP::CloudController
             end
 
             before do
-              allow(instances_reporter).to receive(:all_instances_for_app).and_raise(
+              allow(instances_reporters).to receive(:all_instances_for_app).and_raise(
                 Errors::InstancesUnavailable.new(SomeInstancesException.new))
             end
 

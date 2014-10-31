@@ -1,8 +1,9 @@
 require "vcap/config"
 require "cloud_controller/account_capacity"
 require "uri"
-require "cloud_controller/diego/traditional/staging_completion_handler"
-require "cloud_controller/diego/docker/staging_completion_handler"
+require "cloud_controller/backends/stagers"
+require "cloud_controller/backends/runners"
+require "cloud_controller/backends/instances_reporters"
 
 # Config template for cloud controller
 module VCAP::CloudController
@@ -255,19 +256,22 @@ module VCAP::CloudController
         dependency_locator.register(:diego_client, diego_client)
         dependency_locator.register(:upload_handler, UploadHandler.new(config))
         dependency_locator.register(:app_event_repository, Repositories::Runtime::AppEventRepository.new)
-        dependency_locator.register(:instances_reporter, CompositeInstancesReporter.new(diego_client, hm_client))
 
         blobstore_url_generator = dependency_locator.blobstore_url_generator
         stager_pool = Dea::StagerPool.new(@config, message_bus, blobstore_url_generator)
         dea_pool = Dea::Pool.new(@config, message_bus)
-        backends = Backends.new(@config, message_bus, dea_pool, stager_pool)
-        dependency_locator.register(:backends, backends)
+        runners = Runners.new(@config, message_bus, dea_pool, stager_pool)
+        stagers = Stagers.new(@config, message_bus, dea_pool, stager_pool, runners)
+
+        dependency_locator.register(:stagers, stagers)
+        dependency_locator.register(:runners, runners)
+        dependency_locator.register(:instances_reporters, InstancesReporters.new(@config, diego_client, hm_client))
 
         diego_client.connect!
 
         Dea::Client.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 
-        AppObserver.configure(backends)
+        AppObserver.configure(stagers, runners)
 
         LegacyBulk.configure(@config, message_bus)
 

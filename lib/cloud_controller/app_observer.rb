@@ -1,19 +1,19 @@
 require "cloud_controller/multi_response_message_bus_request"
 require "models/runtime/droplet_uploader"
 require "cloud_controller/dea/app_stopper"
-require "cloud_controller/backends"
 
 module VCAP::CloudController
   module AppObserver
     class << self
       extend Forwardable
 
-      def configure(backends)
-        @backends = backends
+      def configure(stagers, runners)
+        @stagers = stagers
+        @runners = runners
       end
 
       def deleted(app)
-        @backends.find_one_to_run(app).stop
+        @runners.runner_for_app(app).stop
 
         delete_package(app) if app.package_hash
         delete_buildpack_cache(app)
@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       def routes_changed(app)
-        @backends.find_one_to_run(app).update_routes()
+        @runners.runner_for_app(app).update_routes()
       end
 
       private
@@ -48,20 +48,20 @@ module VCAP::CloudController
 
       def react_to_state_change(app)
         if !app.started?
-          @backends.find_one_to_run(app).stop
+          @runners.runner_for_app(app).stop
           return
         end
 
         if app.needs_staging?
-          @backends.validate_app_for_staging(app)
-          @backends.find_one_to_stage(app).stage
+          @stagers.validate_app(app)
+          @stagers.stager_for_app(app).stage
         else
-          @backends.find_one_to_run(app).start
+          @runners.runner_for_app(app).start
         end
       end
 
       def react_to_instances_change(app)
-        @backends.find_one_to_run(app).scale if app.started?
+        @runners.runner_for_app(app).scale if app.started?
       end
     end
   end

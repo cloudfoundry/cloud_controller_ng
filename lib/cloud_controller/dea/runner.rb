@@ -1,6 +1,14 @@
 module VCAP::CloudController
   module Dea
-    class Backend
+    class Runner
+      EXPORT_ATTRIBUTES = [
+        :instances,
+        :state,
+        :memory,
+        :package_state,
+        :version
+      ]
+
       def initialize(app, config, message_bus, dea_pool, stager_pool)
         @logger ||= Steno.logger("cc.dea.backend")
         @app = app
@@ -8,12 +16,6 @@ module VCAP::CloudController
         @message_bus = message_bus
         @dea_pool = dea_pool
         @stager_pool = stager_pool
-      end
-
-      def stage
-        blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
-        task = AppStagerTask.new(@config, @message_bus, @app, @dea_pool, @stager_pool, blobstore_url_generator)
-        @app.last_stager_response = task.stage { |staging_result| start(staging_result) }
       end
 
       def scale
@@ -34,6 +36,20 @@ module VCAP::CloudController
       end
 
       def update_routes
+      end
+
+      def desire_app_message
+        raise NotImplementedError
+      end
+
+      def desired_app_info
+        hash = {}
+        EXPORT_ATTRIBUTES.each do |field|
+          hash[field.to_s] = @app.values.fetch(field)
+        end
+        hash["id"] = @app.guid
+        hash["updated_at"] = @app.updated_at || @app.created_at
+        hash
       end
     end
   end

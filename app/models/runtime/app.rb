@@ -162,6 +162,7 @@ module VCAP::CloudController
       super
     end
 
+    # Call VCAP::CloudController::Runners.run_with_diego? for the true answer
     def run_with_diego?
       !!(environment_json && environment_json["DIEGO_RUN_BETA"] == "true")
     end

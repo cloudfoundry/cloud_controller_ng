@@ -13,6 +13,7 @@ module VCAP::CloudController
           @logger = Steno.logger("cc.hm9000")
           @dea_client = dea_client
           @message_bus = message_bus
+          @runners = CloudController::DependencyLocator.instance.runners
         end
 
         def handle_requests
@@ -81,6 +82,10 @@ module VCAP::CloudController
             return true, "App not found"
           end
 
+          if @runners.run_with_diego?(app)
+            return true, "App is participating in DIEGO BETA"
+          end
+
           if app.staging_failed?
             return true, "App failed to stage"
           end
@@ -109,7 +114,7 @@ module VCAP::CloudController
             return false, "App not found"
           end
 
-          if app.run_with_diego?
+          if @runners.run_with_diego?(app)
             return false, "App is participating in DIEGO BETA"
           end
 

@@ -35,15 +35,15 @@ module VCAP::CloudController
     end
 
     describe "GET /v2/apps/:id/summary" do
-      let(:instances_reporter) { double(:instances_reporter) }
+      let(:instances_reporters) { double(:instances_reporters) }
 
       before do
-        allow(CloudController::DependencyLocator.instance).to receive(:instances_reporter).and_return(instances_reporter)
+        allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
       end
 
       context "when the instances reporter reports instances" do
         before do
-          allow(instances_reporter).to receive(:number_of_starting_and_running_instances_for_app).and_return(@app.instances)
+          allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_app).and_return(@app.instances)
 
           get "/v2/apps/#{@app.guid}/summary", {}, admin_headers
         end
@@ -130,7 +130,7 @@ module VCAP::CloudController
         end
 
         before do
-          allow(instances_reporter).to receive(:number_of_starting_and_running_instances_for_app).and_raise(
+          allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_app).and_raise(
             Errors::InstancesUnavailable.new(SomeInstancesException.new))
 
           get "/v2/apps/#{@app.guid}/summary", {}, admin_headers

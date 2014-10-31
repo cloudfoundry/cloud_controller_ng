@@ -23,11 +23,11 @@ module VCAP::CloudController
             }
           }
         end
-        let(:instances_reporter) { double(:instances_reporter) }
+        let(:instances_reporters) { double(:instances_reporters) }
 
         before do
-          CloudController::DependencyLocator.instance.register(:instances_reporter, instances_reporter)
-          allow(instances_reporter).to receive(:stats_for_app).and_return(stats)
+          CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
+          allow(instances_reporters).to receive(:stats_for_app).and_return(stats)
         end
 
         context 'because they are a developer' do
@@ -55,7 +55,7 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
-            expect(instances_reporter).to have_received(:stats_for_app).with(
+            expect(instances_reporters).to have_received(:stats_for_app).with(
                                             satisfy { |requested_app| requested_app.guid == @app.guid })
           end
         end
@@ -85,14 +85,14 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
-            expect(instances_reporter).to have_received(:stats_for_app).with(
+            expect(instances_reporters).to have_received(:stats_for_app).with(
                                             satisfy { |requested_app| requested_app.guid == @app.guid })
           end
         end
 
         context 'when there is an error finding instances' do
           before do
-            allow(instances_reporter).to receive(:stats_for_app).and_raise(VCAP::Errors::ApiError.new_from_details('StatsError', 'msg'))
+            allow(instances_reporters).to receive(:stats_for_app).and_raise(VCAP::Errors::ApiError.new_from_details('StatsError', 'msg'))
           end
 
           it 'returns 400' do

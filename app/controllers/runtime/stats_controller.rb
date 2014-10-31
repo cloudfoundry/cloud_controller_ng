@@ -14,16 +14,16 @@ module VCAP::CloudController
         raise ApiError.new_from_details('StatsError', msg)
       end
 
-      [HTTP::OK, MultiJson.dump(instances_reporter.stats_for_app(app))]
+      [HTTP::OK, MultiJson.dump(instances_reporters.stats_for_app(app))]
     end
 
     protected
 
-    attr_reader :instances_reporter
+    attr_reader :instances_reporters
 
     def inject_dependencies(dependencies)
       super
-      @instances_reporter = dependencies[:instances_reporter]
+      @instances_reporters = dependencies[:instances_reporters]
     end
   end
 end

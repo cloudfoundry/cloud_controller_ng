@@ -278,6 +278,35 @@ module VCAP::CloudController
                 end
               end
             end
+
+            context "and the DIEGO_RUN_BETA flag is set " do
+              let(:environment) { {"DIEGO_RUN_BETA" => "true"} }
+
+              context "and diego is disabled" do
+                before do
+                  TestConfig.override(diego: {
+                    staging: 'disabled',
+                    running: 'disabled',
+                  })
+                end
+
+                it "should stop not the instance" do
+                  expect(dea_client).not_to receive(:stop_instances)
+                  subject.process_hm9000_stop(hm9000_stop_message)
+                end
+              end
+
+              context "and diego is enabled" do
+                it "should stop the instance" do
+                  expect(dea_client).to receive(:stop_instances) do |app_guid_to_stop, guid|
+                    expect(app_guid_to_stop).to eq(app.guid)
+                    expect(guid).to eq("abc")
+                  end
+
+                  subject.process_hm9000_stop(hm9000_stop_message)
+                end
+              end
+            end
           end
         end
 

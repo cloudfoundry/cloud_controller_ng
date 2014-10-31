@@ -2,8 +2,9 @@ require "cloud_controller/dea/instances_reporter"
 require "cloud_controller/diego/instances_reporter"
 
 module VCAP::CloudController
-  class CompositeInstancesReporter
-    def initialize(diego_client, health_manager_client)
+  class InstancesReporters
+    def initialize(config, diego_client, health_manager_client)
+      @config = config
       @diego_client = diego_client
       @health_manager_client = health_manager_client
     end
@@ -25,38 +26,32 @@ module VCAP::CloudController
     end
 
     def number_of_starting_and_running_instances_for_apps(apps)
-      diego_instances = diego_reporter.number_of_starting_and_running_instances_for_apps(apps_running_on_diego(apps))
-      legacy_instances = legacy_reporter.number_of_starting_and_running_instances_for_apps(apps_running_on_dea(apps))
+      diego_apps = diego_running_disabled? ? [] : apps.select(&:run_with_diego?)
+      dea_apps = apps - diego_apps
 
+      diego_instances = diego_reporter.number_of_starting_and_running_instances_for_apps(diego_apps)
+      legacy_instances = legacy_reporter.number_of_starting_and_running_instances_for_apps(dea_apps)
       legacy_instances.merge(diego_instances)
     end
 
     private
 
-    attr_reader :diego_client, :health_manager_client
-
-    def diego_reporter
-      Diego::InstancesReporter.new(diego_client)
-    end
-
-    def legacy_reporter
-      Dea::InstancesReporter.new(health_manager_client)
+    def diego_running_disabled?
+      @diego_running_disabled ||= @config[:diego][:running] == 'disabled'
     end
 
     def reporter_for_app(app)
-      if app.run_with_diego?
-        diego_reporter
-      else
-        legacy_reporter
-      end
+      return legacy_reporter if diego_running_disabled?
+
+      app.run_with_diego? ? diego_reporter : legacy_reporter
     end
 
-    def apps_running_on_diego(apps)
-      apps.select(&:run_with_diego?)
+    def diego_reporter
+      @diego_reporter ||= Diego::InstancesReporter.new(@diego_client)
     end
 
-    def apps_running_on_dea(apps)
-      apps - apps_running_on_diego(apps)
+    def legacy_reporter
+      @dea_reporter ||= Dea::InstancesReporter.new(@health_manager_client)
     end
   end
 end

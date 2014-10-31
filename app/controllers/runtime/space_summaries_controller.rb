@@ -12,11 +12,11 @@ module VCAP::CloudController
 
     protected
 
-    attr_reader :instances_reporter
+    attr_reader :instances_reporters
 
     def inject_dependencies(dependencies)
       super
-      @instances_reporter = dependencies[:instances_reporter]
+      @instances_reporters = dependencies[:instances_reporters]
     end
 
     private
@@ -31,7 +31,7 @@ module VCAP::CloudController
     end
 
     def app_summary(space)
-      instances = instances_reporter.number_of_starting_and_running_instances_for_apps(space.apps)
+      instances = instances_reporters.number_of_starting_and_running_instances_for_apps(space.apps)
       space.apps.collect do |app|
         {
           guid:              app.guid,

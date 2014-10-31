@@ -10,7 +10,7 @@ module VCAP::CloudController
       end
 
       context "as a developer" do
-        let(:instances_reporter) { double(:instances_reporter) }
+        let(:instances_reporters) { double(:instances_reporters) }
         let(:crashed_instances) do
           [
             {:instance => "instance_1", :since => 1},
@@ -19,8 +19,8 @@ module VCAP::CloudController
         end
 
         before do
-          CloudController::DependencyLocator.instance.register(:instances_reporter, instances_reporter)
-          allow(instances_reporter).to receive(:crashed_instances_for_app).and_return(crashed_instances)
+          CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
+          allow(instances_reporters).to receive(:crashed_instances_for_app).and_return(crashed_instances)
         end
 
         it "returns the crashed instances" do
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(200)
           expect(MultiJson.load(last_response.body)).to eq(expected)
-          expect(instances_reporter).to have_received(:crashed_instances_for_app).with(
+          expect(instances_reporters).to have_received(:crashed_instances_for_app).with(
                                           satisfy { |requested_app| requested_app.guid == @app.guid })
         end
       end

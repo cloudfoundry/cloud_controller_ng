@@ -6,12 +6,12 @@ module VCAP::CloudController
     module Docker
       describe StagingCompletionHandler do
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
-        let(:backend) { instance_double(Diego::Backend, start: nil) }
-        let(:backends) { instance_double(Backends, find_one_to_run: backend) }
+        let(:runner) { instance_double(Diego::Runner, start: nil) }
+        let(:runners) { instance_double(Runners, runner_for_app: runner) }
         let(:app) { AppFactory.make(staging_task_id: "fake-staging-task-id") }
         let(:payload) { {} }
 
-        subject(:handler) { StagingCompletionHandler.new(backends) }
+        subject(:handler) { StagingCompletionHandler.new(runners) }
 
         before do
           allow(Steno).to receive(:logger).with("cc.docker.stager").and_return(logger)
@@ -37,8 +37,8 @@ module VCAP::CloudController
           it "sends desires the app on Diego" do
             handler.staging_complete(payload)
 
-            expect(backends).to have_received(:find_one_to_run).with(app)
-            expect(backend).to have_received(:start)
+            expect(runners).to have_received(:runner_for_app).with(app)
+            expect(runner).to have_received(:start)
           end
 
           context "when it receives execution metadata" do
@@ -70,8 +70,8 @@ module VCAP::CloudController
             it "returns without sending a desire request for the app" do
               handler.staging_complete(payload)
 
-              expect(backends).not_to have_received(:find_one_to_run)
-              expect(backend).not_to have_received(:start)
+              expect(runners).not_to have_received(:runner_for_app)
+              expect(runner).not_to have_received(:start)
             end
 
             it "logs info about an unknown app for the CF operator" do
@@ -95,8 +95,8 @@ module VCAP::CloudController
             it "returns without sending a desired request for the app" do
               handler.staging_complete(payload)
 
-              expect(backends).not_to have_received(:find_one_to_run)
-              expect(backend).not_to have_received(:start)
+              expect(runners).not_to have_received(:runner_for_app)
+              expect(runner).not_to have_received(:start)
             end
 
             it "logs info about an invalid task id for the CF operator and returns" do
@@ -118,7 +118,7 @@ module VCAP::CloudController
             it "does not try to run it on diego twice" do
               handler.staging_complete(payload)
 
-              expect(backends).to have_received(:find_one_to_run).once
+              expect(runners).to have_received(:runner_for_app).once
             end
           end
         end
@@ -149,8 +149,8 @@ module VCAP::CloudController
           it "returns without sending a desired request for the app" do
             handler.staging_complete(payload)
 
-            expect(backends).not_to have_received(:find_one_to_run)
-            expect(backend).not_to have_received(:start)
+            expect(runners).not_to have_received(:runner_for_app)
+            expect(runner).not_to have_received(:start)
           end
         end
       end

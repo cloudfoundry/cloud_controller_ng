@@ -68,46 +68,17 @@ module VCAP::CloudController
       end
     end
 
-    def bulk_apps_query(last_id,batch_size)
-      query = App.where(
-        ["id > ?", last_id],
-        "deleted_at IS NULL"
-      )
-
-      if self.class.diego_enabled
-       query = query.where(diego: false)
-      end
-
-      query.order(:id).limit(batch_size)
-    end
-
     def bulk_apps
       batch_size = Integer(params.fetch("batch_size"))
       bulk_token = MultiJson.load(params.fetch("bulk_token"))
       last_id = Integer(bulk_token["id"] || 0)
-      id_for_next_token = nil
 
-      app_hashes = {}
-      query = bulk_apps_query(last_id,batch_size)
-      query.each do |app|
-        hash = {}
-        export_attributes = [
-          :instances,
-          :state,
-          :memory,
-          :package_state,
-          :version
-        ]
+      dependency_locator = ::CloudController::DependencyLocator.instance
+      runners = dependency_locator.runners
 
-        export_attributes.each do |field|
-          hash[field.to_s] = app.values.fetch(field)
-        end
-
-        hash["id"] = app.guid
-        hash["updated_at"] = app.updated_at || app.created_at
-        app_hashes[app.guid] = hash
-        id_for_next_token = app.id
-      end
+      apps = runners.dea_apps(batch_size, last_id)
+      app_hashes = apps.inject({}) { |acc, app| acc[app.guid] = runners.runner_for_app(app).desired_app_info; acc }
+      id_for_next_token = apps.empty? ? nil : apps.last.id
 
       BulkResponse.new(
         :results => app_hashes,

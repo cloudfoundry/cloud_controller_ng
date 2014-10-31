@@ -1,19 +1,10 @@
 module VCAP::CloudController
   module Diego
-    class Backend
-      def initialize(app, messenger, protocol, completion_handler)
+    class Runner
+      def initialize(app, messenger, protocol)
         @app = app
         @messenger = messenger
         @protocol = protocol
-        @completion_handler = completion_handler
-      end
-
-      def stage
-       @messenger.send_stage_request(@app)
-      end
-
-      def staging_complete(staging_response)
-        @completion_handler.staging_complete(staging_response)
       end
 
       def scale
@@ -34,6 +25,10 @@ module VCAP::CloudController
 
       def desire_app_message
         @protocol.desire_app_message(@app)
+      end
+
+      def desired_app_info
+        raise NotImplementedError
       end
     end
   end

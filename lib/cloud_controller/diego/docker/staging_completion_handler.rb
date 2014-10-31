@@ -6,8 +6,8 @@ module VCAP::CloudController
     module Docker
       class StagingCompletionHandler < VCAP::CloudController::Diego::StagingCompletionHandlerBase
 
-        def initialize(backends)
-          super(backends, Steno.logger("cc.docker.stager"), "diego.docker.staging.")
+        def initialize(runners)
+          super(runners, Steno.logger("cc.docker.stager"), "diego.docker.staging.")
         end
 
         private

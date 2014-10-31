@@ -3,13 +3,30 @@ require "membrane"
 
 module VCAP::CloudController
   describe StagingCompletionController do
-
     let(:url) { "/internal/staging/completed" }
 
-    let(:backend) { instance_double(Diego::Backend, staging_complete: nil, start: nil) }
+    let(:stager) { instance_double(Diego::Stager, staging_complete: nil) }
 
     let(:buildpack) { Buildpack.make }
-    let(:staged_app) { AppFactory.make(staging_task_id: "task-1", state: "STARTED", package_state: "PENDING") }
+
+    def make_diego_app
+      AppFactory.make.tap do |app|
+        app.environment_json = (app.environment_json || {}).merge("DIEGO_RUN_BETA" => "true")
+        app.package_state = "PENDING"
+        app.state = "STARTED"
+        app.staging_task_id = "task-1"
+        app.save
+      end
+    end
+    def make_dea_app
+      AppFactory.make.tap do |app|
+        app.package_state = "PENDING"
+        app.state = "STARTED"
+        app.staging_task_id = "task-1"
+        app.save
+      end
+    end
+    let(:staged_app) { make_diego_app }
 
     let(:app_id) { staged_app.guid }
     let(:task_id) { staged_app.staging_task_id }
@@ -32,7 +49,7 @@ module VCAP::CloudController
       @internal_password = "internal_password"
       authorize @internal_user, @internal_password
 
-      allow_any_instance_of(Backends).to receive(:diego_backend).and_return(backend)
+      allow_any_instance_of(Stagers).to receive(:stager_for_app).and_return(stager)
     end
 
     describe "authentication" do
@@ -71,19 +88,32 @@ module VCAP::CloudController
       end
     end
 
-    it "calls the backend handler with the staging response" do
-      expect(backend).to receive(:staging_complete).with(staging_response)
+    context "with a diego app" do
+      it "calls the stager with the staging response" do
+        expect(stager).to receive(:staging_complete).with(staging_response)
 
-      post url, MultiJson.dump(staging_response)
-      expect(last_response.status).to eq(200)
+        post url, MultiJson.dump(staging_response)
+        expect(last_response.status).to eq(200)
+      end
+
+      it "propagates api errors from staging_response" do
+        expect(stager).to receive(:staging_complete).and_raise(Errors::ApiError.new_from_details("JobTimeout"))
+
+        post url, MultiJson.dump(staging_response)
+        expect(last_response.status).to eq(524)
+        expect(last_response.body).to match /JobTimeout/
+      end
     end
 
-    it "propagates api errors from staging_response" do
-      expect(backend).to receive(:staging_complete).and_raise(Errors::ApiError.new_from_details("JobTimeout"))
+    context "with a dea app" do
+      let(:staged_app) { make_dea_app }
 
-      post url, MultiJson.dump(staging_response)
-      expect(last_response.status).to eq(524)
-      expect(last_response.body).to match /JobTimeout/
+      it "fails with a 403" do
+        post url, MultiJson.dump(staging_response)
+
+        expect(last_response.status).to eq(403)
+        expect(last_response.body).to match /StagingBackendInvalid/
+      end
     end
   end
 end

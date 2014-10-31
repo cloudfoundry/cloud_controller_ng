@@ -46,7 +46,7 @@ module CloudController
                                 }
                               when 'StagingCompletionController'
                                 {
-                                  backends:   dependency_locator.backends
+                                  stagers:   dependency_locator.stagers
                                 }
                               when 'AppsController', 'RestagesController'
                                 { app_event_repository: dependency_locator.app_event_repository }
@@ -64,7 +64,7 @@ module CloudController
                               when 'InstancesController', 'SpaceSummariesController', 'AppSummariesController',
                                    'CrashesController', 'StatsController'
                                 {
-                                  instances_reporter:   dependency_locator.instances_reporter,
+                                  instances_reporters:   dependency_locator.instances_reporters,
                                 }
                               when 'AppBitsDownloadController'
                                 {

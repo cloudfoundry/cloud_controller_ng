@@ -5,8 +5,8 @@ module VCAP::CloudController
     module Traditional
       class StagingCompletionHandler < VCAP::CloudController::Diego::StagingCompletionHandlerBase
 
-        def initialize(backends)
-          super(backends, Steno.logger("cc.stager"), "diego.staging.")
+        def initialize(runners)
+          super(runners, Steno.logger("cc.stager"), "diego.staging.")
           @staging_response_schema = Membrane::SchemaParser.parse do
             {
               "app_id" => String,
