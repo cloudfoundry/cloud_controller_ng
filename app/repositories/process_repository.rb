@@ -1,9 +1,8 @@
 module VCAP::CloudController
   class ProcessRepository
-    class InvalidProcess < StandardError;
-    end
-    class ProcessNotFound < StandardError;
-    end
+    class MutationAttempWithoutALock < StandardError; end
+    class InvalidProcess < StandardError; end
+    class ProcessNotFound < StandardError; end
 
     def new_process(opts)
       AppProcess.new(opts)
@@ -26,6 +25,7 @@ module VCAP::CloudController
       }.reject { |_, v| v.nil? }
 
       process_model = if desired_process.guid
+                        raise MutationAttempWithoutALock unless @lock_acquired
                         App.first!(guid: desired_process.guid).update(attributes)
                       else
                         App.create(attributes)
@@ -42,6 +42,22 @@ module VCAP::CloudController
       process_model = App.find(guid: guid)
       return if process_model.nil?
       process_from_model(process_model)
+    end
+
+    def find_by_guid_for_update(guid)
+      process_model = App.find(guid: guid)
+      yield nil and return if process_model.nil?
+
+      process_model.db.transaction do
+        process_model.lock!
+        process = process_from_model(process_model)
+        @lock_acquired = true
+        begin
+          yield process
+        ensure
+          @lock_acquired = false
+        end
+      end
     end
 
     def update(process, changes)
@@ -65,7 +81,9 @@ module VCAP::CloudController
 
     def delete(process)
       process_model = App.find(guid: process.guid)
-      process_model.destroy if process_model
+      return unless process_model
+      raise MutationAttempWithoutALock unless @lock_acquired
+      process_model.destroy
     end
 
     private

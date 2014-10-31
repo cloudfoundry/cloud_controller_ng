@@ -44,37 +44,36 @@ module VCAP::CloudController
     def update(guid)
       changes = MultiJson.load(body).symbolize_keys
 
-      initial_process = @process_repository.find_by_guid(guid)
+      @process_repository.find_by_guid_for_update(guid) do |initial_process|
+        if initial_process.nil? || @access_context.cannot?(:update, initial_process)
+          raise VCAP::Errors::ApiError.new_from_details('NotFound')
+        end
 
-      if initial_process.nil? || @access_context.cannot?(:update, initial_process)
-        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+        desired_process = @process_repository.update(initial_process, changes)
+
+        if @access_context.cannot?(:update, desired_process)
+          raise VCAP::Errors::ApiError.new_from_details('NotFound')
+        end
+
+        process = @process_repository.persist!(desired_process)
+
+        process_presenter = ProcessPresenter.new(process)
+        [HTTP::OK, process_presenter.present_json]
       end
-
-      desired_process = @process_repository.update(initial_process, changes)
-
-      if @access_context.cannot?(:update, desired_process)
-        raise VCAP::Errors::ApiError.new_from_details('NotFound')
-      end
-
-      process = @process_repository.persist!(desired_process)
-
-      process_presenter = ProcessPresenter.new(process)
-      [HTTP::OK, process_presenter.present_json]
-
     rescue MultiJson::ParseError => e
       raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
     end
 
     delete '/v3/processes/:guid', :delete
     def delete(guid)
-      process = @process_repository.find_by_guid(guid)
+      @process_repository.find_by_guid_for_update(guid) do |process|
+        if process.nil? || @access_context.cannot?(:delete, process)
+          raise VCAP::Errors::ApiError.new_from_details('NotFound')
+        end
 
-      if process.nil? || @access_context.cannot?(:delete, process)
-        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+        @process_repository.delete(process)
+        [HTTP::NO_CONTENT]
       end
-
-      @process_repository.delete(process)
-      [HTTP::NO_CONTENT]
     end
   end
 end

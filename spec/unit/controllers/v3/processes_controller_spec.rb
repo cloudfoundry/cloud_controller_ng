@@ -178,7 +178,7 @@ module VCAP::CloudController
 
       context 'when the user cannot update an process' do
         before do
-          allow(process_repo).to receive(:find_by_guid).and_return(process)
+          allow(process_repo).to receive(:find_by_guid_for_update).and_yield(process)
           SecurityContext.set(user)
         end
 
@@ -194,7 +194,7 @@ module VCAP::CloudController
 
       context 'when the process does not exist' do
         before do
-          allow(process_repo).to receive(:find_by_guid).and_return(nil)
+          allow(process_repo).to receive(:find_by_guid_for_update).and_yield(nil)
         end
         it 'raises an ApiError with a 404 code' do
           expect {
@@ -220,7 +220,7 @@ module VCAP::CloudController
 
       context 'when a user can update a process' do
         before do
-          expect(process_repo).to receive(:find_by_guid).and_return(process)
+          expect(process_repo).to receive(:find_by_guid_for_update).and_yield(process)
           expect(process_repo).to receive(:update).and_return(process)
           expect(process_repo).to receive(:persist!).and_return(process)
           SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
