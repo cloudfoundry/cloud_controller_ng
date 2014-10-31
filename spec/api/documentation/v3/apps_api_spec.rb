@@ -20,6 +20,12 @@ resource 'Apps (Experimental)', type: :api do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:guid) { app_model.guid }
     let(:space_guid) { app_model.space_guid }
+    let(:space) { VCAP::CloudController::Space.find(guid: space_guid) }
+
+    before do
+      space.organization.add_user user
+      space.add_developer user
+    end
 
     example 'Get an App' do
       process = VCAP::CloudController::AppFactory.make(app_guid: guid)
