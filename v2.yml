@@ -663,6 +663,11 @@
   http_code: 400
   message: Docker support has not been enabled.
 
+320004:
+  name: StagingBackendInvalid
+  http_code: 403
+  message: "The request staging completion endpoint only handles apps desired to stage on the Diego backend."
+
 330000:
   name: FeatureFlagNotFound
   http_code: 404
