@@ -538,6 +538,7 @@ module VCAP::CloudController
 
       it "logs audit.space.delete-request when deleting a space" do
         space = Space.make
+        app = AppModel.make(space_guid: space.guid)
         organization_guid = space.organization.guid
         space_guid = space.guid
         delete "/v2/spaces/#{space_guid}", "", json_headers(admin_headers)
@@ -550,6 +551,7 @@ module VCAP::CloudController
         expect(event.space_guid).to eq(space_guid)
         expect(event.actor_name).to eq(SecurityContext.current_user_email)
         expect(event.organization_guid).to eq(organization_guid)
+        expect(AppModel.all).to_not include(app)
       end
     end
 
