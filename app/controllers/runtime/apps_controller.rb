@@ -26,6 +26,31 @@ module VCAP::CloudController
 
     query_parameters :name, :space_guid, :organization_guid
 
+    def create
+      json_msg = self.class::CreateMessage.decode(body)
+
+      @request_attrs = json_msg.extract(stringify_keys: true)
+
+      logger.debug "cc.create", model: self.class.model_class_name, attributes: request_attrs
+
+      before_create
+
+      obj = nil
+      model.db.transaction do
+        v3_app_model = AppModel.create
+        obj = model.create_from_hash(request_attrs.merge(app_guid: v3_app_model.guid))
+        validate_access(:create, obj, request_attrs)
+      end
+
+      after_create(obj)
+
+      [
+        HTTP::CREATED,
+        {"Location" => "#{self.class.path}/#{obj.guid}"},
+        object_renderer.render_json(self.class, obj, @opts)
+      ]
+    end
+
     get '/v2/apps/:guid/env', :read_env
     def read_env(guid)
       app = find_guid_and_validate_access(:read_env, guid, App)

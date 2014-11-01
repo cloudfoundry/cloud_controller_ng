@@ -105,7 +105,11 @@ module VCAP::CloudController
 
           allow(app_event_repository).to receive(:record_app_create).and_call_original
 
-          post "/v2/apps", MultiJson.dump(initial_hash), json_headers(admin_headers)
+          expect {
+            post "/v2/apps", MultiJson.dump(initial_hash), json_headers(admin_headers)
+          }.to change { AppModel.count }.by 1
+
+          expect(AppModel.last.processes.first.name).to include("maria")
           expect(app_event_repository).to have_received(:record_app_create).with(App.last, admin_user, SecurityContext.current_user_email, expected_attrs)
         end
       end

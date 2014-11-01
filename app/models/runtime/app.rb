@@ -50,7 +50,7 @@ module VCAP::CloudController
                       :environment_json, :memory, :instances, :disk_quota,
                       :state, :command, :console, :debug,
                       :staging_task_id, :service_binding_guids, :route_guids, :health_check_timeout,
-                      :docker_image
+                      :docker_image, :app_guid
 
     strip_attributes :name
 
