@@ -3,24 +3,6 @@ require 'net/http'
 module VCAP::Services
   module ServiceBrokers::V2
 
-    class ServiceBrokerBadResponse < HttpResponseError
-      def initialize(uri, method, response)
-        begin
-          hash = MultiJson.load(response.body)
-        rescue MultiJson::ParseError
-        end
-
-        if hash.is_a?(Hash) && hash.has_key?('description')
-          message = "Service broker error: #{hash['description']}"
-        else
-          message = "The service broker API returned an error from #{uri}: #{response.code} #{response.message}"
-        end
-
-        super(message, uri, method, response)
-      end
-
-    end
-
     class ServiceBrokerApiUnreachable < HttpRequestError
       def initialize(uri, method, source)
         super(
@@ -40,53 +22,6 @@ module VCAP::Services
           method,
           source
         )
-      end
-    end
-
-    class ServiceBrokerResponseMalformed < HttpResponseError
-      def initialize(uri, method, response)
-        super(
-          "The service broker response was not understood",
-          uri,
-          method,
-          response
-        )
-      end
-    end
-
-    class ServiceBrokerApiAuthenticationFailed < HttpResponseError
-      def initialize(uri, method, response)
-        super(
-          "Authentication failed for the service broker API. Double-check that the username and password are correct: #{uri}",
-          uri,
-          method,
-          response
-        )
-      end
-    end
-
-    class ServiceBrokerConflict < HttpResponseError
-      def initialize(uri, method, response)
-        error_message = parsed_json(response.body)["description"]
-
-        super(
-          error_message || "Resource conflict: #{uri}",
-          uri,
-          method,
-          response
-        )
-      end
-
-      def response_code
-        409
-      end
-
-      private
-
-      def parsed_json(str)
-        MultiJson.load(str)
-      rescue MultiJson::ParseError
-        {}
       end
     end
 
