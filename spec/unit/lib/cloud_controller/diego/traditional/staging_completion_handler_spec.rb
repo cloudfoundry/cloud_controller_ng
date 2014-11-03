@@ -115,21 +115,14 @@ module VCAP::CloudController
     end
 
     describe "failure cases" do
-      context "when another staging task has started" do
+      context "when the app has already been staged" do
         before do
-          success_response["task_id"] = "another-task-id"
-        end
-
-        it "does not start the app instances" do
-          expect(Dea::Client).not_to receive(:start)
           handle_staging_result(success_response)
         end
 
-        it "should not update the app with a detected buildpack" do
+        it "does not start the app instances twice" do
           handle_staging_result(success_response)
-          staged_app.reload
-          expect(staged_app.detected_buildpack).not_to eq("INTERCAL")
-          expect(staged_app.detected_buildpack_guid).not_to eq(buildpack.guid)
+          expect(backend).to have_received(:start).once
         end
       end
 

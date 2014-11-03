@@ -109,6 +109,18 @@ module VCAP::CloudController
               )
             end
           end
+
+          context "when it receives another success response" do
+            before do
+              handler.staging_complete(payload)
+            end
+
+            it "does not try to run it on diego twice" do
+              handler.staging_complete(payload)
+
+              expect(backends).to have_received(:find_one_to_run).once
+            end
+          end
         end
 
         context "when it receives a failure response" do
