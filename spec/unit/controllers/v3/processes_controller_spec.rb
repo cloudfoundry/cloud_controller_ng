@@ -4,8 +4,9 @@ module VCAP::CloudController
   describe ProcessesController do
     let(:logger) { instance_double(Steno::Logger) }
     let(:process_repo) { instance_double(ProcessRepository) }
-    let(:app_model) { AppFactory.make }
-    let(:process) { AppProcess.new(app_model) }
+    let(:process_model) { AppFactory.make(app_guid: app_model.guid) }
+    let(:app_model) { AppModel.make }
+    let(:process) { AppProcess.new(process_model) }
     let(:user) { User.make }
     let(:guid) { process.guid }
     let(:req_body) {''}
@@ -56,29 +57,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      context 'when the process does exist' do
-        before do
-          allow(process_repo).to receive(:find_by_guid).and_return(process)
-          SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
-        end
-
-        it 'returns a 200' do
-          response_code, _ = process_controller.show(guid)
-          expect(response_code).to eq 200
-        end
-
-        it 'returns the process in JSON format' do
-          expected_response = {
-            'guid' => process.guid,
-          }
-
-          _ , json_body = process_controller.show(app_model.guid)
-          response_hash = MultiJson.load(json_body)
-
-          expect(response_hash).to match(expected_response)
-        end
-      end
     end
 
     describe '#create' do
@@ -89,7 +67,8 @@ module VCAP::CloudController
           'instances' => 2,
           'disk_quota' => 1024,
           'space_guid' => Space.make.guid,
-          'stack_guid' => Stack.make.guid
+          'stack_guid' => Stack.make.guid,
+          'app_guid' => app_model.guid,
         }.to_json
       end
 
@@ -215,31 +194,6 @@ module VCAP::CloudController
             expect(error.name).to eq 'MessageParseError'
             expect(error.response_code).to eq 400
           end
-        end
-      end
-
-      context 'when a user can update a process' do
-        before do
-          expect(process_repo).to receive(:find_by_guid_for_update).and_yield(process)
-          expect(process_repo).to receive(:update).and_return(process)
-          expect(process_repo).to receive(:persist!).and_return(process)
-          SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
-        end
-
-        it 'returns a 200 Ok response' do
-          response_code, _ = process_controller.update(guid)
-          expect(response_code).to eq 200
-        end
-
-        it 'returns the process information in JSON format' do
-          expected_response = {
-            'guid' => process.guid,
-          }
-
-          _, json_body = process_controller.update(process.guid)
-          response_hash = MultiJson.load(json_body)
-
-          expect(response_hash).to match(expected_response)
         end
       end
     end

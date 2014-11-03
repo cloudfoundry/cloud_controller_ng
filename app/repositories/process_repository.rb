@@ -12,9 +12,19 @@ module VCAP::CloudController
       process_model = if desired_process.guid
                         raise MutationAttempWithoutALock unless @lock_acquired
                         changes = changes_for_process(desired_process)
+                        if changes[:app_guid] && !AppModel.find(guid: changes[:app_guid])
+                          raise InvalidProcess.new("App was not found with guid: #{changes[:app_guid]}")
+                        end
                         App.first!(guid: desired_process.guid).update(changes)
                       else
                         attributes = attributes_for_process(desired_process).reject { |_, v| v.nil? }
+                        unless attributes[:app_guid]
+                          raise InvalidProcess.new("Process must be associated with existing app")
+                        end
+                        unless AppModel.find(guid: attributes[:app_guid])
+                          raise InvalidProcess.new("App was not found with guid: #{attributes[:app_guid]}")
+                        end
+
                         App.create(attributes)
                       end
 

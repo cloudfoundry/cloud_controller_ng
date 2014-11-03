@@ -8,6 +8,7 @@ module VCAP::CloudController
 
     def present_json
       process_hash = {
+        app_guid: process.app_guid,
         guid: process.guid,
       }
 
