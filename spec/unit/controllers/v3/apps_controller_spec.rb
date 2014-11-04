@@ -156,6 +156,22 @@ module VCAP::CloudController
             expect(response_code).to eq 204
           end
         end
+
+        context 'when the app has child processes' do
+          before do
+            SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
+            AppFactory.make(app_guid: guid)
+          end
+
+          it 'raises a 409' do
+            expect {
+              response_code, _ = apps_controller.delete(guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'Conflict'
+              expect(error.response_code).to eq 409
+            end
+          end
+        end
       end
     end
   end

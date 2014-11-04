@@ -41,6 +41,10 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details('NotFound')
       end
 
+      if app_model.processes.any?
+        raise VCAP::Errors::ApiError.new_from_details('Conflict', 'Has child processes')
+      end
+
       app_model.destroy
       [HTTP::NO_CONTENT]
     end
