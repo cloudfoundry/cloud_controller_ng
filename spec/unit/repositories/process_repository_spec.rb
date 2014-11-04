@@ -140,7 +140,8 @@ module VCAP::CloudController
 
       context 'when the process exists in the database' do
           it 'updates the existing process data model' do
-            app = AppFactory.make
+            app = AppFactory.make(package_state: 'STAGED')
+            original_package_state = app.package_state
             process_repository = ProcessRepository.new
             process_repository.find_by_guid_for_update(app.guid) do |initial_process|
               changes = {
@@ -167,6 +168,7 @@ module VCAP::CloudController
               expect(process.health_check_timeout).to eq(app.health_check_timeout)
               expect(process.docker_image).to eq(app.docker_image)
               expect(process.environment_json).to eq(app.environment_json)
+              expect(app.reload.package_state).to eq(original_package_state)
             end
           end
 

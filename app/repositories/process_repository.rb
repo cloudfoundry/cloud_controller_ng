@@ -9,25 +9,12 @@ module VCAP::CloudController
     end
 
     def persist!(desired_process)
-      attributes = {
-        name:                 desired_process.name,
-        space_guid:           desired_process.space_guid,
-        stack_guid:           desired_process.stack_guid,
-        disk_quota:           desired_process.disk_quota,
-        memory:               desired_process.memory,
-        instances:            desired_process.instances,
-        state:                desired_process.state,
-        command:              desired_process.command,
-        buildpack:            desired_process.buildpack,
-        health_check_timeout: desired_process.health_check_timeout,
-        docker_image:         desired_process.docker_image,
-        environment_json:     desired_process.environment_json
-      }.reject { |_, v| v.nil? }
-
       process_model = if desired_process.guid
                         raise MutationAttempWithoutALock unless @lock_acquired
-                        App.first!(guid: desired_process.guid).update(attributes)
+                        changes = changes_for_process(desired_process)
+                        App.first!(guid: desired_process.guid).update(changes)
                       else
+                        attributes = attributes_for_process(desired_process).reject { |_, v| v.nil? }
                         App.create(attributes)
                       end
 
@@ -61,7 +48,27 @@ module VCAP::CloudController
     end
 
     def update(process, changes)
-      attributes = {
+      old_changes = process.changes
+      attributes = attributes_for_process(process).merge(changes)
+
+      AppProcess.new(attributes, old_changes.merge(changes))
+    end
+
+    def delete(process)
+      process_model = App.find(guid: process.guid)
+      return unless process_model
+      raise MutationAttempWithoutALock unless @lock_acquired
+      process_model.destroy
+    end
+
+    private
+
+    def changes_for_process(process)
+      process.changes
+    end
+
+    def attributes_for_process(process)
+      {
         guid:                 process.guid,
         name:                 process.name,
         space_guid:           process.space_guid,
@@ -75,18 +82,8 @@ module VCAP::CloudController
         health_check_timeout: process.health_check_timeout,
         docker_image:         process.docker_image,
         environment_json:     process.environment_json
-      }.merge(changes)
-      AppProcess.new(attributes)
+      }
     end
-
-    def delete(process)
-      process_model = App.find(guid: process.guid)
-      return unless process_model
-      raise MutationAttempWithoutALock unless @lock_acquired
-      process_model.destroy
-    end
-
-    private
 
     def process_from_model(model)
       AppProcess.new({

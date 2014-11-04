@@ -4,7 +4,9 @@ module VCAP::CloudController
       :instances, :state, :command, :buildpack, :health_check_timeout,
       :docker_image, :environment_json, :name
 
-    def initialize(opts)
+    attr_reader :changes
+
+    def initialize(opts, changes={})
       @guid                 = opts[:guid]
       @name                 = opts[:name]
       @space_guid           = opts[:space_guid]
@@ -18,6 +20,8 @@ module VCAP::CloudController
       @health_check_timeout = opts[:health_check_timeout]
       @docker_image         = opts[:docker_image]
       @environment_json     = opts[:environment_json]
+
+      @changes = changes
     end
   end
 end
