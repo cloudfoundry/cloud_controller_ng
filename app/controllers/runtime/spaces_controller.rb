@@ -97,7 +97,6 @@ module VCAP::CloudController
     def delete(guid)
       space = find_guid_and_validate_access(:delete, guid)
       @space_event_repository.record_space_delete_request(space, SecurityContext.current_user, SecurityContext.current_user_email, recursive?)
-      AppModel.where(space_guid: guid).delete
       do_delete(space)
     end
 

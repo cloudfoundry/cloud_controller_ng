@@ -538,20 +538,51 @@ module VCAP::CloudController
 
       it "logs audit.space.delete-request when deleting a space" do
         space = Space.make
-        app = AppModel.make(space_guid: space.guid)
         organization_guid = space.organization.guid
         space_guid = space.guid
-        delete "/v2/spaces/#{space_guid}", "", json_headers(admin_headers)
+        delete "/v2/spaces/#{space_guid}?recursive=true", "", json_headers(admin_headers)
 
         expect(last_response.status).to eq(204)
 
         event = Event.find(:type => "audit.space.delete-request", :actee => space_guid)
         expect(event).not_to be_nil
-        expect(event.metadata["request"]).to eq("recursive" => false)
+        expect(event.metadata["request"]).to eq("recursive" => true)
         expect(event.space_guid).to eq(space_guid)
         expect(event.actor_name).to eq(SecurityContext.current_user_email)
         expect(event.organization_guid).to eq(organization_guid)
-        expect(AppModel.all).to_not include(app)
+      end
+    end
+
+    describe 'DELETE /v2/spaces/:guid' do
+      context 'when recursive is false' do
+        it 'successfully deletes spaaces with no associations' do
+          space_guid = Space.make.guid
+          delete "/v2/spaces/#{space_guid}", "", json_headers(admin_headers)
+
+          expect(last_response.status).to eq(204)
+          expect(Space.find(guid: space_guid)).to be_nil
+        end
+
+        it 'fails to delete spaces with v3 apps associated to it' do
+          space_guid = Space.make.guid
+          AppModel.make(space_guid: space_guid)
+          delete "/v2/spaces/#{space_guid}", "", json_headers(admin_headers)
+
+          expect(last_response.status).to eq(400)
+          expect(Space.find(guid: space_guid)).not_to be_nil
+        end
+      end
+
+      context 'when recursive is true' do
+        it 'successfully deletes spaaces with v3 app associations' do
+          space_guid = Space.make.guid
+          app_guid = AppModel.make(space_guid: space_guid).guid
+          delete "/v2/spaces/#{space_guid}?recursive=true", "", json_headers(admin_headers)
+
+          expect(last_response.status).to eq(204)
+          expect(Space.find(guid: space_guid)).to be_nil
+          expect(AppModel.find(guid: app_guid)).to be_nil
+        end
       end
     end
 
