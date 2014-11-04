@@ -36,7 +36,7 @@ module CloudController
         end
 
         if file.respond_to?(:url)
-          return file.url(Time.current + 3600)
+          return file.url(Time.now + 3600)
         end
         return file.public_url
       end

@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     def schedule_cleanup(name, klass, at)
       Clockwork.every(1.day, "#{name}.cleanup.job", at: at) do |_|
-        @logger.info("Queueing #{klass} at #{Time.current}")
+        @logger.info("Queueing #{klass} at #{Time.now}")
         cutoff_age_in_days = @config.fetch(name.to_sym).fetch(:cutoff_age_in_days)
         job = klass.new(cutoff_age_in_days)
         Jobs::Enqueuer.new(job, queue: "cc-generic").enqueue()

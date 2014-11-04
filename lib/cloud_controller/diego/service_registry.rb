@@ -25,12 +25,12 @@ module VCAP::CloudController::Diego
     attr_reader :message_bus
 
     def set_tps_addr(guid, addr, ttl)
-      expires_at         = Time.current + ttl
+      expires_at         = Time.now + ttl
       tps_services[guid] = { addr: addr, expires_at: expires_at }
     end
 
     def expire_tps_addrs
-      now = Time.current
+      now = Time.now
       tps_services.select! { |_, val| val[:expires_at] > now }
     end
 

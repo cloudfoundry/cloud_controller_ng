@@ -59,9 +59,9 @@ module VCAP
 
     def decode_token_with_key(auth_token, options)
       options = {:audience_ids => config[:resource_id]}.merge(options)
-      token = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, Time.current.to_i - @grace_period_in_seconds)
+      token = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, Time.now.to_i - @grace_period_in_seconds)
       expiration_time = token['exp'] || token[:exp]
-      if expiration_time && expiration_time < Time.current.to_i
+      if expiration_time && expiration_time < Time.now.to_i
         @logger.warn("token currently expired but accepted within grace period of #{@grace_period_in_seconds} seconds")
       end
       token

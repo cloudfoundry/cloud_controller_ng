@@ -1,7 +1,6 @@
 require "bcrypt"
 require "sinatra"
 require "sequel"
-Sequel.default_timezone = :utc
 require "thin"
 require "multi_json"
 require "delayed_job"
@@ -21,7 +20,6 @@ require "cloud_controller/security_context"
 require "active_support/core_ext/hash"
 require "active_support/core_ext/object/to_query"
 require "active_support/json/encoding"
-Time.zone = "UTC"
 
 module VCAP::CloudController; end
 

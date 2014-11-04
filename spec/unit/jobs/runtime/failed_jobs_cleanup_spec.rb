@@ -34,7 +34,7 @@ module VCAP::CloudController
         end
 
         context "non-failing jobs" do
-          let(:run_at) { Time.current + 1.day }
+          let(:run_at) { Time.now + 1.day }
           let(:the_job) { SuccessJob.new }
 
           it "the job is not removed" do
@@ -45,7 +45,7 @@ module VCAP::CloudController
         end
 
         context "failing jobs" do
-          let(:run_at) { Time.current - 1.day }
+          let(:run_at) { Time.now - 1.day }
           let(:the_job) { FailingJob.new }
 
           context "when younger than specified cut-off" do
@@ -57,7 +57,7 @@ module VCAP::CloudController
           end
 
           context "when older than specified cut-off" do
-            let(:run_at) { Time.current - 3.days }
+            let(:run_at) { Time.now - 3.days }
 
             it "removes the job" do
               expect {

@@ -24,7 +24,7 @@ module VCAP::CloudController::Diego
 
         context 'when a broadcast message has expired' do
           before do
-            Timecop.travel(Time.current + 30)
+            Timecop.travel(Time.now + 30)
           end
 
           it 'no longer contains the expired ip address' do

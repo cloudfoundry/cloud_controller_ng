@@ -21,7 +21,7 @@ module VCAP::CloudController
       end
 
       def process_advertise_message(message)
-        advertisement = NatsMessages::DeaAdvertisement.new(message, Time.current.to_i + @advertise_timeout)
+        advertisement = NatsMessages::DeaAdvertisement.new(message, Time.now.to_i + @advertise_timeout)
 
         mutex.synchronize do
           remove_advertisement_for_id(advertisement.dea_id)
@@ -30,7 +30,7 @@ module VCAP::CloudController
       end
 
       def process_shutdown_message(message)
-        fake_advertisement = NatsMessages::DeaAdvertisement.new(message, Time.current.to_i + @advertise_timeout)
+        fake_advertisement = NatsMessages::DeaAdvertisement.new(message, Time.now.to_i + @advertise_timeout)
 
         mutex.synchronize do
           remove_advertisement_for_id(fake_advertisement.dea_id)
@@ -69,7 +69,7 @@ module VCAP::CloudController
       attr_reader :message_bus
 
       def prune_stale_deas
-        now = Time.current.to_i
+        now = Time.now.to_i
         @dea_advertisements.delete_if { |ad| ad.expired?(now) }
       end
 

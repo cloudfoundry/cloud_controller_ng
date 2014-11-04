@@ -6,7 +6,7 @@ namespace :db do
 
     migrations_dir = File.join("db", "migrations")
 
-    version = ENV["VERSION"] || Time.current.utc.strftime("%Y%m%d%H%M%S")
+    version = ENV["VERSION"] || Time.now.utc.strftime("%Y%m%d%H%M%S")
     filename = "#{version}_#{name}.rb"
     FileUtils.mkdir_p(migrations_dir)
 

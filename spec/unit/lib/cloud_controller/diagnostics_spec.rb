@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       it "populates the start time to now" do
-        now = Time.current
+        now = Time.now
         Timecop.freeze now do
           expect(current_request[:start_time]).to be_within(0.01).of(now.to_f)
         end
@@ -98,9 +98,9 @@ module VCAP::CloudController
 
       describe "file name" do
         it "uses a file name that includes a time stamp" do
-          Timecop.freeze Time.current do
+          Timecop.freeze Time.now do
             filename = Diagnostics.collect(output_dir)
-            timestamp = Time.current.strftime("%Y%m%d-%H:%M:%S.%L")
+            timestamp = Time.now.strftime("%Y%m%d-%H:%M:%S.%L")
             expect(filename).to match_regex(/#{timestamp}/)
           end
         end

@@ -5,7 +5,7 @@ module IntegrationHttp
   def admin_token
     token = {
       "aud" => "cloud_controller",
-      "exp" => Time.current.to_i + 10_000,
+      "exp" => Time.now.to_i + 10_000,
       "client_id" => Sham.guid,
       "scope" => ["cloud_controller.admin"],
     }

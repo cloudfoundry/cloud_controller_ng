@@ -172,7 +172,7 @@ describe MultiResponseMessageBusRequest do
     end
 
     it "cancels timeout" do
-      t = Time.current
+      t = Time.now
       multi_response_message_bus_request.on_response(100) { |*args| raise "Must never be called" }
       multi_response_message_bus_request.request({})
       multi_response_message_bus_request.ignore_subsequent_responses
@@ -180,7 +180,7 @@ describe MultiResponseMessageBusRequest do
       # if timeout timer does not get cancelled
       # this test will take ~100s instead of less than 100s
       # (Use within 50s instead of 0.1s since system might be busy.)
-      expect(Time.current).to be_within(50).of(t)
+      expect(Time.now).to be_within(50).of(t)
     end
 
     it "raises error when request was not made" do

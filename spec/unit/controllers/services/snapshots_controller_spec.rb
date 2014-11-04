@@ -30,7 +30,7 @@ module VCAP::CloudController
 
     describe "POST", "/v2/snapshots" do
       let(:new_name) { 'new name' }
-      let(:snapshot_created_at) { Time.current.to_s }
+      let(:snapshot_created_at) { Time.now.to_s }
       let(:new_snapshot) { VCAP::Services::Api::SnapshotV2.new(snapshot_id: '1', name: 'foo', state: 'empty', size: 0, created_time: snapshot_created_at)}
       let(:payload) {
         MultiJson.dump(:service_instance_guid => service_instance.guid,
@@ -156,7 +156,7 @@ module VCAP::CloudController
         end
 
         it "returns an list of snapshots" do
-          created_time = Time.current.to_s
+          created_time = Time.now.to_s
           expect(service_instance).to receive(:enum_snapshots) do
             [VCAP::Services::Api::SnapshotV2.new(
               "snapshot_id" => "1234",

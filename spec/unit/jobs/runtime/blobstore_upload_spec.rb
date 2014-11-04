@@ -40,7 +40,7 @@ module VCAP::CloudController
           BlobstoreUpload.class_eval do
             def reschedule_at(_, _= nil)
               #induce the jobs to reschedule almost immediately instead of waiting around for the backoff algorithm
-              Time.current
+              Time.now
             end
           end
           BlobstoreUpload.new(local_file.path, blobstore_key, blobstore_name)
