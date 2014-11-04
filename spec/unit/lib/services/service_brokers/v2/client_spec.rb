@@ -130,6 +130,49 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
     end
+
+    describe ServiceBrokerRejectedPlanUpdate do
+      let(:method) { 'PUT' }
+      let(:response_body) { '{"description": "error message"}' }
+      let(:response) { double(code: 422, reason: 'Broker rejected the upate', body: response_body) }
+
+      it "initializes the base class correctly" do
+        exception = ServiceBrokerRejectedPlanUpdate.new(uri, method, response)
+        expect(exception.message).to eq("error message")
+        expect(exception.uri).to eq(uri)
+        expect(exception.method).to eq(method)
+        expect(exception.source).to eq(MultiJson.load(response.body))
+      end
+
+      it "has a response_code of 400" do
+        exception = ServiceBrokerRejectedPlanUpdate.new(uri, method, response)
+        expect(exception.response_code).to eq(400)
+      end
+
+      context "when the description field is missing" do
+        let(:response_body) { '{"field": "value"}' }
+
+        it "initializes the base class correctly" do
+          exception = ServiceBrokerRejectedPlanUpdate.new(uri, method, response)
+          expect(exception.message).to eq("The service broker could not fulfill the update request.")
+          expect(exception.uri).to eq(uri)
+          expect(exception.method).to eq(method)
+          expect(exception.source).to eq(MultiJson.load(response.body))
+        end
+      end
+
+      context "when the body is not JSON-parsable" do
+        let(:response_body) { 'foo' }
+
+        it "initializes the base class correctly" do
+          exception = ServiceBrokerRejectedPlanUpdate.new(uri, method, response)
+          expect(exception.message).to eq("The service broker could not fulfill the update request.")
+          expect(exception.uri).to eq(uri)
+          expect(exception.method).to eq(method)
+          expect(exception.source).to eq(response.body)
+        end
+      end
+    end
   end
 
   describe Client do
@@ -372,7 +415,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:path) { "/v2/service_instances/#{instance.guid}/" }
 
       it 'makes a patch request with the new service plan' do
-        allow(http_client).to receive(:patch)
+        allow(http_client).to receive(:patch).and_return(double('response', code: 200, body: '{}'))
         client.update_service_plan(instance, new_plan)
 
         expect(http_client).to have_received(:patch).with(
@@ -390,11 +433,48 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a patch request to the correct path' do
-        allow(http_client).to receive(:patch)
+        allow(http_client).to receive(:patch).and_return(double('response', code: 200, body: '{}'))
 
         client.update_service_plan(instance, new_plan)
 
         expect(http_client).to have_received(:patch).with(path, anything())
+      end
+
+      describe 'error handling' do
+        before do
+          fake_response = double('response', code: status_code, body: body)
+          allow(http_client).to receive(:patch).and_return(fake_response)
+        end
+
+        context 'when the broker returns a 400' do
+          let(:status_code) { '400' }
+          let(:body) { { description: 'the request was malformed' }.to_json }
+          it 'raises a ServiceBrokerBadResponse error' do
+            expect{ client.update_service_plan(instance, new_plan) }.to raise_error(
+              ServiceBrokerBadResponse, /the request was malformed/
+            )
+          end
+        end
+
+        context 'when the broker returns a 404' do
+          let(:status_code) { '404' }
+          let(:body) { { description: 'service instance not found'}.to_json }
+          it 'raises a ServiceBrokerBadRequest error' do
+            expect{ client.update_service_plan(instance, new_plan) }.to raise_error(
+              ServiceBrokerBadResponse, /service instance not found/
+            )
+          end
+        end
+
+        context 'when the broker returns a 422' do
+          let(:status_code) { '422' }
+          let(:body) { { description: 'cannot update to this plan' }.to_json }
+          it 'raises a ServiceBrokerRejectedPlanUpdate error' do
+            expect{ client.update_service_plan(instance, new_plan) }.to raise_error(
+              ServiceBrokerRejectedPlanUpdate, /cannot update to this plan/
+            )
+          end
+        end
       end
     end
 

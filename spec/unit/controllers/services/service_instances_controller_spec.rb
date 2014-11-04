@@ -532,6 +532,18 @@ module VCAP::CloudController
           expect(service_instance.reload.service_plan).to eq(old_service_plan)
         end
       end
+
+      context 'when the broker client raises a ServiceBrokerRejectedPlanUpdate' do
+        before do
+          allow(client).to receive(:update_service_plan).and_raise(ServiceBrokerRejectedPlanUpdate)
+        end
+
+        it 'returns a CF-ServiceBrokerRejectedPlanUpdate' do
+          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+          expect(last_response.status).to eq 400
+          expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerRejectedPlanUpdate'
+        end
+      end
     end
 
     describe 'PUT', '/v2/service_plans/:service_plan_guid/services_instances' do
