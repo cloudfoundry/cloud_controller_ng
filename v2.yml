@@ -58,6 +58,11 @@
   http_code: 422
   message: "The request is semantically invalid: %s"
 
+10009:
+  name: Conflict
+  http_code: 409
+  message: "The request could not be completed due to a conflict: %s"
+
 20001:
   name: UserInvalid
   http_code: 400
