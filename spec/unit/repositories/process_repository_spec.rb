@@ -6,10 +6,8 @@ module VCAP::CloudController
 
     let(:space_guid) { Space.make.guid }
     let(:stack_guid) { Stack.make.guid }
-    let(:app_guid) { AppModel.make.guid }
     let(:valid_opts) do
       {
-        app_guid:             app_guid,
         name:                 'my-process',
         memory:               256,
         instances:            2,
@@ -142,7 +140,7 @@ module VCAP::CloudController
 
       context 'when the process exists in the database' do
           it 'updates the existing process data model' do
-            app = AppFactory.make(app_guid: app_guid, package_state: 'STAGED')
+            app = AppFactory.make(package_state: 'STAGED')
             original_package_state = app.package_state
             process_repository = ProcessRepository.new
             process_repository.find_by_guid_for_update(app.guid) do |initial_process|
@@ -176,7 +174,7 @@ module VCAP::CloudController
 
           context 'and then the original process is deleted from the database' do
             it 'raises a ProcessNotFound error' do
-              process_model = AppFactory.make(app_guid: app_guid)
+              process_model = AppFactory.make
               process_repository = ProcessRepository.new
               process_repository.find_by_guid_for_update(process_model.guid)do |initial_process|
                 changes = {
@@ -191,33 +189,6 @@ module VCAP::CloudController
             end
           end
         end
-
-      context 'when the desired process lacks an app guid' do
-        it 'raises a InvalidProcess error' do
-          invalid_opts = valid_opts
-          invalid_opts.delete(:app_guid)
-          process_repository = ProcessRepository.new
-          expect {
-            expect {
-              desired_process = process_repository.new_process(invalid_opts)
-              process_repository.persist!(desired_process)
-            }.to_not change { App.count }
-          }.to raise_error(ProcessRepository::InvalidProcess)
-        end
-      end
-
-      context 'when the desired process points to an nonexistent app' do
-        it 'raises a InvalidProcess error' do
-          invalid_opts = valid_opts.merge(app_guid: 'banana-pancakes')
-          process_repository = ProcessRepository.new
-          expect {
-            expect {
-              desired_process = process_repository.new_process(invalid_opts)
-              process_repository.persist!(desired_process)
-            }.to_not change { App.count }
-          }.to raise_error(ProcessRepository::InvalidProcess)
-        end
-      end
 
       context 'when the desired process is not valid' do
         it 'raises a InvalidProcess error' do

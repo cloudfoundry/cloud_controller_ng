@@ -174,5 +174,76 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#add_process' do
+      let(:app_model) { AppModel.make }
+      let(:guid) { app_model.guid }
+      let(:process) { AppFactory.make }
+      let(:process_guid) { process.guid }
+      let(:req_body) do
+        MultiJson.dump({process_guid: process_guid})
+      end
+
+      context 'when the user cannot update the app' do
+        before do
+          SecurityContext.set(user)
+        end
+
+        it 'returns a 404 NotFound error' do
+          expect {
+            apps_controller.add_process(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the request body is invalid JSON' do
+        before do
+          SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
+        end
+
+        let(:req_body) { '{ invalid_json }' }
+
+        it 'returns an 400 Bad Request' do
+          expect {
+            apps_controller.add_process(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'MessageParseError'
+            expect(error.response_code).to eq 400
+          end
+        end
+      end
+
+      context 'when the process does not exist' do
+        before do
+          SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
+        end
+
+        let(:process_guid) { 'non-existant-guid' }
+
+        it 'returns a 404 Not Found' do
+          expect {
+            apps_controller.add_process(guid)
+          }.to raise_error do |error|
+            p error
+            expect(error.name).to eq 'NotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when a user can add a process to the app' do
+        before do
+          SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
+        end
+
+        it 'returns a 200 OK response' do
+          response_code, _ = apps_controller.add_process(guid)
+          expect(response_code).to eq 200
+        end
+      end
+    end
   end
 end

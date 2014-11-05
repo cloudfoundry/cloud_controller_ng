@@ -16,14 +16,12 @@ resource 'Processes (Experimental)', type: :api do
   end
 
   get '/v3/processes/:guid' do
-    let(:app_guid) { VCAP::CloudController::AppModel.make.guid }
-    let(:process) { VCAP::CloudController::AppFactory.make(app_guid: app_guid) }
+    let(:process) { VCAP::CloudController::AppFactory.make }
     let(:guid) { process.guid }
 
     example 'Get a Process' do
       expected_response = {
         'guid'     => guid,
-        'app_guid' => app_guid
       }
 
       do_request_with_error_handling
@@ -47,8 +45,7 @@ resource 'Processes (Experimental)', type: :api do
   end
 
   patch '/v3/processes/:guid' do
-    let(:app_guid) { VCAP::CloudController::AppModel.make.guid }
-    let(:process) { VCAP::CloudController::AppFactory.make(app_guid: app_guid) }
+    let(:process) { VCAP::CloudController::AppFactory.make }
 
     parameter :name, 'Name of process'
     parameter :memory, 'Amount of memory (MB) allocated to each instance'
@@ -76,7 +73,6 @@ resource 'Processes (Experimental)', type: :api do
     example 'Updating a Process' do
       expected_response = {
         'guid' => guid,
-        'app_guid' => app_guid,
       }
       do_request_with_error_handling
       parsed_response = JSON.parse(response_body)
@@ -96,9 +92,6 @@ resource 'Processes (Experimental)', type: :api do
     let(:space) { VCAP::CloudController::Space.make }
     let(:stack) { VCAP::CloudController::Stack.make }
 
-    let(:app_model) { VCAP::CloudController::AppModel.make }
-
-    parameter :app_guid, 'GUID of the app where the process is being added', required: true
     parameter :name, 'Name of process', required: true
     parameter :memory, 'Amount of memory (MB) allocated to each instance', required: true
     parameter :instances, 'Number of instances', required: true
@@ -118,7 +111,6 @@ resource 'Processes (Experimental)', type: :api do
     let(:disk_quota) { 1024 }
     let(:space_guid) { space.guid }
     let(:stack_guid) { stack.guid }
-    let(:app_guid) { app_model.guid }
 
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
 
@@ -126,7 +118,6 @@ resource 'Processes (Experimental)', type: :api do
       example 'Create a Process' do
         expected_response = {
           'guid' => /^[a-z0-9\-]+$/,
-          'app_guid' => app_guid,
         }
         expect {
           do_request_with_error_handling
@@ -145,7 +136,6 @@ resource 'Processes (Experimental)', type: :api do
       example 'Create a Docker Process' do
         expected_response = {
           'guid' => /^[a-z0-9\-]+$/,
-          'app_guid' => app_guid,
         }
         expect {
           do_request_with_error_handling

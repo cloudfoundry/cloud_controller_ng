@@ -1,12 +1,13 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppModelAccess, type: :access do
+  describe AppV3Access, type: :access do
     let(:token) { {} }
     let(:admin) { false }
     let(:user) { User.make }
     let(:roles) { double(:roles, admin?: admin) }
     let(:app_model) { AppModel.make }
+    let(:app) { AppRepository.new(ProcessRepository.new).app_from_model(app_model) }
     let(:access_context) { double(:access_context, roles: roles, user: user) }
 
     before do
@@ -22,7 +23,7 @@ module VCAP::CloudController
         let(:admin) { true }
 
         it 'allows the user to read' do
-          access_control = AppModelAccess.new(access_context)
+          access_control = AppV3Access.new(access_context)
           expect(access_control.read?(nil)).to be_truthy
         end
       end
@@ -32,17 +33,17 @@ module VCAP::CloudController
           let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
           it 'allows the user to read' do
-            allow(AppModel).to receive(:user_visible).and_return(AppModel.where(guid: app_model.guid))
-            access_control = AppModelAccess.new(access_context)
-            expect(access_control.read?(app_model)).to be_truthy
+            allow(AppModel).to receive(:user_visible).and_return(AppModel.where(guid: app.guid))
+            access_control = AppV3Access.new(access_context)
+            expect(access_control.read?(app)).to be_truthy
           end
         end
 
         context 'when the user has insufficient scope' do
           it 'disallows the user from reading' do
-            allow(AppModel).to receive(:user_visible).and_return(AppModel.where(guid: app_model.guid))
-            access_control = AppModelAccess.new(access_context)
-            expect(access_control.read?(app_model)).to be_falsey
+            allow(AppModel).to receive(:user_visible).and_return(AppModel.where(guid: app.guid))
+            access_control = AppV3Access.new(access_context)
+            expect(access_control.read?(app)).to be_falsey
           end
         end
 
@@ -51,23 +52,24 @@ module VCAP::CloudController
 
           it 'disallows the user from reading' do
             allow(AppModel).to receive(:user_visible).and_return(AppModel.where(guid: nil))
-            access_control = AppModelAccess.new(access_context)
-            expect(access_control.read?(app_model)).to be_falsey
+            access_control = AppV3Access.new(access_context)
+            expect(access_control.read?(app)).to be_falsey
           end
         end
       end
     end
 
-    describe '#create?, #delete?' do
+    describe '#create?, #update?, #delete?' do
       let(:space) { Space.make }
-      let(:app) { AppModel.new({ space_guid: space.guid }) }
+      let(:app) { AppV3.new({ space_guid: space.guid }) }
 
       context 'admin user' do
         let(:admin) { true }
 
         it 'allows the user to perform the action' do
-          access_control = AppModelAccess.new(access_context)
+          access_control = AppV3Access.new(access_context)
           expect(access_control.create?(app)).to be_truthy
+          expect(access_control.update?(app)).to be_truthy
           expect(access_control.delete?(app)).to be_truthy
         end
       end
@@ -82,8 +84,9 @@ module VCAP::CloudController
           end
 
           it 'allows the user to create' do
-            access_control = AppModelAccess.new(access_context)
+            access_control = AppV3Access.new(access_context)
             expect(access_control.create?(app)).to be_truthy
+            expect(access_control.update?(app)).to be_truthy
             expect(access_control.delete?(app)).to be_truthy
           end
         end
@@ -97,8 +100,9 @@ module VCAP::CloudController
           end
 
           it 'disallows the user from creating' do
-            access_control = AppModelAccess.new(access_context)
+            access_control = AppV3Access.new(access_context)
             expect(access_control.create?(app)).to be_falsey
+            expect(access_control.update?(app)).to be_falsey
             expect(access_control.delete?(app)).to be_falsey
           end
         end
@@ -107,8 +111,9 @@ module VCAP::CloudController
           let(:token) { { 'scope' => ['cloud_controller.write'] } }
 
           it 'disallows the user from creating' do
-            access_control = AppModelAccess.new(access_context)
+            access_control = AppV3Access.new(access_context)
             expect(access_control.create?(app)).to be_falsey
+            expect(access_control.update?(app)).to be_falsey
             expect(access_control.delete?(app)).to be_falsey
           end
         end
@@ -123,8 +128,9 @@ module VCAP::CloudController
           end
 
           it 'disallows the user from creating' do
-            access_control = AppModelAccess.new(access_context)
+            access_control = AppV3Access.new(access_context)
             expect(access_control.create?(app)).to be_falsey
+            expect(access_control.update?(app)).to be_falsey
             expect(access_control.delete?(app)).to be_falsey
           end
         end

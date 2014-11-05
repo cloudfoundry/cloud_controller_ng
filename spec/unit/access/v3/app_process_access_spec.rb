@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'models/v3/mappers/process_mapper'
 
 module VCAP::CloudController
   describe AppProcessAccess, type: :access do
@@ -6,7 +7,8 @@ module VCAP::CloudController
     let(:admin) { false }
     let(:user) { User.make }
     let(:roles) { double(:roles, admin?: admin) }
-    let(:process) { AppFactory.make }
+    let(:process_model) { AppFactory.make }
+    let(:process) { ProcessMapper.map_model_to_domain(process_model) }
     let(:access_context) { double(:access_context, roles: roles, user: user) }
 
     before do
