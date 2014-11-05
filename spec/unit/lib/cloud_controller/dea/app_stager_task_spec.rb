@@ -440,6 +440,27 @@ module VCAP::CloudController
               expect(callback_called).to be false
             end
           end
+
+          context "when staging was already marked as failed" do
+            before do
+              @before_staging_completion = -> {
+                app.mark_as_failed_to_stage
+              }
+            end
+
+            it "does not mark the app as staged" do
+              expect { stage rescue nil }.not_to change { app.refresh.staged? }
+            end
+
+            it "raises a StagingError" do
+              expect {
+                stage
+              }.to raise_error(
+                       Errors::ApiError,
+                       /staging had already been marked as failed, this could mean that staging took too long/
+                   )
+            end
+          end
         end
 
         context "when app staging fails without a reason" do

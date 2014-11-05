@@ -157,21 +157,23 @@ module VCAP::CloudController
       end
 
       def ensure_staging_is_current!
-        unless staging_is_current?
+        begin
+          # Reload to find other updates of staging task id
+          # which means that there was a new staging process initiated
+          @app.refresh
+        rescue Exception => e
+          Loggregator.emit_error(@app.guid, "Exception checking staging status: #{e.message}")
+          logger.error("Exception checking staging status: #{e.inspect}\n  #{e.backtrace.join("\n  ")}")
+          raise Errors::ApiError.new_from_details("StagingError", "failed to stage application: can't retrieve staging status")
+        end
+
+        if @app.staging_task_id != task_id
           raise Errors::ApiError.new_from_details("StagingError", "failed to stage application: another staging request was initiated")
         end
-      end
 
-      def staging_is_current?
-        # Reload to find other updates of staging task id
-        # which means that there was a new staging process initiated
-        @app.refresh
-
-        @app.staging_task_id == task_id
-      rescue Exception => e
-        Loggregator.emit_error(@app.guid, "Exception checking staging status: #{e.message}")
-        logger.error("Exception checking staging status: #{e.inspect}\n  #{e.backtrace.join("\n  ")}")
-        false
+        if @app.staging_failed?
+          raise Errors::ApiError.new_from_details("StagingError", "failed to stage application: staging had already been marked as failed, this could mean that staging took too long")
+        end
       end
 
       def staging_completion(stager_response)
