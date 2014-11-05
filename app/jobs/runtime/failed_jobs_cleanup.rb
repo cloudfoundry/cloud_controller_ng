@@ -2,7 +2,6 @@ module VCAP::CloudController
   module Jobs
     module Runtime
       class FailedJobsCleanup < Struct.new(:cutoff_age_in_days)
-
         def perform
           old_delayed_jobs = Delayed::Job.
             where("failed_at is not null").

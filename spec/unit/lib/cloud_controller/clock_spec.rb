@@ -8,11 +8,13 @@ module VCAP::CloudController
       let(:app_events_cleanup_job) { double(Jobs::Runtime::AppEventsCleanup) }
       let(:audit_events_cleanup_job) { double(Jobs::Runtime::EventsCleanup) }
       let(:failed_jobs_cleanup_job) { double(Jobs::Runtime::FailedJobsCleanup) }
+      let(:pending_packages_cleanup_job) { double(Jobs::Runtime::PendingPackagesCleanup) }
 
       let(:app_usage_events_cleanup_enqueuer) { double(Jobs::Enqueuer) }
       let(:app_events_cleanup_enqueuer) { double(Jobs::Enqueuer) }
       let(:audit_events_cleanup_enqueuer) { double(Jobs::Enqueuer) }
       let(:failed_jobs_cleanup_enqueuer) { double(Jobs::Enqueuer) }
+      let(:pending_packages_cleanup_enqueuer) { double(Jobs::Enqueuer) }
 
       let(:logger) { double(Steno::Logger) }
       let(:config) do
@@ -21,6 +23,7 @@ module VCAP::CloudController
           app_usage_events: { cutoff_age_in_days: 33 },
           audit_events: { cutoff_age_in_days: 11 },
           failed_jobs: { cutoff_age_in_days: 44 },
+          pending_packages: { frequency_in_seconds: 1.minute, expiration_in_seconds: 5.minutes },
         }
       end
 
@@ -47,6 +50,10 @@ module VCAP::CloudController
         allow(Jobs::Runtime::FailedJobsCleanup).to receive(:new).and_return(failed_jobs_cleanup_job)
         allow(Jobs::Enqueuer).to receive(:new).with(failed_jobs_cleanup_job, queue: "cc-generic").and_return(failed_jobs_cleanup_enqueuer)
         allow(failed_jobs_cleanup_enqueuer).to receive(:enqueue)
+
+        allow(Jobs::Runtime::PendingPackagesCleanup).to receive(:new).and_return(pending_packages_cleanup_job)
+        allow(Jobs::Enqueuer).to receive(:new).with(pending_packages_cleanup_job, queue: "cc-generic").and_return(pending_packages_cleanup_enqueuer)
+        allow(pending_packages_cleanup_enqueuer).to receive(:enqueue)
 
         clock.start
       end
@@ -100,6 +107,15 @@ module VCAP::CloudController
 
         it "sets the cutoff_age_in_days for FailedJobsCleanup to the configured value" do
           expect(Jobs::Runtime::FailedJobsCleanup).to have_received(:new).with(44)
+        end
+      end
+
+      describe "pending_packages.cleanup.job" do
+        it "schedules a PendingPackagesCleanup job to run every N minutes" do
+          expect(Clockwork).to have_received(:every).with(1.minute, "pending_packages.cleanup.job")
+          expect(Jobs::Runtime::PendingPackagesCleanup).to have_received(:new).with(5.minutes)
+          expect(Jobs::Enqueuer).to have_received(:new).with(pending_packages_cleanup_job, queue: "cc-generic")
+          expect(pending_packages_cleanup_enqueuer).to have_received(:enqueue)
         end
       end
     end
