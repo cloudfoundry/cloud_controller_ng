@@ -7,7 +7,7 @@ module VCAP::CloudController
         AppEventRepository.new
       end
 
-      describe ".record_app_update" do
+      describe "#record_app_update" do
         let(:request_attrs) do
           {"name" => "old", "instances" => 1, "memory" => 84, "state" => "STOPPED"}
         end
@@ -54,7 +54,7 @@ module VCAP::CloudController
         end
       end
 
-      describe ".record_app_create" do
+      describe "#record_app_create" do
         let(:request_attrs) do
           {
             "name" => "new",
@@ -99,7 +99,7 @@ module VCAP::CloudController
         end
       end
 
-      describe ".record_app_delete" do
+      describe "#record_app_delete" do
         let(:deleting_app) { AppFactory.make }
 
         let(:user) { User.make }
@@ -125,7 +125,7 @@ module VCAP::CloudController
         end
       end
 
-      describe ".create_app_exit_event" do
+      describe "#create_app_exit_event" do
         let(:exiting_app) { AppFactory.make }
         let(:droplet_exited_payload) {
           {
@@ -162,7 +162,7 @@ module VCAP::CloudController
         end
       end
 
-      describe ".record_map_route" do
+      describe "#record_map_route" do
         let(:app) { AppFactory.make }
         let(:route) { Route.make }
 
@@ -198,7 +198,7 @@ module VCAP::CloudController
         end
       end
 
-      describe ".record_unmap_route" do
+      describe "#record_unmap_route" do
         let(:app) { AppFactory.make }
         let(:route) { Route.make }
 
@@ -234,7 +234,7 @@ module VCAP::CloudController
         end
       end
 
-      describe ".record_restage" do
+      describe "#record_restage" do
         let(:app) { AppFactory.make }
         let(:user) { User.make }
         let(:user_email) { "user@example.com" }
@@ -247,6 +247,44 @@ module VCAP::CloudController
           expect(event.actee).to eq(app.guid)
           expect(event.actor_name).to eq("user@example.com")
           expect(event.actee_type).to eq("app")
+        end
+      end
+
+      describe "#record_src_copy_bits" do
+        let(:src_app) { AppFactory.make }
+        let(:dest_app) { AppFactory.make }
+        let(:user) { User.make }
+        let(:user_email) { "user@example.com" }
+
+        it "creates a new app.copy_bits event for the source app" do
+          event = app_event_repository.record_src_copy_bits(dest_app, src_app, user, user_email)
+
+          expect(event.type).to eq("audit.app.copy-bits")
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq("user")
+          expect(event.actee).to eq(src_app.guid)
+          expect(event.actor_name).to eq("user@example.com")
+          expect(event.actee_type).to eq("app")
+          expect(event.metadata[:destination_guid]).to eq(dest_app.guid)
+        end
+      end
+
+      describe "#record_dest_copy_bits" do
+        let(:src_app) { AppFactory.make }
+        let(:dest_app) { AppFactory.make }
+        let(:user) { User.make }
+        let(:user_email) { "user@example.com" }
+
+        it "creates a new app.copy_bits event for the destination app" do
+          event = app_event_repository.record_dest_copy_bits(dest_app, src_app, user, user_email)
+
+          expect(event.type).to eq("audit.app.copy-bits")
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq("user")
+          expect(event.actee).to eq(dest_app.guid)
+          expect(event.actor_name).to eq("user@example.com")
+          expect(event.actee_type).to eq("app")
+          expect(event.metadata[:source_guid]).to eq(src_app.guid)
         end
       end
     end

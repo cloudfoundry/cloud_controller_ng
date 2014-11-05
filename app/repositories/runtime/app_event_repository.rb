@@ -53,6 +53,18 @@ module VCAP::CloudController
           create_app_audit_event("audit.app.restage", app, actor_hash, {})
         end
 
+        def record_src_copy_bits(dest_app, src_app, actor, actor_name)
+          actor_hash = { name: actor_name, guid: actor.guid, type: "user" }
+          metadata = { destination_guid: dest_app.guid }
+          create_app_audit_event("audit.app.copy-bits", src_app, actor_hash, metadata)
+        end
+
+        def record_dest_copy_bits(dest_app, src_app, actor, actor_name)
+          actor_hash = { name: actor_name, guid: actor.guid, type: "user" }
+          metadata = { source_guid: src_app.guid }
+          create_app_audit_event("audit.app.copy-bits", dest_app, actor_hash, metadata)
+        end
+
         private
 
         def create_app_audit_event(type, app, actor, metadata)

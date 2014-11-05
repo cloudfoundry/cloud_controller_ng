@@ -8,12 +8,15 @@ module VCAP::CloudController
       let(:compressed_path) { File.expand_path("../../../fixtures/good.zip", File.dirname(__FILE__)) }
       let(:local_tmp_dir) { Dir.mktmpdir }
       let(:blobstore_dir) { Dir.mktmpdir }
+      let(:app_event_repository) { double(:app_event_repository, record_src_copy_bits: nil, record_dest_copy_bits: nil) }
       let(:package_blobstore) do
         CloudController::Blobstore::Client.new({provider: "Local", local_root: blobstore_dir}, "package")
       end
+      let(:user) { 'some-user' }
+      let(:email) { 'some-user@example.com' }
 
       subject(:job) do
-        AppBitsCopier.new(src_app, dest_app)
+        AppBitsCopier.new(src_app, dest_app, app_event_repository, user, email)
       end
 
       it { is_expected.to be_a_valid_job }
@@ -58,6 +61,18 @@ module VCAP::CloudController
           }.to change {
             dest_app.refresh.package_hash
           }
+        end
+
+        it "creates a copy_bits audit event for source app" do
+          allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
+          job.perform
+          expect(app_event_repository).to have_received(:record_src_copy_bits).with(src_app, dest_app, user, email)
+        end
+
+        it "creates a copy_bits audit event for destination app" do
+          allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
+          job.perform
+          expect(app_event_repository).to have_received(:record_dest_copy_bits).with(src_app, dest_app, user, email)
         end
 
         it "knows its job name" do

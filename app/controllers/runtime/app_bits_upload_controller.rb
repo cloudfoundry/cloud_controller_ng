@@ -5,6 +5,11 @@ module VCAP::CloudController
     path_base "apps"
     model_class_name :App
 
+    def inject_dependencies(dependencies)
+      super
+      @app_event_repository = dependencies.fetch(:app_event_repository)
+    end
+
     def check_authentication(op)
       auth = env["HTTP_AUTHORIZATION"]
       grace_period = config.fetch(:app_bits_upload_grace_period_in_seconds, 0)
@@ -47,7 +52,7 @@ module VCAP::CloudController
       src_app = find_guid_and_validate_access(:upload, source_app_guid)
       dest_app = find_guid_and_validate_access(:upload, dest_app_guid)
 
-      app_bits_copier = Jobs::Runtime::AppBitsCopier.new(src_app, dest_app)
+      app_bits_copier = Jobs::Runtime::AppBitsCopier.new(src_app, dest_app, @app_event_repository, SecurityContext.current_user, SecurityContext.current_user_email)
 
       job = Jobs::Enqueuer.new(app_bits_copier, queue: "cc-generic").enqueue
       [HTTP::CREATED, JobPresenter.new(job).to_json]

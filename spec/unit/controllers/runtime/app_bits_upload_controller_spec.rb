@@ -2,6 +2,9 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe AppBitsUploadController do
+    let(:app_event_repository) { Repositories::Runtime::AppEventRepository.new }
+    before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
+
     describe "PUT /v2/app/:id/bits" do
       let(:app_obj) do
         AppFactory.make(droplet_hash: nil, package_hash: nil, package_state: "PENDING")
@@ -247,13 +250,16 @@ module VCAP::CloudController
       let(:json_payload) { { "source_app_guid" => src_app.guid }.to_json }
 
       class FakeCopier
-        def initialize(src_app, dest_app)
-          @src_app = src_app
-          @dest_app = dest_app
-          @@copies = []
+        def initialize(src_app, dest_app, app_event_repo, user, email)
+          @src_app        = src_app
+          @dest_app       = dest_app
+          @app_event_repo = app_event_repo
+          @user           = user
+          @email          = email
+          @@copies        = []
         end
         def perform
-          FakeCopier.copies << [@src_app, @dest_app]
+          FakeCopier.copies << [@src_app, @dest_app, @app_event_repo, @user, @email]
         end
 
         def self.copies
