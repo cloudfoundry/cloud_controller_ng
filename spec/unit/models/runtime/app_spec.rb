@@ -1402,18 +1402,29 @@ module VCAP::CloudController
       end
     end
 
+    describe "#mark_as_staged" do
+      let(:app) { AppFactory.make }
+
+      it "resets the package_pending_since timestamp" do
+        expect {
+          app.mark_as_staged
+        }.to change { app.package_pending_since }.from(kind_of(Time)).to(nil)
+      end
+    end
+
     describe "#mark_as_failed_to_stage" do
       let (:app) { AppFactory.make }
-
-      before do
-        app.package_state = "PENDING"
-        app.staging_failed_reason = nil
-      end
 
       it "should set the package state to failed" do
         expect {
           app.mark_as_failed_to_stage
         }.to change { app.package_state }.to "FAILED"
+      end
+
+      it "resets the package_pending_since timestamp" do
+        expect {
+          app.mark_as_failed_to_stage
+        }.to change { app.package_pending_since }.from(kind_of(Time)).to(nil)
       end
 
       context "when a valid reason is specified" do
@@ -1461,6 +1472,13 @@ module VCAP::CloudController
         expect {
           app.mark_for_restaging
         }.to change { app.staging_failed_reason }.to nil
+      end
+
+      it "updates the package_pending_since date to current" do
+        app.package_pending_since = nil
+        expect {
+          app.mark_for_restaging
+        }.to change { app.package_pending_since }.from(nil).to(kind_of(Time))
       end
     end
 

@@ -426,17 +426,20 @@ module VCAP::CloudController
 
     def mark_as_staged
       self.package_state = "STAGED"
+      self.package_pending_since = nil
     end
 
     def mark_as_failed_to_stage(reason="StagingError")
       self.package_state = "FAILED"
       self.staging_failed_reason = reason
+      self.package_pending_since = nil
       save
     end
 
     def mark_for_restaging
       self.package_state = "PENDING"
       self.staging_failed_reason = nil
+      self.package_pending_since = Time.now
     end
 
     def buildpack

@@ -102,7 +102,6 @@ module VCAP::CloudController
           expect(Jobs::Runtime::FailedJobsCleanup).to have_received(:new).with(44)
         end
       end
-
     end
   end
 end
