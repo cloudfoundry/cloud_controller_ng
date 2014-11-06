@@ -60,7 +60,7 @@ module VCAP::CloudController
 
     APP_STATES = %w[STOPPED STARTED].map(&:freeze).freeze
     PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
-    STAGING_FAILED_REASONS = %w[StagingError NoAppDetectedError BuildpackCompileFailed BuildpackReleaseFailed].map(&:freeze).freeze
+    STAGING_FAILED_REASONS = %w[StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed BuildpackReleaseFailed].map(&:freeze).freeze
 
     CENSORED_FIELDS = [:encrypted_environment_json, :command, :environment_json]
 
