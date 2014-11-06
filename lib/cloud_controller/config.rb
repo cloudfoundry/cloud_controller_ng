@@ -303,7 +303,7 @@ module VCAP::CloudController
       def merge_defaults(config)
         config[:stacks_file] ||= File.join(config_dir, "stacks.yml")
         config[:maximum_app_disk_in_mb] ||= 2048
-        config[:request_timeout_in_seconds] ||= 300
+        config[:request_timeout_in_seconds] ||= 900
         config[:directories] ||= {}
         config[:billing_event_writing_enabled] = true if config[:billing_event_writing_enabled].nil?
         config[:skip_cert_verify] = false if config[:skip_cert_verify].nil?
