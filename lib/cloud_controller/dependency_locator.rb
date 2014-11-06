@@ -141,6 +141,10 @@ module CloudController
       ProcessRepository.new
     end
 
+    def app_repository
+      AppRepository.new
+    end
+
     def object_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new

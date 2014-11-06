@@ -76,6 +76,11 @@ module CloudController
                                 {
                                   process_repository: dependency_locator.process_repository,
                                 }
+                              when 'AppsV3Controller'
+                                {
+                                  app_repository: dependency_locator.app_repository,
+                                  process_repository: dependency_locator.process_repository,
+                                }
                               else
                                 {}
                             end

@@ -6,8 +6,8 @@ require 'handlers/processes_handler'
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
     def inject_dependencies(dependencies)
-      @process_repository = ProcessRepository.new
-      @app_repository = AppRepository.new
+      @process_repository = dependencies[:process_repository]
+      @app_repository =  dependencies[:app_repository]
     end
 
     get '/v3/apps/:guid', :show

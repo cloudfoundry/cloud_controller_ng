@@ -13,7 +13,10 @@ module VCAP::CloudController
           {},
           req_body,
           nil,
-          {},
+          {
+            process_repository: ProcessRepository.new,
+            app_repository: AppRepository.new,
+          },
         )
     end
 
