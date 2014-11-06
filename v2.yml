@@ -403,6 +403,11 @@
   http_code: 400
   message: "There are no buildpacks available"
 
+170007:
+  name: StagingTimeExpired
+  http_code: 504
+  message: "Staging time expired: %s"
+
 180001:
   name: SnapshotNotFound
   http_code: 404
