@@ -58,8 +58,6 @@ case $1 in
     chown vcap:vcap <%= diag_dir %>
     <% end %>
 
-    source $CC_JOB_DIR/bin/handle_nfs_or_local_blobstore.sh
-
     # Configure the core file location
     mkdir -p /var/vcap/sys/cores
     chown vcap:vcap /var/vcap/sys/cores

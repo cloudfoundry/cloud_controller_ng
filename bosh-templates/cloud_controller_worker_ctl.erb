@@ -40,8 +40,6 @@ case $1 in
     echo $$ > $PIDFILE
     chown vcap:vcap $PIDFILE
 
-    source $CC_JOB_DIR/bin/handle_nfs_or_local_blobstore.sh
-
     cd $CC_PACKAGE_DIR/cloud_controller_ng
     <% task_name = "jobs:generic" %>
     exec chpst -u vcap:vcap bundle exec rake <%= task_name %>[cc_global_worker.<%= spec.job.name %>.<%= spec.index %>.$INDEX]
