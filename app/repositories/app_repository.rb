@@ -1,11 +1,9 @@
+require 'models/v3/mappers/process_mapper'
+
 module VCAP::CloudController
   class AppRepository
     class MutationAttempWithoutALock < StandardError; end
     class InvalidProcessAssociation < StandardError; end
-
-    def initialize(process_repository)
-      @process_repository = process_repository
-    end
 
     def new_app(opts)
       AppV3.new(opts)
@@ -40,10 +38,10 @@ module VCAP::CloudController
       end
     end
 
-    def add_process!(app, process_guid)
-      process_model = App.find(guid: process_guid)
-      raise InvalidProcessAssociation unless process_model
-      process_model.update(app_guid: app.guid)
+    def add_process!(app, process)
+      raise InvalidProcessAssociation if process.nil? || !process.guid
+      app_model = AppModel.find(guid: app.guid)
+      app_model.add_process_by_guid(process.guid)
     end
 
     def delete(app)
@@ -55,7 +53,7 @@ module VCAP::CloudController
 
     def app_from_model(model)
       processes = model.processes.map do |process|
-        @process_repository.find_by_guid(process.guid)
+        ProcessMapper.map_model_to_domain(process)
       end
 
       AppV3.new({

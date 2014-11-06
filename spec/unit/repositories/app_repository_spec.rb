@@ -10,7 +10,7 @@ module VCAP::CloudController
     describe '#find_by_guid' do
       it 'find the app object by guid and returns a something' do
         app_model      = AppModel.make
-        app_repository = AppRepository.new(process_repository)
+        app_repository = AppRepository.new
         app            = app_repository.find_by_guid(app_model.guid)
 
         expect(app.guid).to eq(app_model.guid)
@@ -19,7 +19,7 @@ module VCAP::CloudController
       end
 
       it 'returns nil when the app does not exist' do
-        app_repository = AppRepository.new(process_repository)
+        app_repository = AppRepository.new
         app = app_repository.find_by_guid('non-existant-guid')
         expect(app).to be_nil
       end
@@ -29,7 +29,7 @@ module VCAP::CloudController
       it 'find the app object by guid and yield a something' do
         yielded = false
         app_model      = AppModel.make
-        app_repository = AppRepository.new(process_repository)
+        app_repository = AppRepository.new
         app_repository.find_by_guid_for_update(app_model.guid) do |app|
           yielded = true
           expect(app.guid).to eq(app_model.guid)
@@ -43,7 +43,7 @@ module VCAP::CloudController
 
     describe '#new_app' do
       it 'returns an something object that has not been persisted' do
-        app_repository = AppRepository.new(process_repository)
+        app_repository = AppRepository.new
         expect {
           app = app_repository.new_app(valid_opts)
           expect(app.guid).to eq(nil)
@@ -56,7 +56,7 @@ module VCAP::CloudController
     describe '#persist!' do
       context 'when the desired app does not exist' do
         it 'persists the app data model' do
-          app_repository = AppRepository.new(process_repository)
+          app_repository = AppRepository.new
           expect {
             desired_app = app_repository.new_app(valid_opts)
             app = app_repository.persist!(desired_app)
@@ -71,7 +71,7 @@ module VCAP::CloudController
     describe '#delete' do
       context 'when the app is persisted' do
         it 'deletes the persisted app' do
-          app_repository = AppRepository.new(process_repository)
+          app_repository = AppRepository.new
           app = app_repository.persist!(app_repository.new_app(valid_opts))
           expect {
             app_repository.find_by_guid_for_update(app.guid) do |app_to_delete|
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
       context 'when the app is not persisted' do
         it 'does nothing' do
-          app_repository = AppRepository.new(process_repository)
+          app_repository = AppRepository.new
           app = app_repository.new_app(valid_opts)
           expect {
             app_repository.delete(app)
@@ -100,10 +100,10 @@ module VCAP::CloudController
           it "associates the process with the given app" do
             process_model = AppFactory.make
             process = process_repository.find_by_guid(process_model.guid)
-            app_repository = AppRepository.new(process_repository)
+            app_repository = AppRepository.new
             app = app_repository.persist!(app_repository.new_app(valid_opts))
 
-            app_repository.add_process!(app, process.guid)
+            app_repository.add_process!(app, process)
             expect(app_repository.find_by_guid(app.guid).processes.map(&:guid)).to include(process.guid)
             expect(process_model.reload.app_guid).to eq(app.guid)
           end
@@ -112,11 +112,11 @@ module VCAP::CloudController
 
       context "when the process does not exist" do
         it "raises an invalid association error" do
-          app_repository = AppRepository.new(process_repository)
+          app_repository = AppRepository.new
           app = app_repository.persist!(app_repository.new_app(valid_opts))
 
           expect {
-            app_repository.add_process!(app, 'not-existent')
+            app_repository.add_process!(app, AppProcess.new({}))
           }.to raise_error(AppRepository::InvalidProcessAssociation)
         end
       end

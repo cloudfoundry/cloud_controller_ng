@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:user) { User.make }
     let(:roles) { double(:roles, admin?: admin) }
     let(:app_model) { AppModel.make }
-    let(:app) { AppRepository.new(ProcessRepository.new).app_from_model(app_model) }
+    let(:app) { AppRepository.new.app_from_model(app_model) }
     let(:access_context) { double(:access_context, roles: roles, user: user) }
 
     before do

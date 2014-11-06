@@ -7,7 +7,7 @@ module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
     def inject_dependencies(dependencies)
       @process_repository = ProcessRepository.new
-      @app_repository = AppRepository.new(@process_repository)
+      @app_repository = AppRepository.new
     end
 
     get '/v3/apps/:guid', :show
@@ -48,7 +48,8 @@ module VCAP::CloudController
       end
 
       opts = MultiJson.load(body).symbolize_keys
-      @app_repository.add_process!(app, opts[:process_guid])
+      process = @process_repository.find_by_guid(opts[:process_guid])
+      @app_repository.add_process!(app, process)
 
       [HTTP::OK, {}]
     rescue MultiJson::ParseError => e
