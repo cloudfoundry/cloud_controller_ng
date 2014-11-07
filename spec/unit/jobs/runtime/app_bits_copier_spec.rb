@@ -66,13 +66,13 @@ module VCAP::CloudController
         it "creates a copy_bits audit event for source app" do
           allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
           job.perform
-          expect(app_event_repository).to have_received(:record_src_copy_bits).with(src_app, dest_app, user, email)
+          expect(app_event_repository).to have_received(:record_src_copy_bits).with(dest_app, src_app, user, email)
         end
 
         it "creates a copy_bits audit event for destination app" do
           allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
           job.perform
-          expect(app_event_repository).to have_received(:record_dest_copy_bits).with(src_app, dest_app, user, email)
+          expect(app_event_repository).to have_received(:record_dest_copy_bits).with(dest_app, src_app, user, email)
         end
 
         it "knows its job name" do

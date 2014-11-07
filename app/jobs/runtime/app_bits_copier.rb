@@ -18,8 +18,8 @@ module VCAP::CloudController
           package_blobstore.cp_file_between_keys(@src_app.guid, @dest_app.guid)
           @dest_app.package_hash = @src_app.package_hash
           @dest_app.save
-          @app_event_repo.record_src_copy_bits(@src_app, @dest_app, @user, @email)
-          @app_event_repo.record_dest_copy_bits(@src_app, @dest_app, @user, @email)
+          @app_event_repo.record_src_copy_bits(@dest_app, @src_app, @user, @email)
+          @app_event_repo.record_dest_copy_bits(@dest_app, @src_app, @user, @email)
         end
 
         def job_name_in_configuration
