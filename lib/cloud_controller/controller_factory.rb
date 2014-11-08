@@ -57,35 +57,51 @@ module CloudController
                                   collection_renderer: dependency_locator.large_paginated_collection_renderer,
                                 }
                               when 'BillingEventsController'
-                                {
-                                  object_renderer:     nil, # no object rendering
-                                  collection_renderer: dependency_locator.entity_only_paginated_collection_renderer,
-                                }
+                                billing_dependencies
                               when 'InstancesController', 'SpaceSummariesController', 'AppSummariesController',
                                    'CrashesController', 'StatsController'
-                                {
-                                  instances_reporters:   dependency_locator.instances_reporters,
-                                }
+                                instance_reporter
                               when 'AppBitsDownloadController'
-                                {
-                                  blob_sender:          dependency_locator.blob_sender,
-                                  package_blobstore:    dependency_locator.package_blobstore,
-                                  missing_blob_handler: dependency_locator.missing_blob_handler,
-                                }
+                                app_bits_download_dependencies
                               when 'ProcessesController'
-                                {
-                                  process_repository: dependency_locator.process_repository,
-                                }
+                                process_dependencies
                               when 'AppsV3Controller'
-                                {
-                                  app_repository: dependency_locator.app_repository,
-                                  process_repository: dependency_locator.process_repository,
-                                }
+                                app_v3_dependencies
                               else
                                 {}
-                            end
+                              end
 
       default_dependencies.merge(custom_dependencies)
+    end
+
+    def billing_dependencies
+      {
+        object_renderer:     nil, # no object rendering
+        collection_renderer: dependency_locator.entity_only_paginated_collection_renderer,
+      }
+    end
+
+    def instance_reporter
+      { instances_reporter:   dependency_locator.instances_reporter }
+    end
+
+    def app_bits_download_dependencies
+      {
+        blob_sender:          dependency_locator.blob_sender,
+        package_blobstore:    dependency_locator.package_blobstore,
+        missing_blob_handler: dependency_locator.missing_blob_handler,
+      }
+    end
+
+    def process_dependencies
+      { process_repository: dependency_locator.process_repository }
+    end
+
+    def app_v3_dependencies
+      {
+        app_repository: dependency_locator.app_repository,
+        process_repository: dependency_locator.process_repository,
+      }
     end
   end
 end

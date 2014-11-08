@@ -2,7 +2,7 @@ require 'models/v3/mappers/process_mapper'
 
 module VCAP::CloudController
   class AppRepository
-    class MutationAttempWithoutALock < StandardError; end
+    class MutationAttemptWithoutALock < StandardError; end
     class InvalidProcessAssociation < StandardError; end
 
     def new_app(opts)
@@ -47,7 +47,7 @@ module VCAP::CloudController
     def delete(app)
       process_model = AppModel.find(guid: app.guid)
       return unless process_model
-      raise MutationAttempWithoutALock unless @lock_acquired
+      raise MutationAttemptWithoutALock unless @lock_acquired
       process_model.destroy
     end
 

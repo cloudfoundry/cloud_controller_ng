@@ -2,7 +2,7 @@ require 'models/v3/mappers/process_mapper'
 
 module VCAP::CloudController
   class ProcessRepository
-    class MutationAttempWithoutALock < StandardError; end
+    class MutationAttemptWithoutALock < StandardError; end
     class InvalidProcess < StandardError; end
     class ProcessNotFound < StandardError; end
 
@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     def persist!(desired_process)
       process_model = if desired_process.guid
-                        raise MutationAttempWithoutALock unless @lock_acquired
+                        raise MutationAttemptWithoutALock unless @lock_acquired
                         changes = changes_for_process(desired_process)
                         App.first!(guid: desired_process.guid).update(changes)
                       else
@@ -59,7 +59,7 @@ module VCAP::CloudController
     def delete(process)
       process_model = App.find(guid: process.guid)
       return unless process_model
-      raise MutationAttempWithoutALock unless @lock_acquired
+      raise MutationAttemptWithoutALock unless @lock_acquired
       process_model.destroy
     end
 

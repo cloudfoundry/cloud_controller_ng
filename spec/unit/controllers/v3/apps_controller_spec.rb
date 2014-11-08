@@ -230,7 +230,6 @@ module VCAP::CloudController
           expect {
             apps_controller.add_process(guid)
           }.to raise_error do |error|
-            p error
             expect(error.name).to eq 'NotFound'
             expect(error.response_code).to eq 404
           end
