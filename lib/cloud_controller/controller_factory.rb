@@ -60,7 +60,7 @@ module CloudController
                                 billing_dependencies
                               when 'InstancesController', 'SpaceSummariesController', 'AppSummariesController',
                                    'CrashesController', 'StatsController'
-                                instance_reporter
+                                instances_reporters
                               when 'AppBitsDownloadController'
                                 app_bits_download_dependencies
                               when 'ProcessesController'
@@ -81,8 +81,8 @@ module CloudController
       }
     end
 
-    def instance_reporter
-      { instances_reporter:   dependency_locator.instances_reporter }
+    def instances_reporters
+      { instances_reporters:   dependency_locator.instances_reporters }
     end
 
     def app_bits_download_dependencies

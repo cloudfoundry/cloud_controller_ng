@@ -7,15 +7,12 @@ module VCAP::CloudController
     end
 
     def present_json
-      processes = app.processes.map do |p|
-        { href: "/v3/processes/#{p.guid}" }
-      end
       app_hash = {
         guid:   app.guid,
 
         _links: {
           self:      { href: "/v3/apps/#{app.guid}" },
-          processes: processes,
+          processes: { href: "/v3/apps/#{app.guid}/processes" },
           space:     { href: "/v2/spaces/#{app.space_guid}" },
         }
       }

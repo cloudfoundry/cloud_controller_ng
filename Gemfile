@@ -4,7 +4,7 @@ source 'http://rubygems.org'
 gem 'addressable'
 gem 'activesupport', '~> 3.0' # It looks like this is required for DelayedJob, even with the DJ-Sequel extension
 gem 'rake'
-gem 'bcrypt-ruby'
+gem 'bcrypt'
 gem 'eventmachine', '~> 1.0.0'
 gem 'fog'
 gem 'i18n'

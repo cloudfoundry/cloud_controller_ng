@@ -38,6 +38,12 @@ module VCAP::CloudController
       end
     end
 
+    def remove_process!(app, process)
+      raise InvalidProcessAssociation if process.nil? || !process.guid
+      app_model = AppModel.find(guid: app.guid)
+      app_model.remove_process_by_guid(process.guid)
+    end
+
     def add_process!(app, process)
       raise InvalidProcessAssociation if process.nil? || !process.guid
       app_model = AppModel.find(guid: app.guid)
@@ -52,7 +58,7 @@ module VCAP::CloudController
     end
 
     def app_from_model(model)
-      processes = model.processes.map do |process|
+      processes = App.where(app_guid: model.guid).eager(:space, :stack).all.map do |process|
         ProcessMapper.map_model_to_domain(process)
       end
 

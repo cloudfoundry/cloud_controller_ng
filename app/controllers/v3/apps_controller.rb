@@ -22,6 +22,21 @@ module VCAP::CloudController
       [HTTP::OK, presenter.present_json]
     end
 
+    get '/v3/apps/:guid/processes', :list_processes
+    def list_processes(guid)
+      app = @app_repository.find_by_guid(guid)
+
+      if app.nil? || @access_context.cannot?(:read, app)
+        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+      end
+
+      response_body = []
+      app.processes.each do |process|
+        response_body << MultiJson.load(ProcessPresenter.new(process).present_json)
+      end
+      [HTTP::OK, MultiJson.dump(response_body)]
+    end
+
     post '/v3/apps', :create
     def create
       creation_opts = MultiJson.load(body).symbolize_keys
@@ -52,6 +67,25 @@ module VCAP::CloudController
       @app_repository.add_process!(app, process)
 
       [HTTP::OK, {}]
+    rescue MultiJson::ParseError => e
+      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
+    rescue AppRepository::InvalidProcessAssociation => e
+      raise VCAP::Errors::ApiError.new_from_details('NotFound')
+    end
+
+    delete '/v3/apps/:guid/processes', :remove_process
+    def remove_process(guid)
+      app = @app_repository.find_by_guid(guid)
+
+      if app.nil? || @access_context.cannot?(:update, app)
+        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+      end
+
+      opts = MultiJson.load(body).symbolize_keys
+      process = @process_repository.find_by_guid(opts[:process_guid])
+      @app_repository.remove_process!(app, process)
+
+      [HTTP::NO_CONTENT, {}]
     rescue MultiJson::ParseError => e
       raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
     rescue AppRepository::InvalidProcessAssociation => e

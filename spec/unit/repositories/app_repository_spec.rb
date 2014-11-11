@@ -94,16 +94,17 @@ module VCAP::CloudController
       end
     end
 
-    context "#add_process" do
+    context "#add_process!" do
       context "when the process exists" do
         context "and it is not associated with an app" do
           it "associates the process with the given app" do
-            process_model = AppFactory.make
-            process = process_repository.find_by_guid(process_model.guid)
             app_repository = AppRepository.new
             app = app_repository.persist!(app_repository.new_app(valid_opts))
 
+            process_model = AppFactory.make
+            process = process_repository.find_by_guid(process_model.guid)
             app_repository.add_process!(app, process)
+
             expect(app_repository.find_by_guid(app.guid).processes.map(&:guid)).to include(process.guid)
             expect(process_model.reload.app_guid).to eq(app.guid)
           end
@@ -117,6 +118,36 @@ module VCAP::CloudController
 
           expect {
             app_repository.add_process!(app, AppProcess.new({}))
+          }.to raise_error(AppRepository::InvalidProcessAssociation)
+        end
+      end
+    end
+
+    context "#remove_process!" do
+      context "when the process exists" do
+        context "and it is associated with an app" do
+          it "disassociates the process with the given app" do
+            app_repository = AppRepository.new
+            app = app_repository.persist!(app_repository.new_app(valid_opts))
+
+            process_model = AppFactory.make
+            process = process_repository.find_by_guid(process_model.guid)
+            app_repository.add_process!(app, process)
+
+            app_repository.remove_process!(app, process)
+            expect(app_repository.find_by_guid(app.guid).processes).to eq([])
+            expect(process_model.reload.app_guid).to eq(nil)
+          end
+        end
+      end
+
+      context "when the process does not exist" do
+        it "raises an invalid association error" do
+          app_repository = AppRepository.new
+          app = app_repository.persist!(app_repository.new_app(valid_opts))
+
+          expect {
+            app_repository.remove_process!(app, AppProcess.new({}))
           }.to raise_error(AppRepository::InvalidProcessAssociation)
         end
       end
