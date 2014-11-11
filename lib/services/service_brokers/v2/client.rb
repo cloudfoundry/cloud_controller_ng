@@ -191,9 +191,11 @@ module VCAP::Services::ServiceBrokers::V2
           return nil # no body
 
         when 200..299
+
           begin
             response_hash = MultiJson.load(response.body)
           rescue MultiJson::ParseError
+            logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
           end
 
           unless response_hash.is_a?(Hash)

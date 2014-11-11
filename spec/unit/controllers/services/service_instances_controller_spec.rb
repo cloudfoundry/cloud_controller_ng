@@ -534,8 +534,13 @@ module VCAP::CloudController
       end
 
       context 'when the broker client raises a ServiceBrokerRejectedPlanUpdate' do
+        let(:uri) { 'http://uri.example.com' }
+        let(:method) { 'GET' }
+        let(:response_body) { '{"description": "error message"}' }
+        let(:response) { double(code: 422, reason: 'Broker rejected the upate', body: response_body) }
+
         before do
-          allow(client).to receive(:update_service_plan).and_raise(ServiceBrokerRejectedPlanUpdate)
+          allow(client).to receive(:update_service_plan).and_raise(VCAP::Services::ServiceBrokers::V2::ServiceBrokerRejectedPlanUpdate.new(uri, method, response))
         end
 
         it 'returns a CF-ServiceBrokerRejectedPlanUpdate' do

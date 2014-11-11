@@ -44,7 +44,7 @@ resource "Service Instances", :type => [:api, :legacy_api] do
         uri.user = service_broker.auth_username
         uri.password = service_broker.auth_password
         uri.path += "/v2/service_instances/#{service_instance.guid}/"
-        stub_request(:patch, uri.to_s).to_return(:status => 200, :body => "", :headers => {})
+        stub_request(:patch, uri.to_s).to_return(:status => 200, :body => '{}', :headers => {})
       end
 
       example "Updating a service instance" do

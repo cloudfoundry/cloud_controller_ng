@@ -108,13 +108,12 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def upgrade_service_instance
-    stub_request(:patch, %r(broker-url/v2/service_instances/[[:alnum:]-]+)).to_return(status: 200, body: {})
+    stub_request(:patch, %r(broker-url/v2/service_instances/[[:alnum:]-]+)).to_return(status: 200, body: '{}')
     put("/v2/service_instances/#{@service_instance_guid}",
     {
       service_plan_guid: @large_plan_guid
     }.to_json,
     json_headers(admin_headers))
-
   end
 
   def create_app
