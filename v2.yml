@@ -63,6 +63,11 @@
   http_code: 409
   message: "The request could not be completed due to a conflict: %s"
 
+10010:
+  name: ResourceNotFound
+  http_code: 404
+  message: "%s"
+
 20001:
   name: UserInvalid
   http_code: 400
