@@ -15,7 +15,7 @@ module VCAP::CloudController
       app = @app_repository.find_by_guid(guid)
 
       if app.nil? || @access_context.cannot?(:read, app)
-        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+        app_not_found!
       end
 
       presenter = AppPresenter.new(app)
@@ -27,7 +27,7 @@ module VCAP::CloudController
       app = @app_repository.find_by_guid(guid)
 
       if app.nil? || @access_context.cannot?(:read, app)
-        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+        app_not_found!
       end
 
       response_body = []
@@ -59,7 +59,7 @@ module VCAP::CloudController
       app = @app_repository.find_by_guid(guid)
 
       if app.nil? || @access_context.cannot?(:update, app)
-        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+        app_not_found!
       end
 
       opts = MultiJson.load(body).symbolize_keys
@@ -70,7 +70,7 @@ module VCAP::CloudController
     rescue MultiJson::ParseError => e
       raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
     rescue AppRepository::InvalidProcessAssociation => e
-      raise VCAP::Errors::ApiError.new_from_details('NotFound')
+      process_not_found!
     end
 
     delete '/v3/apps/:guid/processes', :remove_process
@@ -78,7 +78,7 @@ module VCAP::CloudController
       app = @app_repository.find_by_guid(guid)
 
       if app.nil? || @access_context.cannot?(:update, app)
-        raise VCAP::Errors::ApiError.new_from_details('NotFound')
+        app_not_found!
       end
 
       opts = MultiJson.load(body).symbolize_keys
@@ -89,7 +89,7 @@ module VCAP::CloudController
     rescue MultiJson::ParseError => e
       raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
     rescue AppRepository::InvalidProcessAssociation => e
-      raise VCAP::Errors::ApiError.new_from_details('NotFound')
+      process_not_found!
     end
 
     delete '/v3/apps/:guid', :delete
@@ -97,7 +97,7 @@ module VCAP::CloudController
       @app_repository.find_by_guid_for_update(guid) do |app|
 
         if app.nil? || @access_context.cannot?(:delete, app)
-          raise VCAP::Errors::ApiError.new_from_details('NotFound')
+          app_not_found!
         end
 
         if app.processes.any?
@@ -108,5 +108,15 @@ module VCAP::CloudController
       end
       [HTTP::NO_CONTENT]
     end
+  end
+
+  private
+
+  def app_not_found!
+    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+  end
+
+  def process_not_found!
+    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
   end
 end

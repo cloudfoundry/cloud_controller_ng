@@ -37,7 +37,8 @@ module VCAP::CloudController
           expect {
             process_controller.show(guid)
           }.to raise_error do |error|
-            expect(error.name).to eq 'NotFound'
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.message).to eq 'Process not found'
             expect(error.response_code).to eq 404
           end
         end
@@ -53,7 +54,7 @@ module VCAP::CloudController
           expect {
             process_controller.show(guid)
           }.to raise_error do |error|
-            expect(error.name).to eq 'NotFound'
+            expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
           end
         end
@@ -163,11 +164,11 @@ module VCAP::CloudController
           SecurityContext.set(user)
         end
 
-        it 'returns a 404 NotFound error' do
+        it 'returns a 404 ResourceNotFound error' do
           expect {
             process_controller.update(guid)
           }.to raise_error do |error|
-            expect(error.name).to eq 'NotFound'
+            expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
           end
         end
@@ -203,7 +204,7 @@ module VCAP::CloudController
           expect {
             process_controller.update(guid)
           }.to raise_error do |error|
-            expect(error.name).to eq 'NotFound'
+            expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
           end
         end
@@ -252,7 +253,7 @@ module VCAP::CloudController
           expect {
             process_controller.delete(guid)
           }.to raise_error do |error|
-            expect(error.name).to eq 'NotFound'
+            expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
           end
         end
@@ -268,7 +269,7 @@ module VCAP::CloudController
           expect {
             process_controller.delete(guid)
           }.to raise_error do |error|
-            expect(error.name).to eq 'NotFound'
+            expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
           end
         end
