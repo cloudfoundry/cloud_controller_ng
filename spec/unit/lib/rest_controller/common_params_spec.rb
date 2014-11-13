@@ -15,6 +15,18 @@ module VCAP::CloudController::RestController
         expect(common_params.parse({"inline-relations-depth" => "123"})).to eq({:inline_relations_depth => 123})
       end
 
+      it "treats orphan-relations as an Integer and symbolizes the key" do
+        expect(common_params.parse({"orphan-relations" => "1"})).to eq({:orphan_relations => 1})
+      end
+
+      it "treats exclude-relations as a String Array and symbolizes the key" do
+        expect(common_params.parse({"exclude-relations" => "name1,name2"})).to eq({:exclude_relations => ["name1", "name2"]})
+      end
+
+      it "treats include-relations as a String Array and symbolizes the key" do
+        expect(common_params.parse({"include-relations" => "name1,name2"})).to eq({:include_relations => ["name1","name2"]})
+      end
+
       it "treats page as an Integer and symbolizes the key" do
         expect(common_params.parse({"page" => "123"})).to eq({:page => 123})
       end

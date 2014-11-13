@@ -18,11 +18,11 @@ module VCAP::CloudController::RestController
     #
     # @param [Sequel::Model] obj Object to encode.
     #
-    # @option opts [Boolean] :pretty Controlls pretty formating of the encoded
+    # @option opts [Boolean] :pretty Controls pretty formatting of the encoded
     # json.  Defaults to true.
     #
     # @option opts [Integer] :inline_relations_depth Depth to recursively
-    # exapend relationships in addition to providing the URLs.
+    # expand relationships in addition to providing the URLs.
     #
     # @option opts [Integer] :max_inline Maximum number of objects to
     # expand inline in a relationship.
