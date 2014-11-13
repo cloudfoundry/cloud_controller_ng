@@ -67,6 +67,12 @@ module VCAP::CloudController
       )
     end
 
+    get "/v2/organizations/:guid/memory_usage", :get_memory_usage
+    def get_memory_usage(guid)
+      org = find_guid_and_validate_access(:read, guid)
+      [HTTP::OK, MultiJson.dump({memory_usage_in_mb: OrganizationMemoryCalculator.get_memory_usage(org)})]
+    end
+
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
     end

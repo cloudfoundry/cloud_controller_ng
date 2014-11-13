@@ -151,5 +151,16 @@ resource "Organizations", :type => [:api, :legacy_api] do
 
       standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :organization, path: :service
     end
+
+    describe "Memory Usage (Experimental)" do
+      get "/v2/organizations/:guid/memory_usage" do
+        example "Retrieving organization memory usage" do
+          client.get "/v2/organizations/#{guid}/memory_usage", {}, headers
+          expect(status).to eq(200)
+
+          expect(parsed_response["memory_usage_in_mb"]).to eq(0)
+        end
+      end
+    end
   end
 end

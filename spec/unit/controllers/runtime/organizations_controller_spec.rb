@@ -266,6 +266,31 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/organizations/:guid/memory_usage' do
+      context "for an organization that does not exist" do
+        it "returns a 404" do
+          get '/v2/organizations/foobar/memory_usage', {}, admin_headers
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      context "when the user does not have permissions to read" do
+        let(:user) { User.make }
+
+        it "returns a 403" do
+          get "/v2/organizations/#{org.guid}/memory_usage", {}, headers_for(user)
+          expect(last_response.status).to eq(403)
+        end
+      end
+
+      it "calls the organization memory usage calculator" do
+        allow(OrganizationMemoryCalculator).to receive(:get_memory_usage)
+        get "/v2/organizations/#{org.guid}/memory_usage", {}, admin_headers
+        expect(last_response.status).to eq(200)
+        expect(OrganizationMemoryCalculator).to have_received(:get_memory_usage)
+      end
+    end
+
     describe 'GET /v2/organizations/:guid/domains' do
       let(:organization) { Organization.make }
       let(:manager) { make_manager_for_org(organization) }

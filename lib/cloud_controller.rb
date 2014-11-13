@@ -56,6 +56,7 @@ require "cloud_controller/controller_factory"
 require "cloud_controller/dea/start_app_message"
 require "cloud_controller/egress_network_rules_presenter"
 require "cloud_controller/admin_buildpacks_presenter"
+require "cloud_controller/organization_memory_calculator"
 
 require "cloud_controller/legacy_api/legacy_api_base"
 require "cloud_controller/legacy_api/legacy_info"
