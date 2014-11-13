@@ -2,8 +2,9 @@
 
 INDEX=$2
 
+source /var/vcap/jobs/cloud_controller_ng/bin/ruby_version.sh
+
 export CC_JOB_DIR=/var/vcap/jobs/cloud_controller_worker
-export PATH=/var/vcap/packages/ruby-2.1.4/bin:$PATH
 
 CC_PACKAGE_DIR=/var/vcap/packages/cloud_controller_ng
 
