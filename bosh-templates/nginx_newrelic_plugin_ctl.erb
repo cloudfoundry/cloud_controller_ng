@@ -1,6 +1,5 @@
 #!/bin/bash
 
-source /var/vcap/jobs/cloud_controller_ng/bin/ruby_version.sh
 
 RUN_DIR=/var/vcap/sys/run/nginx_newrelic_plugin
 LOG_DIR=/var/vcap/sys/log/nginx_newrelic_plugin
@@ -9,6 +8,7 @@ JOB_DIR=/var/vcap/jobs/cloud_controller_ng
 CONFIG_DIR=$JOB_DIR/config
 NGINX_NEWRELIC_PLUGIN_DIR=/var/vcap/packages/nginx_newrelic_plugin
 
+source $JOB_DIR/bin/ruby_version.sh
 source /var/vcap/packages/common/utils.sh
 
 case $1 in

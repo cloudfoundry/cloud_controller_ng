@@ -1,8 +1,7 @@
 #!/bin/bash
 
-source /var/vcap/jobs/cloud_controller_ng/bin/ruby_version.sh
-
 export CC_JOB_DIR=/var/vcap/jobs/cloud_controller_clock
+source $CC_JOB_DIR/bin/ruby_version.sh
 
 CC_PACKAGE_DIR=/var/vcap/packages/cloud_controller_ng
 
