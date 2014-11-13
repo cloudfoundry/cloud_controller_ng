@@ -119,7 +119,7 @@ module VCAP::CloudController
       copy_buildpack_errors
 
       validates_includes PACKAGE_STATES, :package_state, :allow_missing => true
-      validates_includes APP_STATES, :state, :allow_missing => true
+      validates_includes APP_STATES, :state, :allow_missing => true, :message => 'must be one of ' + APP_STATES.join(', ')
       validates_includes STAGING_FAILED_REASONS, :staging_failed_reason, :allow_nil => true
 
       validation_policies.map(&:validate)
