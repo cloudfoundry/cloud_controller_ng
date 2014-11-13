@@ -139,56 +139,49 @@ module VCAP::CloudController
       end
 
       context 'when the process exists in the database' do
-          it 'updates the existing process data model' do
-            app = AppFactory.make(package_state: 'STAGED')
-            original_package_state = app.package_state
+        it 'updates the existing process data model' do
+          app                    = AppFactory.make(package_state: 'STAGED')
+          original_package_state = app.package_state
+          process_repository     = ProcessRepository.new
+          process_repository.find_by_guid_for_update(app.guid) do |initial_process|
+            updated_process = initial_process.with_changes({ name: 'my-super-awesome-name' })
+
+            expect {
+              process_repository.persist!(updated_process)
+            }.not_to change { App.count }
+            process = process_repository.find_by_guid(app.guid)
+
+            expect(process.guid).to eq(app.guid)
+            expect(process.name).to eq('my-super-awesome-name')
+            expect(process.memory).to eq(app.memory)
+            expect(process.instances).to eq(app.instances)
+            expect(process.disk_quota).to eq(app.disk_quota)
+            expect(process.space_guid).to eq(app.space.guid)
+            expect(process.stack_guid).to eq(app.stack.guid)
+            expect(process.state).to eq(app.state)
+            expect(process.command).to eq(app.command)
+            expect(process.buildpack).to be_nil
+            expect(process.health_check_timeout).to eq(app.health_check_timeout)
+            expect(process.docker_image).to eq(app.docker_image)
+            expect(process.environment_json).to eq(app.environment_json)
+            expect(app.reload.package_state).to eq(original_package_state)
+          end
+        end
+
+        context 'and then the original process is deleted from the database' do
+          it 'raises a ProcessNotFound error' do
+            process_model      = AppFactory.make
             process_repository = ProcessRepository.new
-            process_repository.find_by_guid_for_update(app.guid) do |initial_process|
-              changes = {
-                name: 'my-super-awesome-name'
-              }
-
-              updated_process = process_repository.update(initial_process, changes)
-
+            process_repository.find_by_guid_for_update(process_model.guid) do |initial_process|
+              updated_process = initial_process.with_changes({ name: 'my-super-awesome-name' })
+              process_model.destroy
               expect {
                 process_repository.persist!(updated_process)
-              }.not_to change { App.count }
-              process = process_repository.find_by_guid(app.guid)
-
-              expect(process.guid).to eq(app.guid)
-              expect(process.name).to eq('my-super-awesome-name')
-              expect(process.memory).to eq(app.memory)
-              expect(process.instances).to eq(app.instances)
-              expect(process.disk_quota).to eq(app.disk_quota)
-              expect(process.space_guid).to eq(app.space.guid)
-              expect(process.stack_guid).to eq(app.stack.guid)
-              expect(process.state).to eq(app.state)
-              expect(process.command).to eq(app.command)
-              expect(process.buildpack).to be_nil
-              expect(process.health_check_timeout).to eq(app.health_check_timeout)
-              expect(process.docker_image).to eq(app.docker_image)
-              expect(process.environment_json).to eq(app.environment_json)
-              expect(app.reload.package_state).to eq(original_package_state)
-            end
-          end
-
-          context 'and then the original process is deleted from the database' do
-            it 'raises a ProcessNotFound error' do
-              process_model = AppFactory.make
-              process_repository = ProcessRepository.new
-              process_repository.find_by_guid_for_update(process_model.guid)do |initial_process|
-                changes = {
-                  name: 'my-super-awesome-name'
-                }
-                updated_process = process_repository.update(initial_process, changes)
-                process_model.destroy
-                expect {
-                  process_repository.persist!(updated_process)
-                }.to raise_error(ProcessRepository::ProcessNotFound)
-            end
+              }.to raise_error(ProcessRepository::ProcessNotFound)
             end
           end
         end
+      end
 
       context 'when the desired process is not valid' do
         it 'raises a InvalidProcess error' do
@@ -229,30 +222,6 @@ module VCAP::CloudController
           }.to_not change { App.count }
           expect(process_repository.find_by_guid(process.guid)).to be_nil
         end
-      end
-    end
-
-    describe '#update' do
-      it 'returns a process domain object with the changes applied' do
-        process_repository = ProcessRepository.new
-        process = process_repository.new_process(valid_opts)
-        changes = {
-          name: 'my-super-awesome-name',
-          stack_guid: 'new-stacks'
-        }
-        updated_process = process_repository.update(process, changes)
-        expect(updated_process.name).to eq('my-super-awesome-name')
-        expect(updated_process.stack_guid).to eq('new-stacks')
-        expect(updated_process.memory).to eq(256)
-        expect(updated_process.instances).to eq(2)
-        expect(updated_process.disk_quota).to eq(1024)
-        expect(updated_process.space_guid).to eq(space_guid)
-        expect(updated_process.state).to eq('STOPPED')
-        expect(updated_process.command).to eq('the-command')
-        expect(updated_process.buildpack).to eq('http://the-buildpack.com')
-        expect(updated_process.health_check_timeout).to eq(100)
-        expect(updated_process.docker_image).to be_nil
-        expect(updated_process.environment_json).to eq({})
       end
     end
   end

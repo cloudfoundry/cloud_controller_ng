@@ -83,7 +83,7 @@ module VCAP::CloudController
           return nil
         end
 
-        desired_process = @process_repository.update(initial_process, update_message.opts)
+        desired_process = initial_process.with_changes(update_message.opts)
 
         raise Unauthorized if access_context.cannot?(:update, desired_process)
 

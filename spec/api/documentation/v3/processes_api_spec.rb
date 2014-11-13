@@ -66,6 +66,7 @@ resource 'Processes (Experimental)', type: :api do
     let(:disk_quota) { 2048 }
     let(:space_guid) { process.space.guid }
     let(:stack_guid) { process.stack.guid }
+    let(:command) { 'X' }
     let(:guid) { process.guid }
 
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
@@ -82,6 +83,7 @@ resource 'Processes (Experimental)', type: :api do
 
       process.reload
       expect(process.name).to eq('new_name')
+      expect(process.command).to eq('X')
       expect(process.memory).to eq(2555)
       expect(process.instances).to eq(2)
       expect(process.disk_quota).to eq(2048)

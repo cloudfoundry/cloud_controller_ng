@@ -179,7 +179,6 @@ module VCAP::CloudController
 
         before do
           allow(process_repo).to receive(:find_by_guid_for_update).and_yield(process)
-          allow(process_repo).to receive(:update).and_return(desired_process)
           process_model.space.organization.add_user(user)
           process_model.space.add_developer(user)
           SecurityContext.set(user, { 'scope' => ['cloud_controller.write', 'cloud_controller.read'] })
@@ -211,10 +210,16 @@ module VCAP::CloudController
       end
 
       context 'when persisting the process fails' do
+        let(:req_body) do
+          {
+            name: 'a-new-name'
+          }.to_json
+        end
+
         before do
           allow(process_repo).to receive(:find_by_guid_for_update).and_yield(process)
-          allow(process_repo).to receive(:update).and_return(process)
-          allow(process_repo).to receive(:persist!).and_raise(ProcessRepository::InvalidProcess)
+          allow(process_repo).to receive(:persist!)
+          .and_raise(ProcessRepository::InvalidProcess)
           process_model.space.organization.add_user(user)
           process_model.space.add_developer(user)
           SecurityContext.set(user, { 'scope' => ['cloud_controller.write', 'cloud_controller.read'] })
