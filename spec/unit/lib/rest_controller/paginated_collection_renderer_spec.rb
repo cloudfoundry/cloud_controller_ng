@@ -149,8 +149,7 @@ module VCAP::CloudController::RestController
           it 'renders json response without orphans' do
             result = render_json_call
             expect(result).to be_instance_of(String)
-            orphans = JSON.parse(result)["orphans"]
-            expect(orphans).to be_nil
+            expect(JSON.parse(result)).not_to have_key("orphans")
           end
 
           it 'does not include orphan-relations in next_url and prev_url' do
