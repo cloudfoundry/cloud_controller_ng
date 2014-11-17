@@ -545,7 +545,7 @@ module VCAP::CloudController
 
         it 'returns a CF-ServiceBrokerRejectedPlanUpdate' do
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(last_response.status).to eq 400
+          expect(last_response.status).to eq 502
           expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerRejectedPlanUpdate'
         end
       end

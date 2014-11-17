@@ -144,9 +144,9 @@ module VCAP::Services::ServiceBrokers::V2
         expect(exception.source).to eq(MultiJson.load(response.body))
       end
 
-      it "has a response_code of 400" do
+      it "has a response_code of 502" do
         exception = ServiceBrokerRejectedPlanUpdate.new(uri, method, response)
-        expect(exception.response_code).to eq(400)
+        expect(exception.response_code).to eq(502)
       end
 
       context "when the description field is missing" do
