@@ -52,7 +52,7 @@ describe 'Service Broker API integration' do
         let(:broker_response_status) { 422 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(500)
+          expect(last_response.status).to eq(502)
         end
       end
       context 'when broker returns 502' do

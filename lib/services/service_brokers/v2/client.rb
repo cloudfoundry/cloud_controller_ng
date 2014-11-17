@@ -66,9 +66,6 @@ module VCAP::Services::ServiceBrokers::V2
 
   class ServiceBrokerRejectedPlanUpdate < HttpResponseError
     def initialize(uri, method, response)
-      @response = response #DEBUG
-      @uri = uri
-
       error_message = parsed_json(response.body)["description"]
 
       super(
@@ -80,10 +77,6 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def response_code
-      #DEBUG
-      puts "response: #{@response.inspect}"
-      puts "uri: #{@uri.inspect}"
-
       502
     end
 
@@ -223,7 +216,6 @@ module VCAP::Services::ServiceBrokers::V2
             return nil
           end
         when 422
-          puts "http_client: #{@http_client.inspect}"
           raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerRejectedPlanUpdate.new(uri.to_s, method, response)
       end
 
