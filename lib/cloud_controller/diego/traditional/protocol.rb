@@ -18,6 +18,10 @@ module VCAP::CloudController
           ["diego.desire.app", desire_app_message(app).to_json]
         end
 
+        def stop_staging_app_request(app, task_id)
+          ["diego.staging.stop", stop_staging_message(app, task_id).to_json]
+        end
+
         def stage_app_message(app)
           {
             "app_id" => app.guid,
@@ -53,6 +57,13 @@ module VCAP::CloudController
 
           message["health_check_timeout_in_seconds"] = app.health_check_timeout if app.health_check_timeout
           message
+        end
+
+        def stop_staging_message(app, task_id)
+          {
+            "app_id" => app.guid,
+            "task_id" => task_id,
+          }
         end
       end
     end

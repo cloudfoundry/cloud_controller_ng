@@ -61,14 +61,6 @@ module VCAP::CloudController
           expect(nats_message[:subject]).to eq("diego.staging.start")
           expect(nats_message[:message]).to match_json(expected_message)
         end
-
-        it "updates the app's staging task id so the staging response can be identified" do
-          allow(VCAP).to receive(:secure_uuid).and_return("unique-staging-task-id")
-
-          expect {
-            messenger.send_stage_request(app)
-          }.to change { app.refresh; app.staging_task_id }.to("unique-staging-task-id")
-        end
       end
 
       describe "desiring an app" do
@@ -122,6 +114,23 @@ module VCAP::CloudController
             expect(nats_message[:subject]).to eq("diego.desire.app")
             expect(nats_message[:message]).to match_json(expected_message)
           end
+        end
+      end
+
+      describe "stop staging an app" do
+        let(:task_id) {'staging_task_id'}
+        it "sends a stop staging request" do
+          messenger.send_stop_staging_request(app, task_id)
+
+          expected_message = {
+            "app_id" => app.guid,
+            "task_id" => task_id,
+          }
+
+          expect(message_bus.published_messages.size).to eq(1)
+          nats_message = message_bus.published_messages.first
+          expect(nats_message[:subject]).to eq("diego.staging.stop")
+          expect(nats_message[:message]).to match_json(expected_message)
         end
       end
     end
