@@ -32,14 +32,14 @@ module VCAP::CloudController
       end
 
       let(:protocol) do
-        Traditional::Protocol.new(blobstore_url_generator, 90)
+        Traditional::Protocol.new(blobstore_url_generator)
       end
 
       subject(:messenger) { Messenger.new(message_bus, protocol) }
 
       describe "staging an app" do
         it "sends a nats message with the appropriate staging subject and payload" do
-          messenger.send_stage_request(app)
+          messenger.send_stage_request(app, 90)
 
           expected_message = {
             "app_id" => app.guid,

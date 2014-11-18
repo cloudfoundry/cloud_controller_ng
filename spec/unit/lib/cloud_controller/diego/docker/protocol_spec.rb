@@ -17,24 +17,24 @@ module VCAP::CloudController
           end
 
           subject(:protocol) do
-            Protocol.new(900)
+            Protocol.new
           end
 
           describe "#stage_app_request" do
             subject(:request) do
-              protocol.stage_app_request(app)
+              protocol.stage_app_request(app, 900)
             end
 
             it "includes a subject and message for CfMessageBus::MessageBus#publish" do
               expect(request.size).to eq(2)
               expect(request.first).to eq("diego.docker.staging.start")
-              expect(request.last).to match_json(protocol.stage_app_message(app))
+              expect(request.last).to match_json(protocol.stage_app_message(app, 900))
             end
           end
 
           describe "#stage_app_message" do
             subject(:message) do
-              protocol.stage_app_message(app)
+              protocol.stage_app_message(app, 900)
             end
 
             it "includes the fields needed to stage a Docker app" do

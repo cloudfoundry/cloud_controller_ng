@@ -6,9 +6,9 @@ module VCAP::CloudController
         @protocol = protocol
       end
 
-      def send_stage_request(app)
+      def send_stage_request(app, staging_timeout)
         logger.info("staging.begin", :app_guid => app.guid)
-        @message_bus.publish(*@protocol.stage_app_request(app))
+        @message_bus.publish(*@protocol.stage_app_request(app, staging_timeout))
       end
 
       def send_desire_request(app)

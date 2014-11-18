@@ -64,14 +64,14 @@ module VCAP::CloudController
     end
 
     def diego_docker_runner(app)
-      protocol = Diego::Docker::Protocol.new(staging_timeout)
+      protocol = Diego::Docker::Protocol.new
       messenger = Diego::Messenger.new(@message_bus, protocol)
       Diego::Runner.new(app, messenger, protocol)
     end
 
     def diego_traditional_runner(app)
       dependency_locator = CloudController::DependencyLocator.instance
-      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator, staging_timeout)
+      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator)
       messenger = Diego::Messenger.new(@message_bus, protocol)
       Diego::Runner.new(app, messenger, protocol)
     end

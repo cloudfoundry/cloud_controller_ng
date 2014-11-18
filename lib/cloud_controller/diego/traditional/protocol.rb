@@ -5,14 +5,13 @@ module VCAP::CloudController
   module Diego
     module Traditional
       class Protocol
-        def initialize(blobstore_url_generator, staging_timeout)
+        def initialize(blobstore_url_generator)
           @blobstore_url_generator = blobstore_url_generator
           @buildpack_entry_generator = BuildpackEntryGenerator.new(@blobstore_url_generator)
-          @staging_timeout = staging_timeout
         end
 
-        def stage_app_request(app)
-          ["diego.staging.start", stage_app_message(app).to_json]
+        def stage_app_request(app, staging_timeout)
+          ["diego.staging.start", stage_app_message(app, staging_timeout).to_json]
         end
 
         def desire_app_request(app)
@@ -23,7 +22,7 @@ module VCAP::CloudController
           ["diego.staging.stop", stop_staging_message(app, task_id).to_json]
         end
 
-        def stage_app_message(app)
+        def stage_app_message(app, staging_timeout)
           {
             "app_id" => app.guid,
             "task_id" => app.staging_task_id,
@@ -37,7 +36,7 @@ module VCAP::CloudController
             "droplet_upload_uri" => @blobstore_url_generator.droplet_upload_url(app),
             "build_artifacts_cache_download_uri" => @blobstore_url_generator.buildpack_cache_download_url(app),
             "build_artifacts_cache_upload_uri" => @blobstore_url_generator.buildpack_cache_upload_url(app),
-            "timeout" => @staging_timeout,
+            "timeout" => staging_timeout,
           }
         end
 

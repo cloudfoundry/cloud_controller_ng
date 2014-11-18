@@ -15,7 +15,7 @@ module VCAP::CloudController
         end
 
         subject(:protocol) do
-          Protocol.new(blobstore_url_generator, 900)
+          Protocol.new(blobstore_url_generator)
         end
 
         describe "#stage_app_request" do
@@ -24,19 +24,19 @@ module VCAP::CloudController
           end
 
           subject(:request) do
-            protocol.stage_app_request(app)
+            protocol.stage_app_request(app, 900)
           end
 
           it "returns arguments intended for CfMessageBus::MessageBus#publish" do
             expect(request.size).to eq(2)
             expect(request.first).to eq("diego.staging.start")
-            expect(request.last).to match_json(protocol.stage_app_message(app))
+            expect(request.last).to match_json(protocol.stage_app_message(app, 900))
           end
         end
 
         describe "#stage_app_message" do
           let(:staging_app) { AppFactory.make }
-          subject(:message) { protocol.stage_app_message(staging_app) }
+          subject(:message) { protocol.stage_app_message(staging_app, 900) }
 
           before do
             staging_app.update(staging_task_id: "fake-staging-task-id") # Mimic Diego::Messenger#send_stage_request
