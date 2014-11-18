@@ -32,7 +32,7 @@ module VCAP::CloudController
       end
 
       let(:protocol) do
-        Traditional::Protocol.new(blobstore_url_generator)
+        Traditional::Protocol.new(blobstore_url_generator, 90)
       end
 
       subject(:messenger) { Messenger.new(message_bus, protocol) }
@@ -54,6 +54,7 @@ module VCAP::CloudController
             "app_bits_download_uri" => "http://app-package.com",
             "buildpacks" => Traditional::BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app),
             "droplet_upload_uri" => "http://droplet-upload-uri",
+            "timeout" => 90,
           }
 
           expect(message_bus.published_messages.size).to eq(1)

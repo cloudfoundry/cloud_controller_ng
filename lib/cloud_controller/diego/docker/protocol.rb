@@ -4,6 +4,10 @@ module VCAP::CloudController
   module Diego
     module Docker
       class Protocol
+        def initialize(staging_timeout)
+          @staging_timeout = staging_timeout
+        end
+
         def stage_app_request(app)
           ["diego.docker.staging.start", stage_app_message(app).to_json]
         end
@@ -17,6 +21,7 @@ module VCAP::CloudController
             "file_descriptors" => app.file_descriptors,
             "stack" => app.stack.name,
             "docker_image" => app.docker_image,
+            "timeout" => @staging_timeout,
           }
         end
 

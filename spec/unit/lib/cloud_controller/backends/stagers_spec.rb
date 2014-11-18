@@ -8,7 +8,10 @@ module VCAP::CloudController
           staging: 'optional',
           running: 'optional',
         },
-        diego_docker: true
+        diego_docker: true,
+        staging: {
+          timeout_in_seconds: 90
+        }
       }
     end
 
@@ -163,23 +166,23 @@ module VCAP::CloudController
 
       context 'when the App is staging to Diego' do
         before do
-          allow(app).to receive(:stage_with_diego?).and_return(true)            
+          allow(app).to receive(:stage_with_diego?).and_return(true)
         end
 
         context 'when diego staging is enabled' do
           it "finds a diego stager" do
             expect(stagers).to receive(:diego_stager).with(app).and_call_original
-            
+
             expect(stager).to be_a(Diego::Stager)
           end
         end
 
         context 'when the app has a docker image' do
           let(:docker_image) {'foobar'}
-          
+
           it "finds a diego stager" do
             expect(stagers).to receive(:diego_stager).with(app).and_call_original
-            
+
             expect(stager).to be_a(Diego::Stager)
           end
         end

@@ -8,7 +8,10 @@ module VCAP::CloudController
           running: 'optional',
           running: 'optional',
         },
-        diego_docker: true
+        diego_docker: true,
+        staging: {
+          timeout_in_seconds: 90
+        }
       }
     end
 
@@ -78,9 +81,9 @@ module VCAP::CloudController
 
       context "when the app is configured to run on Diego" do
         before do
-          allow(app).to receive(:run_with_diego?).and_return(true)            
+          allow(app).to receive(:run_with_diego?).and_return(true)
         end
-  
+
         context 'when diego running is enabled' do
           it "finds a diego backend" do
             expect(runners).to receive(:diego_runner).with(app).and_call_original
@@ -302,7 +305,7 @@ module VCAP::CloudController
         5.times do |i|
           app = make_dea_app(id: i+1, state: "STARTED")
           app.add_route(Route.make(space: app.space))
-        end        
+        end
       end
 
       it "returns apps that have the desired data" do

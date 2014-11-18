@@ -17,7 +17,7 @@ module VCAP::CloudController
           end
 
           subject(:protocol) do
-            Protocol.new
+            Protocol.new(900)
           end
 
           describe "#stage_app_request" do
@@ -46,6 +46,7 @@ module VCAP::CloudController
                 "file_descriptors" => app.file_descriptors,
                 "stack" => app.stack.name,
                 "docker_image" => app.docker_image,
+                "timeout" => 900,
               })
             end
           end

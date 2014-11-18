@@ -15,7 +15,7 @@ module VCAP::CloudController
         end
 
         subject(:protocol) do
-          Protocol.new(blobstore_url_generator)
+          Protocol.new(blobstore_url_generator, 900)
         end
 
         describe "#stage_app_request" do
@@ -58,6 +58,7 @@ module VCAP::CloudController
               "app_bits_download_uri" => "http://app-package.com",
               "buildpacks" => buildpack_entry_generator.buildpack_entries(staging_app),
               "droplet_upload_uri" => "http://droplet-upload-uri",
+              "timeout" => 900,
             )
           end
         end
