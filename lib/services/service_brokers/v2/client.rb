@@ -15,6 +15,9 @@ module VCAP::Services::ServiceBrokers::V2
       super(message, uri, method, response)
     end
 
+    def response_code
+      502
+    end
   end
 
   class ServiceBrokerResponseMalformed < HttpResponseError
@@ -36,6 +39,10 @@ module VCAP::Services::ServiceBrokers::V2
         method,
         response
       )
+    end
+
+    def response_code
+      502
     end
   end
 

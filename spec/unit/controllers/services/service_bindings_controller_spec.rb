@@ -344,7 +344,7 @@ module VCAP::CloudController
 
             it 'passes through the error message' do
               make_request
-              expect(last_response.status).to eq 500
+              expect(last_response.status).to eq 502
               expect(decoded_response['description']).to match /ERROR MESSAGE HERE/
             end
           end

@@ -31,21 +31,21 @@ describe 'Service Broker API integration' do
         let(:broker_response_status) { 400 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(500)
+          expect(last_response.status).to eq(502)
         end
       end
       context 'when broker returns 401' do
         let(:broker_response_status) { 401 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(500)
+          expect(last_response.status).to eq(502)
         end
       end
       context 'when broker returns 403' do
         let(:broker_response_status) { 403 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(500)
+          expect(last_response.status).to eq(502)
         end
       end
       context 'when broker returns 422' do
@@ -59,14 +59,14 @@ describe 'Service Broker API integration' do
         let(:broker_response_status) { 502 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(500)
+          expect(last_response.status).to eq(502)
         end
       end
       context 'when broker returns 500' do
         let(:broker_response_status) { 500 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(500)
+          expect(last_response.status).to eq(502)
         end
       end
     end
@@ -364,8 +364,8 @@ describe 'Service Broker API integration' do
         context 'broker returns neither a 200 nor 410 response' do
           let(:broker_response_status) { 411 }
 
-          it 'returns a 500 response to user' do
-            expect(last_response.status).to eq(500)
+          it 'returns a 502 response to user' do
+            expect(last_response.status).to eq(502)
           end
         end
       end
@@ -422,8 +422,8 @@ describe 'Service Broker API integration' do
         context 'broker returns neither a 200 nor 410 response' do
           let(:broker_response_status) { 411 }
 
-          it 'returns a 500 response to user' do
-            expect(last_response.status).to eq(500)
+          it 'returns a 502 response to user' do
+            expect(last_response.status).to eq(502)
           end
         end
       end
