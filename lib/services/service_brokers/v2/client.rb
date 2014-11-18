@@ -71,31 +71,6 @@ module VCAP::Services::ServiceBrokers::V2
     end
   end
 
-  class ServiceBrokerRejectedPlanUpdate < HttpResponseError
-    def initialize(uri, method, response)
-      error_message = parsed_json(response.body)["description"]
-
-      super(
-        error_message || "The service broker could not fulfill the update request.",
-        uri,
-        method,
-        response
-      )
-    end
-
-    def response_code
-      502
-    end
-
-    private
-
-    def parsed_json(str)
-      MultiJson.load(str)
-    rescue MultiJson::ParseError
-      {}
-    end
-  end
-
   class Client
 
     CATALOG_PATH = '/v2/catalog'.freeze
@@ -222,8 +197,6 @@ module VCAP::Services::ServiceBrokers::V2
             logger.warn("Already deleted: #{uri.to_s}")
             return nil
           end
-        when 422
-          raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerRejectedPlanUpdate.new(uri.to_s, method, response)
       end
 
       raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse.new(uri.to_s, method, response)

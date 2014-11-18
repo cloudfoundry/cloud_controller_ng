@@ -130,49 +130,6 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
     end
-
-    describe ServiceBrokerRejectedPlanUpdate do
-      let(:method) { 'PUT' }
-      let(:response_body) { '{"description": "error message"}' }
-      let(:response) { double(code: 422, reason: 'Broker rejected the upate', body: response_body) }
-
-      it "initializes the base class correctly" do
-        exception = ServiceBrokerRejectedPlanUpdate.new(uri, method, response)
-        expect(exception.message).to eq("error message")
-        expect(exception.uri).to eq(uri)
-        expect(exception.method).to eq(method)
-        expect(exception.source).to eq(MultiJson.load(response.body))
-      end
-
-      it "has a response_code of 502" do
-        exception = ServiceBrokerRejectedPlanUpdate.new(uri, method, response)
-        expect(exception.response_code).to eq(502)
-      end
-
-      context "when the description field is missing" do
-        let(:response_body) { '{"field": "value"}' }
-
-        it "initializes the base class correctly" do
-          exception = ServiceBrokerRejectedPlanUpdate.new(uri, method, response)
-          expect(exception.message).to eq("The service broker could not fulfill the update request.")
-          expect(exception.uri).to eq(uri)
-          expect(exception.method).to eq(method)
-          expect(exception.source).to eq(MultiJson.load(response.body))
-        end
-      end
-
-      context "when the body is not JSON-parsable" do
-        let(:response_body) { 'foo' }
-
-        it "initializes the base class correctly" do
-          exception = ServiceBrokerRejectedPlanUpdate.new(uri, method, response)
-          expect(exception.message).to eq("The service broker could not fulfill the update request.")
-          expect(exception.uri).to eq(uri)
-          expect(exception.method).to eq(method)
-          expect(exception.source).to eq(response.body)
-        end
-      end
-    end
   end
 
   describe Client do
@@ -469,9 +426,9 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when the broker returns a 422' do
           let(:status_code) { '422' }
           let(:body) { { description: 'cannot update to this plan' }.to_json }
-          it 'raises a ServiceBrokerRejectedPlanUpdate error' do
+          it 'raises a ServiceBrokerBadResponse error' do
             expect{ client.update_service_plan(instance, new_plan) }.to raise_error(
-              ServiceBrokerRejectedPlanUpdate, /cannot update to this plan/
+              ServiceBrokerBadResponse, /cannot update to this plan/
             )
           end
         end
