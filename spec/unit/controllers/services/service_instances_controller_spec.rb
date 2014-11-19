@@ -532,6 +532,23 @@ module VCAP::CloudController
           expect(service_instance.reload.service_plan).to eq(old_service_plan)
         end
       end
+
+      context 'when the broker client raises a ServiceBrokerBadResponse' do
+        let(:uri) { 'http://uri.example.com' }
+        let(:method) { 'GET' }
+        let(:response_body) { '{"description": "error message"}' }
+        let(:response) { double(code: 422, reason: 'Broker rejected the upate', body: response_body) }
+
+        before do
+          allow(client).to receive(:update_service_plan).and_raise(VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse.new(uri, method, response))
+        end
+
+        it 'returns a CF-ServiceBrokerBadResponse' do
+          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+          expect(last_response.status).to eq 502
+          expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
+        end
+      end
     end
 
     describe 'PUT', '/v2/service_plans/:service_plan_guid/services_instances' do

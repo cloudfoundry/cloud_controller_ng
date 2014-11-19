@@ -1,6 +1,137 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
+  describe ServiceBrokerBadResponse do
+    let(:uri) { 'http://www.example.com/' }
+    let(:response) { double(code: 500, message: 'Internal Server Error', body: response_body) }
+    let(:method) { 'PUT' }
+
+    context 'with a description in the body' do
+      let(:response_body) do
+        {
+          'description' => 'Some error text'
+        }.to_json
+      end
+
+      it 'generates the correct hash' do
+        exception = described_class.new(uri, method, response)
+        exception.set_backtrace(['/foo:1', '/bar:2'])
+
+        expect(exception.to_h).to eq({
+          'description' => "Service broker error: Some error text",
+          'backtrace' => ['/foo:1', '/bar:2'],
+          "http" => {
+            "status" => 500,
+            "uri" => uri,
+            "method" => "PUT"
+          },
+          'source' => {
+            'description' => 'Some error text'
+          }
+        })
+      end
+
+    end
+
+    context 'without a description in the body' do
+      let(:response_body) do
+        {'foo' => 'bar'}.to_json
+      end
+      it 'generates the correct hash' do
+        exception = described_class.new(uri, method, response)
+        exception.set_backtrace(['/foo:1', '/bar:2'])
+
+        expect(exception.to_h).to eq({
+          'description' => "The service broker API returned an error from http://www.example.com/: 500 Internal Server Error",
+          'backtrace' => ['/foo:1', '/bar:2'],
+          "http" => {
+            "status" => 500,
+            "uri" => uri,
+            "method" => "PUT"
+          },
+          'source' => {'foo' => 'bar'}
+        })
+      end
+
+    end
+
+  end
+
+  describe 'the remaining ServiceBrokers::V2 exceptions' do
+    let(:uri) { 'http://uri.example.com' }
+    let(:method) { 'POST' }
+    let(:error) { StandardError.new }
+
+    describe ServiceBrokerResponseMalformed do
+      let(:response_body) { 'foo' }
+      let(:response) { double(code: 200, reason: 'OK', body: response_body) }
+
+      it "initializes the base class correctly" do
+        exception = ServiceBrokerResponseMalformed.new(uri, method, response)
+        expect(exception.message).to eq("The service broker response was not understood")
+        expect(exception.uri).to eq(uri)
+        expect(exception.method).to eq(method)
+        expect(exception.source).to be(response.body)
+      end
+    end
+
+    describe ServiceBrokerApiAuthenticationFailed do
+      let(:response_body) { 'foo' }
+      let(:response) { double(code: 401, reason: 'Auth Error', body: response_body) }
+
+      it "initializes the base class correctly" do
+        exception = ServiceBrokerApiAuthenticationFailed.new(uri, method, response)
+        expect(exception.message).to eq("Authentication failed for the service broker API. Double-check that the username and password are correct: #{uri}")
+        expect(exception.uri).to eq(uri)
+        expect(exception.method).to eq(method)
+        expect(exception.source).to be(response.body)
+      end
+    end
+
+    describe ServiceBrokerConflict do
+      let(:response_body) { '{"description": "error message"}' }
+      let(:response) { double(code: 409, reason: 'Conflict', body: response_body) }
+
+      it "initializes the base class correctly" do
+        exception = ServiceBrokerConflict.new(uri, method, response)
+        #expect(exception.message).to eq("Resource conflict: #{uri}")
+        expect(exception.message).to eq("error message")
+        expect(exception.uri).to eq(uri)
+        expect(exception.method).to eq(method)
+        expect(exception.source).to eq(MultiJson.load(response.body))
+      end
+
+      it "has a response_code of 409" do
+        exception = ServiceBrokerConflict.new(uri, method, response)
+        expect(exception.response_code).to eq(409)
+      end
+
+      context "when the description field is missing" do
+        let(:response_body) { '{"field": "value"}' }
+
+        it "initializes the base class correctly" do
+          exception = ServiceBrokerConflict.new(uri, method, response)
+          expect(exception.message).to eq("Resource conflict: #{uri}")
+          expect(exception.uri).to eq(uri)
+          expect(exception.method).to eq(method)
+          expect(exception.source).to eq(MultiJson.load(response.body))
+        end
+      end
+
+      context "when the body is not JSON-parsable" do
+        let(:response_body) { 'foo' }
+
+        it "initializes the base class correctly" do
+          exception = ServiceBrokerConflict.new(uri, method, response)
+          expect(exception.message).to eq("Resource conflict: #{uri}")
+          expect(exception.uri).to eq(uri)
+          expect(exception.method).to eq(method)
+          expect(exception.source).to eq(response.body)
+        end
+      end
+    end
+  end
+
   describe Client do
     let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
 
@@ -241,7 +372,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:path) { "/v2/service_instances/#{instance.guid}/" }
 
       it 'makes a patch request with the new service plan' do
-        allow(http_client).to receive(:patch)
+        allow(http_client).to receive(:patch).and_return(double('response', code: 200, body: '{}'))
         client.update_service_plan(instance, new_plan)
 
         expect(http_client).to have_received(:patch).with(
@@ -259,11 +390,48 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a patch request to the correct path' do
-        allow(http_client).to receive(:patch)
+        allow(http_client).to receive(:patch).and_return(double('response', code: 200, body: '{}'))
 
         client.update_service_plan(instance, new_plan)
 
         expect(http_client).to have_received(:patch).with(path, anything())
+      end
+
+      describe 'error handling' do
+        before do
+          fake_response = double('response', code: status_code, body: body)
+          allow(http_client).to receive(:patch).and_return(fake_response)
+        end
+
+        context 'when the broker returns a 400' do
+          let(:status_code) { '400' }
+          let(:body) { { description: 'the request was malformed' }.to_json }
+          it 'raises a ServiceBrokerBadResponse error' do
+            expect{ client.update_service_plan(instance, new_plan) }.to raise_error(
+              ServiceBrokerBadResponse, /the request was malformed/
+            )
+          end
+        end
+
+        context 'when the broker returns a 404' do
+          let(:status_code) { '404' }
+          let(:body) { { description: 'service instance not found'}.to_json }
+          it 'raises a ServiceBrokerBadRequest error' do
+            expect{ client.update_service_plan(instance, new_plan) }.to raise_error(
+              ServiceBrokerBadResponse, /service instance not found/
+            )
+          end
+        end
+
+        context 'when the broker returns a 422' do
+          let(:status_code) { '422' }
+          let(:body) { { description: 'cannot update to this plan' }.to_json }
+          it 'raises a ServiceBrokerBadResponse error' do
+            expect{ client.update_service_plan(instance, new_plan) }.to raise_error(
+              ServiceBrokerBadResponse, /cannot update to this plan/
+            )
+          end
+        end
       end
     end
 

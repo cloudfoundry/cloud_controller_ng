@@ -46,14 +46,26 @@ describe 'Service Broker API integration' do
         setup_broker(catalog)
       end
 
-      it 'is a functional feature' do
-        provision_service
-        expect(VCAP::CloudController::ServiceInstance.find(guid: @service_instance_guid).service_plan_guid).to eq @plan_guid
+      context 'when the service update should succeed' do
+        it 'successfully updates the service plan' do
+          provision_service
+          expect(VCAP::CloudController::ServiceInstance.find(guid: @service_instance_guid).service_plan_guid).to eq @plan_guid
 
-        upgrade_service_instance
-        expect(last_response.status).to eq 201
-        expect(VCAP::CloudController::ServiceInstance.find(guid: @service_instance_guid).service_plan_guid).to eq @large_plan_guid
+          upgrade_service_instance(200)
+          expect(last_response.status).to eq 201
+          expect(VCAP::CloudController::ServiceInstance.find(guid: @service_instance_guid).service_plan_guid).to eq @large_plan_guid
+        end
       end
+
+      context 'when the service update fails with broker error 422' do
+        it 'returns 502 to the client' do
+          provision_service
+
+          upgrade_service_instance(422)
+          expect(last_response.status).to eq 502
+        end
+      end
+
     end
   end
 end

@@ -1,4 +1,76 @@
 module VCAP::Services::ServiceBrokers::V2
+  class ServiceBrokerBadResponse < HttpResponseError
+    def initialize(uri, method, response)
+      begin
+        hash = MultiJson.load(response.body)
+      rescue MultiJson::ParseError
+      end
+
+      if hash.is_a?(Hash) && hash.has_key?('description')
+        message = "Service broker error: #{hash['description']}"
+      else
+        message = "The service broker API returned an error from #{uri}: #{response.code} #{response.message}"
+      end
+
+      super(message, uri, method, response)
+    end
+
+    def response_code
+      502
+    end
+  end
+
+  class ServiceBrokerResponseMalformed < HttpResponseError
+    def initialize(uri, method, response)
+      super(
+        "The service broker response was not understood",
+        uri,
+        method,
+        response
+      )
+    end
+  end
+
+  class ServiceBrokerApiAuthenticationFailed < HttpResponseError
+    def initialize(uri, method, response)
+      super(
+        "Authentication failed for the service broker API. Double-check that the username and password are correct: #{uri}",
+        uri,
+        method,
+        response
+      )
+    end
+
+    def response_code
+      502
+    end
+  end
+
+  class ServiceBrokerConflict < HttpResponseError
+    def initialize(uri, method, response)
+      error_message = parsed_json(response.body)["description"]
+
+      super(
+        error_message || "Resource conflict: #{uri}",
+        uri,
+        method,
+        response
+      )
+    end
+
+    def response_code
+      409
+    end
+
+    private
+
+    def parsed_json(str)
+      MultiJson.load(str)
+    rescue MultiJson::ParseError
+      {}
+    end
+  end
+
   class Client
 
     CATALOG_PATH = '/v2/catalog'.freeze
@@ -72,7 +144,7 @@ module VCAP::Services::ServiceBrokers::V2
     def update_service_plan(instance, plan)
       path = "/v2/service_instances/#{instance.guid}/"
 
-      @http_client.patch(path, {
+      response = @http_client.patch(path, {
           plan_id:	plan.broker_provided_id,
           previous_values: {
             plan_id: instance.service_plan.broker_provided_id,
@@ -81,6 +153,8 @@ module VCAP::Services::ServiceBrokers::V2
             space_id: instance.space.guid
           }
       })
+
+      parse_response(:put, path, response)
     end
 
     private
@@ -99,9 +173,11 @@ module VCAP::Services::ServiceBrokers::V2
           return nil # no body
 
         when 200..299
+
           begin
             response_hash = MultiJson.load(response.body)
           rescue MultiJson::ParseError
+            logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
           end
 
           unless response_hash.is_a?(Hash)

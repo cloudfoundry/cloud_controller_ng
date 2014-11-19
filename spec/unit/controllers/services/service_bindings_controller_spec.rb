@@ -325,7 +325,7 @@ module VCAP::CloudController
               expect(last_response.status).to eq 409
             end
 
-            it 'returns a ServiceBindingAppServiceTaken error' do
+            it 'returns a ServiceBrokerConflict error' do
               make_request
               expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerConflict'
             end
@@ -344,7 +344,7 @@ module VCAP::CloudController
 
             it 'passes through the error message' do
               make_request
-              expect(last_response.status).to eq 500
+              expect(last_response.status).to eq 502
               expect(decoded_response['description']).to match /ERROR MESSAGE HERE/
             end
           end
