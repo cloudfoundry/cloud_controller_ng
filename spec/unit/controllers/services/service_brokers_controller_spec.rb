@@ -81,7 +81,7 @@ module VCAP::CloudController
         allow(ServiceBrokerPresenter).to receive(:new).with(broker).and_return(presenter)
       end
 
-      it 'creates generates an broker create event' do
+      it 'creates a broker create event' do
         post '/v2/service_brokers', body, headers
 
         event = Event.all.last
@@ -270,6 +270,30 @@ module VCAP::CloudController
         allow(ServiceBroker).to receive(:find).with(guid: broker.guid).and_return(broker)
         allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new).with(broker).and_return(registration)
         allow(ServiceBrokerPresenter).to receive(:new).with(broker).and_return(presenter)
+      end
+
+      it 'creates a broker update event' do
+        old_broker_name = broker.name
+        body_hash.delete(:broker_url)
+
+        put "/v2/service_brokers/#{broker.guid}", body, headers
+
+        event = Event.all.last
+        expect(event.type).to eq('audit.broker.update')
+        expect(event.actor_type).to eq('user')
+        expect(event.timestamp).to be
+        expect(event.actor).to eq(admin_user.guid)
+        expect(event.actee).to eq(broker.guid)
+        expect(event.actee_type).to eq('broker')
+        expect(event.actee_name).to eq(old_broker_name)
+        expect(event.space_guid).to be_empty
+        expect(event.organization_guid).to be_empty
+        expect(event.metadata).to include({
+          'request' => {
+            'name' => body_hash[:name],
+            'auth_username' => body_hash[:auth_username],
+          }
+        })
       end
 
       it 'updates the broker' do
