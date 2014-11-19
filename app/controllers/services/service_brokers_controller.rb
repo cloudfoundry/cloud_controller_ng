@@ -26,7 +26,7 @@ module VCAP::CloudController
         raise get_exception_from_errors(registration)
       end
 
-      create_audit_event('audit.broker.create', broker, params, SecurityContext.current_user)
+      create_audit_event('audit.broker.create', broker, params)
 
       if !registration.warnings.empty?
         registration.warnings.each { |warning| add_warning(warning) }
@@ -50,7 +50,7 @@ module VCAP::CloudController
         raise get_exception_from_errors(registration)
       end
 
-      create_audit_event('audit.broker.update', broker, params, SecurityContext.current_user)
+      create_audit_event('audit.broker.update', broker, params)
 
       if !registration.warnings.empty?
         registration.warnings.each { |warning| add_warning(warning) }
@@ -64,7 +64,10 @@ module VCAP::CloudController
       validate_access(:delete, ServiceBroker)
       broker = ServiceBroker.find(:guid => guid)
       return HTTP::NOT_FOUND unless broker
+
       VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker).execute!
+      create_audit_event('audit.broker.delete', broker, {})
+
       HTTP::NO_CONTENT
     rescue Sequel::ForeignKeyConstraintViolation
       raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerNotRemovable")
@@ -85,10 +88,17 @@ module VCAP::CloudController
 
     private
 
-    def create_audit_event(type, broker, params, user)
+    def create_audit_event(type, broker, params)
+      user = SecurityContext.current_user
+
       request_hash = {}
       [:name, :broker_url, :auth_username].each do |key|
         request_hash[key] = params[key] unless params[key].nil?
+      end
+
+      metadata = {}
+      if request_hash.length > 0
+        metadata[:request] = request_hash
       end
 
       Event.create(
@@ -101,9 +111,7 @@ module VCAP::CloudController
           actee_name: broker.name,
           space_guid: '',           #empty since brokers don't associate to spaces
           organization_guid: '',
-          metadata: {
-            request: request_hash
-          }
+          metadata: metadata,
         )
     end
 

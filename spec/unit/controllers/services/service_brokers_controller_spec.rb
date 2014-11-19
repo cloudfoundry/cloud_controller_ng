@@ -193,6 +193,22 @@ module VCAP::CloudController
         expect(decoded_response).to include('total_results' => 0)
       end
 
+      it 'creates a broker delete event' do
+        delete "/v2/service_brokers/#{broker.guid}", {}, headers
+
+        event = Event.all.last
+        expect(event.type).to eq('audit.broker.delete')
+        expect(event.actor_type).to eq('user')
+        expect(event.timestamp).to be
+        expect(event.actor).to eq(admin_user.guid)
+        expect(event.actee).to eq(broker.guid)
+        expect(event.actee_type).to eq('broker')
+        expect(event.actee_name).to eq(broker.name)
+        expect(event.space_guid).to be_empty
+        expect(event.organization_guid).to be_empty
+        expect(event.metadata).to be_empty
+      end
+
       it "returns 404 when deleting a service broker that does not exist" do
         delete "/v2/service_brokers/1234", {}, headers
         expect(last_response.status).to eq(404)
