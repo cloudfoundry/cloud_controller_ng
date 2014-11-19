@@ -26,6 +26,8 @@ module VCAP::CloudController
         raise get_exception_from_errors(registration)
       end
 
+      create_audit_event(broker, params, SecurityContext.current_user)
+
       if !registration.warnings.empty?
         registration.warnings.each { |warning| add_warning(warning) }
       end
@@ -80,6 +82,27 @@ module VCAP::CloudController
     define_routes
 
     private
+
+    def create_audit_event(broker, params, user)
+      Event.create(
+          type: 'audit.broker.create',
+          actor_type: 'user',
+          timestamp: Time.now,
+          actor: user.guid,
+          actee: broker.guid,
+          actee_type: 'broker',
+          actee_name: broker.name,
+          space_guid: '',           #empty since brokers don't associate to spaces
+          organization_guid: '',
+          metadata: {
+            request: {
+              name: params[:name],
+              broker_url: params[:broker_url],
+              auth_username: params[:auth_username]
+            }
+          }
+        )
+    end
 
     def url_of(broker)
       "#{self.class.path}/#{broker.guid}"

@@ -81,6 +81,28 @@ module VCAP::CloudController
         allow(ServiceBrokerPresenter).to receive(:new).with(broker).and_return(presenter)
       end
 
+      it 'creates generates an broker create event' do
+        post '/v2/service_brokers', body, headers
+
+        event = Event.all.last
+        expect(event.type).to eq('audit.broker.create')
+        expect(event.actor_type).to eq('user')
+        expect(event.timestamp).to be
+        expect(event.actor).to eq(admin_user.guid)
+        expect(event.actee).to eq(broker.guid)
+        expect(event.actee_type).to eq('broker')
+        expect(event.actee_name).to eq(broker.name)
+        expect(event.space_guid).to be_empty
+        expect(event.organization_guid).to be_empty
+        expect(event.metadata).to include({
+          'request' => {
+            'name' => body_hash[:name],
+            'broker_url' => body_hash[:broker_url],
+            'auth_username' => body_hash[:auth_username],
+          }
+        })
+      end
+
       it 'creates a service broker registration' do
         post '/v2/service_brokers', body, headers
 
