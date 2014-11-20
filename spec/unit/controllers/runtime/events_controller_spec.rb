@@ -26,6 +26,8 @@ module VCAP::CloudController
 
         @event_a = Event.make :space => @space_a
         @event_b = Event.make :space => @space_b
+
+        @service_event = Event.make(space_guid: '', organization_guid: '', type: 'audit.broker.create')
       end
 
 
@@ -48,7 +50,7 @@ module VCAP::CloudController
           get "/v2/events", {}, admin_headers
 
           parsed_body = MultiJson.load(last_response.body)
-          expect(parsed_body["total_results"]).to eq(2)
+          expect(parsed_body["total_results"]).to eq(3)
         end
       end
 
