@@ -97,11 +97,11 @@ resource 'Processes (Experimental)', type: :api do
     let(:stack) { VCAP::CloudController::Stack.make }
 
     parameter :name, 'Name of process', required: true
-    parameter :memory, 'Amount of memory (MB) allocated to each instance', required: true
-    parameter :instances, 'Number of instances', required: true
-    parameter :disk_quota, 'Amount of disk space (MB) allocated to each instance', required: true
+    parameter :memory, 'Amount of memory (MB) allocated to each instance'
+    parameter :instances, 'Number of instances'
+    parameter :disk_quota, 'Amount of disk space (MB) allocated to each instance'
     parameter :space_guid, 'Guid of associated Space', required: true
-    parameter :stack_guid, 'Guid of associated Stack', required: true
+    parameter :stack_guid, 'Guid of associated Stack'
     parameter :state, 'Desired state of process'
     parameter :command, 'Start command for process'
     parameter :buildpack, 'Buildpack used to stage process'
