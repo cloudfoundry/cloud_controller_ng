@@ -82,13 +82,15 @@ module VCAP::CloudController
       end
 
       it 'creates a broker create event' do
-        post '/v2/service_brokers', body, headers
+        email = 'email@example.com'
+        post '/v2/service_brokers', body, headers_for(admin_user, email: email)
 
         event = Event.all.last
         expect(event.type).to eq('audit.broker.create')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
         expect(event.actor).to eq(admin_user.guid)
+        expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(broker.guid)
         expect(event.actee_type).to eq('broker')
         expect(event.actee_name).to eq(broker.name)
@@ -194,13 +196,15 @@ module VCAP::CloudController
       end
 
       it 'creates a broker delete event' do
-        delete "/v2/service_brokers/#{broker.guid}", {}, headers
+        email = "some-email-address@example.com"
+        delete "/v2/service_brokers/#{broker.guid}", {}, headers_for(admin_user, email: email)
 
         event = Event.all.last
         expect(event.type).to eq('audit.broker.delete')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
         expect(event.actor).to eq(admin_user.guid)
+        expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(broker.guid)
         expect(event.actee_type).to eq('broker')
         expect(event.actee_name).to eq(broker.name)
@@ -291,14 +295,16 @@ module VCAP::CloudController
       it 'creates a broker update event' do
         old_broker_name = broker.name
         body_hash.delete(:broker_url)
+        email = 'email@example.com'
 
-        put "/v2/service_brokers/#{broker.guid}", body, headers
+        put "/v2/service_brokers/#{broker.guid}", body, headers_for(admin_user, email: email)
 
         event = Event.all.last
         expect(event.type).to eq('audit.broker.update')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
         expect(event.actor).to eq(admin_user.guid)
+        expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(broker.guid)
         expect(event.actee_type).to eq('broker')
         expect(event.actee_name).to eq(old_broker_name)

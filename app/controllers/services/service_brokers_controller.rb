@@ -104,8 +104,9 @@ module VCAP::CloudController
       Event.create(
           type: type,
           actor_type: 'user',
-          timestamp: Time.now,
           actor: user.guid,
+          actor_name: SecurityContext.current_user_email,
+          timestamp: Time.now,
           actee: broker.guid,
           actee_type: 'broker',
           actee_name: broker.name,
