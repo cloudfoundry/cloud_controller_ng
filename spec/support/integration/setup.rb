@@ -29,7 +29,11 @@ module IntegrationSetup
 
     db_connection_string = "#{TestConfig.config[:db][:database]}_integration_cc"
     if !opts[:preserve_database]
-      run_cmd("bundle exec rake db:recreate db:migrate", wait: true, env: {"DB_CONNECTION_STRING" => db_connection_string}.merge(opts[:env] || {}))
+      env = {
+        "DB_CONNECTION_STRING" => db_connection_string,
+        'DB' => ENV['DB'] || 'postgres',
+      }.merge(opts[:env] || {})
+      run_cmd("bundle exec rake db:recreate db:migrate", wait: true, env: env)
     end
 
     @cc_pids ||= []
