@@ -10,6 +10,7 @@ module VCAP::CloudController
           [:name, :broker_url, :auth_username].each do |key|
             request_hash[key] = params[key] unless params[key].nil?
           end
+          request_hash[:auth_password] = '[REDACTED]' if params.has_key? :auth_password
 
           metadata = {}
           if request_hash.length > 0

@@ -101,6 +101,7 @@ module VCAP::CloudController
             'name' => body_hash[:name],
             'broker_url' => body_hash[:broker_url],
             'auth_username' => body_hash[:auth_username],
+            'auth_password' => '[REDACTED]',
           }
         })
       end
@@ -272,6 +273,7 @@ module VCAP::CloudController
           set: nil
         })
       end
+
       let(:registration) do
         reg = double(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration, {
           broker: broker,
@@ -281,6 +283,7 @@ module VCAP::CloudController
         allow(reg).to receive(:warnings).and_return([])
         reg
       end
+
       let(:presenter) { double(ServiceBrokerPresenter, {
         to_json: "{\"metadata\":{\"guid\":\"#{broker.guid}\"}}"
       }) }
@@ -314,8 +317,27 @@ module VCAP::CloudController
           'request' => {
             'name' => body_hash[:name],
             'auth_username' => body_hash[:auth_username],
+            'auth_password' => '[REDACTED]',
           }
         })
+      end
+
+      context "when the auth_password isn't updated" do
+        it 'creates a broker update event without the redacted password key' do
+          body_hash.delete(:auth_password)
+          body_hash.delete(:broker_url)
+          email = 'email@example.com'
+
+          put "/v2/service_brokers/#{broker.guid}", body, headers_for(admin_user, email: email)
+
+          event = Event.all.last
+          expect(event.metadata).to include({
+            'request' => {
+              'name' => body_hash[:name],
+              'auth_username' => body_hash[:auth_username],
+            }
+          })
+        end
       end
 
       it 'updates the broker' do
