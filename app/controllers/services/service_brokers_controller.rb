@@ -15,6 +15,11 @@ module VCAP::CloudController
 
     query_parameters :name
 
+    def inject_dependencies(dependencies)
+      super
+      @services_event_repository = dependencies.fetch(:services_event_repository)
+    end
+
     def create
       validate_access(:create, ServiceBroker)
       params = CreateMessage.decode(body).extract
@@ -26,7 +31,7 @@ module VCAP::CloudController
         raise get_exception_from_errors(registration)
       end
 
-      create_audit_event('audit.broker.create', broker, params)
+      @services_event_repository.create_audit_event('audit.broker.create', broker, params)
 
       if !registration.warnings.empty?
         registration.warnings.each { |warning| add_warning(warning) }
@@ -50,7 +55,7 @@ module VCAP::CloudController
         raise get_exception_from_errors(registration)
       end
 
-      create_audit_event('audit.broker.update', broker, params)
+      @services_event_repository.create_audit_event('audit.broker.update', broker, params)
 
       if !registration.warnings.empty?
         registration.warnings.each { |warning| add_warning(warning) }
@@ -66,7 +71,7 @@ module VCAP::CloudController
       return HTTP::NOT_FOUND unless broker
 
       VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker).execute!
-      create_audit_event('audit.broker.delete', broker, {})
+      @services_event_repository.create_audit_event('audit.broker.delete', broker, {})
 
       HTTP::NO_CONTENT
     rescue Sequel::ForeignKeyConstraintViolation

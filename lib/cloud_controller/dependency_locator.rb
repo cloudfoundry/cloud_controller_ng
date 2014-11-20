@@ -137,6 +137,10 @@ module CloudController
       Repositories::Runtime::SpaceEventRepository.new
     end
 
+    def services_event_repository
+      Repositories::Services::EventRepository.new
+    end
+
     def process_repository
       ProcessRepository.new
     end

@@ -67,11 +67,19 @@ module CloudController
                                 process_dependencies
                               when 'AppsV3Controller'
                                 app_v3_dependencies
+                              when 'ServiceBrokersController'
+                                service_brokers_dependencies
                               else
                                 {}
                               end
 
       default_dependencies.merge(custom_dependencies)
+    end
+
+    def service_brokers_dependencies
+      {
+        services_event_repository: dependency_locator.services_event_repository
+      }
     end
 
     def billing_dependencies
