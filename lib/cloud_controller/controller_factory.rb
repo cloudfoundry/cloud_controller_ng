@@ -103,7 +103,7 @@ module CloudController
     end
 
     def process_dependencies
-      { process_repository: dependency_locator.process_repository }
+      { processes_handler: dependency_locator.processes_handler }
     end
 
     def app_v3_dependencies

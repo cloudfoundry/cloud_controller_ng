@@ -2,12 +2,11 @@ module VCAP::CloudController
   class AppProcessAccess
     include Allowy::AccessControl
 
-    def create?(desired_process)
+    def create?(desired_process, space)
       return true if context.roles.admin?
 
       has_write_scope = SecurityContext.scopes.include?('cloud_controller.write')
 
-      space = Space.find(guid: desired_process.space_guid)
       is_space_developer = space && space.developers.include?(context.user)
 
       org_active = space && space.organization.active?
@@ -24,12 +23,12 @@ module VCAP::CloudController
       has_read_scope && user_visible
     end
 
-    def delete?(process)
-      create?(process)
+    def delete?(process, space)
+      create?(process, space)
     end
 
-    def update?(process)
-      create?(process)
+    def update?(process, space)
+      create?(process, space)
     end
   end
 end

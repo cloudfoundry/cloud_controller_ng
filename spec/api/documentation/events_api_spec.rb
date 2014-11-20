@@ -76,7 +76,7 @@ resource "Events", :type => [:api, :legacy_api] do
     end
 
     example "List App Create Events" do
-      app_event_repository.record_app_create(test_app, test_user, test_user_email, app_request)
+      app_event_repository.record_app_create(test_app, test_app.space, test_user, test_user_email, app_request)
 
       client.get "/v2/events?q=type:audit.app.create", {}, headers
       expect(status).to eq(200)
@@ -108,7 +108,7 @@ resource "Events", :type => [:api, :legacy_api] do
     end
 
     example "List App Update Events" do
-      app_event_repository.record_app_update(test_app, test_user, test_user_email, app_request)
+      app_event_repository.record_app_update(test_app, test_app.space, test_user, test_user_email, app_request)
 
       client.get "/v2/events?q=type:audit.app.update", {}, headers
       expect(status).to eq(200)
@@ -126,7 +126,7 @@ resource "Events", :type => [:api, :legacy_api] do
     end
 
     example "List App Delete Events" do
-      app_event_repository.record_app_delete_request(test_app, test_user, test_user_email, false)
+      app_event_repository.record_app_delete_request(test_app, test_app.space, test_user, test_user_email, false)
 
       client.get "/v2/events?q=type:audit.app.delete-request", {}, headers
       expect(status).to eq(200)
@@ -142,9 +142,9 @@ resource "Events", :type => [:api, :legacy_api] do
     end
 
     example "List events associated with an App since January 1, 2014" do
-      app_event_repository.record_app_create(test_app, test_user, test_user_email, app_request)
-      app_event_repository.record_app_update(test_app, test_user, test_user_email, app_request)
-      app_event_repository.record_app_delete_request(test_app, test_user, test_user_email, false)
+      app_event_repository.record_app_create(test_app, test_app.space, test_user, test_user_email, app_request)
+      app_event_repository.record_app_update(test_app, test_app.space, test_user, test_user_email, app_request)
+      app_event_repository.record_app_delete_request(test_app, test_app.space, test_user, test_user_email, false)
 
       client.get "/v2/events?q=actee:#{test_app.guid}&q=#{CGI.escape('timestamp>2014-01-01 00:00:00-04:00')}", {}, headers
       expect(status).to eq(200)

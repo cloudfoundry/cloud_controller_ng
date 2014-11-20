@@ -62,18 +62,6 @@ module VCAP::CloudController
     PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
     STAGING_FAILED_REASONS = %w[StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed BuildpackReleaseFailed].map(&:freeze).freeze
 
-    CENSORED_FIELDS = [:encrypted_environment_json, :command, :environment_json]
-
-    CENSORED_MESSAGE = "PRIVATE DATA HIDDEN".freeze
-
-    def self.audit_hash(request_attrs)
-      request_attrs.dup.tap do |changes|
-        CENSORED_FIELDS.map(&:to_s).each do |censored|
-          changes[censored] = CENSORED_MESSAGE if changes.has_key?(censored)
-        end
-      end
-    end
-
     # marked as true on changing the associated routes, and reset by
     # +Dea::Client.start+
     attr_accessor :routes_changed

@@ -34,7 +34,7 @@ module VCAP::CloudController
           buildpack:            self.buildpack,
           health_check_timeout: self.health_check_timeout,
           docker_image:         self.docker_image,
-          environment_json:     self.environment_json
+          environment_json:     self.environment_json,
         }.merge(changes))
     end
   end

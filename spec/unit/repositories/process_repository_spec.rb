@@ -6,6 +6,7 @@ module VCAP::CloudController
 
     let(:space_guid) { Space.make.guid }
     let(:stack_guid) { Stack.make.guid }
+    subject(:repo) { ProcessRepository.new }
     let(:valid_opts) do
       {
         name:                 'my-process',
@@ -40,6 +41,37 @@ module VCAP::CloudController
           process            = process_repository.find_by_guid(app.guid)
           expect(process.buildpack).to be_nil
         end
+      end
+    end
+
+    describe 'find_for_show' do
+      it 'it finds both the process and the associated space' do
+        space_model = Space.make
+        app = AppFactory.make(buildpack: 'http://the-buildpack.com', space: space_model)
+
+        process, space = repo.find_for_show(app.guid)
+
+        expect(process.guid).to eq(app.guid)
+        expect(process.name).to eq(app.name)
+        expect(process.memory).to eq(app.memory)
+        expect(process.instances).to eq(app.instances)
+        expect(process.disk_quota).to eq(app.disk_quota)
+        expect(process.space_guid).to eq(app.space.guid)
+        expect(process.stack_guid).to eq(app.stack.guid)
+        expect(process.state).to eq(app.state)
+        expect(process.command).to eq(app.command)
+        expect(process.buildpack).to eq(app.buildpack.url)
+        expect(process.health_check_timeout).to eq(app.health_check_timeout)
+        expect(process.docker_image).to eq(app.docker_image)
+        expect(process.environment_json).to eq(app.environment_json)
+
+        expect(space).to eq(space_model)
+      end
+
+      it 'returns nil when the process does not exist' do
+        process, space = repo.find_for_show('non-existant-guid')
+        expect(process).to be_nil
+        expect(space).to be_nil
       end
     end
 
@@ -88,6 +120,50 @@ module VCAP::CloudController
           expect(process.health_check_timeout).to eq(app.health_check_timeout)
           expect(process.docker_image).to eq(app.docker_image)
           expect(process.environment_json).to eq(app.environment_json)
+        end
+      end
+    end
+
+    describe '#find_for_update' do
+      context 'when the process exists' do
+        it 'find the process object by guid and yield a process and space' do
+          space = Space.make
+          process = AppFactory.make(buildpack: 'http://the-buildpack.com', space: space)
+          yielded = false
+
+          repo.find_for_update(process.guid) do |p, s|
+            yielded = true
+
+            expect(p.guid).to eq(process.guid)
+            expect(p.name).to eq(process.name)
+            expect(p.memory).to eq(process.memory)
+            expect(p.instances).to eq(process.instances)
+            expect(p.disk_quota).to eq(process.disk_quota)
+            expect(p.space_guid).to eq(process.space.guid)
+            expect(p.stack_guid).to eq(process.stack.guid)
+            expect(p.state).to eq(process.state)
+            expect(p.command).to eq(process.command)
+            expect(p.buildpack).to eq('http://the-buildpack.com')
+            expect(p.health_check_timeout).to eq(process.health_check_timeout)
+            expect(p.docker_image).to eq(process.docker_image)
+            expect(p.environment_json).to eq(process.environment_json)
+
+            expect(s).to eq(space)
+          end
+
+          expect(yielded).to be_truthy
+        end
+      end
+
+      context 'when the process does not exist' do
+        it 'yields nil for both the space and process' do
+          yielded = false
+          repo.find_for_update('bogus') do |p, s|
+            yielded = true
+            expect(p).to be_nil
+            expect(s).to be_nil
+          end
+          expect(yielded).to be_truthy
         end
       end
     end

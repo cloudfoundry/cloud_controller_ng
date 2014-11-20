@@ -110,7 +110,8 @@ module VCAP::CloudController
           }.to change { AppModel.count }.by 1
 
           expect(AppModel.last.processes.first.name).to include("maria")
-          expect(app_event_repository).to have_received(:record_app_create).with(App.last, admin_user, SecurityContext.current_user_email, expected_attrs)
+          app = App.last
+          expect(app_event_repository).to have_received(:record_app_create).with(app, app.space, admin_user, SecurityContext.current_user_email, expected_attrs)
         end
       end
 
@@ -167,7 +168,7 @@ module VCAP::CloudController
           it "records app update with whitelisted attributes" do
             allow(app_event_repository).to receive(:record_app_update).and_call_original
 
-            expect(app_event_repository).to receive(:record_app_update) do |recorded_app, user, user_name, attributes|
+            expect(app_event_repository).to receive(:record_app_update) do |recorded_app, recorded_space, user, user_name, attributes|
               expect(recorded_app.guid).to eq(app_obj.guid)
               expect(recorded_app.instances).to eq(2)
               expect(user).to eq(admin_user)
@@ -237,7 +238,7 @@ module VCAP::CloudController
 
           delete_app
 
-          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, admin_user, SecurityContext.current_user_email, false)
+          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, app_obj.space, admin_user, SecurityContext.current_user_email, false)
         end
 
         it "records the recursive query parameter when recursive"  do
@@ -245,7 +246,7 @@ module VCAP::CloudController
 
           delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
 
-          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, admin_user, SecurityContext.current_user_email, true)
+          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, app_obj.space, admin_user, SecurityContext.current_user_email, true)
         end
 
         it "does not record when the destroy fails" do

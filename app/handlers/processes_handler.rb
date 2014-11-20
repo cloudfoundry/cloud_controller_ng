@@ -53,9 +53,9 @@ module VCAP::CloudController
     class InvalidProcess < StandardError; end
     class Unauthorized < StandardError; end
 
-    def initialize(process_repository, access_context)
+    def initialize(process_repository, process_event_repository)
       @process_repository = process_repository
-      @access_context     = access_context
+      @process_event_repository = process_event_repository
     end
 
     def show(guid, access_context)
@@ -68,41 +68,61 @@ module VCAP::CloudController
 
     def create(create_message, access_context)
       desired_process = @process_repository.new_process(create_message.opts)
+      space = Space.find(guid: desired_process.space_guid)
 
-      raise Unauthorized if access_context.cannot?(:create, desired_process)
+      raise Unauthorized if access_context.cannot?(:create, desired_process, space)
 
-      @process_repository.persist!(desired_process)
+      process = @process_repository.persist!(desired_process)
 
+      user = access_context.user
+      email = access_context.user_email
+
+      @process_event_repository.record_app_create(process, space, user, email, create_message.opts)
+
+      process
     rescue ProcessRepository::InvalidProcess => e
       raise InvalidProcess.new(e.message)
     end
 
     def update(update_message, access_context)
-      @process_repository.find_by_guid_for_update(update_message.guid) do |initial_process|
-        if initial_process.nil? || access_context.cannot?(:update, initial_process)
-          return nil
-        end
+      @process_repository.find_for_update(update_message.guid) do |initial_process, initial_space|
+        return if initial_process.nil?
+
+        raise Unauthorized if access_context.cannot?(:update, initial_process, initial_space)
 
         desired_process = initial_process.with_changes(update_message.opts)
+        desired_space = update_message.opts[:space_guid] != initial_space.guid ? Space.find(guid: desired_process.space_guid) : initial_space
 
-        raise Unauthorized if access_context.cannot?(:update, desired_process)
+        raise Unauthorized if access_context.cannot?(:update, desired_process, desired_space)
 
-        @process_repository.persist!(desired_process)
+        process = @process_repository.persist!(desired_process)
+
+        user = access_context.user
+        email = access_context.user_email
+
+        @process_event_repository.record_app_update(process, desired_space, user, email, update_message.opts)
+
+        process
       end
     rescue ProcessRepository::InvalidProcess => e
       raise InvalidProcess.new(e.message)
     end
 
-    def delete(guid)
-      @process_repository.find_by_guid_for_update(guid) do |process|
-        if process.nil? || @access_context.cannot?(:delete, process)
-          return false
+    def delete(guid, access_context)
+      @process_repository.find_for_update(guid) do |process, space|
+        if process.nil? || access_context.cannot?(:delete, process, space)
+          return nil
         end
 
         @process_repository.delete(process)
-        return true
+
+        user = access_context.user
+        email = access_context.user_email
+
+        @process_event_repository.record_app_delete_request(process, space, user, email, true)
+        return process
       end
-      false
+      nil
     end
 
     private

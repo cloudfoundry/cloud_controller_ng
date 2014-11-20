@@ -42,6 +42,5 @@ module VCAP::CloudController
       app.command = domain.command
       app
     end
-
   end
 end

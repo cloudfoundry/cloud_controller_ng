@@ -34,6 +34,8 @@ namespace :spec do
         models
         presenters
         repositories
+        handlers
+        presenters
       ]
 
     fast_suites.each do |layer_name|

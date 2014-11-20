@@ -1,18 +1,16 @@
 require 'presenters/v3/process_presenter'
-require 'repositories/process_repository'
 require 'handlers/processes_handler'
 
 module VCAP::CloudController
   # TODO: would be nice not needing to use this BaseController
   class ProcessesController < RestController::BaseController
     def inject_dependencies(dependencies)
-      @process_repository = dependencies[:process_repository]
-      @process_handler = ProcessesHandler.new(@process_repository, @access_context)
+      @processes_handler = dependencies[:processes_handler]
     end
 
     get '/v3/processes/:guid', :show
     def show(guid)
-      process = @process_handler.show(guid, @access_context)
+      process = @processes_handler.show(guid, @access_context)
       not_found! if process.nil?
 
       process_presenter = ProcessPresenter.new(process)
@@ -24,7 +22,7 @@ module VCAP::CloudController
       create_message = ProcessCreateMessage.create_from_http_request(body)
       bad_request!(create_message.error) unless create_message.valid?
 
-      process = @process_handler.create(create_message, @access_context)
+      process = @processes_handler.create(create_message, @access_context)
 
       process_presenter = ProcessPresenter.new(process)
       [HTTP::CREATED, process_presenter.present_json]
@@ -40,8 +38,7 @@ module VCAP::CloudController
       update_message = ProcessUpdateMessage.create_from_http_request(guid, body)
       bad_request!(update_message.error) unless update_message.valid?
 
-      process = @process_handler.update(update_message, @access_context)
-
+      process = @processes_handler.update(update_message, @access_context)
       not_found! if process.nil?
 
       process_presenter = ProcessPresenter.new(process)
@@ -54,7 +51,7 @@ module VCAP::CloudController
 
     delete '/v3/processes/:guid', :delete
     def delete(guid)
-      deleted = @process_handler.delete(guid)
+      deleted = @processes_handler.delete(guid, @access_context)
       not_found! unless deleted
       [HTTP::NO_CONTENT]
     end

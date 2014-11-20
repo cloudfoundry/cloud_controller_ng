@@ -75,7 +75,9 @@ resource 'Processes (Experimental)', type: :api do
       expected_response = {
         'guid' => guid,
       }
-      do_request_with_error_handling
+      expect {
+        do_request_with_error_handling
+      }.to change{ VCAP::CloudController::Event.count }.by(1)
       parsed_response = JSON.parse(response_body)
 
       expect(response_status).to eq(200)

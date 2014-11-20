@@ -69,9 +69,9 @@ module VCAP::CloudController
 
         it "allows the user to read" do
           access_control = AppProcessAccess.new(access_context)
-          expect(access_control.create?(process)).to be_truthy
-          expect(access_control.delete?(process)).to be_truthy
-          expect(access_control.update?(process)).to be_truthy
+          expect(access_control.create?(process, space)).to be_truthy
+          expect(access_control.delete?(process, space)).to be_truthy
+          expect(access_control.update?(process, space)).to be_truthy
         end
       end
 
@@ -86,9 +86,9 @@ module VCAP::CloudController
 
           it "allows the user to create" do
             access_control = AppProcessAccess.new(access_context)
-            expect(access_control.create?(process)).to be_truthy
-            expect(access_control.delete?(process)).to be_truthy
-            expect(access_control.update?(process)).to be_truthy
+            expect(access_control.create?(process, space)).to be_truthy
+            expect(access_control.delete?(process, space)).to be_truthy
+            expect(access_control.update?(process, space)).to be_truthy
           end
         end
 
@@ -102,9 +102,9 @@ module VCAP::CloudController
 
           it "disallows the user from creating" do
             access_control = AppProcessAccess.new(access_context)
-            expect(access_control.create?(process)).to be_falsey
-            expect(access_control.delete?(process)).to be_falsey
-            expect(access_control.update?(process)).to be_falsey
+            expect(access_control.create?(process, space)).to be_falsey
+            expect(access_control.delete?(process, space)).to be_falsey
+            expect(access_control.update?(process, space)).to be_falsey
           end
         end
 
@@ -113,9 +113,9 @@ module VCAP::CloudController
 
           it "disallows the user from creating" do
             access_control = AppProcessAccess.new(access_context)
-            expect(access_control.create?(process)).to be_falsey
-            expect(access_control.delete?(process)).to be_falsey
-            expect(access_control.update?(process)).to be_falsey
+            expect(access_control.create?(process, space)).to be_falsey
+            expect(access_control.delete?(process, space)).to be_falsey
+            expect(access_control.update?(process, space)).to be_falsey
           end
         end
 
@@ -130,9 +130,9 @@ module VCAP::CloudController
 
           it "disallows the user from creating" do
             access_control = AppProcessAccess.new(access_context)
-            expect(access_control.create?(process)).to be_falsey
-            expect(access_control.delete?(process)).to be_falsey
-            expect(access_control.update?(process)).to be_falsey
+            expect(access_control.create?(process, space)).to be_falsey
+            expect(access_control.delete?(process, space)).to be_falsey
+            expect(access_control.update?(process, space)).to be_falsey
           end
         end
       end
