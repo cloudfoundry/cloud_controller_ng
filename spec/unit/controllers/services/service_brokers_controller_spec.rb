@@ -77,7 +77,7 @@ module VCAP::CloudController
 
       before do
         allow(ServiceBroker).to receive(:new).and_return(broker)
-        allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new).with(broker).and_return(registration)
+        allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new).and_return(registration)
         allow(ServiceBrokerPresenter).to receive(:new).with(broker).and_return(presenter)
       end
 
@@ -291,7 +291,7 @@ module VCAP::CloudController
       before do
         allow(ServiceBroker).to receive(:find)
         allow(ServiceBroker).to receive(:find).with(guid: broker.guid).and_return(broker)
-        allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new).with(broker).and_return(registration)
+        allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new).and_return(registration)
         allow(ServiceBrokerPresenter).to receive(:new).with(broker).and_return(presenter)
       end
 

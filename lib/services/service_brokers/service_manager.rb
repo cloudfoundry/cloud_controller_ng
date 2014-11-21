@@ -1,19 +1,19 @@
 module VCAP::Services::ServiceBrokers
   class ServiceManager
-    attr_reader :catalog, :warnings
+    attr_reader :warnings
 
-    def initialize(catalog)
-      @catalog = catalog
+    def initialize(service_event_repository)
+      @services_event_repository = service_event_repository
       @warnings = []
     end
 
-    def sync_services_and_plans
-      update_or_create_services
-      deactivate_services
-      update_or_create_plans
-      deactivate_plans
-      delete_plans
-      delete_services
+    def sync_services_and_plans(catalog)
+      update_or_create_services(catalog)
+      deactivate_services(catalog)
+      update_or_create_plans(catalog)
+      deactivate_plans(catalog)
+      delete_plans(catalog)
+      delete_services(catalog)
     end
 
     def has_warnings?
@@ -22,11 +22,35 @@ module VCAP::Services::ServiceBrokers
 
     private
 
-    def update_or_create_services
+    def update_or_create(model, cond, &block)
+      obj = model.first(cond)
+      if obj
+        obj.tap(&block).save(:changed => true)
+      else
+        instance = model.create(cond, &block)
+        @services_event_repository.create_service_event('audit.service.create', instance, {
+          entity: {
+            broker_guid: instance.service_broker.guid,
+            unique_id: instance.broker_provided_id,
+            label: instance.label,
+            description: instance.description,
+            bindable: instance.bindable,
+            tags: instance.tags,
+            extra: instance.extra,
+            active: instance.active,
+            requires: instance.requires,
+            plan_updateable: instance.plan_updateable,
+          }
+        })
+        instance
+      end
+    end
+
+    def update_or_create_services(catalog)
       catalog.services.each do |catalog_service|
         service_id = catalog_service.broker_provided_id
 
-        VCAP::CloudController::Service.update_or_create(
+        update_or_create(VCAP::CloudController::Service,
           service_broker: catalog.service_broker,
           unique_id:      service_id
         ) do |service|
@@ -44,14 +68,14 @@ module VCAP::Services::ServiceBrokers
       end
     end
 
-    def deactivate_services
+    def deactivate_services(catalog)
       services_in_db_not_in_catalog = catalog.service_broker.services_dataset.where('unique_id NOT in ?', catalog.services.map(&:broker_provided_id))
       services_in_db_not_in_catalog.each do |service|
         service.update(active: false)
       end
     end
 
-    def update_or_create_plans
+    def update_or_create_plans(catalog)
       catalog.plans.each do |catalog_plan|
         attrs = {
           name:        catalog_plan.name,
@@ -74,7 +98,7 @@ module VCAP::Services::ServiceBrokers
       end
     end
 
-    def deactivate_plans
+    def deactivate_plans(catalog)
       plan_ids_in_broker_catalog = catalog.plans.map(&:broker_provided_id)
       plans_in_db_not_in_catalog = catalog.service_broker.service_plans.reject { |p| plan_ids_in_broker_catalog.include?(p.broker_provided_id) }
       deactivated_plans_warning  = DeactivatedPlansWarning.new
@@ -89,7 +113,7 @@ module VCAP::Services::ServiceBrokers
       @warnings << deactivated_plans_warning.message if deactivated_plans_warning.message
     end
 
-    def delete_plans
+    def delete_plans(catalog)
       plan_ids_in_broker_catalog = catalog.plans.map(&:broker_provided_id)
       plans_in_db_not_in_catalog = catalog.service_broker.service_plans.reject { |p| plan_ids_in_broker_catalog.include?(p.broker_provided_id) }
       plans_in_db_not_in_catalog.each do |plan_to_deactivate|
@@ -99,7 +123,7 @@ module VCAP::Services::ServiceBrokers
       end
     end
 
-    def delete_services
+    def delete_services(catalog)
       services_in_db_not_in_catalog = catalog.service_broker.services_dataset.where('unique_id NOT in ?', catalog.services.map(&:broker_provided_id))
       services_in_db_not_in_catalog.each do |service|
         if service.service_plans.count < 1

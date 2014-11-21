@@ -19,8 +19,13 @@ module VCAP::CloudController
 
     query_parameters :name
 
+    def self.dependencies
+      [ :service_manager, :services_event_repository ]
+    end
+
     def inject_dependencies(dependencies)
       super
+      @service_manager = dependencies.fetch(:service_manager)
       @services_event_repository = dependencies.fetch(:services_event_repository)
     end
 
@@ -29,7 +34,7 @@ module VCAP::CloudController
       params = CreateMessage.decode(body).extract
       broker = ServiceBroker.new(params)
 
-      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker)
+      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager)
 
       unless registration.create
         raise get_exception_from_errors(registration)
@@ -53,7 +58,7 @@ module VCAP::CloudController
       return HTTP::NOT_FOUND unless broker
 
       broker.set(params)
-      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker)
+      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager)
 
       unless registration.update
         raise get_exception_from_errors(registration)
@@ -96,34 +101,6 @@ module VCAP::CloudController
     define_routes
 
     private
-
-    def create_audit_event(type, broker, params)
-      user = SecurityContext.current_user
-
-      request_hash = {}
-      [:name, :broker_url, :auth_username].each do |key|
-        request_hash[key] = params[key] unless params[key].nil?
-      end
-
-      metadata = {}
-      if request_hash.length > 0
-        metadata[:request] = request_hash
-      end
-
-      Event.create(
-          type: type,
-          actor_type: 'user',
-          actor: user.guid,
-          actor_name: SecurityContext.current_user_email,
-          timestamp: Time.now,
-          actee: broker.guid,
-          actee_type: 'broker',
-          actee_name: broker.name,
-          space_guid: '',           #empty since brokers don't associate to spaces
-          organization_guid: '',
-          metadata: metadata,
-        )
-    end
 
     def url_of(broker)
       "#{self.class.path}/#{broker.guid}"

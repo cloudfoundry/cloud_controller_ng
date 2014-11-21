@@ -3,20 +3,19 @@ require 'spec_helper'
 module VCAP::Services::ServiceBrokers
   describe ServiceBrokerRegistration do
 
+    subject(:registration) { ServiceBrokerRegistration.new(broker, service_manager) }
+
+    let(:client_manager) { double(:dashboard_manager, synchronize_clients_with_catalog: true, warnings: []) }
+    let(:catalog) { double(:catalog, valid?: true) }
+    let(:service_manager) { double(:service_manager, sync_services_and_plans: true, has_warnings?: false) }
+
     describe 'initializing' do
       let(:broker) { VCAP::CloudController::ServiceBroker.make }
-      subject { described_class.new(broker) }
 
       its(:broker) { should == broker }
       its(:warnings) { should == [] }
       its(:errors) { should == broker.errors }
     end
-
-    subject(:registration) { ServiceBrokerRegistration.new(broker) }
-
-    let(:client_manager) { double(:dashboard_manager, synchronize_clients_with_catalog: true, warnings: []) }
-    let(:catalog) { double(:catalog, valid?: true) }
-    let(:service_manager) { double(:service_manager, sync_services_and_plans: true, has_warnings?: false) }
 
     describe '#create' do
       let(:broker) do
@@ -85,7 +84,7 @@ module VCAP::Services::ServiceBrokers
       context 'when invalid' do
         context 'because the broker has errors' do
           let(:broker) { VCAP::CloudController::ServiceBroker.new }
-          let(:registration) { ServiceBrokerRegistration.new(broker) }
+          let(:registration) { ServiceBrokerRegistration.new(broker, service_manager) }
 
           it 'returns nil' do
             expect(registration.create).to be_nil
@@ -295,7 +294,7 @@ module VCAP::Services::ServiceBrokers
         end
       end
     end
-    
+
     describe '#update' do
       let!(:broker) do
         VCAP::CloudController::ServiceBroker.make(
@@ -355,7 +354,7 @@ module VCAP::Services::ServiceBrokers
 
       context 'when invalid' do
         context 'because the broker has errors' do
-          let(:registration) { ServiceBrokerRegistration.new(broker) }
+          let(:registration) { ServiceBrokerRegistration.new(broker, service_manager) }
 
           before do
             broker.name = nil

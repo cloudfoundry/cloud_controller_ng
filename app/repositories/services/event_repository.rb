@@ -3,8 +3,30 @@ module VCAP::CloudController
     module Services
       class EventRepository
 
+        def initialize(security_context)
+          @security_context = security_context
+        end
+
+        def create_service_event(type, service, metadata)
+          user = @security_context.current_user
+
+          Event.create(
+              type: type,
+              actor_type: 'user',
+              actor: user.guid,
+              actor_name: @security_context.current_user_email,
+              timestamp: Time.now,
+              actee: service.guid,
+              actee_type: 'service',
+              actee_name: service.label,
+              space_guid: '',  #empty since services don't associate to spaces
+              organization_guid: '',
+              metadata: metadata,
+            )
+        end
+
         def create_audit_event(type, broker, params)
-          user = SecurityContext.current_user
+          user = @security_context.current_user
 
           request_hash = {}
           [:name, :broker_url, :auth_username].each do |key|
@@ -21,7 +43,7 @@ module VCAP::CloudController
               type: type,
               actor_type: 'user',
               actor: user.guid,
-              actor_name: SecurityContext.current_user_email,
+              actor_name: @security_context.current_user_email,
               timestamp: Time.now,
               actee: broker.guid,
               actee_type: 'broker',
