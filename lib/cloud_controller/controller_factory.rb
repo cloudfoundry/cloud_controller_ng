@@ -1,6 +1,5 @@
 module CloudController
   class ControllerFactory
-    # rubocop:disable CyclomaticComplexity
     include VCAP::CloudController
 
     def initialize(config, logger, env, params, body, sinatra = nil)
