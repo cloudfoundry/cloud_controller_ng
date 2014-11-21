@@ -1,5 +1,9 @@
 module VCAP::CloudController
   class BuildpackBitsController < RestController::ModelController
+    def self.dependencies
+      [ :buildpack_blobstore, :upload_handler ]
+    end
+
     path_base "buildpacks"
     model_class_name :Buildpack
     allow_unauthenticated_access only: :download

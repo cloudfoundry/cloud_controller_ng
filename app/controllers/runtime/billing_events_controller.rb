@@ -1,5 +1,9 @@
 module VCAP::CloudController
   class BillingEventsController < RestController::ModelController
+    def self.dependencies
+      [:entity_only_paginated_collection_renderer]
+    end
+
     # override base enumeration functionality.  This is mainly becase we need
     # better controll over the dataset returned, and we don't have generic
     # functionality for the controller to configure its dataset.
@@ -37,6 +41,12 @@ module VCAP::CloudController
       Time.parse(str).localtime if str
     rescue
       raise Errors::ApiError.new_from_details("BillingEventQueryInvalid")
+    end
+
+    def inject_dependencies(dependencies)
+      super
+      @collection_renderer = dependencies[:entity_only_paginated_collection_renderer]
+      @object_renderer = nil
     end
 
     define_messages

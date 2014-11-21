@@ -5,6 +5,10 @@ require 'handlers/processes_handler'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
+    def self.dependencies
+      [ :app_repository, :process_repository ]
+    end
+
     def inject_dependencies(dependencies)
       @process_repository = dependencies[:process_repository]
       @app_repository =  dependencies[:app_repository]

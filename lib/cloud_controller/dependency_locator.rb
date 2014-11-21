@@ -25,6 +25,10 @@ module CloudController
       @dependencies = {}
     end
 
+    def config
+      @config || raise('config not set')
+    end
+
     def register(name, value)
       @dependencies[name] = value
     end
@@ -50,7 +54,7 @@ module CloudController
     end
 
     def app_event_repository
-      @dependencies[:app_event_repository] || raise('app_event_registry not set')
+      @dependencies[:app_event_repository] || raise('app_event_repository not set')
     end
 
     def instances_reporters

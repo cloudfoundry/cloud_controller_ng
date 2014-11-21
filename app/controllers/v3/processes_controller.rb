@@ -4,6 +4,9 @@ require 'handlers/processes_handler'
 module VCAP::CloudController
   # TODO: would be nice not needing to use this BaseController
   class ProcessesController < RestController::BaseController
+    def self.dependencies
+      [ :process_repository, :processes_handler ]
+    end
     def inject_dependencies(dependencies)
       @processes_handler = dependencies[:processes_handler]
     end

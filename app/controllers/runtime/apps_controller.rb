@@ -1,5 +1,9 @@
 module VCAP::CloudController
   class AppsController < RestController::ModelController
+    def self.dependencies
+      [ :app_event_repository ]
+    end
+
     define_attributes do
       attribute  :buildpack,              String,           :default => nil
       attribute  :command,                String,           :default => nil

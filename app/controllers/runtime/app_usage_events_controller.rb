@@ -2,6 +2,10 @@ require "repositories/runtime/app_usage_event_repository"
 
 module VCAP::CloudController
   class AppUsageEventsController < RestController::ModelController
+    def self.dependencies
+      [ :large_paginated_collection_renderer ]
+    end
+
     preserve_query_parameters :after_guid
 
     get "/v2/app_usage_events", :enumerate
@@ -21,6 +25,11 @@ module VCAP::CloudController
 
     def self.not_found_exception_name
       "EventNotFound"
+    end
+
+    def inject_dependencies(dependencies)
+      super
+      @collection_renderer = dependencies[:large_paginated_collection_renderer]
     end
 
     private

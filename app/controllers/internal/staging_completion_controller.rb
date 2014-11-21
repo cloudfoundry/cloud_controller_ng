@@ -5,6 +5,9 @@ require "cloud_controller/internal_api"
 
 module VCAP::CloudController
   class StagingCompletionController < RestController::BaseController
+    def self.dependencies
+      [ :stagers ]
+    end
 
     # Endpoint does its own (non-standard) auth
     allow_unauthenticated_access

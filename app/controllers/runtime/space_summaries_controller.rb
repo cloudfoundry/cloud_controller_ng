@@ -1,6 +1,11 @@
 module VCAP::CloudController
   class SpaceSummariesController < RestController::ModelController
+    def self.dependencies
+      [ :instances_reporters ]
+    end
+
     path_base "spaces"
+
     model_class_name :Space
 
     get "#{path_guid}/summary", :summary

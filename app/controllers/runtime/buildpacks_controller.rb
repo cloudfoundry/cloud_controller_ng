@@ -1,5 +1,9 @@
 module VCAP::CloudController
   class BuildpacksController < RestController::ModelController
+    def self.dependencies
+      [ :buildpack_blobstore, :upload_handler ]
+    end
+
     define_attributes do
       attribute :name, String
       attribute :position, Integer, default: 0

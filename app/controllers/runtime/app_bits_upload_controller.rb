@@ -2,6 +2,10 @@ require "presenters/api/job_presenter"
 
 module VCAP::CloudController
   class AppBitsUploadController < RestController::ModelController
+    def self.dependencies
+      [ :app_event_repository ]
+    end
+
     path_base "apps"
     model_class_name :App
 

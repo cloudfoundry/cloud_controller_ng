@@ -6,6 +6,10 @@ module VCAP::CloudController
   # cloudcontroller metaprogramming. We manually generate the JSON
   # expected by CFoundry and CF.
   class ServiceBrokersController < RestController::ModelController
+    def self.dependencies
+      [ :services_event_repository ]
+    end
+
     define_attributes do
       attribute :name,       String
       attribute :broker_url, String
