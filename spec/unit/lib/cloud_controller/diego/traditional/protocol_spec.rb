@@ -14,8 +14,10 @@ module VCAP::CloudController
           )
         end
 
+        let(:common_protocol) { double(:common_protocol) }
+
         subject(:protocol) do
-          Protocol.new(blobstore_url_generator)
+          Protocol.new(blobstore_url_generator, common_protocol)
         end
 
         describe "#stage_app_request" do
@@ -156,6 +158,17 @@ module VCAP::CloudController
               "app_id" => staging_app.guid,
               "task_id" => task_id,
             )
+          end
+        end
+
+        describe "#stop_index_request" do
+          let(:app) { AppFactory.make }
+          before { allow(common_protocol).to receive(:stop_index_request) }
+          
+          it "delegates to the common protocol" do
+            protocol.stop_index_request(app, 33)
+
+            expect(common_protocol).to have_received(:stop_index_request).with(app, 33)
           end
         end
       end

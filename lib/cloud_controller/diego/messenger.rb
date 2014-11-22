@@ -21,6 +21,11 @@ module VCAP::CloudController
         @message_bus.publish(*@protocol.stop_staging_app_request(app, task_id))
       end
 
+      def send_stop_index_request(app, index)
+        logger.info("stop.index", :app_guid => app.guid, :index => index)
+        @message_bus.publish(*@protocol.stop_index_request(app, index))
+      end
+
       private
 
       def logger

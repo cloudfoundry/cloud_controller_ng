@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class InstancesController < RestController::ModelController
     def self.dependencies
-      [ :instances_reporters ]
+      [ :instances_reporters, :index_stopper ]
     end
 
     path_base "apps"
@@ -35,17 +35,18 @@ module VCAP::CloudController
     def kill_instance(guid, index)
       app = find_guid_and_validate_access(:update, guid)
 
-      Dea::Client.stop_indices(app, [index.to_i])
+      index_stopper.stop_index(app, index.to_i)
       [HTTP::NO_CONTENT, nil]
     end
 
     protected
 
-    attr_reader :instances_reporters
+    attr_reader :instances_reporters, :index_stopper
 
     def inject_dependencies(dependencies)
       super
       @instances_reporters = dependencies.fetch(:instances_reporters)
+      @index_stopper = dependencies.fetch(:index_stopper)
     end
   end
 end

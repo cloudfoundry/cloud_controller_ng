@@ -90,6 +90,18 @@ module VCAP::CloudController
           runner.stop
         end
       end
+
+      describe "#stop_index" do
+        before do
+          allow(Client).to receive(:stop_indices)
+
+          runner.stop_index(3)
+        end
+
+        it "stops the given index of the app" do
+          expect(Client).to have_received(:stop_indices).with(app, [3])
+        end
+      end
     end
   end
 end

@@ -61,6 +61,10 @@ module CloudController
       @dependencies[:instances_reporters] || raise('instances_reporters not set')
     end
 
+    def index_stopper
+      @dependencies[:index_stopper] || raise('index_stopper not set')
+    end
+
     def droplet_blobstore
       droplets = @config.fetch(:droplets)
       cdn_uri = droplets.fetch(:cdn, nil) && droplets.fetch(:cdn).fetch(:uri, nil)

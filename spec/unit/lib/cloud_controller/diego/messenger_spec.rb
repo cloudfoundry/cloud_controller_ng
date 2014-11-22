@@ -32,7 +32,7 @@ module VCAP::CloudController
       end
 
       let(:protocol) do
-        Traditional::Protocol.new(blobstore_url_generator)
+        Traditional::Protocol.new(blobstore_url_generator, Common::Protocol.new)
       end
 
       subject(:messenger) { Messenger.new(message_bus, protocol) }

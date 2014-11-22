@@ -4,6 +4,10 @@ module VCAP::CloudController
   module Diego
     module Docker
       class Protocol
+        def initialize(common_protocol)
+          @common_protocol = common_protocol
+        end
+
         def stage_app_request(app, staging_timeout)
           ["diego.docker.staging.start", stage_app_message(app, staging_timeout).to_json]
         end
@@ -54,6 +58,10 @@ module VCAP::CloudController
             "app_id" => app.guid,
             "task_id" => task_id,
           }
+        end
+
+        def stop_index_request(app, index)
+          @common_protocol.stop_index_request(app, index)
         end
       end
     end

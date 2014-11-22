@@ -3,9 +3,11 @@ require "spec_helper"
 module VCAP::CloudController
   describe VCAP::CloudController::InstancesController do
     let(:instances_reporters) { double(:instances_reporters) }
+    let(:index_stopper) { double(:index_stopper) }
 
     before do
       CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
+      CloudController::DependencyLocator.instance.register(:index_stopper, index_stopper)
     end
 
     describe "GET /v2/apps/:id/instances" do
@@ -155,13 +157,13 @@ module VCAP::CloudController
       context "as a developer or space manager" do
         let(:user) { make_developer_for_space(app_obj.space) }
 
-        it "has the dea stop the instance at the given index" do
-          allow(Dea::Client).to receive(:stop_indices)
+        it "stops the instance at the given index" do
+          allow(index_stopper).to receive(:stop_index)
 
           delete "/v2/apps/#{app_obj.guid}/instances/1", "", headers_for(user)
 
           expect(last_response.status).to eq(204)
-          expect(Dea::Client).to have_received(:stop_indices).with(app_obj, [1])
+          expect(index_stopper).to have_received(:stop_index).with(app_obj, 1)
         end
       end
 

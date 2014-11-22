@@ -30,6 +30,10 @@ module VCAP::CloudController
       def desired_app_info
         raise NotImplementedError
       end
+
+      def stop_index(index)
+        @messenger.send_stop_index_request(@app, index)
+      end
     end
   end
 end

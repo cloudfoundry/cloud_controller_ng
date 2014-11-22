@@ -4,6 +4,7 @@ require "cloud_controller/diego/traditional/protocol"
 require "cloud_controller/diego/traditional/staging_completion_handler"
 require "cloud_controller/diego/docker/protocol"
 require "cloud_controller/diego/docker/staging_completion_handler"
+require "cloud_controller/diego/common/protocol"
 
 module VCAP::CloudController
   class Stagers
@@ -59,7 +60,7 @@ module VCAP::CloudController
     end
 
     def diego_docker_stager(app)
-      protocol = Diego::Docker::Protocol.new
+      protocol = Diego::Docker::Protocol.new(Diego::Common::Protocol.new)
       messenger = Diego::Messenger.new(@message_bus, protocol)
       completion_handler = Diego::Docker::StagingCompletionHandler.new(@runners)
       Diego::Stager.new(app, messenger, completion_handler, staging_timeout)
@@ -67,7 +68,7 @@ module VCAP::CloudController
 
     def diego_traditional_stager(app)
       dependency_locator = CloudController::DependencyLocator.instance
-      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator)
+      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator, Diego::Common::Protocol.new)
       messenger = Diego::Messenger.new(@message_bus, protocol)
       completion_handler = Diego::Traditional::StagingCompletionHandler.new(@runners)
       Diego::Stager.new(app, messenger, completion_handler, staging_timeout)

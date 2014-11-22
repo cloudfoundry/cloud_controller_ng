@@ -51,6 +51,10 @@ module VCAP::CloudController
         hash["updated_at"] = @app.updated_at || @app.created_at
         hash
       end
+
+      def stop_index(index)
+        Client.stop_indices(@app, [index])
+      end
     end
   end
 end

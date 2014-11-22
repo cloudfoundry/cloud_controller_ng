@@ -3,6 +3,7 @@ require "cloud_controller/account_capacity"
 require "uri"
 require "cloud_controller/backends/stagers"
 require "cloud_controller/backends/runners"
+require "cloud_controller/index_stopper"
 require "cloud_controller/backends/instances_reporters"
 require 'repositories/services/event_repository'
 
@@ -267,6 +268,7 @@ module VCAP::CloudController
         dependency_locator.register(:stagers, stagers)
         dependency_locator.register(:runners, runners)
         dependency_locator.register(:instances_reporters, InstancesReporters.new(@config, diego_client, hm_client))
+        dependency_locator.register(:index_stopper, IndexStopper.new(runners))
 
         diego_client.connect!
 
