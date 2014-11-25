@@ -23,27 +23,12 @@ module VCAP::Services::ServiceBrokers
     private
 
     def update_or_create(model, cond, &block)
-      obj = model.first(cond)
-      if obj
-        obj.tap(&block).save(:changed => true)
-      else
-        instance = model.create(cond, &block)
-        @services_event_repository.create_service_event('audit.service.create', instance, {
-          entity: {
-            broker_guid: instance.service_broker.guid,
-            unique_id: instance.broker_provided_id,
-            label: instance.label,
-            description: instance.description,
-            bindable: instance.bindable,
-            tags: instance.tags,
-            extra: instance.extra,
-            active: instance.active,
-            requires: instance.requires,
-            plan_updateable: instance.plan_updateable,
-          }
-        })
-        instance
-      end
+      obj = model.first(cond) || model.new(cond)
+      event_type = obj.new? ? 'audit.service.create' : 'audit.service.update'
+      obj.tap(&block)
+      metadata = @services_event_repository.metadata_for_modified_service(obj)
+      obj.save(:changed => true)
+      @services_event_repository.create_service_event(event_type, obj, metadata)
     end
 
     def update_or_create_services(catalog)

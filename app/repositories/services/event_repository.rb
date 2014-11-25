@@ -7,6 +7,28 @@ module VCAP::CloudController
           @security_context = security_context
         end
 
+        def metadata_for_modified_service(service)
+          instance_fields = {
+            broker_guid: :service_broker_guid,
+            unique_id: :broker_provided_id,
+            label: :label,
+            description: :description,
+            bindable: :bindable,
+            tags: :tags,
+            extra: :extra,
+            active: :active,
+            requires: :requires,
+            plan_updateable: :plan_updateable
+          }
+          entity = {}
+          instance_fields.each do |key, value|
+            if service.new? || service.modified?(key)
+              entity[key.to_s] = service.send(value)
+            end
+          end
+          { entity: entity }
+        end
+
         def create_service_event(type, service, metadata)
           user = @security_context.current_user
 

@@ -213,6 +213,82 @@ module VCAP::Services::ServiceBrokers
           expect(service.description).to eq(service_description)
         end
 
+        context "when all the service's fields are updated" do
+          it 'creates service audit events with all fields in the metadata' do
+            service_manager.sync_services_and_plans(catalog)
+
+            expect(VCAP::CloudController::Event.all.count).to eq(1)
+            event = VCAP::CloudController::Event.all.last
+            service = VCAP::CloudController::Service.last
+            expect(event.type).to eq('audit.service.update')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_name).to eq(user_email)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(service.guid)
+            expect(event.actee_type).to eq('service')
+            expect(event.actee_name).to eq(service_name)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
+            expect(event.metadata).to include({
+              'entity' => {
+                'label' => service_name,
+                'description' => service.description,
+                'tags' => service.tags,
+                'extra' => service.extra,
+                'requires' => service.requires,
+                'plan_updateable' => service.plan_updateable,
+              }
+            })
+          end
+        end
+
+        context "when some of the service's fields are updated" do
+          it 'creates service audit events with changed fields in the metadata' do
+            service.label = service_name
+            service.description = service_description
+            service.save
+
+            service_manager.sync_services_and_plans(catalog)
+
+            expect(VCAP::CloudController::Event.all.count).to eq(1)
+            event = VCAP::CloudController::Event.all.last
+            service = VCAP::CloudController::Service.last
+            expect(event.type).to eq('audit.service.update')
+            expect(event.metadata).to include({
+              'entity' => {
+                'tags' => service.tags,
+                'extra' => service_metadata_hash['metadata'].to_json,
+                'requires' => ['ultimate', 'power'],
+                'plan_updateable' => service.plan_updateable,
+              }
+            })
+          end
+        end
+
+        context "when none of the service's fields are updated" do
+          it 'creates service audit events with changed fields in the metadata' do
+            service.label = service_name
+            service.description = service_description
+            service.bindable = true
+            service.tags = ['mysql', 'relational']
+            service.extra = service_metadata_hash['metadata'].to_json
+            service.active = true
+            service.requires = ['ultimate', 'power']
+            service.plan_updateable = true
+            service.save
+
+            service_manager.sync_services_and_plans(catalog)
+
+            expect(VCAP::CloudController::Event.all.count).to eq(1)
+            event = VCAP::CloudController::Event.all.last
+            expect(event.type).to eq('audit.service.update')
+            expect(event.metadata).to include({
+              'entity' => {}
+            })
+          end
+        end
+
         context 'when the broker is different' do
           let(:different_broker) { VCAP::CloudController::ServiceBroker.make }
           let!(:service) do
