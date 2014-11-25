@@ -415,7 +415,8 @@ HEREDOC
         let!(:service) do
           VCAP::CloudController::Service.make(
             service_broker: broker,
-            unique_id: 'nolongerexists'
+            unique_id: 'nolongerexists',
+            label: 'was-an-awesome-service',
           )
         end
 
@@ -431,6 +432,24 @@ HEREDOC
         it 'should delete the service' do
           service_manager.sync_services_and_plans(catalog)
           expect(VCAP::CloudController::Service.find(:id => service.id)).to be_nil
+        end
+
+        it 'creates service audit events for each service deleted' do
+          service_manager.sync_services_and_plans(catalog)
+
+          expect(VCAP::CloudController::Event.all.count).to eq(2)
+          event = VCAP::CloudController::Event.all.last
+          expect(event.type).to eq('audit.service.delete')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_name).to eq(user_email)
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(service.guid)
+          expect(event.actee_type).to eq('service')
+          expect(event.actee_name).to eq('was-an-awesome-service')
+          expect(event.space_guid).to eq('')
+          expect(event.organization_guid).to eq('')
+          expect(event.metadata).to be_empty
         end
 
         it 'should not delete services owned by other brokers' do

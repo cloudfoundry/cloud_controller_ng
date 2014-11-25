@@ -113,6 +113,7 @@ module VCAP::Services::ServiceBrokers
       services_in_db_not_in_catalog.each do |service|
         if service.service_plans.count < 1
           service.destroy
+          @services_event_repository.create_service_event('audit.service.delete', service, {})
         end
       end
     end
