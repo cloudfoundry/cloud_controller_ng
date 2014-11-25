@@ -161,7 +161,7 @@ module VCAP::RestAPI
       if column[:db_type] == TINYINT_TYPE
         TINYINT_FROM_TRUE_FALSE.fetch(q_val, q_val)
       else
-        q_val == "t"
+        q_val == "t" ? true : q_val
       end
     end
 
