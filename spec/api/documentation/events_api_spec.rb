@@ -3,7 +3,21 @@ require "rspec_api_documentation/dsl"
 require "cgi"
 
 resource "Events", :type => [:api, :legacy_api] do
-  DOCUMENTED_EVENT_TYPES = %w[app.crash audit.app.update audit.app.create audit.app.delete-request audit.space.create audit.space.update audit.space.delete-request audit.service.create audit.service.update audit.service.delete]
+  DOCUMENTED_EVENT_TYPES = %w[
+    app.crash
+    audit.app.update
+    audit.app.create
+    audit.app.delete-request
+    audit.space.create
+    audit.space.update
+    audit.space.delete-request
+    audit.broker.create
+    audit.broker.update
+    audit.broker.delete
+    audit.service.create
+    audit.service.update
+    audit.service.delete
+  ]
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   authenticated_request
 
@@ -265,6 +279,80 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_type => "service",
                                :actee => test_service.guid,
                                :actee_name => test_service.label,
+                               :space_guid => '',
+                               :metadata => {}
+    end
+
+    example "List Broker Create Events" do
+      params = {
+        name: 'pancake broker',
+        broker_url: 'http://www.pancakes.com',
+        auth_username: 'panda',
+        auth_password: 'password'
+      }
+      broker = VCAP::CloudController::ServiceBroker.make(params)
+      service_event_repository.create_audit_event('audit.broker.create', broker, params)
+
+      client.get "/v2/events?q=type:audit.broker.create", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "broker",
+                               :actee => broker.guid,
+                               :actee_name => 'pancake broker',
+                               :space_guid => '',
+                               :metadata => {
+                                 'request' => {
+                                   'name' => 'pancake broker',
+                                   'broker_url' => 'http://www.pancakes.com',
+                                   'auth_username' => 'panda',
+                                   'auth_password' => '[REDACTED]'
+                                 }
+                               }
+
+    end
+
+    example "List Broker Update Events" do
+      params = {
+        broker_url: 'http://www.pancakes.com',
+        auth_password: 'password'
+      }
+      broker = VCAP::CloudController::ServiceBroker.make
+      service_event_repository.create_audit_event('audit.broker.update', broker, params)
+
+      client.get "/v2/events?q=type:audit.broker.update", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "broker",
+                               :actee => broker.guid,
+                               :actee_name => broker.name,
+                               :space_guid => '',
+                               :metadata => {
+                                 'request' => {
+                                   'broker_url' => 'http://www.pancakes.com',
+                                   'auth_password' => '[REDACTED]'
+                                 }
+                               }
+    end
+
+    example "List Broker Delete Events" do
+      broker = VCAP::CloudController::ServiceBroker.make
+      service_event_repository.create_audit_event('audit.broker.delete', broker, {})
+
+      client.get "/v2/events?q=type:audit.broker.delete", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "broker",
+                               :actee => broker.guid,
+                               :actee_name => broker.name,
                                :space_guid => '',
                                :metadata => {}
     end
