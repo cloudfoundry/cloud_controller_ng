@@ -65,26 +65,29 @@ module VCAP::CloudController
       validates_length_range 3..255, :name
 
       errors.add(:name, :overlapping_domain) if name_overlaps?
+      errors.add(:name, :route_conflict) if routes_match?
     end
 
     def name_overlaps?
       return true unless intermediate_domains.all? do |suffix|
         d = Domain.find(name: suffix)
-        d.nil? || d.owning_organization == owning_organization
+        d.nil? || d.owning_organization == owning_organization || d.instance_of?(SharedDomain)
       end
-
-      return true if intermediate_domains.reject{|d| d == name}.any? do |suffix|
-        !!Domain.find(name: suffix)
-      end
-
-      do_exclude = Domain.dataset
-      if owning_organization.nil?
-        do_exclude = Domain.dataset.exclude(:owning_organization_id => nil)
-      end
-
-      return true if do_exclude.filter(Sequel.like(:name, "%.#{name}")).count > 0
 
       return false
+    end
+
+    def routes_match?
+      return false unless name and name =~ DOMAIN_REGEX
+
+      if name.include?('.')
+        route_host = name[0, name.index('.')]
+        route_domain_name = name[name.index('.')+1, name.length]
+        route_domain = Domain.find(name: route_domain_name)
+        return false if route_domain.nil?
+        return true if Route.dataset.filter(:host => route_host, :domain => route_domain).count > 0
+      end
+      false
     end
 
     def self.intermediate_domains(name)
