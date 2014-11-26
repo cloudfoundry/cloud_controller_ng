@@ -3,7 +3,7 @@ require "rspec_api_documentation/dsl"
 require "cgi"
 
 resource "Events", :type => [:api, :legacy_api] do
-  DOCUMENTED_EVENT_TYPES = %w[app.crash audit.app.update audit.app.create audit.app.delete-request audit.space.create audit.space.update audit.space.delete-request]
+  DOCUMENTED_EVENT_TYPES = %w[app.crash audit.app.update audit.app.create audit.app.delete-request audit.space.create audit.space.update audit.space.delete-request audit.service.create audit.service.update audit.service.delete]
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   authenticated_request
 
@@ -38,6 +38,7 @@ resource "Events", :type => [:api, :legacy_api] do
     let(:test_user) { VCAP::CloudController::User.make }
     let(:test_user_email) { "user@email.com" }
     let(:test_space) { VCAP::CloudController::Space.make }
+    let(:test_service) { VCAP::CloudController::Service.make }
     let(:app_request) do
       {
         "name" => "new",
@@ -73,6 +74,11 @@ resource "Events", :type => [:api, :legacy_api] do
 
     let(:space_event_repository) do
       VCAP::CloudController::Repositories::Runtime::SpaceEventRepository.new
+    end
+
+    let(:service_event_repository) do
+      security_context = double(:security_context, current_user: test_user, current_user_email: test_user_email)
+      VCAP::CloudController::Repositories::Services::EventRepository.new(security_context)
     end
 
     example "List App Create Events" do
@@ -206,6 +212,61 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_name => test_space.name,
                                :space_guid => test_space.guid,
                                :metadata => { "request" => { "recursive" => true } }
+    end
+
+    example "List Service Create Events" do
+      values = test_service.values
+      values.delete(:id)
+      new_service = VCAP::CloudController::Service.new(values)
+      metadata = service_event_repository.metadata_for_modified_service(new_service)
+      service_event_repository.create_service_event('audit.service.create', new_service, metadata)
+
+      client.get "/v2/events?q=type:audit.service.create", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service",
+                               :actee => new_service.guid,
+                               :actee_name => new_service.label,
+                               :space_guid => '',
+                               :metadata => metadata.stringify_keys
+
+    end
+
+    example "List Service Update Events" do
+      test_service.label = 'new label'
+      metadata = service_event_repository.metadata_for_modified_service(test_service)
+      service_event_repository.create_service_event('audit.service.update', test_service, metadata)
+
+      client.get "/v2/events?q=type:audit.service.update", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service",
+                               :actee => test_service.guid,
+                               :actee_name => test_service.label,
+                               :space_guid => '',
+                               :metadata => {'entity' => {'label' => 'new label'}}
+    end
+
+    example "List Service Delete Events" do
+      service_event_repository.create_service_event('audit.service.delete', test_service, {})
+
+      client.get "/v2/events?q=type:audit.service.delete", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service",
+                               :actee => test_service.guid,
+                               :actee_name => test_service.label,
+                               :space_guid => '',
+                               :metadata => {}
     end
   end
 end
