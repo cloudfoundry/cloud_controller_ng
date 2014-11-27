@@ -47,6 +47,24 @@ module VCAP::CloudController
             )
         end
 
+        def create_service_plan_event(type, plan, metadata)
+          user = @security_context.current_user
+
+          Event.create(
+              type: type,
+              actor_type: 'user',
+              actor: user.guid,
+              actor_name: @security_context.current_user_email,
+              timestamp: Time.now,
+              actee: plan.guid,
+              actee_type: 'service_plan',
+              actee_name: plan.name,
+              space_guid: '',  #empty since plans don't associate to spaces
+              organization_guid: '',
+              metadata: metadata,
+            )
+        end
+
         def create_audit_event(type, broker, params)
           user = @security_context.current_user
 

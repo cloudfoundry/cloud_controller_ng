@@ -70,15 +70,23 @@ module VCAP::Services::ServiceBrokers
           extra:       catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
         }
         if catalog_plan.cc_plan
-          catalog_plan.cc_plan.update(attrs)
+          instance = catalog_plan.cc_plan.update(attrs)
         else
-          VCAP::CloudController::ServicePlan.create(
+          instance = VCAP::CloudController::ServicePlan.create(
             attrs.merge(
               service:   catalog_plan.catalog_service.cc_service,
               unique_id: catalog_plan.broker_provided_id,
               public:    false,
             )
           )
+          @services_event_repository.create_service_plan_event('audit.service_plan.create', instance, {
+            entity: attrs.merge(
+              service_guid:   instance.service_guid,
+              unique_id: catalog_plan.broker_provided_id,
+              public:    false,
+            )
+          })
+          instance
         end
       end
     end

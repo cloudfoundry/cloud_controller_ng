@@ -101,8 +101,7 @@ module VCAP::Services::ServiceBrokers
       it 'creates service audit events for each service created' do
         service_manager.sync_services_and_plans(catalog)
 
-        expect(VCAP::CloudController::Event.all.count).to eq(1)
-        event = VCAP::CloudController::Event.all.last
+        event = VCAP::CloudController::Event.first(type: 'audit.service.create')
         service = VCAP::CloudController::Service.last
         expect(event.type).to eq('audit.service.create')
         expect(event.actor_type).to eq('user')
@@ -217,8 +216,7 @@ module VCAP::Services::ServiceBrokers
           it 'creates service audit events with all fields in the metadata' do
             service_manager.sync_services_and_plans(catalog)
 
-            expect(VCAP::CloudController::Event.all.count).to eq(1)
-            event = VCAP::CloudController::Event.all.last
+            event = VCAP::CloudController::Event.first(type: 'audit.service.update')
             service = VCAP::CloudController::Service.last
             expect(event.type).to eq('audit.service.update')
             expect(event.actor_type).to eq('user')
@@ -251,8 +249,7 @@ module VCAP::Services::ServiceBrokers
 
             service_manager.sync_services_and_plans(catalog)
 
-            expect(VCAP::CloudController::Event.all.count).to eq(1)
-            event = VCAP::CloudController::Event.all.last
+            event = VCAP::CloudController::Event.first(type: 'audit.service.update')
             service = VCAP::CloudController::Service.last
             expect(event.type).to eq('audit.service.update')
             expect(event.metadata).to include({
@@ -280,8 +277,7 @@ module VCAP::Services::ServiceBrokers
 
             service_manager.sync_services_and_plans(catalog)
 
-            expect(VCAP::CloudController::Event.all.count).to eq(1)
-            event = VCAP::CloudController::Event.all.last
+            event = VCAP::CloudController::Event.first(type: 'audit.service.update')
             expect(event.type).to eq('audit.service.update')
             expect(event.metadata).to include({
               'entity' => {}
@@ -316,6 +312,36 @@ module VCAP::Services::ServiceBrokers
           expect(plan.description).to eq(plan_description)
 
           expect(plan.free).to be false
+        end
+
+        it 'creates service plan audit events for each plan created' do
+          service_manager.sync_services_and_plans(catalog)
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_plan.create')
+          plan = VCAP::CloudController::ServicePlan.all.last
+          service = VCAP::CloudController::Service.last
+          expect(event.type).to eq('audit.service_plan.create')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_name).to eq(user_email)
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(plan.guid)
+          expect(event.actee_type).to eq('service_plan')
+          expect(event.actee_name).to eq(plan_name)
+          expect(event.space_guid).to eq('')
+          expect(event.organization_guid).to eq('')
+          expect(event.metadata).to include({
+            'entity' => {
+              'name' => plan_name,
+              'description' => plan_description,
+              'free' => false,
+              'active' => true,
+              'extra' => plan_metadata_hash['metadata'].to_json,
+              'unique_id' => plan.broker_provided_id,
+              'public' => false,
+              'service_guid' => service.guid,
+            }
+          })
         end
 
         context 'and a plan already exists' do
@@ -437,8 +463,7 @@ HEREDOC
         it 'creates service audit events for each service deleted' do
           service_manager.sync_services_and_plans(catalog)
 
-          expect(VCAP::CloudController::Event.all.count).to eq(2)
-          event = VCAP::CloudController::Event.all.last
+          event = VCAP::CloudController::Event.first(type: 'audit.service.delete')
           expect(event.type).to eq('audit.service.delete')
           expect(event.actor_type).to eq('user')
           expect(event.actor).to eq(user.guid)
