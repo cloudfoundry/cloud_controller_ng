@@ -133,7 +133,7 @@ module VCAP::CloudController
         end
 
         it "should emit a loggregator error" do
-          expect(Loggregator).to receive(:emit_error).with(staged_app.guid, /bad/)
+          expect(Loggregator).to receive(:emit_error).with(staged_app.guid, "Failed to stage application")
           handle_staging_result(fail_response)
         end
 

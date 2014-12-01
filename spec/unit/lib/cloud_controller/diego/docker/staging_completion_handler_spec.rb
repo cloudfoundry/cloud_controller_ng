@@ -140,10 +140,10 @@ module VCAP::CloudController
             }.from("PENDING").to("FAILED")
           end
 
-          it "logs an error for the CF user" do
+          it "logs a generic error for the CF user" do
             handler.staging_complete(payload)
 
-            expect(Loggregator).to have_received(:emit_error).with(app.guid, /fake-error/)
+            expect(Loggregator).to have_received(:emit_error).with(app.guid, "Failed to stage application")
           end
 
           it "returns without sending a desired request for the app" do
