@@ -36,6 +36,10 @@ module VCAP::CloudController
       domain
     end
 
+    def shared?
+      true
+    end
+
     def addable_to_organization!(organization)
     end
   end

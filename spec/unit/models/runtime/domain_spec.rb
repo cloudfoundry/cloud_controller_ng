@@ -5,6 +5,11 @@ module VCAP::CloudController
 
     it { is_expected.to have_timestamp_columns }
 
+    it "can't be created if a would become parent" do
+      PrivateDomain.make name: 'bar.foo.com'
+      expect{ PrivateDomain.make name: 'foo.com' }.to raise_error
+    end
+
     describe "Associations" do
       context "routes" do
         let(:space) { Space.make }
