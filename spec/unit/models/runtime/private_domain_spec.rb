@@ -26,6 +26,44 @@ module VCAP::CloudController
         subject { private_domain }
         include_examples "domain validation"
       end
+      
+      it "allows private bar.foo.com when foo.com has the same owner" do
+        private_domain = PrivateDomain.make name: "foo.com"
+        expect { PrivateDomain.make name: "bar.foo.com", owning_organization_id: private_domain.owning_organization_id }.to_not raise_error
+      end
+      
+      it "allows private foo.com a when bar.foo.com has the same owner" do
+        private_domain = PrivateDomain.make name: "bar.foo.com"
+        expect { PrivateDomain.make name: "foo.com", owning_organization_id: private_domain.owning_organization_id }.to_not raise_error
+      end
+
+      it "denies private foo.com when another org has bar.foo.com" do
+        PrivateDomain.make name: "bar.foo.com"
+        expect { PrivateDomain.make name: "foo.com" }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+      end
+
+      it "denies private foo.com when there is a shared bar.foo.com" do
+        SharedDomain.make name: "bar.foo.com"
+        expect { PrivateDomain.make name: "foo.com" }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+      end
+
+      it "allows private bar.foo.com a when private baz.bar.foo.com has the same owner and shared foo.com exist" do
+        private_domain = PrivateDomain.make name: "baz.bar.foo.com"
+        SharedDomain.make name: "foo.com"
+        expect { PrivateDomain.make name: "bar.foo.com", owning_organization_id: private_domain.owning_organization_id }.to_not raise_error
+      end
+
+      it "denies private bar.foo.com a when private baz.bar.foo.com has a different owner and shared foo.com exist" do
+        PrivateDomain.make name: "baz.bar.foo.com"
+        SharedDomain.make name: "foo.com"
+        expect { PrivateDomain.make name: "bar.foo.com" }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+      end
+
+      it "denies private bar.foo.com a when shared baz.bar.foo.com and foo.com exist" do
+        SharedDomain.make name: "baz.bar.foo.com"
+        SharedDomain.make name: "foo.com"
+        expect { PrivateDomain.make name: "bar.foo.com" }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+      end
     end
 
     describe "#as_summary_json" do

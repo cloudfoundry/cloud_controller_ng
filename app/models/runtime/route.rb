@@ -48,6 +48,12 @@ module VCAP::CloudController
 
       validate_domain
       validate_total_routes
+      errors.add(:host, :domain_conflict) if domains_match?
+    end
+
+    def domains_match?
+        return false if domain.nil? || host.nil? || host.empty?
+        return !Domain.find(name: fqdn).nil?
     end
 
     def validate_app(app)
