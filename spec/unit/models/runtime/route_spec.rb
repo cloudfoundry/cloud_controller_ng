@@ -127,6 +127,17 @@ module VCAP::CloudController
             )
           }.to raise_error(Sequel::ValidationFailed)
         end
+
+        it "should not allow route to match existing domain" do
+          SharedDomain.make name: "bar.foo.com"
+          expect {
+            Route.make(
+              :space  => space,
+              :domain => SharedDomain.make(name: "foo.com"),
+              :host   => "bar"
+            )
+          }.to raise_error(Sequel::ValidationFailed, /domain_conflict/)
+        end
       end
 
       describe "total allowed routes" do
