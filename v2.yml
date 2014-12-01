@@ -59,9 +59,9 @@
   message: "The request is semantically invalid: %s"
 
 10009:
-  name: Conflict
-  http_code: 409
-  message: "The request could not be completed due to a conflict: %s"
+  name: UnableToPerform
+  http_code: 400
+  message: "%s could not be completed: %s"
 
 10010:
   name: ResourceNotFound
