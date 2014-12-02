@@ -51,6 +51,24 @@ module VCAP::CloudController
           create_event(type, actee, metadata)
         end
 
+        def create_service_binding_event(type, service_binding)
+          metadata = {
+            request: {
+              service_instance_guid: service_binding.service_instance.guid,
+              app_guid: service_binding.app.guid
+            }
+          }
+
+          actee = {
+            id: service_binding.guid,
+            type: 'service_binding',
+            name: 'N/A',
+            space_guid: service_binding.space.guid,
+            organization_guid: service_binding.space.organization.guid
+          }
+          create_event(type, actee, metadata)
+        end
+
         private
 
         def event_type(object, object_type)
@@ -107,8 +125,8 @@ module VCAP::CloudController
             actee: actee[:id],
             actee_type: actee[:type],
             actee_name: actee[:name],
-            space_guid: '',  #empty since services don't associate to spaces
-            organization_guid: '',
+            space_guid: actee[:space_guid] || '',
+            organization_guid: actee[:organization_guid] || '',
             metadata: metadata,
           )
         end

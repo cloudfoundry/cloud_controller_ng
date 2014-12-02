@@ -182,6 +182,38 @@ module VCAP::CloudController
           expect(binding.credentials).to eq(CREDENTIALS)
         end
 
+        it 'creates an audit event upon binding' do
+          req = {
+            :app_guid => app_obj.guid,
+            :service_instance_guid => instance.guid
+          }
+
+          email = 'email@example.com'
+          post "/v2/service_bindings", req.to_json, json_headers(headers_for(developer, email: email))
+
+          service_binding = ServiceBinding.last
+
+          event = Event.first(type: 'audit.service_binding.create')
+          expect(event.type).to eq('audit.service_binding.create')
+          expect(event.actor_type).to eq('user')
+          expect(event.timestamp).to be
+          expect(event.actor).to eq(developer.guid)
+          expect(event.actor_name).to eq(email)
+          expect(event.actee).to eq(service_binding.guid)
+          expect(event.actee_type).to eq('service_binding')
+          expect(event.actee_name).to eq('N/A')
+          expect(event.space_guid).to eq(space.guid)
+          expect(event.organization_guid).to eq(space.organization.guid)
+
+          expect(event.metadata).to include({
+            'request' => {
+              'service_instance_guid' => req[:service_instance_guid],
+              'app_guid' => req[:app_guid]
+            }
+          })
+
+        end
+
         it 'unbinds the service instance when an exception is raised' do
           req = MultiJson.dump(
             :app_guid => app_obj.guid,

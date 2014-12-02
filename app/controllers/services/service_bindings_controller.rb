@@ -13,6 +13,15 @@ module VCAP::CloudController
 
     query_parameters :app_guid, :service_instance_guid
 
+    def self.dependencies
+      [ :services_event_repository ]
+    end
+
+    def inject_dependencies(dependencies)
+      super
+      @services_event_repository = dependencies.fetch(:services_event_repository)
+    end
+
     post path, :create
     def create
       json_msg = self.class::CreateMessage.decode(body)
@@ -38,6 +47,8 @@ module VCAP::CloudController
       else
         raise Sequel::ValidationFailed.new(binding)
       end
+
+      @services_event_repository.create_service_binding_event('audit.service_binding.create', binding)
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{binding.guid}" },
