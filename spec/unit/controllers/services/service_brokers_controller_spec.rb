@@ -54,13 +54,13 @@ module VCAP::CloudController
 
       let(:errors) { double(Sequel::Model::Errors, on: nil) }
       let(:broker) do
-        double(ServiceBroker, {
+        ServiceBroker.make(
           guid: '123',
           name: 'My Custom Service',
           broker_url: 'http://broker.example.com',
           auth_username: 'me',
           auth_password: 'abc123',
-        })
+        )
       end
       let(:registration) do
         reg = double(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration, {
@@ -85,7 +85,7 @@ module VCAP::CloudController
         email = 'email@example.com'
         post '/v2/service_brokers', body, headers_for(admin_user, email: email)
 
-        event = Event.all.last
+        event = Event.first(type: 'audit.broker.create')
         expect(event.type).to eq('audit.broker.create')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
@@ -200,7 +200,7 @@ module VCAP::CloudController
         email = "some-email-address@example.com"
         delete "/v2/service_brokers/#{broker.guid}", {}, headers_for(admin_user, email: email)
 
-        event = Event.all.last
+        event = Event.first(type: 'audit.broker.delete')
         expect(event.type).to eq('audit.broker.delete')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
@@ -302,7 +302,7 @@ module VCAP::CloudController
 
         put "/v2/service_brokers/#{broker.guid}", body, headers_for(admin_user, email: email)
 
-        event = Event.all.last
+        event = Event.first(type: 'audit.broker.update')
         expect(event.type).to eq('audit.broker.update')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
@@ -330,7 +330,7 @@ module VCAP::CloudController
 
           put "/v2/service_brokers/#{broker.guid}", body, headers_for(admin_user, email: email)
 
-          event = Event.all.last
+          event = Event.first(type: 'audit.broker.update')
           expect(event.metadata).to include({
             'request' => {
               'name' => body_hash[:name],

@@ -114,12 +114,18 @@ module VCAP::Services::ServiceBrokers
         expect(event.space_guid).to eq('')
         expect(event.organization_guid).to eq('')
         expect(event.metadata).to include({
-          'entity' => {
-            'broker_guid' => service.service_broker.guid,
+          'changes_from_catalog' => {
+            'service_broker_guid' => service.service_broker.guid,
             'unique_id' => service_id,
+            'provider' => service.provider,
+            'url' => service.url,
+            'version' => service.version,
+            'info_url' => service.info_url,
+            'bindable' => service.bindable,
+            'long_description' => service.long_description,
+            'documentation_url' => service.documentation_url,
             'label' => service_name,
             'description' => service.description,
-            'bindable' => service.bindable,
             'tags' => service.tags,
             'extra' => service.extra,
             'active' => service.active,
@@ -229,7 +235,7 @@ module VCAP::Services::ServiceBrokers
             expect(event.space_guid).to eq('')
             expect(event.organization_guid).to eq('')
             expect(event.metadata).to include({
-              'entity' => {
+              'changes_from_catalog' => {
                 'label' => service_name,
                 'description' => service.description,
                 'tags' => service.tags,
@@ -253,7 +259,7 @@ module VCAP::Services::ServiceBrokers
             service = VCAP::CloudController::Service.last
             expect(event.type).to eq('audit.service.update')
             expect(event.metadata).to include({
-              'entity' => {
+              'changes_from_catalog' => {
                 'tags' => service.tags,
                 'extra' => service_metadata_hash['metadata'].to_json,
                 'requires' => ['ultimate', 'power'],
@@ -280,7 +286,7 @@ module VCAP::Services::ServiceBrokers
             event = VCAP::CloudController::Event.first(type: 'audit.service.update')
             expect(event.type).to eq('audit.service.update')
             expect(event.metadata).to include({
-              'entity' => {}
+              'changes_from_catalog' => {}
             })
           end
         end
@@ -331,7 +337,7 @@ module VCAP::Services::ServiceBrokers
           expect(event.space_guid).to eq('')
           expect(event.organization_guid).to eq('')
           expect(event.metadata).to include({
-            'entity' => {
+            'changes_from_catalog' => {
               'name' => plan_name,
               'description' => plan_description,
               'free' => false,
@@ -368,6 +374,31 @@ module VCAP::Services::ServiceBrokers
             expect(plan.free).to be false
           end
 
+          it 'creates service plan audit events for each plan updated' do
+            service_manager.sync_services_and_plans(catalog)
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_plan.update')
+            plan = VCAP::CloudController::ServicePlan.all.last
+            expect(event.type).to eq('audit.service_plan.update')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_name).to eq(user_email)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(plan.guid)
+            expect(event.actee_type).to eq('service_plan')
+            expect(event.actee_name).to eq(plan_name)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
+            expect(event.metadata).to include({
+              'changes_from_catalog' => {
+                'name' => plan.name,
+                'description' => plan.description,
+                'free' => false,
+                'extra' => plan.extra,
+              }
+            })
+          end
+
           context 'when the plan is public' do
             before do
               plan.update(public: true)
@@ -394,6 +425,23 @@ module VCAP::Services::ServiceBrokers
           it 'deletes the plan from the db' do
             service_manager.sync_services_and_plans(catalog)
             expect(VCAP::CloudController::ServicePlan.find(:id => missing_plan.id)).to be_nil
+          end
+
+          it 'creates service audit events for each service plan deleted' do
+            service_manager.sync_services_and_plans(catalog)
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_plan.delete')
+            expect(event.type).to eq('audit.service_plan.delete')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_name).to eq(user_email)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(missing_plan.guid)
+            expect(event.actee_type).to eq('service_plan')
+            expect(event.actee_name).to eq(missing_plan.name)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
+            expect(event.metadata).to be_empty
           end
 
           context 'when an instance for the plan exists' do

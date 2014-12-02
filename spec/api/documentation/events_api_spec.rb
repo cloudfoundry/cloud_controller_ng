@@ -53,6 +53,7 @@ resource "Events", :type => [:api, :legacy_api] do
     let(:test_user_email) { "user@email.com" }
     let(:test_space) { VCAP::CloudController::Space.make }
     let(:test_service) { VCAP::CloudController::Service.make }
+    let(:test_plan) { VCAP::CloudController::ServicePlan.make }
     let(:app_request) do
       {
         "name" => "new",
@@ -228,12 +229,94 @@ resource "Events", :type => [:api, :legacy_api] do
                                :metadata => { "request" => { "recursive" => true } }
     end
 
+    example "List Service Plan Create Events" do
+      new_plan = VCAP::CloudController::ServicePlan.new(
+        guid: "guid",
+        name: "plan-name",
+        service: VCAP::CloudController::Service.make(:v2),
+        description: 'A plan',
+        unique_id: "guid",
+        free: true,
+        public: true,
+        active: true
+      )
+      service_event_repository.with_service_plan_event(new_plan) do
+        new_plan.save
+      end
+
+      client.get "/v2/events?q=type:audit.service_plan.create", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_plan",
+                               :actee => new_plan.guid,
+                               :actee_name => new_plan.name,
+                               :space_guid => '',
+                               :metadata => {
+                                 'changes_from_catalog' => {
+                                     "name"=> new_plan.name,
+                                     "free"=> new_plan.free,
+                                     "description"=> new_plan.description,
+                                     "service_guid"=> new_plan.service.guid,
+                                     "extra"=> new_plan.extra,
+                                     "unique_id"=> new_plan.unique_id,
+                                     "public"=> new_plan.public,
+                                     "active"=> new_plan.active
+                                 }
+                               }
+
+    end
+
+    example "List Service Plan Update Events" do
+      test_plan.name = 'new name'
+      service_event_repository.with_service_plan_event(test_plan) do
+        test_plan.save
+      end
+
+      client.get "/v2/events?q=type:audit.service_plan.update", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_plan",
+                               :actee => test_plan.guid,
+                               :actee_name => test_plan.name,
+                               :space_guid => '',
+                               :metadata => {'changes_from_catalog' => {'name' => 'new name'}}
+    end
+
+    example "List Service Plan Delete Events" do
+      service_event_repository.create_delete_service_plan_event(test_plan)
+
+      client.get "/v2/events?q=type:audit.service_plan.delete", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_plan",
+                               :actee => test_plan.guid,
+                               :actee_name => test_plan.name,
+                               :space_guid => '',
+                               :metadata => {}
+    end
+
     example "List Service Create Events" do
-      values = test_service.values
-      values.delete(:id)
-      new_service = VCAP::CloudController::Service.new(values)
-      metadata = service_event_repository.metadata_for_modified_service(new_service)
-      service_event_repository.create_service_event('audit.service.create', new_service, metadata)
+      new_service = VCAP::CloudController::Service.new(
+        guid: "guid",
+        label: "label",
+        description: "BOOOO",
+        bindable: true,
+        service_broker: VCAP::CloudController::ServiceBroker.make,
+        plan_updateable: false,
+        active: true,
+      )
+      service_event_repository.with_service_event(new_service) do
+        new_service.save
+      end
 
       client.get "/v2/events?q=type:audit.service.create", {}, headers
       expect(status).to eq(200)
@@ -245,14 +328,34 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee => new_service.guid,
                                :actee_name => new_service.label,
                                :space_guid => '',
-                               :metadata => metadata.stringify_keys
+                               :metadata => {
+                                 'changes_from_catalog' => {
+                                   'service_broker_guid' => new_service.service_broker.guid,
+                                   'unique_id' => new_service.broker_provided_id,
+                                   'provider' => new_service.provider,
+                                   'url' => new_service.url,
+                                   'version' => new_service.version,
+                                   'info_url' => new_service.info_url,
+                                   'bindable' => new_service.bindable,
+                                   'long_description' => new_service.long_description,
+                                   'documentation_url' => new_service.documentation_url,
+                                   'label' => new_service.label,
+                                   'description' => new_service.description,
+                                   'tags' => new_service.tags,
+                                   'extra' => new_service.extra,
+                                   'active' => new_service.active,
+                                   'requires' => new_service.requires,
+                                   'plan_updateable' => new_service.plan_updateable,
+                                 }
+                               }
 
     end
 
     example "List Service Update Events" do
       test_service.label = 'new label'
-      metadata = service_event_repository.metadata_for_modified_service(test_service)
-      service_event_repository.create_service_event('audit.service.update', test_service, metadata)
+      service_event_repository.with_service_event(test_service) do
+        test_service.save
+      end
 
       client.get "/v2/events?q=type:audit.service.update", {}, headers
       expect(status).to eq(200)
@@ -264,11 +367,11 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee => test_service.guid,
                                :actee_name => test_service.label,
                                :space_guid => '',
-                               :metadata => {'entity' => {'label' => 'new label'}}
+                               :metadata => {'changes_from_catalog' => {'label' => 'new label'}}
     end
 
     example "List Service Delete Events" do
-      service_event_repository.create_service_event('audit.service.delete', test_service, {})
+      service_event_repository.create_delete_service_event(test_service)
 
       client.get "/v2/events?q=type:audit.service.delete", {}, headers
       expect(status).to eq(200)
@@ -291,7 +394,7 @@ resource "Events", :type => [:api, :legacy_api] do
         auth_password: 'password'
       }
       broker = VCAP::CloudController::ServiceBroker.make(params)
-      service_event_repository.create_audit_event('audit.broker.create', broker, params)
+      service_event_repository.create_broker_event('audit.broker.create', broker, params)
 
       client.get "/v2/events?q=type:audit.broker.create", {}, headers
       expect(status).to eq(200)
@@ -320,7 +423,7 @@ resource "Events", :type => [:api, :legacy_api] do
         auth_password: 'password'
       }
       broker = VCAP::CloudController::ServiceBroker.make
-      service_event_repository.create_audit_event('audit.broker.update', broker, params)
+      service_event_repository.create_broker_event('audit.broker.update', broker, params)
 
       client.get "/v2/events?q=type:audit.broker.update", {}, headers
       expect(status).to eq(200)
@@ -342,7 +445,7 @@ resource "Events", :type => [:api, :legacy_api] do
 
     example "List Broker Delete Events" do
       broker = VCAP::CloudController::ServiceBroker.make
-      service_event_repository.create_audit_event('audit.broker.delete', broker, {})
+      service_event_repository.create_broker_event('audit.broker.delete', broker, {})
 
       client.get "/v2/events?q=type:audit.broker.delete", {}, headers
       expect(status).to eq(200)

@@ -22,72 +22,67 @@ module VCAP::Services::ServiceBrokers
 
     private
 
-    def update_or_create(model, cond, &block)
-      obj = model.first(cond) || model.new(cond)
-      event_type = obj.new? ? 'audit.service.create' : 'audit.service.update'
-      obj.tap(&block)
-      metadata = @services_event_repository.metadata_for_modified_service(obj)
-      obj.save(:changed => true)
-      @services_event_repository.create_service_event(event_type, obj, metadata)
-    end
-
     def update_or_create_services(catalog)
       catalog.services.each do |catalog_service|
-        service_id = catalog_service.broker_provided_id
+        cond = {
+          service_broker: catalog_service.service_broker,
+          unique_id:      catalog_service.broker_provided_id,
+        }
+        obj = find_or_new_model(VCAP::CloudController::Service, cond)
 
-        update_or_create(VCAP::CloudController::Service,
-          service_broker: catalog.service_broker,
-          unique_id:      service_id
-        ) do |service|
-          service.set(
-            label:       catalog_service.name,
-            description: catalog_service.description,
-            bindable:    catalog_service.bindable,
-            tags:        catalog_service.tags,
-            extra:       catalog_service.metadata ? catalog_service.metadata.to_json : nil,
-            active:      catalog_service.plans_present?,
-            requires:    catalog_service.requires,
-            plan_updateable: catalog_service.plan_updateable,
-          )
+        obj.set(
+          label:       catalog_service.name,
+          description: catalog_service.description,
+          bindable:    catalog_service.bindable,
+          tags:        catalog_service.tags,
+          extra:       catalog_service.metadata ? catalog_service.metadata.to_json : nil,
+          active:      catalog_service.plans_present?,
+          requires:    catalog_service.requires,
+          plan_updateable: catalog_service.plan_updateable,
+        )
+
+        @services_event_repository.with_service_event(obj) do
+          obj.save(:changed => true)
         end
       end
+    end
+
+    def update_or_create_plans(catalog)
+      catalog.plans.each do |catalog_plan|
+        cond = {
+          unique_id: catalog_plan.broker_provided_id,
+          service: catalog_plan.catalog_service.cc_service,
+        }
+        plan = find_or_new_model(VCAP::CloudController::ServicePlan, cond)
+        if plan.new?
+          plan.public = false
+        end
+
+        plan.set({
+          name:        catalog_plan.name,
+          description: catalog_plan.description,
+          free:        catalog_plan.free,
+          active:      true,
+          extra:       catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
+        })
+        @services_event_repository.with_service_plan_event(plan) do
+          plan.save(:changed => true)
+        end
+      end
+    end
+
+    def find_or_new_model(model_class, cond)
+        obj = model_class.first(cond)
+        unless obj
+          obj = model_class.new(cond)
+        end
+        obj
     end
 
     def deactivate_services(catalog)
       services_in_db_not_in_catalog = catalog.service_broker.services_dataset.where('unique_id NOT in ?', catalog.services.map(&:broker_provided_id))
       services_in_db_not_in_catalog.each do |service|
         service.update(active: false)
-      end
-    end
-
-    def update_or_create_plans(catalog)
-      catalog.plans.each do |catalog_plan|
-        attrs = {
-          name:        catalog_plan.name,
-          description: catalog_plan.description,
-          free:        catalog_plan.free,
-          active:      true,
-          extra:       catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
-        }
-        if catalog_plan.cc_plan
-          instance = catalog_plan.cc_plan.update(attrs)
-        else
-          instance = VCAP::CloudController::ServicePlan.create(
-            attrs.merge(
-              service:   catalog_plan.catalog_service.cc_service,
-              unique_id: catalog_plan.broker_provided_id,
-              public:    false,
-            )
-          )
-          @services_event_repository.create_service_plan_event('audit.service_plan.create', instance, {
-            entity: attrs.merge(
-              service_guid:   instance.service_guid,
-              unique_id: catalog_plan.broker_provided_id,
-              public:    false,
-            )
-          })
-          instance
-        end
       end
     end
 
@@ -112,6 +107,7 @@ module VCAP::Services::ServiceBrokers
       plans_in_db_not_in_catalog.each do |plan_to_deactivate|
         if plan_to_deactivate.service_instances.count < 1
           plan_to_deactivate.destroy
+          @services_event_repository.create_delete_service_plan_event(plan_to_deactivate)
         end
       end
     end
@@ -121,7 +117,7 @@ module VCAP::Services::ServiceBrokers
       services_in_db_not_in_catalog.each do |service|
         if service.service_plans.count < 1
           service.destroy
-          @services_event_repository.create_service_event('audit.service.delete', service, {})
+          @services_event_repository.create_delete_service_event(service)
         end
       end
     end

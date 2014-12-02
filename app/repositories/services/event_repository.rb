@@ -7,67 +7,61 @@ module VCAP::CloudController
           @security_context = security_context
         end
 
-        def metadata_for_modified_service(service)
-          instance_fields = {
-            broker_guid: :service_broker_guid,
-            unique_id: :broker_provided_id,
-            label: :label,
-            description: :description,
-            bindable: :bindable,
-            tags: :tags,
-            extra: :extra,
-            active: :active,
-            requires: :requires,
-            plan_updateable: :plan_updateable
+        def with_service_event(service, &saveBlock)
+          actee = {
+            type: "service",
+            name: service.label,
           }
-          entity = {}
-          instance_fields.each do |key, value|
-            if service.new? || service.modified?(key)
-              entity[key.to_s] = service.send(value)
-            end
+          with_audit_event(service, actee, &saveBlock)
+        end
+
+        def with_service_plan_event(plan, &saveBlock)
+          actee = {
+            type: "service_plan",
+            name: plan.name,
+          }
+          with_audit_event(plan, actee, &saveBlock)
+        end
+
+        def create_delete_service_event(service, metadata={})
+          actee = {
+            id: service.guid,
+            type: 'service',
+            name: service.label,
+          }
+          create_event('audit.service.delete', actee, metadata)
+        end
+
+        def create_delete_service_plan_event(plan)
+          actee = {
+            id: plan.guid,
+            type: 'service_plan',
+            name: plan.name,
+          }
+          create_event('audit.service_plan.delete', actee, {})
+        end
+
+        def create_broker_event(type, broker, params)
+          metadata = metadata_for_broker_params(params)
+          actee = {
+            id: broker.guid,
+            type: 'broker',
+            name: broker.name,
+          }
+          create_event(type, actee, metadata)
+        end
+
+        private
+
+        def event_type(object, object_type)
+          if object.new?
+            "audit.#{object_type}.create"
+          else
+            "audit.#{object_type}.update"
           end
-          { entity: entity }
         end
 
-        def create_service_event(type, service, metadata)
-          user = @security_context.current_user
-
-          Event.create(
-              type: type,
-              actor_type: 'user',
-              actor: user.guid,
-              actor_name: @security_context.current_user_email,
-              timestamp: Time.now,
-              actee: service.guid,
-              actee_type: 'service',
-              actee_name: service.label,
-              space_guid: '',  #empty since services don't associate to spaces
-              organization_guid: '',
-              metadata: metadata,
-            )
-        end
-
-        def create_service_plan_event(type, plan, metadata)
-          user = @security_context.current_user
-
-          Event.create(
-              type: type,
-              actor_type: 'user',
-              actor: user.guid,
-              actor_name: @security_context.current_user_email,
-              timestamp: Time.now,
-              actee: plan.guid,
-              actee_type: 'service_plan',
-              actee_name: plan.name,
-              space_guid: '',  #empty since plans don't associate to spaces
-              organization_guid: '',
-              metadata: metadata,
-            )
-        end
-
-        def create_audit_event(type, broker, params)
-          user = @security_context.current_user
-
+        def metadata_for_broker_params(params)
           request_hash = {}
           [:name, :broker_url, :auth_username].each do |key|
             request_hash[key] = params[key] unless params[key].nil?
@@ -78,20 +72,45 @@ module VCAP::CloudController
           if request_hash.length > 0
             metadata[:request] = request_hash
           end
+          metadata
+        end
+
+        def metadata_for_modified_model(model_instance)
+          changes = {}
+          model_instance.to_hash.each do |key, value|
+            if model_instance.new? || model_instance.modified?(key.to_sym)
+              changes[key.to_s] = value
+            end
+          end
+
+          { changes_from_catalog: changes }
+        end
+
+        def with_audit_event(object, actee, &saveBlock)
+          type = event_type(object, actee[:type])
+          metadata = metadata_for_modified_model(object)
+          saveBlock.call
+
+          actee[:id] = object.guid
+          create_event(type, actee, metadata)
+        end
+
+        def create_event(type, actee, metadata)
+          user = @security_context.current_user
 
           Event.create(
-              type: type,
-              actor_type: 'user',
-              actor: user.guid,
-              actor_name: @security_context.current_user_email,
-              timestamp: Time.now,
-              actee: broker.guid,
-              actee_type: 'broker',
-              actee_name: broker.name,
-              space_guid: '',  #empty since brokers don't associate to spaces
-              organization_guid: '',
-              metadata: metadata,
-            )
+            type: type,
+            actor_type: 'user',
+            actor: user.guid,
+            actor_name: @security_context.current_user_email,
+            timestamp: Time.now,
+            actee: actee[:id],
+            actee_type: actee[:type],
+            actee_name: actee[:name],
+            space_guid: '',  #empty since services don't associate to spaces
+            organization_guid: '',
+            metadata: metadata,
+          )
         end
       end
     end
