@@ -382,41 +382,44 @@ module VCAP::Services::ServiceBrokers
         end
 
         context 'and a plan exists that has been removed from the broker catalog' do
-          let!(:plan) do
+          let(:missing_plan_name) { "111" }
+          let!(:missing_plan) do
             VCAP::CloudController::ServicePlan.make(
               service: service,
-              unique_id: 'nolongerexists'
+              unique_id: 'nolongerexists',
+              name: missing_plan_name,
             )
           end
 
           it 'deletes the plan from the db' do
             service_manager.sync_services_and_plans(catalog)
-            expect(VCAP::CloudController::ServicePlan.find(:id => plan.id)).to be_nil
+            expect(VCAP::CloudController::ServicePlan.find(:id => missing_plan.id)).to be_nil
           end
 
           context 'when an instance for the plan exists' do
-            let(:plan2_name) { Sham.name }
-            let(:service2_name) { Sham.name }
-            let(:service2_plan_name) { Sham.name }
+            let(:service_name) { "AAA" }
+            let(:missing_plan2_name) { "222" }
+            let(:missing_service2_name) { "BBB" }
+            let(:missing_service2_plan_name) { "111-B" }
 
             before do
-              VCAP::CloudController::ManagedServiceInstance.make(service_plan: plan)
+              VCAP::CloudController::ManagedServiceInstance.make(service_plan: missing_plan)
 
-              plan2 = VCAP::CloudController::ServicePlan.make(service: service, unique_id: 'plan2_nolongerexists', name: plan2_name)
-              VCAP::CloudController::ManagedServiceInstance.make(service_plan: plan2)
+              missing_plan2 = VCAP::CloudController::ServicePlan.make(service: service, unique_id: 'plan2_nolongerexists', name: missing_plan2_name)
+              VCAP::CloudController::ManagedServiceInstance.make(service_plan: missing_plan2)
 
-              service2 = VCAP::CloudController::Service.make(service_broker: broker, label: service2_name)
-              service2_plan = VCAP::CloudController::ServicePlan.make(service: service2, unique_id: 'i_be_gone', name: service2_plan_name)
-              VCAP::CloudController::ManagedServiceInstance.make(service_plan: service2_plan)
+              missing_service2 = VCAP::CloudController::Service.make(service_broker: broker, label: missing_service2_name)
+              missing_service2_plan = VCAP::CloudController::ServicePlan.make(service: missing_service2, unique_id: 'i_be_gone', name: missing_service2_plan_name)
+              VCAP::CloudController::ManagedServiceInstance.make(service_plan: missing_service2_plan)
             end
 
             it 'marks the existing plan as inactive' do
-              expect(plan).to be_active
+              expect(missing_plan).to be_active
 
               service_manager.sync_services_and_plans(catalog)
-              plan.reload
+              missing_plan.reload
 
-              expect(plan).not_to be_active
+              expect(missing_plan).not_to be_active
             end
 
             it 'adds a formatted warning' do
@@ -426,10 +429,10 @@ module VCAP::Services::ServiceBrokers
               expect(service_manager.warnings).to include(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
-  #{plan.name}
-  #{plan2_name}
-#{service2_name}
-  #{service2_plan_name}
+  #{missing_plan_name}
+  #{missing_plan2_name}
+#{missing_service2_name}
+  #{missing_service2_plan_name}
 HEREDOC
 # rubocop:enable LineLength
             end

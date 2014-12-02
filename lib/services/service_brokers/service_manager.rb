@@ -151,9 +151,10 @@ module VCAP::Services::ServiceBrokers
       def format_message
         warning_msg = ''
 
-        @nested_warnings.each_pair do |service, plans|
+        @nested_warnings.sort.each do |pair|
+          service, plans = pair
           warning_msg += "#{service}\n"
-          plans.each do |plan|
+          plans.sort.each do |plan|
             warning_msg += "#{INDENT}#{plan}\n"
           end
         end
