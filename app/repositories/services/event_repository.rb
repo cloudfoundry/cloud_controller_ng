@@ -12,7 +12,7 @@ module VCAP::CloudController
             type: "service",
             name: service.label,
           }
-          with_audit_event(service, actee, &saveBlock)
+          with_audit_event(service, actee, :changes_from_catalog, &saveBlock)
         end
 
         def with_service_plan_event(plan, &saveBlock)
@@ -20,7 +20,18 @@ module VCAP::CloudController
             type: "service_plan",
             name: plan.name,
           }
-          with_audit_event(plan, actee, &saveBlock)
+          with_audit_event(plan, actee, :changes_from_catalog, &saveBlock)
+        end
+
+        def create_service_instance_event(type, service_instance, params)
+          actee = {
+            id: service_instance.guid,
+            type: 'service_instance',
+            name: service_instance.name,
+            space_guid: service_instance.space_guid,
+            organization_guid: service_instance.space.organization.guid,
+          }
+          create_event(type, actee, { request: params })
         end
 
         def create_delete_service_event(service, metadata={})
@@ -93,24 +104,26 @@ module VCAP::CloudController
           metadata
         end
 
-        def metadata_for_modified_model(model_instance)
+        def changes_for_modified_model(model_instance)
           changes = {}
           model_instance.to_hash.each do |key, value|
             if model_instance.new? || model_instance.modified?(key.to_sym)
               changes[key.to_s] = value
             end
           end
-
-          { changes_from_catalog: changes }
+          changes
         end
 
-        def with_audit_event(object, actee, &saveBlock)
+        def with_audit_event(object, actee, changes_key, &saveBlock)
           type = event_type(object, actee[:type])
-          metadata = metadata_for_modified_model(object)
-          saveBlock.call
+          metadata = {
+            changes_key => changes_for_modified_model(object)
+          }
+          result = saveBlock.call
 
           actee[:id] = object.guid
           create_event(type, actee, metadata)
+          result
         end
 
         def create_event(type, actee, metadata)
@@ -122,11 +135,11 @@ module VCAP::CloudController
             actor: user.guid,
             actor_name: @security_context.current_user_email,
             timestamp: Time.now,
-            actee: actee[:id],
-            actee_type: actee[:type],
-            actee_name: actee[:name],
-            space_guid: actee[:space_guid] || '',
-            organization_guid: actee[:organization_guid] || '',
+            actee: actee.fetch(:id),
+            actee_type: actee.fetch(:type),
+            actee_name: actee.fetch(:name),
+            space_guid: actee.fetch(:space_guid, ''),
+            organization_guid: actee.fetch(:organization_guid, ''),
             metadata: metadata,
           )
         end

@@ -459,5 +459,75 @@ resource "Events", :type => [:api, :legacy_api] do
                                :space_guid => '',
                                :metadata => {}
     end
+
+    example "List Service Instance Create Events" do
+      instance = VCAP::CloudController::ManagedServiceInstance.make
+      service_event_repository.create_service_instance_event('audit.service_instance.create', instance, {
+        'name' => instance.name,
+        'service_plan_guid' => instance.service_plan.guid,
+        'space_guid' => instance.space_guid,
+      })
+
+      client.get "/v2/events?q=type:audit.service_instance.create", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_instance",
+                               :actee => instance.guid,
+                               :actee_name => instance.name,
+                               :space_guid => instance.space_guid,
+                               :metadata => {
+                                 'request' => {
+                                   'name' => instance.name,
+                                   'service_plan_guid' => instance.service_plan.guid,
+                                   'space_guid' => instance.space_guid,
+                                 }
+                               }
+
+    end
+
+    example "List Service Instance Update Events" do
+      instance = VCAP::CloudController::ManagedServiceInstance.make
+      service_event_repository.create_service_instance_event('audit.service_instance.update', instance, {
+        'service_plan_guid' => instance.service_plan.guid,
+      })
+
+      client.get "/v2/events?q=type:audit.service_instance.update", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_instance",
+                               :actee => instance.guid,
+                               :actee_name => instance.name,
+                               :space_guid => instance.space_guid,
+                               :metadata => {
+                                 'request' => {
+                                   'service_plan_guid' => instance.service_plan.guid,
+                                 }
+                               }
+    end
+
+    example "List Service Instance Delete Events" do
+      instance = VCAP::CloudController::ManagedServiceInstance.make
+      service_event_repository.create_service_instance_event('audit.service_instance.delete', instance, {})
+
+      client.get "/v2/events?q=type:audit.service_instance.delete", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_instance",
+                               :actee => instance.guid,
+                               :actee_name => instance.name,
+                               :space_guid => instance.space_guid,
+                               :metadata => {
+                                 'request' => {}
+                               }
+    end
   end
 end

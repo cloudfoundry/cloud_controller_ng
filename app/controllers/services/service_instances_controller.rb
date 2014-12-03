@@ -49,6 +49,15 @@ module VCAP::CloudController
       Errors::ApiError.new_from_details("ServiceInstanceNotFound", guid)
     end
 
+    def self.dependencies
+      [ :services_event_repository ]
+    end
+
+    def inject_dependencies(dependencies)
+      super
+      @services_event_repository = dependencies.fetch(:services_event_repository)
+    end
+
     def create
       json_msg = self.class::CreateMessage.decode(body)
 
@@ -90,24 +99,49 @@ module VCAP::CloudController
         raise e
       end
 
+      @services_event_repository.create_service_instance_event('audit.service_instance.create', service_instance, request_attrs)
+
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{service_instance.guid}" },
         object_renderer.render_json(self.class, service_instance, @opts)
       ]
     end
 
-    def before_update(service_instance)
-      if @request_attrs["service_plan_guid"]
-        validate_access(:update, service_instance, request_attrs)
+    def update(guid)
+      json_msg = self.class::UpdateMessage.decode(body)
+      request_attrs = json_msg.extract(stringify_keys: true)
+      logger.debug "cc.update", guid: guid, attributes: request_attrs
+      raise InvalidRequest unless request_attrs
 
-        new_plan = ServicePlan.find(guid: @request_attrs["service_plan_guid"])
+      service_instance = find_guid(guid)
+      validate_access(:read_for_update, service_instance)
+      validate_access(:update, service_instance)
+
+      if request_attrs["service_plan_guid"]
         old_plan = service_instance.service_plan
-        if old_plan.service.plan_updateable
-          service_instance.client.update_service_plan(service_instance, new_plan)
-        else
+        unless old_plan.service.plan_updateable
           raise VCAP::Errors::ApiError.new_from_details("ServicePlanNotUpdateable")
         end
+
+        new_plan = ServicePlan.find(guid: request_attrs["service_plan_guid"])
+        service_instance.client.update_service_plan(service_instance, new_plan)
       end
+
+      if request_attrs['space_guid']
+        space = Space.find(guid: request_attrs['space_guid'])
+        unless space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+          raise VCAP::Errors::ApiError.new_from_details("NotAuthorized")
+        end
+      end
+
+      ServiceInstance.db.transaction do
+        service_instance.lock!
+        service_instance.update_from_hash(request_attrs)
+      end
+
+      @services_event_repository.create_service_instance_event('audit.service_instance.update', service_instance, request_attrs)
+
+      [HTTP::CREATED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
     end
 
     class BulkUpdateMessage < VCAP::RestAPI::Message
@@ -162,7 +196,10 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid, ServiceInstance))
+      model = ServiceInstance.find(guid: guid)
+      response = do_delete(find_guid_and_validate_access(:delete, guid, ServiceInstance))
+      @services_event_repository.create_service_instance_event('audit.service_instance.delete', model, {})
+      response
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)

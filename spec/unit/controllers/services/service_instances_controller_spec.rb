@@ -214,6 +214,29 @@ module VCAP::CloudController
           expect(instance.dashboard_url).to eq('the dashboard_url')
         end
 
+        it 'creates a service audit event for creating the service instance' do
+          instance = create_managed_service_instance(email: 'developer@example.com')
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+          expect(event.type).to eq('audit.service_instance.create')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(developer.guid)
+          expect(event.actor_name).to eq('developer@example.com')
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(instance.guid)
+          expect(event.actee_type).to eq('service_instance')
+          expect(event.actee_name).to eq(instance.name)
+          expect(event.space_guid).to eq(instance.space.guid)
+          expect(event.organization_guid).to eq(instance.space.organization.guid)
+          expect(event.metadata).to include({
+            'request' => {
+              'name' => instance.name,
+              'service_plan_guid' => instance.service_plan_guid,
+              'space_guid' => instance.space_guid,
+            }
+          })
+        end
+
         it 'creates a CREATED service usage event' do
           instance = nil
           expect {
@@ -315,7 +338,7 @@ module VCAP::CloudController
         context 'with naming collisions' do
 
           it 'does not allow duplicate managed service instances' do
-            instance = create_managed_service_instance
+            create_managed_service_instance
             expect(last_response.status).to eq(201)
 
             create_managed_service_instance
@@ -324,7 +347,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow duplicate user provided service instances' do
-            instance = create_user_provided_service_instance
+            create_user_provided_service_instance
             expect(last_response.status).to eq(201)
 
             create_user_provided_service_instance
@@ -333,7 +356,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow a user provided service instance with same name as managed service instance' do
-            instance = create_managed_service_instance
+            create_managed_service_instance
             expect(last_response.status).to eq(201)
 
             create_user_provided_service_instance
@@ -342,7 +365,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow a managed service instance with same name as user provided service instance' do
-            instance = create_user_provided_service_instance
+            create_user_provided_service_instance
             expect(last_response.status).to eq(201)
 
             create_managed_service_instance
@@ -484,12 +507,33 @@ module VCAP::CloudController
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
           expect(service_instance.reload.service_plan).to eq(new_service_plan)
         end
+
+        it 'creates a service audit event for updating the service instance' do
+          put "/v2/service_instances/#{service_instance.guid}", body, headers_for(admin_user, email: 'admin@example.com')
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.update')
+          expect(event.type).to eq('audit.service_instance.update')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(admin_user.guid)
+          expect(event.actor_name).to eq('admin@example.com')
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(service_instance.guid)
+          expect(event.actee_type).to eq('service_instance')
+          expect(event.actee_name).to eq(service_instance.name)
+          expect(event.space_guid).to eq(service_instance.space.guid)
+          expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+          expect(event.metadata).to include({
+            'request' => {
+              'service_plan_guid' => new_service_plan.guid,
+            }
+          })
+        end
       end
 
       context 'When the broker did not declare support for plan upgrades' do
         let(:old_service_plan) { ServicePlan.make(:v2) }
 
-        it 'updates the service plan in the database' do
+        it 'does not update the service plan in the database' do
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
           expect(service_instance.reload.service_plan).to eq(old_service_plan)
         end
@@ -645,6 +689,23 @@ module VCAP::CloudController
           }.to change(ServiceInstance, :count).by(-1)
           expect(last_response.status).to eq(204)
           expect(ServiceInstance.find(:guid => service_instance.guid)).to be_nil
+        end
+
+        it 'creates a service audit event for deleting the service instance' do
+          delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(admin_user, email: 'admin@example.com')
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
+          expect(event.type).to eq('audit.service_instance.delete')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(admin_user.guid)
+          expect(event.actor_name).to eq('admin@example.com')
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(service_instance.guid)
+          expect(event.actee_type).to eq('service_instance')
+          expect(event.actee_name).to eq(service_instance.name)
+          expect(event.space_guid).to eq(service_instance.space.guid)
+          expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+          expect(event.metadata).to eq({'request' => {}})
         end
 
         context 'when the service broker returns a 409' do
@@ -875,13 +936,13 @@ module VCAP::CloudController
       end
     end
 
-    def create_managed_service_instance
+    def create_managed_service_instance(user_opts={})
       req = MultiJson.dump(
         :name => 'foo',
         :space_guid => space.guid,
         :service_plan_guid => plan.guid
       )
-      headers = json_headers(headers_for(developer))
+      headers = json_headers(headers_for(developer, user_opts))
 
       post "/v2/service_instances", req, headers
 
