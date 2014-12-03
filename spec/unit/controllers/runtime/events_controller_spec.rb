@@ -27,7 +27,7 @@ module VCAP::CloudController
         @event_a = Event.make :space => @space_a
         @event_b = Event.make :space => @space_b
 
-        @service_event = Event.make(space_guid: '', organization_guid: '', type: 'audit.broker.create')
+        @service_event = Event.make(space_guid: '', organization_guid: '', type: 'audit.service_broker.create')
       end
 
 

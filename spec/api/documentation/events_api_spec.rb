@@ -11,9 +11,9 @@ resource "Events", :type => [:api, :legacy_api] do
     audit.space.create
     audit.space.update
     audit.space.delete-request
-    audit.broker.create
-    audit.broker.update
-    audit.broker.delete
+    audit.service_broker.create
+    audit.service_broker.update
+    audit.service_broker.delete
     audit.service.create
     audit.service.update
     audit.service.delete
@@ -400,9 +400,9 @@ resource "Events", :type => [:api, :legacy_api] do
         auth_password: 'password'
       }
       broker = VCAP::CloudController::ServiceBroker.make(params)
-      service_event_repository.create_broker_event('audit.broker.create', broker, params)
+      service_event_repository.create_broker_event('audit.service_broker.create', broker, params)
 
-      client.get "/v2/events?q=type:audit.broker.create", {}, headers
+      client.get "/v2/events?q=type:audit.service_broker.create", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
@@ -429,9 +429,9 @@ resource "Events", :type => [:api, :legacy_api] do
         auth_password: 'password'
       }
       broker = VCAP::CloudController::ServiceBroker.make
-      service_event_repository.create_broker_event('audit.broker.update', broker, params)
+      service_event_repository.create_broker_event('audit.service_broker.update', broker, params)
 
-      client.get "/v2/events?q=type:audit.broker.update", {}, headers
+      client.get "/v2/events?q=type:audit.service_broker.update", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",
@@ -451,9 +451,9 @@ resource "Events", :type => [:api, :legacy_api] do
 
     example "List Broker Delete Events" do
       broker = VCAP::CloudController::ServiceBroker.make
-      service_event_repository.create_broker_event('audit.broker.delete', broker, {})
+      service_event_repository.create_broker_event('audit.service_broker.delete', broker, {})
 
-      client.get "/v2/events?q=type:audit.broker.delete", {}, headers
+      client.get "/v2/events?q=type:audit.service_broker.delete", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
                                :actor_type => "user",

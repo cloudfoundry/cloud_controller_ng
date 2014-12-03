@@ -85,7 +85,7 @@ module VCAP::CloudController
         email = 'email@example.com'
         post '/v2/service_brokers', body, headers_for(admin_user, email: email)
 
-        event = Event.first(type: 'audit.broker.create')
+        event = Event.first(type: 'audit.service_broker.create')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
         expect(event.actor).to eq(admin_user.guid)
@@ -199,7 +199,7 @@ module VCAP::CloudController
         email = "some-email-address@example.com"
         delete "/v2/service_brokers/#{broker.guid}", {}, headers_for(admin_user, email: email)
 
-        event = Event.first(type: 'audit.broker.delete')
+        event = Event.first(type: 'audit.service_broker.delete')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
         expect(event.actor).to eq(admin_user.guid)
@@ -300,7 +300,7 @@ module VCAP::CloudController
 
         put "/v2/service_brokers/#{broker.guid}", body, headers_for(admin_user, email: email)
 
-        event = Event.first(type: 'audit.broker.update')
+        event = Event.first(type: 'audit.service_broker.update')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
         expect(event.actor).to eq(admin_user.guid)
@@ -327,7 +327,7 @@ module VCAP::CloudController
 
           put "/v2/service_brokers/#{broker.guid}", body, headers_for(admin_user, email: email)
 
-          event = Event.first(type: 'audit.broker.update')
+          event = Event.first(type: 'audit.service_broker.update')
           expect(event.metadata).to include({
             'request' => {
               'name' => body_hash[:name],
