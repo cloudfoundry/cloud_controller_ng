@@ -17,6 +17,12 @@ resource "Events", :type => [:api, :legacy_api] do
     audit.service.create
     audit.service.update
     audit.service.delete
+    audit.service_plan.create
+    audit.service_plan.update
+    audit.service_plan.delete
+    audit.service_instance.create
+    audit.service_instance.update
+    audit.service_instance.delete
   ]
   let(:admin_auth_header) { admin_headers["HTTP_AUTHORIZATION"] }
   authenticated_request
