@@ -86,7 +86,6 @@ module VCAP::CloudController
         post '/v2/service_brokers', body, headers_for(admin_user, email: email)
 
         event = Event.first(type: 'audit.broker.create')
-        expect(event.type).to eq('audit.broker.create')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
         expect(event.actor).to eq(admin_user.guid)
@@ -201,7 +200,6 @@ module VCAP::CloudController
         delete "/v2/service_brokers/#{broker.guid}", {}, headers_for(admin_user, email: email)
 
         event = Event.first(type: 'audit.broker.delete')
-        expect(event.type).to eq('audit.broker.delete')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
         expect(event.actor).to eq(admin_user.guid)
@@ -303,7 +301,6 @@ module VCAP::CloudController
         put "/v2/service_brokers/#{broker.guid}", body, headers_for(admin_user, email: email)
 
         event = Event.first(type: 'audit.broker.update')
-        expect(event.type).to eq('audit.broker.update')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
         expect(event.actor).to eq(admin_user.guid)
