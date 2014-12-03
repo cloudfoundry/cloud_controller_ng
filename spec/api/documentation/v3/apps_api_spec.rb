@@ -16,7 +16,7 @@ resource 'Apps (Experimental)', type: :api do
     end
   end
 
-  context "standard endpoints" do
+  context 'standard endpoints' do
     get '/v3/apps/:guid' do
       let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:guid) { app_model.guid }
@@ -100,7 +100,7 @@ resource 'Apps (Experimental)', type: :api do
     end
   end
 
-  context "nested endpoints" do
+  context 'nested endpoints' do
     put '/v3/apps/:guid/processes' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:stack) { VCAP::CloudController::Stack.make }
@@ -138,6 +138,7 @@ resource 'Apps (Experimental)', type: :api do
 
       let!(:process) { VCAP::CloudController::AppFactory.make(space_guid: space.guid) }
       let(:process_guid) { process.guid }
+      let(:process_type) { process.type }
 
       let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
       let(:guid) { app_model.guid }
@@ -152,6 +153,7 @@ resource 'Apps (Experimental)', type: :api do
         expected_response = [
           {
             'guid' => process_guid,
+            'type' => process_type,
           }
         ]
         do_request_with_error_handling

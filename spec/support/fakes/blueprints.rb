@@ -149,6 +149,7 @@ module VCAP::CloudController
     space             { Space.make }
     stack             { Stack.make }
     instances         { 1 }
+    type              { "web" }
   end
 
   ServiceBinding.blueprint do

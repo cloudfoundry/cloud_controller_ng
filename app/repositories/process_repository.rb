@@ -10,11 +10,21 @@ module VCAP::CloudController
       AppProcess.new(opts)
     end
 
-    def persist!(desired_process)
-      process_model = ProcessMapper.map_domain_to_model(desired_process)
+    def update!(desired_process)
+      original = App.find(guid: desired_process.guid)
+      process_model = ProcessMapper.map_domain_to_existing_model(desired_process, original)
 
       raise ProcessNotFound if process_model.nil?
-      raise MutationAttemptWithoutALock if process_model.guid && !@lock_acquired
+      raise MutationAttemptWithoutALock if !@lock_acquired
+
+      process_model.save
+      ProcessMapper.map_model_to_domain(process_model)
+    rescue Sequel::ValidationFailed => e
+      raise InvalidProcess.new(e.message)
+    end
+
+    def create!(desired_process)
+      process_model = ProcessMapper.map_domain_to_new_model(desired_process)
 
       process_model.save
       ProcessMapper.map_model_to_domain(process_model)
@@ -41,7 +51,37 @@ module VCAP::CloudController
         # need to fetch the App twice. This allows us to only make 2 queries,
         # rather than 3-4.
         App.for_update.where(guid: guid).first
-        process_model = App.where(apps__guid: guid).eager_graph(:space, :stack).all.first
+        process_model = App.where(apps__guid: guid).
+          eager_graph(:stack, :app => :processes, :space => :organization).all.first
+
+        yield nil, nil, [] and return if process_model.nil?
+
+        neighboring_processes = []
+        if process_model.app
+          process_model.app.processes.each do |p|
+            neighboring_processes << ProcessMapper.map_model_to_domain(p) if p.guid != process_model.guid
+          end
+        end
+
+        @lock_acquired = true
+        begin
+          yield ProcessMapper.map_model_to_domain(process_model), process_model.space, neighboring_processes
+        ensure
+          @lock_acquired = false
+        end
+      end
+    end
+
+    def find_for_delete(guid)
+      App.db.transaction do
+        # We need to lock the row in the apps table. However we cannot eager
+        # load associations while using the for_update method. Therefore we
+        # need to fetch the App twice. This allows us to only make 2 queries,
+        # rather than 3-4.
+        App.for_update.where(guid: guid).first
+        process_model = App.where(apps__guid: guid).
+          eager_graph(:stack, :space => :organization).all.first
+
         yield nil, nil and return if process_model.nil?
 
         @lock_acquired = true

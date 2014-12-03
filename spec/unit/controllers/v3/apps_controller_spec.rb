@@ -166,12 +166,12 @@ module VCAP::CloudController
             AppFactory.make(app_guid: guid)
           end
 
-          it 'raises a 409' do
+          it 'raises a 400' do
             expect {
-              response_code, _ = apps_controller.delete(guid)
+             _, _ = apps_controller.delete(guid)
             }.to raise_error do |error|
-              expect(error.name).to eq 'Conflict'
-              expect(error.response_code).to eq 409
+              expect(error.name).to eq 'UnableToPerform'
+              expect(error.response_code).to eq 400
             end
           end
         end
@@ -181,7 +181,7 @@ module VCAP::CloudController
     describe '#add_process' do
       let(:app_model) { AppModel.make }
       let(:guid) { app_model.guid }
-      let(:process) { AppFactory.make }
+      let(:process) { AppFactory.make(type: 'special') }
       let(:process_guid) { process.guid }
       let(:req_body) do
         MultiJson.dump({process_guid: process_guid})
@@ -236,6 +236,24 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the app already has a process with the same type' do
+        let(:req_body) do
+          MultiJson.dump({process_guid: process_guid, type: 'special'})
+        end
+        before do
+          app_model.add_process_by_guid(AppFactory.make(type: 'special').guid)
+          SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
+        end
+
+        it 'returns a 400 Invalid' do
+          expect {
+            apps_controller.add_process(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ProcessInvalid'
+            expect(error.response_code).to eq 400
+          end
+        end
+      end
       context 'when a user can add a process to the app' do
         before do
           SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })

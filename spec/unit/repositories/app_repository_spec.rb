@@ -95,27 +95,38 @@ module VCAP::CloudController
     end
 
     context "#add_process!" do
+      let(:app_repository) { AppRepository.new }
+      let(:process_model) { AppFactory.make }
+      let(:app) do
+        app_repository.persist!(app_repository.new_app(valid_opts))
+      end
+      let(:process) do
+        process_repository.find_by_guid(process_model.guid)
+      end
+
       context "when the process exists" do
         context "and it is not associated with an app" do
           it "associates the process with the given app" do
-            app_repository = AppRepository.new
-            app = app_repository.persist!(app_repository.new_app(valid_opts))
-
-            process_model = AppFactory.make
-            process = process_repository.find_by_guid(process_model.guid)
-            app_repository.add_process!(app, process)
+            app_repository.find_by_guid_for_update(app.guid) do |app_to_update|
+              app_repository.add_process!(app, process)
+            end
 
             expect(app_repository.find_by_guid(app.guid).processes.map(&:guid)).to include(process.guid)
             expect(process_model.reload.app_guid).to eq(app.guid)
+          end
+
+          context 'and a lock has not been acquired' do
+            it 'raises a locking error' do
+              expect {
+                app_repository.add_process!(app, process)
+              }.to raise_error(AppRepository::MutationAttemptWithoutALock)
+            end
           end
         end
       end
 
       context "when the process does not exist" do
         it "raises an invalid association error" do
-          app_repository = AppRepository.new
-          app = app_repository.persist!(app_repository.new_app(valid_opts))
-
           expect {
             app_repository.add_process!(app, AppProcess.new({}))
           }.to raise_error(AppRepository::InvalidProcessAssociation)
@@ -125,16 +136,35 @@ module VCAP::CloudController
 
     context "#remove_process!" do
       context "when the process exists" do
+        let(:app_repository) { AppRepository.new }
+        let(:process_model) { AppFactory.make }
+        let(:app) do
+          app_repository.persist!(app_repository.new_app(valid_opts))
+        end
+        let(:process) do
+          process_repository.find_by_guid(process_model.guid)
+        end
+
         context "and it is associated with an app" do
+          before do
+            app_repository.find_by_guid_for_update(app.guid) do |app_to_update|
+              app_repository.add_process!(app_to_update, process)
+            end
+          end
+
+          context 'and a lock has not been acquired' do
+            it 'raises an error' do
+              expect {
+                app_repository.remove_process!(app, process)
+              }.to raise_error(AppRepository::MutationAttemptWithoutALock)
+            end
+          end
+
           it "disassociates the process with the given app" do
-            app_repository = AppRepository.new
-            app = app_repository.persist!(app_repository.new_app(valid_opts))
+            app_repository.find_by_guid_for_update(app.guid) do |app_to_update|
+              app_repository.remove_process!(app_to_update, process)
+            end
 
-            process_model = AppFactory.make
-            process = process_repository.find_by_guid(process_model.guid)
-            app_repository.add_process!(app, process)
-
-            app_repository.remove_process!(app, process)
             expect(app_repository.find_by_guid(app.guid).processes).to eq([])
             expect(process_model.reload.app_guid).to eq(nil)
           end

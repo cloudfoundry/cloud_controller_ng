@@ -60,15 +60,19 @@ module VCAP::CloudController
 
     put '/v3/apps/:guid/processes', :add_process
     def add_process(guid)
-      app = @app_repository.find_by_guid(guid)
-
-      if app.nil? || @access_context.cannot?(:update, app)
-        app_not_found!
-      end
-
       opts = MultiJson.load(body).symbolize_keys
-      process = @process_repository.find_by_guid(opts[:process_guid])
-      @app_repository.add_process!(app, process)
+
+      @app_repository.find_by_guid_for_update(guid) do |app|
+        validate_app_for_update(app)
+
+        @process_repository.find_by_guid_for_update(opts[:process_guid]) do |process|
+          process_not_found! if process.nil?
+
+          check_duplicate_type_names(app, opts[:type])
+
+          @app_repository.add_process!(app, process)
+        end
+      end
 
       [HTTP::OK, {}]
     rescue MultiJson::ParseError => e
@@ -79,15 +83,15 @@ module VCAP::CloudController
 
     delete '/v3/apps/:guid/processes', :remove_process
     def remove_process(guid)
-      app = @app_repository.find_by_guid(guid)
-
-      if app.nil? || @access_context.cannot?(:update, app)
-        app_not_found!
-      end
-
       opts = MultiJson.load(body).symbolize_keys
-      process = @process_repository.find_by_guid(opts[:process_guid])
-      @app_repository.remove_process!(app, process)
+
+      @app_repository.find_by_guid_for_update(guid) do |app|
+        validate_app_for_update(app)
+
+        @process_repository.find_by_guid_for_update(opts[:process_guid]) do |process|
+          @app_repository.remove_process!(app, process)
+        end
+      end
 
       [HTTP::NO_CONTENT, {}]
     rescue MultiJson::ParseError => e
@@ -99,13 +103,12 @@ module VCAP::CloudController
     delete '/v3/apps/:guid', :delete
     def delete(guid)
       @app_repository.find_by_guid_for_update(guid) do |app|
-
         if app.nil? || @access_context.cannot?(:delete, app)
           app_not_found!
         end
 
         if app.processes.any?
-          raise VCAP::Errors::ApiError.new_from_details('Conflict', 'Has child processes')
+          raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', 'App deletion', 'Has child processes')
         end
 
         @app_repository.delete(app)
@@ -116,11 +119,27 @@ module VCAP::CloudController
 
   private
 
+  def check_duplicate_type_names(app, type)
+    app.processes.each do |associated_process|
+      invalid_process_type!(type) if associated_process.type == type
+    end
+  end
+
+  def validate_app_for_update(app)
+    if app.nil? || @access_context.cannot?(:update, app)
+      app_not_found!
+    end
+  end
+
   def app_not_found!
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
   end
 
   def process_not_found!
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
+  end
+
+  def invalid_process_type!(type)
+    raise VCAP::Errors::ApiError.new_from_details('ProcessInvalid', "Type '#{type}' is already in use")
   end
 end

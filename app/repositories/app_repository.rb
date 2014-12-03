@@ -38,14 +38,37 @@ module VCAP::CloudController
       end
     end
 
+    def find_for_update(guid)
+      AppModel.db.transaction do
+        AppModel.for_update.where(guid: guid).first
+
+        app_model = AppModel.where(guid: guid).
+          eager_graph(:processes, :space => :organization).all.first
+
+        yield nil and return if app_model.nil?
+
+        app = app_from_model(app_model)
+
+        @lock_acquired = true
+
+        begin
+          yield app
+        ensure
+          @lock_acquired = false
+        end
+      end
+    end
+
     def remove_process!(app, process)
       raise InvalidProcessAssociation if process.nil? || !process.guid
+      raise MutationAttemptWithoutALock unless @lock_acquired
       app_model = AppModel.find(guid: app.guid)
       app_model.remove_process_by_guid(process.guid)
     end
 
     def add_process!(app, process)
-      raise InvalidProcessAssociation if process.nil? || !process.guid
+      raise InvalidProcessAssociation if !process.guid
+      raise MutationAttemptWithoutALock unless @lock_acquired
       app_model = AppModel.find(guid: app.guid)
       app_model.add_process_by_guid(process.guid)
     end
@@ -58,7 +81,7 @@ module VCAP::CloudController
     end
 
     def app_from_model(model)
-      processes = App.where(app_guid: model.guid).eager(:space, :stack).all.map do |process|
+      processes = model.processes.map do |process|
         ProcessMapper.map_model_to_domain(process)
       end
 

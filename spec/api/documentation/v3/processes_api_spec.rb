@@ -3,8 +3,9 @@ require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
 resource 'Processes (Experimental)', type: :api do
-  let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  header 'AUTHORIZATION', :admin_auth_header
+  let(:user) { VCAP::CloudController::User.make }
+  let(:user_header) { headers_for(user)['HTTP_AUTHORIZATION'] }
+  header 'AUTHORIZATION', :user_header
 
   def do_request_with_error_handling
     do_request
@@ -18,10 +19,17 @@ resource 'Processes (Experimental)', type: :api do
   get '/v3/processes/:guid' do
     let(:process) { VCAP::CloudController::AppFactory.make }
     let(:guid) { process.guid }
+    let(:type) { process.type }
+
+    before do
+      process.space.organization.add_user user
+      process.space.add_developer user
+    end
 
     example 'Get a Process' do
       expected_response = {
         'guid'     => guid,
+        'type'     => type,
       }
 
       do_request_with_error_handling
@@ -36,6 +44,11 @@ resource 'Processes (Experimental)', type: :api do
     let!(:process) { VCAP::CloudController::AppFactory.make }
     let(:guid) { process.guid }
 
+    before do
+      process.space.organization.add_user user
+      process.space.add_developer user
+    end
+
     example 'Delete a Process' do
       expect {
         do_request_with_error_handling
@@ -45,9 +58,14 @@ resource 'Processes (Experimental)', type: :api do
   end
 
   patch '/v3/processes/:guid' do
+    let(:buildpack_model) { VCAP::CloudController::Buildpack.make(name: 'another-buildpack') }
     let(:process) { VCAP::CloudController::AppFactory.make }
 
-    parameter :name, 'Name of process'
+    before do
+      process.space.organization.add_user user
+      process.space.add_developer user
+    end
+
     parameter :memory, 'Amount of memory (MB) allocated to each instance'
     parameter :instances, 'Number of instances'
     parameter :disk_quota, 'Amount of disk space (MB) allocated to each instance'
@@ -59,14 +77,20 @@ resource 'Processes (Experimental)', type: :api do
     parameter :health_check_timeout, 'Health check timeout for process'
     parameter :docker_image, 'Name of docker image containing process'
     parameter :environment_json, 'JSON key-value pairs for ENV variables'
+    parameter :type, 'Type of the process'
 
-    let(:name) { 'new_name' }
     let(:memory) { 2555 }
     let(:instances) { 2 }
     let(:disk_quota) { 2048 }
     let(:space_guid) { process.space.guid }
     let(:stack_guid) { process.stack.guid }
     let(:command) { 'X' }
+    let(:state) { 'STARTED' }
+    let(:buildpack) { buildpack_model.name }
+    let(:health_check_timeout) { 70 }
+    let(:environment_json) { { 'foo' => 'bar' } }
+    let(:type) { 'worker' }
+
     let(:guid) { process.guid }
 
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
@@ -74,6 +98,7 @@ resource 'Processes (Experimental)', type: :api do
     example 'Updating a Process' do
       expected_response = {
         'guid' => guid,
+        'type' => type,
       }
       expect {
         do_request_with_error_handling
@@ -84,19 +109,29 @@ resource 'Processes (Experimental)', type: :api do
       expect(parsed_response).to match(expected_response)
 
       process.reload
-      expect(process.name).to eq('new_name')
-      expect(process.command).to eq('X')
-      expect(process.memory).to eq(2555)
-      expect(process.instances).to eq(2)
-      expect(process.disk_quota).to eq(2048)
+      expect(process.state).to eq(state)
+      expect(process.command).to eq(command)
+      expect(process.memory).to eq(memory)
+      expect(process.instances).to eq(instances)
+      expect(process.disk_quota).to eq(disk_quota)
+      expect(process.buildpack).to eq(buildpack_model)
+      expect(process.health_check_timeout).to eq(health_check_timeout)
+      expect(process.environment_json).to eq(environment_json)
+      expect(process.type).to eq(type)
     end
   end
 
   post '/v3/processes' do
+    let(:buildpack_model) { VCAP::CloudController::Buildpack.make(name: 'another-buildpack') }
     let(:space) { VCAP::CloudController::Space.make }
     let(:stack) { VCAP::CloudController::Stack.make }
 
-    parameter :name, 'Name of process', required: true
+    before do
+      space.organization.add_user user
+      space.add_developer user
+    end
+
+    parameter :name, 'Name of process'
     parameter :memory, 'Amount of memory (MB) allocated to each instance'
     parameter :instances, 'Number of instances'
     parameter :disk_quota, 'Amount of disk space (MB) allocated to each instance'
@@ -108,6 +143,7 @@ resource 'Processes (Experimental)', type: :api do
     parameter :health_check_timeout, 'Health check timeout for process'
     parameter :docker_image, 'Name of docker image containing process'
     parameter :environment_json, 'JSON key-value pairs for ENV variables'
+    parameter :type, 'Type of the process'
 
     let(:name) { 'process' }
     let(:memory) { 256 }
@@ -115,6 +151,12 @@ resource 'Processes (Experimental)', type: :api do
     let(:disk_quota) { 1024 }
     let(:space_guid) { space.guid }
     let(:stack_guid) { stack.guid }
+    let(:state) { 'STOPPED' }
+    let(:command) { 'run me' }
+    let(:buildpack) { buildpack_model.name }
+    let(:health_check_timeout) { 70 }
+    let(:environment_json) { { foo: 'bar' } }
+    let(:type) { 'worker' }
 
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
 
@@ -122,6 +164,7 @@ resource 'Processes (Experimental)', type: :api do
       example 'Create a Process' do
         expected_response = {
           'guid' => /^[a-z0-9\-]+$/,
+          'type' => type,
         }
         expect {
           do_request_with_error_handling
@@ -130,16 +173,22 @@ resource 'Processes (Experimental)', type: :api do
 
         expect(response_status).to eq(201)
         expect(parsed_response).to match(expected_response)
+
+        process = VCAP::CloudController::App.find(guid: parsed_response['guid'])
+        expect(process.type).to eq(type)
       end
     end
 
     context 'with a docker image' do
+      let(:buildpack) { nil }
       let(:environment_json) { { 'CF_DIEGO_BETA' => 'true', 'CF_DIEGO_RUN_BETA' => 'true' } }
       let(:docker_image) { 'cloudfoundry/hello' }
+      let(:type) { 'worker' }
 
       example 'Create a Docker Process' do
         expected_response = {
           'guid' => /^[a-z0-9\-]+$/,
+          'type' => type,
         }
         expect {
           do_request_with_error_handling

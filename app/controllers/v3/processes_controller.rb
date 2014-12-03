@@ -39,7 +39,10 @@ module VCAP::CloudController
     patch '/v3/processes/:guid', :update
     def update(guid)
       update_message = ProcessUpdateMessage.create_from_http_request(guid, body)
-      bad_request!(update_message.error) unless update_message.valid?
+      bad_request!('Invalid JSON') if update_message.nil?
+
+      errors = update_message.validate
+      unprocessable!(errors.first) if errors.length > 0
 
       process = @processes_handler.update(update_message, @access_context)
       not_found! if process.nil?

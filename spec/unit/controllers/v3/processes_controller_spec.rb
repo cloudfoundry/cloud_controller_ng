@@ -10,6 +10,13 @@ module VCAP::CloudController
     let(:process) { ProcessMapper.map_model_to_domain(process_model) }
     let(:guid) { process.guid }
     let(:req_body) {''}
+    let(:expected_response) do
+        {
+          'guid' => process.guid,
+          'type' => process.type,
+        }
+    end
+
     let(:process_controller) do
         ProcessesController.new(
           {},
@@ -53,10 +60,6 @@ module VCAP::CloudController
       end
 
       it 'returns the process information in JSON format' do
-        expected_response = {
-          'guid' => process.guid,
-        }
-
         _, json_body = process_controller.show(guid)
         response_hash = MultiJson.load(json_body)
 
@@ -130,10 +133,6 @@ module VCAP::CloudController
         end
 
         it 'returns the process information in JSON format' do
-          expected_response = {
-            'guid' => process.guid,
-          }
-
           _, json_body = process_controller.create
           response_hash = MultiJson.load(json_body)
 
@@ -146,7 +145,6 @@ module VCAP::CloudController
       let(:new_space) { Space.make }
       let(:req_body) do
         {
-          'name' => 'my-process',
           'memory' => 256,
           'instances' => 2,
           'disk_quota' => 1024,
@@ -165,10 +163,6 @@ module VCAP::CloudController
       end
 
       it 'returns the process information in JSON format' do
-        expected_response = {
-          'guid' => process.guid,
-        }
-
         _, json_body = process_controller.update(guid)
         response_hash = MultiJson.load(json_body)
 
@@ -207,7 +201,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when persisting the process fails because it is invalid' do
+      context 'when persisting the process fails because it is invalid due to an error' do
         let(:req_body) do
           {
             name: 'a-new-name'
@@ -216,6 +210,23 @@ module VCAP::CloudController
 
         before do
           allow(processes_handler).to receive(:update).and_raise(ProcessesHandler::InvalidProcess)
+        end
+
+        it 'raises an UnprocessableEntity with a 422' do
+          expect {
+            process_controller.update(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq 422
+          end
+        end
+      end
+
+      context 'when persisting the process fails because it is invalid due to validation' do
+        let(:req_body) do
+          {
+            name: 'a-new-name'
+          }.to_json
         end
 
         it 'raises an UnprocessableEntity with a 422' do
@@ -241,7 +252,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'delete' do
+    describe '#delete' do
       before do
         allow(processes_handler).to receive(:delete).and_return(true)
       end
