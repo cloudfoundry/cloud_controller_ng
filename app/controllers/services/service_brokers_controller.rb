@@ -76,7 +76,7 @@ module VCAP::CloudController
       broker = ServiceBroker.find(:guid => guid)
       return HTTP::NOT_FOUND unless broker
 
-      VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker).execute!
+      VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker, @services_event_repository).execute!
       @services_event_repository.create_broker_event('audit.service_broker.delete', broker, {})
 
       HTTP::NO_CONTENT
