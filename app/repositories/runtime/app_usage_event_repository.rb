@@ -8,6 +8,7 @@ module VCAP::CloudController
 
         def create_from_app(app, state_name=nil)
           AppUsageEvent.create(state: state_name || app.state,
+                               package_state: app.package_state,
                                instance_count: app.instances,
                                memory_in_mb_per_instance: app.memory,
                                app_guid: app.guid,
@@ -28,6 +29,7 @@ module VCAP::CloudController
               :app_guid => :apps__guid,
               :app_name => :apps__name,
               :state => :apps__state,
+              :package_state => :apps__package_state,
               :instance_count => :apps__instances,
               :memory_in_mb_per_instance => :apps__memory,
               :space_guid => :spaces__guid,

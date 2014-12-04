@@ -4,6 +4,9 @@ RSpec::Matchers.define :match_app do |expected_app|
     unless actual_event.state == expected_app.state
       problems << "event.state: #{actual_event.state}, app.state: #{expected_app.state}"
     end
+    unless actual_event.package_state == expected_app.package_state
+      problems << "event.package_state: #{actual_event.package_state}, app.package_state: #{expected_app.package_state}"
+    end
     unless actual_event.instance_count == expected_app.instances
       problems << "event.instance_count: #{actual_event.instance_count}, app.instances: #{expected_app.instance_count}"
     end
