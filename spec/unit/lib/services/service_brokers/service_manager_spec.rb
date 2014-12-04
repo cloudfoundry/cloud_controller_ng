@@ -114,7 +114,7 @@ module VCAP::Services::ServiceBrokers
         expect(event.space_guid).to eq('')
         expect(event.organization_guid).to eq('')
         expect(event.metadata).to include({
-          'changes_from_catalog' => {
+          'changes_from_broker_catalog' => {
             'service_broker_guid' => service.service_broker.guid,
             'unique_id' => service_id,
             'provider' => service.provider,
@@ -235,7 +235,7 @@ module VCAP::Services::ServiceBrokers
             expect(event.space_guid).to eq('')
             expect(event.organization_guid).to eq('')
             expect(event.metadata).to include({
-              'changes_from_catalog' => {
+              'changes_from_broker_catalog' => {
                 'label' => service_name,
                 'description' => service.description,
                 'tags' => service.tags,
@@ -259,7 +259,7 @@ module VCAP::Services::ServiceBrokers
             service = VCAP::CloudController::Service.last
             expect(event.type).to eq('audit.service.update')
             expect(event.metadata).to include({
-              'changes_from_catalog' => {
+              'changes_from_broker_catalog' => {
                 'tags' => service.tags,
                 'extra' => service_metadata_hash['metadata'].to_json,
                 'requires' => ['ultimate', 'power'],
@@ -286,7 +286,7 @@ module VCAP::Services::ServiceBrokers
             event = VCAP::CloudController::Event.first(type: 'audit.service.update')
             expect(event.type).to eq('audit.service.update')
             expect(event.metadata).to include({
-              'changes_from_catalog' => {}
+              'changes_from_broker_catalog' => {}
             })
           end
         end
@@ -337,7 +337,7 @@ module VCAP::Services::ServiceBrokers
           expect(event.space_guid).to eq('')
           expect(event.organization_guid).to eq('')
           expect(event.metadata).to include({
-            'changes_from_catalog' => {
+            'changes_from_broker_catalog' => {
               'name' => plan_name,
               'description' => plan_description,
               'free' => false,
@@ -390,7 +390,7 @@ module VCAP::Services::ServiceBrokers
             expect(event.space_guid).to eq('')
             expect(event.organization_guid).to eq('')
             expect(event.metadata).to include({
-              'changes_from_catalog' => {
+              'changes_from_broker_catalog' => {
                 'name' => plan.name,
                 'description' => plan.description,
                 'free' => false,

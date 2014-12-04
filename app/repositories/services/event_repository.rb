@@ -12,7 +12,7 @@ module VCAP::CloudController
             type: "service",
             name: service.label,
           }
-          with_audit_event(service, actee, :changes_from_catalog, &saveBlock)
+          with_audit_event(service, actee, :changes_from_broker_catalog, &saveBlock)
         end
 
         def with_service_plan_event(plan, &saveBlock)
@@ -20,7 +20,7 @@ module VCAP::CloudController
             type: "service_plan",
             name: plan.name,
           }
-          with_audit_event(plan, actee, :changes_from_catalog, &saveBlock)
+          with_audit_event(plan, actee, :changes_from_broker_catalog, &saveBlock)
         end
 
         def create_service_instance_event(type, service_instance, params)

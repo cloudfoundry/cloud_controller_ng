@@ -263,7 +263,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_name => new_plan.name,
                                :space_guid => '',
                                :metadata => {
-                                 'changes_from_catalog' => {
+                                 'changes_from_broker_catalog' => {
                                      "name"=> new_plan.name,
                                      "free"=> new_plan.free,
                                      "description"=> new_plan.description,
@@ -292,7 +292,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee => test_plan.guid,
                                :actee_name => test_plan.name,
                                :space_guid => '',
-                               :metadata => {'changes_from_catalog' => {'name' => 'new name'}}
+                               :metadata => {'changes_from_broker_catalog' => {'name' => 'new name'}}
     end
 
     example "List Service Plan Delete Events (experimental)" do
@@ -336,7 +336,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_name => new_service.label,
                                :space_guid => '',
                                :metadata => {
-                                 'changes_from_catalog' => {
+                                 'changes_from_broker_catalog' => {
                                    'service_broker_guid' => new_service.service_broker.guid,
                                    'unique_id' => new_service.broker_provided_id,
                                    'provider' => new_service.provider,
@@ -373,7 +373,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee => test_service.guid,
                                :actee_name => test_service.label,
                                :space_guid => '',
-                               :metadata => {'changes_from_catalog' => {'label' => 'new label'}}
+                               :metadata => {'changes_from_broker_catalog' => {'label' => 'new label'}}
     end
 
     example "List Service Delete Events (experimental)" do
