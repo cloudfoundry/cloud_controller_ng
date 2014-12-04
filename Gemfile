@@ -34,7 +34,7 @@ gem 'clockwork', require: false
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 gem 'cf-uaa-lib', '~> 3.1.0', git: 'https://github.com/cloudfoundry/cf-uaa-lib.git', ref: 'b1e11235dc6cd7d8d4680e005526de37201305ea'
 gem 'cf-message-bus', git: 'https://github.com/cloudfoundry/cf-message-bus.git'
-gem 'cf-registrar', '~> 1.0.1', git: 'https://github.com/cloudfoundry/cf-registrar.git'
+gem 'cf-registrar', '~> 1.0.2', git: 'https://github.com/cloudfoundry/cf-registrar.git'
 
 group :db do
   gem 'mysql2', '0.3.13'
