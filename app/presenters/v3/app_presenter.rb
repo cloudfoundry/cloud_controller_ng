@@ -8,7 +8,8 @@ module VCAP::CloudController
 
     def present_json
       app_hash = {
-        guid:   app.guid,
+        guid: app.guid,
+        name: app.name,
 
         _links: {
           self:      { href: "/v3/apps/#{app.guid}" },

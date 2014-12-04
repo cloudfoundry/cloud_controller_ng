@@ -41,7 +41,7 @@ module VCAP::CloudController
 
       obj = nil
       model.db.transaction do
-        v3_app_model = AppModel.create
+        v3_app_model = AppModel.create(name: request_attrs['name'])
         obj = model.create_from_hash(request_attrs.merge(app_guid: v3_app_model.guid))
         validate_access(:create, obj, request_attrs)
       end

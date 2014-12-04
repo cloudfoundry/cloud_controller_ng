@@ -50,12 +50,41 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
       end
 
-      app = @app_repository.persist!(app)
+      app = @app_repository.create!(app)
 
       presenter = AppPresenter.new(app)
       [HTTP::CREATED, presenter.present_json]
     rescue MultiJson::ParseError => e
       raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
+    end
+
+    patch '/v3/apps/:guid', :update
+    def update(guid)
+      update_opts = MultiJson.load(body).symbolize_keys
+
+      presenter = nil
+      @app_repository.find_by_guid_for_update(guid) do |app|
+        app_not_found! if app.nil?
+
+        if @access_context.cannot?(:update, app)
+          raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+        end
+
+        desired_app = AppV3.new({
+          guid: app.guid,
+          name: update_opts[:name].nil? ? app.name : update_opts[:name],
+        })
+
+        updated_app = @app_repository.update!(desired_app)
+
+        presenter = AppPresenter.new(updated_app)
+      end
+
+      [HTTP::OK, presenter.present_json]
+    rescue MultiJson::ParseError => e
+      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
+    rescue AppRepository::InvalidApp => e
+      unprocessable!(e.message)
     end
 
     put '/v3/apps/:guid/processes', :add_process
@@ -141,5 +170,9 @@ module VCAP::CloudController
 
   def invalid_process_type!(type)
     raise VCAP::Errors::ApiError.new_from_details('ProcessInvalid', "Type '#{type}' is already in use")
+  end
+
+  def unprocessable!(message)
+    raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
   end
 end

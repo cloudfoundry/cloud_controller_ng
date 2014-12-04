@@ -5,6 +5,7 @@ module VCAP::CloudController
     let(:logger) { instance_double(Steno::Logger) }
     let(:user) { User.make }
     let(:req_body) {''}
+    let(:app_repository) { AppRepository.new }
     let(:apps_controller) do
       AppsV3Controller.new(
           {},
@@ -15,7 +16,7 @@ module VCAP::CloudController
           nil,
           {
             process_repository: ProcessRepository.new,
-            app_repository: AppRepository.new,
+            app_repository: app_repository,
           },
         )
     end
@@ -73,11 +74,12 @@ module VCAP::CloudController
     describe '#create' do
       let(:req_body) do
         {
+          name: 'some-name',
           space_guid: Space.make.guid,
         }.to_json
       end
 
-      context 'when the user cannot create an process' do
+      context 'when the user cannot create an app' do
         before do
           SecurityContext.set(user)
         end
@@ -112,6 +114,102 @@ module VCAP::CloudController
         it 'returns a 201 Created response' do
            response_code, _ = apps_controller.create
           expect(response_code).to eq 201
+        end
+      end
+    end
+
+    describe '#update' do
+      let(:app_model) { AppModel.make }
+      let(:new_name) { 'new-name' }
+      let(:req_body) do
+        {
+          name: new_name,
+        }.to_json
+      end
+
+      context 'when the user cannot update the app' do
+        before do
+          SecurityContext.set(user)
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          expect {
+            apps_controller.update(app_model.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+        end
+      end
+
+      context 'when the request body is invalid JSON' do
+        let(:req_body) { '{ invalid_json }' }
+        it 'returns an 400 Bad Request' do
+          expect {
+            apps_controller.update(app_model.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'MessageParseError'
+            expect(error.response_code).to eq 400
+          end
+        end
+      end
+
+      context 'when the user can update the app' do
+        let(:req_body) { { name: new_name }.to_json }
+        let(:expected_response) do
+          {
+            'guid' => app_model.guid,
+            'name' => new_name,
+          }
+        end
+
+        before do
+          SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
+        end
+
+        it 'returns a 200 OK response' do
+          response_code, _ = apps_controller.update(app_model.guid)
+          expect(response_code).to eq 200
+        end
+
+        it 'returns the process information in JSON format' do
+          _, json_body = apps_controller.update(app_model.guid)
+          response_hash = MultiJson.load(json_body)
+
+          expect(response_hash).to include(expected_response)
+        end
+      end
+
+      context 'when the App does not exist' do
+        let(:guid) { 'bad-guid' }
+
+        before do
+          SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
+        end
+
+        it 'raises an ApiError with a 404 code' do
+          expect {
+            apps_controller.update(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when persisting the app fails because it is invalid' do
+        let(:app_repository) { double(:app_repository) }
+        before do
+          allow(app_repository).to receive(:find_by_guid_for_update).and_raise(AppRepository::InvalidApp)
+        end
+
+        it 'raises an UnprocessableEntity with a 422' do
+          expect {
+            apps_controller.update('some-guid')
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq 422
+          end
         end
       end
     end

@@ -102,14 +102,10 @@ module VCAP::CloudController
       describe "events" do
         it "records app create" do
           expected_attrs = AppsController::CreateMessage.decode(initial_hash.to_json).extract(stringify_keys: true)
-
           allow(app_event_repository).to receive(:record_app_create).and_call_original
 
-          expect {
-            post "/v2/apps", MultiJson.dump(initial_hash), json_headers(admin_headers)
-          }.to change { AppModel.count }.by 1
+          post "/v2/apps", MultiJson.dump(initial_hash), json_headers(admin_headers)
 
-          expect(AppModel.last.processes.first.name).to include("maria")
           app = App.last
           expect(app_event_repository).to have_received(:record_app_create).with(app, app.space, admin_user, SecurityContext.current_user_email, expected_attrs)
         end
@@ -126,6 +122,14 @@ module VCAP::CloudController
         end
       end
 
+      it "creates a v3 app" do
+        expect {
+          post "/v2/apps", MultiJson.dump(initial_hash), json_headers(admin_headers)
+        }.to change { AppModel.count }.by 1
+
+        expect(AppModel.last.name).to eq("maria")
+        expect(AppModel.last.processes.first.name).to eq("maria")
+      end
     end
 
     describe "update app" do

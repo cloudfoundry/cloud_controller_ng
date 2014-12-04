@@ -326,8 +326,18 @@ module VCAP::CloudController
         end
       end
 
-    end
+      context 'when a lock is not held' do
+        it 'raises a MutationAttemptWithoutALock error' do
+          process_repository = ProcessRepository.new
+          process_model      = AppFactory.make
+          desired_app        = ProcessMapper.map_model_to_domain(process_model)
 
+          expect {
+            process_repository.update!(desired_app)
+          }.to raise_error(ProcessRepository::MutationAttemptWithoutALock)
+        end
+      end
+    end
 
     describe '#create!' do
       it 'persists the process to the database' do

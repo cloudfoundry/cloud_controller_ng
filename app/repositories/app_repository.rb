@@ -4,16 +4,33 @@ module VCAP::CloudController
   class AppRepository
     class MutationAttemptWithoutALock < StandardError; end
     class InvalidProcessAssociation < StandardError; end
+    class AppNotFound < StandardError; end
+    class InvalidApp < StandardError; end
 
     def new_app(opts)
       AppV3.new(opts)
     end
 
-    def persist!(desired_app)
+    def create!(desired_app)
       attributes = attributes_for_app(desired_app).reject { |_, v| v.nil? }
       app_model = AppModel.create(attributes)
 
       app_from_model(app_model)
+    end
+
+    def update!(desired_app)
+      raise MutationAttemptWithoutALock if !@lock_acquired
+
+      app_model = AppModel.find(guid: desired_app.guid)
+      raise AppNotFound if app_model.nil?
+
+      app_model.name = desired_app.name if desired_app.name
+
+      app_model.save
+
+      app_from_model(app_model)
+    rescue Sequel::ValidationFailed => e
+      raise InvalidApp.new(e.message)
     end
 
     def find_by_guid(guid)
@@ -86,9 +103,10 @@ module VCAP::CloudController
       end
 
       AppV3.new({
-        guid: model.values[:guid],
-        processes: processes,
-        space_guid: model.values[:space_guid]
+        guid:       model.values[:guid],
+        name:       model.values[:name],
+        processes:  processes,
+        space_guid: model.values[:space_guid],
       })
     end
 
@@ -96,8 +114,9 @@ module VCAP::CloudController
 
     def attributes_for_app(app)
       {
-        guid:                 app.guid,
-        space_guid:           app.space_guid,
+        guid:       app.guid,
+        name:       app.name,
+        space_guid: app.space_guid,
       }
     end
   end

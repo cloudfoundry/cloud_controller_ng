@@ -11,11 +11,12 @@ module VCAP::CloudController
     end
 
     def update!(desired_process)
+      raise MutationAttemptWithoutALock if !@lock_acquired
+
       original = App.find(guid: desired_process.guid)
       process_model = ProcessMapper.map_domain_to_existing_model(desired_process, original)
 
       raise ProcessNotFound if process_model.nil?
-      raise MutationAttemptWithoutALock if !@lock_acquired
 
       process_model.save
       ProcessMapper.map_model_to_domain(process_model)

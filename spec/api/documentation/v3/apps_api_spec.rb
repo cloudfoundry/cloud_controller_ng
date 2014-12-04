@@ -18,10 +18,11 @@ resource 'Apps (Experimental)', type: :api do
 
   context 'standard endpoints' do
     get '/v3/apps/:guid' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { VCAP::CloudController::AppModel.make(name: name) }
       let(:guid) { app_model.guid }
       let(:space_guid) { app_model.space_guid }
       let(:space) { VCAP::CloudController::Space.find(guid: space_guid) }
+      let(:name) { 'my_app' }
 
       before do
         space.organization.add_user user
@@ -30,6 +31,7 @@ resource 'Apps (Experimental)', type: :api do
 
       example 'Get an App' do
         expected_response = {
+          'name'   => name,
           'guid'   => guid,
           '_links' => {
             'self'      => { 'href' => "/v3/apps/#{guid}" },
@@ -49,12 +51,14 @@ resource 'Apps (Experimental)', type: :api do
     post '/v3/apps' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:space_guid) { space.guid }
+      let(:name) { 'my_app' }
 
       before do
         space.organization.add_user(user)
         space.add_developer(user)
       end
 
+      parameter :name, 'Name of the App', required: true
       parameter :space_guid, 'GUID of associated Space', required: true
 
       let(:raw_post) { MultiJson.dump(params, pretty: true) }
@@ -66,6 +70,7 @@ resource 'Apps (Experimental)', type: :api do
 
         expected_guid = VCAP::CloudController::AppModel.last.guid
         expected_response = {
+          'name'   => name,
           'guid'   => expected_guid,
           '_links' => {
             'self'      => { 'href' => "/v3/apps/#{expected_guid}" },
@@ -76,6 +81,42 @@ resource 'Apps (Experimental)', type: :api do
 
         parsed_response = MultiJson.load(response_body)
         expect(response_status).to eq(201)
+        expect(parsed_response).to match(expected_response)
+      end
+    end
+
+    patch '/v3/apps/:guid' do
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:space_guid) { space.guid }
+      let(:app_model) { VCAP::CloudController::AppModel.make(name: 'original_name', space_guid: space_guid) }
+
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      parameter :name, 'Name of the App'
+
+      let(:name) { 'new_name' }
+      let(:guid) { app_model.guid }
+
+      let(:raw_post) { MultiJson.dump(params, pretty: true) }
+
+      example 'Updating an App' do
+        do_request_with_error_handling
+
+        expected_response = {
+          'name'   => name,
+          'guid'   => app_model.guid,
+          '_links' => {
+            'self'      => { 'href' => "/v3/apps/#{app_model.guid}" },
+            'processes' => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
+            'space'     => { 'href' => "/v2/spaces/#{space_guid}" },
+          }
+        }
+
+        parsed_response = MultiJson.load(response_body)
+        expect(response_status).to eq(200)
         expect(parsed_response).to match(expected_response)
       end
     end
