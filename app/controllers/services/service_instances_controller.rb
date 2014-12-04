@@ -1,4 +1,5 @@
 require 'services/api'
+require 'jobs/audit_event_job'
 
 module VCAP::CloudController
   class ServiceInstancesController < RestController::ModelController
@@ -196,10 +197,19 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      model = ServiceInstance.find(guid: guid)
-      response = do_delete(find_guid_and_validate_access(:delete, guid, ServiceInstance))
-      @services_event_repository.create_service_instance_event('audit.service_instance.delete', model, {})
-      response
+      service_instance = ServiceInstance.find(guid: guid)
+      raise_if_has_associations!(service_instance) if v2_api? && !recursive?
+
+      deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)
+      delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :create_service_instance_event, 'audit.service_instance.delete', service_instance, {})
+
+      if async?
+        job = Jobs::Enqueuer.new(delete_and_audit_job, queue: "cc-generic").enqueue()
+        [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
+      else
+        delete_and_audit_job.perform
+        [HTTP::NO_CONTENT, nil]
+      end
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
