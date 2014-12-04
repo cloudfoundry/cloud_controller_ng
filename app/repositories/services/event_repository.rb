@@ -29,8 +29,7 @@ module VCAP::CloudController
             id: service_instance.guid,
             type: 'service_instance',
             name: service_instance.name,
-            space_guid: service_instance.space_guid,
-            organization_guid: service_instance.space.organization.guid,
+            space: service_instance.space,
           }
           create_event(type, actee, { request: params })
         end
@@ -75,8 +74,7 @@ module VCAP::CloudController
             id: service_binding.guid,
             type: 'service_binding',
             name: 'N/A',
-            space_guid: service_binding.space.guid,
-            organization_guid: service_binding.space.organization.guid
+            space: service_binding.space,
           }
           create_event(type, actee, metadata)
         end
@@ -128,7 +126,7 @@ module VCAP::CloudController
         end
 
         def create_event(type, actee, metadata)
-          Event.create(
+          base_data = {
             type: type,
             actor_type: 'user',
             actor: @user.guid,
@@ -137,10 +135,22 @@ module VCAP::CloudController
             actee: actee.fetch(:id),
             actee_type: actee.fetch(:type),
             actee_name: actee.fetch(:name),
-            space_guid: actee.fetch(:space_guid, ''),
-            organization_guid: actee.fetch(:organization_guid, ''),
             metadata: metadata,
-          )
+          }
+
+          if actee[:space]
+            space_data = {
+              space: actee[:space]
+            }
+          else
+            space_data = {
+              space_guid: '',
+              organization_guid: ''
+            }
+          end
+
+
+          Event.create(base_data.merge(space_data))
         end
       end
     end
