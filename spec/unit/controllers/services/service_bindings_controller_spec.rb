@@ -194,7 +194,6 @@ module VCAP::CloudController
           service_binding = ServiceBinding.last
 
           event = Event.first(type: 'audit.service_binding.create')
-          expect(event.type).to eq('audit.service_binding.create')
           expect(event.actor_type).to eq('user')
           expect(event.timestamp).to be
           expect(event.actor).to eq(developer.guid)
