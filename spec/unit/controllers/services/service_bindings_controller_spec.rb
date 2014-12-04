@@ -399,6 +399,15 @@ module VCAP::CloudController
         expect(ServiceBinding.find(guid: binding.guid)).to be_nil
         expect(broker_client).to have_received(:unbind).with(binding)
       end
+
+      context "with ?async=true" do
+        it 'returns a job id' do
+          delete "/v2/service_bindings/#{binding.guid}?async=true", '', json_headers(headers_for(developer))
+          expect(last_response.status).to eq 202
+          expect(decoded_response['entity']['guid']).to be
+          expect(decoded_response['entity']['status']).to eq 'queued'
+        end
+      end
     end
 
     describe 'GET', '/v2/service_bindings?inline-relations-depth=1', regression: true do
