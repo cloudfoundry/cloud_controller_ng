@@ -4,7 +4,8 @@ module VCAP::CloudController
       class EventRepository
 
         def initialize(security_context)
-          @security_context = security_context
+          @user = security_context.current_user
+          @current_user_email = security_context.current_user_email
         end
 
         def with_service_event(service, &saveBlock)
@@ -127,13 +128,11 @@ module VCAP::CloudController
         end
 
         def create_event(type, actee, metadata)
-          user = @security_context.current_user
-
           Event.create(
             type: type,
             actor_type: 'user',
-            actor: user.guid,
-            actor_name: @security_context.current_user_email,
+            actor: @user.guid,
+            actor_name: @current_user_email,
             timestamp: Time.now,
             actee: actee.fetch(:id),
             actee_type: actee.fetch(:type),
