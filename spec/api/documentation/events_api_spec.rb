@@ -235,7 +235,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :metadata => { "request" => { "recursive" => true } }
     end
 
-    example "List Service Plan Create Events" do
+    example "List Service Plan Create Events (experimental)" do
       new_plan = VCAP::CloudController::ServicePlan.new(
         guid: "guid",
         name: "plan-name",
@@ -272,10 +272,9 @@ resource "Events", :type => [:api, :legacy_api] do
                                      "active"=> new_plan.active
                                  }
                                }
-
     end
 
-    example "List Service Plan Update Events" do
+    example "List Service Plan Update Events (experimental)" do
       test_plan.name = 'new name'
       service_event_repository.with_service_plan_event(test_plan) do
         test_plan.save
@@ -294,7 +293,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :metadata => {'changes_from_catalog' => {'name' => 'new name'}}
     end
 
-    example "List Service Plan Delete Events" do
+    example "List Service Plan Delete Events (experimental)" do
       service_event_repository.create_delete_service_plan_event(test_plan)
 
       client.get "/v2/events?q=type:audit.service_plan.delete", {}, headers
@@ -310,7 +309,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :metadata => {}
     end
 
-    example "List Service Create Events" do
+    example "List Service Create Events (experimental)" do
       new_service = VCAP::CloudController::Service.new(
         guid: "guid",
         label: "label",
@@ -354,10 +353,9 @@ resource "Events", :type => [:api, :legacy_api] do
                                    'plan_updateable' => new_service.plan_updateable,
                                  }
                                }
-
     end
 
-    example "List Service Update Events" do
+    example "List Service Update Events (experimental)" do
       test_service.label = 'new label'
       service_event_repository.with_service_event(test_service) do
         test_service.save
@@ -376,7 +374,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :metadata => {'changes_from_catalog' => {'label' => 'new label'}}
     end
 
-    example "List Service Delete Events" do
+    example "List Service Delete Events (experimental)" do
       service_event_repository.create_delete_service_event(test_service)
 
       client.get "/v2/events?q=type:audit.service.delete", {}, headers
@@ -392,7 +390,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :metadata => {}
     end
 
-    example "List Broker Create Events" do
+    example "List Broker Create Events (experimental)" do
       params = {
         name: 'pancake broker',
         broker_url: 'http://www.pancakes.com',
@@ -420,10 +418,9 @@ resource "Events", :type => [:api, :legacy_api] do
                                    'auth_password' => '[REDACTED]'
                                  }
                                }
-
     end
 
-    example "List Broker Update Events" do
+    example "List Broker Update Events (experimental)" do
       params = {
         broker_url: 'http://www.pancakes.com',
         auth_password: 'password'
@@ -449,7 +446,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                }
     end
 
-    example "List Broker Delete Events" do
+    example "List Broker Delete Events (experimental)" do
       broker = VCAP::CloudController::ServiceBroker.make
       service_event_repository.create_broker_event('audit.service_broker.delete', broker, {})
 
@@ -466,7 +463,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :metadata => {}
     end
 
-    example "List Service Instance Create Events" do
+    example "List Service Instance Create Events (experimental)" do
       instance = VCAP::CloudController::ManagedServiceInstance.make
       service_event_repository.create_service_instance_event('audit.service_instance.create', instance, {
         'name' => instance.name,
@@ -491,10 +488,9 @@ resource "Events", :type => [:api, :legacy_api] do
                                    'space_guid' => instance.space_guid,
                                  }
                                }
-
     end
 
-    example "List Service Instance Update Events" do
+    example "List Service Instance Update Events (experimental)" do
       instance = VCAP::CloudController::ManagedServiceInstance.make
       service_event_repository.create_service_instance_event('audit.service_instance.update', instance, {
         'service_plan_guid' => instance.service_plan.guid,
@@ -517,7 +513,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                }
     end
 
-    example "List Service Instance Delete Events" do
+    example "List Service Instance Delete Events (experimental)" do
       instance = VCAP::CloudController::ManagedServiceInstance.make
       service_event_repository.create_service_instance_event('audit.service_instance.delete', instance, {})
 
