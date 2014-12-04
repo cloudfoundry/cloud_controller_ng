@@ -62,7 +62,7 @@ module VCAP::CloudController
           create_event(type, actee, metadata)
         end
 
-        def create_service_binding_event(type, service_binding)
+        def create_service_binding_event(type, service_binding, params=nil)
           metadata = {
             request: {
               service_instance_guid: service_binding.service_instance.guid,

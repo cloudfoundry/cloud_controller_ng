@@ -399,6 +399,32 @@ module VCAP::CloudController
         expect(broker_client).to have_received(:unbind).with(service_binding)
       end
 
+      it 'records an audit event after the binding has been deleted' do
+        email = "email@example.com"
+        space = service_binding.service_instance.space
+
+        delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer, email: email))
+
+        event = Event.first(type: 'audit.service_binding.delete')
+        expect(event.actor_type).to eq('user')
+        expect(event.timestamp).to be
+        expect(event.actor).to eq(developer.guid)
+        expect(event.actor_name).to eq(email)
+        expect(event.actee).to eq(service_binding.guid)
+        expect(event.actee_type).to eq('service_binding')
+        expect(event.actee_name).to eq('N/A')
+        expect(event.space_guid).to eq(space.guid)
+        expect(event.organization_guid).to eq(space.organization.guid)
+
+        expect(event.metadata).to include({
+          'request' => {
+            'service_instance_guid' => service_binding.service_instance.guid,
+            'app_guid' => service_binding.app.guid
+          }
+        })
+
+      end
+
       context "with ?async=true" do
         it 'returns a job id' do
           delete "/v2/service_bindings/#{service_binding.guid}?async=true", '', json_headers(headers_for(developer))

@@ -56,9 +56,21 @@ module VCAP::CloudController
       ]
     end
 
-    delete path_guid, :delete    
+    delete path_guid, :delete
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      service_binding = ServiceBinding.find(guid: guid)
+      raise_if_has_associations!(service_binding) if v2_api? && !recursive?
+
+      deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceBinding, guid)
+      delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :create_service_binding_event, 'audit.service_binding.delete', service_binding)
+
+      if async?
+        job = Jobs::Enqueuer.new(delete_and_audit_job, queue: "cc-generic").enqueue()
+        [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
+      else
+        delete_and_audit_job.perform
+        [HTTP::NO_CONTENT, nil]
+      end
     end
 
     private
