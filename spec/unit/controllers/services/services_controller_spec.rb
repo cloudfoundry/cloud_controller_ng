@@ -229,7 +229,7 @@ module VCAP::CloudController
       let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
 
       before do
-        stub_request(:delete, /#{service.service_broker.broker_url}.*/).to_return(body: {}, code: 200)
+        stub_request(:delete, /#{service.service_broker.broker_url}.*/).to_return(body: '', status: 200)
       end
 
       it 'creates a service delete event' do

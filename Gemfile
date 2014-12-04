@@ -26,7 +26,7 @@ gem 'allowy'
 gem 'loggregator_emitter', '~> 3.0'
 gem 'talentbox-delayed_job_sequel'
 gem 'thin', '~> 1.6.0'
-gem 'newrelic_rpm'
+gem 'newrelic_rpm', '3.7.3.204'
 gem 'clockwork', require: false
 
 # We need to use https for git urls as the git protocol is blocked by various
@@ -38,7 +38,7 @@ gem 'cf-registrar', '~> 1.0.1', git: 'https://github.com/cloudfoundry/cf-registr
 
 group :db do
   gem 'mysql2', '0.3.13'
-  gem 'pg'
+  gem 'pg', '0.16.0'
 end
 
 group :operations do
