@@ -708,6 +708,15 @@ module VCAP::CloudController
           expect(event.metadata).to eq({'request' => {}})
         end
 
+        context 'with ?async=true' do
+          it 'returns a job id' do
+            delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
+            expect(last_response.status).to eq 202
+            expect(decoded_response['entity']['guid']).to be
+            expect(decoded_response['entity']['status']).to eq 'queued'
+          end
+        end
+
         context 'when the service broker returns a 409' do
           let(:body) {'{"description": "service broker error"}' }
           let(:status) { 409 }
