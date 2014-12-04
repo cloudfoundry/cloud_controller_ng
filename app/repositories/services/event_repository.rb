@@ -79,6 +79,19 @@ module VCAP::CloudController
           create_event(type, actee, metadata)
         end
 
+        def create_service_dashboard_client_event(type, client_attrs)
+          metadata = {
+            changes_from_broker_catalog: client_attrs.reject {|key, _| key == 'id' }
+          }
+
+          actee = {
+            id: client_attrs['id'],
+            type: 'service_dashboard_client',
+            name: client_attrs['id']
+          }
+          create_event(type, actee, metadata)
+        end
+
         private
 
         def event_type(object, object_type)
