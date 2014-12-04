@@ -384,24 +384,24 @@ module VCAP::CloudController
     end
 
     describe 'DELETE', '/v2/service_bindings/:service_binding_guid' do
-      let(:binding) { ServiceBinding.make }
-      let(:developer) { make_developer_for_space(binding.service_instance.space) }
+      let(:service_binding) { ServiceBinding.make }
+      let(:developer) { make_developer_for_space(service_binding.service_instance.space) }
 
       it 'returns an empty response body' do
-        delete "/v2/service_bindings/#{binding.guid}", '', json_headers(headers_for(developer))
+        delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer))
         expect(last_response.status).to eq 204
         expect(last_response.body).to be_empty
       end
 
       it 'unbinds a service instance from an app' do
-        delete "/v2/service_bindings/#{binding.guid}", '', json_headers(headers_for(developer))
-        expect(ServiceBinding.find(guid: binding.guid)).to be_nil
-        expect(broker_client).to have_received(:unbind).with(binding)
+        delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer))
+        expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
+        expect(broker_client).to have_received(:unbind).with(service_binding)
       end
 
       context "with ?async=true" do
         it 'returns a job id' do
-          delete "/v2/service_bindings/#{binding.guid}?async=true", '', json_headers(headers_for(developer))
+          delete "/v2/service_bindings/#{service_binding.guid}?async=true", '', json_headers(headers_for(developer))
           expect(last_response.status).to eq 202
           expect(decoded_response['entity']['guid']).to be
           expect(decoded_response['entity']['status']).to eq 'queued'
