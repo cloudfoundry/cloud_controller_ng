@@ -62,8 +62,11 @@ resource "Events", :type => [:api, :legacy_api] do
     let(:test_user) { VCAP::CloudController::User.make }
     let(:test_user_email) { "user@email.com" }
     let(:test_space) { VCAP::CloudController::Space.make }
-    let(:test_service) { VCAP::CloudController::Service.make }
-    let(:test_plan) { VCAP::CloudController::ServicePlan.make }
+
+    let(:test_broker) { VCAP::CloudController::ServiceBroker.make }
+    let(:test_service) { VCAP::CloudController::Service.make(service_broker: test_broker) }
+    let(:test_plan) { VCAP::CloudController::ServicePlan.make(service: test_service) }
+
     let(:app_request) do
       {
         "name" => "new",
@@ -251,14 +254,14 @@ resource "Events", :type => [:api, :legacy_api] do
         service_broker: VCAP::CloudController::ServiceBroker.make
       ).save
 
-      service_event_repository.create_service_dashboard_client_event('audit.service_dashboard_client.create', client_attrs)
+      service_event_repository.create_service_dashboard_client_event('audit.service_dashboard_client.create', client_attrs, test_broker)
 
       client.get "/v2/events?q=type:audit.service_dashboard_client.create", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
-                               :actor_type => "user",
-                               :actor => test_user.guid,
-                               :actor_name => test_user_email,
+                               :actor_type => "service_broker",
+                               :actor => test_broker.guid,
+                               :actor_name => test_broker.name,
                                :actee_type => "service_dashboard_client",
                                :actee => client_attrs['id'],
                                :actee_name => client_attrs['id'],
@@ -281,14 +284,14 @@ resource "Events", :type => [:api, :legacy_api] do
         service_broker: VCAP::CloudController::ServiceBroker.make
       ).save
 
-      service_event_repository.create_service_dashboard_client_event('audit.service_dashboard_client.delete', client_attrs)
+      service_event_repository.create_service_dashboard_client_event('audit.service_dashboard_client.delete', client_attrs, test_broker)
 
       client.get "/v2/events?q=type:audit.service_dashboard_client.delete", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
-                               :actor_type => "user",
-                               :actor => test_user.guid,
-                               :actor_name => test_user_email,
+                               :actor_type => 'service_broker',
+                               :actor => test_broker.guid,
+                               :actor_name => test_broker.name,
                                :actee_type => "service_dashboard_client",
                                :actee => client_attrs['id'],
                                :actee_name => client_attrs['id'],
@@ -302,7 +305,7 @@ resource "Events", :type => [:api, :legacy_api] do
       new_plan = VCAP::CloudController::ServicePlan.new(
         guid: "guid",
         name: "plan-name",
-        service: VCAP::CloudController::Service.make(:v2),
+        service: test_service,
         description: 'A plan',
         unique_id: "guid",
         free: true,
@@ -316,9 +319,9 @@ resource "Events", :type => [:api, :legacy_api] do
       client.get "/v2/events?q=type:audit.service_plan.create", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
-                               :actor_type => "user",
-                               :actor => test_user.guid,
-                               :actor_name => test_user_email,
+                               :actor_type => "service_broker",
+                               :actor => test_broker.guid,
+                               :actor_name => test_broker.name,
                                :actee_type => "service_plan",
                                :actee => new_plan.guid,
                                :actee_name => new_plan.name,
@@ -346,9 +349,9 @@ resource "Events", :type => [:api, :legacy_api] do
       client.get "/v2/events?q=type:audit.service_plan.update", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
-                               :actor_type => "user",
-                               :actor => test_user.guid,
-                               :actor_name => test_user_email,
+                               :actor_type => "service_broker",
+                               :actor => test_broker.guid,
+                               :actor_name => test_broker.name,
                                :actee_type => "service_plan",
                                :actee => test_plan.guid,
                                :actee_name => test_plan.name,
@@ -362,9 +365,9 @@ resource "Events", :type => [:api, :legacy_api] do
       client.get "/v2/events?q=type:audit.service_plan.delete", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
-                               :actor_type => "user",
-                               :actor => test_user.guid,
-                               :actor_name => test_user_email,
+                               :actor_type => "service_broker",
+                               :actor => test_broker.guid,
+                               :actor_name => test_broker.name,
                                :actee_type => "service_plan",
                                :actee => test_plan.guid,
                                :actee_name => test_plan.name,
@@ -378,7 +381,7 @@ resource "Events", :type => [:api, :legacy_api] do
         label: "label",
         description: "BOOOO",
         bindable: true,
-        service_broker: VCAP::CloudController::ServiceBroker.make,
+        service_broker: test_broker,
         plan_updateable: false,
         active: true,
       )
@@ -389,9 +392,9 @@ resource "Events", :type => [:api, :legacy_api] do
       client.get "/v2/events?q=type:audit.service.create", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
-                               :actor_type => "user",
-                               :actor => test_user.guid,
-                               :actor_name => test_user_email,
+                               :actor_type => "service_broker",
+                               :actor => test_broker.guid,
+                               :actor_name => test_broker.name,
                                :actee_type => "service",
                                :actee => new_service.guid,
                                :actee_name => new_service.label,
@@ -427,9 +430,9 @@ resource "Events", :type => [:api, :legacy_api] do
       client.get "/v2/events?q=type:audit.service.update", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
-                               :actor_type => "user",
-                               :actor => test_user.guid,
-                               :actor_name => test_user_email,
+                               :actor_type => "service_broker",
+                               :actor => test_broker.guid,
+                               :actor_name => test_broker.name,
                                :actee_type => "service",
                                :actee => test_service.guid,
                                :actee_name => test_service.label,
@@ -443,9 +446,9 @@ resource "Events", :type => [:api, :legacy_api] do
       client.get "/v2/events?q=type:audit.service.delete", {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response["resources"][0], :event,
-                               :actor_type => "user",
-                               :actor => test_user.guid,
-                               :actor_name => test_user_email,
+                               :actor_type => "service_broker",
+                               :actor => test_broker.guid,
+                               :actor_name => test_broker.name,
                                :actee_type => "service",
                                :actee => test_service.guid,
                                :actee_name => test_service.label,
