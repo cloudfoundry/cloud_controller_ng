@@ -8,95 +8,38 @@ module VCAP::CloudController
           @current_user_email = security_context.current_user_email
         end
 
-        def with_service_event(service, &saveBlock)
+        def create_broker_event(type, broker, params)
+          metadata = metadata_for_broker_params(params)
           actee = {
-            type: "service",
-            name: service.label,
+            actee: broker.guid,
+            actee_type: 'broker',
+            actee_name: broker.name,
           }
-          with_audit_event(service, service.service_broker, actee, :changes_from_broker_catalog, &saveBlock)
-        end
-
-        def with_service_plan_event(plan, &saveBlock)
-          actee = {
-            type: "service_plan",
-            name: plan.name,
-          }
-          with_audit_event(plan, plan.service.service_broker, actee, :changes_from_broker_catalog, &saveBlock)
-        end
-
-        def create_service_instance_event(type, service_instance, params)
-          actee = {
-            id: service_instance.guid,
-            type: 'service_instance',
-            name: service_instance.name,
-            space: service_instance.space,
-          }
-          create_event(type, user_actor, actee, { request: params })
+          create_event(type, user_actor, actee, metadata)
         end
 
         def create_service_event(type, service)
           broker = service.service_broker
           actee = {
-            id: service.guid,
-            type: 'service',
-            name: service.label,
+            actee: service.guid,
+            actee_type: 'service',
+            actee_name: service.label,
           }
-          create_event(type, broker_actor(broker), actee, metadata)
+          create_event(type, broker_actor(broker), actee, {})
         end
 
         def create_service_plan_event(type, plan)
           broker = plan.service.service_broker
 
           actee = {
-            id: plan.guid,
-            type: 'service_plan',
-            name: plan.name,
+            actee: plan.guid,
+            actee_type: 'service_plan',
+            actee_name: plan.name,
           }
           create_event('audit.service_plan.delete', broker_actor(broker), actee, {})
         end
 
-        def create_service_purge_event(service)
-          metadata = {
-            request: {
-              purge: true
-            }
-          }
-          actee = {
-            id: service.guid,
-            type: 'service',
-            name: service.label,
-          }
-          create_event('audit.service.delete', user_actor, actee, metadata)
-        end
-
-        def create_broker_event(type, broker, params)
-          metadata = metadata_for_broker_params(params)
-          actee = {
-            id: broker.guid,
-            type: 'broker',
-            name: broker.name,
-          }
-          create_event(type, user_actor, actee, metadata)
-        end
-
-        def create_service_binding_event(type, service_binding)
-          metadata = {
-            request: {
-              service_instance_guid: service_binding.service_instance.guid,
-              app_guid: service_binding.app.guid
-            }
-          }
-
-          actee = {
-            id: service_binding.guid,
-            type: 'service_binding',
-            name: 'N/A',
-            space: service_binding.space,
-          }
-          create_event(type, user_actor, actee, metadata)
-        end
-
-        def create_service_dashboard_client_event(type, broker, client_attrs)
+        def create_service_dashboard_client_event(type, client_attrs, broker)
           metadata = {
             changes_from_broker_catalog: {}
           }
@@ -109,11 +52,68 @@ module VCAP::CloudController
           end
 
           actee = {
-            id: client_attrs['id'],
-            type: 'service_dashboard_client',
-            name: client_attrs['id']
+            actee: client_attrs['id'],
+            actee_type: 'service_dashboard_client',
+            actee_name: client_attrs['id']
           }
           create_event(type, broker_actor(broker), actee, metadata)
+        end
+
+        def create_service_instance_event(type, service_instance, params)
+          actee = {
+            actee: service_instance.guid,
+            actee_type: 'service_instance',
+            actee_name: service_instance.name,
+          }
+          create_event(type, user_actor, actee, { request: params }, service_instance.space)
+        end
+
+        def create_service_binding_event(type, service_binding, params=nil)
+          metadata = {
+            request: {
+              service_instance_guid: service_binding.service_instance.guid,
+              app_guid: service_binding.app.guid
+            }
+          }
+
+          actee = {
+            actee: service_binding.guid,
+            actee_type: 'service_binding',
+            actee_name: 'N/A',
+          }
+          create_event(type, user_actor, actee, metadata, service_binding.space)
+        end
+
+        def with_service_event(service, &saveBlock)
+          actee = {
+            actee_type: "service",
+            actee_name: service.label,
+          }
+          actor = broker_actor(service.service_broker)
+          with_audit_event(service, actor, actee, :changes_from_broker_catalog, &saveBlock)
+        end
+
+        def with_service_plan_event(plan, &saveBlock)
+          actee = {
+            actee_type: "service_plan",
+            actee_name: plan.name,
+          }
+          actor = broker_actor(plan.service.service_broker)
+          with_audit_event(plan, actor, actee, :changes_from_broker_catalog, &saveBlock)
+        end
+
+        def create_service_purge_event(service)
+          metadata = {
+            request: {
+              purge: true
+            }
+          }
+          actee = {
+            actee: service.guid,
+            actee_type: 'service',
+            actee_name: service.label,
+          }
+          create_event('audit.service.delete', user_actor, actee, metadata)
         end
 
         private
@@ -150,15 +150,15 @@ module VCAP::CloudController
           changes
         end
 
-        def with_audit_event(object, broker, actee, changes_key, &saveBlock)
-          type = event_type(object, actee[:type])
+        def with_audit_event(object, actor, actee, changes_key, &saveBlock)
+          type = event_type(object, actee[:actee_type])
           metadata = {
             changes_key => changes_for_modified_model(object)
           }
           result = saveBlock.call
 
-          actee[:id] = object.guid
-          create_event(type, broker_actor(broker), actee, metadata)
+          actee[:actee] = object.guid
+          create_event(type, actor, actee, metadata)
           result
         end
 
@@ -178,20 +178,15 @@ module VCAP::CloudController
           }
         end
 
-        def create_event(type, actor, actee, metadata)
+        def create_event(type, actor_data, actee_data, metadata, space=nil)
           base_data = {
             type: type,
             timestamp: Time.now,
-            actee: actee.fetch(:id),
-            actee_type: actee.fetch(:type),
-            actee_name: actee.fetch(:name),
-            metadata: metadata,
-          }.merge(actor)
+            metadata: metadata
+          }
 
-          if actee[:space]
-            space_data = {
-              space: actee[:space]
-            }
+          if space
+            space_data = { space: space }
           else
             space_data = {
               space_guid: '',
@@ -199,7 +194,9 @@ module VCAP::CloudController
             }
           end
 
-          Event.create(base_data.merge(space_data))
+          data = base_data.merge(actor_data).merge(actee_data).merge(space_data)
+
+          Event.create(data)
         end
       end
     end
