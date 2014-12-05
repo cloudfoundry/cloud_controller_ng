@@ -105,9 +105,9 @@ module VCAP::Services::SSO
             expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.create').count).to eq 2
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_id)
-            expect(event.actor_type).to eq('user')
-            expect(event.actor).to eq(user.guid)
-            expect(event.actor_name).to eq(email)
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(service_broker.guid)
+            expect(event.actor_name).to eq(service_broker.name)
             expect(event.timestamp).to be
             expect(event.actee).to eq(client_id)
             expect(event.actee_type).to eq('service_dashboard_client')
@@ -173,9 +173,9 @@ module VCAP::Services::SSO
               expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.create').count).to eq 1
 
               event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_id)
-              expect(event.actor_type).to eq('user')
-              expect(event.actor).to eq(user.guid)
-              expect(event.actor_name).to eq(email)
+              expect(event.actor_type).to eq('service_broker')
+              expect(event.actor).to eq(service_broker.guid)
+              expect(event.actor_name).to eq(service_broker.name)
               expect(event.timestamp).to be
               expect(event.actee).to eq(client_id)
               expect(event.actee_type).to eq('service_dashboard_client')
@@ -268,9 +268,9 @@ module VCAP::Services::SSO
             expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.delete').count).to eq 2
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.delete', actee_name: unused_id)
-            expect(event.actor_type).to eq('user')
-            expect(event.actor).to eq(user.guid)
-            expect(event.actor_name).to eq(email)
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(service_broker.guid)
+            expect(event.actor_name).to eq(service_broker.name)
             expect(event.timestamp).to be
             expect(event.actee).to eq(unused_id)
             expect(event.actee_type).to eq('service_dashboard_client')
@@ -485,9 +485,9 @@ module VCAP::Services::SSO
         expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.delete').count).to eq 2
 
         event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.delete', actee_name: client_to_delete_1)
-        expect(event.actor_type).to eq('user')
-        expect(event.actor).to eq(user.guid)
-        expect(event.actor_name).to eq(email)
+        expect(event.actor_type).to eq('service_broker')
+        expect(event.actor).to eq(service_broker.guid)
+        expect(event.actor_name).to eq(service_broker.name)
         expect(event.timestamp).to be
         expect(event.actee).to eq(client_to_delete_1)
         expect(event.actee_type).to eq('service_dashboard_client')

@@ -109,9 +109,9 @@ module VCAP::Services::SSO
           uaa_changeset.each do |uaa_cmd|
             case uaa_cmd.uaa_command[:action]
             when 'add'
-              @services_event_repository.create_service_dashboard_client_event('audit.service_dashboard_client.create', uaa_cmd.client_attrs)
+              @services_event_repository.create_service_dashboard_client_event('audit.service_dashboard_client.create', service_broker, uaa_cmd.client_attrs)
             when 'delete'
-              @services_event_repository.create_service_dashboard_client_event('audit.service_dashboard_client.delete', uaa_cmd.client_attrs)
+              @services_event_repository.create_service_dashboard_client_event('audit.service_dashboard_client.delete', service_broker, uaa_cmd.client_attrs)
             end
           end
         end

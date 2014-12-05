@@ -37,9 +37,9 @@ module VCAP::Services::ServiceBrokers
 
         event = VCAP::CloudController::Event.first(type: 'audit.service.delete')
         expect(event.type).to eq('audit.service.delete')
-        expect(event.actor_type).to eq('user')
-        expect(event.actor).to eq(user.guid)
-        expect(event.actor_name).to eq(email)
+        expect(event.actor_type).to eq('service_broker')
+        expect(event.actor).to eq(broker.guid)
+        expect(event.actor_name).to eq(broker.name)
         expect(event.timestamp).to be
         expect(event.actee).to eq(service.guid)
         expect(event.actee_type).to eq('service')
@@ -50,9 +50,9 @@ module VCAP::Services::ServiceBrokers
 
         event = VCAP::CloudController::Event.first(type: 'audit.service_plan.delete')
         expect(event.type).to eq('audit.service_plan.delete')
-        expect(event.actor_type).to eq('user')
-        expect(event.actor).to eq(user.guid)
-        expect(event.actor_name).to eq(email)
+        expect(event.actor_type).to eq('service_broker')
+        expect(event.actor).to eq(broker.guid)
+        expect(event.actor_name).to eq(broker.name)
         expect(event.timestamp).to be
         expect(event.actee).to eq(plan.guid)
         expect(event.actee_type).to eq('service_plan')

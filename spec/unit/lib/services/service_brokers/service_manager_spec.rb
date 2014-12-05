@@ -104,9 +104,9 @@ module VCAP::Services::ServiceBrokers
         event = VCAP::CloudController::Event.first(type: 'audit.service.create')
         service = VCAP::CloudController::Service.last
         expect(event.type).to eq('audit.service.create')
-        expect(event.actor_type).to eq('user')
-        expect(event.actor).to eq(user.guid)
-        expect(event.actor_name).to eq(user_email)
+        expect(event.actor_type).to eq('service_broker')
+        expect(event.actor).to eq(broker.guid)
+        expect(event.actor_name).to eq(broker.name)
         expect(event.timestamp).to be
         expect(event.actee).to eq(service.guid)
         expect(event.actee_type).to eq('service')
@@ -225,9 +225,9 @@ module VCAP::Services::ServiceBrokers
             event = VCAP::CloudController::Event.first(type: 'audit.service.update')
             service = VCAP::CloudController::Service.last
             expect(event.type).to eq('audit.service.update')
-            expect(event.actor_type).to eq('user')
-            expect(event.actor).to eq(user.guid)
-            expect(event.actor_name).to eq(user_email)
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(broker.guid)
+            expect(event.actor_name).to eq(broker.name)
             expect(event.timestamp).to be
             expect(event.actee).to eq(service.guid)
             expect(event.actee_type).to eq('service')
@@ -327,9 +327,9 @@ module VCAP::Services::ServiceBrokers
           plan = VCAP::CloudController::ServicePlan.all.last
           service = VCAP::CloudController::Service.last
           expect(event.type).to eq('audit.service_plan.create')
-          expect(event.actor_type).to eq('user')
-          expect(event.actor).to eq(user.guid)
-          expect(event.actor_name).to eq(user_email)
+          expect(event.actor_type).to eq('service_broker')
+          expect(event.actor).to eq(broker.guid)
+          expect(event.actor_name).to eq(broker.name)
           expect(event.timestamp).to be
           expect(event.actee).to eq(plan.guid)
           expect(event.actee_type).to eq('service_plan')
@@ -380,9 +380,9 @@ module VCAP::Services::ServiceBrokers
             event = VCAP::CloudController::Event.first(type: 'audit.service_plan.update')
             plan = VCAP::CloudController::ServicePlan.all.last
             expect(event.type).to eq('audit.service_plan.update')
-            expect(event.actor_type).to eq('user')
-            expect(event.actor).to eq(user.guid)
-            expect(event.actor_name).to eq(user_email)
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(broker.guid)
+            expect(event.actor_name).to eq(broker.name)
             expect(event.timestamp).to be
             expect(event.actee).to eq(plan.guid)
             expect(event.actee_type).to eq('service_plan')
@@ -432,9 +432,9 @@ module VCAP::Services::ServiceBrokers
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_plan.delete')
             expect(event.type).to eq('audit.service_plan.delete')
-            expect(event.actor_type).to eq('user')
-            expect(event.actor).to eq(user.guid)
-            expect(event.actor_name).to eq(user_email)
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(broker.guid)
+            expect(event.actor_name).to eq(broker.name)
             expect(event.timestamp).to be
             expect(event.actee).to eq(missing_plan.guid)
             expect(event.actee_type).to eq('service_plan')
@@ -516,9 +516,9 @@ HEREDOC
 
           event = VCAP::CloudController::Event.first(type: 'audit.service.delete')
           expect(event.type).to eq('audit.service.delete')
-          expect(event.actor_type).to eq('user')
-          expect(event.actor).to eq(user.guid)
-          expect(event.actor_name).to eq(user_email)
+          expect(event.actor_type).to eq('service_broker')
+          expect(event.actor).to eq(broker.guid)
+          expect(event.actor_name).to eq(broker.name)
           expect(event.timestamp).to be
           expect(event.actee).to eq(service.guid)
           expect(event.actee_type).to eq('service')

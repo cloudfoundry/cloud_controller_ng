@@ -61,11 +61,9 @@ module VCAP::CloudController
 
     def delete(guid)
       service = find_guid_and_validate_access(:delete, guid)
-      @services_event_repository.create_delete_service_event(service, {
-        request: { purge: purge? },
-      })
       if purge?
         service.purge
+        @services_event_repository.create_service_purge_event(service, { request: { purge: purge? } })
         [HTTP::NO_CONTENT, nil]
       else
         do_delete(service)
