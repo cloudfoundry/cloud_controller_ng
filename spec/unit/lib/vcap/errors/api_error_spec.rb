@@ -12,12 +12,12 @@ module VCAP::Errors
              message_format: "Before %s %s after.")
     end
 
-    let(:messageServiceInvalid) { "ServiceInvalid" }
+    let(:messageTranslated) { "MessageTranslated" }
     let(:messagePartialTranslated) { "MessagePartialTranslated"}
     let(:messageNotTranslated) { "MessageNotTranslated" }
     let(:args) { [ "foo", "bar" ] }
 
-    let(:messageServiceInvalidDetails) { create_details(messageServiceInvalid) }
+    let(:messageTranslatedDetails) { create_details(messageTranslated) }
     let(:messagePartialTranslatedDetails) { create_details(messagePartialTranslated) }
     let(:messageNotTranslatedDetails) { create_details(messageNotTranslated) }
 
@@ -30,7 +30,7 @@ module VCAP::Errors
       expect(I18n.load_path).to have(2).items
       expect(I18n.default_locale).to eq(:en_US)
 
-      allow(Details).to receive("new").with(messageServiceInvalid).and_return(messageServiceInvalidDetails)
+      allow(Details).to receive("new").with(messageTranslated).and_return(messageTranslatedDetails)
       allow(Details).to receive("new").with(messagePartialTranslated).and_return(messagePartialTranslatedDetails)
       allow(Details).to receive("new").with(messageNotTranslated).and_return(messageNotTranslatedDetails)
     end
@@ -42,7 +42,7 @@ module VCAP::Errors
     end
 
     context ".new_from_details" do
-      subject(:api_error) { ApiError.new_from_details(messageServiceInvalid, *args) }
+      subject(:api_error) { ApiError.new_from_details(messageTranslated, *args) }
 
       it "returns an ApiError" do
         expect(api_error).to be_a(ApiError)
@@ -53,7 +53,7 @@ module VCAP::Errors
       end
 
       context "if it doesn't recognise the error from v2.yml" do
-        let(:messageServiceInvalid) { "What is this?  I don't know?!!"}
+        let(:messageTranslated) { "What is this?  I don't know?!!"}
 
         before do
           allow(Details).to receive(:new).and_call_original
@@ -66,7 +66,7 @@ module VCAP::Errors
     end
 
     context "get error message" do
-      subject(:api_error) { ApiError.new_from_details(messageServiceInvalid, *args) }
+      subject(:api_error) { ApiError.new_from_details(messageTranslated, *args) }
       subject(:api_error_with_partial_translation) { ApiError.new_from_details(messagePartialTranslated, *args) }
       subject(:api_error_with_translation_missing)  { ApiError.new_from_details(messageNotTranslated, *args) }
 
@@ -107,7 +107,7 @@ module VCAP::Errors
       subject(:api_error) { ApiError.new }
 
       before do
-        api_error.details = messageServiceInvalidDetails
+        api_error.details = messageTranslatedDetails
       end
 
       it "exposes the code" do
@@ -119,7 +119,7 @@ module VCAP::Errors
       end
 
       it "exposes the name" do
-        expect(api_error.name).to eq("ServiceInvalid")
+        expect(api_error.name).to eq("MessageTranslated")
       end
     end
   end

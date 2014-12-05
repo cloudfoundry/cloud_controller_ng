@@ -68,6 +68,8 @@ RSpec.configure do |rspec_config|
 
     stub_v1_broker
     VCAP::CloudController::SecurityContext.clear
+
+    I18nHelper.set_i18n_env
   end
 
   rspec_config.around :each do |example|
@@ -80,6 +82,8 @@ RSpec.configure do |rspec_config|
       raise "Sequel Deprecation String found: #{Sequel::Deprecation.output.string}"
     end
     Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
+
+    I18nHelper.clear_i18n_env
   end
 
   rspec_config.after :all do
