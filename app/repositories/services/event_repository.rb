@@ -81,8 +81,15 @@ module VCAP::CloudController
 
         def create_service_dashboard_client_event(type, client_attrs)
           metadata = {
-            changes_from_broker_catalog: client_attrs.reject {|key, _| key == 'id' }
+            changes_from_broker_catalog: {}
           }
+
+          if client_attrs.has_key?('redirect_uri')
+            metadata[:changes_from_broker_catalog] = {
+              secret: '[REDACTED]',
+              redirect_uri: client_attrs['redirect_uri']
+            }
+          end
 
           actee = {
             id: client_attrs['id'],

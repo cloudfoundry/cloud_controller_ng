@@ -116,7 +116,7 @@ module VCAP::Services::SSO
             expect(event.organization_guid).to eq('')
             expect(event.metadata).to include({
               'changes_from_broker_catalog' => {
-                'secret' => dashboard_client_attrs_1['secret'],
+                'secret' => '[REDACTED]',
                 'redirect_uri' => dashboard_client_attrs_1['redirect_uri']
               }
             })
@@ -184,7 +184,7 @@ module VCAP::Services::SSO
               expect(event.organization_guid).to eq('')
               expect(event.metadata).to include({
                 'changes_from_broker_catalog' => {
-                  'secret' => dashboard_client_attrs_2['secret'],
+                  'secret' => '[REDACTED]',
                   'redirect_uri' => dashboard_client_attrs_2['redirect_uri']
                 }
               })
@@ -260,6 +260,26 @@ module VCAP::Services::SSO
 
           it 'returns true' do
             expect(manager.synchronize_clients_with_catalog(catalog)).to be true
+          end
+
+          it 'records a delete event for the deleted client' do
+            manager.remove_clients_for_broker
+
+            expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.delete').count).to eq 2
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.delete', actee_name: unused_id)
+            expect(event.actor_type).to eq('user')
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_name).to eq(email)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(unused_id)
+            expect(event.actee_type).to eq('service_dashboard_client')
+            expect(event.actee_name).to eq(unused_id)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
+            expect(event.metadata).to include({
+              'changes_from_broker_catalog' => {}
+            })
           end
         end
 
@@ -459,6 +479,26 @@ module VCAP::Services::SSO
         expect(VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).count).to eq(0)
       end
 
+      it 'records a delete event for each dashboard client' do
+        manager.remove_clients_for_broker
+
+        expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.delete').count).to eq 2
+
+        event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.delete', actee_name: client_to_delete_1)
+        expect(event.actor_type).to eq('user')
+        expect(event.actor).to eq(user.guid)
+        expect(event.actor_name).to eq(email)
+        expect(event.timestamp).to be
+        expect(event.actee).to eq(client_to_delete_1)
+        expect(event.actee_type).to eq('service_dashboard_client')
+        expect(event.actee_name).to eq(client_to_delete_1)
+        expect(event.space_guid).to eq('')
+        expect(event.organization_guid).to eq('')
+        expect(event.metadata).to include({
+          'changes_from_broker_catalog' => {}
+        })
+      end
+
       context 'when deleting UAA clients fails' do
         before do
           error = VCAP::Services::SSO::UAA::UaaError.new('error message')
@@ -480,6 +520,10 @@ module VCAP::Services::SSO
           expect(VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).count).to eq(2)
         end
 
+        it 'does not record any events' do
+          manager.remove_clients_for_broker rescue nil
+          expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.delete').count).to eq 0
+        end
       end
 
       context 'when getting UAA clients raises an error' do
@@ -508,6 +552,11 @@ module VCAP::Services::SSO
         it 'does not delete the UAA clients' do
           manager.remove_clients_for_broker rescue nil
           expect(client_manager).to_not have_received(:modify_transaction)
+        end
+
+        it 'does not record any events' do
+          manager.remove_clients_for_broker rescue nil
+          expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.delete').count).to eq 0
         end
       end
 
