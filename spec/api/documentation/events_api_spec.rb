@@ -20,6 +20,8 @@ resource "Events", :type => [:api, :legacy_api] do
     audit.service_plan.create
     audit.service_plan.update
     audit.service_plan.delete
+    audit.service_dashboard_client.create
+    audit.service_dashboard_client.delete
     audit.service_instance.create
     audit.service_instance.update
     audit.service_instance.delete
@@ -235,6 +237,65 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_name => test_space.name,
                                :space_guid => test_space.guid,
                                :metadata => { "request" => { "recursive" => true } }
+    end
+
+    example "List Service Dashboard Client Create Events (experimental)" do
+      client_attrs = {
+        'id' => 'client_id',
+        'secret' => 'secret',
+        'redirect_uri' => 'example.com/redirect'
+      }
+
+      dashboard_client = VCAP::CloudController::ServiceDashboardClient.new(
+        uaa_id: client_attrs['id'],
+        service_broker: VCAP::CloudController::ServiceBroker.make
+      ).save
+
+      service_event_repository.create_service_dashboard_client_event('audit.service_dashboard_client.create', client_attrs)
+
+      client.get "/v2/events?q=type:audit.service_dashboard_client.create", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_dashboard_client",
+                               :actee => client_attrs['id'],
+                               :actee_name => client_attrs['id'],
+                               :space_guid => '',
+                               :metadata => {
+                                 'changes_from_broker_catalog' => {
+                                    'secret' => '[REDACTED]',
+                                    'redirect_uri' => client_attrs['redirect_uri']
+                                 }
+                               }
+    end
+
+    example "List Service Dashboard Client Delete Events (experimental)" do
+      client_attrs = {
+        'id' => 'client_id'
+      }
+
+      dashboard_client = VCAP::CloudController::ServiceDashboardClient.new(
+        uaa_id: client_attrs['id'],
+        service_broker: VCAP::CloudController::ServiceBroker.make
+      ).save
+
+      service_event_repository.create_service_dashboard_client_event('audit.service_dashboard_client.delete', client_attrs)
+
+      client.get "/v2/events?q=type:audit.service_dashboard_client.delete", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_dashboard_client",
+                               :actee => client_attrs['id'],
+                               :actee_name => client_attrs['id'],
+                               :space_guid => '',
+                               :metadata => {
+                                 'changes_from_broker_catalog' => {}
+                               }
     end
 
     example "List Service Plan Create Events (experimental)" do
