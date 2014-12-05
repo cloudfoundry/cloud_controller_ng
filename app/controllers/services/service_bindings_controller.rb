@@ -48,7 +48,7 @@ module VCAP::CloudController
         raise Sequel::ValidationFailed.new(service_binding)
       end
 
-      @services_event_repository.create_service_binding_event('audit.service_binding.create', service_binding)
+      @services_event_repository.record_service_binding_event(:create, service_binding)
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{service_binding.guid}" },
@@ -62,7 +62,7 @@ module VCAP::CloudController
       raise_if_has_associations!(service_binding) if v2_api? && !recursive?
 
       deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceBinding, guid)
-      delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :create_service_binding_event, 'audit.service_binding.delete', service_binding)
+      delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :record_service_binding_event, :delete, service_binding)
 
       if async?
         job = Jobs::Enqueuer.new(delete_and_audit_job, queue: "cc-generic").enqueue()

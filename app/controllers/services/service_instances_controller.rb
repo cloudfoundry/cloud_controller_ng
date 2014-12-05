@@ -100,7 +100,7 @@ module VCAP::CloudController
         raise e
       end
 
-      @services_event_repository.create_service_instance_event('audit.service_instance.create', service_instance, request_attrs)
+      @services_event_repository.record_service_instance_event(:create, service_instance, request_attrs)
 
       [ HTTP::CREATED,
         { "Location" => "#{self.class.path}/#{service_instance.guid}" },
@@ -140,7 +140,7 @@ module VCAP::CloudController
         service_instance.update_from_hash(request_attrs)
       end
 
-      @services_event_repository.create_service_instance_event('audit.service_instance.update', service_instance, request_attrs)
+      @services_event_repository.record_service_instance_event(:update, service_instance, request_attrs)
 
       [HTTP::CREATED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
     end
@@ -201,7 +201,7 @@ module VCAP::CloudController
       raise_if_has_associations!(service_instance) if v2_api? && !recursive?
 
       deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)
-      delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :create_service_instance_event, 'audit.service_instance.delete', service_instance, {})
+      delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :record_service_instance_event, :delete, service_instance, {})
 
       if async?
         job = Jobs::Enqueuer.new(delete_and_audit_job, queue: "cc-generic").enqueue()

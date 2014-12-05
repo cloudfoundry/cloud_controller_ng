@@ -37,7 +37,7 @@ module VCAP::CloudController
         raise get_exception_from_errors(registration)
       end
 
-      @services_event_repository.create_broker_event('audit.service_broker.create', broker, params)
+      @services_event_repository.record_broker_event(:create, broker, params)
 
       if !registration.warnings.empty?
         registration.warnings.each { |warning| add_warning(warning) }
@@ -61,7 +61,7 @@ module VCAP::CloudController
         raise get_exception_from_errors(registration)
       end
 
-      @services_event_repository.create_broker_event('audit.service_broker.update', broker, params)
+      @services_event_repository.record_broker_event(:update, broker, params)
 
       if !registration.warnings.empty?
         registration.warnings.each { |warning| add_warning(warning) }
@@ -77,7 +77,7 @@ module VCAP::CloudController
       return HTTP::NOT_FOUND unless broker
 
       VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker, @services_event_repository).execute!
-      @services_event_repository.create_broker_event('audit.service_broker.delete', broker, {})
+      @services_event_repository.record_broker_event(:delete, broker, {})
 
       HTTP::NO_CONTENT
     rescue Sequel::ForeignKeyConstraintViolation

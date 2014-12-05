@@ -36,9 +36,9 @@ module VCAP::Services::ServiceBrokers
         service = hash[:service]
         plans = hash[:plans]
         plans.each do |plan|
-          @services_event_repository.create_service_plan_event('audit.service_plan.delete', plan)
+          @services_event_repository.record_service_plan_event(:delete, plan)
         end
-        @services_event_repository.create_service_event('audit.service.delete', service)
+        @services_event_repository.record_service_event(:delete, service)
       end
     end
   end
