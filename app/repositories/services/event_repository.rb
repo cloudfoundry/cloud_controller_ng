@@ -34,17 +34,17 @@ module VCAP::CloudController
           create_event(type, user_actor, actee, { request: params })
         end
 
-        def create_delete_service_event(service, metadata={})
+        def create_service_event(type, service)
           broker = service.service_broker
           actee = {
             id: service.guid,
             type: 'service',
             name: service.label,
           }
-          create_event('audit.service.delete', broker_actor(broker), actee, metadata)
+          create_event(type, broker_actor(broker), actee, metadata)
         end
 
-        def create_delete_service_plan_event(plan)
+        def create_service_plan_event(type, plan)
           broker = plan.service.service_broker
 
           actee = {
@@ -55,7 +55,12 @@ module VCAP::CloudController
           create_event('audit.service_plan.delete', broker_actor(broker), actee, {})
         end
 
-        def create_service_purge_event(service, metadata={})
+        def create_service_purge_event(service)
+          metadata = {
+            request: {
+              purge: true
+            }
+          }
           actee = {
             id: service.guid,
             type: 'service',
@@ -74,7 +79,7 @@ module VCAP::CloudController
           create_event(type, user_actor, actee, metadata)
         end
 
-        def create_service_binding_event(type, service_binding, params=nil)
+        def create_service_binding_event(type, service_binding)
           metadata = {
             request: {
               service_instance_guid: service_binding.service_instance.guid,

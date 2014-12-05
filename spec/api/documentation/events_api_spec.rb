@@ -357,7 +357,7 @@ resource "Events", :type => [:api, :legacy_api] do
     end
 
     example "List Service Plan Delete Events (experimental)" do
-      service_event_repository.create_delete_service_plan_event(test_plan)
+      service_event_repository.create_service_plan_event('audit.service_plan.delete', test_plan)
 
       client.get "/v2/events?q=type:audit.service_plan.delete", {}, headers
       expect(status).to eq(200)
@@ -438,7 +438,7 @@ resource "Events", :type => [:api, :legacy_api] do
     end
 
     example "List Service Delete Events (experimental)" do
-      service_event_repository.create_delete_service_event(test_service)
+      service_event_repository.create_service_event('audit.service.delete', test_service)
 
       client.get "/v2/events?q=type:audit.service.delete", {}, headers
       expect(status).to eq(200)
@@ -601,10 +601,7 @@ resource "Events", :type => [:api, :legacy_api] do
       app = VCAP::CloudController::App.make(space: space)
       service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app)
 
-      service_event_repository.create_service_binding_event('audit.service_binding.create', service_binding, {
-        'service_instance_guid' => instance.guid,
-        'app_guid' => app.guid,
-      })
+      service_event_repository.create_service_binding_event('audit.service_binding.create', service_binding)
 
       client.get "/v2/events?q=type:audit.service_binding.create", {}, headers
       expect(status).to eq(200)
@@ -630,10 +627,7 @@ resource "Events", :type => [:api, :legacy_api] do
       app = VCAP::CloudController::App.make(space: space)
       service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app)
 
-      service_event_repository.create_service_binding_event('audit.service_binding.delete', service_binding, {
-        'service_instance_guid' => instance.guid,
-        'app_guid' => app.guid,
-      })
+      service_event_repository.create_service_binding_event('audit.service_binding.delete', service_binding)
 
       client.get "/v2/events?q=type:audit.service_binding.delete", {}, headers
       expect(status).to eq(200)
