@@ -197,7 +197,7 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      service_instance = ServiceInstance.find(guid: guid)
+      service_instance = find_guid_and_validate_access(:delete, guid, ServiceInstance)
       raise_if_has_associations!(service_instance) if v2_api? && !recursive?
 
       deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)

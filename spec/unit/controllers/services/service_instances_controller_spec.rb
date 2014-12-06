@@ -731,6 +731,13 @@ module VCAP::CloudController
             expect(JSON.parse(last_response.body)['description']).to include 'service broker error'
           end
         end
+
+        context 'and the instance cannot be found' do
+          it 'returns a 404' do
+            delete "/v2/service_instances/non-existing-instance", {}, admin_headers
+            expect(last_response.status).to eq 404
+          end
+        end
       end
 
       context 'with a v1 service instance' do
