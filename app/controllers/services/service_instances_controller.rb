@@ -110,7 +110,7 @@ module VCAP::CloudController
 
     def update(guid)
       json_msg = self.class::UpdateMessage.decode(body)
-      request_attrs = json_msg.extract(stringify_keys: true)
+      @request_attrs = json_msg.extract(stringify_keys: true)
       logger.debug "cc.update", guid: guid, attributes: request_attrs
       raise InvalidRequest unless request_attrs
 
