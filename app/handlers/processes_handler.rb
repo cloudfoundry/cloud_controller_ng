@@ -1,10 +1,12 @@
+require 'repositories/process_repository'
+
 module VCAP::CloudController
   class ProcessCreateMessage
     attr_reader :opts
     attr_accessor :error
 
     def self.create_from_http_request(body)
-      opts = body && MultiJson.load(body).symbolize_keys
+      opts = body && MultiJson.load(body)
       ProcessCreateMessage.new(opts)
     rescue MultiJson::ParseError => e
       message = ProcessCreateMessage.new(nil)
@@ -27,7 +29,7 @@ module VCAP::CloudController
     attr_reader :opts, :guid
 
     def self.create_from_http_request(guid, body)
-      opts = body && MultiJson.load(body).symbolize_keys
+      opts = body && MultiJson.load(body)
       ProcessUpdateMessage.new(guid, opts)
     rescue MultiJson::ParseError
       nil
@@ -43,7 +45,7 @@ module VCAP::CloudController
     private
 
     def validate_name_field
-      return 'The name field cannot be updated on a Process' if !@opts.nil? && @opts[:name]
+      return 'The name field cannot be updated on a Process' if !@opts.nil? && @opts['name']
       nil
     end
 
@@ -57,7 +59,6 @@ module VCAP::CloudController
       @guid = guid
     end
   end
-
 
   class ProcessesHandler
     class InvalidProcess < StandardError; end
@@ -78,7 +79,7 @@ module VCAP::CloudController
 
     def create(create_message, access_context)
       guid = SecureRandom.uuid
-      create_opts = create_message.opts.merge(guid: guid)
+      create_opts = create_message.opts.merge('guid' => guid)
 
       desired_process = @process_repository.new_process(create_opts)
       space           = Space.find(guid: desired_process.space_guid)
@@ -104,11 +105,11 @@ module VCAP::CloudController
         raise Unauthorized if access_context.cannot?(:update, initial_process, initial_space)
 
         neighbor_processes.each do |process|
-          raise InvalidProcess if process.type == update_message.opts[:type]
+          raise InvalidProcess if process.type == update_message.opts['type']
         end
 
         desired_process = initial_process.with_changes(update_message.opts)
-        desired_space = update_message.opts[:space_guid] != initial_space.guid ? Space.find(guid: desired_process.space_guid) : initial_space
+        desired_space = update_message.opts['space_guid'] != initial_space.guid ? Space.find(guid: desired_process.space_guid) : initial_space
 
         raise Unauthorized if access_context.cannot?(:update, desired_process, desired_space)
 

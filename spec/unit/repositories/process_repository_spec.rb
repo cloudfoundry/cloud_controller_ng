@@ -9,19 +9,19 @@ module VCAP::CloudController
     subject(:repo) { ProcessRepository.new }
     let(:valid_opts) do
       {
-        name:                 'my-process',
-        memory:               256,
-        instances:            2,
-        disk_quota:           1024,
-        space_guid:           space_guid,
-        stack_guid:           stack_guid,
-        state:                'STOPPED',
-        command:              'the-command',
-        buildpack:            'http://the-buildpack.com',
-        health_check_timeout: 100,
-        docker_image:         nil,
-        environment_json:     {},
-        type:                 'worker',
+        'name'                 => 'my-process',
+        'memory'               => 256,
+        'instances'            => 2,
+        'disk_quota'           => 1024,
+        'space_guid'           => space_guid,
+        'stack_guid'           => stack_guid,
+        'state'                => 'STOPPED',
+        'command'              => 'the-command',
+        'buildpack'            => 'http://the-buildpack.com',
+        'health_check_timeout' => 100,
+        'docker_image'         => nil,
+        'environment_json'     => {},
+        'type'                 => 'worker',
       }
     end
 
@@ -269,7 +269,7 @@ module VCAP::CloudController
           original_package_state = app.package_state
           process_repository     = ProcessRepository.new
           process_repository.find_by_guid_for_update(app.guid) do |initial_process|
-            updated_process = initial_process.with_changes({ name: 'my-super-awesome-name' })
+            updated_process = initial_process.with_changes({ 'name' => 'my-super-awesome-name' })
 
             expect {
               process_repository.update!(updated_process)
@@ -296,7 +296,7 @@ module VCAP::CloudController
         context 'when the desired process is not valid' do
           it 'raises a InvalidProcess error' do
             invalid_opts = {
-              state: 'INVALID',
+              'state' => 'INVALID',
             }
             process_repository = ProcessRepository.new
             expect {

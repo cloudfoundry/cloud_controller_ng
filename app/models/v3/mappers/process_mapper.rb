@@ -3,20 +3,20 @@ module VCAP::CloudController
 
     def self.map_model_to_domain(model)
       AppProcess.new({
-        guid:                 model.values[:guid],
-        name:                 model.values[:name],
-        space_guid:           model.space && model.space.guid,
-        stack_guid:           model.stack && model.stack.guid,
-        disk_quota:           model.values[:disk_quota],
-        memory:               model.values[:memory],
-        instances:            model.values[:instances],
-        state:                model.values[:state],
-        command:              model.command,
-        buildpack:            model.values[:buildpack],
-        health_check_timeout: model.values[:health_check_timeout],
-        docker_image:         model.values[:docker_image],
-        environment_json:     model.environment_json,
-        type:                 model.type
+        'guid'                 => model.values[:guid],
+        'name'                 => model.values[:name],
+        'space_guid'           => model.space && model.space.guid,
+        'stack_guid'           => model.stack && model.stack.guid,
+        'disk_quota'           => model.values[:disk_quota],
+        'memory'               => model.values[:memory],
+        'instances'            => model.values[:instances],
+        'state'                => model.values[:state],
+        'command'              => model.command,
+        'buildpack'            => model.values[:buildpack],
+        'health_check_timeout' => model.values[:health_check_timeout],
+        'docker_image'         => model.values[:docker_image],
+        'environment_json'     => model.environment_json,
+        'type'                 => model.type
       })
     end
 

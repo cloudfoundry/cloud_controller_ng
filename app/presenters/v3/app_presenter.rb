@@ -1,12 +1,6 @@
 module VCAP::CloudController
   class AppPresenter
-    attr_reader :app
-
-    def initialize(app)
-      @app = app
-    end
-
-    def present_json
+    def present_json(app)
       app_hash = {
         guid: app.guid,
         name: app.name,

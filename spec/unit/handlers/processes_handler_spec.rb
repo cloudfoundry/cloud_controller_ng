@@ -41,7 +41,7 @@ module VCAP::CloudController
     context '#update' do
       context 'changing type to an invalid value' do
         it 'raises an InvalidProcess exception' do
-          update_opts = { type: 'worker' }
+          update_opts = { 'type' => 'worker' }
 
           process_model2 = AppFactory.make(space: space, type: 'worker')
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
       end
 
       it 'updates the process and creates an update audit event' do
-        update_opts = { name: 'my-process', type: 'web' }
+        update_opts = { 'name' => 'my-process', 'type' => 'web' }
 
         updated_process = process.with_changes(update_opts)
 
@@ -88,7 +88,7 @@ module VCAP::CloudController
 
     context '#create' do
       it 'saves an event when creating a process' do
-        creation_opts = { space_guid: space.guid, name: 'my-process' }
+        creation_opts = { 'space_guid' => space.guid, 'name' => 'my-process' }
 
         ac = double(:ac, cannot?: false, user: User.make, user_email: 'jim@jim.com')
         process = AppProcess.new(creation_opts)
@@ -103,7 +103,7 @@ module VCAP::CloudController
 
         expect(process_repo).to have_received(:new_process) do |opts|
           expect(opts).to match(hash_including(create_message.opts))
-          expect(opts[:guid]).to match(/^[a-z0-9\-]+$/)
+          expect(opts['guid']).to match(/^[a-z0-9\-]+$/)
         end
         expect(process_repo).to have_received(:create!).with(process)
         expect(process_event_repo).to have_received(:record_app_create).

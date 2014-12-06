@@ -5,17 +5,13 @@ module VCAP::CloudController
   describe ProcessesController do
     let(:logger) { instance_double(Steno::Logger) }
     let(:processes_handler) { instance_double(ProcessesHandler) }
+    let(:process_presenter) { double(:process_presenter) }
     let(:process_model) { AppFactory.make(app_guid: app_model.guid) }
     let(:app_model) { AppModel.make }
     let(:process) { ProcessMapper.map_model_to_domain(process_model) }
     let(:guid) { process.guid }
     let(:req_body) {''}
-    let(:expected_response) do
-        {
-          'guid' => process.guid,
-          'type' => process.type,
-        }
-    end
+    let(:expected_response) { 'process_response_body' }
 
     let(:process_controller) do
         ProcessesController.new(
@@ -25,12 +21,16 @@ module VCAP::CloudController
           {},
           req_body,
           nil,
-          { :processes_handler => processes_handler },
+          {
+            processes_handler: processes_handler,
+            process_presenter: process_presenter
+          },
         )
     end
 
     before do
       allow(logger).to receive(:debug)
+      allow(process_presenter).to receive(:present_json).and_return(expected_response)
     end
 
     describe '#show' do
@@ -59,11 +59,9 @@ module VCAP::CloudController
         expect(response_code).to eq(HTTP::OK)
       end
 
-      it 'returns the process information in JSON format' do
-        _, json_body = process_controller.show(guid)
-        response_hash = MultiJson.load(json_body)
-
-        expect(response_hash).to match(expected_response)
+      it 'returns the process information' do
+        _, response = process_controller.show(guid)
+        expect(response).to eq(expected_response)
       end
     end
 
@@ -132,11 +130,9 @@ module VCAP::CloudController
           expect(response_code).to eq(HTTP::CREATED)
         end
 
-        it 'returns the process information in JSON format' do
-          _, json_body = process_controller.create
-          response_hash = MultiJson.load(json_body)
-
-          expect(response_hash).to match(expected_response)
+        it 'returns the process information' do
+          _, response = process_controller.create
+          expect(response).to eq(expected_response)
         end
       end
     end
@@ -162,11 +158,9 @@ module VCAP::CloudController
         expect(response_code).to eq(HTTP::OK)
       end
 
-      it 'returns the process information in JSON format' do
-        _, json_body = process_controller.update(guid)
-        response_hash = MultiJson.load(json_body)
-
-        expect(response_hash).to match(expected_response)
+      it 'returns the process information' do
+        _, response = process_controller.update(guid)
+        expect(response).to eq(expected_response)
       end
 
       context 'when the user cannot update to the desired state' do

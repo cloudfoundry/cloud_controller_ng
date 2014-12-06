@@ -32,20 +32,20 @@ module VCAP::CloudController
 
       let(:valid_opts) do
         {
-          guid:                 '1-2-3',
-          name:                 'some-name',
-          space_guid:           space.guid,
-          stack_guid:           stack.guid,
-          disk_quota:           32,
-          memory:               456,
-          instances:            51,
-          state:                'STARTED',
-          command:              'start-command',
-          buildpack:            'buildpack',
-          health_check_timeout: 3,
-          docker_image:         'docker_image',
-          environment_json:     'env_json',
-          type:                 'worker'
+          'guid'                 => '1-2-3',
+          'name'                 => 'some-name',
+          'space_guid'           => space.guid,
+          'stack_guid'           => stack.guid,
+          'disk_quota'           => 32,
+          'memory'               => 456,
+          'instances'            => 51,
+          'state'                => 'STARTED',
+          'command'              => 'start-command',
+          'buildpack'            => 'buildpack',
+          'health_check_timeout' => 3,
+          'docker_image'         => 'docker_image',
+          'environment_json'     => 'env_json',
+          'type'                 => 'worker'
         }
       end
       let(:custom_opts) { {} }
@@ -72,7 +72,7 @@ module VCAP::CloudController
       end
 
       context 'and some values are nil' do
-        let(:custom_opts) { { guid: nil, instances: nil } }
+        let(:custom_opts) { { 'guid' => nil, 'instances' => nil } }
 
         it 'does not map them' do
           model = ProcessMapper.map_domain_to_new_model(process)
@@ -101,20 +101,20 @@ module VCAP::CloudController
 
       let(:valid_opts) do
         {
-          guid:                 app.guid,
-          name:                 'some-name',
-          space_guid:           space.guid,
-          stack_guid:           stack.guid,
-          disk_quota:           32,
-          memory:               456,
-          instances:            51,
-          state:                'STARTED',
-          command:              'start-command',
-          buildpack:            'buildpack',
-          health_check_timeout: 3,
-          docker_image:         'docker_image',
-          environment_json:     'env_json',
-          type:                 'worker'
+          'guid'                 => app.guid,
+          'name'                 => 'some-name',
+          'space_guid'           => space.guid,
+          'stack_guid'           => stack.guid,
+          'disk_quota'           => 32,
+          'memory'               => 456,
+          'instances'            => 51,
+          'state'                => 'STARTED',
+          'command'              => 'start-command',
+          'buildpack'            => 'buildpack',
+          'health_check_timeout' => 3,
+          'docker_image'         => 'docker_image',
+          'environment_json'     => 'env_json',
+          'type'                 => 'worker'
         }
       end
       let(:process) { AppProcess.new(valid_opts) }

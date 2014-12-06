@@ -1,164 +1,117 @@
 require 'presenters/v3/app_presenter'
-require 'repositories/process_repository'
-require 'repositories/app_repository'
 require 'handlers/processes_handler'
+require 'handlers/apps_handler'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
     def self.dependencies
-      [ :app_repository, :process_repository ]
+      [ :processes_handler, :process_presenter, :apps_handler, :app_presenter ]
     end
 
     def inject_dependencies(dependencies)
-      @process_repository = dependencies[:process_repository]
-      @app_repository =  dependencies[:app_repository]
+      @process_handler = dependencies[:processes_handler]
+      @app_handler = dependencies[:apps_handler]
+      @app_presenter = dependencies[:app_presenter]
+      @process_presenter = dependencies[:process_presenter]
     end
 
     get '/v3/apps/:guid', :show
     def show(guid)
-      app = @app_repository.find_by_guid(guid)
+      app = @app_handler.show(guid, @access_context)
+      app_not_found! if app.nil?
 
-      if app.nil? || @access_context.cannot?(:read, app)
-        app_not_found!
-      end
-
-      presenter = AppPresenter.new(app)
-      [HTTP::OK, presenter.present_json]
-    end
-
-    get '/v3/apps/:guid/processes', :list_processes
-    def list_processes(guid)
-      app = @app_repository.find_by_guid(guid)
-
-      if app.nil? || @access_context.cannot?(:read, app)
-        app_not_found!
-      end
-
-      response_body = []
-      app.processes.each do |process|
-        response_body << MultiJson.load(ProcessPresenter.new(process).present_json)
-      end
-      [HTTP::OK, MultiJson.dump(response_body)]
+      [HTTP::OK, @app_presenter.present_json(app)]
     end
 
     post '/v3/apps', :create
     def create
-      creation_opts = MultiJson.load(body).symbolize_keys
-      app = @app_repository.new_app(creation_opts)
+      message = AppCreateMessage.create_from_http_request(body)
+      bad_request!(message.error) if message.error
 
-      if @access_context.cannot?(:create, app)
-        raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
-      end
+      app = @app_handler.create(message, @access_context)
 
-      app = @app_repository.create!(app)
-
-      presenter = AppPresenter.new(app)
-      [HTTP::CREATED, presenter.present_json]
-    rescue MultiJson::ParseError => e
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
+      [HTTP::CREATED, @app_presenter.present_json(app)]
+    rescue AppsHandler::Unauthorized
+      unauthorized!
     end
 
     patch '/v3/apps/:guid', :update
     def update(guid)
-      update_opts = MultiJson.load(body).symbolize_keys
+      message = AppUpdateMessage.create_from_http_request(guid, body)
+      bad_request!(message.error) if message.error
 
-      presenter = nil
-      @app_repository.find_by_guid_for_update(guid) do |app|
-        app_not_found! if app.nil?
+      app = @app_handler.update(message, @access_context)
+      app_not_found! if app.nil?
 
-        if @access_context.cannot?(:update, app)
-          raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
-        end
-
-        desired_app = AppV3.new({
-          guid: app.guid,
-          name: update_opts[:name].nil? ? app.name : update_opts[:name],
-        })
-
-        updated_app = @app_repository.update!(desired_app)
-
-        presenter = AppPresenter.new(updated_app)
-      end
-
-      [HTTP::OK, presenter.present_json]
-    rescue MultiJson::ParseError => e
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
-    rescue AppRepository::InvalidApp => e
-      unprocessable!(e.message)
-    end
-
-    put '/v3/apps/:guid/processes', :add_process
-    def add_process(guid)
-      opts = MultiJson.load(body).symbolize_keys
-
-      @app_repository.find_by_guid_for_update(guid) do |app|
-        validate_app_for_update(app)
-
-        @process_repository.find_by_guid_for_update(opts[:process_guid]) do |process|
-          process_not_found! if process.nil?
-
-          check_duplicate_type_names(app, opts[:type])
-
-          @app_repository.add_process!(app, process)
-        end
-      end
-
-      [HTTP::OK, {}]
-    rescue MultiJson::ParseError => e
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
-    rescue AppRepository::InvalidProcessAssociation => e
-      process_not_found!
-    end
-
-    delete '/v3/apps/:guid/processes', :remove_process
-    def remove_process(guid)
-      opts = MultiJson.load(body).symbolize_keys
-
-      @app_repository.find_by_guid_for_update(guid) do |app|
-        validate_app_for_update(app)
-
-        @process_repository.find_by_guid_for_update(opts[:process_guid]) do |process|
-          @app_repository.remove_process!(app, process)
-        end
-      end
-
-      [HTTP::NO_CONTENT, {}]
-    rescue MultiJson::ParseError => e
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
-    rescue AppRepository::InvalidProcessAssociation => e
-      process_not_found!
+      [HTTP::OK, @app_presenter.present_json(app)]
+    rescue AppsHandler::Unauthorized
+      unauthorized!
     end
 
     delete '/v3/apps/:guid', :delete
     def delete(guid)
-      @app_repository.find_by_guid_for_update(guid) do |app|
-        if app.nil? || @access_context.cannot?(:delete, app)
-          app_not_found!
-        end
+      deleted = @app_handler.delete(guid, @access_context)
+      app_not_found! unless deleted
 
-        if app.processes.any?
-          raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', 'App deletion', 'Has child processes')
-        end
-
-        @app_repository.delete(app)
-      end
       [HTTP::NO_CONTENT]
+    rescue AppsHandler::DeleteWithProcesses
+      raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', 'App deletion', 'Has child processes')
+    end
+
+    ###
+    ### Processes
+    ###
+
+    get '/v3/apps/:guid/processes', :list_processes
+    def list_processes(guid)
+      app = @app_handler.show(guid, @access_context)
+      app_not_found! if app.nil?
+
+      [HTTP::OK, @process_presenter.present_json_list(app.processes)]
+    end
+
+    put '/v3/apps/:guid/processes', :add_process
+    def add_process(guid)
+      opts = MultiJson.load(body)
+
+      app = @app_handler.show(guid, @access_context)
+      app_not_found! if app.nil?
+
+      process = @process_handler.show(opts['process_guid'], @access_context)
+      process_not_found! if process.nil?
+
+      @app_handler.add_process(app, process, @access_context)
+
+      [HTTP::NO_CONTENT]
+    rescue MultiJson::ParseError => e
+      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
+    rescue AppsHandler::DuplicateProcessType
+      invalid_process_type!(process.type)
+    rescue AppsHandler::Unauthorized
+      app_not_found!
+    end
+
+    delete '/v3/apps/:guid/processes', :remove_process
+    def remove_process(guid)
+      opts = MultiJson.load(body)
+
+      app = @app_handler.show(guid, @access_context)
+      app_not_found! if app.nil?
+
+      process = @process_handler.show(opts['process_guid'], @access_context)
+      process_not_found! if process.nil?
+
+      @app_handler.remove_process(app, process, @access_context)
+
+      [HTTP::NO_CONTENT]
+    rescue MultiJson::ParseError => e
+      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
+    rescue AppsHandler::Unauthorized
+      app_not_found!
     end
   end
 
   private
-
-  def check_duplicate_type_names(app, type)
-    app.processes.each do |associated_process|
-      invalid_process_type!(type) if associated_process.type == type
-    end
-  end
-
-  def validate_app_for_update(app)
-    if app.nil? || @access_context.cannot?(:update, app)
-      app_not_found!
-    end
-  end
 
   def app_not_found!
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
@@ -172,7 +125,11 @@ module VCAP::CloudController
     raise VCAP::Errors::ApiError.new_from_details('ProcessInvalid', "Type '#{type}' is already in use")
   end
 
-  def unprocessable!(message)
-    raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+  def bad_request!(message)
+    raise VCAP::Errors::ApiError.new_from_details('MessageParseError', message)
+  end
+
+  def unauthorized!
+    raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
   end
 end

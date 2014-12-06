@@ -166,6 +166,18 @@ module CloudController
       ProcessesHandler.new(process_repository, app_event_repository)
     end
 
+    def process_presenter
+      ProcessPresenter.new
+    end
+
+    def apps_handler
+      AppsHandler.new
+    end
+
+    def app_presenter
+      AppPresenter.new
+    end
+
     def object_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new

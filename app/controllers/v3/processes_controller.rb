@@ -5,10 +5,11 @@ module VCAP::CloudController
   # TODO: would be nice not needing to use this BaseController
   class ProcessesController < RestController::BaseController
     def self.dependencies
-      [ :process_repository, :processes_handler ]
+      [ :process_repository, :processes_handler, :process_presenter ]
     end
     def inject_dependencies(dependencies)
       @processes_handler = dependencies[:processes_handler]
+      @process_presenter = dependencies[:process_presenter]
     end
 
     get '/v3/processes/:guid', :show
@@ -16,8 +17,7 @@ module VCAP::CloudController
       process = @processes_handler.show(guid, @access_context)
       not_found! if process.nil?
 
-      process_presenter = ProcessPresenter.new(process)
-      [HTTP::OK, process_presenter.present_json]
+      [HTTP::OK, @process_presenter.present_json(process)]
     end
 
     post '/v3/processes', :create
@@ -27,8 +27,7 @@ module VCAP::CloudController
 
       process = @processes_handler.create(create_message, @access_context)
 
-      process_presenter = ProcessPresenter.new(process)
-      [HTTP::CREATED, process_presenter.present_json]
+      [HTTP::CREATED, @process_presenter.present_json(process)]
 
     rescue ProcessesHandler::InvalidProcess => e
       unprocessable!(e.message)
@@ -47,8 +46,7 @@ module VCAP::CloudController
       process = @processes_handler.update(update_message, @access_context)
       not_found! if process.nil?
 
-      process_presenter = ProcessPresenter.new(process)
-      [HTTP::OK, process_presenter.present_json]
+      [HTTP::OK, @process_presenter.present_json(process)]
     rescue ProcessesHandler::InvalidProcess => e
       unprocessable!(e.message)
     rescue ProcessesHandler::Unauthorized

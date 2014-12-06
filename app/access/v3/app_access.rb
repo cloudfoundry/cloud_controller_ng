@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class AppV3Access
+  class AppModelAccess
     include Allowy::AccessControl
 
     def read?(app)

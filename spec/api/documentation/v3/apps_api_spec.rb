@@ -166,7 +166,7 @@ resource 'Apps (Experimental)', type: :api do
           do_request_with_error_handling
         }.not_to change{ VCAP::CloudController::App.count }
 
-        expect(response_status).to eq(200)
+        expect(response_status).to eq(204)
         expect(app_model.reload.processes.first).to eq(process.reload)
       end
     end

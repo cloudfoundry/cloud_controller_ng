@@ -53,7 +53,7 @@ module VCAP::CloudController
         # rather than 3-4.
         App.for_update.where(guid: guid).first
         process_model = App.where(apps__guid: guid).
-          eager_graph(:stack, :app => :processes, :space => :organization).all.first
+          eager_graph(:stack, :space => :organization).all.first
 
         yield nil, nil, [] and return if process_model.nil?
 
