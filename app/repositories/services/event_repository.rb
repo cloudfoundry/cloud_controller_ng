@@ -8,6 +8,23 @@ module VCAP::CloudController
           @current_user_email = security_context.current_user_email
         end
 
+        def create_service_plan_visibility_event(type, visibility)
+          actee = {
+            actee: visibility.guid,
+            actee_type: 'service_plan_visibility',
+            actee_name: ''
+          }
+          metadata = {
+            service_plan_guid: visibility.service_plan_guid
+          }
+          space_data = {
+            space_guid: '',
+            organization_guid: visibility.organization_guid
+          }
+
+          create_event(type, user_actor, actee, metadata, space_data)
+        end
+
         def record_broker_event(type, broker, params)
           metadata = metadata_for_broker_params(params)
           actee = {
@@ -65,7 +82,8 @@ module VCAP::CloudController
             actee_type: 'service_instance',
             actee_name: service_instance.name,
           }
-          create_event("audit.service_instance.#{type}", user_actor, actee, { request: params }, service_instance.space)
+          space_data = {space: service_instance.space}
+          create_event("audit.service_instance.#{type}", user_actor, actee, { request: params }, space_data)
         end
 
         def record_service_binding_event(type, service_binding, params=nil)
@@ -81,7 +99,8 @@ module VCAP::CloudController
             actee_type: 'service_binding',
             actee_name: 'N/A',
           }
-          create_event("audit.service_binding.#{type}", user_actor, actee, metadata, service_binding.space)
+          space_data = {space: service_binding.space}
+          create_event("audit.service_binding.#{type}", user_actor, actee, metadata, space_data)
         end
 
         def with_service_event(service, &saveBlock)
@@ -178,16 +197,14 @@ module VCAP::CloudController
           }
         end
 
-        def create_event(type, actor_data, actee_data, metadata, space=nil)
+        def create_event(type, actor_data, actee_data, metadata, space_data=nil)
           base_data = {
             type: type,
             timestamp: Time.now,
             metadata: metadata
           }
 
-          if space
-            space_data = { space: space }
-          else
+          unless space_data
             space_data = {
               space_guid: '',
               organization_guid: ''

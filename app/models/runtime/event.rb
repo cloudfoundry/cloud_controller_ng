@@ -11,7 +11,7 @@ module VCAP::CloudController
       validates_presence :actor_type
       validates_presence :actee
       validates_presence :actee_type
-      validates_presence :actee_name
+      validates_not_null :actee_name
     end
 
     serialize_attributes :json, :metadata

@@ -11,6 +11,19 @@ RSpec::Matchers.define :validate_presence do |attribute, options = {}|
   end
 end
 
+RSpec::Matchers.define :validate_not_null do |attribute, options = {}|
+  description do
+    "validate #{attribute} is not null"
+  end
+  match do |instance|
+    unless instance.valid?
+      errors = instance.errors.on(attribute)
+      expected_error = options[:message] || :not_null
+      errors && errors.include?(expected_error)
+    end
+  end
+end
+
 RSpec::Matchers.define :validate_db_presence do |attribute|
   description do
     "validate db presence of #{attribute}"

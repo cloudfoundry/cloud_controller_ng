@@ -30,7 +30,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :actor_type }
       it { is_expected.to validate_presence :actee }
       it { is_expected.to validate_presence :actee_type }
-      it { is_expected.to validate_presence :actee_name }
+      it { is_expected.to validate_not_null :actee_name }
     end
 
     describe "Serialization" do
