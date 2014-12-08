@@ -5,6 +5,14 @@ module VCAP::CloudController
         job.perform
         event_repository.send(event_creation_method, event_type, model, params)
       end
+
+      def job_name_in_configuration
+        :audut_event_job
+      end
+
+      def max_attempts
+        1
+      end
     end
   end
 end

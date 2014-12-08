@@ -287,6 +287,7 @@ module VCAP::CloudController
 
   AppUsageEvent.blueprint do
     state { "STARTED" }
+    package_state { "STAGED" }
     instance_count { 1 }
     memory_in_mb_per_instance { 564 }
     app_guid { Sham.guid }

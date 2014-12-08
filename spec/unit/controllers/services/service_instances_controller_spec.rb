@@ -227,6 +227,7 @@ module VCAP::CloudController
           expect(event.actee_type).to eq('service_instance')
           expect(event.actee_name).to eq(instance.name)
           expect(event.space_guid).to eq(instance.space.guid)
+          expect(event.space_id).to eq(instance.space.id)
           expect(event.organization_guid).to eq(instance.space.organization.guid)
           expect(event.metadata).to include({
             'request' => {
@@ -521,6 +522,7 @@ module VCAP::CloudController
           expect(event.actee_type).to eq('service_instance')
           expect(event.actee_name).to eq(service_instance.name)
           expect(event.space_guid).to eq(service_instance.space.guid)
+          expect(event.space_id).to eq(service_instance.space.id)
           expect(event.organization_guid).to eq(service_instance.space.organization.guid)
           expect(event.metadata).to include({
             'request' => {
@@ -704,6 +706,7 @@ module VCAP::CloudController
           expect(event.actee_type).to eq('service_instance')
           expect(event.actee_name).to eq(service_instance.name)
           expect(event.space_guid).to eq(service_instance.space.guid)
+          expect(event.space_id).to eq(service_instance.space.id)
           expect(event.organization_guid).to eq(service_instance.space.organization.guid)
           expect(event.metadata).to eq({'request' => {}})
         end

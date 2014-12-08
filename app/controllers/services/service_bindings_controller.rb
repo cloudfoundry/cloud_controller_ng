@@ -39,20 +39,20 @@ module VCAP::CloudController
       validate_service_instance(instance_guid)
       validate_app(app_guid)
 
-      binding = ServiceBinding.new(@request_attrs)
-      validate_access(:create, binding)
+      service_binding = ServiceBinding.new(@request_attrs)
+      validate_access(:create, service_binding)
 
-      if binding.valid?
-        binding.bind!
+      if service_binding.valid?
+        service_binding.bind!
       else
-        raise Sequel::ValidationFailed.new(binding)
+        raise Sequel::ValidationFailed.new(service_binding)
       end
 
-      @services_event_repository.create_service_binding_event('audit.service_binding.create', binding)
+      @services_event_repository.create_service_binding_event('audit.service_binding.create', service_binding)
 
       [ HTTP::CREATED,
-        { "Location" => "#{self.class.path}/#{binding.guid}" },
-        object_renderer.render_json(self.class, binding, @opts)
+        { "Location" => "#{self.class.path}/#{service_binding.guid}" },
+        object_renderer.render_json(self.class, service_binding, @opts)
       ]
     end
 

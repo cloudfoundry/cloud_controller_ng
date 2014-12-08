@@ -118,13 +118,17 @@ module VCAP::CloudController
       end
 
       trap('USR1') do
-        logger.warn("Collecting diagnostics")
-        collect_diagnostics
+        EM.add_timer(0) do
+          logger.warn("Collecting diagnostics")
+          collect_diagnostics
+        end
       end
 
       trap('USR2') do
-        logger.warn("Caught signal USR2")
-        stop_router_registrar
+        EM.add_timer(0) do
+          logger.warn("Caught signal USR2")
+          stop_router_registrar
+        end
       end
     end
 

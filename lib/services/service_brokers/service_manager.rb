@@ -107,7 +107,7 @@ module VCAP::Services::ServiceBrokers
       plans_in_db_not_in_catalog.each do |plan_to_deactivate|
         if plan_to_deactivate.service_instances.count < 1
           plan_to_deactivate.destroy
-          @services_event_repository.create_delete_service_plan_event(plan_to_deactivate)
+          @services_event_repository.create_service_plan_event('audit.service_plan.delete', plan_to_deactivate)
         end
       end
     end
@@ -117,7 +117,7 @@ module VCAP::Services::ServiceBrokers
       services_in_db_not_in_catalog.each do |service|
         if service.service_plans.count < 1
           service.destroy
-          @services_event_repository.create_delete_service_event(service)
+          @services_event_repository.create_service_event('audit.service.delete', service)
         end
       end
     end

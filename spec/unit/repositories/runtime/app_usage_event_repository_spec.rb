@@ -44,6 +44,39 @@ module VCAP::CloudController
           end
         end
 
+        context "when the app is created" do
+          before do
+            app.package_state = package_state
+          end
+
+          context "when the package is pending" do
+            let(:package_state) { "PENDING" }
+
+            it "will create an event with pending package state" do
+              event = repository.create_from_app(app)
+              expect(event).to match_app(app)
+            end
+          end
+
+          context "when the package is staged" do
+            let(:package_state) { "STAGED" }
+
+            it "will create an event with staged package state" do
+              event = repository.create_from_app(app)
+              expect(event).to match_app(app)
+            end
+          end
+
+          context "when the package is failed" do
+            let(:package_state) { "FAILED" }
+
+            it "will create an event with failed package state" do
+              event = repository.create_from_app(app)
+              expect(event).to match_app(app)
+            end
+          end
+        end
+
         context "when an admin buildpack is associated with the app" do
           let(:buildpack) { Buildpack.make }
           before do

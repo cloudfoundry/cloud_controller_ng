@@ -2,10 +2,11 @@ module VCAP::Services::ServiceBrokers
   class ServiceBrokerRegistration
     attr_reader :broker, :warnings
 
-    def initialize(broker, service_manager)
+    def initialize(broker, service_manager, services_event_repository)
       @broker = broker
       @service_manager = service_manager
       @warnings = []
+      @services_event_repository = services_event_repository
     end
 
     def create
@@ -67,7 +68,7 @@ module VCAP::Services::ServiceBrokers
     end
 
     def client_manager
-      @client_manager ||= VCAP::Services::SSO::DashboardClientManager.new(broker)
+      @client_manager ||= VCAP::Services::SSO::DashboardClientManager.new(broker, @services_event_repository)
     end
 
     def catalog

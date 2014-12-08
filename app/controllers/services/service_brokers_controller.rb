@@ -31,7 +31,7 @@ module VCAP::CloudController
       params = CreateMessage.decode(body).extract
       broker = ServiceBroker.new(params)
 
-      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager)
+      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager, @services_event_repository)
 
       unless registration.create
         raise get_exception_from_errors(registration)
@@ -55,7 +55,7 @@ module VCAP::CloudController
       return HTTP::NOT_FOUND unless broker
 
       broker.set(params)
-      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager)
+      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager, @services_event_repository)
 
       unless registration.update
         raise get_exception_from_errors(registration)
@@ -76,7 +76,7 @@ module VCAP::CloudController
       broker = ServiceBroker.find(:guid => guid)
       return HTTP::NOT_FOUND unless broker
 
-      VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker).execute!
+      VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker, @services_event_repository).execute!
       @services_event_repository.create_broker_event('audit.service_broker.delete', broker, {})
 
       HTTP::NO_CONTENT

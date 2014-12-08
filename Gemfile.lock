@@ -10,9 +10,9 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/cf-registrar.git
-  revision: 49850ee876652a59dbd2d73dad726b3b808bb8f9
+  revision: e586e0c16bbb5cc8e8960b2c1940e82ed8d4e623
   specs:
-    cf-registrar (1.0.1)
+    cf-registrar (1.0.2)
       cf-message-bus
       eventmachine (~> 1.0.0)
       steno
@@ -310,7 +310,7 @@ DEPENDENCIES
   awesome_print
   bcrypt
   cf-message-bus!
-  cf-registrar (~> 1.0.1)!
+  cf-registrar (~> 1.0.2)!
   cf-uaa-lib (~> 3.1.0)!
   clockwork
   cloudfront-signer
