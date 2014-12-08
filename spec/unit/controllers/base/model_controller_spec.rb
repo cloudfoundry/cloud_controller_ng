@@ -476,9 +476,9 @@ module VCAP::CloudController
         before do
           VCAP::Errors::Details::HARD_CODED_DETAILS["TestModelNotFound"] = {
             'code' => 999999999,
-            'http_code' => 404,
-            'message' => "Test Model Not Found",
+            'http_code' => 404
           }
+          I18n.backend.store_translations(:en_US, {TestModelNotFound: "Test Model Not Found"})
         end
 
         it "returns not found for reads" do
@@ -507,9 +507,9 @@ module VCAP::CloudController
         before do
           VCAP::Errors::Details::HARD_CODED_DETAILS["TestModelValidation"] = {
             'code' => 999999998,
-            'http_code' => 400,
-            'message' => "Validation Error",
+            'http_code' => 400
           }
+          I18n.backend.store_translations(:en_US, {TestModelValidation: "Validation Error"})
         end
 
         it "returns 400 error for missing attributes; returns a request-id and no location" do

@@ -42,7 +42,7 @@ module VCAP::CloudController
       plan = find_guid_and_validate_access(:delete, guid)
 
       if plan.service_instances.present?
-        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "service_instances", plan.class.table_name)
+        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", associations: "service_instances", model: plan.class.table_name)
       end
 
       plan.destroy

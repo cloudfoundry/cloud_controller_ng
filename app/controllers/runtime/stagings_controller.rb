@@ -35,7 +35,7 @@ module VCAP::CloudController
       blob = package_blobstore.blob(guid)
       unless blob
         logger.error "could not find package for #{guid}"
-        raise ApiError.new_from_details("AppPackageNotFound", guid)
+        raise ApiError.new_from_details("AppPackageNotFound", guid: guid)
       end
       @blob_sender.send_blob(app.guid, "AppPackage", blob, self)
     end
@@ -138,18 +138,18 @@ module VCAP::CloudController
     end
 
     def check_app_exists(app, guid)
-      raise ApiError.new_from_details("AppNotFound", guid) if app.nil?
+      raise ApiError.new_from_details("AppNotFound", guid: guid) if app.nil?
     end
 
     def check_file_was_uploaded(app)
-      raise ApiError.new_from_details("StagingError", "malformed droplet upload request for #{app.guid}") unless upload_path
+      raise ApiError.new_from_details("StagingError.malformed_droplet", guid: app.guid) unless upload_path
     end
 
     def check_file_md5
       file_md5 = Digest::MD5.base64digest(File.read(upload_path))
       header_md5 = env["HTTP_CONTENT_MD5"]
       if header_md5.present? && file_md5 != header_md5
-        raise ApiError.new_from_details("StagingError", "content md5 did not match")
+        raise ApiError.new_from_details("StagingError.md5_mismatch")
       end
     end
   end

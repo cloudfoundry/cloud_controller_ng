@@ -54,6 +54,7 @@ RSpec.configure do |rspec_config|
   rspec_config.include IntegrationSetup, type: :integration
 
   rspec_config.before(:all) { WebMock.disable_net_connect!(:allow => "codeclimate.com") }
+  rspec_config.before(:all) { VCAP::Errors::ApiError.setup_i18n(Dir[File.expand_path("../../vendor/errors/i18n/*.yml", __FILE__)], :en_US) }
   rspec_config.before(:all, type: :integration) { WebMock.allow_net_connect! }
   rspec_config.after(:all, type: :integration) { WebMock.disable_net_connect!(:allow => "codeclimate.com") }
 
@@ -68,8 +69,6 @@ RSpec.configure do |rspec_config|
 
     stub_v1_broker
     VCAP::CloudController::SecurityContext.clear
-
-    I18nHelper.set_i18n_env
   end
 
   rspec_config.around :each do |example|
@@ -82,8 +81,6 @@ RSpec.configure do |rspec_config|
       raise "Sequel Deprecation String found: #{Sequel::Deprecation.output.string}"
     end
     Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
-
-    I18nHelper.clear_i18n_env
   end
 
   rspec_config.after :all do

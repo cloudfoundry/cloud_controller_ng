@@ -1,8 +1,8 @@
 ---
 en_US:
-  MessageTranslated: "This is a translated message of %s %s."
-  MessagePartialTranslated: "This is a translated message of %s %s only in default locale"
-  AppInvalid:
-    invalid_instance_number: "The app is invalid: Number of instances less than 1"
-    invalid_app_state: "Invalid app state provided"
-    default: "The app is invalid: %s"
+  TranslatedMessage: "This is a translated message of %{arg1} %{arg2}."
+  OnlyInDefaultLocale: "This is a translated message of %{arg1} %{arg2} only in default locale"
+  MessageWithNestedTranslations:
+    default: "Default message: %{arg1}"
+    nested_message_1: "Nested message 1: %{arg1}"
+    nested_message_2: "Nested message 2: %{arg1}"

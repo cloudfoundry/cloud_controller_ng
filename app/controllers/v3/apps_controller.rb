@@ -108,7 +108,7 @@ module VCAP::CloudController
         end
 
         if app.processes.any?
-          raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', 'App deletion', 'Has child processes')
+          raise VCAP::Errors::ApiError.new_from_details('UnableToPerform.app_deletion_due_to_child_processes')
         end
 
         @app_repository.delete(app)
@@ -132,14 +132,14 @@ module VCAP::CloudController
   end
 
   def app_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound.app')
   end
 
   def process_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
+    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound.process')
   end
 
   def invalid_process_type!(type)
-    raise VCAP::Errors::ApiError.new_from_details('ProcessInvalid', "Type '#{type}' is already in use")
+    raise VCAP::Errors::ApiError.new_from_details('ProcessInvalid.type_in_use', type: type)
   end
 end

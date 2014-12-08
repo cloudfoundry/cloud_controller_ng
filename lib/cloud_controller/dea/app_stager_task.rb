@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       def stage(&completion_callback)
         @stager_id = @stager_pool.find_stager(@app.stack.name, staging_task_memory_mb, staging_task_disk_mb)
-        raise Errors::ApiError.new_from_details("StagingError", "no available stagers") unless @stager_id
+        raise Errors::ApiError.new_from_details("StagingError.no_available_stagers") unless @stager_id
 
         subject = "staging.#{@stager_id}.start"
         @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
@@ -132,7 +132,8 @@ module VCAP::CloudController
 
         if type && message
           @app.mark_as_failed_to_stage(type)
-          raise Errors::ApiError.new_from_details(type, message)
+          type = "#{type}.generic" if type == "StagingError"
+          raise Errors::ApiError.new_from_details(type, string: message)
         end
       end
 
@@ -164,15 +165,15 @@ module VCAP::CloudController
         rescue Exception => e
           Loggregator.emit_error(@app.guid, "Exception checking staging status: #{e.message}")
           logger.error("Exception checking staging status: #{e.inspect}\n  #{e.backtrace.join("\n  ")}")
-          raise Errors::ApiError.new_from_details("StagingError", "failed to stage application: can't retrieve staging status")
+          raise Errors::ApiError.new_from_details("StagingError.can_not_retrieve_staging_status")
         end
 
         if @app.staging_task_id != task_id
-          raise Errors::ApiError.new_from_details("StagingError", "failed to stage application: another staging request was initiated")
+          raise Errors::ApiError.new_from_details("StagingError.another_staging_request_was_initiated")
         end
 
         if @app.staging_failed?
-          raise Errors::ApiError.new_from_details("StagingError", "failed to stage application: staging had already been marked as failed, this could mean that staging took too long")
+          raise Errors::ApiError.new_from_details("StagingError.failed_to_stage")
         end
       end
 

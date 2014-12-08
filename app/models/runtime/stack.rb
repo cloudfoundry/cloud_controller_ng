@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     def before_destroy
       if apps.present?
-        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "app", "stack")
+        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", associations: "app", model: "stack")
       end
     end
 

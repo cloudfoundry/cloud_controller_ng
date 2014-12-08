@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     def before_destroy
       if organizations.present?
-        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "organization", "quota definition")
+        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", associations: "organization", model: "quota definition")
       end
     end
 

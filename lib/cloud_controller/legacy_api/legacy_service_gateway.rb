@@ -101,7 +101,7 @@ module VCAP::CloudController
       (label, version) = label_and_version.split("-")
 
       service = Service[:label => label, :provider => provider]
-      raise ApiError.new_from_details("ServiceNotFound", "label=#{label} provider=#{provider}") unless service
+      raise ApiError.new_from_details("ServiceNotFound", guid: "label=#{label} provider=#{provider}") unless service
       validate_access(label, provider)
       logger.debug("Listing handles for service: #{service.inspect}")
 
@@ -207,7 +207,7 @@ module VCAP::CloudController
       req = VCAP::Services::Api::HandleUpdateRequest.decode(body)
 
       service = Service[:label => label, :provider => provider]
-      raise ApiError.new_from_details("ServiceNotFound", "label=#{label} provider=#{provider}") unless service
+      raise ApiError.new_from_details("ServiceNotFound", guid: "label=#{label} provider=#{provider}") unless service
 
 
       plans_ds = service.service_plans_dataset
@@ -230,7 +230,7 @@ module VCAP::CloudController
         )
         binding.save_changes
       else
-        raise ApiError.new_from_details("ServiceInstanceNotFound", "label=#{label} provider=#{provider} id=#{id}")
+        raise ApiError.new_from_details("ServiceInstanceNotFound", guid: "label=#{label} provider=#{provider} id=#{id}")
       end
     end
 

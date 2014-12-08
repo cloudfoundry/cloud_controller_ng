@@ -12,8 +12,8 @@ module VCAP::CloudController
       app = find_guid_and_validate_access(:read, guid)
 
       if app.staging_failed?
-        reason = app.staging_failed_reason || "StagingError"
-        raise VCAP::Errors::ApiError.new_from_details(reason, "cannot get instances since staging failed")
+        reason = app.staging_failed_reason || "StagingError.generic"
+        raise VCAP::Errors::ApiError.new_from_details(reason, string: "cannot get instances since staging failed")
       elsif app.pending?
         raise VCAP::Errors::ApiError.new_from_details("NotStaged")
       end

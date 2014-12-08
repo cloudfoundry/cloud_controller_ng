@@ -3,7 +3,7 @@ module CloudController
     class FingerprintsCollection
       def initialize(fingerprints)
         unless fingerprints.kind_of?(Array)
-          raise VCAP::Errors::ApiError.new_from_details("AppBitsUploadInvalid", "invalid :resources")
+          raise VCAP::Errors::ApiError.new_from_details("AppBitsUploadInvalid.invalid_resources")
         end
 
         @fingerprints = fingerprints

@@ -255,7 +255,7 @@ module VCAP::CloudController::RestController
       end
 
       if associations.any?
-        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", associations.join(", "), obj.class.table_name)
+        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", associations: associations.join(", "), model: obj.class.table_name)
       end
     end
 
@@ -342,7 +342,7 @@ module VCAP::CloudController::RestController
       # @return [Exception] The vcap not-found exception for this
       # rest/api endpoint.
       def not_found_exception(guid)
-        Errors::ApiError.new_from_details(not_found_exception_name, guid)
+        Errors::ApiError.new_from_details(not_found_exception_name, guid: guid)
       end
 
       # Start the DSL for defining attributes.  This is used inside
