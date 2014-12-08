@@ -1,6 +1,165 @@
 ---
 en_US:
   AppInvalid:
+    default: "The app is invalid: %{string}"
     invalid_instance_number: "The app is invalid: Number of instances less than 1"
-    invalid_app_state: "Invalid app state provided"
-    default: "The app is invalid: %s"
+    invalid_app_state: Invalid app state provided
+  InvalidAuthToken: Invalid Auth Token
+  MessageParseError: "Request invalid due to parse error: %{string}"
+  InvalidRelation: "Invalid relation: %{string}"
+  NotFound: Unknown request
+  ServerError: Server error
+  NotAuthenticated: Authentication error
+  NotAuthorized: You are not authorized to perform the requested action
+  InvalidRequest: The request is invalid
+  BadQueryParameter: "The query parameter is invalid: %{string}"
+  AssociationNotEmpty: "Please delete the %{associations} associations for your %{model}."
+  InsufficientScope: Your token lacks the necessary scopes to access this resource.
+  UnprocessableEntity: "The request is semantically invalid: %{string}"
+  UnableToPerform:
+    app_deletion_due_to_child_processes: "App deletion could not be completed due to existing child processes"
+  ResourceNotFound:
+    app: App not found
+    process: Process not found
+  UserInvalid: "The user info is invalid: %{string}"
+  UaaIdTaken: "The UAA ID is taken: %{string}"
+  UserNotFound: "The user could not be found: %{guid}"
+  OrganizationInvalid: "The organization info is invalid: %{string}"
+  OrganizationNameTaken: "The organization name is taken: %{string}"
+  OrganizationNotFound: "The organization could not be found: %{guid}"
+  SpaceInvalid: "The app space info is invalid: %{string}"
+  SpaceNameTaken: "The app space name is taken: %{string}"
+  SpaceUserNotInOrg: "The app space and the user are not in the same org: %{string}"
+  SpaceNotFound: "The app space could not be found: %{guid}"
+  ServiceAuthTokenInvalid: "The service auth token is invalid: %{string}"
+  ServiceAuthTokenLabelTaken: "The service auth token label is taken: %{string}"
+  ServiceAuthTokenNotFound: "The service auth token could not be found: %{guid}"
+  MissingServiceAuthToken: "Missing service auth token: %{string}"
+  ServiceInstanceNameEmpty: Service instance name is required.
+  ServiceInstanceNameTaken: "The service instance name is taken: %{string}"
+  ServiceInstanceServiceBindingWrongSpace: "The service instance and the service binding are in different app spaces: %{string}"
+  ServiceInstanceInvalid: "The service instance is invalid: %{string}"
+  ServiceInstanceNotFound: "The service instance could not be found: %{guid}"
+  ServiceInstanceQuotaExceeded: You have exceeded your organization's services limit.
+  PreviouslyUsedAs_ServiceInstancePaidQuotaExceeded: You have exceeded your organization's services limit.
+  ServiceInstanceServicePlanNotAllowed: The service instance cannot be created because paid service plans are not allowed.
+  ServiceInstanceDuplicateNotAllowed: An instance of this service is already present in this space.  Some services only support one instance per space.
+  ServiceInstanceNameTooLong: You have requested an invalid service instance name.  Names are limited to 50 characters.
+  ServiceInstanceOrganizationNotAuthorized: A service instance for the selected plan cannot be created in this organization. The plan is visible because another organization you belong to has access to it.
+  ServiceInstanceDeprovisionFailed: "The service broker reported an error during deprovisioning: %{string}"
+  ServiceInstanceSpaceQuotaExceeded: You have exceeded your space's services limit.
+  ServiceInstanceServicePlanNotAllowedBySpaceQuota: The service instance cannot be created because paid service plans are not allowed for your space.
+  RuntimeInvalid: "The runtime is invalid: %{string}"
+  RuntimeNameTaken: "The runtime name is taken: %{string}"
+  RuntimeNotFound: "The runtime could not be found: %{guid}"
+  FrameworkInvalid: "The framework is invalid: %{string}"
+  FrameworkNameTaken: "The framework name is taken: %{string}"
+  FrameworkNotFound: "The framework could not be found: %{guid}"
+  ServiceBindingInvalid: "The service binding is invalid: %{string}"
+  ServiceBindingDifferentSpaces: "The app and the service are not in the same app space: %{string}"
+  ServiceBindingAppServiceTaken: "The app space binding to service is taken: %{string}"
+  ServiceBindingNotFound: "The service binding could not be found: %{guid}"
+  UnbindableService: The service doesn't support binding.
+  InvalidLoggingServiceBinding: The service is attempting to stream logs from your application, but is not registered as a logging service. Please contact the service provider.
+  AppNameTaken: "The app name is taken: %{string}"
+  AppNotFound: "The app name could not be found: %{guid}"
+  AppMemoryQuotaExceeded: You have exceeded your organization's memory limit.
+  AppMemoryInvalid: You have specified an invalid amount of memory for your application.
+  QuotaInstanceMemoryLimitExceeded: You have exceeded the instance memory limit for your organization's quota.
+  ServicePlanInvalid: "The service plan is invalid: %{string}"
+  ServicePlanNameTaken: "The service plan name is taken: %{string}"
+  ServicePlanNotFound: "The service plan could not be found: %{guid}"
+  ServicePlanNotUpdateable: The service does not support changing plans.
+  ServiceInvalid: "The service is invalid: %{string}"
+  ServiceLabelTaken: "The service label is taken: %{string}"
+  ServiceNotFound: "The service could not be found: %{guid}"
+  DomainInvalid: "The domain is invalid: %{string}"
+  DomainNotFound: "The domain could not be found: %{guid}"
+  DomainNameTaken: "The domain name is taken: %{string}"
+  LegacyApiWithoutDefaultSpace: A legacy api call requring a default app space was called, but no default app space is set for the user.
+  AppPackageInvalid: "The app package is invalid: %{string}"
+  AppPackageNotFound: "The app package could not be found: %{guid}"
+  InsufficientRunningResourcesAvailable: One or more instances could not be started because of insufficient running resources.
+  AppBitsUploadInvalid:
+    destination_does_not_exist: "The app upload is invalid: Destination does not exist"
+    invalid_resources: "The app upload is invalid: invalid :resources"
+    missing_resources: "The app upload is invalid: missing :resources"
+    relative_path_outside_root_folder: "The app upload is invalid: Relative path(s) outside of root folder"
+    symlink_point_outside_root_folder: "The app upload is invalid: Symlink(s) point outside of root folder"
+    unzipping_errors: "Unzipping had errors\n STDOUT: \"%{stdout}\"\n STDERR: \"%{stderr}\""
+  AppBitsCopyInvalid: "The app copy is invalid: %{string}"
+  StagingError:
+    generic: "Staging error: %{string}" # This needs to be broken down into multiple errors. See instance_controller.rb
+    another_staging_request_was_initiated: "Staging error: failed to stage application: another staging request was initiated"
+    can_not_retrieve_staging_status: "Staging error: failed to stage application: can't retrieve staging status"
+    failed_to_stage: "Staging error: failed to stage application: staging had already been marked as failed, this could mean that staging took too long"
+    malformed_droplet: "Staging error: malformed droplet upload request for %{guid}"
+    md5_mismatch: "Staging error: content md5 did not match"
+    no_available_stagers: "Staging error: no available stagers"
+  NotStaged: App has not finished staging
+  NoAppDetectedError: An app was not successfully detected by any available buildpack
+  BuildpackCompileFailed: App staging failed in the buildpack compile phase
+  BuildpackReleaseFailed: App staging failed in the buildpack release phase
+  NoBuildpacksFound: There are no buildpacks available
+  StagingTimeExpired: "Staging time expired: %{string}"
+  SnapshotNotFound: "Snapshot could not be found: %{guid}"
+  ServiceGatewayError: "Service gateway internal error: %{string}"
+  ServiceNotImplemented: Operation not supported for service
+  SDSNotAvailable: No serialization service backends available
+  FileError: "File error: %{string}"
+  StatsError: "Stats error: %{string}"
+  RouteInvalid: "The route is invalid: %{string}"
+  RouteNotFound: "The route could not be found: %{guid}"
+  RouteHostTaken: "The host is taken: %{string}"
+  InstancesError: "Instances error: %{string}"
+  InstancesUnavailable: "Instances information unavailable: %{string}"
+  BillingEventQueryInvalid: Billing event query start_date and/or end_date are missing or invalid
+  EventNotFound: "Event could not be found: %{guid}"
+  QuotaDefinitionNotFound: "Quota Definition could not be found: %{name}"
+  QuotaDefinitionNameTaken: "Quota Definition is taken: %{string}"
+  QuotaDefinitionInvalid: "Quota Definition is invalid: %{string}"
+  QuotaDefinitionMemoryLimitNegative: Quota Definition memory limit cannot be negative
+  StackInvalid: "The stack is invalid: %{string}"
+  StackNameTaken: "The stack name is taken: %{string}"
+  StackNotFound:
+    default: "The stack could not be found: %{guid}"
+    not_available: "The stack could not be found: The requested app stack #{stack} is not available on this system."
+  ServicePlanVisibilityInvalid: "Service Plan Visibility is invalid: %{string}"
+  ServicePlanVisibilityAlreadyExists: "This combination of ServicePlan and Organization is already taken: %{string}"
+  ServicePlanVisibilityNotFound: "The service plan visibility could not be found: %{guid}"
+  ServiceBrokerInvalid: "Service broker is invalid: %{string}"
+  ServiceBrokerNameTaken: The service broker name is taken
+  ServiceBrokerUrlTaken: "The service broker url is taken: %{string}"
+  ServiceBrokerNotFound: "The service broker was not found: %{guid}"
+  ServiceBrokerNotRemovable: Can not remove brokers that have associated service instances
+  ServiceBrokerUrlInvalid: "%{string} is not a valid URL"
+  ServiceBrokerCatalogInvalid: "Service broker catalog is invalid: %{string}"
+  ServiceBrokerDashboardClientFailure: "Service broker dashboard clients could not be modified: %{string}"
+  BuildpackNameTaken: "The buildpack name is already in use: %{string}"
+  BuildpackBitsUploadInvalid: "The buildpack upload is invalid: %{string}"
+  BuildpackInvalid: "Buildpack is invalid: %{string}"
+  CustomBuildpacksDisabled: Custom buildpacks are disabled
+  BuildpackLocked: The buildpack is locked
+  JobTimeout: The job execution has timed out.
+  SecurityGroupInvalid: "The security group is invalid: %{string}"
+  SecurityGroupNotFound: "The security group could not be found: %{guid}"
+  SecurityGroupStagingDefaultInvalid: "The security group could not be found: %{string}"
+  SecurityGroupRunningDefaultInvalid: "The security group could not be found: %{string}"
+  SecurityGroupNameTaken: "The security group name is taken: %{string}"
+  SpaceQuotaDefinitionInvalid: "Space Quota Definition is invalid: %{string}"
+  SpaceQuotaDefinitionNameTaken: "The space quota definition name is taken: %{string}"
+  SpaceQuotaMemoryLimitExceeded: You have exceeded your space's memory limit.
+  SpaceQuotaInstanceMemoryLimitExceeded: You have exceeded the instance memory limit for your space's quota.
+  SpaceQuotaTotalRoutesExceeded: You have exceeded the total routes for your space's quota.
+  OrgQuotaTotalRoutesExceeded: You have exceeded the total routes for your organization's quota.
+  SpaceQuotaDefinitionNotFound: "Space Quota Definition could not be found: %{guid}"
+  DiegoDisabled: Diego has not been enabled.
+  DiegoDockerBuildpackConflict: You cannot specify a custom buildpack and a docker image at the same time.
+  DockerDisabled: Docker support has not been enabled.
+  StagingBackendInvalid: The request staging completion endpoint only handles apps desired to stage on the Diego backend.
+  FeatureFlagNotFound: "The feature flag could not be found: %{guid}"
+  FeatureFlagInvalid: "The feature flag is invalid: %{string}"
+  FeatureDisabled: "Feature Disabled: %{string}"
+  UserProvidedServiceInstanceNotFound: "The service instance could not be found: %{guid}"
+  ProcessInvalid:
+    type_in_use: "The process is invalid: Type %{type} is already in use"

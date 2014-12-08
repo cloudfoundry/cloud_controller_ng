@@ -1,6 +1,6 @@
 ---
 zh_CN:
   AppInvalid:
+    default: "无效的应用程序：%{string}"
     invalid_instance_number: "无效的应用程序：应用程序实例数量小于1"
     invalid_app_state: "无效的应用程序：所设定的应用程序状态是无效的"
-    default: "无效的应用程序：%s"
