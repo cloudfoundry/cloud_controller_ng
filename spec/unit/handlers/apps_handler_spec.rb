@@ -4,7 +4,8 @@ require 'handlers/apps_handler'
 module VCAP::CloudController
   describe AppsHandler do
 
-    let(:apps_handler) { described_class.new }
+    let(:process_handler) { double(:process_handler) }
+    let(:apps_handler) { described_class.new(process_handler) }
     let(:access_context) { double(:access_context) }
 
     before do
@@ -126,6 +127,50 @@ module VCAP::CloudController
 
           updated_app = AppModel.find(guid: guid)
           expect(updated_app.name).to eq(app_model.name)
+        end
+
+        context 'when the app has a web process' do
+          let(:space) { Space.make }
+          let(:user) { User.make }
+          let(:process_opts) { {space: space} }
+          let(:process) { AppFactory.make(process_opts) }
+          let(:process_guid) { process.guid }
+
+          before do
+            allow(access_context).to receive(:user).and_return(user)
+            allow(access_context).to receive(:user_email).and_return("email")
+            apps_handler.add_process(app_model, process, access_context)
+
+            allow(process_handler).to receive(:update) do
+              process.name = new_name
+              process.save
+            end
+          end
+
+          it 'also updates the name of the web process' do
+            result = apps_handler.update(update_message, access_context)
+            expect(result.guid).to eq(guid)
+            expect(result.name).to eq(new_name)
+
+            updated_app = AppModel.find(guid: guid)
+            updated_process = App.find(guid: process_guid)
+
+            expect(updated_app.name).to eq(new_name)
+            expect(updated_process.name).to eq(new_name)
+          end
+
+          it 'does not update the app or process if the process raises an exception' do
+            allow(access_context).to receive(:cannot?).and_return(true).once
+            expect {
+              apps_handler.update(empty_update_message, access_context)
+            }.to raise_error
+
+            updated_app = AppModel.find(guid: guid)
+            updated_process = App.find(guid: process_guid)
+
+            expect(updated_app.name).to eq(app_model.name)
+            expect(updated_process.name).to eq(process.name)
+          end
         end
       end
 

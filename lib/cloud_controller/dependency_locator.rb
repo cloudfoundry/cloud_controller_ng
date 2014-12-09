@@ -171,7 +171,7 @@ module CloudController
     end
 
     def apps_handler
-      AppsHandler.new
+      AppsHandler.new(processes_handler)
     end
 
     def app_presenter

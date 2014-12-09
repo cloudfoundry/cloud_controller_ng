@@ -45,6 +45,10 @@ module VCAP::CloudController
     class DuplicateProcessType < StandardError; end
     class InvalidApp < StandardError; end
 
+    def initialize(process_handler)
+      @process_handler = process_handler
+    end
+
     def show(guid, access_context)
       app = AppModel.find(guid: guid)
       return nil if app.nil? || access_context.cannot?(:read, app)
@@ -76,6 +80,9 @@ module VCAP::CloudController
         raise Unauthorized if access_context.cannot?(:update, app)
 
         app.save
+
+        web_process = app.processes.find { |p| p.type == 'web' }
+        update_web_process_name(web_process, message.name, access_context) unless web_process.nil?
       end
 
       return app
@@ -108,6 +115,12 @@ module VCAP::CloudController
         raise DuplicateProcessType if app.processes.any? { |p| p.type == process.type }
         app.add_process_by_guid(process.guid)
       end
+    end
+
+    def update_web_process_name(process, name, access_context)
+      opts = { 'name' => name }
+      msg = ProcessUpdateMessage.new(process.guid, opts)
+      @process_handler.update(msg, access_context)
     end
 
     def remove_process(app, process, access_context)
