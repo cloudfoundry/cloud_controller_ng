@@ -33,6 +33,8 @@ module VCAP::CloudController
       [HTTP::CREATED, @app_presenter.present_json(app)]
     rescue AppsHandler::Unauthorized
       unauthorized!
+    rescue AppsHandler::InvalidApp => e
+      unprocessable!(e.message)
     end
 
     patch '/v3/apps/:guid', :update
@@ -46,6 +48,8 @@ module VCAP::CloudController
       [HTTP::OK, @app_presenter.present_json(app)]
     rescue AppsHandler::Unauthorized
       unauthorized!
+    rescue AppsHandler::InvalidApp => e
+      unprocessable!(e.message)
     end
 
     delete '/v3/apps/:guid', :delete
@@ -56,6 +60,8 @@ module VCAP::CloudController
       [HTTP::NO_CONTENT]
     rescue AppsHandler::DeleteWithProcesses
       raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', 'App deletion', 'Has child processes')
+    rescue AppsHandler::Unauthorized
+      app_not_found!
     end
 
     ###
@@ -131,5 +137,9 @@ module VCAP::CloudController
 
   def unauthorized!
     raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+  end
+
+  def unprocessable!(message)
+    raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
   end
 end

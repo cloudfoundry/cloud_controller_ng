@@ -105,6 +105,22 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the app is invalid' do
+        before do
+          allow(apps_handler).to receive(:create).and_raise(AppsHandler::InvalidApp.new('ya done goofed'))
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          expect {
+            apps_controller.create
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq(422)
+            expect(error.message).to match('ya done goofed')
+          end
+        end
+      end
+
       context 'when a user can create a app' do
         it 'returns a 201 Created response' do
            response_code, _ = apps_controller.create
@@ -194,11 +210,42 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the app is invalid' do
+        before do
+          allow(apps_handler).to receive(:update).and_raise(AppsHandler::InvalidApp.new('ya done goofed'))
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          expect {
+            apps_controller.update(app_model.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq(422)
+            expect(error.message).to match('ya done goofed')
+          end
+        end
+      end
     end
 
     describe '#delete' do
       before do
         allow(apps_handler).to receive(:delete).and_return(true)
+      end
+
+      context 'when the user cannot update the app' do
+        before do
+          allow(apps_handler).to receive(:delete).and_raise(AppsHandler::Unauthorized)
+        end
+
+        it 'raises an ApiError with a 404 code' do
+          expect {
+            apps_controller.delete('guid')
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
       end
 
       context 'when the app does not exist' do

@@ -7,6 +7,7 @@ module VCAP::CloudController
 
     def self.create_from_http_request(body)
       opts = body && MultiJson.load(body)
+      raise MultiJson::ParseError.new('invalid request body') unless opts.is_a?(Hash)
       ProcessCreateMessage.new(opts)
     rescue MultiJson::ParseError => e
       message = ProcessCreateMessage.new(nil)
@@ -30,6 +31,7 @@ module VCAP::CloudController
 
     def self.create_from_http_request(guid, body)
       opts = body && MultiJson.load(body)
+      opts = nil unless opts.is_a?(Hash)
       ProcessUpdateMessage.new(guid, opts)
     rescue MultiJson::ParseError
       nil

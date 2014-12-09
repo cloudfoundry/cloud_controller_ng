@@ -49,7 +49,6 @@ module VCAP::CloudController
     end
 
     describe '#create' do
-      let(:app_model) { AppModel.make }
       let(:create_message) { AppCreateMessage.new({ 'name' => 'my_name', 'space_guid' => 'a-guid' }) }
 
       context 'when the user cannot create an app' do
@@ -76,10 +75,22 @@ module VCAP::CloudController
           expect(created_app.space_guid).to eq(create_message.space_guid)
         end
       end
+
+      context 'when the app is invalid' do
+        before do
+          allow_any_instance_of(AppModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('the message'))
+        end
+
+        it 'raises an AppInvalid error' do
+          expect {
+            apps_handler.create(create_message, access_context)
+          }.to raise_error(AppsHandler::InvalidApp, 'the message')
+        end
+      end
     end
 
     describe '#update' do
-      let(:app_model) { AppModel.make }
+      let!(:app_model) { AppModel.make }
       let(:new_name) { 'new-name' }
       let(:guid) { app_model.guid }
       let(:update_message) { AppUpdateMessage.new({ 'guid' => guid, 'name' => new_name }) }
@@ -116,6 +127,18 @@ module VCAP::CloudController
           expect(result).to be_nil
         end
       end
+
+      context 'when the app is invalid' do
+        before do
+          allow_any_instance_of(AppModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('the message'))
+        end
+
+        it 'raises an AppInvalid error' do
+          expect {
+            apps_handler.update(update_message, access_context)
+          }.to raise_error(AppsHandler::InvalidApp, 'the message')
+        end
+      end
     end
 
     describe '#delete' do
@@ -137,9 +160,10 @@ module VCAP::CloudController
             allow(access_context).to receive(:cannot?).and_return(true)
           end
 
-          it 'returns nil' do
-            result = apps_handler.delete(guid, access_context)
-            expect(result).to be_nil
+          it 'raises Unauthorized' do
+            expect {
+              apps_handler.delete(guid, access_context)
+            }.to raise_error(AppsHandler::Unauthorized)
             expect(access_context).to have_received(:cannot?).with(:delete, app_model)
           end
         end

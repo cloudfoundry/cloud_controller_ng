@@ -2,13 +2,20 @@ Sequel.migration do
   up do
     self[:apps_v3].truncate
     alter_table(:apps_v3) do
-      add_column :name, String, null: false
+      add_column :name, String
       add_index :name
+      add_index [:space_guid, :name], unique: true
+      set_column_type :name, String, case_insensitive: true
+    end
+    if self.class.name.match /mysql/i
+      tableName = tables.select { |t| t =~ /apps_v3/ }.first
+      run "ALTER TABLE `#{tableName}` CONVERT TO CHARACTER SET utf8;"
     end
   end
 
   down do
     alter_table(:apps_v3) do
+      drop_index [:space_guid, :name]
       drop_index :name
       drop_column :name
     end

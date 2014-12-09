@@ -5,6 +5,7 @@ module VCAP::CloudController
 
     def self.create_from_http_request(body)
       opts = body && MultiJson.load(body)
+      raise MultiJson::ParseError.new('invalid request body') unless opts.is_a?(Hash)
       AppCreateMessage.new(opts)
     rescue MultiJson::ParseError => e
       message = AppCreateMessage.new({})
@@ -24,6 +25,7 @@ module VCAP::CloudController
 
     def self.create_from_http_request(guid, body)
       opts = body && MultiJson.load(body)
+      raise MultiJson::ParseError.new('invalid request body') unless opts.is_a?(Hash)
       AppUpdateMessage.new(opts.merge('guid' => guid))
     rescue MultiJson::ParseError => e
       message = AppUpdateMessage.new({})
@@ -41,6 +43,7 @@ module VCAP::CloudController
     class Unauthorized < StandardError; end
     class DeleteWithProcesses < StandardError; end
     class DuplicateProcessType < StandardError; end
+    class InvalidApp < StandardError; end
 
     def show(guid, access_context)
       app = AppModel.find(guid: guid)
@@ -57,6 +60,8 @@ module VCAP::CloudController
 
       app.save
       app
+    rescue Sequel::ValidationFailed => e
+      raise InvalidApp.new(e.message)
     end
 
     def update(message, access_context)
@@ -73,7 +78,10 @@ module VCAP::CloudController
         app.save
       end
 
-      app
+      return app
+
+    rescue Sequel::ValidationFailed => e
+      raise InvalidApp.new(e.message)
     end
 
     def delete(guid, access_context)
@@ -83,7 +91,7 @@ module VCAP::CloudController
       app.db.transaction do
         app.lock!
 
-        return nil if access_context.cannot?(:delete, app)
+        raise Unauthorized if access_context.cannot?(:delete, app)
         raise DeleteWithProcesses if app.processes.any?
 
         app.destroy
