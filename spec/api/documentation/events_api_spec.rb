@@ -456,7 +456,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :metadata => {}
     end
 
-    example "List Broker Create Events (experimental)" do
+    example "List Service Broker Create Events (experimental)" do
       params = {
         name: 'pancake broker',
         broker_url: 'http://www.pancakes.com',
@@ -486,7 +486,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                }
     end
 
-    example "List Broker Update Events (experimental)" do
+    example "List Service Broker Update Events (experimental)" do
       params = {
         broker_url: 'http://www.pancakes.com',
         auth_password: 'password'
@@ -512,7 +512,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                }
     end
 
-    example "List Broker Delete Events (experimental)" do
+    example "List Service Broker Delete Events (experimental)" do
       broker = VCAP::CloudController::ServiceBroker.make
       service_event_repository.record_broker_event(:delete, broker, {})
 
