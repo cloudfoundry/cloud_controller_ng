@@ -131,7 +131,7 @@ module VCAP::CloudController
 
           unless start_message.has_app_package?
             logger.error "dea-client.no-package-found", guid: app.guid
-            raise Errors::ApiError.new_from_details("AppPackageNotFound", guid: app.guid)
+            raise Errors::ApiError.new_from_details("AppPackageNotFound", app.guid)
           end
 
           dea_id = dea_pool.find_dea(mem: app.memory, disk: app.disk_quota, stack: app.stack.name, app_id: app.guid)

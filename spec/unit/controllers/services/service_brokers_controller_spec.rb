@@ -399,7 +399,7 @@ module VCAP::CloudController
         end
 
         context 'when there are other errors on the registration' do
-          before { allow(errors).to receive(:full_messages).and_return(['A bunch of stuff was wrong']) }
+          before { allow(errors).to receive(:full_messages).and_return('A bunch of stuff was wrong') }
 
           it 'returns an error' do
             put "/v2/service_brokers/#{broker.guid}", body, headers

@@ -90,7 +90,7 @@ module VCAP::CloudController
       elsif e.errors.on(:broker_url) && e.errors.on(:broker_url).include?(:unique)
         Errors::ApiError.new_from_details("ServiceBrokerUrlTaken", e.model.broker_url)
       else
-        Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", string: e.errors.full_messages.join(", "))
+        Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", e.errors.full_messages)
       end
     end
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
       elsif errors.on(:services)
         Errors::ApiError.new_from_details("ServiceBrokerInvalid", errors.on(:services))
       else
-        Errors::ApiError.new_from_details("ServiceBrokerInvalid", errors.full_messages.join(", "))
+        Errors::ApiError.new_from_details("ServiceBrokerInvalid", errors.full_messages)
       end
     end
   end

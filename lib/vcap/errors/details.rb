@@ -38,6 +38,10 @@ module VCAP
       def response_code
         details_hash["http_code"]
       end
+
+      def message_format
+        details_hash["message"]
+      end
     end
   end
 end

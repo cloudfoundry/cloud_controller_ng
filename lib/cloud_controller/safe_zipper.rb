@@ -16,12 +16,12 @@ class SafeZipper
   end
 
   def unzip!
-    raise VCAP::Errors::ApiError.new_from_details("AppBitsUploadInvalid.destination_does_not_exist") unless File.directory?(@zip_destination)
-    raise VCAP::Errors::ApiError.new_from_details("AppBitsUploadInvalid.relative_path_outside_root_folder") if any_outside_relative_paths?
+    raise VCAP::Errors::ApiError.new_from_details("AppBitsUploadInvalid", "Destination does not exist") unless File.directory?(@zip_destination)
+    raise VCAP::Errors::ApiError.new_from_details("AppBitsUploadInvalid", "Relative path(s) outside of root folder") if any_outside_relative_paths?
 
     unzip
 
-    raise VCAP::Errors::ApiError.new_from_details("AppBitsUploadInvalid.symlink_point_outside_root_folder") if any_outside_symlinks?
+    raise VCAP::Errors::ApiError.new_from_details("AppBitsUploadInvalid", "Symlink(s) point outside of root folder") if any_outside_symlinks?
 
     size
   end
@@ -60,10 +60,8 @@ class SafeZipper
       output, error, status = Open3.capture3(%Q{unzip -l #{@zip_path}})
 
       unless status.success?
-        raise VCAP::Errors::ApiError.new_from_details(
-          "AppBitsUploadInvalid.unzipping_errors",
-          stdout: output,
-          stderr: error)
+        raise VCAP::Errors::ApiError.new_from_details("AppBitsUploadInvalid",
+          "Unzipping had errors\n STDOUT: \"#{output}\"\n STDERR: \"#{error}\"")
       end
 
       output

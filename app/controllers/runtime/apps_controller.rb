@@ -96,7 +96,7 @@ module VCAP::CloudController
       elsif state_errors
         Errors::ApiError.new_from_details("AppInvalid.invalid_app_state")
       else
-        Errors::ApiError.new_from_details("AppInvalid.generic", string: e.errors.full_messages)
+        Errors::ApiError.new_from_details("AppInvalid", e.errors.full_messages)
       end
     end
 
@@ -109,7 +109,7 @@ module VCAP::CloudController
       app = find_guid_and_validate_access(:delete, guid)
 
       if !recursive? && app.service_bindings.present?
-        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", associations: "service_bindings", model: app.class.table_name)
+        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "service_bindings", app.class.table_name)
       end
 
       app.destroy

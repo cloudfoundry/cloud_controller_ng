@@ -20,6 +20,10 @@ module VCAP::Errors
       it "knows code" do
         expect(details.code).to eq(130001)
       end
+
+      it "knows the error message_format" do
+        expect(details.message_format).to eq("The domain is invalid: %s")
+      end
     end
 
     describe ".new(name) with an invalid code" do

@@ -47,7 +47,7 @@ module VCAP::CloudController
     end
 
     def self.not_found_exception(guid)
-      Errors::ApiError.new_from_details("ServiceInstanceNotFound", guid: guid)
+      Errors::ApiError.new_from_details("ServiceInstanceNotFound", guid)
     end
 
     def self.dependencies

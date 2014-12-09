@@ -65,7 +65,7 @@ module VCAP::CloudController
     private
 
     def not_found!
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound.process')
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
     end
 
     def bad_request!(message)

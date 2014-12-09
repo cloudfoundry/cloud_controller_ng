@@ -1,3 +1,3 @@
 ---
 zh_CN:
-  TranslatedMessage: "这是一条被翻译的信息：%{arg1} %{arg2}。"
+  MessageTranslated: "这是一条被翻译的信息：%s %s。"
