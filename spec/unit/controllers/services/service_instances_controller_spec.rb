@@ -85,27 +85,6 @@ module VCAP::CloudController
             expect(last_response.status).to eq(403)
             expect(MultiJson.load(last_response.body)['description']).to eq("You are not authorized to perform the requested action")
           end
-
-          it 'prevents a developer from moving a service to another space' do
-            plan = ServicePlan.make
-            req = MultiJson.dump(
-              :name => 'foo',
-              :space_guid => @space_a.guid,
-              :service_plan_guid => plan.guid
-            )
-            post "/v2/service_instances", req, json_headers(headers_for(member_a))
-
-            instance_guid = JSON.parse(last_response.body)['metadata']['guid']
-
-            move_req = MultiJson.dump(
-              :space_guid => @space_b.guid,
-            )
-
-            put "/v2/service_instances/#{instance_guid}", move_req, json_headers(headers_for(member_a))
-
-            expect(last_response.status).to eq(403)
-            expect(MultiJson.load(last_response.body)['description']).to eq("You are not authorized to perform the requested action")
-          end
         end
 
         describe "private plans" do
@@ -593,6 +572,38 @@ module VCAP::CloudController
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
           expect(last_response.status).to eq 502
           expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
+        end
+      end
+
+      describe 'the space_guid parameter' do
+        let(:org) { Organization.make }
+        let(:space) { Space.make(organization: org) }
+        let(:user) { make_developer_for_space(space) }
+        let(:instance) { ManagedServiceInstance.make(space: space) }
+
+        it 'prevents a developer from moving the service instance to a space for which he is also a space developer' do
+          space2 = Space.make(organization: org)
+          space2.add_developer(user)
+
+          move_req = MultiJson.dump(
+            :space_guid => space2.guid,
+          )
+
+          put "/v2/service_instances/#{instance.guid}", move_req, json_headers(headers_for(user))
+
+          expect(last_response.status).to eq(400)
+          expect(decoded_response['description']).to match /cannot change space for service instance/
+        end
+
+        it 'succeeds when the space_guid does not change' do
+          req = MultiJson.dump(space_guid: instance.space.guid)
+          put "/v2/service_instances/#{instance.guid}", req, json_headers(headers_for(user))
+          expect(last_response.status).to eq 201
+        end
+
+        it 'succeeds when the space_guid is not provided' do
+          put "/v2/service_instances/#{instance.guid}", {}.to_json, json_headers(headers_for(user))
+          expect(last_response.status).to eq 201
         end
       end
     end

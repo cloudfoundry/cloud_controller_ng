@@ -112,11 +112,15 @@ module VCAP::CloudController
       json_msg = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(stringify_keys: true)
       logger.debug "cc.update", guid: guid, attributes: request_attrs
-      raise InvalidRequest unless request_attrs
+      raise Errors::ApiError.new_from_details("InvalidRequest") unless request_attrs
 
       service_instance = find_guid(guid)
       validate_access(:read_for_update, service_instance)
       validate_access(:update, service_instance)
+
+      if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
+        raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
+      end
 
       if request_attrs["service_plan_guid"]
         old_plan = service_instance.service_plan
@@ -126,13 +130,6 @@ module VCAP::CloudController
 
         new_plan = ServicePlan.find(guid: request_attrs["service_plan_guid"])
         service_instance.client.update_service_plan(service_instance, new_plan)
-      end
-
-      if request_attrs['space_guid']
-        space = Space.find(guid: request_attrs['space_guid'])
-        unless space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
-          raise VCAP::Errors::ApiError.new_from_details("NotAuthorized")
-        end
       end
 
       ServiceInstance.db.transaction do
