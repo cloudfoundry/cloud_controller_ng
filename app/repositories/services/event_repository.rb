@@ -112,7 +112,7 @@ module VCAP::CloudController
           actee = {
             actee: service_binding.guid,
             actee_type: 'service_binding',
-            actee_name: 'N/A',
+            actee_name: '',
           }
           space_data = {space: service_binding.space}
           create_event("audit.service_binding.#{type}", user_actor, actee, metadata, space_data)
