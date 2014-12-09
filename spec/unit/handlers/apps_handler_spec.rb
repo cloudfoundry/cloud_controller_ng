@@ -94,6 +94,7 @@ module VCAP::CloudController
       let(:new_name) { 'new-name' }
       let(:guid) { app_model.guid }
       let(:update_message) { AppUpdateMessage.new({ 'guid' => guid, 'name' => new_name }) }
+      let(:empty_update_message) { AppUpdateMessage.new({ 'guid' => guid }) }
 
       context 'when the user cannot update the app' do
         before do
@@ -116,6 +117,15 @@ module VCAP::CloudController
 
           updated_app = AppModel.find(guid: guid)
           expect(updated_app.name).to eq(new_name)
+        end
+
+        it 'keeps current, non-updated attributes' do
+          result = apps_handler.update(empty_update_message, access_context)
+          expect(result.guid).to eq(guid)
+          expect(result.name).to eq(app_model.name)
+
+          updated_app = AppModel.find(guid: guid)
+          expect(updated_app.name).to eq(app_model.name)
         end
       end
 

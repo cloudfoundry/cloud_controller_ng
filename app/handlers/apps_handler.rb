@@ -71,7 +71,7 @@ module VCAP::CloudController
       app.db.transaction do
         app.lock!
 
-        app.name = message.name
+        app.name = message.name unless message.name.nil?
 
         raise Unauthorized if access_context.cannot?(:update, app)
 
