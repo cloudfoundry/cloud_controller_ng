@@ -598,6 +598,73 @@ resource "Events", :type => [:api, :legacy_api] do
                                }
     end
 
+    example "List User Provided Service Instance Create Events (experimental)" do
+      instance = VCAP::CloudController::UserProvidedServiceInstance.make
+      service_event_repository.record_user_provided_service_instance_event(:create, instance, {
+        'name' => instance.name,
+        'space_guid' => instance.space_guid,
+      })
+
+      client.get "/v2/events?q=type:audit.user_provided_service_instance.create", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "user_provided_service_instance",
+                               :actee => instance.guid,
+                               :actee_name => instance.name,
+                               :space_guid => instance.space_guid,
+                               :metadata => {
+                                 'request' => {
+                                   'name' => instance.name,
+                                   'space_guid' => instance.space_guid,
+                                 }
+                               }
+    end
+
+    example "List User Provided Service Instance Update Events (experimental)" do
+      instance = VCAP::CloudController::UserProvidedServiceInstance.make
+      service_event_repository.record_user_provided_service_instance_event(:update, instance, {
+        'credentials' => { 'username' => 'myUser' }
+      })
+
+      client.get "/v2/events?q=type:audit.user_provided_service_instance.update", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "user_provided_service_instance",
+                               :actee => instance.guid,
+                               :actee_name => instance.name,
+                               :space_guid => instance.space_guid,
+                               :metadata => {
+                                 'request' => {
+                                   'credentials' => '[REDACTED]'
+                                 }
+                               }
+    end
+
+    example "List User Provided Service Instance Delete Events (experimental)" do
+      instance = VCAP::CloudController::UserProvidedServiceInstance.make
+      service_event_repository.record_user_provided_service_instance_event(:delete, instance, {})
+
+      client.get "/v2/events?q=type:audit.user_provided_service_instance.delete", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "user_provided_service_instance",
+                               :actee => instance.guid,
+                               :actee_name => instance.name,
+                               :space_guid => instance.space_guid,
+                               :metadata => {
+                                 'request' => {}
+                               }
+    end
+
     example "List Service Binding Create Events (experimental)" do
       space = VCAP::CloudController::Space.make
       instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
