@@ -26,10 +26,19 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      service_plan_visibility = ServicePlanVisibility.find(guid: guid)
-      result = do_delete(find_guid_and_validate_access(:delete, guid))
-      @services_event_repository.create_service_plan_visibility_event('audit.service_plan_visibility.delete', service_plan_visibility)
-      result
+      service_plan_visibility  = find_guid_and_validate_access(:delete, guid, ServicePlanVisibility)
+      raise_if_has_associations!(service_plan_visibility) if v2_api? && !recursive?
+
+      model_deletion_job = Jobs::Runtime::ModelDeletion.new(ServicePlanVisibility, guid)
+      delete_and_audit_job = Jobs::AuditEventJob.new(model_deletion_job, @services_event_repository, :record_service_plan_visibility_event, :delete, service_plan_visibility, {})
+
+      if async?
+        job = Jobs::Enqueuer.new(delete_and_audit_job, queue: "cc-generic").enqueue()
+        [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
+      else
+        delete_and_audit_job.perform
+        [HTTP::NO_CONTENT, nil]
+      end
     end
 
     define_messages

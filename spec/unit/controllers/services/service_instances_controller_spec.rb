@@ -728,6 +728,11 @@ module VCAP::CloudController
             expect(last_response.status).to eq 202
             expect(decoded_response['entity']['guid']).to be
             expect(decoded_response['entity']['status']).to eq 'queued'
+
+            successes, failures = Delayed::Worker.new.work_off
+            expect(successes).to eq 1
+            expect(failures).to eq 0
+            expect(ServiceInstance.find(:guid => service_instance.guid)).to be_nil
           end
         end
 

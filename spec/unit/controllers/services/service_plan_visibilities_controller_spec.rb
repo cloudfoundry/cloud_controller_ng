@@ -63,9 +63,7 @@ module VCAP::CloudController
       delete "/v2/service_plan_visibilities/#{visibility.guid}", {}, headers
 
       expect(last_response.status).to eq(204)
-
-      get '/v2/service_plan_visibilities', {}, headers
-      expect(decoded_response).to include('total_results' => 0)
+      expect(ServicePlanVisibility.find(:guid => visibility.guid)).to be_nil
     end
 
     it 'creates a service plan visibility delete event' do
@@ -83,6 +81,22 @@ module VCAP::CloudController
       expect(event.space_guid).to be_empty
       expect(event.organization_guid).to eq(organization.guid)
       expect(event.metadata).to eq({"service_plan_guid" => service_plan.guid})
+    end
+
+    context 'with ?async=true' do
+      it 'returns a job id' do
+        delete "/v2/service_plan_visibilities/#{visibility.guid}?async=true", {}, headers
+        expect(last_response.status).to eq 202
+        expect(decoded_response['entity']['guid']).to be
+        expect(decoded_response['entity']['status']).to eq 'queued'
+
+        successes, failures = Delayed::Worker.new.work_off
+        expect(successes).to eq 1
+        expect(failures).to eq 0
+        event = Event.first(type: 'audit.service_plan_visibility.delete')
+        expect(event).to be
+        expect(ServicePlanVisibility.find(:guid => visibility.guid)).to be_nil
+      end
     end
   end
 end

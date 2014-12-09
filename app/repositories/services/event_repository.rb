@@ -8,7 +8,7 @@ module VCAP::CloudController
           @current_user_email = security_context.current_user_email
         end
 
-        def create_service_plan_visibility_event(type, visibility)
+        def record_service_plan_visibility_event(type, visibility, params)
           actee = {
             actee: visibility.guid,
             actee_type: 'service_plan_visibility',
@@ -22,7 +22,7 @@ module VCAP::CloudController
             organization_guid: visibility.organization_guid
           }
 
-          create_event(type, user_actor, actee, metadata, space_data)
+          create_event("audit.service_plan_visibility.#{type}", user_actor, actee, metadata, space_data)
         end
 
         def record_broker_event(type, broker, params)
