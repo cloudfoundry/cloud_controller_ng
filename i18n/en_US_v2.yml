@@ -89,11 +89,11 @@ en_US:
     unzipping_errors: "Unzipping had errors\n STDOUT: \"%{stdout}\"\n STDERR: \"%{stderr}\""
   AppBitsCopyInvalid: "The app copy is invalid: %{string}"
   StagingError:
-    generic: "Staging error: %{string}" # This needs to be broken down into multiple errors. See instance_controller.rb
+    default: "Staging error: %{string}" # This needs to be broken down into multiple errors. See instance_controller.rb
     another_staging_request_was_initiated: "Staging error: failed to stage application: another staging request was initiated"
     can_not_retrieve_staging_status: "Staging error: failed to stage application: can't retrieve staging status"
     failed_to_stage: "Staging error: failed to stage application: staging had already been marked as failed, this could mean that staging took too long"
-    malformed_droplet: "Staging error: malformed droplet upload request for %{guid}"
+    malformed_droplet: "Staging error:   droplet upload request for %{guid}"
     md5_mismatch: "Staging error: content md5 did not match"
     no_available_stagers: "Staging error: no available stagers"
   NotStaged: App has not finished staging
