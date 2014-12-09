@@ -86,6 +86,21 @@ module VCAP::CloudController
           create_event("audit.service_instance.#{type}", user_actor, actee, { request: params }, space_data)
         end
 
+        def record_user_provided_service_instance_event(type, service_instance, params)
+          actee = {
+            actee: service_instance.guid,
+            actee_type: 'user_provided_service_instance',
+            actee_name: service_instance.name,
+          }
+
+          metadata = { request: params.dup }
+          if params.has_key?('credentials')
+            metadata[:request]['credentials'] = "[REDACTED]"
+          end
+
+          create_event("audit.user_provided_service_instance.#{type}", user_actor, actee, metadata, service_instance.space)
+        end
+
         def record_service_binding_event(type, service_binding, params=nil)
           metadata = {
             request: {
