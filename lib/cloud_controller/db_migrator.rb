@@ -1,4 +1,7 @@
 class DBMigrator
+  MIGRATIONS_DIR = File.expand_path("../../db", File.dirname(__FILE__))
+  SEQUEL_MIGRATIONS = File.join(MIGRATIONS_DIR, "migrations")
+
   def self.from_config(config, db_logger)
     VCAP::CloudController::Encryptor.db_encryption_key = config[:db_encryption_key]
     db = VCAP::CloudController::DB.connect(config[:db], db_logger)
@@ -12,9 +15,7 @@ class DBMigrator
   def apply_migrations(opts = {})
     Sequel.extension :migration
     require "vcap/sequel_case_insensitive_string_monkeypatch"
-    migrations_dir = File.expand_path("../../db", File.dirname(__FILE__))
-    sequel_migrations = File.join(migrations_dir, "migrations")
-    Sequel::Migrator.run(@db, sequel_migrations, opts)
+    Sequel::Migrator.run(@db, SEQUEL_MIGRATIONS, opts)
   end
 
   def rollback(number_to_rollback)
@@ -22,5 +23,10 @@ class DBMigrator
     recent_migrations = recent_migrations.collect { |hash| hash[:filename].split("_", 2).first.to_i }
     apply_migrations(current: recent_migrations.first,
       target: recent_migrations.last)
+  end
+
+  def check_migrations!
+    Sequel.extension :migration
+    Sequel::Migrator.check_current(@db, SEQUEL_MIGRATIONS)
   end
 end

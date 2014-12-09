@@ -1,3 +1,5 @@
+require "cloud_controller/db_migrator"
+
 module VCAP::CloudController
   class DB
     # Setup a Sequel connection pool
@@ -37,7 +39,9 @@ module VCAP::CloudController
     end
 
     def self.load_models(db_config, logger)
-      connect(db_config, logger)
+      db = connect(db_config, logger)
+      DBMigrator.new(db).check_migrations!
+
       require "models"
       require "delayed_job_sequel"
     end
