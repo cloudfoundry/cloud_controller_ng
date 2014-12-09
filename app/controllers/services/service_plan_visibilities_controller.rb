@@ -25,6 +25,28 @@ module VCAP::CloudController
       end
     end
 
+    def create
+      json_msg = self.class::CreateMessage.decode(body)
+
+      @request_attrs = json_msg.extract(stringify_keys: true)
+
+      logger.debug "cc.create", model: self.class.model_class_name, attributes: request_attrs
+
+      service_plan_visibility = nil
+      model.db.transaction do
+        service_plan_visibility = model.create_from_hash(request_attrs)
+        validate_access(:create, service_plan_visibility, request_attrs)
+      end
+
+      @services_event_repository.record_service_plan_visibility_event(:create, service_plan_visibility, {})
+
+      [
+        HTTP::CREATED,
+        {"Location" => "#{self.class.path}/#{service_plan_visibility.guid}"},
+        object_renderer.render_json(self.class, service_plan_visibility, @opts)
+      ]
+    end
+
     def delete(guid)
       service_plan_visibility  = find_guid_and_validate_access(:delete, guid, ServicePlanVisibility)
       raise_if_has_associations!(service_plan_visibility) if v2_api? && !recursive?
