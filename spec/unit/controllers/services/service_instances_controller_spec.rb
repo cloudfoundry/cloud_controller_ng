@@ -298,21 +298,21 @@ module VCAP::CloudController
         end
 
         context 'creating a service instance with a name over 50 characters' do
-        let(:very_long_name) { 's' * 51 }
+          let(:very_long_name) { 's' * 51 }
 
-        it "returns an error if the service instance name is over 50 characters" do
-          req = MultiJson.dump(
-            name: very_long_name,
-            space_guid: space.guid,
-            service_plan_guid: plan.guid
-          )
-          headers = json_headers(headers_for(developer))
+          it "returns an error if the service instance name is over 50 characters" do
+            req = MultiJson.dump(
+              name: very_long_name,
+              space_guid: space.guid,
+              service_plan_guid: plan.guid
+            )
+            headers = json_headers(headers_for(developer))
 
-          post "/v2/service_instances", req, headers
+            post "/v2/service_instances", req, headers
 
-          expect(last_response.status).to eq(400)
-          expect(decoded_response["code"]).to eq 60009
-        end
+            expect(last_response.status).to eq(400)
+            expect(decoded_response["code"]).to eq 60009
+          end
         end
 
         context 'with naming collisions' do
