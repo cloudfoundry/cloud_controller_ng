@@ -96,7 +96,7 @@ module VCAP::CloudController
       elsif state_errors
         Errors::ApiError.new_from_details("AppInvalid.invalid_app_state")
       else
-        Errors::ApiError.new_from_details("AppInvalid", string: e.errors.full_messages)
+        Errors::ApiError.new_from_details("AppInvalid.generic", string: e.errors.full_messages)
       end
     end
 
