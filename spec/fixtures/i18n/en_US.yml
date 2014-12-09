@@ -2,6 +2,7 @@
 en_US:
   TranslatedMessage: "This is a translated message of %{arg1} %{arg2}."
   OnlyInDefaultLocale: "This is a translated message of %{arg1} %{arg2} only in default locale"
+  MessageWithStringArg: "Message with string: %{string}"
   MessageWithNestedTranslations:
     default: "Default message: %{arg1}"
     nested_message_1: "Nested message 1: %{arg1}"

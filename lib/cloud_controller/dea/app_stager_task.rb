@@ -132,7 +132,6 @@ module VCAP::CloudController
 
         if type && message
           @app.mark_as_failed_to_stage(type)
-          type = "#{type}.generic" if type == "StagingError"
           raise Errors::ApiError.new_from_details(type, string: message)
         end
       end

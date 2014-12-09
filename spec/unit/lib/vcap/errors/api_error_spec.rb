@@ -66,6 +66,15 @@ module VCAP::Errors
         expect(api_error.message).to eq("这是一条被翻译的信息：foo bar。")
       end
 
+      context "when args is an array" do
+        let(:args) { [:foo, 1] }
+        let(:translation_key) { "MessageWithStringArg" }
+
+        it "joins the elements as a string" do
+          expect(api_error.message).to eq("Message with string: foo, 1")
+        end
+      end
+
       context "when the message is not translated in the target locale" do
         let(:translation_key) { "OnlyInDefaultLocale" }
         let(:locale) { :zh_CN }

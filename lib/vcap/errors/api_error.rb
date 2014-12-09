@@ -7,6 +7,9 @@ module VCAP
 
       def self.new_from_details(full_error_name, args = {})
         unless args.is_a? Hash
+          if args.is_a? Array
+            args = args.join(", ")
+          end
           args = { string: args }
         end
 
