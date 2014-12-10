@@ -55,6 +55,33 @@ module VCAP::CloudController
       ]
     end
 
+    def update(guid)
+      json_msg = self.class::UpdateMessage.decode(body)
+
+      @request_attrs = json_msg.extract(stringify_keys: true)
+
+      logger.debug "cc.update", guid: guid, attributes: request_attrs
+      raise InvalidRequest unless request_attrs
+
+      obj = find_guid(guid)
+
+      before_update(obj)
+
+      model.db.transaction do
+        obj.lock!
+        validate_access(:read_for_update, obj, request_attrs)
+        obj.update_from_hash(request_attrs)
+
+        update_v3_app(obj.app_guid, obj.name) unless request_attrs['name'].nil? || obj.app_guid.nil?
+
+        validate_access(:update, obj, request_attrs)
+      end
+
+      after_update(obj)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
+    end
+
     get '/v2/apps/:guid/env', :read_env
     def read_env(guid)
       app = find_guid_and_validate_access(:read_env, guid, App)
@@ -124,6 +151,12 @@ module VCAP::CloudController
     end
 
     private
+
+    def update_v3_app(v3_app_guid, name)
+      v3_app = AppModel.find(guid: v3_app_guid)
+      v3_app.name = name
+      v3_app.save
+    end
 
     def after_create(app)
       record_app_create_value = @app_event_repository.record_app_create(
