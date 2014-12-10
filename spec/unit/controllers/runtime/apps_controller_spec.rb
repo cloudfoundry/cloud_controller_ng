@@ -156,6 +156,20 @@ module VCAP::CloudController
             expect(updated_app.name).to eq(new_name)
             expect(updated_v3_app.name).to eq(updated_app.name)
           end
+
+          context 'when the v2 App does not have a web type' do
+            let(:app_obj) { AppFactory.make(instances: 1, app_guid: v3_app.guid, type: 'worker') }
+
+            it 'does not update the v3 app associated' do
+              update_app
+
+              updated_app = App.find(guid: app_obj.guid)
+              updated_v3_app = AppModel.find(guid: app_obj.app_guid)
+
+              expect(updated_app.name).to eq(new_name)
+              expect(updated_v3_app.name).not_to eq(new_name)
+            end
+          end
         end
 
         context 'when a V2 app does not have a V3 app associated' do

@@ -72,7 +72,7 @@ module VCAP::CloudController
         validate_access(:read_for_update, obj, request_attrs)
         obj.update_from_hash(request_attrs)
 
-        update_v3_app(obj.app_guid, obj.name) unless request_attrs['name'].nil? || obj.app_guid.nil?
+        update_v3_app(obj.app_guid, obj.name) if do_v3_app_update?(request_attrs, obj)
 
         validate_access(:update, obj, request_attrs)
       end
@@ -151,6 +151,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def do_v3_app_update?(request_attrs, app)
+      !(request_attrs['name'].nil? || app.app_guid.nil? || app.type != 'web')
+    end
 
     def update_v3_app(v3_app_guid, name)
       v3_app = AppModel.find(guid: v3_app_guid)
