@@ -48,7 +48,12 @@ module VCAP::Services::ServiceBrokers::V2
 
   class ServiceBrokerConflict < HttpResponseError
     def initialize(uri, method, response)
-      error_message = parsed_json(response.body)["description"]
+      error_message = nil
+      if parsed_json(response.body).has_key?('message')
+        error_message = parsed_json(response.body)["message"]
+      else
+        error_message = parsed_json(response.body)["description"]
+      end
 
       super(
         error_message || "Resource conflict: #{uri}",
