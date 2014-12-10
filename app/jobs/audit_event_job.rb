@@ -7,7 +7,7 @@ module VCAP::CloudController
       end
 
       def job_name_in_configuration
-        :audut_event_job
+        :audit_event_job
       end
 
       def max_attempts
