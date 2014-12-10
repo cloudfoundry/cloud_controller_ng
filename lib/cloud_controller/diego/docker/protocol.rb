@@ -50,6 +50,13 @@ module VCAP::CloudController
           }
 
           message["health_check_timeout_in_seconds"] = app.health_check_timeout if app.health_check_timeout
+
+          if app.uris.empty?
+            message["health_check_type"] = "none"
+          else
+            message["health_check_type"] = "port"
+          end
+
           message
         end
 
