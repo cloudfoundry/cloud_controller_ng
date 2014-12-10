@@ -20,6 +20,9 @@ resource "Events", :type => [:api, :legacy_api] do
     audit.service_plan.create
     audit.service_plan.update
     audit.service_plan.delete
+    audit.service_plan_visibility.create
+    audit.service_plan_visibility.update
+    audit.service_plan_visibility.delete
     audit.service_dashboard_client.create
     audit.service_dashboard_client.delete
     audit.service_instance.create
@@ -62,10 +65,12 @@ resource "Events", :type => [:api, :legacy_api] do
     let(:test_user) { VCAP::CloudController::User.make }
     let(:test_user_email) { "user@email.com" }
     let(:test_space) { VCAP::CloudController::Space.make }
+    let(:test_organization) { VCAP::CloudController::Organization.make }
 
     let(:test_broker) { VCAP::CloudController::ServiceBroker.make }
     let(:test_service) { VCAP::CloudController::Service.make(service_broker: test_broker) }
     let(:test_plan) { VCAP::CloudController::ServicePlan.make(service: test_service) }
+    let(:test_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make(organization_guid: test_organization.guid, service_plan_guid: test_plan.guid) }
 
     let(:app_request) do
       {
@@ -367,6 +372,62 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_name => test_plan.name,
                                :space_guid => '',
                                :metadata => {}
+    end
+    example "List Service Plan Visibility Create Events (experimental)" do
+      service_event_repository.record_service_plan_visibility_event(:create, test_plan_visibility, {})
+
+      client.get "/v2/events?q=type:audit.service_plan_visibility.create", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_plan_visibility",
+                               :actee => test_plan_visibility.guid,
+                               :actee_name => '',
+                               :space_guid => '',
+                               :organization_guid => test_plan_visibility.organization_guid,
+                               :metadata => {
+                                'service_plan_guid' => test_plan_visibility.service_plan_guid
+                               }
+    end
+
+    example "List Service Plan Visibility Update Events (experimental)" do
+      service_event_repository.record_service_plan_visibility_event(:update, test_plan_visibility, {})
+
+      client.get "/v2/events?q=type:audit.service_plan_visibility.update", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_plan_visibility",
+                               :actee => test_plan_visibility.guid,
+                               :actee_name => '',
+                               :space_guid => '',
+                               :organization_guid => test_plan_visibility.organization_guid,
+                               :metadata => {
+                                'service_plan_guid' => test_plan_visibility.service_plan_guid
+                               }
+    end
+
+    example "List Service Plan Visibility Delete Events (experimental)" do
+      service_event_repository.record_service_plan_visibility_event(:delete, test_plan_visibility, {})
+
+      client.get "/v2/events?q=type:audit.service_plan_visibility.delete", {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response["resources"][0], :event,
+                               :actor_type => "user",
+                               :actor => test_user.guid,
+                               :actor_name => test_user_email,
+                               :actee_type => "service_plan_visibility",
+                               :actee => test_plan_visibility.guid,
+                               :actee_name => '',
+                               :space_guid => '',
+                               :organization_guid => test_plan_visibility.organization_guid,
+                               :metadata => {
+                                'service_plan_guid' => test_plan_visibility.service_plan_guid
+                               }
     end
 
     example "List Service Create Events (experimental)" do
