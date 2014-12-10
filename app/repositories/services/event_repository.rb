@@ -57,12 +57,9 @@ module VCAP::CloudController
         end
 
         def record_service_dashboard_client_event(type, client_attrs, broker)
-          metadata = {
-            changes_from_broker_catalog: {}
-          }
-
+          metadata = {}
           if client_attrs.has_key?('redirect_uri')
-            metadata[:changes_from_broker_catalog] = {
+            metadata = {
               secret: '[REDACTED]',
               redirect_uri: client_attrs['redirect_uri']
             }
@@ -124,7 +121,7 @@ module VCAP::CloudController
             actee_name: service.label,
           }
           actor = broker_actor(service.service_broker)
-          with_audit_event(service, actor, actee, :changes_from_broker_catalog, &saveBlock)
+          with_audit_event(service, actor, actee, &saveBlock)
         end
 
         def with_service_plan_event(plan, &saveBlock)
@@ -133,7 +130,7 @@ module VCAP::CloudController
             actee_name: plan.name,
           }
           actor = broker_actor(plan.service.service_broker)
-          with_audit_event(plan, actor, actee, :changes_from_broker_catalog, &saveBlock)
+          with_audit_event(plan, actor, actee, &saveBlock)
         end
 
         def record_service_purge_event(service)
@@ -184,11 +181,9 @@ module VCAP::CloudController
           changes
         end
 
-        def with_audit_event(object, actor, actee, changes_key, &saveBlock)
+        def with_audit_event(object, actor, actee, &saveBlock)
           type = event_type(object, actee[:actee_type])
-          metadata = {
-            changes_key => changes_for_modified_model(object)
-          }
+          metadata = changes_for_modified_model(object)
           result = saveBlock.call
 
           actee[:actee] = object.guid

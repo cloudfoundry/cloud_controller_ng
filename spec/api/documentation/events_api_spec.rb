@@ -267,10 +267,8 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_name => client_attrs['id'],
                                :space_guid => '',
                                :metadata => {
-                                 'changes_from_broker_catalog' => {
                                     'secret' => '[REDACTED]',
                                     'redirect_uri' => client_attrs['redirect_uri']
-                                 }
                                }
     end
 
@@ -296,9 +294,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee => client_attrs['id'],
                                :actee_name => client_attrs['id'],
                                :space_guid => '',
-                               :metadata => {
-                                 'changes_from_broker_catalog' => {}
-                               }
+                               :metadata => {}
     end
 
     example "List Service Plan Create Events (experimental)" do
@@ -327,16 +323,14 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_name => new_plan.name,
                                :space_guid => '',
                                :metadata => {
-                                 'changes_from_broker_catalog' => {
-                                     "name"=> new_plan.name,
-                                     "free"=> new_plan.free,
-                                     "description"=> new_plan.description,
-                                     "service_guid"=> new_plan.service.guid,
-                                     "extra"=> new_plan.extra,
-                                     "unique_id"=> new_plan.unique_id,
-                                     "public"=> new_plan.public,
-                                     "active"=> new_plan.active
-                                 }
+                                 "name"=> new_plan.name,
+                                 "free"=> new_plan.free,
+                                 "description"=> new_plan.description,
+                                 "service_guid"=> new_plan.service.guid,
+                                 "extra"=> new_plan.extra,
+                                 "unique_id"=> new_plan.unique_id,
+                                 "public"=> new_plan.public,
+                                 "active"=> new_plan.active
                                }
     end
 
@@ -356,7 +350,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee => test_plan.guid,
                                :actee_name => test_plan.name,
                                :space_guid => '',
-                               :metadata => {'changes_from_broker_catalog' => {'name' => 'new name'}}
+                               :metadata => { 'name' => 'new name' }
     end
 
     example "List Service Plan Delete Events (experimental)" do
@@ -400,24 +394,22 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_name => new_service.label,
                                :space_guid => '',
                                :metadata => {
-                                 'changes_from_broker_catalog' => {
-                                   'service_broker_guid' => new_service.service_broker.guid,
-                                   'unique_id' => new_service.broker_provided_id,
-                                   'provider' => new_service.provider,
-                                   'url' => new_service.url,
-                                   'version' => new_service.version,
-                                   'info_url' => new_service.info_url,
-                                   'bindable' => new_service.bindable,
-                                   'long_description' => new_service.long_description,
-                                   'documentation_url' => new_service.documentation_url,
-                                   'label' => new_service.label,
-                                   'description' => new_service.description,
-                                   'tags' => new_service.tags,
-                                   'extra' => new_service.extra,
-                                   'active' => new_service.active,
-                                   'requires' => new_service.requires,
-                                   'plan_updateable' => new_service.plan_updateable,
-                                 }
+                                 'service_broker_guid' => new_service.service_broker.guid,
+                                 'unique_id' => new_service.broker_provided_id,
+                                 'provider' => new_service.provider,
+                                 'url' => new_service.url,
+                                 'version' => new_service.version,
+                                 'info_url' => new_service.info_url,
+                                 'bindable' => new_service.bindable,
+                                 'long_description' => new_service.long_description,
+                                 'documentation_url' => new_service.documentation_url,
+                                 'label' => new_service.label,
+                                 'description' => new_service.description,
+                                 'tags' => new_service.tags,
+                                 'extra' => new_service.extra,
+                                 'active' => new_service.active,
+                                 'requires' => new_service.requires,
+                                 'plan_updateable' => new_service.plan_updateable,
                                }
     end
 
@@ -437,7 +429,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee => test_service.guid,
                                :actee_name => test_service.label,
                                :space_guid => '',
-                               :metadata => {'changes_from_broker_catalog' => {'label' => 'new label'}}
+                               :metadata => { 'label' => 'new label' }
     end
 
     example "List Service Delete Events (experimental)" do

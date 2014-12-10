@@ -115,10 +115,8 @@ module VCAP::Services::SSO
             expect(event.space_guid).to eq('')
             expect(event.organization_guid).to eq('')
             expect(event.metadata).to include({
-              'changes_from_broker_catalog' => {
-                'secret' => '[REDACTED]',
-                'redirect_uri' => dashboard_client_attrs_1['redirect_uri']
-              }
+              'secret' => '[REDACTED]',
+              'redirect_uri' => dashboard_client_attrs_1['redirect_uri']
             })
           end
         end
@@ -183,10 +181,8 @@ module VCAP::Services::SSO
               expect(event.space_guid).to eq('')
               expect(event.organization_guid).to eq('')
               expect(event.metadata).to include({
-                'changes_from_broker_catalog' => {
-                  'secret' => '[REDACTED]',
-                  'redirect_uri' => dashboard_client_attrs_2['redirect_uri']
-                }
+                'secret' => '[REDACTED]',
+                'redirect_uri' => dashboard_client_attrs_2['redirect_uri']
               })
             end
 
@@ -277,9 +273,7 @@ module VCAP::Services::SSO
             expect(event.actee_name).to eq(unused_id)
             expect(event.space_guid).to eq('')
             expect(event.organization_guid).to eq('')
-            expect(event.metadata).to include({
-              'changes_from_broker_catalog' => {}
-            })
+            expect(event.metadata).to be_empty
           end
         end
 
@@ -494,9 +488,7 @@ module VCAP::Services::SSO
         expect(event.actee_name).to eq(client_to_delete_1)
         expect(event.space_guid).to eq('')
         expect(event.organization_guid).to eq('')
-        expect(event.metadata).to include({
-          'changes_from_broker_catalog' => {}
-        })
+        expect(event.metadata).to be_empty
       end
 
       context 'when deleting UAA clients fails' do
