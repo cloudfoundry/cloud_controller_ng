@@ -91,6 +91,39 @@ module VCAP::CloudController
     end
   end
 
+  describe 'PUT /v2/service_plan_visibilities/:guid' do
+    let(:headers) { json_headers(admin_headers) }
+    let!(:organization) { Organization.make }
+    let!(:new_organization) { Organization.make }
+    let!(:service_plan) { ServicePlan.make }
+    let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
+
+    it "updates the service plan visibility" do
+      put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump({organization_guid: new_organization.guid}), headers
+
+      expect(last_response.status).to eq(201)
+      service_plan_visibility = ServicePlanVisibility.find(:guid => visibility.guid)
+      expect(service_plan_visibility.organization_guid).to eq new_organization.guid
+    end
+
+    it 'creates a service plan visibility update event' do
+      email = "some-email-address@example.com"
+      put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump({ organization_guid: new_organization.guid }), headers_for(admin_user, email: email)
+
+      event = Event.first(type: 'audit.service_plan_visibility.update')
+      expect(event.actor_type).to eq('user')
+      expect(event.timestamp).to be
+      expect(event.actor).to eq(admin_user.guid)
+      expect(event.actor_name).to eq(email)
+      expect(event.actee).to eq(visibility.guid)
+      expect(event.actee_type).to eq('service_plan_visibility')
+      expect(event.actee_name).to eq("")
+      expect(event.space_guid).to be_empty
+      expect(event.organization_guid).to eq(new_organization.guid)
+      expect(event.metadata).to eq({"service_plan_guid" => service_plan.guid})
+    end
+  end
+
   describe 'DELETE /v2/service_plan_visibilities/:guid' do
     let(:headers) { json_headers(admin_headers) }
     let!(:organization) { Organization.make }
