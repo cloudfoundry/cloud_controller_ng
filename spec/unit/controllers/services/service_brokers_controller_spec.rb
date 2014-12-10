@@ -250,7 +250,6 @@ module VCAP::CloudController
       let(:body_hash) do
         {
           name: 'My Updated Service',
-          broker_url: 'http://new-broker.example.com',
           auth_username: 'new-username',
           auth_password: 'new-password',
         }
@@ -310,31 +309,10 @@ module VCAP::CloudController
         expect(event.actee_name).to eq(old_broker_name)
         expect(event.space_guid).to be_empty
         expect(event.organization_guid).to be_empty
-        expect(event.metadata).to include({
-          'request' => {
-            'name' => body_hash[:name],
-            'auth_username' => body_hash[:auth_username],
-            'auth_password' => '[REDACTED]',
-          }
-        })
-      end
-
-      context "when the auth_password isn't updated" do
-        it 'creates a broker update event without the redacted password key' do
-          body_hash.delete(:auth_password)
-          body_hash.delete(:broker_url)
-          email = 'email@example.com'
-
-          put "/v2/service_brokers/#{broker.guid}", body, headers_for(admin_user, email: email)
-
-          event = Event.first(type: 'audit.service_broker.update')
-          expect(event.metadata).to include({
-            'request' => {
-              'name' => body_hash[:name],
-              'auth_username' => body_hash[:auth_username],
-            }
-          })
-        end
+        expect(event.metadata['request']['name']).to eq body_hash[:name]
+        expect(event.metadata['request']['auth_username']).to eq body_hash[:auth_username]
+        expect(event.metadata['request']['auth_password']).to eq '[REDACTED]'
+        expect(event.metadata['request']).not_to have_key 'broker_url'
       end
 
       it 'updates the broker' do
