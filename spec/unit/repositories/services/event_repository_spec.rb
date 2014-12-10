@@ -16,7 +16,16 @@ module VCAP::CloudController
           repository.record_service_plan_visibility_event(:create, service_plan_visibility, {})
 
           event = Event.find(type: 'audit.service_plan_visibility.create')
-          expect(event).to be
+          expect(event.actor_type).to eq('user')
+          expect(event.timestamp).to be
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_name).to eq(email)
+          expect(event.actee).to eq(service_plan_visibility.guid)
+          expect(event.actee_type).to eq('service_plan_visibility')
+          expect(event.actee_name).to eq("")
+          expect(event.space_guid).to be_empty
+          expect(event.organization_guid).to eq(service_plan_visibility.organization.guid)
+          expect(event.metadata).to eq({"service_plan_guid" => service_plan_visibility.service_plan.guid})
         end
 
         context "when it fails" do
