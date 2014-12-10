@@ -18,7 +18,20 @@ resource "Service Usage Events (experimental)", :type => [:api, :legacy_api] do
   standard_model_get :service_usage_event
 
   get "/v2/service_usage_events" do
+    field :guid, "The guid of the event.", required: false
+    field :state, "The desired state of the service.", required: false, readonly: true, valid_values: ["CREATED", "DELETED"]
+    field :org_guid, "The GUID of the organization.", required: false, readonly: true
+    field :space_guid, "The GUID of the space.", required: false, readonly: true
+    field :space_name, "The name of the space.", required: false, readonly: true
+    field :service_instance_guid, "The GUID of the service instance.", required: false, readonly: true
+    field :service_instance_name, "The name of the service instance.", required: false, readonly: true
+    field :service_instance_type, "The type of the service instance.", required: false, readonly: true, valid_values: ["managed_service_instance", "user_provided_service_instance"]
+    field :service_plan_guid, "The GUID for the service plan.", required: false, readonly: true
+    field :service_plan_name, "The name for the service plan.", required: false, readonly: true
+    field :service_guid, "The GUID of the service.", required: false, readonly: true
+
     standard_list_parameters VCAP::CloudController::ServiceUsageEventsController
+
     request_parameter :after_guid, "Restrict results to Service Usage Events after the one with the given guid"
 
     example "List Service Usage Events" do
