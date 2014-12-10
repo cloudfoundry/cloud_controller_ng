@@ -108,6 +108,7 @@ module VCAP::CloudController
               "droplet_uri" => "fake-droplet_uri",
               "environment" => [{"name" => "fake", "value" => "environment"}],
               "file_descriptors" => 333,
+              "health_check_type" => "port",
               "health_check_timeout_in_seconds" => 444,
               "log_guid" => "fake-guid",
               "memory_mb" => 555,
@@ -164,7 +165,7 @@ module VCAP::CloudController
         describe "#stop_index_request" do
           let(:app) { AppFactory.make }
           before { allow(common_protocol).to receive(:stop_index_request) }
-          
+
           it "delegates to the common protocol" do
             protocol.stop_index_request(app, 33)
 

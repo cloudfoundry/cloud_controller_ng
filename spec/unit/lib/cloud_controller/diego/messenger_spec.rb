@@ -12,10 +12,6 @@ module VCAP::CloudController
       let(:app) do
         app = AppFactory.make
         app.instances = 3
-        app.space.add_route(route1)
-        app.space.add_route(route2)
-        app.add_route(route1)
-        app.add_route(route2)
         app.health_check_timeout = 120
         app
       end
@@ -77,7 +73,8 @@ module VCAP::CloudController
             "execution_metadata" => "the-staging-metadata",
             "environment" => Environment.new(app).as_json,
             "num_instances" => expected_instances,
-            "routes" => ["some-route.some-domain.com", "some-other-route.some-domain.com"],
+            "routes" => [],
+            "health_check_type" => "none",
             "health_check_timeout_in_seconds" => 120,
             "log_guid" => app.guid,
           }
@@ -116,10 +113,31 @@ module VCAP::CloudController
             expect(nats_message[:message]).to match_json(expected_message)
           end
         end
+
+        context "when the app has routes" do
+          before do
+            app.space.add_route(route1)
+            app.space.add_route(route2)
+            app.add_route(route1)
+            app.add_route(route2)
+          end
+
+          it "should desire it with the correct 'routes' and the 'port' health check" do
+            messenger.send_desire_request(app)
+
+            expected_message["health_check_type"] = "port"
+            expected_message["routes"] = ["some-route.some-domain.com", "some-other-route.some-domain.com"]
+
+            nats_message = message_bus.published_messages.first
+            expect(nats_message[:subject]).to eq("diego.desire.app")
+            expect(nats_message[:message]).to match_json(expected_message)
+          end
+        end
       end
 
       describe "stop staging an app" do
-        let(:task_id) {'staging_task_id'}
+        let(:task_id) { 'staging_task_id' }
+
         it "sends a stop staging request" do
           messenger.send_stop_staging_request(app, task_id)
 

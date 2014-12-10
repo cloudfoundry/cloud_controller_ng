@@ -162,7 +162,8 @@ module VCAP::CloudController
               "droplet_uri" => "http://blobsto.re/droplet",
               "stack" => "stack-6",
               "start_command" => "start-command-6",
-              "execution_metadata" => ""
+              "execution_metadata" => "",
+              "health_check_type" => "port",
             })
 
             last_response_app_env = last_response_app["environment"]
