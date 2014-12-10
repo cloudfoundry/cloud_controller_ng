@@ -38,8 +38,10 @@ http {
     listen    <%= p("cc.external_port") %>;
     server_name  _;
     server_name_in_redirect off;
-    proxy_send_timeout          <%= p("request_timeout_in_seconds") %>;
-    proxy_read_timeout          <%= p("request_timeout_in_seconds") %>;
+    <% if p("request_timeout_in_seconds").to_i > 0 %>
+      proxy_send_timeout          <%= p("request_timeout_in_seconds") %>;
+      proxy_read_timeout          <%= p("request_timeout_in_seconds") %>;
+    <% end %>
 
     # proxy and log all CC traffic
     location / {
