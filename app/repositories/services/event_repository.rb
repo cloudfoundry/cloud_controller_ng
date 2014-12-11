@@ -29,7 +29,7 @@ module VCAP::CloudController
           metadata = metadata_for_broker_params(params)
           actee = {
             actee: broker.guid,
-            actee_type: 'broker',
+            actee_type: 'service_broker',
             actee_name: broker.name,
           }
           create_event("audit.service_broker.#{type}", user_actor, actee, metadata)

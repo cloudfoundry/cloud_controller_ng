@@ -91,7 +91,7 @@ module VCAP::CloudController
         expect(event.actor).to eq(admin_user.guid)
         expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(broker.guid)
-        expect(event.actee_type).to eq('broker')
+        expect(event.actee_type).to eq('service_broker')
         expect(event.actee_name).to eq(broker.name)
         expect(event.space_guid).to be_empty
         expect(event.organization_guid).to be_empty
@@ -205,7 +205,7 @@ module VCAP::CloudController
         expect(event.actor).to eq(admin_user.guid)
         expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(broker.guid)
-        expect(event.actee_type).to eq('broker')
+        expect(event.actee_type).to eq('service_broker')
         expect(event.actee_name).to eq(broker.name)
         expect(event.space_guid).to be_empty
         expect(event.organization_guid).to be_empty
@@ -306,7 +306,7 @@ module VCAP::CloudController
         expect(event.actor).to eq(admin_user.guid)
         expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(broker.guid)
-        expect(event.actee_type).to eq('broker')
+        expect(event.actee_type).to eq('service_broker')
         expect(event.actee_name).to eq(old_broker_name)
         expect(event.space_guid).to be_empty
         expect(event.organization_guid).to be_empty
