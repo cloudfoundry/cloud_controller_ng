@@ -105,18 +105,18 @@ module VCAP::Services::SSO
         service_broker.db.transaction do
           db_changeset.each(&:db_command)
           client_manager.modify_transaction(uaa_changeset)
-
-          uaa_changeset.each do |uaa_cmd|
-            case uaa_cmd.uaa_command[:action]
-            when 'add'
-              @services_event_repository.record_service_dashboard_client_event(:create, uaa_cmd.client_attrs, service_broker)
-            when 'delete'
-              @services_event_repository.record_service_dashboard_client_event(:delete, uaa_cmd.client_attrs, service_broker)
-            end
-          end
         end
       rescue VCAP::Services::SSO::UAA::UaaError => e
         raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
+      end
+
+      uaa_changeset.each do |uaa_cmd|
+        case uaa_cmd.uaa_command[:action]
+        when 'add'
+          @services_event_repository.record_service_dashboard_client_event(:create, uaa_cmd.client_attrs, service_broker)
+        when 'delete'
+          @services_event_repository.record_service_dashboard_client_event(:delete, uaa_cmd.client_attrs, service_broker)
+        end
       end
     end
 
