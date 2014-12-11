@@ -96,7 +96,8 @@ module VCAP::CloudController
             metadata[:request]['credentials'] = "[REDACTED]"
           end
 
-          create_event("audit.user_provided_service_instance.#{type}", user_actor, actee, metadata, { space: service_instance.space })
+          space_data = { space: service_instance.space }
+          create_event("audit.user_provided_service_instance.#{type}", user_actor, actee, metadata, space_data)
         end
 
         def record_service_binding_event(type, service_binding, params=nil)

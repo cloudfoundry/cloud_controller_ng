@@ -452,6 +452,7 @@ module VCAP::CloudController
           expect(event.actee_type).to eq 'user_provided_service_instance'
           expect(event.actee_name).to eq instance.name
           expect(event.space_guid).to eq instance.space.guid
+          expect(event.space_id).to eq instance.space.id
           expect(event.metadata).to eq('request' => params)
         end
 
@@ -499,6 +500,7 @@ module VCAP::CloudController
           expect(event.actee_type).to eq 'service_binding'
           expect(event.actee_name).to eq ''
           expect(event.space_guid).to eq service_binding.space.guid
+          expect(event.space_id).to eq service_binding.space.id
           expect(event.metadata).to eq(metadata)
         end
       end
