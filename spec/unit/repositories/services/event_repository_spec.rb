@@ -479,6 +479,29 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#record_service_binding_event' do
+        let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
+        it 'records an event' do
+          repository.record_service_binding_event(:create, service_binding)
+          event = Event.first(type: 'audit.service_binding.create')
+          metadata = {
+            'request' => {
+              'service_instance_guid' => service_binding.service_instance.guid,
+              'app_guid' => service_binding.app.guid
+            }
+          }
+
+          expect(event.actor).to eq user.guid
+          expect(event.actor_type).to eq 'user'
+          expect(event.actor_name).to eq email
+          expect(event.actee).to eq service_binding.guid
+          expect(event.actee_type).to eq 'service_binding'
+          expect(event.actee_name).to eq ''
+          expect(event.space_guid).to eq service_binding.space.guid
+          expect(event.metadata).to eq(metadata)
+        end
+      end
     end
   end
 end
