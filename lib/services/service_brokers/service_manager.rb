@@ -95,7 +95,7 @@ module VCAP::Services::ServiceBrokers
         plan_to_deactivate.active = false
         plan_to_deactivate.save
 
-        deactivated_plans_warning.add(plan_to_deactivate)
+        deactivated_plans_warning.add(plan_to_deactivate) if plan_to_deactivate.service_instances.count >= 1
       end
 
       @warnings << deactivated_plans_warning.message if deactivated_plans_warning.message

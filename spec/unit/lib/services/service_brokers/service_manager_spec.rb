@@ -443,10 +443,6 @@ module VCAP::Services::ServiceBrokers
 
               missing_plan2 = VCAP::CloudController::ServicePlan.make(service: service, unique_id: 'plan2_nolongerexists', name: missing_plan2_name)
               VCAP::CloudController::ManagedServiceInstance.make(service_plan: missing_plan2)
-
-              missing_service2 = VCAP::CloudController::Service.make(service_broker: broker, label: missing_service2_name)
-              missing_service2_plan = VCAP::CloudController::ServicePlan.make(service: missing_service2, unique_id: 'i_be_gone', name: missing_service2_plan_name)
-              VCAP::CloudController::ManagedServiceInstance.make(service_plan: missing_service2_plan)
             end
 
             it 'marks the existing plan as inactive' do
@@ -458,11 +454,17 @@ module VCAP::Services::ServiceBrokers
               expect(missing_plan).not_to be_active
             end
 
-            it 'adds a formatted warning' do
-              service_manager.sync_services_and_plans(catalog)
+            context "when there are existing service instances" do
+              before do
+                missing_service2 = VCAP::CloudController::Service.make(service_broker: broker, label: missing_service2_name)
+                missing_service2_plan = VCAP::CloudController::ServicePlan.make(service: missing_service2, unique_id: 'i_be_gone', name: missing_service2_plan_name)
+                VCAP::CloudController::ManagedServiceInstance.make(service_plan: missing_service2_plan)
+              end
 
+              it 'adds a formatted warning' do
+                service_manager.sync_services_and_plans(catalog)
 # rubocop:disable LineLength
-              expect(service_manager.warnings).to include(<<HEREDOC)
+                expect(service_manager.warnings).to include(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
   #{missing_plan_name}
@@ -471,6 +473,23 @@ Warning: Service plans are missing from the broker's catalog (#{broker.broker_ur
   #{missing_service2_plan_name}
 HEREDOC
 # rubocop:enable LineLength
+              end
+            end
+
+            context "when there are no existing service instances" do
+              it 'does not add a formatted warning' do
+                service_manager.sync_services_and_plans(catalog)
+# rubocop:disable LineLength
+                expect(service_manager.warnings).to_not include(<<HEREDOC)
+Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
+#{service_name}
+  #{missing_plan_name}
+  #{missing_plan2_name}
+#{missing_service2_name}
+  #{missing_service2_plan_name}
+HEREDOC
+# rubocop:enable LineLength
+              end
             end
           end
         end
