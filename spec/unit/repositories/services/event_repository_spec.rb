@@ -109,6 +109,242 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#with_service_event' do
+        let(:broker) { VCAP::CloudController::ServiceBroker.make }
+
+        context 'when the service is new' do
+          let(:service) do
+            VCAP::CloudController::Service.new(
+              service_broker: broker,
+              label: 'name',
+              description: 'some description',
+              bindable: true,
+              active: false,
+              plan_updateable: false,
+              unique_id: 'broker-provided-id',
+            )
+          end
+
+          it 'records a create event' do
+            repository.with_service_event(service) do
+              service.save
+            end
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service.create')
+            expect(event.type).to eq('audit.service.create')
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(broker.guid)
+            expect(event.actor_name).to eq(broker.name)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(service.guid)
+            expect(event.actee_type).to eq('service')
+            expect(event.actee_name).to eq(service.label)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
+          end
+
+          it 'records every field of the service in the metadata of the event' do
+            repository.with_service_event(service) do
+              service.save
+            end
+
+            event = Event.first(type: 'audit.service.create')
+            expect(event.metadata).to include({
+              'service_broker_guid' => service.service_broker.guid,
+              'unique_id' => service.broker_provided_id,
+              'provider' => service.provider,
+              'url' => service.url,
+              'version' => service.version,
+              'info_url' => service.info_url,
+              'bindable' => service.bindable,
+              'long_description' => service.long_description,
+              'documentation_url' => service.documentation_url,
+              'label' => service.label,
+              'description' => service.description,
+              'tags' => service.tags,
+              'extra' => service.extra,
+              'active' => service.active,
+              'requires' => service.requires,
+              'plan_updateable' => service.plan_updateable,
+            })
+          end
+        end
+
+        context 'when the service already exists' do
+          let!(:service) { Service.make(service_broker: broker, description: 'description') }
+          before do
+            service.plan_updateable = true
+            service.extra = { 'extra' => 'data' }.to_json
+            service.description = 'description' # field is updated but not changed
+          end
+
+          it 'creates an update event' do
+            repository.with_service_event(service) do
+              service.save
+            end
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service.update')
+            expect(event.type).to eq('audit.service.update')
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(broker.guid)
+            expect(event.actor_name).to eq(broker.name)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(service.guid)
+            expect(event.actee_type).to eq('service')
+            expect(event.actee_name).to eq(service.label)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
+          end
+
+          it 'records in the metadata only those fields which were changed' do
+            repository.with_service_event(service) do
+              service.save
+            end
+
+            metadata = VCAP::CloudController::Event.first(type: 'audit.service.update').metadata
+            expect(metadata.keys.length).to eq 2
+            expect(metadata['plan_updateable']).to eq true
+            expect(metadata['extra']).to eq({'extra' => 'data'}.to_json)
+          end
+        end
+      end
+
+      describe '#with_service_plan_event' do
+        let(:broker) { VCAP::CloudController::ServiceBroker.make }
+        let(:service) { VCAP::CloudController::Service.make(service_broker: broker) }
+
+        context 'when the service is new' do
+          let(:plan) do
+            VCAP::CloudController::ServicePlan.new(
+              service: service,
+              name: 'myPlan',
+              description: 'description',
+              free: true,
+              unique_id: 'broker-provided-id',
+              active: false,
+              public: false
+            )
+          end
+
+          it 'records a create event' do
+            repository.with_service_plan_event(plan) do
+              plan.save
+            end
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_plan.create')
+            expect(event.type).to eq('audit.service_plan.create')
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(broker.guid)
+            expect(event.actor_name).to eq(broker.name)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(plan.guid)
+            expect(event.actee_type).to eq('service_plan')
+            expect(event.actee_name).to eq(plan.name)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
+          end
+
+          it 'records every field of the service plan in the metadata of the event' do
+            repository.with_service_plan_event(plan) do
+              plan.save
+            end
+
+            event = Event.first(type: 'audit.service_plan.create')
+            expect(event.metadata).to include({
+              'name' => plan.name,
+              'description' => plan.description,
+              'free' => plan.free,
+              'active' => plan.active,
+              'extra' => plan.extra,
+              'unique_id' => plan.broker_provided_id,
+              'public' => plan.public,
+              'service_guid' => service.guid,
+            })
+          end
+        end
+
+        context 'when the service plan already exists' do
+          let!(:plan) { ServicePlan.make(service: service, description: 'description') }
+          before do
+            plan.extra = { 'extra' => 'data' }.to_json
+            plan.description = 'description'
+          end
+
+          it 'creates an update event' do
+            repository.with_service_plan_event(plan) do
+              plan.save
+            end
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_plan.update')
+            expect(event.type).to eq('audit.service_plan.update')
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(broker.guid)
+            expect(event.actor_name).to eq(broker.name)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(plan.guid)
+            expect(event.actee_type).to eq('service_plan')
+            expect(event.actee_name).to eq(plan.name)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
+          end
+
+          it 'records in the metadata only those fields which were changed' do
+            repository.with_service_plan_event(plan) do
+              plan.save
+            end
+
+            metadata = VCAP::CloudController::Event.first(type: 'audit.service_plan.update').metadata
+            expect(metadata.keys.length).to eq 1
+            expect(metadata['extra']).to eq({'extra' => 'data'}.to_json)
+          end
+        end
+      end
+
+      describe '#record_service_event' do
+        let(:broker) { VCAP::CloudController::ServiceBroker.make }
+        let(:service) { VCAP::CloudController::Service.make(service_broker: broker) }
+
+        it 'creates an event with empty metadata because it is only used for delete events' do
+          repository.record_service_event(:delete, service)
+
+          event = Event.first
+          expect(event.type).to eq('audit.service.delete')
+          expect(event.actor_type).to eq('service_broker')
+          expect(event.actor).to eq(broker.guid)
+          expect(event.actor_name).to eq(broker.name)
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(service.guid)
+          expect(event.actee_type).to eq('service')
+          expect(event.actee_name).to eq(service.label)
+          expect(event.space_guid).to eq('')
+          expect(event.organization_guid).to eq('')
+          expect(event.metadata).to eq({})
+        end
+      end
+
+      describe '#record_service_plan_event' do
+        let(:broker) { VCAP::CloudController::ServiceBroker.make }
+        let(:service) { VCAP::CloudController::Service.make(service_broker: broker) }
+        let(:plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+
+        it 'creates an event with empty metadata because it is only used for delete events' do
+          repository.record_service_plan_event(:delete, plan)
+
+          event = Event.first
+          expect(event.type).to eq('audit.service_plan.delete')
+          expect(event.actor_type).to eq('service_broker')
+          expect(event.actor).to eq(broker.guid)
+          expect(event.actor_name).to eq(broker.name)
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(plan.guid)
+          expect(event.actee_type).to eq('service_plan')
+          expect(event.actee_name).to eq(plan.name)
+          expect(event.space_guid).to eq('')
+          expect(event.organization_guid).to eq('')
+          expect(event.metadata).to eq({})
+        end
+      end
     end
   end
 end
