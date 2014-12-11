@@ -117,6 +117,20 @@ module VCAP::CloudController
           create_event("audit.service_binding.#{type}", user_actor, actee, metadata, space_data)
         end
 
+        def record_service_purge_event(service)
+          metadata = {
+            request: {
+              purge: true
+            }
+          }
+          actee = {
+            actee: service.guid,
+            actee_type: 'service',
+            actee_name: service.label,
+          }
+          create_event('audit.service.delete', user_actor, actee, metadata)
+        end
+
         def with_service_event(service, &saveBlock)
           actee = {
             actee_type: "service",
@@ -133,20 +147,6 @@ module VCAP::CloudController
           }
           actor = broker_actor(plan.service.service_broker)
           with_audit_event(plan, actor, actee, &saveBlock)
-        end
-
-        def record_service_purge_event(service)
-          metadata = {
-            request: {
-              purge: true
-            }
-          }
-          actee = {
-            actee: service.guid,
-            actee_type: 'service',
-            actee_name: service.label,
-          }
-          create_event('audit.service.delete', user_actor, actee, metadata)
         end
 
         private

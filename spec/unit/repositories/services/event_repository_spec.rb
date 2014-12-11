@@ -27,20 +27,6 @@ module VCAP::CloudController
           expect(event.organization_guid).to eq(service_plan_visibility.organization.guid)
           expect(event.metadata).to eq({"service_plan_guid" => service_plan_visibility.service_plan.guid})
         end
-
-        context "when it fails" do
-          before do
-            allow(Event).to receive(:create).and_raise
-          end
-
-          it "logs an error but does not propogate errors" do
-            repository.record_service_plan_visibility_event(:create, service_plan_visibility, {})
-
-            event = Event.find(type: 'audit.service_plan_visibility.create')
-            expect(event).not_to be
-            expect(logger).to have_received(:error)
-          end
-        end
       end
 
       describe '#record_broker_event' do
@@ -92,20 +78,6 @@ module VCAP::CloudController
 
               expect(Event.first.metadata).to eq({})
             end
-          end
-        end
-
-        context "when it fails" do
-          before do
-            allow(Event).to receive(:create).and_raise
-          end
-
-          it "logs an error but does not propogate errors" do
-            repository.record_broker_event(:create, service_broker, {})
-
-            event = Event.find(type: 'audit.service_broker.create')
-            expect(event).not_to be
-            expect(logger).to have_received(:error)
           end
         end
       end
@@ -525,6 +497,100 @@ module VCAP::CloudController
           expect(event.space_guid).to eq ''
           expect(event.organization_guid).to eq ''
           expect(event.metadata).to eq(metadata)
+        end
+      end
+
+      describe "when creating the event fails" do
+        before do
+          allow(Event).to receive(:create).and_raise
+        end
+
+        specify "record_service_plan_visibility_event logs an error but does not propogate errors" do
+          service_plan_visibility = VCAP::CloudController::ServicePlanVisibility.make
+          repository.record_service_plan_visibility_event(:create, service_plan_visibility, {})
+          expect(logger).to have_received(:error)
+        end
+        specify "record_broker_event logs an error but does not propogate errors" do
+          broker = VCAP::CloudController::ServiceBroker.make
+          repository.record_broker_event(:create, broker, {})
+          expect(logger).to have_received(:error)
+        end
+
+        specify "record_service_event logs an error but does not propogate errors" do
+          broker = VCAP::CloudController::ServiceBroker.make
+          service = VCAP::CloudController::Service.make(service_broker: broker)
+          repository.record_service_event(:create, service)
+          expect(logger).to have_received(:error)
+        end
+
+        specify "record_service_plan_event logs an error but does not propogate errors" do
+          broker = VCAP::CloudController::ServiceBroker.make
+          service = VCAP::CloudController::Service.make(service_broker: broker)
+          service_plan = VCAP::CloudController::ServicePlan.make(service: service)
+          repository.record_service_plan_event(:create, service_plan)
+          expect(logger).to have_received(:error)
+        end
+
+        specify "record_service_dashboard_client_event logs an error but does not propogate errors" do
+          broker = VCAP::CloudController::ServiceBroker.make
+          repository.record_service_dashboard_client_event(:create, {}, broker)
+          expect(logger).to have_received(:error)
+        end
+
+        specify "record_service_instance_event logs an error but does not propogate errors" do
+          service_instance = VCAP::CloudController::ServiceInstance.make
+          repository.record_service_instance_event(:create, service_instance, {})
+          expect(logger).to have_received(:error)
+        end
+
+        specify "record_user_provided_service_instance_event logs an error but does not propogate errors" do
+          service_instance = VCAP::CloudController::UserProvidedServiceInstance.make
+          repository.record_user_provided_service_instance_event(:create, service_instance, {})
+          expect(logger).to have_received(:error)
+        end
+
+        specify "record_service_binding_event logs an error but does not propogate errors" do
+          service_binding = VCAP::CloudController::ServiceBinding.make
+          repository.record_service_binding_event(:create, service_binding, {})
+          expect(logger).to have_received(:error)
+        end
+
+        specify "record_service_purge_event logs an error but does not propogate errors" do
+          service = VCAP::CloudController::Service.make
+          repository.record_service_purge_event(service)
+          expect(logger).to have_received(:error)
+        end
+
+        specify 'with_service_event logs an error but does not propogate errors' do
+          broker = VCAP::CloudController::ServiceBroker.make
+          service = VCAP::CloudController::Service.make(service_broker: broker)
+
+          plan = VCAP::CloudController::ServicePlan.new(
+              service: service,
+              name: 'myPlan',
+              description: 'description',
+              free: true,
+              unique_id: 'broker-provided-id',
+              active: false,
+              public: false
+            )
+          repository.with_service_plan_event(plan) { plan.save }
+          expect(logger).to have_received(:error)
+        end
+
+        specify 'with_service_plan_event logs an error but does not propogate errors' do
+          broker = VCAP::CloudController::ServiceBroker.make
+          service = VCAP::CloudController::Service.new(
+              service_broker: broker,
+              label: 'name',
+              description: 'some description',
+              bindable: true,
+              active: false,
+              plan_updateable: false,
+              unique_id: 'broker-provided-id',
+            )
+          repository.with_service_event(service) { service.save }
+          expect(logger).to have_received(:error)
         end
       end
     end
