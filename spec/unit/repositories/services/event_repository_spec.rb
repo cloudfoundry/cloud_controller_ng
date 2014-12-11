@@ -502,6 +502,29 @@ module VCAP::CloudController
           expect(event.metadata).to eq(metadata)
         end
       end
+
+      describe '#record_service_purge_event' do
+        let(:service) { VCAP::CloudController::Service.make }
+        it 'records an event' do
+          repository.record_service_purge_event(service)
+          event = Event.first(type: 'audit.service.delete')
+          metadata = {
+            'request' => {
+              'purge' => true
+            }
+          }
+
+          expect(event.actor).to eq user.guid
+          expect(event.actor_type).to eq 'user'
+          expect(event.actor_name).to eq email
+          expect(event.actee).to eq service.guid
+          expect(event.actee_type).to eq 'service'
+          expect(event.actee_name).to eq service.label
+          expect(event.space_guid).to eq ''
+          expect(event.organization_guid).to eq ''
+          expect(event.metadata).to eq(metadata)
+        end
+      end
     end
   end
 end
