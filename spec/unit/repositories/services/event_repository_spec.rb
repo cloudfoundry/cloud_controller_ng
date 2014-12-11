@@ -345,6 +345,56 @@ module VCAP::CloudController
           expect(event.metadata).to eq({})
         end
       end
+
+      describe '#record_service_dashboard_client_event' do
+        let(:broker) { VCAP::CloudController::ServiceBroker.make }
+        let(:client_attrs) do
+          {
+            'id' => 'client-id',
+            'secret' => 'super-secret',
+            'redirect_uri' => 'redirect-here.com/thing'
+          }
+        end
+
+        it 'creates an event' do
+          repository.record_service_dashboard_client_event(:create, client_attrs, broker)
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_attrs['id'])
+          expect(event.actor_type).to eq('service_broker')
+          expect(event.actor).to eq(broker.guid)
+          expect(event.actor_name).to eq(broker.name)
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(client_attrs['id'])
+          expect(event.actee_type).to eq('service_dashboard_client')
+          expect(event.actee_name).to eq(client_attrs['id'])
+          expect(event.space_guid).to eq('')
+          expect(event.organization_guid).to eq('')
+          expect(event.metadata['redirect_uri']).to eq client_attrs['redirect_uri']
+        end
+
+        it 'redacts the client secret' do
+          repository.record_service_dashboard_client_event(:create, client_attrs, broker)
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_attrs['id'])
+          expect(event.metadata['secret']).to eq '[REDACTED]'
+        end
+
+        context 'when the redirect_uri is not updated' do
+          let(:client_attrs) do
+            {
+              'id' => 'client-id',
+              'secret' => 'super-secret',
+            }
+          end
+
+          it 'leaves the metadata field empty' do
+            repository.record_service_dashboard_client_event(:create, client_attrs, broker)
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_attrs['id'])
+            expect(event.metadata).to be_empty
+          end
+        end
+      end
     end
   end
 end

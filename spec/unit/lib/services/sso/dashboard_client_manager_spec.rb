@@ -3,19 +3,19 @@ require 'spec_helper'
 module VCAP::Services::SSO
   describe DashboardClientManager do
     let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
-    let(:manager) { DashboardClientManager.new(service_broker, services_event_respository) }
+    let(:manager) { DashboardClientManager.new(service_broker, services_event_repository) }
     let(:client_manager) { double('client_manager') }
 
     let(:user) { VCAP::CloudController::User.make }
     let(:email) { 'email@example.com' }
-    let(:services_event_respository) { VCAP::CloudController::Repositories::Services::EventRepository.new(security_context) }
+    let(:services_event_repository) { VCAP::CloudController::Repositories::Services::EventRepository.new(security_context) }
     let(:security_context) { double(:security_context, current_user: user, current_user_email: email) }
 
     describe '#initialize' do
       subject{ manager }
 
       it 'sets the service_broker' do
-        manager = DashboardClientManager.new(service_broker, services_event_respository)
+        manager = DashboardClientManager.new(service_broker, services_event_repository)
         expect(manager.service_broker).to eql(service_broker)
       end
 
@@ -99,7 +99,6 @@ module VCAP::Services::SSO
 
           it 'records a create event for each dashboard client' do
             client_id = dashboard_client_attrs_1['id']
-
             manager.synchronize_clients_with_catalog(catalog)
 
             expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.create').count).to eq 2
@@ -259,9 +258,8 @@ module VCAP::Services::SSO
           end
 
           it 'records a delete event for the deleted client' do
-            manager.remove_clients_for_broker
-
-            expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.delete').count).to eq 2
+            manager.synchronize_clients_with_catalog(catalog)
+            expect(VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.delete').count).to eq 1
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.delete', actee_name: unused_id)
             expect(event.actor_type).to eq('service_broker')
