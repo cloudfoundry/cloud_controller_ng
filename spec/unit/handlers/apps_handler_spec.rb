@@ -130,7 +130,7 @@ module VCAP::CloudController
         end
 
         context 'when the app has a web process' do
-          let(:space) { Space.make }
+          let(:space) { Space.find(guid: app_model.space_guid) }
           let(:user) { User.make }
           let(:process_opts) { {space: space} }
           let(:process) { AppFactory.make(process_opts) }
@@ -250,7 +250,7 @@ module VCAP::CloudController
     describe '#add_process' do
       let(:app_model) { AppModel.make }
       let(:guid) { app_model.guid }
-      let(:process) { AppFactory.make(type: 'special') }
+      let(:process) { AppFactory.make(type: 'special', space_guid: app_model.space_guid) }
 
       context 'when the user cannot update the app' do
         before do
@@ -275,6 +275,17 @@ module VCAP::CloudController
           expect {
             apps_handler.add_process(app_model, process, access_context)
           }.to raise_error(AppsHandler::DuplicateProcessType)
+        end
+      end
+
+      context 'when the process is not in the same space as the app' do
+        let(:another_space) { Space.make }
+        let(:process) { AppFactory.make(type: 'special', space_guid: another_space.guid) }
+
+        it 'raises IncorrectProcessSpace error' do
+          expect {
+            apps_handler.add_process(app_model, process, access_context)
+          }.to raise_error(AppsHandler::IncorrectProcessSpace)
         end
       end
 

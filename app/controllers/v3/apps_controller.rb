@@ -59,7 +59,7 @@ module VCAP::CloudController
 
       [HTTP::NO_CONTENT]
     rescue AppsHandler::DeleteWithProcesses
-      raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', 'App deletion', 'Has child processes')
+      unable_to_perform!('App deletion', 'Has child processes')
     rescue AppsHandler::Unauthorized
       app_not_found!
     end
@@ -95,6 +95,8 @@ module VCAP::CloudController
       invalid_process_type!(process.type)
     rescue AppsHandler::Unauthorized
       app_not_found!
+    rescue AppsHandler::IncorrectProcessSpace
+      unable_to_perform!('Process addition', 'Process and App are not in the same space')
     end
 
     delete '/v3/apps/:guid/processes', :remove_process
@@ -118,6 +120,10 @@ module VCAP::CloudController
   end
 
   private
+
+  def unable_to_perform!(msg, details)
+    raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', msg, details)
+  end
 
   def app_not_found!
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')

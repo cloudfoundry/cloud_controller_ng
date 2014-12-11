@@ -44,6 +44,7 @@ module VCAP::CloudController
     class DeleteWithProcesses < StandardError; end
     class DuplicateProcessType < StandardError; end
     class InvalidApp < StandardError; end
+    class IncorrectProcessSpace < StandardError; end
 
     def initialize(process_handler)
       @process_handler = process_handler
@@ -108,6 +109,7 @@ module VCAP::CloudController
 
     def add_process(app, process, access_context)
       raise Unauthorized if access_context.cannot?(:update, app)
+      raise IncorrectProcessSpace if app.space_guid != process.space_guid
 
       app.db.transaction do
         app.lock!

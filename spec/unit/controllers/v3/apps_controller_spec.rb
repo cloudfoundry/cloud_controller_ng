@@ -376,6 +376,21 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the process is in a different space' do
+        before do
+          allow(apps_handler).to receive(:add_process).and_raise(AppsHandler::IncorrectProcessSpace)
+        end
+
+        it 'returns an UnableToPerform error' do
+          expect {
+            _, _ = apps_controller.add_process(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnableToPerform'
+            expect(error.response_code).to eq 400
+          end
+        end
+      end
+
       context 'when the process is added to the app' do
         it 'returns a 204 No Content response' do
           response_code, _ = apps_controller.add_process(guid)
