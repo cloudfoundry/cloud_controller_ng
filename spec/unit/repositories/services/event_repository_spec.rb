@@ -395,6 +395,41 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#record_service_instance_event' do
+        let(:instance) { VCAP::CloudController::ServiceInstance.make }
+        let(:params) do
+          {
+            'service_plan_guid' => 'plan-guid',
+            'space-guid' => 'space-guid',
+            'name' => 'instance-name'
+          }
+        end
+
+        it 'records an event' do
+          repository.record_service_instance_event(:create, instance, params)
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+          expect(event.type).to eq('audit.service_instance.create')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_name).to eq(email)
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(instance.guid)
+          expect(event.actee_type).to eq('service_instance')
+          expect(event.actee_name).to eq(instance.name)
+          expect(event.space_guid).to eq(instance.space.guid)
+          expect(event.space_id).to eq(instance.space.id)
+          expect(event.organization_guid).to eq(instance.space.organization.guid)
+        end
+
+        it 'places the params in the metadata' do
+          repository.record_service_instance_event(:create, instance, params)
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+          expect(event.metadata).to eq({ 'request' => params })
+        end
+      end
     end
   end
 end
