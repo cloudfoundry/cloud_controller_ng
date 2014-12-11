@@ -45,7 +45,7 @@ module VCAP::CloudController
 
     describe 'validations' do
       describe 'name' do
-        let(:space_guid) { 'a-guid' }
+        let(:space_guid) { space.guid }
         let(:app) { AppModel.make }
 
         it 'uniqueness is case insensitive' do
@@ -116,6 +116,19 @@ module VCAP::CloudController
             AppModel.make(name: name, space_guid: space.guid)
           }.to raise_error(Sequel::ValidationFailed, /space_guid and name/)
         end
+      end
+
+      it 'is invalid if space does not exist' do
+        name = 'my-app'
+        space = Space.make
+
+        expect {
+          AppModel.make(name: name, space_guid: space.guid)
+        }.to_not raise_error
+
+        expect {
+          AppModel.make(name: name, space_guid: 'not-here')
+        }.to raise_error(Sequel::ValidationFailed, /space_guid/)
       end
     end
   end

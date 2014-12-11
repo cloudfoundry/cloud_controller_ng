@@ -50,7 +50,8 @@ module VCAP::CloudController
     end
 
     describe '#create' do
-      let(:create_message) { AppCreateMessage.new({ 'name' => 'my_name', 'space_guid' => 'a-guid' }) }
+      let(:space_guid) { Space.make.guid }
+      let(:create_message) { AppCreateMessage.new({ 'name' => 'my_name', 'space_guid' => space_guid }) }
 
       context 'when the user cannot create an app' do
         before do

@@ -142,7 +142,7 @@ module VCAP::CloudController
       end
 
       context 'V3 Apps compatibility' do
-        let(:v3_app) { AppModel.create(name: 'v3-app-name') }
+        let(:v3_app) { AppModel.make(name: 'v3-app-name') }
         let(:app_obj) { AppFactory.make(instances: 1, app_guid: v3_app.guid) }
         let(:new_name) { 'new-name' }
         let(:update_hash) { { name: new_name } }
