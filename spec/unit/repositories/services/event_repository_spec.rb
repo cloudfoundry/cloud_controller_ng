@@ -430,6 +430,55 @@ module VCAP::CloudController
           expect(event.metadata).to eq({ 'request' => params })
         end
       end
+
+      describe '#record_user_provided_service_instance_event' do
+        let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+        let(:params) do
+          {
+            "name" => 'my-upsi',
+            "space_guid" => instance.space.guid,
+            "syslog_drain_url" => ""
+          }
+        end
+
+        it 'records an event' do
+          repository.record_user_provided_service_instance_event(:create, instance, params)
+          event = Event.first(type: 'audit.user_provided_service_instance.create')
+
+          expect(event.actor).to eq user.guid
+          expect(event.actor_type).to eq 'user'
+          expect(event.actor_name).to eq email
+          expect(event.actee).to eq instance.guid
+          expect(event.actee_type).to eq 'user_provided_service_instance'
+          expect(event.actee_name).to eq instance.name
+          expect(event.space_guid).to eq instance.space.guid
+          expect(event.metadata).to eq('request' => params)
+        end
+
+        context 'when the params contain credentials' do
+          let(:params) do
+            {
+              "name" => 'my-upsi',
+              "credentials" => {
+                'url' => 'user:password@url.com'
+              },
+              "space_guid" => instance.space.guid,
+              "syslog_drain_url" => ""
+            }
+          end
+
+          it 'redacts the credentials' do
+            repository.record_user_provided_service_instance_event(:create, instance, params)
+            event = Event.first(type: 'audit.user_provided_service_instance.create')
+            expect(event.metadata).to eq('request' => {
+              'name' => params['name'],
+              'credentials' => '[REDACTED]',
+              'space_guid' => params['space_guid'],
+              'syslog_drain_url' => params['syslog_drain_url']
+            })
+          end
+        end
+      end
     end
   end
 end

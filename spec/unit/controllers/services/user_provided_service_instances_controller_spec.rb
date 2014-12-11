@@ -2,7 +2,6 @@ require "spec_helper"
 
 module VCAP::CloudController
   describe UserProvidedServiceInstancesController, :services do
-
     describe "Attributes" do
       it do
         expect(described_class).to have_creatable_attributes({
@@ -89,9 +88,9 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:req) do
         {
-          name: 'my-upsi',
-          credentials: { uri: 'https://user:password@service-location.com:port/db' },
-          space_guid: space.guid
+          'name' => 'my-upsi',
+          'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
+          'space_guid' => space.guid
         }
       end
 
@@ -109,8 +108,8 @@ module VCAP::CloudController
       it 'records a create event' do
         post '/v2/user_provided_service_instances', req.to_json, headers_for(developer, email: email)
 
-        service_instance = UserProvidedServiceInstance.first
         event = Event.first(type: 'audit.user_provided_service_instance.create')
+        service_instance = UserProvidedServiceInstance.first
 
         expect(event.actor).to eq developer.guid
         expect(event.actor_type).to eq 'user'
@@ -136,8 +135,8 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:req) do
         {
-          name: 'my-upsi',
-          credentials: { uri: 'https://user:password@service-location.com:port/db' }
+          'name' => 'my-upsi',
+          'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' }
         }
       end
 
@@ -227,7 +226,6 @@ module VCAP::CloudController
         service_instance = UserProvidedServiceInstance.first
 
         delete "/v2/user_provided_service_instances/#{service_instance.guid}", {}, headers_for(developer, email: email)
-
         event = Event.first(type: 'audit.user_provided_service_instance.delete')
         expect(event.actor).to eq developer.guid
         expect(event.actor_type).to eq 'user'
