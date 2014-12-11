@@ -37,6 +37,7 @@ resource "Service Instances", :type => [:api, :legacy_api] do
       let(:old_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan) }
 
+      field :name, "The new name for the service instance", required: false, example_values: ["my-new-service-instance"]
       field :service_plan_guid, "The new plan guid for the service instance", required: false, example_values: ["6c4bd80f-4593-41d1-a2c9-b20cb65ec76e"]
 
       before do
