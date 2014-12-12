@@ -419,10 +419,7 @@ module VCAP::CloudController
         expect(event.organization_guid).to eq(space.organization.guid)
 
         expect(event.metadata).to include({
-          'request' => {
-            'service_instance_guid' => service_binding.service_instance.guid,
-            'app_guid' => service_binding.app.guid
-          }
+          'request' => {}
         })
 
       end
