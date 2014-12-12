@@ -78,6 +78,16 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the space does not exist' do
+        let(:space_guid) { 'notexist' }
+
+        it 'raises an AppInvalid error' do
+          expect {
+            apps_handler.create(create_message, access_context)
+          }.to raise_error(AppsHandler::InvalidApp, 'Space was not found')
+        end
+      end
+
       context 'when the app is invalid' do
         before do
           allow_any_instance_of(AppModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('the message'))

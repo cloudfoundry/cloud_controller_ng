@@ -62,6 +62,7 @@ module VCAP::CloudController
       app.space_guid = message.space_guid
 
       raise Unauthorized if access_context.cannot?(:create,  app)
+      raise InvalidApp.new('Space was not found') if Space.find(guid: message.space_guid).nil?
 
       app.save
       app

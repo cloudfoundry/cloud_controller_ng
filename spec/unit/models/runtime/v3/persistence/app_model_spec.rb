@@ -117,19 +117,6 @@ module VCAP::CloudController
           }.to raise_error(Sequel::ValidationFailed, /space_guid and name/)
         end
       end
-
-      it 'is invalid if space does not exist' do
-        name = 'my-app'
-        space = Space.make
-
-        expect {
-          AppModel.make(name: name, space_guid: space.guid)
-        }.to_not raise_error
-
-        expect {
-          AppModel.make(name: name, space_guid: 'not-here')
-        }.to raise_error(Sequel::ValidationFailed, /space_guid/)
-      end
     end
   end
 end

@@ -8,7 +8,6 @@ module VCAP::CloudController
       validates_presence :name
       validates_unique [:space_guid, :name]
       validates_format APP_NAME_REGEX, :name
-      validates_space_exists(send(:space_guid))
     end
 
     def self.user_visible(user)
@@ -20,12 +19,6 @@ module VCAP::CloudController
           :spaces, spaces__organization_id: :organizations__id
         ).select(:spaces__guid)],
       ]))
-    end
-
-    private
-
-    def validates_space_exists(space_guid)
-      errors.add(:space_guid, "space does not exist") if Space.where(guid: space_guid).count <= 0
     end
   end
 end
