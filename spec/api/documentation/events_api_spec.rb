@@ -766,10 +766,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_name => "",
                                :space_guid => instance.space_guid,
                                :metadata => {
-                                 'request' => {
-                                   'service_instance_guid' => instance.guid,
-                                   'app_guid' => app.guid,
-                                 }
+                                 'request' => {}
                                }
     end
   end
