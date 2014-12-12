@@ -101,12 +101,12 @@ module VCAP::CloudController
         end
 
         def record_service_binding_event(type, service_binding, params=nil)
-          metadata = {
-            request: {
-              service_instance_guid: service_binding.service_instance.guid,
-              app_guid: service_binding.app.guid
-            }
-          }
+          metadata = { request: {} }
+
+          unless type == :delete
+            metadata[:request][:service_instance_guid] = service_binding.service_instance.guid
+            metadata[:request][:app_guid] = service_binding.app.guid
+          end
 
           actee = {
             actee: service_binding.guid,

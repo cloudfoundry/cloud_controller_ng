@@ -475,6 +475,15 @@ module VCAP::CloudController
           expect(event.space_id).to eq service_binding.space.id
           expect(event.metadata).to eq(metadata)
         end
+
+        context 'when the action is :delete' do
+          it 'contains empty metadata' do
+            repository.record_service_binding_event(:delete, service_binding)
+            event = Event.first(type: 'audit.service_binding.delete')
+
+            expect(event.metadata).to eq({'request' => {}})
+          end
+        end
       end
 
       describe '#record_service_purge_event' do
