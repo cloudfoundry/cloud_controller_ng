@@ -3,10 +3,13 @@ module VCAP::CloudController
     module Services
       class EventRepository
 
-        def initialize(security_context, logger = Steno.logger("cc.event_repository"))
+        def initialize(security_context)
           @user = security_context.current_user
           @current_user_email = security_context.current_user_email
-          @logger = logger
+        end
+
+        def logger
+          Steno.logger("cc.event_repository")
         end
 
         def record_service_plan_visibility_event(type, visibility, params)
@@ -228,7 +231,7 @@ module VCAP::CloudController
           begin
             Event.create(data)
           rescue => e
-            @logger.error("Failed to create audit event: #{e.message}")
+            logger.error("Failed to create audit event: #{e.message}")
           end
         end
       end

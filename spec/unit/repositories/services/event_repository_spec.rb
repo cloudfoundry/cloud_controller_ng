@@ -7,7 +7,10 @@ module VCAP::CloudController
       let(:email) { 'email@example.com' }
       let(:security_context) { double(:security_context, current_user: user, current_user_email: email) }
       let(:logger) { double(:logger, error: nil) }
-      let(:repository) { EventRepository.new(security_context, logger) }
+      let(:repository) { EventRepository.new(security_context) }
+      before do
+        allow(repository).to receive(:logger).and_return(logger)
+      end
 
       describe "record_service_plan_visibility_event" do
         let(:service_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make }
