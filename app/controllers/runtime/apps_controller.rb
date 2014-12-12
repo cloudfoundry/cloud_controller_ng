@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class AppsController < RestController::ModelController
     def self.dependencies
-      [ :app_event_repository ]
+      [ :app_event_repository, :apps_handler ]
     end
 
     define_attributes do
@@ -132,6 +132,7 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @app_event_repository = dependencies.fetch(:app_event_repository)
+      @apps_handler = dependencies.fetch(:apps_handler)
     end
 
     def delete(guid)
@@ -141,7 +142,15 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "service_bindings", app.class.table_name)
       end
 
-      app.destroy
+
+      model.db.transaction do
+        begin
+          app.destroy
+          @apps_handler.delete(app.app_guid, @access_context)
+        rescue AppsHandler::DeleteWithProcesses
+        end
+      end
+
       @app_event_repository.record_app_delete_request(
           app,
           app.space,

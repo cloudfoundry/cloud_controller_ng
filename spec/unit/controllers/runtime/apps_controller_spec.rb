@@ -258,6 +258,30 @@ module VCAP::CloudController
         expect(App.filter(id: app_obj.id)).to be_empty
       end
 
+      context 'V3 App compatibility' do
+        let(:v3_app) { AppModel.make(name: 'v3-app-name') }
+        let(:app_obj) { AppFactory.make(app_guid: v3_app.guid) }
+
+        it 'should delete the V3 app associated with it' do
+          delete_app
+          expect(last_response.status).to eq(204)
+          expect(App.filter(id: app_obj.id)).to be_empty
+          expect(AppModel.filter(guid: v3_app.guid)).to be_empty
+        end
+
+        context 'when a parent V3 app has more child processes' do
+          let!(:app_obj_worker) { AppFactory.make(app_guid: v3_app.guid, type: 'worker') }
+
+          it 'does not delete the v3 app' do
+            delete_app
+            expect(last_response.status).to eq(204)
+            expect(App.filter(id: app_obj.id)).to be_empty
+            expect(App.filter(id: app_obj_worker.id)).not_to be_empty
+            expect(AppModel.filter(guid: v3_app.guid)).not_to be_empty
+          end
+        end
+      end
+
       context "non recursive deletion" do
         context "with NON-empty service_binding association" do
           let!(:svc_instance) { ManagedServiceInstance.make(:space => app_obj.space) }
