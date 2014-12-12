@@ -49,7 +49,7 @@ module VCAP::CloudController
           expect(event.actor).to eq(user.guid)
           expect(event.actor_name).to eq(email)
           expect(event.actee).to eq(service_broker.guid)
-          expect(event.actee_type).to eq('broker')
+          expect(event.actee_type).to eq('service_broker')
           expect(event.actee_name).to eq(service_broker.name)
           expect(event.space_guid).to be_empty
           expect(event.organization_guid).to be_empty
