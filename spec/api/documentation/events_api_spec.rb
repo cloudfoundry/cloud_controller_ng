@@ -28,6 +28,9 @@ resource "Events", :type => [:api, :legacy_api] do
     audit.service_instance.create
     audit.service_instance.update
     audit.service_instance.delete
+    audit.user_provided_service_instance.create
+    audit.user_provided_service_instance.update
+    audit.user_provided_service_instance.delete
     audit.service_binding.create
     audit.service_binding.delete
   ]
