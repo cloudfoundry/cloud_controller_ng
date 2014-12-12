@@ -703,22 +703,46 @@ module VCAP::CloudController
           expect(ServiceInstance.find(:guid => service_instance.guid)).to be_nil
         end
 
-        it 'creates a service audit event for deleting the service instance' do
-          delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(admin_user, email: 'admin@example.com')
+        context 'it is a managed service instance' do
+          it 'creates a service audit event for deleting the service instance' do
+            delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(admin_user, email: 'admin@example.com')
 
-          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
-          expect(event.type).to eq('audit.service_instance.delete')
-          expect(event.actor_type).to eq('user')
-          expect(event.actor).to eq(admin_user.guid)
-          expect(event.actor_name).to eq('admin@example.com')
-          expect(event.timestamp).to be
-          expect(event.actee).to eq(service_instance.guid)
-          expect(event.actee_type).to eq('service_instance')
-          expect(event.actee_name).to eq(service_instance.name)
-          expect(event.space_guid).to eq(service_instance.space.guid)
-          expect(event.space_id).to eq(service_instance.space.id)
-          expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-          expect(event.metadata).to eq({'request' => {}})
+            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
+            expect(event.type).to eq('audit.service_instance.delete')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor).to eq(admin_user.guid)
+            expect(event.actor_name).to eq('admin@example.com')
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(service_instance.guid)
+            expect(event.actee_type).to eq('service_instance')
+            expect(event.actee_name).to eq(service_instance.name)
+            expect(event.space_guid).to eq(service_instance.space.guid)
+            expect(event.space_id).to eq(service_instance.space.id)
+            expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+            expect(event.metadata).to eq({'request' => {}})
+          end
+        end
+
+        context 'it is a user provided service instance' do
+          let!(:service_instance) { UserProvidedServiceInstance.make }
+
+          it 'creates a user_provided_service_instance audit event for deleting the service instance' do
+            delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(admin_user, email: 'admin@example.com')
+
+            event = VCAP::CloudController::Event.first(type: 'audit.user_provided_service_instance.delete')
+            expect(event.type).to eq('audit.user_provided_service_instance.delete')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor).to eq(admin_user.guid)
+            expect(event.actor_name).to eq('admin@example.com')
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(service_instance.guid)
+            expect(event.actee_type).to eq('user_provided_service_instance')
+            expect(event.actee_name).to eq(service_instance.name)
+            expect(event.space_guid).to eq(service_instance.space.guid)
+            expect(event.space_id).to eq(service_instance.space.id)
+            expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+            expect(event.metadata).to eq({'request' => {}})
+          end
         end
 
         context 'with ?async=true' do
