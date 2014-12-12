@@ -24,7 +24,7 @@ gem 'cloudfront-signer'
 gem 'vcap_common', '~> 4.0'
 gem 'allowy'
 gem 'loggregator_emitter', '~> 3.0'
-gem 'talentbox-delayed_job_sequel'
+gem 'delayed_job_sequel', git: 'https://github.com/cloudfoundry/delayed_job_sequel.git'
 gem 'thin', '~> 1.6.0'
 gem 'newrelic_rpm', '3.7.3.204'
 gem 'clockwork', require: false

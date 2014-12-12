@@ -27,6 +27,15 @@ GIT
       multi_json
 
 GIT
+  remote: https://github.com/cloudfoundry/delayed_job_sequel.git
+  revision: c9cfd1d094434bb0300d6175909d03a3672f5fc7
+  specs:
+    delayed_job_sequel (4.0.1)
+      delayed_job (~> 4.0.0)
+      sequel (>= 3.38, < 5.0)
+      tzinfo
+
+GIT
   remote: https://github.com/cloudfoundry/vcap-concurrency.git
   revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
   ref: 2a5b0179
@@ -259,10 +268,6 @@ GEM
     steno (1.2.4)
       fluent-logger
       yajl-ruby (~> 1.0)
-    talentbox-delayed_job_sequel (4.0.1)
-      delayed_job (~> 4.0.0)
-      sequel (>= 3.38, < 5.0)
-      tzinfo
     thin (1.6.3)
       daemons (~> 1.0, >= 1.0.9)
       eventmachine (~> 1.0)
@@ -315,6 +320,7 @@ DEPENDENCIES
   clockwork
   cloudfront-signer
   codeclimate-test-reporter
+  delayed_job_sequel!
   eventmachine (~> 1.0.0)
   fakefs
   fog
@@ -345,7 +351,6 @@ DEPENDENCIES
   sinatra (~> 1.4)
   sinatra-contrib
   steno
-  talentbox-delayed_job_sequel
   thin (~> 1.6.0)
   timecop
   unf
