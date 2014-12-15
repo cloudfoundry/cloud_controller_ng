@@ -16,7 +16,11 @@ module VCAP::CloudController
         let(:service_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make }
 
         it "creates the event" do
-          repository.record_service_plan_visibility_event(:create, service_plan_visibility, {})
+          params = {
+            'organization_guid' => service_plan_visibility.organization.guid,
+            'service_plan_guid' => service_plan_visibility.service_plan.guid
+          }
+          repository.record_service_plan_visibility_event(:create, service_plan_visibility, params)
 
           event = Event.find(type: 'audit.service_plan_visibility.create')
           expect(event.actor_type).to eq('user')
@@ -28,7 +32,7 @@ module VCAP::CloudController
           expect(event.actee_name).to eq("")
           expect(event.space_guid).to be_empty
           expect(event.organization_guid).to eq(service_plan_visibility.organization.guid)
-          expect(event.metadata).to eq({"service_plan_guid" => service_plan_visibility.service_plan.guid})
+          expect(event.metadata).to eq({"request" => params })
         end
       end
 
@@ -76,10 +80,10 @@ module VCAP::CloudController
           end
 
           context 'when no params are passed in' do
-            it 'saves an empty hash' do
+            it 'saves an empty request' do
               repository.record_broker_event(:create, service_broker, {})
 
-              expect(Event.first.metadata).to eq({})
+              expect(Event.first.metadata).to eq({'request' => {}})
             end
           end
         end

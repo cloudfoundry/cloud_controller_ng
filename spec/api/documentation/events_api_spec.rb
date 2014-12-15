@@ -376,8 +376,13 @@ resource "Events", :type => [:api, :legacy_api] do
                                :space_guid => '',
                                :metadata => {}
     end
+
     example "List Service Plan Visibility Create Events (experimental)" do
-      service_event_repository.record_service_plan_visibility_event(:create, test_plan_visibility, {})
+      params = {
+        'service_plan_guid' => test_plan_visibility.service_plan_guid,
+        'organization_guid' => test_plan_visibility.organization_guid
+      }
+      service_event_repository.record_service_plan_visibility_event(:create, test_plan_visibility, params)
 
       client.get "/v2/events?q=type:audit.service_plan_visibility.create", {}, headers
       expect(status).to eq(200)
@@ -391,12 +396,16 @@ resource "Events", :type => [:api, :legacy_api] do
                                :space_guid => '',
                                :organization_guid => test_plan_visibility.organization_guid,
                                :metadata => {
-                                'service_plan_guid' => test_plan_visibility.service_plan_guid
+                                 'request' => params
                                }
     end
 
     example "List Service Plan Visibility Update Events (experimental)" do
-      service_event_repository.record_service_plan_visibility_event(:update, test_plan_visibility, {})
+      params = {
+        'service_plan_guid' => test_plan_visibility.service_plan_guid,
+        'organization_guid' => test_plan_visibility.organization_guid
+      }
+      service_event_repository.record_service_plan_visibility_event(:update, test_plan_visibility, params)
 
       client.get "/v2/events?q=type:audit.service_plan_visibility.update", {}, headers
       expect(status).to eq(200)
@@ -410,7 +419,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :space_guid => '',
                                :organization_guid => test_plan_visibility.organization_guid,
                                :metadata => {
-                                'service_plan_guid' => test_plan_visibility.service_plan_guid
+                                 'request' => params
                                }
     end
 
@@ -428,9 +437,8 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee_name => '',
                                :space_guid => '',
                                :organization_guid => test_plan_visibility.organization_guid,
-                               :metadata => {
-                                'service_plan_guid' => test_plan_visibility.service_plan_guid
-                               }
+                               :metadata => { 'request' => {} }
+
     end
 
     example "List Service Create Events (experimental)" do
@@ -582,7 +590,7 @@ resource "Events", :type => [:api, :legacy_api] do
                                :actee => broker.guid,
                                :actee_name => broker.name,
                                :space_guid => '',
-                               :metadata => {}
+                               :metadata => { 'request' => {} }
     end
 
     example "List Service Instance Create Events (experimental)" do

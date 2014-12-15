@@ -71,7 +71,7 @@ module VCAP::CloudController
 
       it "creates an 'audit.service_plan_visibility.create' event" do
         email = "some-email-address@example.com"
-        params = { organization_guid: organization.guid, service_plan_guid: service_plan.guid }
+        params = { 'organization_guid' => organization.guid, 'service_plan_guid' => service_plan.guid }
         post "/v2/service_plan_visibilities", MultiJson.dump(params), headers_for(admin_user, email: email)
 
         event = Event.first(type: 'audit.service_plan_visibility.create')
@@ -86,7 +86,7 @@ module VCAP::CloudController
         expect(event.actee_name).to eq("")
         expect(event.space_guid).to be_empty
         expect(event.organization_guid).to eq(organization.guid)
-        expect(event.metadata).to eq({"service_plan_guid" => service_plan.guid})
+        expect(event.metadata).to eq({ 'request' => params })
       end
     end
 
@@ -107,7 +107,8 @@ module VCAP::CloudController
 
       it 'creates a service plan visibility update event' do
         email = "some-email-address@example.com"
-        put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump({ organization_guid: new_organization.guid }), headers_for(admin_user, email: email)
+        params = { 'organization_guid' => new_organization.guid }
+        put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump(params), headers_for(admin_user, email: email)
 
         event = Event.first(type: 'audit.service_plan_visibility.update')
         expect(event.actor_type).to eq('user')
@@ -119,7 +120,7 @@ module VCAP::CloudController
         expect(event.actee_name).to eq("")
         expect(event.space_guid).to be_empty
         expect(event.organization_guid).to eq(new_organization.guid)
-        expect(event.metadata).to eq({"service_plan_guid" => service_plan.guid})
+        expect(event.metadata).to eq({'request' => params })
       end
     end
 
@@ -150,7 +151,7 @@ module VCAP::CloudController
         expect(event.actee_name).to eq("")
         expect(event.space_guid).to be_empty
         expect(event.organization_guid).to eq(organization.guid)
-        expect(event.metadata).to eq({"service_plan_guid" => service_plan.guid})
+        expect(event.metadata).to eq('request' => {})
       end
 
       context 'with ?async=true' do

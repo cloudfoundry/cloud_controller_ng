@@ -18,9 +18,9 @@ module VCAP::CloudController
             actee_type: 'service_plan_visibility',
             actee_name: ''
           }
-          metadata = {
-            service_plan_guid: visibility.service_plan_guid
-          }
+
+          metadata = { request: params }
+
           space_data = {
             space_guid: '',
             organization_guid: visibility.organization_guid
@@ -169,7 +169,7 @@ module VCAP::CloudController
           end
           request_hash[:auth_password] = '[REDACTED]' if params.has_key? :auth_password
 
-          metadata = {}
+          metadata = { request: {} }
           if request_hash.length > 0
             metadata[:request] = request_hash
           end

@@ -209,7 +209,8 @@ module VCAP::CloudController
         expect(event.actee_name).to eq(broker.name)
         expect(event.space_guid).to be_empty
         expect(event.organization_guid).to be_empty
-        expect(event.metadata).to be_empty
+        expect(event.metadata).to have_key('request')
+        expect(event.metadata['request']).to be_empty
       end
 
       it "returns 404 when deleting a service broker that does not exist" do

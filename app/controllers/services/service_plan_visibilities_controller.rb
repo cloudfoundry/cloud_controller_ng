@@ -38,7 +38,7 @@ module VCAP::CloudController
         validate_access(:create, service_plan_visibility, request_attrs)
       end
 
-      @services_event_repository.record_service_plan_visibility_event(:create, service_plan_visibility, {})
+      @services_event_repository.record_service_plan_visibility_event(:create, service_plan_visibility, request_attrs)
 
       [
         HTTP::CREATED,
@@ -62,7 +62,7 @@ module VCAP::CloudController
         validate_access(:update, service_plan_visibility, request_attrs)
       end
 
-      @services_event_repository.record_service_plan_visibility_event(:update, service_plan_visibility, {})
+      @services_event_repository.record_service_plan_visibility_event(:update, service_plan_visibility, request_attrs)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, service_plan_visibility, @opts)]
     end
