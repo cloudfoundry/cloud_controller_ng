@@ -208,6 +208,11 @@
   http_code: 400
   message: "The service instance cannot be created because paid service plans are not allowed for your space."
 
+60014:
+  name: ServiceInstanceSpaceChangeNotAllowed
+  http_code: 400
+  message: "Cannot update space for service instance."
+
 70001:
   name: RuntimeInvalid
   http_code: 400
