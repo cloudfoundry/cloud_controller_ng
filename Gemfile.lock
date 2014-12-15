@@ -28,7 +28,7 @@ GIT
 
 GIT
   remote: https://github.com/cloudfoundry/delayed_job_sequel.git
-  revision: c9cfd1d094434bb0300d6175909d03a3672f5fc7
+  revision: d018c527b6638c2787688135ce0d6298d096490c
   specs:
     delayed_job_sequel (4.0.1)
       delayed_job (~> 4.0.0)
