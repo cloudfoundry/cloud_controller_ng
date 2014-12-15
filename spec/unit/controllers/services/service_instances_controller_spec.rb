@@ -591,7 +591,7 @@ module VCAP::CloudController
           put "/v2/service_instances/#{instance.guid}", move_req, json_headers(headers_for(user))
 
           expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to match /cannot change space for service instance/
+          expect(decoded_response['description']).to match /Cannot change space for service instance/
         end
 
         it 'succeeds when the space_guid does not change' do

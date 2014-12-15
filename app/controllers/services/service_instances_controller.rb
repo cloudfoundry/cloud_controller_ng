@@ -119,7 +119,7 @@ module VCAP::CloudController
       validate_access(:update, service_instance)
 
       if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
-        raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
+        raise Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
       end
 
       if request_attrs["service_plan_guid"]
