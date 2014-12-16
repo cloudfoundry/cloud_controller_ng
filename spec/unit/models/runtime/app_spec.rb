@@ -1367,6 +1367,11 @@ module VCAP::CloudController
           expect { app.update(:memory => 999) }.to change(app, :version)
         end
 
+        it "should update the version when changing :health_check_type" do
+          app.health_check_type = "none"
+          expect { app.save }.to change(app, :version)
+        end
+
         it "should not update the version when changing :instances" do
           app.instances = 8
           expect { app.save }.to_not change(app, :version)
