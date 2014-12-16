@@ -55,15 +55,10 @@ module VCAP::CloudController
             "num_instances" => app.desired_instances,
             "routes" => app.uris,
             "log_guid" => app.guid,
+            "health_check_type" => app.health_check_type,
           }
 
           message["health_check_timeout_in_seconds"] = app.health_check_timeout if app.health_check_timeout
-
-          if app.uris.empty?
-            message["health_check_type"] = "none"
-          else
-            message["health_check_type"] = "port"
-          end
 
           message
         end

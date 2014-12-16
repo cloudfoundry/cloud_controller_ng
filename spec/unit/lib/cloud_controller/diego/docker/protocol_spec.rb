@@ -83,7 +83,7 @@ module VCAP::CloudController
               "routes" => app.uris,
               "log_guid" => app.guid,
               "docker_image" => app.docker_image,
-              "health_check_type" => "none",
+              "health_check_type" => app.health_check_type,
             })
           end
 
@@ -93,23 +93,6 @@ module VCAP::CloudController
             end
 
             it "includes the timeout in the message" do
-              expect(message["health_check_timeout_in_seconds"]).to eq(app.health_check_timeout)
-            end
-          end
-
-          context "when the app has routes" do
-            let(:domain) { SharedDomain.make(name: "some-domain.com") }
-            let(:route1) { Route.make(host: "some-route", domain: domain) }
-            let(:route2) { Route.make(host: "some-other-route", domain: domain) }
-
-            before do
-              app.space.add_route(route1)
-              app.space.add_route(route2)
-              app.add_route(route1)
-              app.add_route(route2)
-            end
-
-            it "specifies 'port' health check" do
               expect(message["health_check_timeout_in_seconds"]).to eq(app.health_check_timeout)
             end
           end

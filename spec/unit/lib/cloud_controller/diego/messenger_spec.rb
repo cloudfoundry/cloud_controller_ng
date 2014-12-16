@@ -74,7 +74,7 @@ module VCAP::CloudController
             "environment" => Environment.new(app).as_json,
             "num_instances" => expected_instances,
             "routes" => [],
-            "health_check_type" => "none",
+            "health_check_type" => app.health_check_type,
             "health_check_timeout_in_seconds" => 120,
             "log_guid" => app.guid,
           }
@@ -122,10 +122,9 @@ module VCAP::CloudController
             app.add_route(route2)
           end
 
-          it "should desire it with the correct 'routes' and the 'port' health check" do
+          it "should desire it with the correct 'routes'" do
             messenger.send_desire_request(app)
 
-            expected_message["health_check_type"] = "port"
             expected_message["routes"] = ["some-route.some-domain.com", "some-other-route.some-domain.com"]
 
             nats_message = message_bus.published_messages.first
