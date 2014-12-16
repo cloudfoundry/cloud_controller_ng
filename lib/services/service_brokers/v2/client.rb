@@ -46,6 +46,21 @@ module VCAP::Services::ServiceBrokers::V2
     end
   end
 
+  class ServiceBrokerApiRequestTimeout < HttpResponseError
+    def initialize(uri, method, response)
+      super(
+        "Request timed out on service broker API",
+        uri,
+        method,
+        response
+      )
+    end
+
+    def response_code
+      408
+    end
+  end
+
   class ServiceBrokerConflict < HttpResponseError
     def initialize(uri, method, response)
       error_message = nil
@@ -193,6 +208,9 @@ module VCAP::Services::ServiceBrokers::V2
 
         when HTTP::Status::UNAUTHORIZED
           raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
+
+        when 408
+          raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiRequestTimeout.new(uri.to_s, method, response)
 
         when 409
           raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict.new(uri.to_s, method, response)

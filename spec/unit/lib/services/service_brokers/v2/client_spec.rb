@@ -366,6 +366,24 @@ module VCAP::Services::ServiceBrokers::V2
           let(:operation) { client.provision(instance) }
         end
       end
+
+      context "when provision request times out" do
+        context "and http client response is 408" do
+          let(:code) { '408' }
+
+          it 'raises ServiceBrokerApiRequestTimeout' do
+            expect {
+              client.provision(instance)
+            }.to raise_error(ServiceBrokerApiRequestTimeout)
+          end
+        end
+
+        context "and http client response is 5xx" do
+        end
+
+        context "and http client request is taking more than 60 seconds" do
+        end
+      end
     end
 
     describe '#update_service_plan' do
