@@ -25,6 +25,7 @@ resource "Apps", :type => [:api, :legacy_api] do
     field :detected_start_command, "The command detected by the buildpack during staging.", read_only: true
     field :command, "The command to start an app after it is staged (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT')."
     field :buildpack, "Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.", default: "", example_values: ["", "https://github.com/virtualstaticvoid/heroku-buildpack-r.git", "an_example_installed_buildpack"]
+    field :health_check_type, "Type of health check to perform.", default: "port", valid_values: ["port", "none"]
     field :health_check_timeout, "Timeout for health checking of an staged app when starting up"
     field :docker_image, "Name of the Docker image containing the app", default: nil, experimental: true, example_values: ["cloudfoundry/helloworld", "registry.example.com:5000/user/repository/tag"]
     field :environment_json, "Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables."

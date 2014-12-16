@@ -12,6 +12,7 @@ module VCAP::CloudController
       attribute  :debug,                  String,           :default => nil
       attribute  :disk_quota,             Integer,          :default => nil
       attribute  :environment_json,       Hash,             :default => {}
+      attribute  :health_check_type,      String,           :default => "port"
       attribute  :health_check_timeout,   Integer,          :default => nil
       attribute  :instances,              Integer,          :default => 1
       attribute  :memory,                 Integer,          :default => nil

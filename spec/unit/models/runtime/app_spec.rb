@@ -219,6 +219,23 @@ module VCAP::CloudController
         end
       end
 
+      describe "health_check_type" do
+        it "defaults to 'port'" do
+          expect(app.health_check_type).to eq("port")
+        end
+
+        it "can be set to 'none'" do
+          app.health_check_type = "none"
+          expect(app).to be_valid
+        end
+
+        it "can not be set to 'bogus'" do
+          app.health_check_type = "bogus"
+          expect(app).to_not be_valid
+          expect(app.errors.on(:health_check_type)).to be_present
+        end
+      end
+
       describe "instances" do
         it "does not allow negative instances" do
           app.instances = -1
@@ -388,18 +405,59 @@ module VCAP::CloudController
     end
 
     describe "Serialization" do
-      it { is_expected.to export_attributes :name, :production,
-                                    :space_guid, :stack_guid, :buildpack, :detected_buildpack,
-                                    :environment_json, :memory, :instances, :disk_quota,
-                                    :state, :version, :command, :console, :debug,
-                                    :staging_task_id, :package_state, :health_check_timeout,
-                                    :staging_failed_reason, :docker_image, :package_updated_at, :detected_start_command }
-      it { is_expected.to import_attributes :name, :production,
-                                    :space_guid, :stack_guid, :buildpack, :detected_buildpack,
-                                    :environment_json, :memory, :instances, :disk_quota,
-                                    :state, :command, :console, :debug,
-                                    :staging_task_id, :service_binding_guids, :route_guids, :health_check_timeout,
-                                    :docker_image, :app_guid }
+      it {
+        is_expected.to export_attributes(
+          :buildpack,
+          :command,
+          :console,
+          :debug,
+          :detected_buildpack,
+          :detected_start_command,
+          :disk_quota,
+          :docker_image,
+          :environment_json,
+          :health_check_timeout,
+          :health_check_type,
+          :instances,
+          :memory,
+          :name,
+          :package_state,
+          :package_updated_at,
+          :production,
+          :space_guid,
+          :stack_guid,
+          :staging_failed_reason,
+          :staging_task_id,
+          :state,
+          :version
+        )
+      }
+
+      it {
+        is_expected.to import_attributes(
+          :app_guid,
+          :buildpack,
+          :command,
+          :console,
+          :debug,
+          :detected_buildpack,
+          :disk_quota,
+          :docker_image,
+          :environment_json,
+          :health_check_timeout,
+          :health_check_type,
+          :instances,
+          :memory,
+          :name,
+          :production,
+          :route_guids,
+          :service_binding_guids,
+          :space_guid,
+          :stack_guid,
+          :staging_task_id,
+          :state
+        )
+      }
     end
 
     describe "#in_suspended_org?" do
