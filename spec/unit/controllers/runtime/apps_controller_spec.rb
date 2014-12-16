@@ -123,15 +123,6 @@ module VCAP::CloudController
           expect(last_response.status).to eq(403)
         end
       end
-
-      it "creates a v3 app" do
-        expect {
-          post "/v2/apps", MultiJson.dump(initial_hash), json_headers(admin_headers)
-        }.to change { AppModel.count }.by 1
-
-        expect(AppModel.last.name).to eq("maria")
-        expect(AppModel.last.processes.first.name).to eq("maria")
-      end
     end
 
     describe "update app" do
@@ -141,49 +132,6 @@ module VCAP::CloudController
 
       def update_app
         put "/v2/apps/#{app_obj.guid}", MultiJson.dump(update_hash), json_headers(admin_headers)
-      end
-
-      context 'V3 Apps compatibility' do
-        let(:v3_app) { AppModel.make(name: 'v3-app-name') }
-        let(:app_obj) { AppFactory.make(instances: 1, app_guid: v3_app.guid) }
-        let(:new_name) { 'new-name' }
-        let(:update_hash) { { name: new_name } }
-
-        context 'when request attrs contains a name field' do
-          it 'also updates the v3 app associated if it is a web type' do
-            update_app
-
-            updated_app = App.find(guid: app_obj.guid)
-            updated_v3_app = AppModel.find(guid: app_obj.app_guid)
-            expect(updated_app.name).to eq(new_name)
-            expect(updated_v3_app.name).to eq(updated_app.name)
-          end
-
-          context 'when the v2 App does not have a web type' do
-            let(:app_obj) { AppFactory.make(instances: 1, app_guid: v3_app.guid, type: 'worker') }
-
-            it 'does not update the v3 app associated' do
-              update_app
-
-              updated_app = App.find(guid: app_obj.guid)
-              updated_v3_app = AppModel.find(guid: app_obj.app_guid)
-
-              expect(updated_app.name).to eq(new_name)
-              expect(updated_v3_app.name).not_to eq(new_name)
-            end
-          end
-        end
-
-        context 'when a V2 app does not have a V3 app associated' do
-          let(:app_obj) { AppFactory.make(instances: 1) }
-          it 'updates the V2 app and proceeds as normal' do
-            update_app
-
-            updated_app = App.find(guid: app_obj.guid)
-            expect(updated_app.app_guid).to be_nil
-            expect(updated_app.name).to eq(new_name)
-          end
-        end
       end
 
       describe "app_scaling feature flag" do
@@ -258,30 +206,6 @@ module VCAP::CloudController
         delete_app
         expect(last_response.status).to eq(204)
         expect(App.filter(id: app_obj.id)).to be_empty
-      end
-
-      context 'V3 App compatibility' do
-        let(:v3_app) { AppModel.make(name: 'v3-app-name') }
-        let(:app_obj) { AppFactory.make(app_guid: v3_app.guid) }
-
-        it 'should delete the V3 app associated with it' do
-          delete_app
-          expect(last_response.status).to eq(204)
-          expect(App.filter(id: app_obj.id)).to be_empty
-          expect(AppModel.filter(guid: v3_app.guid)).to be_empty
-        end
-
-        context 'when a parent V3 app has more child processes' do
-          let!(:app_obj_worker) { AppFactory.make(app_guid: v3_app.guid, type: 'worker') }
-
-          it 'does not delete the v3 app' do
-            delete_app
-            expect(last_response.status).to eq(204)
-            expect(App.filter(id: app_obj.id)).to be_empty
-            expect(App.filter(id: app_obj_worker.id)).not_to be_empty
-            expect(AppModel.filter(guid: v3_app.guid)).not_to be_empty
-          end
-        end
       end
 
       context "non recursive deletion" do

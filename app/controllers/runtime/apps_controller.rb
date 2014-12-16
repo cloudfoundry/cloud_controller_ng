@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class AppsController < RestController::ModelController
     def self.dependencies
-      [ :app_event_repository, :apps_handler ]
+      [ :app_event_repository ]
     end
 
     define_attributes do
@@ -30,60 +30,6 @@ module VCAP::CloudController
     end
 
     query_parameters :name, :space_guid, :organization_guid
-
-    def create
-      json_msg = self.class::CreateMessage.decode(body)
-
-      @request_attrs = json_msg.extract(stringify_keys: true)
-
-      logger.debug "cc.create", model: self.class.model_class_name, attributes: request_attrs
-
-      before_create
-
-      obj = nil
-      model.db.transaction do
-        v3_opts = {name: request_attrs['name'], space_guid: request_attrs['space_guid']}
-
-        v3_app_model = AppModel.create(v3_opts)
-        obj = model.create_from_hash(request_attrs.merge(app_guid: v3_app_model.guid))
-        validate_access(:create, obj, request_attrs)
-      end
-
-      after_create(obj)
-
-      [
-        HTTP::CREATED,
-        {"Location" => "#{self.class.path}/#{obj.guid}"},
-        object_renderer.render_json(self.class, obj, @opts)
-      ]
-    end
-
-    def update(guid)
-      json_msg = self.class::UpdateMessage.decode(body)
-
-      @request_attrs = json_msg.extract(stringify_keys: true)
-
-      logger.debug "cc.update", guid: guid, attributes: request_attrs
-      raise InvalidRequest unless request_attrs
-
-      obj = find_guid(guid)
-
-      before_update(obj)
-
-      model.db.transaction do
-        obj.lock!
-        validate_access(:read_for_update, obj, request_attrs)
-        obj.update_from_hash(request_attrs)
-
-        update_v3_app(obj.app_guid, obj.name) if do_v3_app_update?(request_attrs, obj)
-
-        validate_access(:update, obj, request_attrs)
-      end
-
-      after_update(obj)
-
-      [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
-    end
 
     get '/v2/apps/:guid/env', :read_env
     def read_env(guid)
@@ -133,7 +79,6 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @app_event_repository = dependencies.fetch(:app_event_repository)
-      @apps_handler = dependencies.fetch(:apps_handler)
     end
 
     def delete(guid)
@@ -144,13 +89,7 @@ module VCAP::CloudController
       end
 
 
-      model.db.transaction do
-        begin
-          app.destroy
-          @apps_handler.delete(app.app_guid, @access_context)
-        rescue AppsHandler::DeleteWithProcesses
-        end
-      end
+      app.destroy
 
       @app_event_repository.record_app_delete_request(
           app,
@@ -163,16 +102,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def do_v3_app_update?(request_attrs, app)
-      !(request_attrs['name'].nil? || app.app_guid.nil? || app.type != 'web')
-    end
-
-    def update_v3_app(v3_app_guid, name)
-      v3_app = AppModel.find(guid: v3_app_guid)
-      v3_app.name = name
-      v3_app.save
-    end
 
     def after_create(app)
       record_app_create_value = @app_event_repository.record_app_create(
