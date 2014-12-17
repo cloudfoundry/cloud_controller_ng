@@ -114,9 +114,15 @@ module VCAP::Services::ServiceBrokers::V2
         organization_guid: instance.organization.guid,
         space_guid:        instance.space.guid,
       })
-      parsed_response = parse_response(:put, path, response)
 
-      instance.dashboard_url = parsed_response['dashboard_url']
+      begin
+        parsed_response = parse_response(:put, path, response)
+        instance.dashboard_url = parsed_response['dashboard_url']
+      rescue ServiceBrokerApiRequestTimeout, ServiceBrokerBadResponse => e
+        deprovision(instance)
+        raise e
+      end
+
       # DEPRECATED, but needed because of not null constraint
       instance.credentials = {}
     end

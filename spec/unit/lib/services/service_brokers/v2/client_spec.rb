@@ -312,6 +312,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       before do
         allow(http_client).to receive(:put).and_return(response)
+        allow(http_client).to receive(:delete).and_return(response)
 
         allow(response).to receive(:body).and_return(response_body)
         allow(response).to receive(:code).and_return(code)
@@ -367,21 +368,118 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
-      context "when provision request times out" do
-        context "and http client response is 408" do
-          let(:code) { '408' }
+      context 'when provision fails' do
+        context 'and http client response is 408' do
+          before do
+            allow(response).to receive(:code).and_return('408', '200')
+          end
 
-          it 'raises ServiceBrokerApiRequestTimeout' do
+          it 'raises ServiceBrokerApiRequestTimeout and deprovisions' do
             expect {
               client.provision(instance)
             }.to raise_error(ServiceBrokerApiRequestTimeout)
+
+            expect(http_client).to have_received(:delete).
+                                   with("/v2/service_instances/#{instance.guid}", anything())
           end
         end
 
-        context "and http client response is 5xx" do
-        end
+        context 'and http client response is 5xx' do
+          context 'and http error code is 500' do
+            before do
+              allow(response).to receive(:code).and_return('500', '200')
+            end
 
-        context "and http client request is taking more than 60 seconds" do
+            it 'raises ServiceBrokerBadResponse and deprovisions' do
+              expect {
+                  client.provision(instance)
+              }.to raise_error(ServiceBrokerBadResponse)
+
+              expect(http_client).to have_received(:delete).
+                                      with("/v2/service_instances/#{instance.guid}", anything())
+            end
+          end
+
+          context 'and http error code is 501' do
+            before do
+              allow(response).to receive(:code).and_return('501', '200')
+            end
+
+            it 'raises ServiceBrokerBadResponse and deprovisions' do
+              expect {
+                  client.provision(instance)
+              }.to raise_error(ServiceBrokerBadResponse)
+
+              expect(http_client).to have_received(:delete).
+                                      with("/v2/service_instances/#{instance.guid}", anything())
+            end
+          end
+
+          context 'and http error code is 502' do
+            before do
+              allow(response).to receive(:code).and_return('502', '200')
+            end
+
+            it 'raises ServiceBrokerBadResponse and deprovisions' do
+              expect {
+                  client.provision(instance)
+              }.to raise_error(ServiceBrokerBadResponse)
+
+              expect(http_client).to have_received(:delete).
+                                      with("/v2/service_instances/#{instance.guid}", anything())
+            end
+          end
+
+          context 'and http error code is 503' do
+            before do
+              allow(response).to receive(:code).and_return('503', '200')
+            end
+
+            it 'raises ServiceBrokerBadResponse and deprovisions' do
+              expect {
+                  client.provision(instance)
+              }.to raise_error(ServiceBrokerBadResponse)
+
+              expect(http_client).to have_received(:delete).
+                                      with("/v2/service_instances/#{instance.guid}", anything())
+            end
+          end
+
+          context 'and http error code is 504' do
+            before do
+              allow(response).to receive(:code).and_return('504', '200')
+            end
+
+            it 'raises ServiceBrokerBadResponse and deprovisions' do
+              expect {
+                  client.provision(instance)
+              }.to raise_error(ServiceBrokerBadResponse)
+
+              expect(http_client).to have_received(:delete).
+                                      with("/v2/service_instances/#{instance.guid}", anything())
+            end
+          end
+
+          context 'and http error code is 505' do
+            before do
+              allow(response).to receive(:code).and_return('505', '200')
+            end
+
+            it 'raises ServiceBrokerBadResponse and deprovisions' do
+              expect {
+                  client.provision(instance)
+              }.to raise_error(ServiceBrokerBadResponse)
+
+              expect(http_client).to have_received(:delete).
+                                      with("/v2/service_instances/#{instance.guid}", anything())
+            end
+          end
+        end
+      end
+
+      context "when provision takes 60s or longer" do
+        it "deprovisions the instance" do
+          #Makint it provision take longer than 60 seconds
         end
       end
     end
