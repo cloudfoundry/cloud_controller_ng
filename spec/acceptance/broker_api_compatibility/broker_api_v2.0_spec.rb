@@ -157,6 +157,9 @@ describe 'Service Broker API integration' do
           stub_request(:put, %r(#{broker_url}/v2/service_instances/#{guid_pattern})).
             to_return(status: broker_response_status, body: broker_response_body)
 
+          stub_request(:delete, %r(#{broker_url}/v2/service_instances/#{guid_pattern})).
+            to_return(status: broker_response_status, body: broker_response_body)
+
           post('/v2/service_instances',
             {
               name:              'test-service',
