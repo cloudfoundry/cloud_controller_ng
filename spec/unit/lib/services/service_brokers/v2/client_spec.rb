@@ -374,10 +374,10 @@ module VCAP::Services::ServiceBrokers::V2
             allow(response).to receive(:code).and_return('408', '200')
           end
 
-          it 'raises ServiceBrokerApiRequestTimeout and deprovisions' do
+          it 'raises ServiceBrokerApiTimeout and deprovisions' do
             expect {
               client.provision(instance)
-            }.to raise_error(ServiceBrokerApiRequestTimeout)
+            }.to raise_error(ServiceBrokerApiTimeout)
 
             expect(http_client).to have_received(:delete).
                                    with("/v2/service_instances/#{instance.guid}", anything())
@@ -477,9 +477,65 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
-      context "when provision takes 60s or longer" do
-        it "deprovisions the instance" do
-          #Makint it provision take longer than 60 seconds
+      context 'when provision takes longer than broker configured timeout' do
+        let(:default_timeout_value) { VCAP::CloudController::Config.config[:broker_client_timeout_seconds] }
+        let(:timeout_value) { 1 }
+
+        context 'when http_client make request fails with ServiceBrokerApiTimeout' do
+          before do
+            VCAP::CloudController::Config.config[:broker_client_timeout_seconds] = timeout_value
+
+            allow(http_client).to receive(:put) do |path, message|
+              sleep(timeout_value)
+              raise ServiceBrokerApiTimeout.new(path, :put, Timeout::Error.new(message))
+            end
+          end
+
+          it 'deprovisions the instance' do
+            elapsed_time = 0
+            start_time = Time.now
+            expect {
+              client.provision(instance)
+            }.to raise_error(ServiceBrokerApiTimeout)
+
+            elapsed_time = Time.now - start_time
+            expect(elapsed_time).to be >= timeout_value
+
+            expect(http_client).to have_received(:delete).
+                                    with("/v2/service_instances/#{instance.guid}", anything())
+          end
+        end
+
+        context 'when http_client make request fails with ServiceBrokerApiUnreachable' do
+          before do
+            VCAP::CloudController::Config.config[:broker_client_timeout_seconds] = timeout_value
+
+            allow(http_client).to receive(:put) do |path, message|
+              raise ServiceBrokerApiUnreachable.new(path, :put, Errno::ECONNREFUSED)
+            end
+          end
+
+          it 'fails' do
+            expect {
+              client.provision(instance)
+            }.to raise_error(ServiceBrokerApiUnreachable)
+          end
+        end
+
+        context 'when http_client make request fails with HttpRequestError' do
+          before do
+            VCAP::CloudController::Config.config[:broker_client_timeout_seconds] = timeout_value
+
+            allow(http_client).to receive(:put) do |path, message|
+              raise HttpRequestError.new(message, path, :put, Exception.new(message))
+            end
+          end
+
+          it 'fails' do
+            expect {
+              client.provision(instance)
+            }.to raise_error(HttpRequestError)
+          end
         end
       end
     end

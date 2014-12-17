@@ -46,21 +46,6 @@ module VCAP::Services::ServiceBrokers::V2
     end
   end
 
-  class ServiceBrokerApiRequestTimeout < HttpResponseError
-    def initialize(uri, method, response)
-      super(
-        "Request timed out on service broker API",
-        uri,
-        method,
-        response
-      )
-    end
-
-    def response_code
-      408
-    end
-  end
-
   class ServiceBrokerConflict < HttpResponseError
     def initialize(uri, method, response)
       error_message = nil
@@ -108,6 +93,7 @@ module VCAP::Services::ServiceBrokers::V2
     # raises ServiceBrokerConflict if the id is already in use
     def provision(instance)
       path = "/v2/service_instances/#{instance.guid}"
+
       response = @http_client.put(path, {
         service_id:        instance.service.broker_provided_id,
         plan_id:           instance.service_plan.broker_provided_id,
@@ -115,16 +101,15 @@ module VCAP::Services::ServiceBrokers::V2
         space_guid:        instance.space.guid,
       })
 
-      begin
-        parsed_response = parse_response(:put, path, response)
-        instance.dashboard_url = parsed_response['dashboard_url']
-      rescue ServiceBrokerApiRequestTimeout, ServiceBrokerBadResponse => e
-        deprovision(instance)
-        raise e
-      end
+      parsed_response = parse_response(:put, path, response)
+      instance.dashboard_url = parsed_response['dashboard_url']
 
       # DEPRECATED, but needed because of not null constraint
       instance.credentials = {}
+
+    rescue ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
+      deprovision(instance) #TODO move this to delayed job
+      raise e
     end
 
     def bind(binding)
@@ -194,7 +179,6 @@ module VCAP::Services::ServiceBrokers::V2
       code = response.code.to_i
 
       case code
-
         when 204
           return nil # no body
 
@@ -216,7 +200,7 @@ module VCAP::Services::ServiceBrokers::V2
           raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
 
         when 408
-          raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiRequestTimeout.new(uri.to_s, method, response)
+          raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
 
         when 409
           raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict.new(uri.to_s, method, response)

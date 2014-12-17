@@ -23,6 +23,10 @@ module VCAP::Services
           source
         )
       end
+
+      def response_code
+        408
+      end
     end
 
     class HttpClient
