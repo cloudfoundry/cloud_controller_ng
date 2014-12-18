@@ -57,7 +57,7 @@ module VCAP::CloudController
 
           expect {
             handler.update(update_message, ac)
-          }.to raise_error(ProcessesHandler::InvalidProcess)
+          }.to raise_error(ProcessesHandler::InvalidProcess, "Type 'worker' is already in use")
         end
       end
 

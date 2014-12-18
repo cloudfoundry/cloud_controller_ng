@@ -106,8 +106,9 @@ module VCAP::CloudController
 
         raise Unauthorized if access_context.cannot?(:update, initial_process, initial_space)
 
+        desired_type = update_message.opts['type']
         neighbor_processes.each do |process|
-          raise InvalidProcess if process.type == update_message.opts['type']
+          raise InvalidProcess.new("Type '#{desired_type}' is already in use") if process.type == desired_type
         end
 
         desired_process = initial_process.with_changes(update_message.opts)
