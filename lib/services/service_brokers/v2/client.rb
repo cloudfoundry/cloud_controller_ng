@@ -108,7 +108,7 @@ module VCAP::Services::ServiceBrokers::V2
       instance.credentials = {}
 
     rescue ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
-      deprovision(instance) #TODO move this to delayed job
+      VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner.deprovision(self, instance)
       raise e
     end
 

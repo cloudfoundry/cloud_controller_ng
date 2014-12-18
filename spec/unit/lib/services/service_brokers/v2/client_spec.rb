@@ -369,6 +369,10 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when provision fails' do
+        before do
+          allow(VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner).to receive(:deprovision)
+        end
+
         context 'and http client response is 408' do
           before do
             allow(response).to receive(:code).and_return('408', '200')
@@ -379,8 +383,8 @@ module VCAP::Services::ServiceBrokers::V2
               client.provision(instance)
             }.to raise_error(ServiceBrokerApiTimeout)
 
-            expect(http_client).to have_received(:delete).
-                                   with("/v2/service_instances/#{instance.guid}", anything())
+            expect(VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner).
+                                   to have_received(:deprovision).with(client, instance)
           end
         end
 
@@ -395,8 +399,9 @@ module VCAP::Services::ServiceBrokers::V2
                   client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
-              expect(http_client).to have_received(:delete).
-                                      with("/v2/service_instances/#{instance.guid}", anything())
+              expect(VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner).
+                                     to have_received(:deprovision).
+                                     with(client, instance)
             end
           end
 
@@ -410,8 +415,9 @@ module VCAP::Services::ServiceBrokers::V2
                   client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
-              expect(http_client).to have_received(:delete).
-                                      with("/v2/service_instances/#{instance.guid}", anything())
+              expect(VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner).
+                                     to have_received(:deprovision).
+                                     with(client, instance)
             end
           end
 
@@ -425,8 +431,9 @@ module VCAP::Services::ServiceBrokers::V2
                   client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
-              expect(http_client).to have_received(:delete).
-                                      with("/v2/service_instances/#{instance.guid}", anything())
+              expect(VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner).
+                                     to have_received(:deprovision).
+                                     with(client, instance)
             end
           end
 
@@ -440,8 +447,9 @@ module VCAP::Services::ServiceBrokers::V2
                   client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
-              expect(http_client).to have_received(:delete).
-                                      with("/v2/service_instances/#{instance.guid}", anything())
+              expect(VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner).
+                                     to have_received(:deprovision).
+                                     with(client, instance)
             end
           end
 
@@ -455,8 +463,9 @@ module VCAP::Services::ServiceBrokers::V2
                   client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
-              expect(http_client).to have_received(:delete).
-                                      with("/v2/service_instances/#{instance.guid}", anything())
+              expect(VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner).
+                                     to have_received(:deprovision).
+                                     with(client, instance)
             end
           end
 
@@ -470,8 +479,9 @@ module VCAP::Services::ServiceBrokers::V2
                   client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
-              expect(http_client).to have_received(:delete).
-                                      with("/v2/service_instances/#{instance.guid}", anything())
+              expect(VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner).
+                                     to have_received(:deprovision).
+                                     with(client, instance)
             end
           end
         end
@@ -480,6 +490,10 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when provision takes longer than broker configured timeout' do
         let(:default_timeout_value) { VCAP::CloudController::Config.config[:broker_client_timeout_seconds] }
         let(:timeout_value) { 1 }
+
+        before do
+          allow(VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner).to receive(:deprovision)
+        end
 
         context 'when http_client make request fails with ServiceBrokerApiTimeout' do
           before do
@@ -501,8 +515,9 @@ module VCAP::Services::ServiceBrokers::V2
             elapsed_time = Time.now - start_time
             expect(elapsed_time).to be >= timeout_value
 
-            expect(http_client).to have_received(:delete).
-                                    with("/v2/service_instances/#{instance.guid}", anything())
+            expect(VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner).
+                                   to have_received(:deprovision).
+                                   with(client, instance)
           end
         end
 
