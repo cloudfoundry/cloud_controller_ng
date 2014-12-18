@@ -7,20 +7,20 @@ module VCAP::CloudController
 
       let(:plan) { VCAP::CloudController::ServicePlan.make }
       let(:space) { VCAP::CloudController::Space.make }
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.new(service_plan: plan, space: space) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.new(service_plan: plan, space: space) }
 
       let(:name) { 'fake-name' }
-      subject(:job) { VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovision.new(name, client, instance) }
+      subject(:job) { VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovision.new(name, client, service_instance) }
 
       describe '#perform' do
         before do
-          allow(client).to receive(:deprovision).with(instance)
+          allow(client).to receive(:deprovision).with(service_instance)
         end
 
-        it 'deprovisions the instance' do
+        it 'deprovisions the service instance' do
           job.perform
 
-          expect(client).to have_received(:deprovision).with(instance)
+          expect(client).to have_received(:deprovision).with(service_instance)
         end
       end
 
