@@ -115,7 +115,11 @@ module VCAP::CloudController
       app.db.transaction do
         app.lock!
 
-        raise DuplicateProcessType if app.processes.any? { |p| p.type == process.type }
+        app.processes.each do |p|
+          return if p.guid == process.guid
+          raise DuplicateProcessType if p.type == process.type
+        end
+
         app.add_process_by_guid(process.guid)
       end
     end

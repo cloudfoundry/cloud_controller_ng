@@ -315,6 +315,20 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the process is already associated with the app' do
+        before do
+          apps_handler.add_process(app_model, process, access_context)
+        end
+
+        it 'does nothing' do
+          expect(app_model.processes.count).to eq(1)
+          apps_handler.add_process(app_model, process, access_context)
+
+          app_model.reload
+          expect(app_model.processes.count).to eq(1)
+        end
+      end
+
       context 'when a user can add a process to the app' do
         it 'adds the process' do
           expect(app_model.processes.count).to eq(0)
