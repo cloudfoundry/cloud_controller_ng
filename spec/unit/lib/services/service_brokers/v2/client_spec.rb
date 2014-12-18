@@ -486,7 +486,7 @@ module VCAP::Services::ServiceBrokers::V2
             VCAP::CloudController::Config.config[:broker_client_timeout_seconds] = timeout_value
 
             allow(http_client).to receive(:put) do |path, message|
-              sleep(timeout_value)
+              sleep(timeout_value*5)
               raise ServiceBrokerApiTimeout.new(path, :put, Timeout::Error.new(message))
             end
           end
