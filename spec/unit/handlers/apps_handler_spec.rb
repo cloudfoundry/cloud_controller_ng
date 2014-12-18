@@ -86,6 +86,21 @@ module VCAP::CloudController
             apps_handler.create(create_message, access_context)
           }.to raise_error(AppsHandler::InvalidApp, 'Space was not found')
         end
+
+        context 'and the user is not an admin' do
+          before do
+            # This is to replicate a Space not existing in the access_context
+            # check. An access check on an admin user will not attempt to find a
+            # Space.
+            allow(access_context).to receive(:cannot?).and_return(true)
+          end
+
+          it 'still raises an AppInvalid error' do
+            expect {
+              apps_handler.create(create_message, access_context)
+            }.to raise_error(AppsHandler::InvalidApp, 'Space was not found')
+          end
+        end
       end
 
       context 'when the app is invalid' do
