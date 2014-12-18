@@ -24,7 +24,7 @@ module VCAP::CloudController
         return if app.nil?
 
         app.mark_as_failed_to_stage
-        Loggregator.emit_error(app.guid, "Failed to stage application")
+        Loggregator.emit_error(app.guid, "Failed to stage application: #{payload["error"]}")
       end
 
 
