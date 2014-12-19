@@ -114,8 +114,6 @@ module VCAP::RestAPI
 
     def cast_query_value(col_type, key, value)
       case col_type
-      when :foreign_key
-        return clean_up_foreign_key(col_type, value)
       when :integer
         clean_up_integer(value)
       when :boolean
@@ -127,27 +125,24 @@ module VCAP::RestAPI
       end
     end
 
-    def clean_up_foreign_key(q_key, q_val)
-      return unless q_key =~ /(.*)_(gu)?id$/
+    def clean_up_foreign_key(query_key, query_val)
+      return unless query_key =~ /(.*)_(gu)?id$/
 
-      attr = $1
+      foreign_key_table = $1
 
-      f_key = if model.associations.include?(attr.to_sym)
-        attr.to_sym
-      elsif model.associations.include?(attr.pluralize.to_sym)
-        attr.pluralize.to_sym
+      foreign_key_column_name = if model.associations.include?(foreign_key_table.to_sym)
+        foreign_key_table.to_sym
+      elsif model.associations.include?(foreign_key_table.pluralize.to_sym)
+        foreign_key_table.pluralize.to_sym
       end
 
-      # One could argue that this should be a server error.  It means
-      # that a query key came in for an attribute that is explicitly
-      # in the queryable_attributes, but is not a column or an association.
-      raise VCAP::Errors::ApiError.new_from_details("BadQueryParameter", q_key) unless f_key
+      raise_if_column_is_missing(query_key, foreign_key_column_name)
 
-      other_model = model.association_reflection(f_key).associated_class
+      other_model = model.association_reflection(foreign_key_column_name).associated_class
       id_key = other_model.columns.include?(:guid) ? :guid : :id
-      f_val = other_model.filter(id_key => q_val)
+      foreign_key_value = other_model.filter(id_key => query_val)
 
-      { f_key => f_val }
+      { foreign_key_column_name => foreign_key_value }
     end
 
     TINYINT_TYPE = "tinyint(1)".freeze
@@ -176,7 +171,18 @@ module VCAP::RestAPI
     def column_type(query_key)
       return :foreign_key if query_key =~ /(.*)_(gu)?id$/
       column = model.db_schema[query_key.to_sym]
-      column && column[:type]
+
+      raise_if_column_is_missing(query_key, column)
+
+      column[:type]
+    end
+
+    def raise_if_column_is_missing(query_key, column)
+      # One could argue that this should be a server error.  It means
+      # that a query key came in for an attribute that is explicitly
+      # in the queryable_attributes, but is not a column or an association.
+
+      raise VCAP::Errors::ApiError.new_from_details("BadQueryParameter", query_key) unless column
     end
 
     attr_accessor :model, :access_filter, :queryable_attributes, :query

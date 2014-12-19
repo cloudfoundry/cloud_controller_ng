@@ -159,6 +159,26 @@ module VCAP::RestAPI
         end
       end
 
+      describe 'exact query on an nonexistent foreign_key that is included in queryable_attributes' do
+        it "should raise BadQueryParameter" do
+          q = "fake_foreign_key_guid:1"
+          expect {
+            Query.filtered_dataset_from_query_params(Author, Author.dataset,
+                                                          [*@queryable_attributes, 'fake_foreign_key_guid'], :q => q)
+          }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
+        end
+      end
+
+      describe 'exact query on an nonexistent foreign_key that is included in queryable_attributes' do
+        it "should raise BadQueryParameter" do
+          q = "fake_attr:1"
+          expect {
+            Query.filtered_dataset_from_query_params(Author, Author.dataset,
+                                                          [*@queryable_attributes, 'fake_attr'], :q => q)
+          }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
+        end
+      end
+
       describe "exact query on a nonallowed attribute" do
         it "should raise BadQueryParameter" do
           q = "protected:1"
@@ -389,7 +409,7 @@ module VCAP::RestAPI
         end
       end
     end
-    
+
     describe "semicolon escaping" do
       let!(:one_semi) { VCAP::CloudController::TestModel.make(unique_value: "one_semi;", required_attr: true) }
       let!(:multiple_semi) { VCAP::CloudController::TestModel.make(unique_value: "two;;semis and one;semi") }
