@@ -239,7 +239,6 @@ describe 'Service Broker API integration' do
 
           it 'makes the request to the broker and deprovisions' do
             expect(a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern}))).to have_been_made
-            #expect(a_request(:delete, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern}))).to have_been_made
           end
 
           it 'responds to user with 408' do
@@ -341,6 +340,35 @@ describe 'Service Broker API integration' do
 
           it 'responds to user with 201' do
             expect(last_response.status).to eq(201)
+          end
+        end
+      end
+
+      describe 'service binding with timeout' do
+        let(:broker_response_body) { '{}' }
+
+        before do
+          stub_request(:put, %r(/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern})).to_return { |request|
+            raise Timeout::Error.new('fake-timeout')
+          }
+
+          stub_request(:delete, %r(/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern})).
+          to_return(status: broker_response_status, body: broker_response_body)
+
+          post('/v2/service_bindings',
+            { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
+            json_headers(admin_headers))
+        end
+
+        context 'when the broker times out' do
+          let(:broker_response_status) { 408 }
+
+          it 'makes the request to the broker and deprovisions' do
+            expect(a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}))).to have_been_made
+          end
+
+          it 'responds to user with 408' do
+            expect(last_response.status).to eq(408)
           end
         end
       end
