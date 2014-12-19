@@ -96,19 +96,22 @@ module VCAP::RestAPI
     end
 
     def query_filter(key, comparison, val)
-      col_type = column_type(key)
-      return clean_up_foreign_key(key, val) if col_type == :foreign_key
-
+      foreign_key_association = foreign_key_association(key)
       if comparison == " IN "
-        val = val.split(",").collect { |value| cast_query_value(col_type, key, value) }
+        values = val.split(",")
       else
-        val = cast_query_value(col_type, key, val)
+        values = [val]
       end
 
-      if val.nil?
+      return clean_up_foreign_key(key, values, foreign_key_association) if foreign_key_association
+
+      col_type = column_type(key)
+      values = values.collect{ |value| cast_query_value(col_type, key, value) }.compact
+
+      if values.empty?
         { key => nil }
       else
-        ["#{key} #{comparison} ?", val]
+        ["#{key} #{comparison} ?", values]
       end
     end
 
@@ -125,22 +128,24 @@ module VCAP::RestAPI
       end
     end
 
-    def clean_up_foreign_key(query_key, query_val)
+    def foreign_key_association(query_key)
       return unless query_key =~ /(.*)_(gu)?id$/
 
       foreign_key_table = $1
 
-      foreign_key_column_name = if model.associations.include?(foreign_key_table.to_sym)
+      if model.associations.include?(foreign_key_table.to_sym)
         foreign_key_table.to_sym
       elsif model.associations.include?(foreign_key_table.pluralize.to_sym)
         foreign_key_table.pluralize.to_sym
       end
+    end
 
+    def clean_up_foreign_key(query_key, query_values, foreign_key_column_name)
       raise_if_column_is_missing(query_key, foreign_key_column_name)
 
       other_model = model.association_reflection(foreign_key_column_name).associated_class
       id_key = other_model.columns.include?(:guid) ? :guid : :id
-      foreign_key_value = other_model.filter(id_key => query_val)
+      foreign_key_value = other_model.filter(id_key => query_values)
 
       { foreign_key_column_name => foreign_key_value }
     end
@@ -169,11 +174,8 @@ module VCAP::RestAPI
     end
 
     def column_type(query_key)
-      return :foreign_key if query_key =~ /(.*)_(gu)?id$/
       column = model.db_schema[query_key.to_sym]
-
       raise_if_column_is_missing(query_key, column)
-
       column[:type]
     end
 

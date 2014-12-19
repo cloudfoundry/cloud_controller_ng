@@ -165,6 +165,20 @@ class FakeModelTables
 
       foreign_key :author_id, :authors
     end
+
+    db.create_table :magazines do
+      primary_key :id
+
+      String :guid
+    end
+
+    db.create_table :subscribers do
+      primary_key :id
+
+      String :guid
+
+      foreign_key :magazine_id, :magazines
+    end
   end
 
   private

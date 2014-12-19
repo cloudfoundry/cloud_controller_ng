@@ -12,6 +12,14 @@ module VCAP::RestAPI
       many_to_one :author
     end
 
+    class Magazine < Sequel::Model
+      one_to_many :subscribers
+    end
+
+    class Subscriber < Sequel::Model
+      many_to_one :magazine
+    end
+
     before :all do
       @num_authors = 10
       (@num_authors - 1).times do |i|
@@ -257,6 +265,69 @@ module VCAP::RestAPI
           ds = Query.filtered_dataset_from_query_params(Book, Book.dataset,
                                                         @queryable_attributes, :q => q)
           expect(ds.all).to eq(Author[1].books)
+        end
+      end
+
+      context 'when the model has a guid' do
+        let!(:magazine1) { Magazine.create(guid: SecureRandom.uuid) }
+        let!(:magazine2) { Magazine.create(guid: SecureRandom.uuid) }
+        let!(:magazine_with_no_subscribers) { Magazine.create(guid: SecureRandom.uuid) }
+        let!(:subscriber1_magazine1) { Subscriber.create(guid: SecureRandom.uuid, magazine: magazine1) }
+        let!(:subscriber2_magazine1) { Subscriber.create(guid: SecureRandom.uuid, magazine: magazine1) }
+        let!(:subscriber1_magazine2) { Subscriber.create(guid: SecureRandom.uuid, magazine: magazine2) }
+
+        describe "exact query with an guid from a to_many relation" do
+          it "returns the correct results" do
+            q = "subscriber_guid:#{subscriber1_magazine1.guid}"
+            ds = Query.filtered_dataset_from_query_params(Magazine, Magazine.dataset,
+                                                          Set.new(['subscriber_guid']), :q => q)
+            expect(ds.all).to eq([magazine1])
+          end
+        end
+
+        describe "IN query with a single guid from a to_many relation" do
+          it "returns the correct results" do
+            q = "subscriber_guid IN #{subscriber1_magazine1.guid}"
+            ds = Query.filtered_dataset_from_query_params(Magazine, Magazine.dataset,
+                                                          Set.new(['subscriber_guid']), :q => q)
+            expect(ds.all).to eq([magazine1])
+          end
+        end
+
+        describe "IN query with a multiple guids from a to_many relation" do
+          it "returns the correct results" do
+            q = "subscriber_guid IN #{subscriber1_magazine1.guid},#{subscriber1_magazine2.guid}"
+            ds = Query.filtered_dataset_from_query_params(Magazine, Magazine.dataset,
+                                                          Set.new(['subscriber_guid']), :q => q)
+            expect(ds.all).to match_array([magazine1, magazine2])
+          end
+        end
+
+        describe "exact query with an guid from a to_one relation" do
+          it "returns the correct results" do
+            q = "magazine_guid:#{magazine1.guid}"
+            ds = Query.filtered_dataset_from_query_params(Subscriber, Subscriber.dataset,
+                                                          Set.new(['magazine_guid']), :q => q)
+            expect(ds.all).to match_array([subscriber1_magazine1, subscriber2_magazine1])
+          end
+        end
+
+        describe "IN query with a single guid from a to_one relation" do
+          it "returns the correct results" do
+            q = "magazine_guid IN #{magazine1.guid}"
+            ds = Query.filtered_dataset_from_query_params(Subscriber, Subscriber.dataset,
+                                                          Set.new(['magazine_guid']), :q => q)
+            expect(ds.all).to match_array([subscriber1_magazine1, subscriber2_magazine1])
+          end
+        end
+
+        describe "IN query with a multiple guids from a to_one relation" do
+          it "returns the correct results" do
+            q = "magazine_guid IN #{magazine1.guid},#{magazine2.guid}"
+            ds = Query.filtered_dataset_from_query_params(Subscriber, Subscriber.dataset,
+                                                          Set.new(['magazine_guid']), :q => q)
+            expect(ds.all).to match_array([subscriber1_magazine1, subscriber2_magazine1, subscriber1_magazine2])
+          end
         end
       end
 
