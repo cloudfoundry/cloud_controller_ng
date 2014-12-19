@@ -20,11 +20,9 @@ module VCAP::CloudController
         end
 
         it 'enqueues a ServiceInstanceDeprovision Job' do
-          Timecop.freeze do
-            expect(Delayed::Job).to receive(:enqueue).with(an_instance_of(ServiceInstanceDeprovision),
-                                                           hash_including(queue: 'cc-generic'))
-            ServiceInstanceDeprovisioner.deprovision(client, service_instance)
-          end
+          expect(Delayed::Job).to receive(:enqueue).with(an_instance_of(ServiceInstanceDeprovision),
+                                                         hash_including(queue: 'cc-generic'))
+          ServiceInstanceDeprovisioner.deprovision(client, service_instance)
         end
       end
     end
