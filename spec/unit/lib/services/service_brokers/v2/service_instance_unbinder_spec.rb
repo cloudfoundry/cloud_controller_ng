@@ -20,11 +20,9 @@ module VCAP::CloudController
         end
 
         it 'enqueues a ServiceInstanceUnbind Job' do
-          Timecop.freeze do
-            expect(Delayed::Job).to receive(:enqueue).with(an_instance_of(ServiceInstanceUnbind),
-                                                           hash_including(queue: 'cc-generic'))
-            ServiceInstanceUnbinder.unbind(client, binding)
-          end
+          expect(Delayed::Job).to receive(:enqueue).with(an_instance_of(ServiceInstanceUnbind),
+                                                         hash_including(queue: 'cc-generic'))
+          ServiceInstanceUnbinder.unbind(client, binding)
         end
       end
     end

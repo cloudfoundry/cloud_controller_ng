@@ -714,9 +714,6 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when bind takes longer than broker configured timeout' do
-        let(:default_timeout_value) { VCAP::CloudController::Config.config[:broker_client_timeout_seconds] }
-        let(:timeout_value) { 1 }
-
         let(:binding) do
           VCAP::CloudController::ServiceBinding.make(
             binding_options: { 'this' => 'that' }
@@ -729,23 +726,15 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'when http_client make request fails with ServiceBrokerApiTimeout' do
           before do
-            VCAP::CloudController::Config.config[:broker_client_timeout_seconds] = timeout_value
-
             allow(http_client).to receive(:put) do |path, message|
-              sleep(timeout_value*5)
               raise ServiceBrokerApiTimeout.new(path, :put, Timeout::Error.new(message))
             end
           end
 
           it 'unbinds the binding' do
-            elapsed_time = 0
-            start_time = Time.now
             expect {
               client.bind(binding)
             }.to raise_error(ServiceBrokerApiTimeout)
-
-            elapsed_time = Time.now - start_time
-            expect(elapsed_time).to be >= timeout_value
 
             expect(VCAP::CloudController::Jobs::Runtime::ServiceInstanceUnbinder).
                                    to have_received(:unbind).
@@ -755,8 +744,6 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'when http_client make request fails with ServiceBrokerApiUnreachable' do
           before do
-            VCAP::CloudController::Config.config[:broker_client_timeout_seconds] = timeout_value
-
             allow(http_client).to receive(:put) do |path, message|
               raise ServiceBrokerApiUnreachable.new(path, :put, Errno::ECONNREFUSED)
             end
@@ -771,8 +758,6 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'when http_client make request fails with HttpRequestError' do
           before do
-            VCAP::CloudController::Config.config[:broker_client_timeout_seconds] = timeout_value
-
             allow(http_client).to receive(:put) do |path, message|
               raise HttpRequestError.new(message, path, :put, Exception.new(message))
             end
