@@ -47,17 +47,29 @@ module VCAP::RestAPI
         end
       end
 
-      describe "exact query on a unique integer" do
-        it "should return the correct record" do
+      describe 'integer queries' do
+        it "filters equality queries when there are matches" do
           q = "num_val:5"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
           expect(ds.all).to eq([Author[:num_val => 5]])
         end
-      end
 
-      describe "greater-than comparison query on an integer within the range" do
-        it "should return no results" do
+        it 'filters equality queries when there are no matches' do
+          q = "num_val:#{@num_authors + 10}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+          expect(ds.count).to eq(0)
+        end
+
+        it 'filters equality queries when the argument is a string' do
+          q = "num_val:a"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+                                                        @queryable_attributes, :q => q)
+          expect(ds.count).to eq(0)
+        end
+
+        it "filters greater-than comparisons" do
           q = "num_val>#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
@@ -68,10 +80,8 @@ module VCAP::RestAPI
 
           expect(ds.all).to match_array(expected)
         end
-      end
 
-      describe "greater-than equals comparison query on an integer within the range" do
-        it "should return no results" do
+        it "filters great-than-or-equal comparisons" do
           q = "num_val>=#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
@@ -82,10 +92,8 @@ module VCAP::RestAPI
 
           expect(ds.all).to match_array(expected)
         end
-      end
 
-      describe "less-than comparison query on an integer within the range" do
-        it "should return no results" do
+        it "filters less-than comparisons" do
           q = "num_val<#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
@@ -96,10 +104,8 @@ module VCAP::RestAPI
 
           expect(ds.all).to match_array(expected)
         end
-      end
 
-      describe "less-than equals comparison query on an integer within the range" do
-        it "should return no results" do
+        it "filters less-than-or-equal comparisons" do
           q = "num_val<=#{@num_authors - 5}"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
             @queryable_attributes, :q => q)
@@ -112,44 +118,22 @@ module VCAP::RestAPI
         end
       end
 
-      describe "exact query on a nonexistent integer" do
-        it "should return no results" do
-          q = "num_val:#{@num_authors + 10}"
-          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, :q => q)
-          expect(ds.count).to eq(0)
-        end
-      end
-
-      describe "exact query on an integer field with a string" do
-        it "should return no results" do
-          q = "num_val:a"
-          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-                                                        @queryable_attributes, :q => q)
-          expect(ds.count).to eq(0)
-        end
-      end
-
-      describe "exact query on a unique string" do
-        it "should return the correct record" do
+      describe 'string queries' do
+        it "filters equality queries when there are matches" do
           q = "str_val:str 5"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
           expect(ds.all).to eq([Author[:str_val => "str 5"]])
         end
-      end
 
-      describe "exact query on a nonexistent string" do
-        it "should return the correct record" do
+        it "filters equality queries when there are no matches" do
           q = "str_val:fnord"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
           expect(ds.count).to eq(0)
         end
-      end
 
-      describe "exact query on a string prefix" do
-        it "should return no results" do
+        it "does not match partial strings" do
           q = "str_val:str"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
@@ -157,39 +141,142 @@ module VCAP::RestAPI
         end
       end
 
-      describe "exact query on a nonexistent attribute" do
-        it "should raise BadQueryParameter" do
+      describe 'timestamp queries' do
+        describe "exact query on a timestamp" do
+          it "returns the correct record when when the timestamp is null" do
+            q = "published_at:"
+            ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+              @queryable_attributes, :q => q)
+            expect(ds.all).to eq([Author[:num_val => 1]])
+          end
+
+          it "returns the correct record when the timestamp is valid" do
+            query_value = Author[:num_val => 5].published_at
+            q = "published_at:#{query_value}"
+            ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+              @queryable_attributes, :q => q)
+            expect(ds.all).to eq([Author[:num_val => 5]])
+          end
+        end
+
+        it "returns correct results for a greater-than comparison query" do
+          query_value = Author[:num_val => 5].published_at
+          q = "published_at>#{query_value}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+          @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.published_at && a.published_at > query_value
+          end
+
+          expect(ds.all).to match_array(expected)
+        end
+
+        it "returns correct results for a greater-than-or-equal-to comparison query" do
+          query_value = Author[:num_val => 5].published_at
+          q = "published_at>=#{query_value}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.published_at && a.published_at >= query_value
+          end
+
+          expect(ds.all).to match_array(expected)
+        end
+
+        it "returns correct results for a less-than comparison query" do
+          query_value = Author[:num_val => 5].published_at
+          q = "published_at<#{query_value}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.published_at && a.published_at < query_value
+          end
+
+          expect(ds.all).to match_array(expected)
+        end
+
+        it "returns correct results for a less-than-or-equal-to comparison query" do
+          query_value = Author[:num_val => 5].published_at
+          q = "published_at<=#{query_value}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expected = Author.all.select do |a|
+            a.published_at && a.published_at <= query_value
+          end
+
+          expect(ds.all).to match_array(expected)
+        end
+
+        it "returns no results for an exact query on a invalid timestamp" do
+          query_value = Author.last.published_at + 1
+          q = "published_at:#{query_value}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q)
+
+          expect(ds.count).to eq(0)
+        end
+
+        it "raises argument error for an exact query on a malformed timestamp" do
+          q = "published_at:asdf"
+
+          expect { Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, :q => q) }.to raise_error(ArgumentError)
+        end
+      end
+
+      describe "boolean values on boolean column" do
+        it "returns correctly filtered results for true" do
+          ds = Query.filtered_dataset_from_query_params(
+            Author, Author.dataset, @queryable_attributes, :q => "published:t")
+          expect(ds.all).to eq([Author.first])
+        end
+
+        it "returns correctly filtered results for false" do
+          ds = Query.filtered_dataset_from_query_params(
+            Author, Author.dataset, @queryable_attributes, :q => "published:f")
+          expect(ds.all).to eq(Author.all - [Author.first])
+        end
+      end
+
+      describe 'errors' do
+        it "raises for nonexistent attributes" do
           q = "bogus_val:1"
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
           }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
         end
-      end
 
-      describe 'exact query on an nonexistent foreign_key that is included in queryable_attributes' do
-        it "should raise BadQueryParameter" do
+        it "raises on nonexistent foreign_keys" do
           q = "fake_foreign_key_guid:1"
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           [*@queryable_attributes, 'fake_foreign_key_guid'], :q => q)
           }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
         end
-      end
 
-      describe 'exact query on an nonexistent foreign_key that is included in queryable_attributes' do
-        it "should raise BadQueryParameter" do
+        it "raises on nonexistent attributes that do exist in queryable_attributes" do
           q = "fake_attr:1"
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           [*@queryable_attributes, 'fake_attr'], :q => q)
           }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
         end
-      end
 
-      describe "exact query on a nonallowed attribute" do
-        it "should raise BadQueryParameter" do
+        it "raises on nonallowed attributes" do
           q = "protected:1"
+          expect {
+            Query.filtered_dataset_from_query_params(Author, Author.dataset,
+                                                          @queryable_attributes, :q => q)
+          }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
+        end
+
+        it "raises when there is no key" do
+          q = ":10"
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, :q => q)
@@ -213,16 +300,6 @@ module VCAP::RestAPI
         end
       end
 
-      describe "without a key" do
-        it "should raise BadQueryParameter" do
-          q = ":10"
-          expect {
-            Query.filtered_dataset_from_query_params(Author, Author.dataset,
-                                                          @queryable_attributes, :q => q)
-          }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
-        end
-      end
-
       describe "exact query with nil value" do
         it "should return records with nil entries" do
           q = "num_val:"
@@ -232,17 +309,15 @@ module VCAP::RestAPI
         end
       end
 
-      describe "exact query with an nonexistent id from a to_many relation" do
-        it "should return no results" do
+      describe "querying to_many relations" do
+        it "returns no results for a nonexistent id" do
           q = "book_id:9999"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
           expect(ds.count).to eq(0)
         end
-      end
 
-      describe "exact query with an id from a to_many relation" do
-        it "should return no results" do
+        it "returns results that match the id" do
           q = "book_id:2"
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                         @queryable_attributes, :q => q)
@@ -250,17 +325,15 @@ module VCAP::RestAPI
         end
       end
 
-      describe "exact query with an nonexistent id from a to_one relation" do
-        it "should return no results" do
+      describe "querying to_one relations" do
+        it "returns no results for a nonexistent id" do
           q = "author_id:9999"
           ds = Query.filtered_dataset_from_query_params(Book, Book.dataset,
                                                         @queryable_attributes, :q => q)
           expect(ds.count).to eq(0)
         end
-      end
 
-      describe "exact query with an id from a to_one relation" do
-        it "should return the correct results" do
+        it "return results that match the id" do
           q = "author_id:1"
           ds = Query.filtered_dataset_from_query_params(Book, Book.dataset,
                                                         @queryable_attributes, :q => q)
@@ -328,121 +401,6 @@ module VCAP::RestAPI
                                                           Set.new(['magazine_guid']), :q => q)
             expect(ds.all).to match_array([subscriber1_magazine1, subscriber2_magazine1, subscriber1_magazine2])
           end
-        end
-      end
-
-      describe "boolean values on boolean column" do
-        it "returns correctly filtered results for true" do
-          ds = Query.filtered_dataset_from_query_params(
-            Author, Author.dataset, @queryable_attributes, :q => "published:t")
-          expect(ds.all).to eq([Author.first])
-        end
-
-        it "returns correctly filtered results for false" do
-          ds = Query.filtered_dataset_from_query_params(
-            Author, Author.dataset, @queryable_attributes, :q => "published:f")
-          expect(ds.all).to eq(Author.all - [Author.first])
-        end
-      end
-
-      describe "exact query on a timestamp" do
-        context "when the timestamp is null" do
-          it "should return the correct record" do
-            q = "published_at:"
-            ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-              @queryable_attributes, :q => q)
-            expect(ds.all).to eq([Author[:num_val => 1]])
-          end
-        end
-
-        context "when the timestamp is valid" do
-          it "should return the correct record" do
-            query_value = Author[:num_val => 5].published_at
-            q = "published_at:#{query_value}"
-            ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-              @queryable_attributes, :q => q)
-            expect(ds.all).to eq([Author[:num_val => 5]])
-          end
-        end
-      end
-
-      describe "greater-than comparison query on a timestamp within the range" do
-        it "should return 5 records" do
-          query_value = Author[:num_val => 5].published_at
-          q = "published_at>#{query_value}"
-          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, :q => q)
-
-          expected = Author.all.select do |a|
-            a.published_at && a.published_at > query_value
-          end
-
-          expect(ds.all).to match_array(expected)
-        end
-      end
-
-      describe "greater-than equals comparison query on a timestamp within the range" do
-        it "should return 6 records" do
-          query_value = Author[:num_val => 5].published_at
-          q = "published_at>=#{query_value}"
-          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, :q => q)
-
-          expected = Author.all.select do |a|
-            a.published_at && a.published_at >= query_value
-          end
-
-          expect(ds.all).to match_array(expected)
-        end
-      end
-
-      describe "less-than comparison query on a timestamp within the range" do
-        it "should return 3 records" do
-          query_value = Author[:num_val => 5].published_at
-          q = "published_at<#{query_value}"
-          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, :q => q)
-
-          expected = Author.all.select do |a|
-            a.published_at && a.published_at < query_value
-          end
-
-          expect(ds.all).to match_array(expected)
-        end
-      end
-
-      describe "less-than equals comparison query on a timestamp within the range" do
-        it "should returns 4 records" do
-          query_value = Author[:num_val => 5].published_at
-          q = "published_at<=#{query_value}"
-          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, :q => q)
-
-          expected = Author.all.select do |a|
-            a.published_at && a.published_at <= query_value
-          end
-
-          expect(ds.all).to match_array(expected)
-        end
-      end
-
-      describe "exact query on a invalid timestamp" do
-        it "should return no results" do
-          query_value = Author.last.published_at + 1
-          q = "published_at:#{query_value}"
-          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, :q => q)
-
-          expect(ds.count).to eq(0)
-        end
-      end
-
-      describe "exact query on a malformed timestamp" do
-        it "should raise argument error" do
-          q = "published_at:asdf"
-
-          expect { Query.filtered_dataset_from_query_params(Author, Author.dataset,
-            @queryable_attributes, :q => q) }.to raise_error(ArgumentError)
         end
       end
 
