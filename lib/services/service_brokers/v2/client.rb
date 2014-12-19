@@ -125,6 +125,10 @@ module VCAP::Services::ServiceBrokers::V2
       if parsed_response.has_key?('syslog_drain_url')
         binding.syslog_drain_url = parsed_response['syslog_drain_url']
       end
+
+    rescue ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
+      VCAP::CloudController::Jobs::Runtime::ServiceInstanceUnbinder.unbind(self, binding)
+      raise e
     end
 
     def unbind(binding)
