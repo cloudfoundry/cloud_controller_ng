@@ -13,12 +13,8 @@ module VCAP::CloudController
         private
 
         def save_staging_result(app, payload)
-          already_staged = false
-
           app.class.db.transaction do
             app.lock!
-
-            already_staged = app.staged?
 
             app.mark_as_staged
             app.add_new_droplet(SecureRandom.hex) # placeholder until image ID is obtained during staging
@@ -32,10 +28,8 @@ module VCAP::CloudController
               end
             end
 
-            app.save_changes
+            app.save_changes(:raise_on_save_failure => true)
           end
-
-          already_staged
         end
       end
     end

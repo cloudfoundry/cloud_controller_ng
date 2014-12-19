@@ -110,15 +110,34 @@ module VCAP::CloudController
             end
           end
 
-          context "when it receives another success response" do
+          context "when updating the app table with data from staging fails" do
+            let(:payload) do
+              {
+                "app_id" => app.guid,
+                "task_id" => app.staging_task_id,
+              }
+            end
+            let(:save_error) { StandardError.new("save-error") }
+
             before do
-              handler.staging_complete(payload)
+              allow_any_instance_of(App).to receive(:save_changes).and_raise(save_error)
             end
 
-            it "does not try to run it on diego twice" do
+            it "should not start anything" do
               handler.staging_complete(payload)
 
-              expect(runners).to have_received(:runner_for_app).once
+              expect(runners).not_to have_received(:runner_for_app)
+              expect(runner).not_to have_received(:start)
+            end
+
+            it "logs an error for the CF operator" do
+              handler.staging_complete(payload)
+
+              expect(logger).to have_received(:error).with(
+                "diego.docker.staging.saving-staging-result-failed",
+                response: payload,
+                error: "save-error",
+              )
             end
           end
         end

@@ -32,9 +32,11 @@ module VCAP::CloudController
         app = get_app(payload)
         return if app.nil?
 
-        already_staged = save_staging_result(app, payload)
-        if !already_staged
-           @runners.runner_for_app(app).start
+        begin
+          save_staging_result(app, payload)
+          @runners.runner_for_app(app).start
+        rescue => e
+          logger.error(@logger_prefix + "saving-staging-result-failed", :response => payload, :error => e.message)
         end
       end
 

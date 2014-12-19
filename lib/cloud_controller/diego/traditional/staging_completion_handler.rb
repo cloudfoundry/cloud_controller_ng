@@ -32,13 +32,8 @@ module VCAP::CloudController
         end
 
         def save_staging_result(app, payload)
-          already_staged = false
-
           app.class.db.transaction do
             app.lock!
-
-            already_staged = app.staged?
-
             app.mark_as_staged
             app.update_detected_buildpack(payload["detected_buildpack"], payload["buildpack_key"])
 
@@ -49,10 +44,8 @@ module VCAP::CloudController
               droplet.update_detected_start_command(payload["detected_start_command"]["web"])
             end
 
-            app.save_changes
+            app.save_changes(:raise_on_save_failure => true)
           end
-
-          already_staged
         end
       end
     end

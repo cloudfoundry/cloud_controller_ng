@@ -115,17 +115,6 @@ module VCAP::CloudController
     end
 
     describe "failure cases" do
-      context "when the app has already been staged" do
-        before do
-          handle_staging_result(success_response)
-        end
-
-        it "does not start the app instances twice" do
-          handle_staging_result(success_response)
-          expect(runner).to have_received(:start).once
-        end
-      end
-
       context "when the staging fails" do
         it "should mark the app as 'failed to stage'" do
           handle_staging_result(fail_response)
@@ -203,6 +192,31 @@ module VCAP::CloudController
         it "should not emit any loggregator messages" do
           expect(Loggregator).not_to receive(:emit_error).with(staged_app.guid, /bad/)
           handle_staging_result(malformed_fail_response)
+        end
+      end
+
+      context "when updating the app record with data from staging fails" do
+        let(:save_error) { StandardError.new("save-error") }
+
+        before do
+          allow_any_instance_of(App).to receive(:save_changes).and_raise(save_error)
+        end
+
+        it "should not start anything" do
+          handle_staging_result(success_response)
+
+          expect(runners).not_to have_received(:runner_for_app)
+          expect(runner).not_to have_received(:start)
+        end
+
+        it "logs an error for the CF operator" do
+          handle_staging_result(success_response)
+
+          expect(logger).to have_received(:error).with(
+            "diego.staging.saving-staging-result-failed",
+            response: success_response,
+            error: "save-error",
+          )
         end
       end
     end
