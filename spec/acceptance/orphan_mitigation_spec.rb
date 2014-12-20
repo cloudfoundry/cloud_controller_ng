@@ -44,8 +44,8 @@ describe 'orphan mitigation' do
         expect(a_request(:delete, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern}))).to have_been_made
       end
 
-      it 'responds to user with 408' do
-        expect(last_response.status).to eq(408)
+      it 'responds to user with 504' do
+        expect(last_response.status).to eq(504)
       end
     end
   end
@@ -81,8 +81,8 @@ describe 'orphan mitigation' do
         expect(a_request(:delete, %r(http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}))).to have_been_made
       end
 
-      it 'responds to user with 408' do
-        expect(last_response.status).to eq(408)
+      it 'responds to user with 504' do
+        expect(last_response.status).to eq(504)
       end
     end
   end

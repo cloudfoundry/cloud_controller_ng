@@ -25,7 +25,7 @@ module VCAP::Services
       end
 
       def response_code
-        408
+        504
       end
     end
 
