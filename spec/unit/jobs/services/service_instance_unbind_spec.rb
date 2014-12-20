@@ -1,21 +1,25 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  module Jobs::Runtime
+  module Jobs::Services
     describe ServiceInstanceUnbind do
       let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
-      let(:binding) do
-        VCAP::CloudController::ServiceBinding.make(
-          binding_options: { 'this' => 'that' }
-        )
+      let(:service_instance_guid) { 'fake-instance-guid' }
+      let(:app_guid) { 'fake-app-guid' }
+      let(:binding_guid) { 'fake-binding-guid' }
+
+      let(:binding) { instance_double('VCAP::CloudController::ServiceBinding') }
+      before do
+        allow(VCAP::CloudController::ServiceBinding).to receive(:new).and_return(binding)
       end
 
       let(:name) { 'fake-name' }
-      subject(:job) { VCAP::CloudController::Jobs::Runtime::ServiceInstanceUnbind.new(name, client, binding) }
+      subject(:job) { VCAP::CloudController::Jobs::Services::ServiceInstanceUnbind.new(name, {}, binding_guid, service_instance_guid, app_guid) }
 
       describe '#perform' do
         before do
           allow(client).to receive(:unbind).with(binding)
+          allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
         end
 
         it 'unbinds the binding' do

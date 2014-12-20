@@ -82,6 +82,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def initialize(attrs)
       @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(attrs)
+      @attrs = attrs
     end
 
     def catalog
@@ -108,7 +109,7 @@ module VCAP::Services::ServiceBrokers::V2
       instance.credentials = {}
 
     rescue ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
-      VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovisioner.deprovision(self, instance)
+      VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner.deprovision(@attrs, instance)
       raise e
     end
 
@@ -127,7 +128,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
     rescue ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
-      VCAP::CloudController::Jobs::Runtime::ServiceInstanceUnbinder.unbind(self, binding)
+      VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder.unbind(@attrs, binding)
       raise e
     end
 

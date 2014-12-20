@@ -1,9 +1,9 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  module Jobs::Runtime
+  module ServiceBrokers::V2
     describe ServiceInstanceDeprovisioner do
-      let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
+      let(:client_attrs) { {} }
 
       let(:plan) { VCAP::CloudController::ServicePlan.make }
       let(:space) { VCAP::CloudController::Space.make }
@@ -13,16 +13,17 @@ module VCAP::CloudController
 
       describe 'deprovision' do
         it 'creates a ServiceInstanceDeprovision Job' do
-          job = ServiceInstanceDeprovisioner.deprovision(client, service_instance)
-          expect(job).to be_instance_of(ServiceInstanceDeprovision)
-          expect(job.client).to be(client)
-          expect(job.service_instance).to be(service_instance)
+          job = ServiceInstanceDeprovisioner.deprovision(client_attrs, service_instance)
+          expect(job).to be_instance_of(VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision)
+          expect(job.client_attrs).to be(client_attrs)
+          expect(job.service_instance_guid).to be(service_instance.guid)
+          expect(job.service_plan_guid).to be(service_instance.service_plan.guid)
         end
 
         it 'enqueues a ServiceInstanceDeprovision Job' do
-          expect(Delayed::Job).to receive(:enqueue).with(an_instance_of(ServiceInstanceDeprovision),
+          expect(Delayed::Job).to receive(:enqueue).with(an_instance_of(VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision),
                                                          hash_including(queue: 'cc-generic'))
-          ServiceInstanceDeprovisioner.deprovision(client, service_instance)
+          ServiceInstanceDeprovisioner.deprovision(client_attrs, service_instance)
         end
       end
     end

@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module VCAP::CloudController
-  module Jobs::Runtime
+  module Jobs::Services
     describe ServiceInstanceDeprovision do
       let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
 
@@ -10,17 +10,25 @@ module VCAP::CloudController
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.new(service_plan: plan, space: space) }
 
       let(:name) { 'fake-name' }
-      subject(:job) { VCAP::CloudController::Jobs::Runtime::ServiceInstanceDeprovision.new(name, client, service_instance) }
+
+      subject(:job) do
+        VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision.new(name, {},
+          service_instance.guid, service_instance.service_plan.guid)
+      end
 
       describe '#perform' do
         before do
-          allow(client).to receive(:deprovision).with(service_instance)
+          allow(client).to receive(:deprovision)
+          allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
         end
 
         it 'deprovisions the service instance' do
           job.perform
 
-          expect(client).to have_received(:deprovision).with(service_instance)
+          expect(client).to have_received(:deprovision) do |instance|
+            expect(instance.guid).to eq service_instance.guid
+            expect(instance.service_plan.guid).to eq service_instance.service_plan.guid
+          end
         end
       end
 
