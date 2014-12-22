@@ -5,6 +5,7 @@ module VCAP::CloudController
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:host) }
       it { expect(described_class).to be_queryable_by(:domain_guid) }
+      it { expect(described_class).to be_queryable_by(:organization_guid) }
     end
 
     describe 'Attributes' do
@@ -188,6 +189,80 @@ module VCAP::CloudController
           expect(last_response.status).to eq(403)
           expect(decoded_response['error_code']).to match(/FeatureDisabled/)
           expect(decoded_response['description']).to match(/route_creation/)
+        end
+      end
+    end
+
+    describe 'GET /v2/routes' do
+      let(:organization) { Organization.make }
+      let(:domain) { PrivateDomain.make(owning_organization: organization) }
+      let(:space) { Space.make(organization: organization) }
+      let(:route) { Route.make(domain: domain, space: space) }
+
+      describe 'Filtering with Organization Guid' do
+        context 'When Organization Guid Not Present' do
+          it 'Return Resource length zero' do
+            get 'v2/routes?q=organization_guid:notpresent', {}, admin_headers
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(0)
+          end
+        end
+
+        context 'When Organization Guid Present' do
+          let(:first_route_info) { decoded_response.fetch('resources').first }
+          let(:second_route_info) { decoded_response.fetch('resources').last }
+          let(:space1) { Space.make(organization: organization) }
+          let(:route1) { Route.make(domain: domain, space: space1) }
+
+          it 'Allows filtering by organization_guid' do
+            org_guid = organization.guid
+            route_guid = route.guid
+
+            get "v2/routes?q=organization_guid:#{org_guid}", {}, admin_headers
+
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(1)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+          end
+
+          it 'Allows organization_guid query at any place in query ' do
+            org_guid = organization.guid
+            route_guid = route.guid
+            domain_guid = domain.guid
+
+            get "v2/routes?q=domain_guid:#{domain_guid}&q=organization_guid:#{org_guid}", {}, admin_headers
+
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(1)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+          end
+
+          it 'Allows organization_guid query at any place in query with all querables' do
+            org_guid = organization.guid
+            taken_host = 'someroute'
+            route_temp = Route.make(host: taken_host, domain: domain, space: space)
+            route_guid = route_temp.guid
+            domain_guid = domain.guid
+
+            get "v2/routes?q=host:#{taken_host}&q=organization_guid:#{org_guid}&q=domain_guid:#{domain_guid}", {}, admin_headers
+
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(1)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+          end
+
+          it 'Allows filtering at organization level' do
+            org_guid = organization.guid
+            route_guid = route.guid
+            route1_guid = route1.guid
+
+            get "v2/routes?q=organization_guid:#{org_guid}", {}, admin_headers
+
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(2)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(route1_guid)
+          end
         end
       end
     end
