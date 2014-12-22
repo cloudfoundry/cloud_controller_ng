@@ -12,7 +12,10 @@ module VCAP::CloudController::Diego
     end
 
     it "returns the correct environment hash for an application" do
-      encoded_vcap_application_json = app.vcap_application.to_json
+      vcap_app = app.vcap_application
+      Environment::EXCLUDE.each{|k| vcap_app.delete(k)}
+      encoded_vcap_application_json = vcap_app.to_json
+
       encoded_vcap_services_json = app.system_env_json["VCAP_SERVICES"].to_json
 
       expect(Environment.new(app).as_json).to eq([
