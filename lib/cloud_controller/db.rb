@@ -85,7 +85,7 @@ module VCAP
     def self.timestamps(migration, table_key)
       created_at_idx = "#{table_key}_created_at_index".to_sym if table_key
       updated_at_idx = "#{table_key}_updated_at_index".to_sym if table_key
-      migration.Timestamp :created_at, :null => false
+      migration.Timestamp :created_at, :null => false, :default => Sequel::CURRENT_TIMESTAMP
       migration.Timestamp :updated_at
       migration.index :created_at, :name => created_at_idx
       migration.index :updated_at, :name => updated_at_idx
