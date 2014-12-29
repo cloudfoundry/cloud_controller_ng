@@ -44,6 +44,8 @@ module VCAP::CloudController
         optional(:maximum_app_disk_in_mb) => Fixnum,
         :maximum_health_check_timeout => Fixnum,
 
+        optional(:container_file_descriptor_limit) => Fixnum,
+
         optional(:allow_debug) => bool,
 
         optional(:login) => {
