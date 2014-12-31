@@ -72,6 +72,17 @@ module VCAP::CloudController
               expect(VCAP::CloudController::BuildpackBitsDelete).to have_received(:delete_when_safe).with("existing_key", staging_timeout)
             end
           end
+
+          context 'when two upload_buildpack calls are running at the same time' do
+            it 'does not delete the buildpack' do
+              expect(buildpack_blobstore).to receive(:cp_to_blobstore) do
+                Buildpack.find(name: 'upload_binary_buildpack').update(key: expected_sha_valid_zip)
+              end
+
+              expect(VCAP::CloudController::BuildpackBitsDelete).to_not receive(:delete_when_safe)
+              expect(upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)).to be true
+            end
+          end
         end
 
         context "same bits (same sha)" do
