@@ -554,9 +554,15 @@ module VCAP::Services::ServiceBrokers::V2
       let(:service_plan_guid) { new_plan.guid }
 
       let(:path) { "/v2/service_instances/#{instance.guid}/" }
+      let(:code) { 200 }
+      let(:message) { 'OK' }
+      let(:response_data) { '{}' }
+
+      before do
+        allow(http_client).to receive(:patch).and_return(double('response', code: code, body: response_data, message: message))
+      end
 
       it 'makes a patch request with the new service plan' do
-        allow(http_client).to receive(:patch).and_return(double('response', code: 200, body: '{}'))
         client.update_service_plan(instance, new_plan)
 
         expect(http_client).to have_received(:patch).with(
@@ -574,46 +580,50 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a patch request to the correct path' do
-        allow(http_client).to receive(:patch).and_return(double('response', code: 200, body: '{}'))
-
         client.update_service_plan(instance, new_plan)
 
         expect(http_client).to have_received(:patch).with(path, anything)
       end
 
       describe 'error handling' do
-        before do
-          fake_response = double('response', code: status_code, body: body)
-          allow(http_client).to receive(:patch).and_return(fake_response)
+        it_behaves_like 'handles standard error conditions' do
+          let(:operation) { client.update_service_plan(instance, new_plan) }
         end
 
-        context 'when the broker returns a 400' do
-          let(:status_code) { '400' }
-          let(:body) { { description: 'the request was malformed' }.to_json }
-          it 'raises a ServiceBrokerBadResponse error' do
-            expect { client.update_service_plan(instance, new_plan) }.to raise_error(
-              ServiceBrokerBadResponse, /the request was malformed/
-            )
+        describe 'non-standard errors' do
+          before do
+            fake_response = double('response', code: status_code, body: body)
+            allow(http_client).to receive(:patch).and_return(fake_response)
           end
-        end
 
-        context 'when the broker returns a 404' do
-          let(:status_code) { '404' }
-          let(:body) { { description: 'service instance not found' }.to_json }
-          it 'raises a ServiceBrokerBadRequest error' do
-            expect { client.update_service_plan(instance, new_plan) }.to raise_error(
-              ServiceBrokerBadResponse, /service instance not found/
-            )
+          context 'when the broker returns a 400' do
+            let(:status_code) { '400' }
+            let(:body) { { description: 'the request was malformed' }.to_json }
+            it 'raises a ServiceBrokerBadResponse error' do
+              expect { client.update_service_plan(instance, new_plan) }.to raise_error(
+                ServiceBrokerBadResponse, /the request was malformed/
+              )
+            end
           end
-        end
 
-        context 'when the broker returns a 422' do
-          let(:status_code) { '422' }
-          let(:body) { { description: 'cannot update to this plan' }.to_json }
-          it 'raises a ServiceBrokerBadResponse error' do
-            expect { client.update_service_plan(instance, new_plan) }.to raise_error(
-              ServiceBrokerBadResponse, /cannot update to this plan/
-            )
+          context 'when the broker returns a 404' do
+            let(:status_code) { '404' }
+            let(:body) { { description: 'service instance not found' }.to_json }
+            it 'raises a ServiceBrokerBadRequest error' do
+              expect { client.update_service_plan(instance, new_plan) }.to raise_error(
+                ServiceBrokerBadResponse, /service instance not found/
+              )
+            end
+          end
+
+          context 'when the broker returns a 422' do
+            let(:status_code) { '422' }
+            let(:body) { { description: 'cannot update to this plan' }.to_json }
+            it 'raises a ServiceBrokerBadResponse error' do
+              expect { client.update_service_plan(instance, new_plan) }.to raise_error(
+                ServiceBrokerBadResponse, /cannot update to this plan/
+              )
+            end
           end
         end
       end
