@@ -74,12 +74,13 @@ module VCAP::CloudController
       end
 
       context 'when unbind fails' do
-        before { allow(binding.client).to receive(:unbind).and_raise }
+        let(:error) { RuntimeError.new('Some error') }
+        before { allow(binding.client).to receive(:unbind).and_raise(error) }
 
-        it 'raises an error and rolls back' do
+        it 'propagates the error and rolls back' do
           expect {
             binding.destroy
-          }.to raise_error
+          }.to raise_error(error)
 
           expect(binding).to be_exists
         end
