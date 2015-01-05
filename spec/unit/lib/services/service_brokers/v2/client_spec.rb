@@ -716,7 +716,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         before do
-          allow(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).to receive(:unbind)
+          allow(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).to receive(:delayed_unbind)
         end
 
         context 'when http_client make request fails with ServiceBrokerApiTimeout' do
@@ -732,7 +732,7 @@ module VCAP::Services::ServiceBrokers::V2
             }.to raise_error(ServiceBrokerApiTimeout)
 
             expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
-              to have_received(:unbind).
+              to have_received(:delayed_unbind).
               with(client_attrs, binding)
           end
         end

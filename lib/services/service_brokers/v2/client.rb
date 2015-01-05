@@ -127,7 +127,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
     rescue ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
-      VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder.unbind(@attrs, binding)
+      VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder.delayed_unbind(@attrs, binding)
       raise e
     end
 

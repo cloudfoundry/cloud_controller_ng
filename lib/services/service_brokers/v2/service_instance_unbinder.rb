@@ -4,7 +4,7 @@ module VCAP::CloudController
   module ServiceBrokers
     module V2
       class ServiceInstanceUnbinder
-        def self.unbind(client_attrs, binding)
+        def self.delayed_unbind(client_attrs, binding)
           unbind_job = VCAP::CloudController::Jobs::Services::ServiceInstanceUnbind.new(
             'service-instance-unbind',
             client_attrs,

@@ -11,9 +11,9 @@ module VCAP::CloudController
       end
       let(:name) { 'fake-name' }
 
-      describe 'unbind' do
+      describe 'delayed_unbind' do
         it 'creates a ServiceInstanceUnbind Job' do
-          job = ServiceInstanceUnbinder.unbind(client_attrs, binding)
+          job = ServiceInstanceUnbinder.delayed_unbind(client_attrs, binding)
           expect(job).to be_instance_of(VCAP::CloudController::Jobs::Services::ServiceInstanceUnbind)
           expect(job.client_attrs).to be(client_attrs)
           expect(job.binding_guid).to be(binding.guid)
@@ -24,7 +24,7 @@ module VCAP::CloudController
         it 'enqueues a ServiceInstanceUnbind Job' do
           expect(Delayed::Job).to receive(:enqueue).with(an_instance_of(VCAP::CloudController::Jobs::Services::ServiceInstanceUnbind),
                                                          hash_including(queue: 'cc-generic'))
-          ServiceInstanceUnbinder.unbind(client_attrs, binding)
+          ServiceInstanceUnbinder.delayed_unbind(client_attrs, binding)
         end
       end
     end
