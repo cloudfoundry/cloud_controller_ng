@@ -165,76 +165,6 @@ module VCAP::Services::ServiceBrokers::V2
       allow(http_client).to receive(:url).and_return(service_broker.broker_url)
     end
 
-    shared_examples 'handles standard error conditions' do
-      context 'when the API returns an error code' do
-        let(:response_data) { { 'foo' => 'bar' } }
-        let(:code) { '500' }
-        let(:message) { 'Internal Server Error' }
-
-        it 'should raise a ServiceBrokerBadResponse' do
-          expect {
-            operation
-          }.to raise_error { |e|
-            expect(e).to be_a(ServiceBrokerBadResponse)
-            error_hash = e.to_h
-            expect(error_hash.fetch('description')).to eq("The service broker API returned an error from #{service_broker.broker_url}#{path}: 500 Internal Server Error")
-            expect(error_hash.fetch('source')).to include({ 'foo' => 'bar' })
-          }
-        end
-      end
-
-      context 'when the API returns an invalid response' do
-        context 'because of an unexpected status code' do
-          let(:code) { '404' }
-          let(:message) { 'Not Found' }
-
-          it 'should raise an invalid response error' do
-            expect {
-              operation
-            }.to raise_error(
-              ServiceBrokerBadResponse,
-              "The service broker API returned an error from #{service_broker.broker_url}#{path}: 404 Not Found"
-            )
-          end
-        end
-
-        context 'because of a response that does not return a valid hash' do
-          let(:response_data) { [] }
-
-          it 'should raise an invalid response error' do
-            expect {
-              operation
-            }.to raise_error(ServiceBrokerResponseMalformed)
-          end
-        end
-
-        context 'because of an invalid JSON body' do
-          let(:response_data) { 'invalid' }
-
-          it 'should raise an invalid response error' do
-            expect {
-              operation
-            }.to raise_error(ServiceBrokerResponseMalformed)
-          end
-        end
-      end
-
-      context 'when the API cannot authenticate the client' do
-        let(:code) { '401' }
-
-        it 'should raise an authentication error' do
-          expect {
-            operation
-          }.to raise_error { |e|
-            expect(e).to be_a(ServiceBrokerApiAuthenticationFailed)
-            error_hash = e.to_h
-            expect(error_hash.fetch('description')).
-              to eq("Authentication failed for the service broker API. Double-check that the username and password are correct: #{service_broker.broker_url}#{path}")
-          }
-        end
-      end
-    end
-
     describe '#catalog' do
       let(:service_id) { Sham.guid }
       let(:service_name) { Sham.name }
@@ -278,12 +208,6 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'returns a catalog' do
         expect(client.catalog).to eq(response_data)
-      end
-
-      describe 'handling errors' do
-        it_behaves_like 'handles standard error conditions' do
-          let(:operation) { client.catalog }
-        end
       end
     end
 
@@ -351,129 +275,38 @@ module VCAP::Services::ServiceBrokers::V2
         expect(instance.credentials).to eq({})
       end
 
-      describe 'error handling' do
-        context 'the instance_id is already in use' do
-          let(:code) { '409' }
-
-          it 'raises ServiceBrokerConflict' do
-            expect {
-              client.provision(instance)
-            }.to raise_error(ServiceBrokerConflict)
-          end
-        end
-
-        it_behaves_like 'handles standard error conditions' do
-          let(:operation) { client.provision(instance) }
-        end
-      end
-
       context 'when provision fails' do
+        let(:uri) { 'some-uri.com/v2/service_instances/some-guid' }
+        let(:response) { double(:response, body: nil, message: nil)}
+
         before do
           allow(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).to receive(:deprovision)
         end
 
-        context 'and http client response is 408' do
+        context 'due to an http client error' do
+          let(:http_client) { double(:http_client) }
+
           before do
-            allow(response).to receive(:code).and_return('408', '200')
+            allow(http_client).to receive(:put).and_raise(error)
           end
 
-          it 'raises ServiceBrokerApiTimeout and deprovisions' do
-            expect {
-              client.provision(instance)
-            }.to raise_error(ServiceBrokerApiTimeout)
+          context 'ServiceBrokerApiTimeout error' do
+            let(:error) { ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
 
-            expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-              to have_received(:deprovision).with(client_attrs, instance)
-          end
-        end
-
-        context 'and http client response is 5xx' do
-          context 'and http error code is 500' do
-            before do
-              allow(response).to receive(:code).and_return('500', '200')
-            end
-
-            it 'raises ServiceBrokerBadResponse and deprovisions' do
+            it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.provision(instance)
-              }.to raise_error(ServiceBrokerBadResponse)
+              }.to raise_error(ServiceBrokerApiTimeout)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                to have_received(:deprovision).
-                with(client_attrs, instance)
+                to have_received(:deprovision).with(client_attrs, instance)
             end
           end
 
-          context 'and http error code is 501' do
-            before do
-              allow(response).to receive(:code).and_return('501', '200')
-            end
+          context 'ServiceBrokerBadResponse error' do
+            let(:error) { ServiceBrokerBadResponse.new(uri, :put, response) }
 
-            it 'raises ServiceBrokerBadResponse and deprovisions' do
-              expect {
-                client.provision(instance)
-              }.to raise_error(ServiceBrokerBadResponse)
-
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                to have_received(:deprovision).
-                with(client_attrs, instance)
-            end
-          end
-
-          context 'and http error code is 502' do
-            before do
-              allow(response).to receive(:code).and_return('502', '200')
-            end
-
-            it 'raises ServiceBrokerBadResponse and deprovisions' do
-              expect {
-                client.provision(instance)
-              }.to raise_error(ServiceBrokerBadResponse)
-
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                to have_received(:deprovision).
-                with(client_attrs, instance)
-            end
-          end
-
-          context 'and http error code is 503' do
-            before do
-              allow(response).to receive(:code).and_return('503', '200')
-            end
-
-            it 'raises ServiceBrokerBadResponse and deprovisions' do
-              expect {
-                client.provision(instance)
-              }.to raise_error(ServiceBrokerBadResponse)
-
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                to have_received(:deprovision).
-                with(client_attrs, instance)
-            end
-          end
-
-          context 'and http error code is 504' do
-            before do
-              allow(response).to receive(:code).and_return('504', '200')
-            end
-
-            it 'raises ServiceBrokerBadResponse and deprovisions' do
-              expect {
-                client.provision(instance)
-              }.to raise_error(ServiceBrokerBadResponse)
-
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                to have_received(:deprovision).
-                with(client_attrs, instance)
-            end
-          end
-
-          context 'and http error code is 505' do
-            before do
-              allow(response).to receive(:code).and_return('505', '200')
-            end
-
-            it 'raises ServiceBrokerBadResponse and deprovisions' do
+            it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
@@ -484,56 +317,41 @@ module VCAP::Services::ServiceBrokers::V2
             end
           end
         end
-      end
 
-      context 'when provision takes longer than broker configured timeout' do
-        before do
-          allow(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).to receive(:deprovision)
-        end
+        context 'due to a response parser error' do
+          let(:response_parser) { double(:response_parser) }
 
-        context 'when http_client make request fails with ServiceBrokerApiTimeout' do
           before do
-            allow(http_client).to receive(:put) do |path, message|
-              raise ServiceBrokerApiTimeout.new(path, :put, Timeout::Error.new(message))
+            allow(response_parser).to receive(:parse).and_raise(error)
+            allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
+          end
+
+          context 'ServiceBrokerApiTimeout error' do
+            let(:error) { ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.provision(instance)
+              }.to raise_error(ServiceBrokerApiTimeout)
+
+              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
+                to have_received(:deprovision).
+                with(client_attrs, instance)
             end
           end
 
-          it 'deprovisions the instance' do
-            expect {
-              client.provision(instance)
-            }.to raise_error(ServiceBrokerApiTimeout)
+          context 'ServiceBrokerBadResponse error' do
+            let(:error) { ServiceBrokerBadResponse.new(uri, :put, response) }
 
-            expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-              to have_received(:deprovision).
-              with(client_attrs, instance)
-          end
-        end
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.provision(instance)
+              }.to raise_error(ServiceBrokerBadResponse)
 
-        context 'when http_client make request fails with ServiceBrokerApiUnreachable' do
-          before do
-            allow(http_client).to receive(:put) do |path, message|
-              raise ServiceBrokerApiUnreachable.new(path, :put, Errno::ECONNREFUSED)
+              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
+                to have_received(:deprovision).
+                with(client_attrs, instance)
             end
-          end
-
-          it 'fails' do
-            expect {
-              client.provision(instance)
-            }.to raise_error(ServiceBrokerApiUnreachable)
-          end
-        end
-
-        context 'when http_client make request fails with HttpRequestError' do
-          before do
-            allow(http_client).to receive(:put) do |path, message|
-              raise HttpRequestError.new(message, path, :put, Exception.new(message))
-            end
-          end
-
-          it 'fails' do
-            expect {
-              client.provision(instance)
-            }.to raise_error(HttpRequestError)
           end
         end
       end
@@ -586,34 +404,10 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       describe 'error handling' do
-        it_behaves_like 'handles standard error conditions' do
-          let(:operation) { client.update_service_plan(instance, new_plan) }
-        end
-
         describe 'non-standard errors' do
           before do
             fake_response = double('response', code: status_code, body: body)
             allow(http_client).to receive(:patch).and_return(fake_response)
-          end
-
-          context 'when the broker returns a 400' do
-            let(:status_code) { '400' }
-            let(:body) { { description: 'the request was malformed' }.to_json }
-            it 'raises a ServiceBrokerBadResponse error' do
-              expect { client.update_service_plan(instance, new_plan) }.to raise_error(
-                ServiceBrokerBadResponse, /the request was malformed/
-              )
-            end
-          end
-
-          context 'when the broker returns a 404' do
-            let(:status_code) { '404' }
-            let(:body) { { description: 'service instance not found' }.to_json }
-            it 'raises a ServiceBrokerBadRequest error' do
-              expect { client.update_service_plan(instance, new_plan) }.to raise_error(
-                ServiceBrokerBadResponse, /service instance not found/
-              )
-            end
           end
 
           context 'when the broker returns a 422' do
@@ -718,77 +512,88 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
-      context 'when bind takes longer than broker configured timeout' do
+      context 'when binding fails' do
         let(:binding) do
           VCAP::CloudController::ServiceBinding.make(
             binding_options: { 'this' => 'that' }
           )
         end
+        let(:uri) { 'some-uri.com/v2/service_instances/instance-guid/service_bindings/binding-guid'}
+        let(:response) { double(:response, body: nil, message: nil)}
 
         before do
           allow(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).to receive(:delayed_unbind)
         end
 
-        context 'when http_client make request fails with ServiceBrokerApiTimeout' do
+        context 'due to an http client error' do
+          let(:http_client) { double(:http_client) }
+
           before do
-            allow(http_client).to receive(:put) do |path, message|
-              raise ServiceBrokerApiTimeout.new(path, :put, Timeout::Error.new(message))
-            end
+            allow(http_client).to receive(:put).and_raise(error)
           end
 
-          it 'unbinds the binding' do
-            expect {
-              client.bind(binding)
-            }.to raise_error(ServiceBrokerApiTimeout)
+          context 'ServiceBrokerApiTimeout error' do
+            let(:error) { ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.bind(binding)
+              }.to raise_error(ServiceBrokerApiTimeout)
 
             expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
               to have_received(:delayed_unbind).
               with(client_attrs, binding)
-          end
-        end
 
-        context 'when http_client make request fails with ServiceBrokerApiUnreachable' do
-          before do
-            allow(http_client).to receive(:put) do |path, message|
-              raise ServiceBrokerApiUnreachable.new(path, :put, Errno::ECONNREFUSED)
             end
           end
 
-          it 'fails' do
-            expect {
-              client.bind(binding)
-            }.to raise_error(ServiceBrokerApiUnreachable)
+          context 'ServiceBrokerBadResponse error' do
+            let(:error) { ServiceBrokerBadResponse.new(uri, :put, response) }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.bind(binding)
+              }.to raise_error(ServiceBrokerBadResponse)
+
+              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
+                                     to have_received(:delayed_unbind).with(client_attrs, binding)
+            end
           end
         end
 
-        context 'when http_client make request fails with HttpRequestError' do
+        context 'due to a response parser error' do
+          let(:response_parser) { double(:response_parser) }
+
           before do
-            allow(http_client).to receive(:put) do |path, message|
-              raise HttpRequestError.new(message, path, :put, Exception.new(message))
+            allow(response_parser).to receive(:parse).and_raise(error)
+            allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
+          end
+
+          context 'ServiceBrokerApiTimeout error' do
+            let(:error) { ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.bind(binding)
+              }.to raise_error(ServiceBrokerApiTimeout)
+
+              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
+                                     to have_received(:delayed_unbind).with(client_attrs, binding)
             end
           end
 
-          it 'fails' do
-            expect {
-              client.bind(binding)
-            }.to raise_error(HttpRequestError)
+          context 'ServiceBrokerBadResponse error' do
+            let(:error) { ServiceBrokerBadResponse.new(uri, :put, response) }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.bind(binding)
+              }.to raise_error(ServiceBrokerBadResponse)
+
+              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
+                                     to have_received(:delayed_unbind).with(client_attrs, binding)
+            end
           end
-        end
-      end
-
-      describe 'error handling' do
-        context 'the binding id is already in use' do
-          let(:code) { '409' }
-
-          it 'raises ServiceBrokerConflict' do
-            expect {
-              client.bind(binding)
-            }.to raise_error(ServiceBrokerConflict)
-          end
-        end
-
-        it_behaves_like 'handles standard error conditions' do
-          let(:operation) { client.bind(binding) }
         end
       end
     end
@@ -843,20 +648,6 @@ module VCAP::Services::ServiceBrokers::V2
           expect { client.unbind(binding) }.to_not raise_error
         end
       end
-
-      describe 'handling errors' do
-        context 'when the API returns 410' do
-          let(:code) { '410' }
-
-          it 'should swallow the error' do
-            expect(client.unbind(binding)).to be_nil
-          end
-        end
-
-        it_behaves_like 'handles standard error conditions' do
-          let(:operation) { client.unbind(binding) }
-        end
-      end
     end
 
     describe '#deprovision' do
@@ -895,20 +686,6 @@ module VCAP::Services::ServiceBrokers::V2
             plan_id:    instance.service_plan.broker_provided_id
           }
               )
-      end
-
-      describe 'handling errors' do
-        context 'when the API returns 410' do
-          let(:code) { '410' }
-
-          it 'should swallow the error' do
-            expect(client.deprovision(instance)).to be_nil
-          end
-        end
-
-        it_behaves_like 'handles standard error conditions' do
-          let(:operation) { client.deprovision(instance) }
-        end
       end
     end
   end

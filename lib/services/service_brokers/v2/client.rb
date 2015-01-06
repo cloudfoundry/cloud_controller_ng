@@ -81,12 +81,13 @@ module VCAP::Services::ServiceBrokers::V2
 
     def initialize(attrs)
       @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(attrs)
+      @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
       @attrs = attrs
     end
 
     def catalog
       response = @http_client.get(CATALOG_PATH)
-      parse_response(:get, CATALOG_PATH, response)
+      @response_parser.parse(:get, CATALOG_PATH, response)
     end
 
     # The broker is expected to guarantee uniqueness of instance_id.
@@ -101,7 +102,7 @@ module VCAP::Services::ServiceBrokers::V2
         space_guid:        instance.space.guid,
       })
 
-      parsed_response = parse_response(:put, path, response)
+      parsed_response = @response_parser.parse(:put, path, response)
       instance.dashboard_url = parsed_response['dashboard_url']
 
       # DEPRECATED, but needed because of not null constraint
@@ -119,7 +120,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id:     binding.service_plan.broker_provided_id,
         app_guid:    binding.app_guid
       })
-      parsed_response = parse_response(:put, path, response)
+      parsed_response = @response_parser.parse(:put, path, response)
 
       binding.credentials = parsed_response['credentials']
       if parsed_response.key?('syslog_drain_url')
@@ -139,7 +140,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id:    binding.service_plan.broker_provided_id,
       })
 
-      parse_response(:delete, path, response)
+      @response_parser.parse(:delete, path, response)
     end
 
     def deprovision(instance)
@@ -150,7 +151,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id:    instance.service_plan.broker_provided_id,
       })
 
-      parse_response(:delete, path, response)
+      @response_parser.parse(:delete, path, response)
 
     rescue VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict => e
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
@@ -169,55 +170,10 @@ module VCAP::Services::ServiceBrokers::V2
           }
       })
 
-      parse_response(:put, path, response)
+      @response_parser.parse(:put, path, response)
     end
 
     private
-
-    def uri_for(path)
-      URI(@http_client.url + path)
-    end
-
-    def parse_response(method, path, response)
-      uri = uri_for(path)
-      code = response.code.to_i
-
-      case code
-      when 204
-        return nil # no body
-
-      when 200..299
-
-        begin
-          response_hash = MultiJson.load(response.body)
-        rescue MultiJson::ParseError
-          logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
-        end
-
-        unless response_hash.is_a?(Hash)
-          raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
-        end
-
-        return response_hash
-
-      when HTTP::Status::UNAUTHORIZED
-        raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
-
-      when 408
-        raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
-
-      when 409
-        raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict.new(uri.to_s, method, response)
-
-      when 410
-        if method == :delete
-          logger.warn("Already deleted: #{uri}")
-          return nil
-        end
-      end
-
-      raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse.new(uri.to_s, method, response)
-    end
 
     def logger
       @logger ||= Steno.logger('cc.service_broker.v2.client')
