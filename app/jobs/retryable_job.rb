@@ -3,7 +3,7 @@ module VCAP::CloudController
     class RetryableJob
       attr_reader :job, :num_attempts
 
-      def initialize(job, num_attempts = 0)
+      def initialize(job, num_attempts=0)
         @job = job
         @num_attempts = num_attempts
       end
@@ -12,7 +12,7 @@ module VCAP::CloudController
         job.perform
       rescue VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiTimeout, VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse => e
         raise e if num_attempts >= 10
-        Delayed::Job.enqueue(RetryableJob.new(job, num_attempts + 1), queue: 'cc-generic', run_at: Delayed::Job.db_time_now + (2 ** num_attempts).minutes)
+        Delayed::Job.enqueue(RetryableJob.new(job, num_attempts + 1), queue: 'cc-generic', run_at: Delayed::Job.db_time_now + (2**num_attempts).minutes)
       end
 
       def max_attempts

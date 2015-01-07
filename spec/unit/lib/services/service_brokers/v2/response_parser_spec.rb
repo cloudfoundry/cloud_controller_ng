@@ -19,7 +19,7 @@ module VCAP::Services
 
           it 'returns the response body hash' do
             response_hash = parser.parse(:get, '/v2/catalog', response)
-            expect(response_hash).to eq({'foo' => 'bar'})
+            expect(response_hash).to eq({ 'foo' => 'bar' })
           end
 
           context 'when the status code is 204' do

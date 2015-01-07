@@ -277,7 +277,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when provision fails' do
         let(:uri) { 'some-uri.com/v2/service_instances/some-guid' }
-        let(:response) { double(:response, body: nil, message: nil)}
+        let(:response) { double(:response, body: nil, message: nil) }
 
         before do
           allow(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).to receive(:deprovision)
@@ -518,8 +518,8 @@ module VCAP::Services::ServiceBrokers::V2
             binding_options: { 'this' => 'that' }
           )
         end
-        let(:uri) { 'some-uri.com/v2/service_instances/instance-guid/service_bindings/binding-guid'}
-        let(:response) { double(:response, body: nil, message: nil)}
+        let(:uri) { 'some-uri.com/v2/service_instances/instance-guid/service_bindings/binding-guid' }
+        let(:response) { double(:response, body: nil, message: nil) }
 
         before do
           allow(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).to receive(:delayed_unbind)
@@ -540,10 +540,9 @@ module VCAP::Services::ServiceBrokers::V2
                 client.bind(binding)
               }.to raise_error(ServiceBrokerApiTimeout)
 
-            expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
-              to have_received(:delayed_unbind).
-              with(client_attrs, binding)
-
+              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
+                to have_received(:delayed_unbind).
+                with(client_attrs, binding)
             end
           end
 

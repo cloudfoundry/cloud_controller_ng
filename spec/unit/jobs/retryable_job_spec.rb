@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
-    describe "RetryableJob" do
+    describe 'RetryableJob' do
       describe '#perform' do
         let(:job) { double(:job, perform: nil) }
         let(:retryable_job) { RetryableJob.new(job) }
@@ -60,7 +60,7 @@ module VCAP::CloudController
                 expect(Delayed::Job).to have_received(:enqueue) do |enqueued_job, opts|
                   expect(enqueued_job.num_attempts).to eq(num_attempts + 1)
                   run_at = opts[:run_at]
-                  expect(run_at).to be_within(0.01).of(now + (2 ** num_attempts).minutes)
+                  expect(run_at).to be_within(0.01).of(now + (2**num_attempts).minutes)
                 end
               end
             end
@@ -81,5 +81,3 @@ module VCAP::CloudController
     end
   end
 end
-
-
