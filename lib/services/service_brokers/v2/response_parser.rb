@@ -23,7 +23,7 @@ module VCAP::Services
             end
 
             unless response_hash.is_a?(Hash)
-              raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
+              raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
             end
 
             return response_hash

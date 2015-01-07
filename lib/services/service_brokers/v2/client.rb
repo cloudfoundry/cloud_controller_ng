@@ -20,17 +20,6 @@ module VCAP::Services::ServiceBrokers::V2
     end
   end
 
-  class ServiceBrokerResponseMalformed < HttpResponseError
-    def initialize(uri, method, response)
-      super(
-        'The service broker response was not understood',
-        uri,
-        method,
-        response
-      )
-    end
-  end
-
   class ServiceBrokerApiAuthenticationFailed < HttpResponseError
     def initialize(uri, method, response)
       super(

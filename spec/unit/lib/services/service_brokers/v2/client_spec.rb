@@ -59,19 +59,6 @@ module VCAP::Services::ServiceBrokers::V2
     let(:method) { 'POST' }
     let(:error) { StandardError.new }
 
-    describe ServiceBrokerResponseMalformed do
-      let(:response_body) { 'foo' }
-      let(:response) { double(code: 200, reason: 'OK', body: response_body) }
-
-      it 'initializes the base class correctly' do
-        exception = ServiceBrokerResponseMalformed.new(uri, method, response)
-        expect(exception.message).to eq('The service broker response was not understood')
-        expect(exception.uri).to eq(uri)
-        expect(exception.method).to eq(method)
-        expect(exception.source).to be(response.body)
-      end
-    end
-
     describe ServiceBrokerApiAuthenticationFailed do
       let(:response_body) { 'foo' }
       let(:response) { double(code: 401, reason: 'Auth Error', body: response_body) }

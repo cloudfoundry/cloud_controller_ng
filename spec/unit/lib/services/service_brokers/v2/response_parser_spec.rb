@@ -36,7 +36,7 @@ module VCAP::Services
             it 'raises a MalformedResponse error' do
               expect {
                 parser.parse(:get, '/v2/catalog', response)
-              }.to raise_error(ServiceBrokerResponseMalformed)
+              }.to raise_error(Errors::ServiceBrokerResponseMalformed)
               expect(logger).to have_received(:warn).with(/MultiJson parse error/)
             end
           end
@@ -47,7 +47,7 @@ module VCAP::Services
             it 'raises a MalformedResponse error' do
               expect {
                 parser.parse(:get, '/v2/catalog', response)
-              }.to raise_error(ServiceBrokerResponseMalformed)
+              }.to raise_error(Errors::ServiceBrokerResponseMalformed)
               expect(logger).not_to have_received(:warn)
             end
           end
