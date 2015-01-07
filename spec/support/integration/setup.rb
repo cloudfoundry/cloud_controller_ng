@@ -1,3 +1,5 @@
+require "English"
+
 module IntegrationSetup
   CC_START_TIMEOUT = 20
   SLEEP_INTERVAL = 0.5
