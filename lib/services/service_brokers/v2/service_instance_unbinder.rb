@@ -12,8 +12,9 @@ module VCAP::CloudController
             binding.service_instance.guid,
             binding.app.guid
           )
-          Delayed::Job.enqueue(unbind_job, queue: 'cc-generic', run_at: Delayed::Job.db_time_now)
-          unbind_job
+
+          retryable_job = VCAP::CloudController::Jobs::RetryableJob.new(unbind_job, 0)
+          Delayed::Job.enqueue(retryable_job, queue: 'cc-generic', run_at: Delayed::Job.db_time_now)
         end
       end
     end
