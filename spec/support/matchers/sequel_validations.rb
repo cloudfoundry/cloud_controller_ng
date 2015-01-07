@@ -54,3 +54,14 @@ RSpec::Matchers.define :validate_uniqueness do |*attributes|
     end
   end
 end
+
+RSpec::Matchers.define :validates_includes do |values, attribute, options = {}|
+  description do
+    "validate includes of #{attribute} with #{values}"
+  end
+  match do |instance|
+    allow(instance).to receive(:validates_includes)
+    instance.valid?
+    expect(instance).to have_received(:validates_includes).with(values, attribute, options)
+  end
+end

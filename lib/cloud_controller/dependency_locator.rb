@@ -177,6 +177,14 @@ module CloudController
       AppPresenter.new
     end
 
+    def packages_handler
+      PackagesHandler.new(@config)
+    end
+
+    def package_presenter
+      PackagePresenter.new
+    end
+
     def object_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new

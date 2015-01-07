@@ -60,5 +60,6 @@ require 'models/services/service_usage_event'
 
 require 'models/job'
 
-require 'models/v3/domain/app_process'
-require 'models/v3/persistence/app_model'
+require "models/v3/domain/app_process"
+require "models/v3/persistence/app_model"
+require "models/v3/persistence/package_model"

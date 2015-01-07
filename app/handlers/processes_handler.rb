@@ -41,7 +41,7 @@ module VCAP::CloudController
       errors = []
       errors << validate_name_field
       errors << validate_has_opts
-      errors.compact!
+      errors.compact
     end
 
     private

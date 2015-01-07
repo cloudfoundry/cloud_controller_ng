@@ -12,6 +12,7 @@ describe AppBitsPackage do
 
   let(:compressed_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
   let(:app) { VCAP::CloudController::AppFactory.make }
+  let(:package) { VCAP::CloudController::PackageModel.make }
   let(:blobstore_dir) { Dir.mktmpdir }
   let(:local_tmp_dir) { Dir.mktmpdir }
 
@@ -35,6 +36,61 @@ describe AppBitsPackage do
     Fog.mock!
     FileUtils.remove_entry_secure local_tmp_dir
     FileUtils.remove_entry_secure blobstore_dir
+  end
+
+  describe "#create_package_in_blobstore" do
+    let(:package_guid) { package.guid }
+    subject(:create) { packer.create_package_in_blobstore(package_guid, compressed_path) }
+
+    it "uploads the package zip to the package blob store" do
+      create
+      expect(package_blobstore.exists?(package_guid)).to be true
+    end
+
+    it "sets the package sha to the package" do
+      expect { create }.to change { package.refresh.package_hash }
+    end
+
+    it "sets the state of the package" do
+      expect { create }.to change { package.refresh.state }.to ('READY')
+    end
+
+    it "removes the compressed path afterwards" do
+      expect(FileUtils).to receive(:rm_f).with(compressed_path)
+      create
+    end
+
+    context "when there is no package uploaded" do
+      let(:compressed_path) { nil }
+
+      it "doesn't try to remove the file" do
+        expect(FileUtils).not_to receive(:rm_f)
+        create
+      end
+    end
+
+    context 'when the package no longer exists' do
+      let(:package_guid) { 'abcd' }
+
+      it 'raises an error and removes the compressed path' do
+        expect(FileUtils).to receive(:rm_f).with(compressed_path)
+        expect { create }.to raise_error
+      end
+    end
+
+    context 'when copying to the blobstore fails' do
+      it 'logs the exception on the package and reraises the exception' do
+        allow(package_blobstore).to receive(:cp_to_blobstore).and_raise('BOOM')
+        expect { create }.to raise_error
+        expect(package.reload.state).to eq('FAILED')
+        expect(package.error).to eq('BOOM')
+      end
+
+      it "removes the compressed path afterwards" do
+        expect(FileUtils).to receive(:rm_f).with(compressed_path)
+        create
+      end
+    end
   end
 
   describe '#create' do

@@ -35,6 +35,10 @@ module VCAP::CloudController
     space_guid { Space.make.guid }
   end
 
+  PackageModel.blueprint do
+    guid       { Sham.guid }
+  end
+
   User.blueprint do
     guid              { Sham.uaa_id }
   end

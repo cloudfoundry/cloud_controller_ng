@@ -2,6 +2,8 @@ require 'cloud_controller/blobstore/local_app_bits'
 require 'cloud_controller/blobstore/fingerprints_collection'
 
 class AppBitsPackage
+  class PackageNotFound < StandardError; end
+
   attr_reader :package_blobstore, :global_app_bits_cache, :max_package_size, :tmp_dir
 
   def initialize(package_blobstore, global_app_bits_cache, max_package_size, tmp_dir)
@@ -25,6 +27,34 @@ class AppBitsPackage
       package_blobstore.cp_to_blobstore(package.path, app.guid)
       app.package_hash = package.hexdigest
       app.save
+    end
+  ensure
+    FileUtils.rm_f(uploaded_tmp_compressed_path) if uploaded_tmp_compressed_path
+  end
+
+  def create_package_in_blobstore(package_guid, uploaded_tmp_compressed_path)
+    return unless uploaded_tmp_compressed_path
+
+    package = VCAP::CloudController::PackageModel.find(guid: package_guid)
+    raise PackageNotFound if package.nil?
+
+    begin
+      zip_file = File.new(uploaded_tmp_compressed_path)
+      package_blobstore.cp_to_blobstore(uploaded_tmp_compressed_path, package_guid)
+
+      package.db.transaction do
+        package.lock!
+        package.package_hash = zip_file.hexdigest
+        package.state = 'READY'
+        package.save
+      end
+    rescue => e
+      package.db.transaction do
+        package.state = 'FAILED'
+        package.error = e.message
+        package.save
+      end
+      raise e
     end
   ensure
     FileUtils.rm_f(uploaded_tmp_compressed_path) if uploaded_tmp_compressed_path
