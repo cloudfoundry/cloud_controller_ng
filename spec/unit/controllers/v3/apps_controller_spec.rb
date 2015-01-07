@@ -511,6 +511,12 @@ module VCAP::CloudController
       context 'when the app does exist' do
         let(:app_model) { AppModel.make }
         let(:guid) { app_model.guid }
+        let(:list_response) { 'list_response' }
+
+        before do
+          allow(process_presenter).to receive(:present_json_list).and_return(process_response)
+          allow(process_handler).to receive(:list).and_return(list_response)
+        end
 
         it 'returns a 200' do
           response_code, _ = apps_controller.list_processes(guid)

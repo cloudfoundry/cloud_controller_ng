@@ -31,14 +31,87 @@ module VCAP::CloudController
     let(:process_repo) { double(:process_repo) }
     let(:process_event_repo) { double(:process_event_repo) }
     let(:space) { Space.make }
-    let!(:handler) { ProcessesHandler.new(process_repo, process_event_repo) }
-    let(:process_opts) { { space: space } }
-    let!(:process) do
-      process_model = AppFactory.make(process_opts)
-      ProcessMapper.map_model_to_domain(process_model)
+    let(:handler) { ProcessesHandler.new(process_repo, process_event_repo) }
+    let(:access_context) { double(:access_context) }
+
+    describe '#list' do
+      let!(:process1) { AppFactory.make(space: space) }
+      let!(:process2) { AppFactory.make(space: space) }
+      let(:user) { User.make }
+      let(:page) { 1 }
+      let(:per_page) { 1 }
+      let(:pagination_request) { PaginationRequest.new(page, per_page) }
+      let(:paginator) { double(:paginator) }
+      let(:handler) { described_class.new(process_repo, process_event_repo, paginator) }
+      let(:roles) { double(:roles, admin?: admin_role) }
+      let(:admin_role) { false }
+
+      before do
+        allow(access_context).to receive(:roles).and_return(roles)
+        allow(access_context).to receive(:user).and_return(user)
+        allow(paginator).to receive(:get_page)
+      end
+
+      context 'when the user is an admin' do
+        let(:admin_role) { true }
+        before do
+          allow(access_context).to receive(:roles).and_return(roles)
+          AppFactory.make
+        end
+
+        it 'allows viewing all processes' do
+          handler.list(pagination_request, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(3)
+          end
+        end
+      end
+
+      context 'when the user cannot list any processes' do
+        it 'applies a user visibility filter properly' do
+          handler.list(pagination_request, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(0)
+          end
+        end
+      end
+
+      context 'when the user can list processes' do
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+        end
+
+        it 'applies a user visibility filter properly' do
+          handler.list(pagination_request, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(2)
+          end
+        end
+
+        it 'can filter by app_guid' do
+          v3app = AppModel.make
+          process1.app_guid = v3app.guid
+          process1.save
+
+          filter_options = { app_guid: v3app.guid }
+
+          handler.list(pagination_request, access_context, filter_options)
+
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(1)
+          end
+        end
+      end
     end
 
     context '#update' do
+      let(:process_opts) { { space: space } }
+      let(:process) do
+        process_model = AppFactory.make(process_opts)
+        ProcessMapper.map_model_to_domain(process_model)
+      end
+
       context 'changing type to an invalid value' do
         it 'raises an InvalidProcess exception' do
           update_opts = { 'type' => 'worker' }
@@ -113,6 +186,12 @@ module VCAP::CloudController
     end
 
     context '#delete' do
+      let(:process_opts) { { space: space } }
+      let(:process) do
+        process_model = AppFactory.make(process_opts)
+        ProcessMapper.map_model_to_domain(process_model)
+      end
+
       it 'saves an event when deleting a process' do
         ac = double(:ac, user: User.make, user_email: 'jim@jim.com')
 

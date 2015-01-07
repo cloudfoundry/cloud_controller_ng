@@ -41,10 +41,10 @@ resource 'Apps (Experimental)', type: :api do
         expected_response = {
           'pagination' => {
             'total_results' => 3,
-            'first_url'     => '/v3/apps?page=1&per_page=2',
-            'last_url'      => '/v3/apps?page=2&per_page=2',
-            'next_url'      => '/v3/apps?page=2&per_page=2',
-            'previous_url'  => nil,
+            'first'         => { 'href' => '/v3/apps?page=1&per_page=2' },
+            'last'          => { 'href' => '/v3/apps?page=2&per_page=2' },
+            'next'          => { 'href' => '/v3/apps?page=2&per_page=2' },
+            'previous'      => nil,
           },
           'resources'  => [
             {
@@ -54,7 +54,7 @@ resource 'Apps (Experimental)', type: :api do
                 'self'      => { 'href' => "/v3/apps/#{app_model1.guid}" },
                 'processes' => { 'href' => "/v3/apps/#{app_model1.guid}/processes" },
                 'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
-                }
+              }
             },
             {
               'name'   => name2,
@@ -250,12 +250,22 @@ resource 'Apps (Experimental)', type: :api do
       end
 
       example 'List associated processes' do
-        expected_response = [
-          {
-            'guid' => process_guid,
-            'type' => process_type,
-          }
-        ]
+        expected_response = {
+          'pagination' => {
+            'total_results' => 1,
+            'first'         => { 'href' => '/v3/processes?page=1&per_page=50' },
+            'last'          => { 'href' => '/v3/processes?page=1&per_page=50' },
+            'next'          => nil,
+            'previous'      => nil,
+          },
+          'resources'  => [
+            {
+              'guid'     => process_guid,
+              'type'     => process_type,
+            }
+          ]
+        }
+
         do_request_with_error_handling
 
         parsed_response = MultiJson.load(response_body)

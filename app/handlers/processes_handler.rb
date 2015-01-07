@@ -66,9 +66,23 @@ module VCAP::CloudController
     class InvalidProcess < StandardError; end
     class Unauthorized < StandardError; end
 
-    def initialize(process_repository, process_event_repository)
-      @process_repository = process_repository
+    def initialize(process_repository, process_event_repository, paginator=SequelPaginator.new)
+      @process_repository       = process_repository
       @process_event_repository = process_event_repository
+      @paginator                = paginator
+    end
+
+    def list(pagination_request, access_context, filter_options={})
+      dataset = nil
+      if access_context.roles.admin?
+        dataset = App.dataset
+      else
+        dataset = App.user_visible(access_context.user)
+      end
+
+      dataset = dataset.where(app_guid: filter_options[:app_guid]) if filter_options[:app_guid]
+
+      @paginator.get_page(dataset, pagination_request)
     end
 
     def show(guid, access_context)

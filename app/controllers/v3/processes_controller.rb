@@ -12,6 +12,17 @@ module VCAP::CloudController
       @process_presenter = dependencies[:process_presenter]
     end
 
+    get '/v3/processes', :list
+    def list
+      page     = params['page'].to_i
+      per_page = params['per_page'].to_i
+
+      pagination_request = PaginationRequest.new(page, per_page)
+      paginated_result   = @processes_handler.list(pagination_request, @access_context)
+
+      [HTTP::OK, @process_presenter.present_json_list(paginated_result)]
+    end
+
     get '/v3/processes/:guid', :show
     def show(guid)
       process = @processes_handler.show(guid, @access_context)

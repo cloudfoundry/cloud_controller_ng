@@ -85,7 +85,13 @@ module VCAP::CloudController
       app = @app_handler.show(guid, @access_context)
       app_not_found! if app.nil?
 
-      [HTTP::OK, @process_presenter.present_json_list(app.processes)]
+      page     = params['page'].to_i
+      per_page = params['per_page'].to_i
+
+      pagination_request = PaginationRequest.new(page, per_page)
+      paginated_result   = @process_handler.list(pagination_request, @access_context, app_guid: app.guid)
+
+      [HTTP::OK, @process_presenter.present_json_list(paginated_result)]
     end
 
     put '/v3/apps/:guid/processes', :add_process

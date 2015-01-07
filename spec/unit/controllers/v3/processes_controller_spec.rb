@@ -33,6 +33,27 @@ module VCAP::CloudController
       allow(process_presenter).to receive(:present_json).and_return(expected_response)
     end
 
+    describe '#list' do
+      let(:page) { 1 }
+      let(:per_page) { 2 }
+      let(:params) { { 'page' => page, 'per_page' => per_page } }
+      let(:list_response) { 'list_response' }
+
+      before do
+        allow(process_presenter).to receive(:present_json_list).and_return(expected_response)
+        allow(processes_handler).to receive(:list).and_return(list_response)
+      end
+
+      it 'returns 200 and lists the apps' do
+        response_code, response_body = process_controller.list
+
+        expect(processes_handler).to have_received(:list)
+        expect(process_presenter).to have_received(:present_json_list).with(list_response)
+        expect(response_code).to eq(200)
+        expect(response_body).to eq(expected_response)
+      end
+    end
+
     describe '#show' do
       before do
         allow(processes_handler).to receive(:show).and_return(process)

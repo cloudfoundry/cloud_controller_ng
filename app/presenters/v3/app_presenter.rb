@@ -20,10 +20,10 @@ module VCAP::CloudController
       paginated_response = {
         pagination: {
           total_results: total_results,
-          first_url:     "/v3/apps?page=1&per_page=#{per_page}",
-          last_url:      "/v3/apps?page=#{last_page}&per_page=#{per_page}",
-          previous_url:  previous_page > 0 ? "/v3/apps?page=#{previous_page}&per_page=#{per_page}" : nil,
-          next_url:      next_page <= last_page ? "/v3/apps?page=#{next_page}&per_page=#{per_page}" : nil,
+          first:         { href: "/v3/apps?page=1&per_page=#{per_page}" },
+          last:          { href: "/v3/apps?page=#{last_page}&per_page=#{per_page}" },
+          previous:      previous_page > 0 ? { href: "/v3/apps?page=#{previous_page}&per_page=#{per_page}" } : nil,
+          next:          next_page <= last_page ? { href: "/v3/apps?page=#{next_page}&per_page=#{per_page}" } : nil,
         },
         resources:  app_hashes
       }

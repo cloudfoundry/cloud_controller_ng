@@ -44,7 +44,7 @@ module VCAP::CloudController
         json_result = presenter.present_json_list(paginated_result)
         result      = MultiJson.load(json_result)
 
-        first_url = result['pagination']['first_url']
+        first_url = result['pagination']['first']['href']
         expect(first_url).to eq("/v3/apps?page=1&per_page=#{per_page}")
       end
 
@@ -52,7 +52,7 @@ module VCAP::CloudController
         json_result = presenter.present_json_list(paginated_result)
         result      = MultiJson.load(json_result)
 
-        last_url = result['pagination']['last_url']
+        last_url = result['pagination']['last']['href']
         expect(last_url).to eq("/v3/apps?page=2&per_page=#{per_page}")
       end
 
@@ -61,8 +61,8 @@ module VCAP::CloudController
         json_result      = presenter.present_json_list(paginated_result)
         result           = MultiJson.load(json_result)
 
-        last_url  = result['pagination']['last_url']
-        first_url = result['pagination']['first_url']
+        last_url  = result['pagination']['last']['href']
+        first_url = result['pagination']['first']['href']
         expect(last_url).to eq("/v3/apps?page=1&per_page=#{per_page}")
         expect(first_url).to eq("/v3/apps?page=1&per_page=#{per_page}")
       end
@@ -74,7 +74,7 @@ module VCAP::CloudController
           json_result = presenter.present_json_list(paginated_result)
           result      = MultiJson.load(json_result)
 
-          previous_url = result['pagination']['previous_url']
+          previous_url = result['pagination']['previous']
           expect(previous_url).to be_nil
         end
       end
@@ -86,7 +86,7 @@ module VCAP::CloudController
           json_result = presenter.present_json_list(paginated_result)
           result      = MultiJson.load(json_result)
 
-          previous_url = result['pagination']['previous_url']
+          previous_url = result['pagination']['previous']['href']
           expect(previous_url).to eq("/v3/apps?page=1&per_page=#{per_page}")
         end
       end
@@ -99,7 +99,7 @@ module VCAP::CloudController
           json_result = presenter.present_json_list(paginated_result)
           result      = MultiJson.load(json_result)
 
-          next_url = result['pagination']['next_url']
+          next_url = result['pagination']['next']
           expect(next_url).to be_nil
         end
       end
@@ -112,7 +112,7 @@ module VCAP::CloudController
           json_result = presenter.present_json_list(paginated_result)
           result      = MultiJson.load(json_result)
 
-          next_url = result['pagination']['next_url']
+          next_url = result['pagination']['next']['href']
           expect(next_url).to eq("/v3/apps?page=2&per_page=#{per_page}")
         end
       end

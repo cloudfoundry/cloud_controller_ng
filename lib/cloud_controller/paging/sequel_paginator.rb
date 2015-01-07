@@ -12,7 +12,7 @@ module VCAP::CloudController
       per_page = PER_PAGE_DEFAULT if per_page < 1
       per_page = PER_PAGE_MAX if per_page > PER_PAGE_MAX
 
-      query = sequel_dataset.extension(:pagination).paginate(page, per_page)
+      query = sequel_dataset.extension(:pagination).paginate(page, per_page).order(:id)
 
       PaginatedResult.new(query.all, query.pagination_record_count, page, per_page)
     end

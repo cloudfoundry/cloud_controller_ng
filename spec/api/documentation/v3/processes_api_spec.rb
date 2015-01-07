@@ -16,6 +16,55 @@ resource 'Processes (Experimental)', type: :api do
     end
   end
 
+  get '/v3/processes' do
+    parameter :page, 'Page to display', valid_values: '>= 1'
+    parameter :per_page, 'Number of results per page', valid_values: '1-5000'
+
+    let(:name1) { 'my_process1' }
+    let(:name2) { 'my_process2' }
+    let(:name3) { 'my_process3' }
+    let!(:process1) { VCAP::CloudController::App.make(name: name1, space: space) }
+    let!(:process2) { VCAP::CloudController::App.make(name: name2, space: space) }
+    let!(:process3) { VCAP::CloudController::App.make(name: name3, space: space) }
+    let!(:process4) { VCAP::CloudController::App.make(space: VCAP::CloudController::Space.make) }
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:page) { 1 }
+    let(:per_page) { 2 }
+
+    before do
+      space.organization.add_user user
+      space.add_developer user
+    end
+
+    example 'List all Processes' do
+      expected_response = {
+        'pagination' => {
+          'total_results' => 3,
+          'first'         => { 'href' => '/v3/processes?page=1&per_page=2' },
+          'last'          => { 'href' => '/v3/processes?page=2&per_page=2' },
+          'next'          => { 'href' => '/v3/processes?page=2&per_page=2' },
+          'previous'      => nil,
+        },
+        'resources'  => [
+          {
+            'guid'     => process1.guid,
+            'type'     => process1.type,
+          },
+          {
+            'guid'     => process2.guid,
+            'type'     => process2.type,
+          }
+        ]
+      }
+
+      do_request_with_error_handling
+
+      parsed_response = MultiJson.load(response_body)
+      expect(response_status).to eq(200)
+      expect(parsed_response).to match(expected_response)
+    end
+  end
+
   get '/v3/processes/:guid' do
     let(:process) { VCAP::CloudController::AppFactory.make }
     let(:guid) { process.guid }
