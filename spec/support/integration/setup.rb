@@ -1,4 +1,4 @@
-require "English"
+require 'English'
 
 module IntegrationSetup
   CC_START_TIMEOUT = 20

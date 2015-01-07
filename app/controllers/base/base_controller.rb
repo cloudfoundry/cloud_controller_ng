@@ -114,11 +114,7 @@ module VCAP::CloudController::RestController
       escaped_warning = CGI.escape(warning)
       existing_warning = @sinatra.headers['X-Cf-Warnings']
 
-      new_warning = if existing_warning.nil?
-                      escaped_warning
-                    else
-                      "#{existing_warning},#{escaped_warning}"
-                    end
+      new_warning = existing_warning.nil? ? escaped_warning : "#{existing_warning},#{escaped_warning}"
 
       set_header('X-Cf-Warnings', new_warning)
     end
