@@ -63,10 +63,10 @@ module VCAP::Services
 
           context 'when the status code is HTTP Request Timeout (408)' do
             let(:code) { 408 }
-            it 'raises a ServiceBrokerApiTimeout error' do
+            it 'raises a Errors::ServiceBrokerApiTimeout error' do
               expect {
                 parser.parse(:get, '/v2/catalog', response)
-              }.to raise_error(ServiceBrokerApiTimeout)
+              }.to raise_error(Errors::ServiceBrokerApiTimeout)
             end
           end
 

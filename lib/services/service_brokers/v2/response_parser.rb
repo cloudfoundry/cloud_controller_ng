@@ -32,7 +32,7 @@ module VCAP::Services
             raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
 
           when 408
-            raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
+            raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
 
           when 409
             raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict.new(uri.to_s, method, response)

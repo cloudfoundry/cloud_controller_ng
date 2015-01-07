@@ -2,32 +2,6 @@ require 'net/http'
 
 module VCAP::Services
   module ServiceBrokers::V2
-    class ServiceBrokerApiUnreachable < HttpRequestError
-      def initialize(uri, method, source)
-        super(
-          "The service broker API could not be reached: #{uri}",
-          uri,
-          method,
-          source
-        )
-      end
-    end
-
-    class ServiceBrokerApiTimeout < HttpRequestError
-      def initialize(uri, method, source)
-        super(
-          "The service broker API timed out: #{uri}",
-          uri,
-          method,
-          source
-        )
-      end
-
-      def response_code
-        504
-      end
-    end
-
     class HttpClient
       attr_reader :url
 
@@ -79,9 +53,9 @@ module VCAP::Services
         log_response(uri, response)
         return response
       rescue SocketError, Errno::ECONNREFUSED => error
-        raise ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
+        raise Errors::ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
       rescue Timeout::Error => error
-        raise ServiceBrokerApiTimeout.new(uri.to_s, method, error)
+        raise Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, error)
       rescue => error
         raise HttpRequestError.new(error.message, uri.to_s, method, error)
       end

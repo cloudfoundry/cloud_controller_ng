@@ -290,13 +290,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(http_client).to receive(:put).and_raise(error)
           end
 
-          context 'ServiceBrokerApiTimeout error' do
-            let(:error) { ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+          context 'Errors::ServiceBrokerApiTimeout error' do
+            let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.provision(instance)
-              }.to raise_error(ServiceBrokerApiTimeout)
+              }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
                 to have_received(:deprovision).with(client_attrs, instance)
@@ -326,13 +326,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
           end
 
-          context 'ServiceBrokerApiTimeout error' do
-            let(:error) { ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+          context 'Errors::ServiceBrokerApiTimeout error' do
+            let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.provision(instance)
-              }.to raise_error(ServiceBrokerApiTimeout)
+              }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
                 to have_received(:deprovision).
@@ -532,13 +532,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(http_client).to receive(:put).and_raise(error)
           end
 
-          context 'ServiceBrokerApiTimeout error' do
-            let(:error) { ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+          context 'Errors::ServiceBrokerApiTimeout error' do
+            let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.bind(binding)
-              }.to raise_error(ServiceBrokerApiTimeout)
+              }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
                 to have_received(:delayed_unbind).
@@ -568,13 +568,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
           end
 
-          context 'ServiceBrokerApiTimeout error' do
-            let(:error) { ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+          context 'Errors::ServiceBrokerApiTimeout error' do
+            let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.bind(binding)
-              }.to raise_error(ServiceBrokerApiTimeout)
+              }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
                                      to have_received(:delayed_unbind).with(client_attrs, binding)

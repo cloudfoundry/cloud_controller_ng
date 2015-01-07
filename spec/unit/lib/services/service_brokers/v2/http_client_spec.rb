@@ -1,47 +1,6 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
-  describe ServiceBrokerApiUnreachable do
-    let(:uri) { 'http://www.example.com/' }
-    let(:error) { SocketError.new('some message') }
-
-    before do
-      error.set_backtrace(['/socketerror:1', '/backtrace:2'])
-    end
-
-    it 'generates the correct hash' do
-      exception = ServiceBrokerApiUnreachable.new(uri, 'PUT', error)
-      exception.set_backtrace(['/generatedexception:3', '/backtrace:4'])
-
-      expect(exception.to_h).to eq({
-        'description' => 'The service broker API could not be reached: http://www.example.com/',
-        'backtrace' => ['/generatedexception:3', '/backtrace:4'],
-        'http' => {
-          'uri' => uri,
-          'method' => 'PUT'
-        },
-        'source' => {
-          'description' => error.message,
-          'backtrace' => ['/socketerror:1', '/backtrace:2']
-        }
-      })
-    end
-  end
-
-  describe ServiceBrokerApiTimeout do
-    let(:uri) { 'http://uri.example.com' }
-    let(:method) { 'POST' }
-    let(:error) { StandardError.new }
-
-    it 'initializes the base class correctly' do
-      exception = ServiceBrokerApiTimeout.new(uri, method, error)
-      expect(exception.message).to eq("The service broker API timed out: #{uri}")
-      expect(exception.uri).to eq(uri)
-      expect(exception.method).to eq(method)
-      expect(exception.source).to be(error)
-    end
-  end
-
   describe HttpClient do
     let(:auth_username) { 'me' }
     let(:auth_password) { 'abc123' }
@@ -153,7 +112,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'raises an unreachable error' do
             expect { request }.
-              to raise_error(ServiceBrokerApiUnreachable)
+              to raise_error(Errors::ServiceBrokerApiUnreachable)
           end
         end
 
@@ -164,7 +123,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'raises an unreachable error' do
             expect { request }.
-              to raise_error(ServiceBrokerApiUnreachable)
+              to raise_error(Errors::ServiceBrokerApiUnreachable)
           end
         end
       end
@@ -177,7 +136,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'raises a timeout error' do
             expect { request }.
-              to raise_error(ServiceBrokerApiTimeout)
+              to raise_error(Errors::ServiceBrokerApiTimeout)
           end
         end
       end

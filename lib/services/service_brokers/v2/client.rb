@@ -108,7 +108,7 @@ module VCAP::Services::ServiceBrokers::V2
       # DEPRECATED, but needed because of not null constraint
       instance.credentials = {}
 
-    rescue ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
+    rescue Errors::ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
       VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner.deprovision(@attrs, instance)
       raise e
     end
@@ -127,7 +127,7 @@ module VCAP::Services::ServiceBrokers::V2
         binding.syslog_drain_url = parsed_response['syslog_drain_url']
       end
 
-    rescue ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
+    rescue Errors::ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
       VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder.delayed_unbind(@attrs, binding)
       raise e
     end

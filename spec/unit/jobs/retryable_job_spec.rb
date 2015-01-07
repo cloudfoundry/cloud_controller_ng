@@ -19,8 +19,8 @@ module VCAP::CloudController
             allow(Delayed::Job).to receive(:enqueue)
           end
 
-          context 'when the exception is ServiceBrokerApiTimeout' do
-            let(:error) {  VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiTimeout.new('uri.com', :delete, mock_response) }
+          context 'when the exception is Errors::ServiceBrokerApiTimeout' do
+            let(:error) {  VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new('uri.com', :delete, mock_response) }
 
             it 'enqueues another retryable job' do
               retryable_job.perform
@@ -48,7 +48,7 @@ module VCAP::CloudController
           end
 
           describe 'exponential backoff' do
-            let(:error) {  VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiTimeout.new('uri.com', :delete, mock_response) }
+            let(:error) {  VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new('uri.com', :delete, mock_response) }
             let(:retryable_job) { RetryableJob.new(job, num_attempts) }
             let(:num_attempts) { 5 }
 
@@ -67,12 +67,12 @@ module VCAP::CloudController
 
             context 'when the max attempts have reached' do
               let(:retryable_job) { RetryableJob.new(job, 10) }
-              let(:error) {  VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiTimeout.new('uri.com', :delete, mock_response) }
+              let(:error) {  VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new('uri.com', :delete, mock_response) }
 
               it 'progagates an error' do
                 expect {
                   retryable_job.perform
-                }.to raise_error(VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiTimeout)
+                }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout)
               end
             end
           end
