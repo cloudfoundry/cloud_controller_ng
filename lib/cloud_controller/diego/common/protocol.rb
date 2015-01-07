@@ -10,7 +10,7 @@ module VCAP::CloudController
 
         def stop_index_message(app, index)
           {
-            'process_guid' => app.versioned_guid,
+            'process_guid' => ProcessGuid.from_app(app),
             'index' => index,
           }
         end

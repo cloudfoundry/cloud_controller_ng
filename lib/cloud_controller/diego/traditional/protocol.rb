@@ -1,5 +1,6 @@
 require 'cloud_controller/diego/traditional/buildpack_entry_generator'
 require 'cloud_controller/diego/environment'
+require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
   module Diego
@@ -43,7 +44,7 @@ module VCAP::CloudController
 
         def desire_app_message(app)
           message = {
-            'process_guid' => app.versioned_guid,
+            'process_guid' => ProcessGuid.from_app(app),
             'memory_mb' => app.memory,
             'disk_mb' => app.disk_quota,
             'file_descriptors' => app.file_descriptors,

@@ -1579,18 +1579,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'versioned_guid' do
-      before do
-        @app = App.new
-        @app.guid = 'appguid'
-        @app.version = 'versionuuid'
-      end
-
-      it "is the app's guid qualified by its version" do
-        expect(@app.versioned_guid).to eq('appguid-versionuuid')
-      end
-    end
-
     describe 'uris' do
       it 'should return the uris on the app' do
         app = AppFactory.make(space: space)

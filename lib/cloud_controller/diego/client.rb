@@ -1,4 +1,5 @@
 require 'cloud_controller/diego/unavailable'
+require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
   module Diego
@@ -17,7 +18,7 @@ module VCAP::CloudController
         end
 
         address = @service_registry.tps_addrs.first
-        guid = app.versioned_guid
+        guid = ProcessGuid.from_app(app)
 
         uri = URI("#{address}/lrps/#{guid}")
         logger.info "Requesting lrp information for #{guid} from #{address}"

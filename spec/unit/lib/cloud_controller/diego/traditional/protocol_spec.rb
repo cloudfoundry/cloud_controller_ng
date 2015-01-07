@@ -89,7 +89,7 @@ module VCAP::CloudController
               health_check_timeout: 444,
               memory: 555,
               stack: instance_double(Stack, name: 'fake-stack'),
-              versioned_guid: 'fake-versioned_guid',
+              version: 'version-guid',
               uris: ['fake-uris'],
             )
           end
@@ -114,7 +114,7 @@ module VCAP::CloudController
               'log_guid' => 'fake-guid',
               'memory_mb' => 555,
               'num_instances' => 111,
-              'process_guid' => 'fake-versioned_guid',
+              'process_guid' => 'fake-guid-version-guid',
               'stack' => 'fake-stack',
               'start_command' => 'the-custom-command',
               'execution_metadata' => 'staging-metadata',

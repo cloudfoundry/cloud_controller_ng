@@ -71,7 +71,7 @@ module VCAP::CloudController
 
           it 'includes the fields needed to desire a Docker app' do
             expect(message).to eq({
-              'process_guid' => app.versioned_guid,
+              'process_guid' => ProcessGuid.from_app(app),
               'memory_mb' => app.memory,
               'disk_mb' => app.disk_quota,
               'file_descriptors' => app.file_descriptors,

@@ -227,10 +227,6 @@ module VCAP::CloudController
       started? ? instances : 0
     end
 
-    def versioned_guid
-      "#{guid}-#{version}"
-    end
-
     def organization
       space && space.organization
     end
