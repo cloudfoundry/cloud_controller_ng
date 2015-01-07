@@ -1,24 +1,4 @@
 module VCAP::Services::ServiceBrokers::V2
-  class ServiceBrokerBadResponse < HttpResponseError
-    def initialize(uri, method, response)
-      begin
-        hash = MultiJson.load(response.body)
-      rescue MultiJson::ParseError
-      end
-
-      if hash.is_a?(Hash) && hash.key?('description')
-        message = "Service broker error: #{hash['description']}"
-      else
-        message = "The service broker API returned an error from #{uri}: #{response.code} #{response.message}"
-      end
-
-      super(message, uri, method, response)
-    end
-
-    def response_code
-      502
-    end
-  end
 
   class ServiceBrokerConflict < HttpResponseError
     def initialize(uri, method, response)
@@ -82,7 +62,7 @@ module VCAP::Services::ServiceBrokers::V2
       # DEPRECATED, but needed because of not null constraint
       instance.credentials = {}
 
-    rescue Errors::ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
+    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
       VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner.deprovision(@attrs, instance)
       raise e
     end
@@ -101,7 +81,7 @@ module VCAP::Services::ServiceBrokers::V2
         binding.syslog_drain_url = parsed_response['syslog_drain_url']
       end
 
-    rescue Errors::ServiceBrokerApiTimeout, ServiceBrokerBadResponse => e
+    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
       VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder.delayed_unbind(@attrs, binding)
       raise e
     end

@@ -44,7 +44,7 @@ module VCAP::Services
             end
           end
 
-          raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse.new(uri.to_s, method, response)
+          raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
         end
 
         private

@@ -34,7 +34,7 @@ module VCAP::CloudController
           end
 
           context 'when the exception is ServiceBrokerBadResponse' do
-            let(:error) {  VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse.new('uri.com', :delete, mock_response) }
+            let(:error) {  VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new('uri.com', :delete, mock_response) }
 
             it 'enqueues another retryable job' do
               retryable_job.perform

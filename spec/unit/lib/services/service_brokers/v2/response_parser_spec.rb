@@ -86,7 +86,7 @@ module VCAP::Services
             it 'raises ServiceBrokerBadResponse' do
               expect {
                 parser.parse(method, '/v2/catalog', response)
-              }.to raise_error(ServiceBrokerBadResponse, /there was an error/)
+              }.to raise_error(Errors::ServiceBrokerBadResponse, /there was an error/)
             end
 
             context 'and the http method is delete' do
@@ -106,7 +106,7 @@ module VCAP::Services
             it 'raises ServiceBrokerBadResponse' do
               expect {
                 parser.parse(method, '/v2/catalog', response)
-              }.to raise_error(ServiceBrokerBadResponse, /there was an error/)
+              }.to raise_error(Errors::ServiceBrokerBadResponse, /there was an error/)
             end
           end
         end

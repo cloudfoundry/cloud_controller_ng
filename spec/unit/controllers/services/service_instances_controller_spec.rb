@@ -561,7 +561,7 @@ module VCAP::CloudController
         let(:response) { double(code: 422, reason: 'Broker rejected the upate', body: response_body) }
 
         before do
-          allow(client).to receive(:update_service_plan).and_raise(VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse.new(uri, method, response))
+          allow(client).to receive(:update_service_plan).and_raise(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(uri, method, response))
         end
 
         it 'returns a CF-ServiceBrokerBadResponse' do

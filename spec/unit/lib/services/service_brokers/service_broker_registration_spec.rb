@@ -162,7 +162,7 @@ module VCAP::Services::ServiceBrokers
           it "raises an error, even though we'd rather it not" do
             expect {
               registration.create
-            }.to raise_error V2::ServiceBrokerBadResponse
+            }.to raise_error V2::Errors::ServiceBrokerBadResponse
           end
 
           it 'does not create a new service broker' do
@@ -174,7 +174,7 @@ module VCAP::Services::ServiceBrokers
           it 'does not synchronize uaa clients' do
             begin
               registration.create
-            rescue V2::ServiceBrokerBadResponse
+            rescue V2::Errors::ServiceBrokerBadResponse
             end
 
             expect(client_manager).not_to have_received(:synchronize_clients_with_catalog)
@@ -183,7 +183,7 @@ module VCAP::Services::ServiceBrokers
           it 'does not synchronize the catalog' do
             begin
               registration.create
-            rescue V2::ServiceBrokerBadResponse
+            rescue V2::Errors::ServiceBrokerBadResponse
             end
 
             expect(service_manager).not_to have_received(:sync_services_and_plans)
@@ -433,7 +433,7 @@ module VCAP::Services::ServiceBrokers
           it "raises an error, even though we'd rather it not" do
             expect {
               registration.update
-            }.to raise_error V2::ServiceBrokerBadResponse
+            }.to raise_error V2::Errors::ServiceBrokerBadResponse
           end
 
           it 'not update the service broker' do
@@ -446,7 +446,7 @@ module VCAP::Services::ServiceBrokers
           it 'does not synchronize uaa clients' do
             begin
               registration.update
-            rescue V2::ServiceBrokerBadResponse
+            rescue V2::Errors::ServiceBrokerBadResponse
             end
 
             expect(client_manager).not_to have_received(:synchronize_clients_with_catalog)
@@ -455,7 +455,7 @@ module VCAP::Services::ServiceBrokers
           it 'does not synchronize the catalog' do
             begin
               registration.update
-            rescue V2::ServiceBrokerBadResponse
+            rescue V2::Errors::ServiceBrokerBadResponse
             end
 
             expect(service_manager).not_to have_received(:sync_services_and_plans)

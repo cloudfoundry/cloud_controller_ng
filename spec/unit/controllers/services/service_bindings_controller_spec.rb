@@ -372,7 +372,7 @@ module VCAP::CloudController
                 uri = 'http://broker.url.com'
                 method = 'PUT'
                 response = double(:response, code: 500, body: '{"description": "ERROR MESSAGE HERE"}')
-                raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse.new(uri, method, response)
+                raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(uri, method, response)
               end
             end
 

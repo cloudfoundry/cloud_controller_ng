@@ -1,64 +1,10 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
-  describe ServiceBrokerBadResponse do
-    let(:uri) { 'http://www.example.com/' }
-    let(:response) { double(code: 500, message: 'Internal Server Error', body: response_body) }
-    let(:method) { 'PUT' }
-
-    context 'with a description in the body' do
-      let(:response_body) do
-        {
-          'description' => 'Some error text'
-        }.to_json
-      end
-
-      it 'generates the correct hash' do
-        exception = described_class.new(uri, method, response)
-        exception.set_backtrace(['/foo:1', '/bar:2'])
-
-        expect(exception.to_h).to eq({
-          'description' => 'Service broker error: Some error text',
-          'backtrace' => ['/foo:1', '/bar:2'],
-          'http' => {
-            'status' => 500,
-            'uri' => uri,
-            'method' => 'PUT'
-          },
-          'source' => {
-            'description' => 'Some error text'
-          }
-        })
-      end
-    end
-
-    context 'without a description in the body' do
-      let(:response_body) do
-        { 'foo' => 'bar' }.to_json
-      end
-      it 'generates the correct hash' do
-        exception = described_class.new(uri, method, response)
-        exception.set_backtrace(['/foo:1', '/bar:2'])
-
-        expect(exception.to_h).to eq({
-          'description' => 'The service broker API returned an error from http://www.example.com/: 500 Internal Server Error',
-          'backtrace' => ['/foo:1', '/bar:2'],
-          'http' => {
-            'status' => 500,
-            'uri' => uri,
-            'method' => 'PUT'
-          },
-          'source' => { 'foo' => 'bar' }
-        })
-      end
-    end
-  end
-
   describe 'the remaining ServiceBrokers::V2 exceptions' do
     let(:uri) { 'http://uri.example.com' }
     let(:method) { 'POST' }
     let(:error) { StandardError.new }
-
 
     describe ServiceBrokerConflict do
       let(:response_body) { '{"message": "error message"}' }
@@ -279,12 +225,12 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           context 'ServiceBrokerBadResponse error' do
-            let(:error) { ServiceBrokerBadResponse.new(uri, :put, response) }
+            let(:error) { Errors::ServiceBrokerBadResponse.new(uri, :put, response) }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.provision(instance)
-              }.to raise_error(ServiceBrokerBadResponse)
+              }.to raise_error(Errors::ServiceBrokerBadResponse)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
                 to have_received(:deprovision).
@@ -316,12 +262,12 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           context 'ServiceBrokerBadResponse error' do
-            let(:error) { ServiceBrokerBadResponse.new(uri, :put, response) }
+            let(:error) { Errors::ServiceBrokerBadResponse.new(uri, :put, response) }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.provision(instance)
-              }.to raise_error(ServiceBrokerBadResponse)
+              }.to raise_error(Errors::ServiceBrokerBadResponse)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
                 to have_received(:deprovision).
@@ -390,7 +336,7 @@ module VCAP::Services::ServiceBrokers::V2
             let(:body) { { description: 'cannot update to this plan' }.to_json }
             it 'raises a ServiceBrokerBadResponse error' do
               expect { client.update_service_plan(instance, new_plan) }.to raise_error(
-                ServiceBrokerBadResponse, /cannot update to this plan/
+                Errors::ServiceBrokerBadResponse, /cannot update to this plan/
               )
             end
           end
@@ -522,12 +468,12 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           context 'ServiceBrokerBadResponse error' do
-            let(:error) { ServiceBrokerBadResponse.new(uri, :put, response) }
+            let(:error) { Errors::ServiceBrokerBadResponse.new(uri, :put, response) }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.bind(binding)
-              }.to raise_error(ServiceBrokerBadResponse)
+              }.to raise_error(Errors::ServiceBrokerBadResponse)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
                                      to have_received(:delayed_unbind).with(client_attrs, binding)
@@ -557,12 +503,12 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           context 'ServiceBrokerBadResponse error' do
-            let(:error) { ServiceBrokerBadResponse.new(uri, :put, response) }
+            let(:error) { Errors::ServiceBrokerBadResponse.new(uri, :put, response) }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.bind(binding)
-              }.to raise_error(ServiceBrokerBadResponse)
+              }.to raise_error(Errors::ServiceBrokerBadResponse)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
                                      to have_received(:delayed_unbind).with(client_attrs, binding)

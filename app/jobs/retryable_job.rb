@@ -10,7 +10,7 @@ module VCAP::CloudController
 
       def perform
         job.perform
-      rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout, VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse => e
+      rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout, VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse => e
         raise e if num_attempts >= 10
         Delayed::Job.enqueue(RetryableJob.new(job, num_attempts + 1), queue: 'cc-generic', run_at: Delayed::Job.db_time_now + (2**num_attempts).minutes)
       end
