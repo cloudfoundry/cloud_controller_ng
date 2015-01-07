@@ -1,4 +1,4 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::Services
   describe ValidationErrors do
@@ -85,7 +85,7 @@ module VCAP::Services
     end
 
     describe '#nested_errors' do
-      let(:nested_object){ double(:nested_object) }
+      let(:nested_object) { double(:nested_object) }
       let!(:nested_errors) { errors.add_nested(nested_object) }
 
       it "returns the error object's nested errors hash" do

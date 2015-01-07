@@ -1,8 +1,7 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-
     describe PendingPackagesCleanup do
       let(:expiration_in_seconds) { 5.minutes }
 
@@ -10,12 +9,12 @@ module VCAP::CloudController
 
       it { is_expected.to be_a_valid_job }
 
-      it "knows its job name" do
+      it 'knows its job name' do
         expect(cleanup_job.job_name_in_configuration).to equal(:pending_packages)
       end
 
-      describe "#perform" do
-        context "with packages which have been pending for too long" do
+      describe '#perform' do
+        context 'with packages which have been pending for too long' do
           let!(:app1) { AppFactory.make(package_pending_since: Time.now - expiration_in_seconds - 1.second) }
           let!(:app2) { AppFactory.make(package_pending_since: Time.now - expiration_in_seconds - 2.second) }
 
@@ -25,19 +24,19 @@ module VCAP::CloudController
             app2.reload
           end
 
-          it "marks packages as failed" do
+          it 'marks packages as failed' do
             expect(app1.staging_failed?).to be_truthy
             expect(app2.staging_failed?).to be_truthy
           end
 
-          it "resets the pending_since timestamps" do
+          it 'resets the pending_since timestamps' do
             expect(app1.package_pending_since).to be_nil
             expect(app2.package_pending_since).to be_nil
           end
 
-          it "sets the staging_failed_reason" do
-            expect(app1.staging_failed_reason).to eq("StagingTimeExpired")
-            expect(app2.staging_failed_reason).to eq("StagingTimeExpired")
+          it 'sets the staging_failed_reason' do
+            expect(app1.staging_failed_reason).to eq('StagingTimeExpired')
+            expect(app2.staging_failed_reason).to eq('StagingTimeExpired')
           end
         end
 

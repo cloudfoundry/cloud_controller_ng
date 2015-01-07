@@ -1,10 +1,10 @@
-require "securerandom"
-require "openssl/cipher"
-require "base64"
+require 'securerandom'
+require 'openssl/cipher'
+require 'base64'
 
 module VCAP::CloudController::Encryptor
   class << self
-    ALGORITHM = "AES-128-CBC".freeze
+    ALGORITHM = 'AES-128-CBC'.freeze
 
     def generate_salt
       SecureRandom.hex(4).to_s
@@ -23,6 +23,7 @@ module VCAP::CloudController::Encryptor
     attr_accessor :db_encryption_key
 
     private
+
     def make_cipher
       OpenSSL::Cipher::Cipher.new(ALGORITHM)
     end
@@ -37,7 +38,7 @@ module VCAP::CloudController::Encryptor
     extend ActiveSupport::Concern
 
     module ClassMethods
-      def encrypt field_name, options={}
+      def encrypt(field_name, options={})
         field_name = field_name.to_sym
         salt_name = (options[:salt] || "#{field_name}_salt").to_sym
         generate_salt_name = "generate_#{salt_name}".to_sym
@@ -65,7 +66,7 @@ module VCAP::CloudController::Encryptor
         define_method "#{field_name}_with_encryption" do
           VCAP::CloudController::Encryptor.decrypt send("#{field_name}_without_encryption"), send(salt_name)
         end
-        alias_method_chain field_name, "encryption"
+        alias_method_chain field_name, 'encryption'
 
         define_method "#{field_name}_with_encryption=" do |value|
           send generate_salt_name
@@ -79,7 +80,7 @@ module VCAP::CloudController::Encryptor
 
           send "#{field_name}_without_encryption=", encrypted_value
         end
-        alias_method_chain "#{field_name}=", "encryption"
+        alias_method_chain "#{field_name}=", 'encryption'
       end
       private :encrypt
     end

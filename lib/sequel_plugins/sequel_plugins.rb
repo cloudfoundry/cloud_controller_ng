@@ -1,11 +1,11 @@
-require "sequel_plugins/vcap_validations"
-require "sequel_plugins/vcap_serialization"
-require "sequel_plugins/vcap_normalization"
-require "sequel_plugins/vcap_relations"
-require "sequel_plugins/vcap_guid"
-require "sequel_plugins/update_or_create"
-require "sequel_plugins/vcap_user_group"
-require "sequel_plugins/vcap_user_visibility"
+require 'sequel_plugins/vcap_validations'
+require 'sequel_plugins/vcap_serialization'
+require 'sequel_plugins/vcap_normalization'
+require 'sequel_plugins/vcap_relations'
+require 'sequel_plugins/vcap_guid'
+require 'sequel_plugins/update_or_create'
+require 'sequel_plugins/vcap_user_group'
+require 'sequel_plugins/vcap_user_visibility'
 
 Sequel::Model.plugin :vcap_validations
 Sequel::Model.plugin :vcap_serialization

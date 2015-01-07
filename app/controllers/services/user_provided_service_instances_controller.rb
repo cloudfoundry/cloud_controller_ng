@@ -4,15 +4,15 @@ module VCAP::CloudController
   class UserProvidedServiceInstancesController < RestController::ModelController
     define_attributes do
       attribute :name, String
-      attribute :credentials, Hash, :default => {}
-      attribute :syslog_drain_url, String, :default => ""
+      attribute :credentials, Hash, default: {}
+      attribute :syslog_drain_url, String, default: ''
 
       to_one :space
       to_many :service_bindings
     end
 
     def self.dependencies
-      [ :services_event_repository ]
+      [:services_event_repository]
     end
 
     def inject_dependencies(dependencies)
@@ -23,9 +23,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
       if space_and_name_errors && space_and_name_errors.include?(:unique)
-        Errors::ApiError.new_from_details("ServiceInstanceNameTaken", attributes["name"])
+        Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
       else
-        Errors::ApiError.new_from_details("ServiceInstanceInvalid", e.errors.full_messages)
+        Errors::ApiError.new_from_details('ServiceInstanceInvalid', e.errors.full_messages)
       end
     end
 
@@ -33,7 +33,7 @@ module VCAP::CloudController
       json_msg = self.class::CreateMessage.decode(body)
       @request_attrs = json_msg.extract(stringify_keys: true)
 
-      logger.debug "cc.create", model: self.class.model_class_name, attributes: request_attrs
+      logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
 
       service_instance = nil
       UserProvidedServiceInstance.db.transaction do
@@ -45,7 +45,7 @@ module VCAP::CloudController
 
       [
         HTTP::CREATED,
-        {"Location" => "#{self.class.path}/#{service_instance.guid}"},
+        { 'Location' => "#{self.class.path}/#{service_instance.guid}" },
         object_renderer.render_json(self.class, service_instance, @opts)
       ]
     end
@@ -54,8 +54,8 @@ module VCAP::CloudController
       json_msg = self.class::UpdateMessage.decode(body)
       request_attrs = json_msg.extract(stringify_keys: true)
 
-      logger.debug "cc.update", guid: guid, attributes: request_attrs
-      raise  Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
+      logger.debug 'cc.update', guid: guid, attributes: request_attrs
+      raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
 
       service_instance = find_guid(guid)
       validate_access(:read_for_update, service_instance)
@@ -65,13 +65,13 @@ module VCAP::CloudController
         raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
       end
 
-      if request_attrs["service_plan_guid"]
+      if request_attrs['service_plan_guid']
         old_plan = service_instance.service_plan
         unless old_plan.service.plan_updateable
-          raise VCAP::Errors::ApiError.new_from_details("ServicePlanNotUpdateable")
+          raise VCAP::Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
         end
 
-        new_plan = ServicePlan.find(guid: request_attrs["service_plan_guid"])
+        new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
         service_instance.client.update_service_plan(service_instance, new_plan)
       end
 
@@ -90,10 +90,17 @@ module VCAP::CloudController
       raise_if_has_associations!(service_instance) if v2_api? && !recursive?
 
       deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)
-      delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :record_user_provided_service_instance_event, :delete, service_instance, {})
+      delete_and_audit_job = Jobs::AuditEventJob.new(
+        deletion_job,
+        @services_event_repository,
+        :record_user_provided_service_instance_event,
+        :delete,
+        service_instance,
+        {}
+      )
 
       if async?
-        job = Jobs::Enqueuer.new(delete_and_audit_job, queue: "cc-generic").enqueue()
+        job = Jobs::Enqueuer.new(delete_and_audit_job, queue: 'cc-generic').enqueue
         [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
       else
         delete_and_audit_job.perform

@@ -2,14 +2,14 @@ require 'spec_helper'
 require 'presenters/api/staging_job_presenter'
 
 describe StagingJobPresenter do
-  describe "#to_hash" do
+  describe '#to_hash' do
     let(:job) do
       job = Delayed::Job.enqueue double(:obj, perform: nil)
       allow(job).to receive(:run_at) { Time.now.months_since(1) }
       job
     end
 
-    it "creates a valid JSON with the correct url" do
+    it 'creates a valid JSON with the correct url' do
       user = TestConfig.config[:staging][:auth][:user]
       password = TestConfig.config[:staging][:auth][:password]
       polling_url = "http://#{user}:#{password}@#{TestConfig.config[:external_domain]}/staging/jobs/#{job.guid}"
@@ -22,7 +22,7 @@ describe StagingJobPresenter do
         },
         entity: {
           guid: job.guid,
-          status: "queued"
+          status: 'queued'
         }
       )
     end

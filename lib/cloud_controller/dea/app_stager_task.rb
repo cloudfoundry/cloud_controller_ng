@@ -3,6 +3,8 @@ require 'presenters/message_bus/service_binding_presenter'
 module VCAP::CloudController
   module Dea
     class AppStagerTask
+      STAGING_ALREADY_FAILURE_MSG = 'failed to stage application: staging had already been marked as failed, this could mean that staging took too long'
+
       attr_reader :config
       attr_reader :message_bus
 
@@ -21,7 +23,7 @@ module VCAP::CloudController
 
       def stage(&completion_callback)
         @stager_id = @stager_pool.find_stager(@app.stack.name, staging_task_memory_mb, staging_task_disk_mb)
-        raise Errors::ApiError.new_from_details("StagingError", "no available stagers") unless @stager_id
+        raise Errors::ApiError.new_from_details('StagingError', 'no available stagers') unless @stager_id
 
         subject = "staging.#{@stager_id}.start"
         @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
@@ -30,18 +32,18 @@ module VCAP::CloudController
         @app.update(staging_task_id: task_id)
 
         # Attempt to stop any in-flight staging for this app
-        @message_bus.publish("staging.stop", :app_id => @app.guid)
+        @message_bus.publish('staging.stop', app_id: @app.guid)
 
         @completion_callback = completion_callback
 
         @dea_pool.reserve_app_memory(@stager_id, staging_task_memory_mb)
         @stager_pool.reserve_app_memory(@stager_id, staging_task_memory_mb)
 
-        logger.info("staging.begin", :app_guid => @app.guid)
+        logger.info('staging.begin', app_guid: @app.guid)
         staging_result = EM.schedule_sync do |promise|
           # First response is blocking stage_app.
           @multi_message_bus_request.on_response(staging_timeout) do |response, error|
-            logger.info("staging.first-response", :app_guid => @app.guid, :response => response, :error => error)
+            logger.info('staging.first-response', app_guid: @app.guid, response: response, error: error)
             handle_first_response(response, error, promise)
           end
 
@@ -49,7 +51,7 @@ module VCAP::CloudController
           # droplet was uploaded to the CC.
           # Second response does NOT block stage_app
           @multi_message_bus_request.on_response(staging_timeout) do |response, error|
-            logger.info("staging.second-response", :app_guid => @app.guid, :response => response, :error => error)
+            logger.info('staging.second-response', app_guid: @app.guid, response: response, error: error)
             handle_second_response(response, error)
           end
 
@@ -62,17 +64,17 @@ module VCAP::CloudController
       # We never stage if there is not a start request
       def staging_request
         {
-            app_id:                       @app.guid,
-            task_id:                      task_id,
-            properties:                   staging_task_properties(@app),
-            # All url generation should go to blobstore_url_generator
-            download_uri:                 @blobstore_url_generator.app_package_download_url(@app),
-            upload_uri:                   @blobstore_url_generator.droplet_upload_url(@app),
-            buildpack_cache_download_uri: @blobstore_url_generator.buildpack_cache_download_url(@app),
-            buildpack_cache_upload_uri:   @blobstore_url_generator.buildpack_cache_upload_url(@app),
-            start_message:                start_app_message,
-            admin_buildpacks:             admin_buildpacks,
-            egress_network_rules:         staging_egress_rules,
+          app_id:                       @app.guid,
+          task_id:                      task_id,
+          properties:                   staging_task_properties(@app),
+          # All url generation should go to blobstore_url_generator
+          download_uri:                 @blobstore_url_generator.app_package_download_url(@app),
+          upload_uri:                   @blobstore_url_generator.droplet_upload_url(@app),
+          buildpack_cache_download_uri: @blobstore_url_generator.buildpack_cache_download_url(@app),
+          buildpack_cache_upload_uri:   @blobstore_url_generator.buildpack_cache_upload_url(@app),
+          start_message:                start_app_message,
+          admin_buildpacks:             admin_buildpacks,
+          egress_network_rules:         staging_egress_rules,
         }
       end
 
@@ -139,20 +141,20 @@ module VCAP::CloudController
       def error_message(response)
         if response.is_a?(String) || response.nil?
           "failed to stage application:\n#{response}"
-        elsif response["error_info"]
-          response["error_info"]["message"]
-        elsif response["error"]
-          "failed to stage application:\n#{response["error"]}\n#{response["task_log"]}"
+        elsif response['error_info']
+          response['error_info']['message']
+        elsif response['error']
+          "failed to stage application:\n#{response['error']}\n#{response['task_log']}"
         end
       end
 
       def error_type(response)
         if response.is_a?(String) || response.nil?
-          "StagingError"
-        elsif response["error_info"]
-          response["error_info"]["type"]
-        elsif response["error"]
-          "StagingError"
+          'StagingError'
+        elsif response['error_info']
+          response['error_info']['type']
+        elsif response['error']
+          'StagingError'
         end
       end
 
@@ -161,18 +163,18 @@ module VCAP::CloudController
           # Reload to find other updates of staging task id
           # which means that there was a new staging process initiated
           @app.refresh
-        rescue Exception => e
+        rescue => e
           Loggregator.emit_error(@app.guid, "Exception checking staging status: #{e.message}")
           logger.error("Exception checking staging status: #{e.inspect}\n  #{e.backtrace.join("\n  ")}")
-          raise Errors::ApiError.new_from_details("StagingError", "failed to stage application: can't retrieve staging status")
+          raise Errors::ApiError.new_from_details('StagingError', "failed to stage application: can't retrieve staging status")
         end
 
         if @app.staging_task_id != task_id
-          raise Errors::ApiError.new_from_details("StagingError", "failed to stage application: another staging request was initiated")
+          raise Errors::ApiError.new_from_details('StagingError', 'failed to stage application: another staging request was initiated')
         end
 
         if @app.staging_failed?
-          raise Errors::ApiError.new_from_details("StagingError", "failed to stage application: staging had already been marked as failed, this could mean that staging took too long")
+          raise Errors::ApiError.new_from_details('StagingError', STAGING_ALREADY_FAILURE_MSG)
         end
       end
 
@@ -185,9 +187,9 @@ module VCAP::CloudController
           @app.current_droplet.update_detected_start_command(stager_response.detected_start_command) if @app.current_droplet
         end
 
-        @dea_pool.mark_app_started(:dea_id => @stager_id, :app_id => @app.guid) if instance_was_started_by_dea
+        @dea_pool.mark_app_started(dea_id: @stager_id, app_id: @app.guid) if instance_was_started_by_dea
 
-        @completion_callback.call(:started_instances => instance_was_started_by_dea ? 1 : 0) if @completion_callback
+        @completion_callback.call(started_instances: instance_was_started_by_dea ? 1 : 0) if @completion_callback
       end
 
       def staging_task_properties(app)
@@ -200,15 +202,15 @@ module VCAP::CloudController
         env         = staging_env.merge(app_env).map { |k, v| "#{k}=#{v}" }
 
         {
-            :services    => app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
-            :resources   => {
-                :memory => app.memory,
-                :disk   => app.disk_quota,
-                :fds    => app.file_descriptors
-            },
+          services: app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
+          resources: {
+            memory: app.memory,
+            disk: app.disk_quota,
+            fds: app.file_descriptors
+          },
 
-            :environment => env,
-            :meta => app.metadata
+          environment: env,
+          meta: app.metadata
         }
       end
 
@@ -221,18 +223,18 @@ module VCAP::CloudController
       end
 
       def staging_task_disk_mb
-        [ @config[:staging][:minimum_staging_disk_mb] || 4096, @app.disk_quota ].max
+        [@config[:staging][:minimum_staging_disk_mb] || 4096, @app.disk_quota].max
       end
 
       def staging_task_memory_mb
         [
-            (@config[:staging] && @config[:staging][:minimum_staging_memory_mb] || 1024),
-            @app.memory
+          (@config[:staging] && @config[:staging][:minimum_staging_memory_mb] || 1024),
+          @app.memory
         ].max
       end
 
       def logger
-        @logger ||= Steno.logger("cc.app_stager")
+        @logger ||= Steno.logger('cc.app_stager')
       end
 
       class Response
@@ -241,31 +243,31 @@ module VCAP::CloudController
         end
 
         def log
-          @response["task_log"]
+          @response['task_log']
         end
 
         def streaming_log_url
-          @response["task_streaming_log_url"]
+          @response['task_streaming_log_url']
         end
 
         def detected_buildpack
-          @response["detected_buildpack"]
+          @response['detected_buildpack']
         end
 
         def execution_metadata
-          @response["execution_metadata"]
+          @response['execution_metadata']
         end
 
         def detected_start_command
-          @response["detected_start_command"]
+          @response['detected_start_command']
         end
 
         def droplet_hash
-          @response["droplet_sha1"]
+          @response['droplet_sha1']
         end
 
         def buildpack_key
-          @response["buildpack_key"]
+          @response['buildpack_key']
         end
       end
     end

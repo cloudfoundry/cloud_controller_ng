@@ -1,7 +1,7 @@
 RSpec::Matchers.define :be_a_deprecated_response do |_|
   match do |actual|
-    unescaped_header = CGI.unescape(actual.headers["X-Cf-Warnings"])
-    unescaped_header == "Endpoint deprecated"
+    unescaped_header = CGI.unescape(actual.headers['X-Cf-Warnings'])
+    unescaped_header == 'Endpoint deprecated'
   end
 
   failure_message do |actual|

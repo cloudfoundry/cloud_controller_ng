@@ -1,17 +1,16 @@
-require "repositories/runtime/app_event_repository"
-require "repositories/runtime/space_event_repository"
-require "cloud_controller/rest_controller/object_renderer"
-require "cloud_controller/rest_controller/paginated_collection_renderer"
-require "cloud_controller/upload_handler"
-require "cloud_controller/blob_sender/ngx_blob_sender"
-require "cloud_controller/blob_sender/default_blob_sender"
-require "cloud_controller/blob_sender/missing_blob_handler"
-require "cloud_controller/diego/client"
-require "cloud_controller/diego/messenger"
-require "cloud_controller/diego/traditional/protocol"
+require 'repositories/runtime/app_event_repository'
+require 'repositories/runtime/space_event_repository'
+require 'cloud_controller/rest_controller/object_renderer'
+require 'cloud_controller/rest_controller/paginated_collection_renderer'
+require 'cloud_controller/upload_handler'
+require 'cloud_controller/blob_sender/ngx_blob_sender'
+require 'cloud_controller/blob_sender/default_blob_sender'
+require 'cloud_controller/blob_sender/missing_blob_handler'
+require 'cloud_controller/diego/client'
+require 'cloud_controller/diego/messenger'
+require 'cloud_controller/diego/traditional/protocol'
 
 module CloudController
-
   class DependencyLocator
     include Singleton
     include VCAP::CloudController
@@ -86,7 +85,7 @@ module CloudController
         droplets.fetch(:fog_connection),
         droplets.fetch(:droplet_directory_key),
         droplet_cdn,
-        "buildpack_cache"
+        'buildpack_cache'
       )
     end
 
@@ -122,7 +121,7 @@ module CloudController
     def buildpack_blobstore
       Blobstore::Client.new(
         @config[:buildpacks][:fog_connection],
-        @config[:buildpacks][:buildpack_directory_key] || "cc-buildpacks"
+        @config[:buildpacks][:buildpack_directory_key] || 'cc-buildpacks'
       )
     end
 

@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class AppEventsController < RestController::ModelController
     define_attributes do
-      to_one    :app
+      to_one :app
       attribute :instance_guid, String
       attribute :instance_index, Integer
       attribute :exit_status, Integer

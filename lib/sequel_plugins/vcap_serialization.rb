@@ -1,4 +1,4 @@
-require "multi_json"
+require 'multi_json'
 
 module Sequel::Plugins::VcapSerialization
   # This plugin implements serialization and deserialization of
@@ -14,7 +14,7 @@ module Sequel::Plugins::VcapSerialization
     # @return [Hash] The hash representation of the instance only containing
     # the attributes specified by export_attributes and the optional :only
     # parameter.
-    def to_hash(opts = {})
+    def to_hash(opts={})
       hash = {}
       redact_vals = opts[:redact]
       attrs = opts[:attrs] || self.class.export_attrs || []
@@ -26,7 +26,7 @@ module Sequel::Plugins::VcapSerialization
             hash[k.to_s] = nil
           else
             if !redact_vals.nil? && redact_vals.include?(k.to_s)
-              hash[k.to_s] = {redacted_message: '[PRIVATE DATA HIDDEN]'}
+              hash[k.to_s] = { redacted_message: '[PRIVATE DATA HIDDEN]' }
             else
               hash[k.to_s] = value
             end
@@ -43,7 +43,7 @@ module Sequel::Plugins::VcapSerialization
     #
     # @option opts [Array<String>] :only Only import an attribute if it is both
     # included in import_attributes and in the :only option.
-    def update_from_json(json, opts = {})
+    def update_from_json(json, opts={})
       parsed = MultiJson.load(json)
       update_from_hash(parsed, opts)
     end
@@ -55,7 +55,7 @@ module Sequel::Plugins::VcapSerialization
     #
     # @option opts [Array<String>] :only Only import an attribute if it is both
     # included in import_attributes and in the :only option.
-    def update_from_hash(hash, opts = {})
+    def update_from_hash(hash, opts={})
       update_opts = self.class.update_or_create_options(hash, opts)
 
       # Cannot use update(update_opts) because it does not
@@ -76,7 +76,7 @@ module Sequel::Plugins::VcapSerialization
     # both included in import_attributes and in the :only option.
     #
     # @return [Sequel::Model] The created model.
-    def create_from_json(json, opts = {})
+    def create_from_json(json, opts={})
       hash = MultiJson.load(json)
       create_from_hash(hash, opts)
     end
@@ -90,9 +90,9 @@ module Sequel::Plugins::VcapSerialization
     # both included in import_attributes and in the :only option.
     #
     # @return [Sequel::Model] The created model.
-    def create_from_hash(hash, opts = {})
+    def create_from_hash(hash, opts={})
       create_opts = update_or_create_options(hash, opts)
-      create {|instance| instance.set_all(create_opts) }
+      create { |instance| instance.set_all(create_opts) }
     end
 
     # Set the default order during a to_json on the model class.
@@ -114,12 +114,12 @@ module Sequel::Plugins::VcapSerialization
     def update_or_create_options(hash, opts)
       results = {}
       attrs = self.import_attrs || []
-      attrs = attrs - opts[:only] unless opts[:only].nil?
+      attrs -= opts[:only] unless opts[:only].nil?
       attrs.each do |attr|
         key = nil
-        if hash.has_key?(attr)
+        if hash.key?(attr)
           key = attr
-        elsif hash.has_key?(attr.to_s)
+        elsif hash.key?(attr.to_s)
           key = attr.to_s
         end
         results[attr] = hash[key] unless key.nil?

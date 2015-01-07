@@ -1,10 +1,10 @@
 module VCAP::CloudController
   class AppSummariesController < RestController::ModelController
     def self.dependencies
-      [ :instances_reporters ]
+      [:instances_reporters]
     end
 
-    path_base "apps"
+    path_base 'apps'
     model_class_name :App
 
     get "#{path_guid}/summary", :summary
@@ -24,7 +24,7 @@ module VCAP::CloudController
       MultiJson.dump(app_info)
 
     rescue Errors::InstancesUnavailable => e
-      raise VCAP::Errors::ApiError.new_from_details("InstancesUnavailable", e.to_s)
+      raise VCAP::Errors::ApiError.new_from_details('InstancesUnavailable', e.to_s)
     end
 
     protected

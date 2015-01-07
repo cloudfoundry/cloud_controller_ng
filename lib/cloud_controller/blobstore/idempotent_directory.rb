@@ -1,3 +1,4 @@
+# rubocop:disable Style/AccessorMethodName
 module CloudController
   module Blobstore
     class IdempotentDirectory
@@ -6,8 +7,9 @@ module CloudController
       end
 
       def get_or_create
-        @directory.get or @directory.create
+        @directory.get || @directory.create
       end
     end
   end
 end
+# rubocop:enable Style/AccessorMethodName

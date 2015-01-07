@@ -9,7 +9,6 @@ module VCAP::CloudController
           client.deprovision(service_instance)
         end
 
-
         def job_name_in_configuration
           :service_instance_deprovision
         end

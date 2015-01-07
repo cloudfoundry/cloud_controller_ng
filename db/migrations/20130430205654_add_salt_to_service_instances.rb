@@ -1,4 +1,4 @@
-require "cloud_controller/encryptor"
+require 'cloud_controller/encryptor'
 
 Sequel.migration do
   up do
@@ -8,17 +8,17 @@ Sequel.migration do
 
     self[:service_instances].each do |service_instance|
       generated_salt = VCAP::CloudController::Encryptor.generate_salt
-      self[:service_instances].filter(:id => service_instance[:id]).update(
-        :salt => generated_salt,
-        :credentials => VCAP::CloudController::Encryptor.encrypt(service_instance[:credentials], generated_salt)
+      self[:service_instances].filter(id: service_instance[:id]).update(
+        salt: generated_salt,
+        credentials: VCAP::CloudController::Encryptor.encrypt(service_instance[:credentials], generated_salt)
       )
     end
   end
 
   down do
     self[:service_instances].each do |service_instance|
-      self[:service_instances].filter(:id => service_instance[:id]).update(
-        :credentials => VCAP::CloudController::Encryptor.decrypt(service_instance[:credentials], service_instance[:salt])
+      self[:service_instances].filter(id: service_instance[:id]).update(
+        credentials: VCAP::CloudController::Encryptor.decrypt(service_instance[:credentials], service_instance[:salt])
       )
     end
 

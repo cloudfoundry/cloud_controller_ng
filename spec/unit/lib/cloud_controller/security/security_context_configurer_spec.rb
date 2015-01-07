@@ -7,17 +7,17 @@ module VCAP::CloudController
       let(:configurer) { SecurityContextConfigurer.new(token_decoder) }
       let(:token_decoder) { double(VCAP::UaaTokenDecoder) }
 
-      describe "#configure" do
-        let(:auth_token) { "auth-token" }
-        let(:token_information) { {"user_id" => user_guid} }
-        let(:user_guid) { "user-id-1" }
+      describe '#configure' do
+        let(:auth_token) { 'auth-token' }
+        let(:token_information) { { 'user_id' => user_guid } }
+        let(:user_guid) { 'user-id-1' }
 
         before do
           allow(token_decoder).to receive(:decode_token).with(auth_token).and_return(token_information)
         end
 
         it 'initially clears the security context token' do
-          SecurityContext.set("foo", "bar")
+          SecurityContext.set('foo', 'bar')
           allow(token_decoder).to receive(:decode_token).with(auth_token).and_raise('BOGUS_TEST_ERROR')
           expect {
             configurer.configure(auth_token)
@@ -32,10 +32,10 @@ module VCAP::CloudController
         end
 
         context 'when a user_id is present' do
-          let(:token_information) { {"user_id" => user_guid, "client_id" => "foobar"} }
+          let(:token_information) { { 'user_id' => user_guid, 'client_id' => 'foobar' } }
 
           context 'when the specified user already exists' do
-            let!(:user) { User.make(:guid => user_guid) }
+            let!(:user) { User.make(guid: user_guid) }
 
             it 'sets that user on security context' do
               configurer.configure(auth_token)
@@ -55,7 +55,7 @@ module VCAP::CloudController
 
           context 'when the specified user is created after verifying it does not exist' do
             it 'finds the created user' do
-              user = User.make(:guid => user_guid)
+              User.make(guid: user_guid)
               allow(User).to receive(:find) do
                 allow(User).to receive(:find).and_call_original
                 nil
@@ -67,8 +67,8 @@ module VCAP::CloudController
         end
 
         context 'when only a client_id is present' do
-          let(:token_information) { {"client_id" => user_guid} }
-          let!(:user) { User.make(:guid => user_guid) }
+          let(:token_information) { { 'client_id' => user_guid } }
+          let!(:user) { User.make(guid: user_guid) }
 
           it 'uses the client_id to set the user_id' do
             configurer.configure(auth_token)
@@ -89,7 +89,7 @@ module VCAP::CloudController
         context 'when the auth_token is invalid or expired' do
           before do
             allow(token_decoder).to receive(:decode_token).with(auth_token).and_raise(VCAP::UaaTokenDecoder::BadToken)
-            SecurityContext.set("value", "another")
+            SecurityContext.set('value', 'another')
           end
 
           it 'sets the SecurityContext user and token to error values' do
@@ -102,7 +102,7 @@ module VCAP::CloudController
         context 'when the decoded token is nil' do
           before do
             allow(token_decoder).to receive(:decode_token).with(auth_token).and_return(nil)
-            SecurityContext.set("value", "another")
+            SecurityContext.set('value', 'another')
           end
 
           it 'clears the SecurityContext and does not raise' do

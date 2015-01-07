@@ -3,8 +3,8 @@ require 'ext/validation_error_message_overrides'
 require 'vcap/rest_api/message'
 
 describe ::Membrane::Schemas::Regexp::MatchValidator do
-  describe "#fail" do
-    let(:object) { "some-string" }
+  describe '#fail' do
+    let(:object) { 'some-string' }
 
     subject { described_class.new(regexp, object) }
 
@@ -21,7 +21,7 @@ describe ::Membrane::Schemas::Regexp::MatchValidator do
       let(:regexp) { ::VCAP::RestAPI::Message::URL }
 
       it 'generates a readable message' do
-        expected_emsg = "must be a valid URL"
+        expected_emsg = 'must be a valid URL'
         expect { subject.fail!(regexp, object) }.to raise_error(::Membrane::SchemaValidationError, /#{expected_emsg}/)
       end
     end
@@ -30,7 +30,7 @@ describe ::Membrane::Schemas::Regexp::MatchValidator do
       let(:regexp) { ::VCAP::RestAPI::Message::HTTPS_URL }
 
       it 'generates a readable message' do
-        expected_emsg = "must be a valid HTTPS URL"
+        expected_emsg = 'must be a valid HTTPS URL'
         expect { subject.fail!(regexp, object) }.to raise_error(::Membrane::SchemaValidationError, /#{expected_emsg}/)
       end
     end
@@ -39,7 +39,7 @@ describe ::Membrane::Schemas::Regexp::MatchValidator do
       let(:regexp) { ::VCAP::RestAPI::Message::EMAIL }
 
       it 'generates a readable message' do
-        expected_emsg = "must be a valid email"
+        expected_emsg = 'must be a valid email'
         expect { subject.fail!(regexp, object) }.to raise_error(::Membrane::SchemaValidationError, /#{expected_emsg}/)
       end
     end
@@ -48,7 +48,7 @@ describe ::Membrane::Schemas::Regexp::MatchValidator do
       let(:regexp) { ::VCAP::RestAPI::Message::GIT_URL }
 
       it 'generates a readable message' do
-        expected_emsg = "must be a valid git URL"
+        expected_emsg = 'must be a valid git URL'
         expect { subject.fail!(regexp, object) }.to raise_error(::Membrane::SchemaValidationError, /#{expected_emsg}/)
       end
     end

@@ -4,7 +4,7 @@ module VCAP::CloudController
       log_messages << message
     end
 
-    def debug(message, _ = nil)
+    def debug(message, _=nil)
       log_messages << message
     end
 

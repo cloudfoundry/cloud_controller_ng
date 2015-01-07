@@ -25,27 +25,27 @@ module VCAP::CloudController
       validates_presence :app_plan_name
       validates_presence :app_memory
       validates_presence :app_instance_count
-      validates_unique   :app_run_id
+      validates_unique :app_run_id
     end
 
     def event_type
-      "app_start"
+      'app_start'
     end
 
     def self.create_from_app(app)
       return unless app.space.organization.billing_enabled?
       AppStartEvent.create(
-        :timestamp => Time.now,
-        :organization_guid => app.space.organization_guid,
-        :organization_name => app.space.organization.name,
-        :space_guid => app.space.guid,
-        :space_name => app.space.name,
-        :app_guid => app.guid,
-        :app_name => app.name,
-        :app_run_id => SecureRandom.uuid,
-        :app_plan_name => app.production ? "paid" : "free",
-        :app_memory => app.memory,
-        :app_instance_count => app.instances,
+        timestamp: Time.now,
+        organization_guid: app.space.organization_guid,
+        organization_name: app.space.organization.name,
+        space_guid: app.space.guid,
+        space_name: app.space.name,
+        app_guid: app.guid,
+        app_name: app.name,
+        app_run_id: SecureRandom.uuid,
+        app_plan_name: app.production ? 'paid' : 'free',
+        app_memory: app.memory,
+        app_instance_count: app.instances,
       )
     end
   end

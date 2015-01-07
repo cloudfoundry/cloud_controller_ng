@@ -2,7 +2,6 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe AppMemoryCalculator do
-
     subject { described_class.new(app) }
     let(:app) { AppFactory.make(package_hash: 'made-up-hash') }
     let(:stopped_state) { 'STOPPED' }
@@ -108,7 +107,7 @@ module VCAP::CloudController
         it 'returns the memory * instances of the db row' do
           expected      = app.instances * app.memory
           app.instances += 5
-          app.memory    +=100
+          app.memory += 100
 
           expect(subject.currently_used_memory).to eq(expected)
         end

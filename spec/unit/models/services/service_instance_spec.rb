@@ -1,10 +1,10 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe ServiceInstance, type: :model do
     let(:service_instance_attrs)  do
       {
-        name: "my favorite service",
+        name: 'my favorite service',
         space: VCAP::CloudController::Space.make
       }
     end
@@ -13,9 +13,9 @@ module VCAP::CloudController
 
     it { is_expected.to have_timestamp_columns }
 
-    describe "Associations" do
-      describe "service_plan_sti_eager_load" do
-        it "eager loads successfuly" do
+    describe 'Associations' do
+      describe 'service_plan_sti_eager_load' do
+        it 'eager loads successfuly' do
           service_plan = ServicePlan.make.reload
           instance1 = ManagedServiceInstance.make(service_plan: service_plan)
           instance2 = ManagedServiceInstance.make
@@ -25,7 +25,7 @@ module VCAP::CloudController
           }.to have_queried_db_times(/service_plans/i, 1)
 
           expect {
-            eager_loaded_instances.each { |instance| instance.service_plan }
+            eager_loaded_instances.each(&:service_plan)
           }.to have_queried_db_times(//i, 0)
 
           found_instance1 = eager_loaded_instances.detect { |instance| instance.id == instance1.id }
@@ -35,69 +35,69 @@ module VCAP::CloudController
         end
       end
 
-      describe "changing space" do
-        it "fails when existing service bindings are in a different space" do
+      describe 'changing space' do
+        it 'fails when existing service bindings are in a different space' do
           service_instance.add_service_binding(ServiceBinding.make(service_instance: service_instance))
-          expect{service_instance.space = Space.make}.to raise_error ServiceInstance::InvalidServiceBinding
+          expect { service_instance.space = Space.make }.to raise_error ServiceInstance::InvalidServiceBinding
         end
       end
     end
 
-    describe "#create" do
-      context "when the name is longer than 50 characters" do
-        let(:very_long_name){ 's' * 51 }
-        it "refuses to create this service instance" do
+    describe '#create' do
+      context 'when the name is longer than 50 characters' do
+        let(:very_long_name) { 's' * 51 }
+        it 'refuses to create this service instance' do
           service_instance_attrs[:name] = very_long_name
-          expect {service_instance}.to raise_error Sequel::ValidationFailed
+          expect { service_instance }.to raise_error Sequel::ValidationFailed
         end
       end
 
-      describe "when is_gateway_service is false" do
-        it "returns a UserProvidedServiceInstance" do
+      describe 'when is_gateway_service is false' do
+        it 'returns a UserProvidedServiceInstance' do
           service_instance_attrs[:is_gateway_service] = false
           service_instance = described_class.create(service_instance_attrs)
           expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::UserProvidedServiceInstance)
         end
       end
 
-      describe "when is_gateway_service is true" do
-        it "returns a ManagedServiceInstance" do
+      describe 'when is_gateway_service is true' do
+        it 'returns a ManagedServiceInstance' do
           service_instance_attrs[:is_gateway_service] = true
           service_instance = described_class.create(service_instance_attrs)
           expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::ManagedServiceInstance)
         end
       end
 
-      describe "when two are created with the same name" do
-        describe "when a UserProvidedServiceInstance exists" do
+      describe 'when two are created with the same name' do
+        describe 'when a UserProvidedServiceInstance exists' do
           before { UserProvidedServiceInstance.create(service_instance_attrs) }
 
-          it "raises an exception when creating another UserProvidedServiceInstance" do
+          it 'raises an exception when creating another UserProvidedServiceInstance' do
             expect {
               UserProvidedServiceInstance.create(service_instance_attrs)
             }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
           end
 
-          it "raises an exception when creating a ManagedServiceInstance" do
+          it 'raises an exception when creating a ManagedServiceInstance' do
             expect {
               ManagedServiceInstance.create(service_instance_attrs)
             }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
           end
         end
 
-        describe "when a ManagedServiceInstance exists" do
+        describe 'when a ManagedServiceInstance exists' do
           before do
             service_plan = ServicePlan.make.reload
             ManagedServiceInstance.create(service_instance_attrs.merge(service_plan: service_plan))
           end
 
-          it "raises an exception when creating another ManagedServiceInstance" do
+          it 'raises an exception when creating another ManagedServiceInstance' do
             expect {
               ManagedServiceInstance.create(service_instance_attrs)
             }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
           end
 
-          it "raises an exception when creating a UserProvidedServiceInstance" do
+          it 'raises an exception when creating a UserProvidedServiceInstance' do
             expect {
               UserProvidedServiceInstance.create(service_instance_attrs)
             }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
@@ -106,12 +106,12 @@ module VCAP::CloudController
       end
     end
 
-    describe "#destroy" do
+    describe '#destroy' do
       it 'creates a DELETED service usage event' do
         service_instance
         expect {
           service_instance.destroy
-        }.to change{ServiceUsageEvent.count}.by(1)
+        }.to change { ServiceUsageEvent.count }.by(1)
         event = ServiceUsageEvent.last
         expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(service_instance)
@@ -132,18 +132,18 @@ module VCAP::CloudController
       end
     end
 
-    it_behaves_like "a model with an encrypted attribute" do
+    it_behaves_like 'a model with an encrypted attribute' do
       let(:encrypted_attr) { :credentials }
       let(:attr_salt) { :salt }
     end
 
-    describe "#type" do
-      it "returns the model name for API consumption" do
+    describe '#type' do
+      it 'returns the model name for API consumption' do
         managed_instance = VCAP::CloudController::ManagedServiceInstance.new
-        expect(managed_instance.type).to eq "managed_service_instance"
+        expect(managed_instance.type).to eq 'managed_service_instance'
 
         user_provided_instance = VCAP::CloudController::UserProvidedServiceInstance.new
-        expect(user_provided_instance.type).to eq "user_provided_service_instance"
+        expect(user_provided_instance.type).to eq 'user_provided_service_instance'
       end
     end
 
@@ -183,30 +183,30 @@ module VCAP::CloudController
       end
     end
 
-    describe "#to_hash" do
-      let(:opts)      { {attrs: [:credentials]}}
+    describe '#to_hash' do
+      let(:opts)      { { attrs: [:credentials] } }
       let(:developer) { make_developer_for_space(service_instance.space) }
       let(:auditor)   { make_auditor_for_space(service_instance.space) }
       let(:user)      { make_user_for_space(service_instance.space) }
 
-      it "does not redact creds for an admin" do
+      it 'does not redact creds for an admin' do
         allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
-        expect(service_instance.to_hash['credentials']).not_to eq({ :redacted_message => '[PRIVATE DATA HIDDEN]' })
+        expect(service_instance.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
       end
 
-      it "does not redact creds for a space developer" do
+      it 'does not redact creds for a space developer' do
         allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
-        expect(service_instance.to_hash['credentials']).not_to eq({ :redacted_message => '[PRIVATE DATA HIDDEN]' })
+        expect(service_instance.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
       end
 
-      it "redacts creds for a space auditor" do
+      it 'redacts creds for a space auditor' do
         allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(auditor)
-        expect(service_instance.to_hash(opts)['credentials']).to eq({ :redacted_message => '[PRIVATE DATA HIDDEN]' })
+        expect(service_instance.to_hash(opts)['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
       end
 
-      it "redacts creds for a space user" do
+      it 'redacts creds for a space user' do
         allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user)
-        expect(service_instance.to_hash(opts)['credentials']).to eq({ :redacted_message => '[PRIVATE DATA HIDDEN]' })
+        expect(service_instance.to_hash(opts)['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
       end
     end
   end

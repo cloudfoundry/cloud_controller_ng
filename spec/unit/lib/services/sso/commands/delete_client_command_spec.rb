@@ -10,7 +10,7 @@ module VCAP::Services::SSO::Commands
       it 'renders the correct hash request to delete in a UAA transaction' do
         uaa_command = command.uaa_command
 
-        expect(uaa_command).to eq({action: 'delete'})
+        expect(uaa_command).to eq({ action: 'delete' })
       end
     end
   end

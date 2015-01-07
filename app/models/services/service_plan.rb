@@ -1,8 +1,8 @@
 module VCAP::CloudController
   class ServicePlan < Sequel::Model
-    many_to_one       :service
-    one_to_many       :service_instances
-    one_to_many       :service_plan_visibilities
+    many_to_one :service
+    one_to_many :service_instances
+    one_to_many :service_plan_visibilities
 
     add_association_dependencies service_plan_visibilities: :destroy
 
@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public
 
-    strip_attributes  :name
+    strip_attributes :name
 
     delegate :client, to: :service
 
@@ -22,14 +22,14 @@ module VCAP::CloudController
       validates_presence :free,                message: 'is required'
       validates_presence :service,             message: 'is required'
       validates_presence :unique_id,           message: 'is required'
-      validates_unique   [:service_id, :name], message: Sequel.lit('Plan names must be unique within a service')
-      validates_unique   :unique_id,           message: Sequel.lit('Plan ids must be unique')
+      validates_unique [:service_id, :name], message: Sequel.lit('Plan names must be unique within a service')
+      validates_unique :unique_id,           message: Sequel.lit('Plan ids must be unique')
     end
 
     def_dataset_method(:organization_visible) do |organization|
       filter(Sequel.|(
-        {public: true},
-        {id: ServicePlanVisibility.visible_private_plan_ids_for_organization(organization)}
+        { public: true },
+        { id: ServicePlanVisibility.visible_private_plan_ids_for_organization(organization) }
       ).&(active: true))
     end
 

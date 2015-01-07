@@ -19,7 +19,6 @@ module VCAP::CloudController
       update(changes, :state)
     end
 
-
     def undo_scale(changes)
       instances = changes[:instances]
       return false if instances.nil? || instances[0] >= instances[1]
@@ -32,17 +31,17 @@ module VCAP::CloudController
       where_columns[key] = changes[key][1]
       where_columns[:updated_at] = changes[:updated_at][1]
 
-      update_columns = { key => changes[key][0]}
+      update_columns = { key => changes[key][0] }
 
-      count = App.dataset.where(where_columns).update(update_columns)      
+      count = App.dataset.where(where_columns).update(update_columns)
       app.refresh
-      logger.warn("app.rollback.failed", guid: app.guid, self: app.inspect, to: update_columns) if count == 0
+      logger.warn('app.rollback.failed', guid: app.guid, self: app.inspect, to: update_columns) if count == 0
 
-      return count == 1
+      count == 1
     end
 
     def logger
-       @logger ||= Steno.logger("cc.undo_app_changes")
+      @logger ||= Steno.logger('cc.undo_app_changes')
     end
   end
 end

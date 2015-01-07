@@ -56,5 +56,4 @@ describe HttpResponseError do
       })
     end
   end
-
 end

@@ -19,6 +19,6 @@ Sequel.migration do
   end
 
   down do
-    raise Sequel::Error, "This migration cannot be reversed."
+    raise Sequel::Error.new('This migration cannot be reversed.')
   end
 end

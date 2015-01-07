@@ -1,69 +1,69 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::LegacyServiceGateway, :services do
-    describe "Gateway facing apis" do
+    describe 'Gateway facing apis' do
       def build_offering(attrs={})
         defaults = {
-          :label => "foobar-1.0",
-          :url   => "https://www.google.com",
-          :supported_versions => ["1.0", "2.0"],
-          :version_aliases => {"current" => "2.0"},
-          :description => "the foobar svc",
+          label: 'foobar-1.0',
+          url: 'https://www.google.com',
+          supported_versions: ['1.0', '2.0'],
+          version_aliases: { 'current' => '2.0' },
+          description: 'the foobar svc',
         }
         VCAP::Services::Api::ServiceOfferingRequest.new(defaults.merge(attrs))
       end
 
-      describe "POST services/v1/offerings" do
-        let(:path) { "services/v1/offerings" }
+      describe 'POST services/v1/offerings' do
+        let(:path) { 'services/v1/offerings' }
 
         let(:auth_header) do
           ServiceAuthToken.create(
-            :label    => "foobar",
-            :provider => "core",
-            :token    => "foobar",
+            label: 'foobar',
+            provider: 'core',
+            token: 'foobar',
           )
 
-          { "HTTP_X_VCAP_SERVICE_TOKEN" => "foobar" }
+          { 'HTTP_X_VCAP_SERVICE_TOKEN' => 'foobar' }
         end
 
         let(:foo_bar_dash_offering) do
           VCAP::Services::Api::ServiceOfferingRequest.new(
-            :label => "foo-bar-1.0",
-            :url   => "https://www.google.com",
-            :supported_versions => ["1.0", "2.0"],
-            :version_aliases => {"current" => "2.0"},
-            :description => "the foobar svc")
+            label: 'foo-bar-1.0',
+            url: 'https://www.google.com',
+            supported_versions: ['1.0', '2.0'],
+            version_aliases: { 'current' => '2.0' },
+            description: 'the foobar svc')
         end
 
-        it "should reject requests without auth tokens" do
+        it 'should reject requests without auth tokens' do
           post path, build_offering.encode, json_headers({})
           expect(last_response.status).to eq(403)
         end
 
-        it "should should reject posts with malformed bodies" do
-          post path, MultiJson.dump(:bla => "foobar"), json_headers(auth_header)
+        it 'should should reject posts with malformed bodies' do
+          post path, MultiJson.dump(bla: 'foobar'), json_headers(auth_header)
           expect(last_response.status).to eq(400)
         end
 
-        it "should reject requests with missing parameters" do
-          msg = { :label => "foobar-2.2",
-                  :description => "the foobar svc" }
+        it 'should reject requests with missing parameters' do
+          msg = { label: 'foobar-2.2',
+                  description: 'the foobar svc' }
           post path, MultiJson.dump(msg), json_headers(auth_header)
           expect(last_response.status).to eq(400)
         end
 
-        it "should reject requests with extra dash in label" do
+        it 'should reject requests with extra dash in label' do
           post path, foo_bar_dash_offering.encode, json_headers(auth_header)
           expect(last_response.status).to eq(400)
         end
 
-        it "should create service offerings for label/provider services" do
+        it 'should create service offerings for label/provider services' do
           post path, build_offering.encode, json_headers(auth_header)
           expect(last_response.status).to eq(200)
-          svc = Service.find(:label => "foobar", :provider => "core")
+          svc = Service.find(label: 'foobar', provider: 'core')
           expect(svc).not_to be_nil
-          expect(svc.version).to eq("2.0")
+          expect(svc.version).to eq('2.0')
         end
 
         it "should create services with 'extra' data" do
@@ -73,431 +73,429 @@ module VCAP::CloudController
           post path, o.encode, json_headers(auth_header)
 
           expect(last_response.status).to eq(200)
-          service = Service[:label => "foobar", :provider => "core"]
+          service = Service[label: 'foobar', provider: 'core']
           expect(service.extra).to eq(extra_data)
         end
 
-        it "should set bindable to true" do
+        it 'should set bindable to true' do
           post path, build_offering.encode, json_headers(auth_header)
 
           expect(last_response.status).to eq(200)
-          service = Service[:label => "foobar", :provider => "core"]
+          service = Service[label: 'foobar', provider: 'core']
           expect(service.bindable).to eq(true)
         end
 
-        shared_examples_for "offering containing service plans" do
-          it "should create service plans" do
+        shared_examples_for 'offering containing service plans' do
+          it 'should create service plans' do
             post path, both_plans.encode, json_headers(auth_header)
 
-            service = Service[:label => "foobar", :provider => "core"]
-            expect(service.service_plans.map(&:name)).to include("free", "nonfree")
+            service = Service[label: 'foobar', provider: 'core']
+            expect(service.service_plans.map(&:name)).to include('free', 'nonfree')
           end
 
-          it "should update service plans" do
+          it 'should update service plans' do
             post path, just_free_plan.encode, json_headers(auth_header)
             post path, both_plans.encode, json_headers(auth_header)
 
-            service = Service[:label => "foobar", :provider => "core"]
-            expect(service.service_plans.map(&:name)).to include("free", "nonfree")
+            service = Service[label: 'foobar', provider: 'core']
+            expect(service.service_plans.map(&:name)).to include('free', 'nonfree')
           end
 
-          it "should remove plans not posted" do
+          it 'should remove plans not posted' do
             post path, both_plans.encode, json_headers(auth_header)
             post path, just_free_plan.encode, json_headers(auth_header)
 
-            service = Service[:label => "foobar", :provider => "core"]
-            expect(service.service_plans.map(&:name)).to eq(["free"])
+            service = Service[label: 'foobar', provider: 'core']
+            expect(service.service_plans.map(&:name)).to eq(['free'])
           end
         end
 
         context "using the deprecated 'plans' key" do
-          it_behaves_like "offering containing service plans" do
-            let(:just_free_plan) { build_offering(plans: %w[free]) }
-            let(:both_plans)     { build_offering(plans: %w[free nonfree]) }
+          it_behaves_like 'offering containing service plans' do
+            let(:just_free_plan) { build_offering(plans: %w(free)) }
+            let(:both_plans)     { build_offering(plans: %w(free nonfree)) }
           end
         end
 
         context "using the 'plan_details' key" do
-          let(:just_free_plan) { build_offering(plan_details: [{"name" => "free", "free" => true}]) }
+          let(:just_free_plan) { build_offering(plan_details: [{ 'name' => 'free', 'free' => true }]) }
           let(:both_plans) {
             build_offering(
               plan_details: [
-                {"name" => "free",    "free" => true},
-                {"name" => "nonfree", "free" => false},
+                { 'name' => 'free',    'free' => true },
+                { 'name' => 'nonfree', 'free' => false },
               ]
             )
           }
 
-          it_behaves_like "offering containing service plans"
+          it_behaves_like 'offering containing service plans'
 
-          it "puts the details into the db" do
+          it 'puts the details into the db' do
             offer = build_offering(
               plan_details: [
                 {
-                  "name"        => "freeplan",
-                  "free"        => true,
-                  "description" => "free plan",
-                  "extra"       => "extra info",
+                  'name'        => 'freeplan',
+                  'free'        => true,
+                  'description' => 'free plan',
+                  'extra'       => 'extra info',
                 }
               ]
             )
             post path, offer.encode, json_headers(auth_header)
             expect(last_response.status).to eq(200)
 
-            service = Service[:label => "foobar", :provider => "core"]
+            service = Service[label: 'foobar', provider: 'core']
             expect(service.service_plans).to have(1).entries
-            expect(service.service_plans.first.description).to eq("free plan")
-            expect(service.service_plans.first.name).to eq("freeplan")
+            expect(service.service_plans.first.description).to eq('free plan')
+            expect(service.service_plans.first.name).to eq('freeplan')
             expect(service.service_plans.first.free).to eq(true)
-            expect(service.service_plans.first.extra).to eq("extra info")
+            expect(service.service_plans.first.extra).to eq('extra info')
           end
 
-          it "does not add plans with identical names but different freeness under the same service" do
+          it 'does not add plans with identical names but different freeness under the same service' do
             post path, just_free_plan.encode, json_headers(auth_header)
             expect(last_response.status).to eq(200)
 
-            offer2 = build_offering(plan_details: [{"name" => "free", "free" => false, "description" => "tetris"}])
+            offer2 = build_offering(plan_details: [{ 'name' => 'free', 'free' => false, 'description' => 'tetris' }])
             post path, offer2.encode, json_headers(auth_header)
             expect(last_response.status).to eq(200)
 
-            service = Service[:label => "foobar", :provider => "core"]
+            service = Service[label: 'foobar', provider: 'core']
             expect(service).to have(1).service_plans
-            expect(service.service_plans.first.description).to eq("tetris")
+            expect(service.service_plans.first.description).to eq('tetris')
             expect(service.service_plans.first.free).to eq(false)
           end
 
-          it "prevents the request from setting the plan guid" do
+          it 'prevents the request from setting the plan guid' do
             offer = build_offering(
-              plan_details:[{"name" => "plan name", "free" => true, "guid" => "myguid"}]
+              plan_details: [{ 'name' => 'plan name', 'free' => true, 'guid' => 'myguid' }]
             )
             post path, offer.encode, json_headers(auth_header)
             expect(last_response.status).to eq(200)
 
-            service = Service[:label => "foobar", :provider => "core"]
+            service = Service[label: 'foobar', provider: 'core']
             expect(service).to have(1).service_plans
-            expect(service.service_plans.first.guid).not_to eq("myguid")
+            expect(service.service_plans.first.guid).not_to eq('myguid')
           end
         end
 
         context "using both the 'plan_details' key and the deprecated 'plans' key" do
-          it_behaves_like "offering containing service plans" do
+          it_behaves_like 'offering containing service plans' do
             let(:just_free_plan) {
               build_offering(
-                plan_details: [{"name" => "free", "free" => true}],
-                plans: %w[free],
+                plan_details: [{ 'name' => 'free', 'free' => true }],
+                plans: %w(free),
               )
             }
 
             let(:both_plans) {
               build_offering(
                 plan_details: [
-                  {"name" => "free",    "free" => true},
-                  {"name" => "nonfree", "free" => false},
+                  { 'name' => 'free',    'free' => true },
+                  { 'name' => 'nonfree', 'free' => false },
                 ],
-                plans: %w[free nonfree],
+                plans: %w(free nonfree),
               )
             }
           end
         end
 
-        it "should update service offerings for label/provider services" do
+        it 'should update service offerings for label/provider services' do
           post path, build_offering.encode, json_headers(auth_header)
           offer = build_offering
-          offer.url = "http://newurl.com"
+          offer.url = 'http://newurl.com'
           post path, offer.encode, json_headers(auth_header)
           expect(last_response.status).to eq(200)
-          svc = Service.find(:label => "foobar", :provider => "core")
+          svc = Service.find(label: 'foobar', provider: 'core')
           expect(svc).not_to be_nil
-          expect(svc.url).to eq("http://newurl.com")
+          expect(svc.url).to eq('http://newurl.com')
         end
       end
 
-      describe "GET services/v1/offerings/:label_and_version(/:provider)" do
+      describe 'GET services/v1/offerings/:label_and_version(/:provider)' do
         before :each do
           @svc1 = Service.make(
-            :label => "foobar",
-            :url => "http://www.google.com",
-            :provider => "core",
+            label: 'foobar',
+            url: 'http://www.google.com',
+            provider: 'core',
           )
           ServicePlan.make(
-            :name => "free",
-            :service => @svc1,
+            name: 'free',
+            service: @svc1,
           )
           ServicePlan.make(
-            :name => "nonfree",
-            :service => @svc1,
+            name: 'nonfree',
+            service: @svc1,
           )
           @svc2 = Service.make(
-            :label => "foobar",
-            :url => "http://www.google.com",
-            :provider => "test",
+            label: 'foobar',
+            url: 'http://www.google.com',
+            provider: 'test',
           )
           ServicePlan.make(
-            :name => "free",
-            :service => @svc2,
+            name: 'free',
+            service: @svc2,
           )
           ServicePlan.make(
-            :name => "nonfree",
-            :service => @svc2,
+            name: 'nonfree',
+            service: @svc2,
           )
         end
 
-        let(:auth_header) { {"HTTP_X_VCAP_SERVICE_TOKEN" => @svc1.service_auth_token.token} }
+        let(:auth_header) { { 'HTTP_X_VCAP_SERVICE_TOKEN' => @svc1.service_auth_token.token } }
 
-        it "should return not found for unknown label services" do
-          get "services/v1/offerings/xxx", {}, auth_header
+        it 'should return not found for unknown label services' do
+          get 'services/v1/offerings/xxx', {}, auth_header
           expect(last_response.status).to eq(403)
         end
 
-        it "should return not found for unknown provider services" do
-          get "services/v1/offerings/foobar-version/xxx", {}, auth_header
+        it 'should return not found for unknown provider services' do
+          get 'services/v1/offerings/foobar-version/xxx', {}, auth_header
           expect(last_response.status).to eq(403)
         end
 
-        it "should return not authorized on token mismatch" do
-          get "services/v1/offerings/foobar-version", {}, {
-            "HTTP_X_VCAP_SERVICE_TOKEN" => "xxx",
+        it 'should return not authorized on token mismatch' do
+          get 'services/v1/offerings/foobar-version', {}, {
+            'HTTP_X_VCAP_SERVICE_TOKEN' => 'xxx',
           }
           expect(last_response.status).to eq(403)
         end
 
-        it "should return the specific service offering which has null provider" do
-          get "services/v1/offerings/foobar-version", {}, auth_header
+        it 'should return the specific service offering which has null provider' do
+          get 'services/v1/offerings/foobar-version', {}, auth_header
           expect(last_response.status).to eq(200)
 
           resp = MultiJson.load(last_response.body)
-          expect(resp["label"]).to eq("foobar")
-          expect(resp["url"]).to   eq("http://www.google.com")
-          expect(resp["plans"].sort).to eq(%w[free nonfree])
-          expect(resp["provider"]).to eq("core")
+          expect(resp['label']).to eq('foobar')
+          expect(resp['url']).to eq('http://www.google.com')
+          expect(resp['plans'].sort).to eq(%w(free nonfree))
+          expect(resp['provider']).to eq('core')
         end
 
-        it "should return the specific service offering which has specific provider" do
-          get "services/v1/offerings/foobar-version/test", {}, {"HTTP_X_VCAP_SERVICE_TOKEN" => @svc2.service_auth_token.token}
+        it 'should return the specific service offering which has specific provider' do
+          get 'services/v1/offerings/foobar-version/test', {}, { 'HTTP_X_VCAP_SERVICE_TOKEN' => @svc2.service_auth_token.token }
           expect(last_response.status).to eq(200)
 
           resp = MultiJson.load(last_response.body)
-          expect(resp["label"]).to eq("foobar")
-          expect(resp["url"]).to   eq("http://www.google.com")
-          expect(resp["plans"].sort).to eq(%w[free nonfree])
-          expect(resp["provider"]).to eq("test")
+          expect(resp['label']).to eq('foobar')
+          expect(resp['url']).to eq('http://www.google.com')
+          expect(resp['plans'].sort).to eq(%w(free nonfree))
+          expect(resp['provider']).to eq('test')
         end
       end
 
-      describe "GET services/v1/offerings/:label_and_version(/:provider)/handles" do
-        let!(:svc1) { Service.make(:label => "foobar", :version => "1.0", :provider => "core") }
-        let!(:svc2) { Service.make(:label => "foobar", :version => "1.0", :provider => "test") }
+      describe 'GET services/v1/offerings/:label_and_version(/:provider)/handles' do
+        let!(:svc1) { Service.make(label: 'foobar', version: '1.0', provider: 'core') }
+        let!(:svc2) { Service.make(label: 'foobar', version: '1.0', provider: 'test') }
 
         before do
-          plan1 = ServicePlan.make(:service => svc1)
-          plan2 = ServicePlan.make(:service => svc2)
+          plan1 = ServicePlan.make(service: svc1)
+          plan2 = ServicePlan.make(service: svc2)
 
           cfg1 = ManagedServiceInstance.make(
-            :name => "bar1",
-            :service_plan => plan1
+            name: 'bar1',
+            service_plan: plan1
           )
-          cfg1.gateway_name = "foo1"
-          cfg1.gateway_data = { :config => "foo1" }
+          cfg1.gateway_name = 'foo1'
+          cfg1.gateway_data = { config: 'foo1' }
           cfg1.save
 
           cfg2 = ManagedServiceInstance.make(
-            :name => "bar2",
-            :service_plan => plan2
+            name: 'bar2',
+            service_plan: plan2
           )
-          cfg2.gateway_name = "foo2"
-          cfg2.gateway_data = { :config => "foo2" }
+          cfg2.gateway_name = 'foo2'
+          cfg2.gateway_data = { config: 'foo2' }
           cfg2.save
 
           ServiceBinding.make(
-            :gateway_name => "bind1",
-            :service_instance  => cfg1,
-            :gateway_data => { :config => "bind1" },
-            :credentials => {}
+            gateway_name: 'bind1',
+            service_instance: cfg1,
+            gateway_data: { config: 'bind1' },
+            credentials: {}
           )
           ServiceBinding.make(
-            :gateway_name  => "bind2",
-            :service_instance  => cfg2,
-            :gateway_data => { :config => "bind2" },
-            :credentials => {}
+            gateway_name: 'bind2',
+            service_instance: cfg2,
+            gateway_data: { config: 'bind2' },
+            credentials: {}
           )
         end
 
-        it "should return not found for unknown services" do
-          get "services/v1/offerings/xxx-version/handles"
+        it 'should return not found for unknown services' do
+          get 'services/v1/offerings/xxx-version/handles'
           expect(last_response.status).to eq(404)
         end
 
-        it "should return not found for unknown services with a provider" do
-          get "services/v1/offerings/xxx-version/fooprovider/handles"
+        it 'should return not found for unknown services with a provider' do
+          get 'services/v1/offerings/xxx-version/fooprovider/handles'
           expect(last_response.status).to eq(404)
         end
 
-        it "rejects requests with mismatching tokens" do
-          get "/services/v1/offerings/foobar-version/handles", {}, {
-            "HTTP_X_VCAP_SERVICE_TOKEN" => "xxx",
+        it 'rejects requests with mismatching tokens' do
+          get '/services/v1/offerings/foobar-version/handles', {}, {
+            'HTTP_X_VCAP_SERVICE_TOKEN' => 'xxx',
           }
           expect(last_response.status).to eq(403)
         end
 
-        it "should return provisioned and bound handles" do
-          get "/services/v1/offerings/foobar-version/handles", {}, {"HTTP_X_VCAP_SERVICE_TOKEN" => svc1.service_auth_token.token}
+        it 'should return provisioned and bound handles' do
+          get '/services/v1/offerings/foobar-version/handles', {}, { 'HTTP_X_VCAP_SERVICE_TOKEN' => svc1.service_auth_token.token }
           expect(last_response.status).to eq(200)
 
-          handles = JSON.parse(last_response.body)["handles"]
+          handles = JSON.parse(last_response.body)['handles']
           expect(handles.size).to eq(2)
-          expect(handles[0]["service_id"]).to eq("foo1")
-          expect(handles[0]["configuration"]).to eq({ "config" => "foo1" })
-          expect(handles[1]["service_id"]).to eq("bind1")
-          expect(handles[1]["configuration"]).to eq({ "config" => "bind1" })
+          expect(handles[0]['service_id']).to eq('foo1')
+          expect(handles[0]['configuration']).to eq({ 'config' => 'foo1' })
+          expect(handles[1]['service_id']).to eq('bind1')
+          expect(handles[1]['configuration']).to eq({ 'config' => 'bind1' })
 
-          get "/services/v1/offerings/foobar-version/test/handles", {}, {"HTTP_X_VCAP_SERVICE_TOKEN" => svc2.service_auth_token.token }
+          get '/services/v1/offerings/foobar-version/test/handles', {}, { 'HTTP_X_VCAP_SERVICE_TOKEN' => svc2.service_auth_token.token }
           expect(last_response.status).to eq(200)
 
-          handles = JSON.parse(last_response.body)["handles"]
+          handles = JSON.parse(last_response.body)['handles']
           expect(handles.size).to eq(2)
-          expect(handles[0]["service_id"]).to eq("foo2")
-          expect(handles[0]["configuration"]).to eq({ "config" => "foo2" })
-          expect(handles[1]["service_id"]).to eq("bind2")
-          expect(handles[1]["configuration"]).to eq({ "config" => "bind2" })
+          expect(handles[0]['service_id']).to eq('foo2')
+          expect(handles[0]['configuration']).to eq({ 'config' => 'foo2' })
+          expect(handles[1]['service_id']).to eq('bind2')
+          expect(handles[1]['configuration']).to eq({ 'config' => 'bind2' })
         end
       end
 
-      describe "POST services/v1/offerings/:label_and_version(/:provider)/handles/:id" do
-        let!(:svc) { svc = Service.make(:label => "foobar", :provider => "core") }
+      describe 'POST services/v1/offerings/:label_and_version(/:provider)/handles/:id' do
+        let!(:svc) { Service.make(label: 'foobar', provider: 'core') }
 
-        before { @auth_header = {"HTTP_X_VCAP_SERVICE_TOKEN" => svc.service_auth_token.token} }
+        before { @auth_header = { 'HTTP_X_VCAP_SERVICE_TOKEN' => svc.service_auth_token.token } }
 
-        describe "with default provider" do
+        describe 'with default provider' do
           before :each do
-
-            plan = ServicePlan.make(:service => svc)
-            cfg = ManagedServiceInstance.make(:name => "bar1", :service_plan => plan)
-            cfg.gateway_name = "foo1"
+            plan = ServicePlan.make(service: svc)
+            cfg = ManagedServiceInstance.make(name: 'bar1', service_plan: plan)
+            cfg.gateway_name = 'foo1'
             cfg.save
 
             ServiceBinding.make(
-              :service_instance  => cfg,
-              :gateway_name => 'bind1',
-              :gateway_data => {},
-              :credentials => {}
+              service_instance: cfg,
+              gateway_name: 'bind1',
+              gateway_data: {},
+              credentials: {}
             )
           end
 
-          it "should return not found for unknown handles" do
-            post "services/v1/offerings/foobar-version/handles/xxx",
+          it 'should return not found for unknown handles' do
+            post 'services/v1/offerings/foobar-version/handles/xxx',
               VCAP::Services::Api::HandleUpdateRequest.new(
-                :service_id => "xxx",
-                :configuration => [],
-                :credentials   => []
+                service_id: 'xxx',
+                configuration: [],
+                credentials: []
             ).encode, json_headers(@auth_header)
             expect(last_response.status).to eq(404)
           end
 
-          it "should update provisioned handles" do
-            post "services/v1/offerings/foobar-version/handles/foo1",
+          it 'should update provisioned handles' do
+            post 'services/v1/offerings/foobar-version/handles/foo1',
               VCAP::Services::Api::HandleUpdateRequest.new(
-                :service_id => "foo1",
-                :configuration => [],
-                :credentials   => { foo: 'bar' }
+                service_id: 'foo1',
+                configuration: [],
+                credentials: { foo: 'bar' }
             ).encode, json_headers(@auth_header)
             expect(last_response.status).to eq(200)
           end
 
-          it "should update bound handles" do
-            post "/services/v1/offerings/foobar-version/handles/bind1",
+          it 'should update bound handles' do
+            post '/services/v1/offerings/foobar-version/handles/bind1',
               VCAP::Services::Api::HandleUpdateRequest.new(
-                :service_id => "bind1",
-                :configuration => [],
-                :credentials   => []
+                service_id: 'bind1',
+                configuration: [],
+                credentials: []
             ).encode, json_headers(@auth_header)
             expect(last_response.status).to eq(200)
           end
         end
 
-        describe "with specific provider" do
-          let!(:svc) { svc = Service.make(:label => "foobar", :provider => "test") }
+        describe 'with specific provider' do
+          let!(:svc) { Service.make(label: 'foobar', provider: 'test') }
 
           before :each do
             plan = ServicePlan.make(
-              :service => svc
+              service: svc
             )
 
             cfg = ManagedServiceInstance.make(
-              :name         => "bar2",
-              :service_plan => plan,
+              name: 'bar2',
+              service_plan: plan,
             )
-            cfg.gateway_name = "foo2"
+            cfg.gateway_name = 'foo2'
             cfg.save
 
             ServiceBinding.make(
-              :service_instance  => cfg,
-              :gateway_name => 'bind2',
-              :gateway_data => {},
-              :credentials => {},
+              service_instance: cfg,
+              gateway_name: 'bind2',
+              gateway_data: {},
+              credentials: {},
             )
           end
 
-          it "should update provisioned handles" do
-            post "/services/v1/offerings/foobar-version/test/handles/foo2",
+          it 'should update provisioned handles' do
+            post '/services/v1/offerings/foobar-version/test/handles/foo2',
               VCAP::Services::Api::HandleUpdateRequest.new(
-                :service_id => "foo2",
-                :configuration => [],
-                :credentials   => { foo: 'bar' }
+                service_id: 'foo2',
+                configuration: [],
+                credentials: { foo: 'bar' }
             ).encode, json_headers(@auth_header)
             expect(last_response.status).to eq(200)
           end
 
-          it "should update bound handles" do
-            post "/services/v1/offerings/foobar-version/test/handles/bind2",
+          it 'should update bound handles' do
+            post '/services/v1/offerings/foobar-version/test/handles/bind2',
               VCAP::Services::Api::HandleUpdateRequest.new(
-                :service_id => "bind2",
-                :configuration => [],
-                :credentials   => []
+                service_id: 'bind2',
+                configuration: [],
+                credentials: []
             ).encode, json_headers(@auth_header)
             expect(last_response.status).to eq(200)
           end
         end
       end
 
-      describe "DELETE /services/v1/offerings/:label_and_version/(:provider)" do
-        let!(:service_plan_core) { ServicePlan.make(:service => Service.make(:label => "foobar", :provider => "core")) }
-        let!(:service_plan_test) { ServicePlan.make(:service => Service.make(:label => "foobar", :provider => "test")) }
-        let(:auth_header) { {"HTTP_X_VCAP_SERVICE_TOKEN" => service_plan_core.service.service_auth_token.token} }
+      describe 'DELETE /services/v1/offerings/:label_and_version/(:provider)' do
+        let!(:service_plan_core) { ServicePlan.make(service: Service.make(label: 'foobar', provider: 'core')) }
+        let!(:service_plan_test) { ServicePlan.make(service: Service.make(label: 'foobar', provider: 'test')) }
+        let(:auth_header) { { 'HTTP_X_VCAP_SERVICE_TOKEN' => service_plan_core.service.service_auth_token.token } }
 
-        it "should return not found for unknown label services" do
-          delete "/services/v1/offerings/xxx", {}, auth_header
+        it 'should return not found for unknown label services' do
+          delete '/services/v1/offerings/xxx', {}, auth_header
           expect(last_response.status).to eq(403)
         end
 
-        it "should return not found for unknown provider services" do
-          delete "/services/v1/offerings/foobar-version/xxx", {}, auth_header
+        it 'should return not found for unknown provider services' do
+          delete '/services/v1/offerings/foobar-version/xxx', {}, auth_header
           expect(last_response.status).to eq(403)
         end
 
-        it "should return not authorized on token mismatch" do
-          delete "/services/v1/offerings/foobar-version/xxx", {}, {
-            "HTTP_X_VCAP_SERVICE_TOKEN" => "barfoo",
+        it 'should return not authorized on token mismatch' do
+          delete '/services/v1/offerings/foobar-version/xxx', {}, {
+            'HTTP_X_VCAP_SERVICE_TOKEN' => 'barfoo',
           }
           expect(last_response.status).to eq(403)
         end
 
-        it "should delete existing offerings which has null provider" do
-          delete "/services/v1/offerings/foobar-version", {}, auth_header
+        it 'should delete existing offerings which has null provider' do
+          delete '/services/v1/offerings/foobar-version', {}, auth_header
           expect(last_response.status).to eq(200)
 
-          svc = Service[:label => "foobar", :provider => "core"]
+          svc = Service[label: 'foobar', provider: 'core']
           expect(svc).to be_nil
         end
 
-        it "should delete existing offerings which has specific provider" do
-          delete "/services/v1/offerings/foobar-version/test", {}, {"HTTP_X_VCAP_SERVICE_TOKEN" => service_plan_test.service.service_auth_token.token}
+        it 'should delete existing offerings which has specific provider' do
+          delete '/services/v1/offerings/foobar-version/test', {}, { 'HTTP_X_VCAP_SERVICE_TOKEN' => service_plan_test.service.service_auth_token.token }
           expect(last_response.status).to eq(200)
 
-          svc = Service[:label => "foobar", :provider => "test"]
+          svc = Service[label: 'foobar', provider: 'test']
           expect(svc).to be_nil
         end
       end
-
     end
   end
 end

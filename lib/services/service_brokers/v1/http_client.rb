@@ -1,14 +1,13 @@
 module VCAP::Services
   module ServiceBrokers::V1
     class HttpClient
-
       def initialize(attrs)
         @url = attrs.fetch(:url)
         @token = attrs.fetch(:auth_token)
         @broker_client_timeout = VCAP::CloudController::Config.config[:broker_client_timeout_seconds] || 60
       end
 
-      def provision(plan_id, name, options = {})
+      def provision(plan_id, name, options={})
         body = options.merge(
           unique_id: plan_id,
           name: name
@@ -47,7 +46,7 @@ module VCAP::Services
 
       attr_reader :broker_client_timeout
 
-      def execute(method, path, body = nil)
+      def execute(method, path, body=nil)
         endpoint = @url + path
         uri = URI(endpoint)
         req_class = method.to_s.capitalize
@@ -62,14 +61,19 @@ module VCAP::Services
         logger.debug "Sending #{req_class} to #{uri.request_uri}, BODY: #{request.body.inspect}, HEADERS: #{request.to_hash.inspect}"
 
         use_ssl = uri.scheme.to_s.downcase == 'https'
-        response = Net::HTTP.start(uri.hostname, uri.port, :use_ssl=> use_ssl) do |http|
+        response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: use_ssl) do |http|
           http.open_timeout = broker_client_timeout
           http.read_timeout = broker_client_timeout
 
           http.request(request)
         end
 
-        logger.debug "Response from request to #{uri.request_uri}: STATUS #{response.code.to_i}, BODY: #{response.body.inspect}, HEADERS: #{response.to_hash.inspect}"
+        logger.debug [
+          "Response from request to #{uri.request_uri}:",
+          "STATUS #{response.code.to_i},",
+          "BODY: #{response.body.inspect},",
+          "HEADERS: #{response.to_hash.inspect}"
+        ].join(' ')
 
         case response
         when Net::HTTPSuccess
@@ -82,7 +86,7 @@ module VCAP::Services
           rescue MultiJson::ParseError
           end
 
-          if hash.is_a?(Hash) && hash.has_key?('description')
+          if hash.is_a?(Hash) && hash.key?('description')
             message = "Service broker error: #{hash['description']}"
           else
             message = "The service broker API returned an error from #{endpoint}: #{response.code} #{response.message}"
@@ -93,7 +97,7 @@ module VCAP::Services
       end
 
       def logger
-        @logger ||= Steno.logger("cc.service_broker.v1.http_client")
+        @logger ||= Steno.logger('cc.service_broker.v1.http_client')
       end
     end
   end

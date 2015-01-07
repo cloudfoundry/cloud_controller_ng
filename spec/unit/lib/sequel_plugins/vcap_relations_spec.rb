@@ -1,6 +1,6 @@
-require "spec_helper"
+require 'spec_helper'
 
-describe "Sequel::Plugins::VcapRelations" do
+describe 'Sequel::Plugins::VcapRelations' do
   def define_model(name) # we need new classes each time to reset the class level state
     model_klass = Class.new(Sequel::Model) do
       plugin :vcap_relations
@@ -8,7 +8,7 @@ describe "Sequel::Plugins::VcapRelations" do
     end
     self.class.send(:remove_const, name) if self.class.const_defined?(name)
     self.class.const_set(name, model_klass)
-    model_klass.set_dataset(DbConfig.connection["#{name.downcase.to_s}s".to_sym])
+    model_klass.set_dataset(DbConfig.connection["#{name.downcase}s".to_sym])
   end
 
   let!(:owner_klass)  { define_model(:Owner) }
@@ -18,31 +18,31 @@ describe "Sequel::Plugins::VcapRelations" do
   let!(:middle_klass) { define_model(:Middle) }
   let!(:bottom_klass) { define_model(:Bottom) }
 
-  describe ".one_to_many" do
+  describe '.one_to_many' do
     before do
       @o = owner_klass.create
       expect { @o.dogs }.to raise_error(NoMethodError)
       owner_klass.one_to_many :dogs
     end
 
-    it "should add a <relation> method" do
+    it 'should add a <relation> method' do
       expect(@o.dogs).to be_empty
     end
 
-    it "should add a add_<relation> method that takes an object" do
+    it 'should add a add_<relation> method that takes an object' do
       d = dog_klass.create
       @o.add_dog d
       expect(@o.dogs).to include(d)
     end
 
-    it "should add a add_<relation> method that takes an id" do
+    it 'should add a add_<relation> method that takes an id' do
       d = dog_klass.create
       @o.add_dog d.id
       d.refresh
       expect(@o.dogs).to include(d)
     end
 
-    it "should add a <relation>_ids= method that takes an array of ids" do
+    it 'should add a <relation>_ids= method that takes an array of ids' do
       d1 = dog_klass.create
       d2 = dog_klass.create
 
@@ -59,7 +59,7 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@o.dogs).to include(d2)
     end
 
-    it "should add a add_<relation>_guids= method that takes a guid" do
+    it 'should add a add_<relation>_guids= method that takes a guid' do
       d1 = dog_klass.create
       d2 = dog_klass.create
 
@@ -76,7 +76,7 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@o.dogs).to include(d2)
     end
 
-    it "should define a <relation>_ids accessor method" do
+    it 'should define a <relation>_ids accessor method' do
       expect(@o.dog_ids).to be_empty
       expect(@o.dog_ids.respond_to?(:each)).to eq(true)
 
@@ -91,7 +91,7 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@o.dog_ids).to include(d2.id)
     end
 
-    it "should allow multiple adds of the same id" do
+    it 'should allow multiple adds of the same id' do
       d1 = dog_klass.create
       @o.add_dog d1
       @o.add_dog d1
@@ -100,7 +100,7 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@o.dogs.length).to eq(1)
     end
 
-    it "should define a remove_<relation> method that takes an object" do
+    it 'should define a remove_<relation> method that takes an object' do
       d1 = dog_klass.create
       d2 = dog_klass.create
 
@@ -117,7 +117,7 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@o.dogs.length).to eq(1)
     end
 
-    it "should define a remove_<relation> method that takes an id" do
+    it 'should define a remove_<relation> method that takes an id' do
       d1 = dog_klass.create
       d2 = dog_klass.create
 
@@ -134,16 +134,16 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@o.dogs.length).to eq(1)
     end
 
-    it "raises an error on add using the <relation>_guids=" do
-      expect { @o.dog_guids = ["bogus-guid"] }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+    it 'raises an error on add using the <relation>_guids=' do
+      expect { @o.dog_guids = ['bogus-guid'] }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
     end
 
-    it "raises an error using the remove_<relation>_by_guid" do
+    it 'raises an error using the remove_<relation>_by_guid' do
       expect { @o.remove_dog_by_guid('bogus-guid') }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
     end
   end
 
-  describe ".many_to_many" do
+  describe '.many_to_many' do
     before do
       @d1 = dog_klass.create
       @d2 = dog_klass.create
@@ -163,24 +163,24 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@n2.dogs).to be_empty
     end
 
-    it "should add a <relation> method" do
+    it 'should add a <relation> method' do
       expect(@d1.names).to be_empty
     end
 
-    it "should add a add_<relation> method that takes an object" do
+    it 'should add a add_<relation> method that takes an object' do
       @d1.add_name @n1
       expect(@d1.names).to include(@n1)
       expect(@n1.dogs).to include(@d1)
     end
 
-    it "should add a add_<relation> method that takes an id" do
+    it 'should add a add_<relation> method that takes an id' do
       @d1.add_name @n1.id
       expect(@d1.names).to include(@n1)
       @n1.refresh
       expect(@n1.dogs).to include(@d1)
     end
 
-    it "should add a <relation>_ids= method that takes an array of ids" do
+    it 'should add a <relation>_ids= method that takes an array of ids' do
       @d1.name_ids = [@n1.id, @n2.id]
       @n1.refresh
       @n2.refresh
@@ -199,14 +199,14 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@n2.dogs).to include(@d1)
     end
 
-    it "should add a add_<relation> method that takes a guid" do
+    it 'should add a add_<relation> method that takes a guid' do
       @d1.add_name_by_guid @n1.guid
       expect(@d1.names).to include(@n1)
       @n1.refresh
       expect(@n1.dogs).to include(@d1)
     end
 
-    it "should add a <relation>_guids= method that takes an array of guids" do
+    it 'should add a <relation>_guids= method that takes an array of guids' do
       @d1.name_guids = [@n1.guid, @n2.guid]
       @n1.refresh
       @n2.refresh
@@ -225,7 +225,7 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@n2.dogs).to include(@d1)
     end
 
-    it "should define a <relation>_ids accessor method" do
+    it 'should define a <relation>_ids accessor method' do
       expect(@d1.name_ids).to be_empty
       expect(@d1.name_ids.respond_to?(:each)).to eq(true)
 
@@ -238,14 +238,14 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@d1.name_ids).to include(@n2.id)
     end
 
-    it "should allow multiple adds of the same object" do
+    it 'should allow multiple adds of the same object' do
       @d1.add_name @n1
       @d1.add_name @n1
       expect(@d1.names).to include(@n1)
       expect(@d1.names.length).to eq(1)
     end
 
-    it "should allow multiple adds of the same id" do
+    it 'should allow multiple adds of the same id' do
       @d1.add_name @n1.id
       @d1.add_name @n1.id
       @n1.refresh
@@ -253,7 +253,7 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@d1.names.length).to eq(1)
     end
 
-    it "should define a remove_<relation> method that takes an object" do
+    it 'should define a remove_<relation> method that takes an object' do
       @d1.add_name @n1
       @d1.add_name @n2
 
@@ -271,7 +271,7 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@d1.names.length).to eq(1)
     end
 
-    it "should define a remove_<relation> method that takes an id" do
+    it 'should define a remove_<relation> method that takes an id' do
       @d1.add_name @n1
       @d1.add_name @n2
 
@@ -290,66 +290,66 @@ describe "Sequel::Plugins::VcapRelations" do
       expect(@d1.names.length).to eq(1)
     end
 
-    it "raises an error on add using the <relation>_guids=" do
-      expect { @d1.name_guids = ["bogus-guid"] }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+    it 'raises an error on add using the <relation>_guids=' do
+      expect { @d1.name_guids = ['bogus-guid'] }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
     end
 
-    it "raises an error using the remove_<relation>_by_guid" do
+    it 'raises an error using the remove_<relation>_by_guid' do
       expect { @d1.remove_name_by_guid('bogus-guid') }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
     end
   end
 
-  describe "#has_one_to_many?" do
+  describe '#has_one_to_many?' do
     let!(:owner) { owner_klass.create }
     before { owner_klass.one_to_many :dogs }
 
-    it "should return true when there are one_to_many associations" do
+    it 'should return true when there are one_to_many associations' do
       d = dog_klass.create
       owner.add_dog(d)
       expect(owner.has_one_to_many?(:dogs)).to eq(true)
     end
 
-    it "should return false when there are NO one_to_many associations" do
+    it 'should return false when there are NO one_to_many associations' do
       expect(owner.has_one_to_many?(:dogs)).to eq(false)
     end
   end
 
-  describe "#has_one_to_one?" do
+  describe '#has_one_to_one?' do
     let!(:owner) { owner_klass.create }
     before { owner_klass.one_to_one :dog }
 
-    it "should return true when there are one_to_one associations" do
+    it 'should return true when there are one_to_one associations' do
       d = dog_klass.create
       owner.dog = d
       expect(owner.has_one_to_one?(:dog)).to eq(true)
     end
 
-    it "should return false when there are NO one_to_one associations" do
+    it 'should return false when there are NO one_to_one associations' do
       expect(owner.has_one_to_one?(:dog)).to eq(false)
     end
   end
 
-  describe "#association_type" do
+  describe '#association_type' do
     let!(:owner) { owner_klass.create }
 
-    it "should return one_to_one association type when it is defined" do
+    it 'should return one_to_one association type when it is defined' do
       owner_klass.one_to_one :dog
       expect(owner.association_type(:dog)).to eq(:one_to_one)
     end
 
-    it "should return one_to_many association type when it is defined" do
+    it 'should return one_to_many association type when it is defined' do
       owner_klass.one_to_many :dog
       expect(owner.association_type(:dog)).to eq(:one_to_many)
     end
   end
 
-  describe "relationship_dataset" do
+  describe 'relationship_dataset' do
     before do
       bottom = bottom_klass
 
       top_klass.one_to_many :middles
-      top_klass.one_to_many :bottoms, :dataset => lambda {
-        bottom.filter(:middle => middles)
+      top_klass.one_to_many :bottoms, dataset: lambda {
+        bottom.filter(middle: middles)
       }
 
       middle_klass.one_to_one :top
@@ -378,16 +378,16 @@ describe "Sequel::Plugins::VcapRelations" do
       end
     end
 
-    context "with no custom dataset defined" do
-      it "uses the full dataset of the related model" do
+    context 'with no custom dataset defined' do
+      it 'uses the full dataset of the related model' do
         all = middle.relationship_dataset(:bottoms).all
         expect(all.size).to eq(10)
         expect(all).to eq(bottom_klass.all)
       end
     end
 
-    context "with a custom dataset for the relationship" do
-      it "uses the custom dataset" do
+    context 'with a custom dataset for the relationship' do
+      it 'uses the custom dataset' do
         all = top.relationship_dataset(:bottoms).all
         expect(all.size).to eq(10)
         expect(all).to eq(bottom_klass.all)
@@ -395,38 +395,38 @@ describe "Sequel::Plugins::VcapRelations" do
     end
   end
 
-  describe ".many_to_one" do
+  describe '.many_to_one' do
     before { initialize_relations }
 
-    let!(:middle) { middle_klass.create(:guid => "middle-guid") }
-    let!(:other_middle) { middle_klass.create(:guid => "other_middle_guid") }
+    let!(:middle) { middle_klass.create(guid: 'middle-guid') }
+    let!(:other_middle) { middle_klass.create(guid: 'other_middle_guid') }
 
     let!(:bottoms) do
       10.times.collect do
-        bottom_klass.create(:middle => middle)
+        bottom_klass.create(middle: middle)
       end
     end
 
-    context "the default behaviour" do
+    context 'the default behaviour' do
       def initialize_relations
         bottom_klass.many_to_one :middle
       end
 
-      it "adds a middle_guid accessor to bottom" do
+      it 'adds a middle_guid accessor to bottom' do
         bottom = bottoms.first
-        expect(bottom.middle_guid).to eq("middle-guid")
-        bottom.middle_guid = "other_middle_guid"
+        expect(bottom.middle_guid).to eq('middle-guid')
+        bottom.middle_guid = 'other_middle_guid'
         bottom.save
-        expect(bottom.middle_guid).to eq("other_middle_guid")
+        expect(bottom.middle_guid).to eq('other_middle_guid')
       end
     end
 
-    context "with the :without_guid_generation flag" do
+    context 'with the :without_guid_generation flag' do
       def initialize_relations
-        bottom_klass.many_to_one :middle, :without_guid_generation => true
+        bottom_klass.many_to_one :middle, without_guid_generation: true
       end
 
-      it "does not add a middle_guid accessor to bottom" do
+      it 'does not add a middle_guid accessor to bottom' do
         bottom = bottoms.first
 
         expect {
@@ -434,17 +434,17 @@ describe "Sequel::Plugins::VcapRelations" do
         }.to raise_error(NoMethodError)
 
         expect {
-          bottom.middle_guid = "hello"
+          bottom.middle_guid = 'hello'
         }.to raise_error(NoMethodError)
       end
     end
 
-    context "when an invalid guid is passed" do
+    context 'when an invalid guid is passed' do
       def initialize_relations
         bottom_klass.many_to_one :middle
       end
 
-      it "raises an error" do
+      it 'raises an error' do
         bottom = bottoms.first
         expect { bottom.middle_guid = 'bogus-guid' }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
       end

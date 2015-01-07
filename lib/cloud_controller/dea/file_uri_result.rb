@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Dea
     class FileUriResult < Struct.new(:file_uri_v1, :file_uri_v2, :credentials)
-      def initialize(opts = {})
+      def initialize(opts={})
         if opts[:file_uri_v2]
           self.file_uri_v2 = opts[:file_uri_v2]
         end

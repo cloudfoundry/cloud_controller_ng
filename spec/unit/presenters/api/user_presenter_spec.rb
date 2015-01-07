@@ -1,11 +1,11 @@
 require 'spec_helper'
 
 describe UserPresenter do
-  describe "#to_hash" do
+  describe '#to_hash' do
     let(:user) { VCAP::CloudController::User.make(admin: true) }
     subject { UserPresenter.new(user) }
 
-    it "creates a valid JSON" do
+    it 'creates a valid JSON' do
       expect(subject.to_hash).to eq({
         metadata: {
             guid: user.guid,

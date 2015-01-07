@@ -7,8 +7,8 @@ module VCAP::CloudController
 
     def credentials
       [
-          @config[:auth_user],
-          @config[:auth_password],
+        @config[:auth_user],
+        @config[:auth_password],
       ]
     end
     module_function :credentials

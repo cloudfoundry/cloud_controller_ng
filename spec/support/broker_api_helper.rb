@@ -1,7 +1,7 @@
 
 module VCAP::CloudController::BrokerApiHelper
   def service_name
-    "MySQL"
+    'MySQL'
   end
 
   def stubbed_broker_url
@@ -20,21 +20,21 @@ module VCAP::CloudController::BrokerApiHelper
     'password'
   end
 
-  def stub_catalog_fetch(broker_response_status=200, catalog = nil)
+  def stub_catalog_fetch(broker_response_status=200, catalog=nil)
     catalog ||= {
       services: [{
-        id:          "service-guid-here",
+        id:          'service-guid-here',
         name:        service_name,
-        description: "A MySQL-compatible relational database",
+        description: 'A MySQL-compatible relational database',
         bindable:    true,
         plans:       [{
-          id:          "plan1-guid-here",
-          name:        "small",
-          description: "A small shared database with 100mb storage quota and 10 connections"
+          id:          'plan1-guid-here',
+          name:        'small',
+          description: 'A small shared database with 100mb storage quota and 10 connections'
         }, {
-          id:          "plan2-guid-here",
-          name:        "large",
-          description: "A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections"
+          id:          'plan2-guid-here',
+          name:        'large',
+          description: 'A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections'
         }]
       }]
     }
@@ -51,7 +51,7 @@ module VCAP::CloudController::BrokerApiHelper
     @space_guid = @space.guid
   end
 
-  def setup_broker(catalog = nil)
+  def setup_broker(catalog=nil)
     stub_catalog_fetch(200, catalog)
 
     post('/v2/service_brokers',
@@ -63,9 +63,9 @@ module VCAP::CloudController::BrokerApiHelper
     get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
     response   = JSON.parse(last_response.body)
     service_plans = response['resources'].first['entity']['service_plans']
-    @plan_guid = service_plans.find { |plan| plan['entity']['name']=='small' }['metadata']['guid']
+    @plan_guid = service_plans.find { |plan| plan['entity']['name'] == 'small' }['metadata']['guid']
 
-    large_plan = service_plans.find { |plan| plan['entity']['name']=='large' }
+    large_plan = service_plans.find { |plan| plan['entity']['name'] == 'large' }
     @large_plan_guid = large_plan['metadata']['guid'] if large_plan
     make_all_plans_public
 
@@ -91,8 +91,8 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def provision_service
-    body = { dashboard_url: "https://your.service.com/dashboard" }.to_json
-    stub_request(:put, %r(broker-url/v2/service_instances/[[:alnum:]-]+)).
+    body = { dashboard_url: 'https://your.service.com/dashboard' }.to_json
+    stub_request(:put, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
       to_return(status: 201, body: "#{body}")
 
     post('/v2/service_instances',
@@ -108,7 +108,7 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def upgrade_service_instance(return_code)
-    stub_request(:patch, %r(broker-url/v2/service_instances/[[:alnum:]-]+)).to_return(status: return_code, body: '{}')
+    stub_request(:patch, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).to_return(status: return_code, body: '{}')
     put("/v2/service_instances/#{@service_instance_guid}",
     {
       service_plan_guid: @large_plan_guid
@@ -122,18 +122,18 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def bind_service
-    stub_request(:put, %r(/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+)).
+    stub_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
       to_return(status: 201, body: {}.to_json)
 
     post('/v2/service_bindings',
       { app_guid: app_guid, service_instance_guid: @service_instance_guid }.to_json,
       json_headers(admin_headers))
 
-    @binding_id = JSON.parse(last_response.body)["metadata"]["guid"]
+    @binding_id = JSON.parse(last_response.body)['metadata']['guid']
   end
 
   def deprovision_service
-    stub_request(:delete, %r(broker-url/v2/service_instances/[[:alnum:]-]+)).
+    stub_request(:delete, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
       to_return(status: 200, body: '{}')
 
     delete("/v2/service_instances/#{@service_instance_guid}", '{}', json_headers(admin_headers))

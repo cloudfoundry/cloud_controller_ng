@@ -1,7 +1,7 @@
 RSpec::Matchers.define :have_creatable_attributes do |attributes|
   match do |controller|
     create_message = controller.const_get(:CreateMessage)
-    @attribute_validator = AttributeValidator.new(create_message, attributes, "creatable")
+    @attribute_validator = AttributeValidator.new(create_message, attributes, 'creatable')
     @attribute_validator.valid?
   end
 
@@ -13,7 +13,7 @@ end
 RSpec::Matchers.define :have_updatable_attributes do |attributes|
   match do |controller|
     create_message = controller.const_get(:UpdateMessage)
-    @attribute_validator = AttributeValidator.new(create_message, attributes, "updatable")
+    @attribute_validator = AttributeValidator.new(create_message, attributes, 'updatable')
     @attribute_validator.valid?
   end
 
@@ -50,7 +50,7 @@ class AttributeValidator
       end
     end
     fields.each do |attribute_name, details|
-      @unexpected_attributes << attribute_name unless attributes.has_key? attribute_name
+      @unexpected_attributes << attribute_name unless attributes.key? attribute_name
     end
 
     @missing_attributes.empty? &&
@@ -89,10 +89,9 @@ class AttributeValidator
   def schema_matches?(schema, expected_type)
     schema_string = Membrane::SchemaParser.deparse(schema).downcase
     if schema.instance_of? Membrane::Schemas::Record
-      schema_string.gsub(/[\s,]/, "") == expected_type.gsub(/[\s,]/, "")
+      schema_string.gsub(/[\s,]/, '') == expected_type.gsub(/[\s,]/, '')
     else
       schema_string == expected_type
     end
   end
-
 end

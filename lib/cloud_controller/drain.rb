@@ -1,5 +1,5 @@
-require "logger"
-require "fileutils"
+require 'logger'
+require 'fileutils'
 
 module VCAP
   module CloudController
@@ -9,14 +9,14 @@ module VCAP
       end
 
       def log_invocation(args)
-        log_info("Drain invoked with #{args.map{|x| x.inspect}.join(" ")}")
+        log_info("Drain invoked with #{args.map(&:inspect).join(' ')}")
       end
 
       def unregister_cc(pid_path)
         unregister_wait_timeout = 20 # because we don't know when/wheter the router has acted on the unregister message
         unregister_wait_interval = 5
-        send_signal(pid_path, "USR2", "cc_ng")
-        while unregister_wait_timeout > 0 do
+        send_signal(pid_path, 'USR2', 'cc_ng')
+        while unregister_wait_timeout > 0
           log_info("Waiting for router unregister to have taken effect #{unregister_wait_timeout} more seconds")
           sleep unregister_wait_interval
           unregister_wait_timeout -= unregister_wait_interval
@@ -26,12 +26,12 @@ module VCAP
       def shutdown_nginx(pid_path)
         nginx_timeout = 30
         nginx_interval = 3
-        send_signal(pid_path, "QUIT", "Nginx") # request nginx graceful shutdown
+        send_signal(pid_path, 'QUIT', 'Nginx') # request nginx graceful shutdown
         wait_for_pid(pid_path, nginx_timeout, nginx_interval) # wait until nginx is shut down
       end
 
       def shutdown_cc(pid_path)
-        send_signal(pid_path, "TERM", "cc_ng")
+        send_signal(pid_path, 'TERM', 'cc_ng')
       end
 
       private
@@ -60,18 +60,18 @@ module VCAP
       end
 
       def alive?(pidfile, program)
-        if !File.exists?(pidfile)
+        if !File.exist?(pidfile)
           log_info("#{program} not running")
           return false
         end
-        return true
+        true
       end
 
       def logger
         return @logger if @logger
-        log_dir = File.join(@log_path, "drain")
+        log_dir = File.join(@log_path, 'drain')
         FileUtils.mkdir_p(log_dir)
-        @logger = Logger.new(File.join(log_dir, "drain.log"))
+        @logger = Logger.new(File.join(log_dir, 'drain.log'))
       end
     end
   end

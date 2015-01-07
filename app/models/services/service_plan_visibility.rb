@@ -19,7 +19,7 @@ module VCAP::CloudController
     end
 
     def self.visible_private_plan_ids_for_organization(organization)
-      organization.service_plan_visibilities.map { |visibility| visibility.service_plan_id }
+      organization.service_plan_visibilities.map(&:service_plan_id)
     end
   end
 end

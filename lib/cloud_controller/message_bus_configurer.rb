@@ -1,6 +1,6 @@
 module MessageBus
   class Configurer
-    def initialize(config = {})
+    def initialize(config={})
       @config = config
     end
 

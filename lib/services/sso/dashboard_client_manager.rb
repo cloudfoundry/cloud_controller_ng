@@ -2,7 +2,11 @@ module VCAP::Services::SSO
   class DashboardClientManager
     attr_reader :errors, :service_broker, :warnings
 
-    REQUESTED_FEATURE_DISABLED_WARNING = 'Warning: This broker includes configuration for a dashboard client. Auto-creation of OAuth2 clients has been disabled in this Cloud Foundry instance. The broker catalog has been updated but its dashboard client configuration will be ignored.'
+    REQUESTED_FEATURE_DISABLED_WARNING = [
+      'Warning: This broker includes configuration for a dashboard client.',
+      'Auto-creation of OAuth2 clients has been disabled in this Cloud Foundry instance.',
+      'The broker catalog has been updated but its dashboard client configuration will be ignored.'
+    ].join(' ').freeze
 
     def initialize(service_broker, services_event_repository)
       @service_broker = service_broker
@@ -16,7 +20,7 @@ module VCAP::Services::SSO
 
     def synchronize_clients_with_catalog(catalog)
       requested_clients = catalog.services.map(&:dashboard_client).compact
-      requested_client_ids = requested_clients.map{|client| client['id']}
+      requested_client_ids = requested_clients.map { |client| client['id'] }
 
       unless cc_configured_to_modify_uaa_clients?
         warnings << REQUESTED_FEATURE_DISABLED_WARNING unless requested_clients.empty?
@@ -28,11 +32,11 @@ module VCAP::Services::SSO
       existing_ccdb_clients    = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
       existing_ccdb_client_ids = existing_ccdb_clients.map(&:uaa_id)
 
-      existing_uaa_client_ids  = fetch_clients_from_uaa(requested_client_ids | existing_ccdb_client_ids).map{ |c| c['client_id'] }
+      existing_uaa_client_ids  = fetch_clients_from_uaa(requested_client_ids | existing_ccdb_client_ids).map { |c| c['client_id'] }
       return false unless all_clients_can_be_claimed_in_uaa?(existing_uaa_client_ids, catalog)
 
       claim_clients_and_update_uaa(requested_clients, existing_ccdb_clients, existing_uaa_client_ids)
-      return true
+      true
     end
 
     def remove_clients_for_broker
@@ -41,7 +45,7 @@ module VCAP::Services::SSO
       requested_clients       = [] # request no clients
       existing_db_clients     = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
       existing_db_client_ids  = existing_db_clients.map(&:uaa_id)
-      existing_uaa_client_ids = fetch_clients_from_uaa(existing_db_client_ids).map{ |client| client['client_id'] }
+      existing_uaa_client_ids = fetch_clients_from_uaa(existing_db_client_ids).map { |client| client['client_id'] }
 
       claim_clients_and_update_uaa(requested_clients, existing_db_clients, existing_uaa_client_ids)
     end
@@ -84,11 +88,10 @@ module VCAP::Services::SSO
       true
     end
 
-
     def fetch_clients_from_uaa(requested_client_ids)
       client_manager.get_clients(requested_client_ids)
     rescue VCAP::Services::SSO::UAA::UaaError => e
-      raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
+      raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerDashboardClientFailure', e.message)
     end
 
     def client_claimable_by_broker?(existing_client_in_ccdb)
@@ -107,7 +110,7 @@ module VCAP::Services::SSO
           client_manager.modify_transaction(uaa_changeset)
         end
       rescue VCAP::Services::SSO::UAA::UaaError => e
-        raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerDashboardClientFailure", e.message)
+        raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerDashboardClientFailure', e.message)
       end
 
       uaa_changeset.each do |uaa_cmd|

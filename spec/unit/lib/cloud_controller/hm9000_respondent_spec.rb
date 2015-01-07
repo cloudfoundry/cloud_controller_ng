@@ -1,10 +1,10 @@
-require "spec_helper"
-require "cloud_controller/dea/hm9000/respondent"
+require 'spec_helper'
+require 'cloud_controller/dea/hm9000/respondent'
 
 module VCAP::CloudController
   describe Dea::HM9000::Respondent do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:dea_client) { double("dea client", :message_bus => message_bus) }
+    let(:dea_client) { double('dea client', message_bus: message_bus) }
 
     subject { Dea::HM9000::Respondent.new(dea_client, message_bus) }
 
@@ -13,89 +13,93 @@ module VCAP::CloudController
       allow(dea_client).to receive(:start_instance_at_index)
     end
 
-    describe "#handle_requests" do
+    describe '#handle_requests' do
       before { allow(message_bus).to receive(:subscribe) }
 
-      it "subscribes hm9000.stop and sets up callback to process_hm9000_stop" do
-        expect(message_bus).to receive(:subscribe).with("hm9000.stop", :queue => "cc") do |&callback|
-          callback.call("some payload")
+      it 'subscribes hm9000.stop and sets up callback to process_hm9000_stop' do
+        expect(message_bus).to receive(:subscribe).with('hm9000.stop', queue: 'cc') do |&callback|
+          callback.call('some payload')
         end
 
-        expect(subject).to receive(:process_hm9000_stop).with("some payload")
+        expect(subject).to receive(:process_hm9000_stop).with('some payload')
 
         subject.handle_requests
       end
 
-      it "subscribes hm9000.start and sets up callback to process_hm9000_start" do
-        expect(message_bus).to receive(:subscribe).with("hm9000.start", :queue => "cc") do |&callback|
-          callback.call("some payload")
+      it 'subscribes hm9000.start and sets up callback to process_hm9000_start' do
+        expect(message_bus).to receive(:subscribe).with('hm9000.start', queue: 'cc') do |&callback|
+          callback.call('some payload')
         end
 
-        expect(subject).to receive(:process_hm9000_start).with("some payload")
+        expect(subject).to receive(:process_hm9000_start).with('some payload')
 
         subject.handle_requests
       end
-
     end
 
     let(:app) do
-      AppFactory.make :instances => 2, :state => app_state, :droplet_hash => droplet_hash,
-        :package_hash => "abcd", :package_state => package_state,
-        :environment_json => environment
+      AppFactory.make(
+        instances: 2,
+        state: app_state,
+        droplet_hash: droplet_hash,
+        package_hash: 'abcd',
+        package_state: package_state,
+        environment_json: environment
+      )
     end
 
     let(:environment) { {} }
 
-    let(:app_state) { "STARTED" }
-    let(:droplet_hash) { "present-hash" }
-    let(:package_state) { "STAGED" }
+    let(:app_state) { 'STARTED' }
+    let(:droplet_hash) { 'present-hash' }
+    let(:package_state) { 'STAGED' }
 
-    describe "#process_hm9000_start" do
+    describe '#process_hm9000_start' do
       let(:hm9000_start_message) do
-        { "droplet" => start_droplet,
-          "version" => start_version,
-          "instance_index" => start_instance_index,
-          "message_id" => "abc"
+        { 'droplet' => start_droplet,
+          'version' => start_version,
+          'instance_index' => start_instance_index,
+          'message_id' => 'abc'
         }
       end
 
-      context "when the message is missing fields" do
-        it "should not do anything" do
+      context 'when the message is missing fields' do
+        it 'should not do anything' do
           expect(dea_client).not_to receive(:start_instance_at_index)
-          subject.process_hm9000_stop({"droplet" => app.guid, "instance_index" => 2})
+          subject.process_hm9000_stop({ 'droplet' => app.guid, 'instance_index' => 2 })
         end
       end
 
-      context "if the app does not exist" do
-        let(:start_droplet) {"a-non-existent-app"}
+      context 'if the app does not exist' do
+        let(:start_droplet) { 'a-non-existent-app' }
         let(:start_version) { app.version }
-        let(:start_instance_index) {1}
+        let(:start_instance_index) { 1 }
 
-        it "should not do anything" do
+        it 'should not do anything' do
           expect(dea_client).not_to receive(:start_instance_at_index)
           subject.process_hm9000_start(hm9000_start_message)
         end
       end
 
-      context "if the app does exit" do
+      context 'if the app does exit' do
         let(:start_droplet) { app.guid }
 
-        context "if the version matches" do
+        context 'if the version matches' do
           let(:start_version) { app.version }
-          context "if the desired index is within the desired number of instances" do
-            let(:start_instance_index) {1}
-            context "if app is in STARTED state" do
-              context "and the DIEGO_RUN_BETA flag is set" do
-                let(:environment) { {"DIEGO_RUN_BETA" => "true"} }
+          context 'if the desired index is within the desired number of instances' do
+            let(:start_instance_index) { 1 }
+            context 'if app is in STARTED state' do
+              context 'and the DIEGO_RUN_BETA flag is set' do
+                let(:environment) { { 'DIEGO_RUN_BETA' => 'true' } }
 
-                it "should not send the start message" do
+                it 'should not send the start message' do
                   expect(dea_client).not_to receive(:start_instance_at_index)
                   subject.process_hm9000_start(hm9000_start_message)
                 end
               end
-              
-              context "and the DIEGO_RUN_BETA flag is not set" do
-                it "should send the start message" do
+
+              context 'and the DIEGO_RUN_BETA flag is not set' do
+                it 'should send the start message' do
                   expect(dea_client).to receive(:start_instance_at_index) do |app_to_start, index_to_start|
                     expect(app_to_start).to eq(app)
                     expect(index_to_start).to eq(1)
@@ -106,52 +110,52 @@ module VCAP::CloudController
               end
             end
 
-            context "if the app has not finished uploading" do
+            context 'if the app has not finished uploading' do
               let(:droplet_hash) { nil }
 
-              it "should not do anything" do
+              it 'should not do anything' do
                 expect(dea_client).not_to receive(:start_instance_at_index)
                 subject.process_hm9000_start(hm9000_start_message)
               end
             end
 
-            context "if the app failed to stage" do
+            context 'if the app failed to stage' do
               before do
-                app.package_state = "FAILED"
+                app.package_state = 'FAILED'
                 app.save
               end
 
-              it "should not do anything" do
+              it 'should not do anything' do
                 expect(dea_client).not_to receive(:start_instance_at_index)
                 subject.process_hm9000_start(hm9000_start_message)
               end
             end
 
-            context "if app is NOT in STARTED state" do
-              let(:app_state) { "STOPPED" }
+            context 'if app is NOT in STARTED state' do
+              let(:app_state) { 'STOPPED' }
 
-              it "should not do anything" do
+              it 'should not do anything' do
                 expect(dea_client).not_to receive(:start_instance_at_index)
                 subject.process_hm9000_start(hm9000_start_message)
               end
             end
           end
 
-          context "if the desired index is outside the desired number of instances" do
-            let(:start_instance_index) {2}
+          context 'if the desired index is outside the desired number of instances' do
+            let(:start_instance_index) { 2 }
 
-            it "should not do anything" do
+            it 'should not do anything' do
               expect(dea_client).not_to receive(:start_instance_at_index)
               subject.process_hm9000_start(hm9000_start_message)
             end
           end
         end
 
-        context "if the version does not match" do
-          let(:start_version) {"another-version"}
-          let(:start_instance_index) {1}
+        context 'if the version does not match' do
+          let(:start_version) { 'another-version' }
+          let(:start_instance_index) { 1 }
 
-          it "should not do anything" do
+          it 'should not do anything' do
             expect(dea_client).not_to receive(:start_instance_at_index)
             subject.process_hm9000_start(hm9000_start_message)
           end
@@ -159,105 +163,105 @@ module VCAP::CloudController
       end
     end
 
-    describe "#process_hm9000_stop" do
+    describe '#process_hm9000_stop' do
       let(:hm9000_stop_message) do
-        { "droplet" => stop_droplet,
-          "version" => stop_version,
-          "instance_guid" => "abc",
-          "instance_index" => stop_instance_index,
-          "is_duplicate" => is_duplicate,
-          "message_id" => "abc"
+        { 'droplet' => stop_droplet,
+          'version' => stop_version,
+          'instance_guid' => 'abc',
+          'instance_index' => stop_instance_index,
+          'is_duplicate' => is_duplicate,
+          'message_id' => 'abc'
         }
       end
 
       let(:is_duplicate) { false }
 
-      context "when the message is missing fields" do
-        it "should not do anything" do
+      context 'when the message is missing fields' do
+        it 'should not do anything' do
           expect(dea_client).not_to receive(:stop_instances)
-          subject.process_hm9000_stop({"droplet" => app.guid, "instance_guid" => "abc"})
+          subject.process_hm9000_stop({ 'droplet' => app.guid, 'instance_guid' => 'abc' })
         end
       end
 
-      context "when the app does not exist" do
-        let(:stop_droplet) { "a-non-existent-app" }
-        let(:stop_version) { "current-version" }
+      context 'when the app does not exist' do
+        let(:stop_droplet) { 'a-non-existent-app' }
+        let(:stop_version) { 'current-version' }
         let(:stop_instance_index) { 1 }
 
-        it "should stop the instance" do
+        it 'should stop the instance' do
           expect(dea_client).to receive(:stop_instances) do |app_guid_to_stop, guid|
-            expect(app_guid_to_stop).to eq("a-non-existent-app")
-            expect(guid).to eq("abc")
+            expect(app_guid_to_stop).to eq('a-non-existent-app')
+            expect(guid).to eq('abc')
           end
 
           subject.process_hm9000_stop(hm9000_stop_message)
         end
       end
 
-      context "when the app exists" do
+      context 'when the app exists' do
         let(:stop_droplet) { app.guid }
 
-        context "and the currently-running version of the app matches the version in the stop message" do
+        context 'and the currently-running version of the app matches the version in the stop message' do
           let(:stop_version) { app.version }
 
-          context "when the index to stop is outside the range of desired indices" do
+          context 'when the index to stop is outside the range of desired indices' do
             let(:stop_instance_index) { 2 }
-            it "should stop the instance" do
+            it 'should stop the instance' do
               expect(dea_client).to receive(:stop_instances) do |app_guid_to_stop, guid|
                 expect(app_guid_to_stop).to eq(app.guid)
-                expect(guid).to eq("abc")
+                expect(guid).to eq('abc')
               end
 
               subject.process_hm9000_stop(hm9000_stop_message)
             end
           end
 
-          context "when the index to stop is within the range of desired indices" do
+          context 'when the index to stop is within the range of desired indices' do
             let(:stop_instance_index) { 1 }
 
-            context "and the instance is a duplicate (there is > 1 running on that index)" do
+            context 'and the instance is a duplicate (there is > 1 running on that index)' do
               let(:is_duplicate) { true }
-              it "should stop the index" do
+              it 'should stop the index' do
                 expect(dea_client).to receive(:stop_instances) do |app_guid_to_stop, guid|
                   expect(app_guid_to_stop).to eq(app.guid)
-                  expect(guid).to eq("abc")
+                  expect(guid).to eq('abc')
                 end
 
                 subject.process_hm9000_stop(hm9000_stop_message)
               end
             end
 
-            context "and the instance is not a duplicate (there is only 1 running on that index)" do
-              context "and the app is in the STARTED state" do
-                context "and the package has staged" do
-                  it "should ignore the request" do
+            context 'and the instance is not a duplicate (there is only 1 running on that index)' do
+              context 'and the app is in the STARTED state' do
+                context 'and the package has staged' do
+                  it 'should ignore the request' do
                     expect(dea_client).not_to receive(:stop_instances)
                     subject.process_hm9000_stop(hm9000_stop_message)
                   end
                 end
 
-                context "but the package is pending staging" do
+                context 'but the package is pending staging' do
                   before do
-                    app.package_state = "PENDING"
+                    app.package_state = 'PENDING'
                     app.save
                   end
 
-                  it "should ignore the request" do
+                  it 'should ignore the request' do
                     expect(dea_client).not_to receive(:stop_instances)
                     subject.process_hm9000_stop(hm9000_stop_message)
                   end
                 end
 
-                context "but the package has failed to stage" do
+                context 'but the package has failed to stage' do
                   before do
-                    app.package_state = "FAILED"
+                    app.package_state = 'FAILED'
                     app.save
                   end
 
-                  it "should stop the index" do
+                  it 'should stop the index' do
                     expect(dea_client).to receive(:stop_instances) do |app_guid_to_stop, guid|
                       expect(app_guid_to_stop).to eq(app.guid)
-                      expect(guid).to eq("abc")
+                      expect(guid).to eq('abc')
                     end
 
                     subject.process_hm9000_stop(hm9000_stop_message)
@@ -265,13 +269,13 @@ module VCAP::CloudController
                 end
               end
 
-              context "and the app is in the STOPPED state" do
-                let(:app_state) { "STOPPED" }
+              context 'and the app is in the STOPPED state' do
+                let(:app_state) { 'STOPPED' }
 
-                it "should stop the instance" do
+                it 'should stop the instance' do
                   expect(dea_client).to receive(:stop_instances) do |app_guid_to_stop, guid|
                     expect(app_guid_to_stop).to eq(app.guid)
-                    expect(guid).to eq("abc")
+                    expect(guid).to eq('abc')
                   end
 
                   subject.process_hm9000_stop(hm9000_stop_message)
@@ -279,10 +283,10 @@ module VCAP::CloudController
               end
             end
 
-            context "and the DIEGO_RUN_BETA flag is set " do
-              let(:environment) { {"DIEGO_RUN_BETA" => "true"} }
+            context 'and the DIEGO_RUN_BETA flag is set ' do
+              let(:environment) { { 'DIEGO_RUN_BETA' => 'true' } }
 
-              context "and diego is disabled" do
+              context 'and diego is disabled' do
                 before do
                   TestConfig.override(diego: {
                     staging: 'disabled',
@@ -290,17 +294,17 @@ module VCAP::CloudController
                   })
                 end
 
-                it "should stop not the instance" do
+                it 'should stop not the instance' do
                   expect(dea_client).not_to receive(:stop_instances)
                   subject.process_hm9000_stop(hm9000_stop_message)
                 end
               end
 
-              context "and diego is enabled" do
-                it "should stop the instance" do
+              context 'and diego is enabled' do
+                it 'should stop the instance' do
                   expect(dea_client).to receive(:stop_instances) do |app_guid_to_stop, guid|
                     expect(app_guid_to_stop).to eq(app.guid)
-                    expect(guid).to eq("abc")
+                    expect(guid).to eq('abc')
                   end
 
                   subject.process_hm9000_stop(hm9000_stop_message)
@@ -310,14 +314,14 @@ module VCAP::CloudController
           end
         end
 
-        context "and the currently-running version of the app is different from the version in the stop message" do
-          let(:stop_version) { "different-version" }
+        context 'and the currently-running version of the app is different from the version in the stop message' do
+          let(:stop_version) { 'different-version' }
           let(:stop_instance_index) { 1 }
 
-          it "should stop the instance" do
+          it 'should stop the instance' do
             expect(dea_client).to receive(:stop_instances) do |app_guid_to_stop, guid|
               expect(app_guid_to_stop).to eq(app.guid)
-              expect(guid).to eq("abc")
+              expect(guid).to eq('abc')
             end
 
             subject.process_hm9000_stop(hm9000_stop_message)

@@ -1,7 +1,6 @@
 module VCAP::CloudController
   module Jobs
     class RequestJob < Struct.new(:job, :request_id)
-
       def perform
         current_request_id = ::VCAP::Request.current_id
         begin

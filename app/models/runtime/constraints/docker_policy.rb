@@ -1,5 +1,5 @@
 class DockerPolicy
-  BUILDPACK_DETECTED_ERROR_MSG = "incompatible with buildpack"
+  BUILDPACK_DETECTED_ERROR_MSG = 'incompatible with buildpack'
 
   def initialize(app)
     @errors = app.errors

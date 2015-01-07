@@ -1,10 +1,10 @@
 module VCAP::CloudController
   class SpaceSummariesController < RestController::ModelController
     def self.dependencies
-      [ :instances_reporters ]
+      [:instances_reporters]
     end
 
-    path_base "spaces"
+    path_base 'spaces'
 
     model_class_name :Space
 
@@ -48,13 +48,11 @@ module VCAP::CloudController
         }.merge(app.to_hash)
       end
     rescue Errors::InstancesUnavailable => e
-      raise VCAP::Errors::ApiError.new_from_details("InstancesUnavailable", e.to_s)
+      raise VCAP::Errors::ApiError.new_from_details('InstancesUnavailable', e.to_s)
     end
 
     def services_summary(space)
-      space.service_instances.map do |instance|
-        instance.as_summary_json
-      end
+      space.service_instances.map(&:as_summary_json)
     end
   end
 end

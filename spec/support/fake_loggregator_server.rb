@@ -2,7 +2,6 @@ require 'socket'
 require 'loggregator_messages/log_message.pb'
 
 class FakeLoggregatorServer
-
   attr_reader :messages, :port, :sock
 
   def initialize(port)
@@ -15,16 +14,15 @@ class FakeLoggregatorServer
     @sock.bind('localhost', port)
 
     @thread = Thread.new do
-      while true
+      loop do
         begin
           stuff = @sock.recv(65536)
           envelope = LogEnvelope.decode(stuff)
           messages << envelope.log_message
         rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError,  Beefcake::Message::InvalidValueError => e
-          puts "ERROR"
+          puts 'ERROR'
           puts e
         end
-
       end
     end
   end

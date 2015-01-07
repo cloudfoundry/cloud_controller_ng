@@ -8,17 +8,17 @@ module VCAP::CloudController
     subject(:drain) { Drain.new(log_dir) }
 
     def log_contents
-      File.open(File.join(log_dir, "drain", "drain.log")) do |file|
+      File.open(File.join(log_dir, 'drain', 'drain.log')) do |file|
         yield file.read
       end
     end
 
     let(:pid) { 23456 }
     let(:pid_dir) { Dir.mktmpdir }
-    let(:pid_path) { File.join(pid_dir, "pidfile") }
+    let(:pid_path) { File.join(pid_dir, 'pidfile') }
 
     before do
-      File.open(pid_path, "w") do |file|
+      File.open(pid_path, 'w') do |file|
         file.write(pid)
       end
 
@@ -31,72 +31,72 @@ module VCAP::CloudController
       FileUtils.rm_r(log_dir)
     end
 
-    describe "#unregister_cc" do
+    describe '#unregister_cc' do
       before do
-        allow(Process).to receive(:kill).with("USR2", pid)
+        allow(Process).to receive(:kill).with('USR2', pid)
       end
 
-      it "sends USR2 to the process specified in the pid file" do
+      it 'sends USR2 to the process specified in the pid file' do
         drain.unregister_cc(pid_path)
 
-        expect(Process).to have_received(:kill).with("USR2", pid)
+        expect(Process).to have_received(:kill).with('USR2', pid)
       end
 
-      it "sleeps while it waits for the router unregistration" do
+      it 'sleeps while it waits for the router unregistration' do
         expect(drain).to receive(:sleep).at_least(:once)
 
         drain.unregister_cc(pid_path)
       end
 
-      it "logs that it sends the signal to CC and is waiting for the router unregistration" do
+      it 'logs that it sends the signal to CC and is waiting for the router unregistration' do
         drain.unregister_cc(pid_path)
 
         log_contents do |log|
           expect(log).to match("Sending signal USR2 to cc_ng with pid #{pid}.")
-          expect(log).to match("Waiting for router unregister")
+          expect(log).to match('Waiting for router unregister')
         end
       end
 
-      it "logs if the process no longer exists" do
-        allow(Process).to receive(:kill).with("USR2", pid).and_raise(Errno::ESRCH)
+      it 'logs if the process no longer exists' do
+        allow(Process).to receive(:kill).with('USR2', pid).and_raise(Errno::ESRCH)
 
         drain.unregister_cc(pid_path)
 
         log_contents do |log|
-          expect(log).to match("Pid no longer exists")
+          expect(log).to match('Pid no longer exists')
         end
       end
 
-      it "logs if the process file no longer exists" do
+      it 'logs if the process file no longer exists' do
         allow(File).to receive(:read).with(pid_path).and_raise(Errno::ENOENT)
 
         drain.unregister_cc(pid_path)
 
         log_contents do |log|
-          expect(log).to match("Pid file no longer exists")
+          expect(log).to match('Pid file no longer exists')
         end
       end
     end
 
-    describe "#shutdown_nginx" do
+    describe '#shutdown_nginx' do
       before do
-        allow(Process).to receive(:kill).with("QUIT", pid)
+        allow(Process).to receive(:kill).with('QUIT', pid)
       end
 
-      it "sends QUIT to the nginx process specified in the pid file" do
+      it 'sends QUIT to the nginx process specified in the pid file' do
         drain.shutdown_nginx(pid_path)
-        expect(Process).to have_received(:kill).with("QUIT", pid)
+        expect(Process).to have_received(:kill).with('QUIT', pid)
       end
 
-      it "sleeps while it waits for the pid file to be deleted" do
-        expect(File).to receive(:exists?).with(pid_path).and_return(true, true, false)
+      it 'sleeps while it waits for the pid file to be deleted' do
+        expect(File).to receive(:exist?).with(pid_path).and_return(true, true, false)
         expect(drain).to receive(:sleep).exactly(2).times
 
         drain.shutdown_nginx(pid_path)
       end
 
-      it "logs while it waits for the pid file to be deleted" do
-        expect(File).to receive(:exists?).with(pid_path).and_return(true, true, false)
+      it 'logs while it waits for the pid file to be deleted' do
+        expect(File).to receive(:exist?).with(pid_path).and_return(true, true, false)
 
         drain.shutdown_nginx(pid_path)
 
@@ -105,8 +105,8 @@ module VCAP::CloudController
         end
       end
 
-      it "logs that the process has stopped running when its pid file is deleted" do
-        expect(File).to receive(:exists?).with(pid_path).and_return(true, false)
+      it 'logs that the process has stopped running when its pid file is deleted' do
+        expect(File).to receive(:exist?).with(pid_path).and_return(true, false)
 
         drain.shutdown_nginx(pid_path)
 
@@ -116,20 +116,20 @@ module VCAP::CloudController
       end
     end
 
-    describe "#shutdown_cc" do
+    describe '#shutdown_cc' do
       before do
-        allow(Process).to receive(:kill).with("TERM", pid)
+        allow(Process).to receive(:kill).with('TERM', pid)
       end
 
-      it "sends TERM to the cc process specified in the pid file" do
+      it 'sends TERM to the cc process specified in the pid file' do
         drain.shutdown_cc(pid_path)
-        expect(Process).to have_received(:kill).with("TERM", pid)
+        expect(Process).to have_received(:kill).with('TERM', pid)
       end
     end
 
-    describe "#log_invocation" do
-      it "logs that the drain is invoked with the given arguments" do
-        drain.log_invocation([1, "banana"])
+    describe '#log_invocation' do
+      it 'logs that the drain is invoked with the given arguments' do
+        drain.log_invocation([1, 'banana'])
 
         log_contents do |log|
           expect(log).to match(/Drain invoked with.*1.*banana/)

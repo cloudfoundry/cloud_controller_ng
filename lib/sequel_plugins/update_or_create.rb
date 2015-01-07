@@ -4,7 +4,7 @@ module Sequel::Plugins::UpdateOrCreate
     def update_or_create(cond, &block)
       obj = first(cond)
       if obj
-        obj.tap(&block).save(:changed => true)
+        obj.tap(&block).save(changed: true)
       else
         create(cond, &block)
       end

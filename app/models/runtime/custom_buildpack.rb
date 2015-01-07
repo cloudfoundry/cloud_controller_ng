@@ -8,14 +8,14 @@ module VCAP::CloudController
       MultiJson.dump(url)
     end
 
-    URI_REGEXP = /\A#{URI::regexp}\Z/.freeze
+    URI_REGEXP = /\A#{URI.regexp}\Z/.freeze
 
     def valid?
       @errors = []
       unless url =~ URI_REGEXP
         @errors << "#{url} is not valid public url or a known buildpack name"
       end
-      return @errors.empty?
+      @errors.empty?
     end
 
     def errors

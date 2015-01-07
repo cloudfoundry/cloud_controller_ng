@@ -1,5 +1,5 @@
-require "cloud_controller/dea/nats_messages/dea_advertisment"
-require "cloud_controller/dea/eligible_advertisement_filter"
+require 'cloud_controller/dea/nats_messages/dea_advertisment'
+require 'cloud_controller/dea/eligible_advertisement_filter'
 
 module VCAP::CloudController
   module Dea
@@ -11,11 +11,11 @@ module VCAP::CloudController
       end
 
       def register_subscriptions
-        message_bus.subscribe("dea.advertise") do |msg|
+        message_bus.subscribe('dea.advertise') do |msg|
           process_advertise_message(msg)
         end
 
-        message_bus.subscribe("dea.shutdown") do |msg|
+        message_bus.subscribe('dea.shutdown') do |msg|
           process_shutdown_message(msg)
         end
       end

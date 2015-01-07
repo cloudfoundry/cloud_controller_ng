@@ -3,7 +3,7 @@ module VCAP::CloudController
     module Runtime
       class BuildpackInstaller < Struct.new(:name, :file, :opts, :config)
         def perform
-          logger = Steno.logger("cc.background")
+          logger = Steno.logger('cc.background')
           logger.info "Installing buildpack #{name}"
 
           buildpack = Buildpack.find(name: name)

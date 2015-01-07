@@ -1,9 +1,9 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
     describe BlobstoreDelete do
-      let(:key) { "key" }
+      let(:key) { 'key' }
       let(:job) do
         BlobstoreDelete.new(key, :droplet_blobstore)
       end
@@ -12,7 +12,7 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.droplet_blobstore
       end
 
-      let(:tmpfile) { Tempfile.new("")}
+      let(:tmpfile) { Tempfile.new('') }
 
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(blobstore)
@@ -25,8 +25,8 @@ module VCAP::CloudController
 
       it { is_expected.to be_a_valid_job }
 
-      context "when no attributes defined" do
-        it "deletes the blob" do
+      context 'when no attributes defined' do
+        it 'deletes the blob' do
           expect {
             job.perform
           }.to change {
@@ -35,8 +35,8 @@ module VCAP::CloudController
         end
       end
 
-      context "when attributes match" do
-        it "deletes the blob" do
+      context 'when attributes match' do
+        it 'deletes the blob' do
           blob = blobstore.blob(key)
           job.attributes = blob.attributes
 
@@ -48,12 +48,12 @@ module VCAP::CloudController
         end
       end
 
-      context "when attributes do not match" do
+      context 'when attributes do not match' do
         let(:job) do
-          BlobstoreDelete.new(key, :droplet_blobstore, { "mis" => "match"})
+          BlobstoreDelete.new(key, :droplet_blobstore, { 'mis' => 'match' })
         end
 
-        it "does not delete the blob" do
+        it 'does not delete the blob' do
           expect {
             job.perform
           }.to_not change {
@@ -62,14 +62,14 @@ module VCAP::CloudController
         end
       end
 
-      context "when the blob does not exist" do
-        it "does not invoke delete" do
+      context 'when the blob does not exist' do
+        it 'does not invoke delete' do
           expect(blobstore).to receive(:blob).and_return(nil)
           job.perform
         end
       end
 
-      it "knows its job name" do
+      it 'knows its job name' do
         expect(job.job_name_in_configuration).to equal(:blobstore_delete)
       end
     end

@@ -1,5 +1,5 @@
 class AppEnvironmentPolicy
-  RESERVED_ENV_VAR_ERROR_MSG = "reserved_key:%s"
+  RESERVED_ENV_VAR_ERROR_MSG = 'reserved_key:%s'
 
   def initialize(app)
     @errors = app.errors
@@ -8,7 +8,7 @@ class AppEnvironmentPolicy
 
   def validate
     return if @environment_json.nil?
-    unless @environment_json.kind_of?(Hash)
+    unless @environment_json.is_a?(Hash)
       @errors.add(:environment_json, :invalid_environment)
       return
     end

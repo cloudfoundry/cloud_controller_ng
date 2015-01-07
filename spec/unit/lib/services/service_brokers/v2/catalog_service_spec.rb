@@ -3,7 +3,7 @@ require 'securerandom'
 
 module VCAP::Services::ServiceBrokers::V2
   describe CatalogService do
-    def build_valid_service_attrs(opts = {})
+    def build_valid_service_attrs(opts={})
       {
         'id' => 'broker-provided-service-id',
         'metadata' => {},
@@ -16,7 +16,7 @@ module VCAP::Services::ServiceBrokers::V2
       }.merge(opts.stringify_keys)
     end
 
-    def build_valid_plan_attrs(opts = {})
+    def build_valid_plan_attrs(opts={})
       @index ||= 0
       @index += 1
       {
@@ -102,7 +102,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that @bindable is a boolean' do
-        attrs = build_valid_service_attrs(bindable: "true")
+        attrs = build_valid_service_attrs(bindable: 'true')
         service = CatalogService.new(double('broker'), attrs)
         expect(service).not_to be_valid
 
@@ -119,7 +119,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that @plan_updateable is a boolean' do
-        attrs = build_valid_service_attrs(plan_updateable: "true")
+        attrs = build_valid_service_attrs(plan_updateable: 'true')
         service = CatalogService.new(double('broker'), attrs)
         expect(service).not_to be_valid
 
@@ -127,7 +127,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that @tags is an array of strings' do
-        attrs = build_valid_service_attrs(tags: "a string")
+        attrs = build_valid_service_attrs(tags: 'a string')
         service = CatalogService.new(double('broker'), attrs)
         expect(service).not_to be_valid
 
@@ -141,7 +141,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that @requires is an array of strings' do
-        attrs = build_valid_service_attrs(requires: "a string")
+        attrs = build_valid_service_attrs(requires: 'a string')
         service = CatalogService.new(double('broker'), attrs)
         expect(service).not_to be_valid
 
@@ -172,7 +172,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that the plans list is an array' do
-        attrs = build_valid_service_attrs(plans: "invalid")
+        attrs = build_valid_service_attrs(plans: 'invalid')
         service = CatalogService.new(double('broker'), attrs)
         expect(service).not_to be_valid
 
@@ -190,7 +190,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that the plans list is an array of hashes' do
-        attrs = build_valid_service_attrs(plans: ["list", "of", "strings"])
+        attrs = build_valid_service_attrs(plans: ['list', 'of', 'strings'])
         service = CatalogService.new(double('broker'), attrs)
         expect(service).not_to be_valid
 
@@ -340,7 +340,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
       let(:broker_provided_id) { SecureRandom.uuid }
       let(:catalog_service) do
-        described_class.new( service_broker,
+        described_class.new(service_broker,
           'id' => broker_provided_id,
           'name' => 'service-name',
           'description' => 'service description',

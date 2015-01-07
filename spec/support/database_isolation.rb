@@ -1,10 +1,10 @@
 module DatabaseIsolation
   def self.choose(isolation, config, db)
     case isolation
-      when :truncation
-        TruncateTables.new(config, db)
-      else
-        RollbackTransaction.new
+    when :truncation
+      TruncateTables.new(config, db)
+    else
+      RollbackTransaction.new
     end
   end
 

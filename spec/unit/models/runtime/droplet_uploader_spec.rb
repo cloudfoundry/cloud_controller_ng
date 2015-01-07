@@ -1,5 +1,5 @@
-require "spec_helper"
-require "tmpdir"
+require 'spec_helper'
+require 'tmpdir'
 
 describe CloudController::DropletUploader do
   let(:app) do
@@ -12,11 +12,11 @@ describe CloudController::DropletUploader do
 
   subject { described_class.new(app, blobstore) }
 
-  describe "#upload" do
+  describe '#upload' do
     include TempFileCreator
 
-    context "when the upload to the blobstore suceeds" do
-      it "adds a new app droplet" do
+    context 'when the upload to the blobstore suceeds' do
+      it 'adds a new app droplet' do
         expect(app.droplet_hash).to be_nil
 
         expect {
@@ -26,32 +26,32 @@ describe CloudController::DropletUploader do
         expect(app.droplet_hash).to eq(app.droplets.last.droplet_hash)
       end
 
-      it "deletes old droplets when there are more droplets than droplets_to_keep" do
+      it 'deletes old droplets when there are more droplets than droplets_to_keep' do
         droplets_to_keep = 1
         expect(app.droplets.size).to eq(0)
 
-        subject.upload(temp_file_with_content("droplet version 1").path, droplets_to_keep)
+        subject.upload(temp_file_with_content('droplet version 1').path, droplets_to_keep)
         expect(app.reload.droplets.size).to eq(droplets_to_keep)
 
-        droplet_dest = Tempfile.new("downloaded_droplet")
+        droplet_dest = Tempfile.new('downloaded_droplet')
         app.current_droplet.download_to(droplet_dest.path)
-        expect(droplet_dest.read).to eql("droplet version 1")
+        expect(droplet_dest.read).to eql('droplet version 1')
 
-        subject.upload(temp_file_with_content("droplet version 2").path, droplets_to_keep)
+        subject.upload(temp_file_with_content('droplet version 2').path, droplets_to_keep)
         expect(app.reload.droplets.size).to eq(droplets_to_keep)
 
-        droplet_dest = Tempfile.new("downloaded_droplet")
+        droplet_dest = Tempfile.new('downloaded_droplet')
         app.current_droplet.download_to(droplet_dest.path)
-        expect(droplet_dest.read).to eql("droplet version 2")
+        expect(droplet_dest.read).to eql('droplet version 2')
       end
     end
 
-    context "when the upload to the blobstore fails" do
+    context 'when the upload to the blobstore fails' do
       before do
-        allow(blobstore).to receive(:cp_to_blobstore).and_raise "Upload failed"
+        allow(blobstore).to receive(:cp_to_blobstore).and_raise 'Upload failed'
       end
 
-      it "does not create a new droplet" do
+      it 'does not create a new droplet' do
         expect {
           expect {
             subject.upload(temp_file_with_content.path)

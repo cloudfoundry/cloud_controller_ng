@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers
   describe ValidationErrorsFormatter do
-    describe "#format(validation_errors)" do
+    describe '#format(validation_errors)' do
       let(:errors) { VCAP::Services::ValidationErrors.new }
       let(:service_broker) { double(:service_broker) }
       let(:service_1) { V2::CatalogService.new(service_broker, 'name' => 'service-1') }

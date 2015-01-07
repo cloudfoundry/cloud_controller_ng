@@ -2,7 +2,6 @@ require 'spec_helper'
 
 module VCAP::CloudController::Diego
   describe ServiceRegistry do
-
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
 
     subject { described_class.new(message_bus) }

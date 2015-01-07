@@ -30,7 +30,7 @@ module CloudController
         url = blob.download_url if blob
 
         return nil unless url
-        return @droplet_blobstore.local? ? staging_uri("/staging/droplets/#{app.guid}/download") : url
+        @droplet_blobstore.local? ? staging_uri("/staging/droplets/#{app.guid}/download") : url
       end
 
       def perma_droplet_download_url(app_guid)
@@ -47,10 +47,11 @@ module CloudController
       end
 
       private
+
       def generate_download_url(store, path, blobstore_key)
         uri = store.download_uri(blobstore_key)
         return nil unless uri
-        return store.local? ? staging_uri(path) : uri
+        store.local? ? staging_uri(path) : uri
       end
 
       def staging_uri(path)

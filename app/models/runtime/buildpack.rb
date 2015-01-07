@@ -1,5 +1,5 @@
-require "cloud_controller/buildpack_positioner"
-require "cloud_controller/buildpack_shifter"
+require 'cloud_controller/buildpack_positioner'
+require 'cloud_controller/buildpack_shifter'
 
 module VCAP::CloudController
   class Buildpack < Sequel::Model
@@ -7,7 +7,7 @@ module VCAP::CloudController
     import_attributes :name, :position, :enabled, :locked, :filename, :key
 
     def self.list_admin_buildpacks
-      exclude(:key => nil).exclude(:key => "").order(:position).all
+      exclude(key: nil).exclude(key: '').order(:position).all
     end
 
     def self.at_last_position
@@ -44,7 +44,7 @@ module VCAP::CloudController
 
     def validate
       validates_unique :name
-      validates_format(/^(\w|\-)+$/, :name, message: "name can only contain alphanumeric characters")
+      validates_format(/^(\w|\-)+$/, :name, message: 'name can only contain alphanumeric characters')
     end
 
     def locked?
@@ -52,7 +52,7 @@ module VCAP::CloudController
     end
 
     def staging_message
-      {buildpack_key: self.key}
+      { buildpack_key: self.key }
     end
 
     # This is used in the serialization of apps to JSON. The buildpack object is left in the hash for the app, then the

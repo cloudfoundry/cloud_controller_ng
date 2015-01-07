@@ -7,7 +7,7 @@ class MetadataPolicy
 
   def validate
     return if @metadata.nil?
-    unless @metadata.kind_of?(Hash)
+    unless @metadata.is_a?(Hash)
       @errors.add(:metadata, :invalid_metadata)
     end
   end

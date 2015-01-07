@@ -1,4 +1,4 @@
-require "presenters/error_presenter"
+require 'presenters/error_presenter'
 
 module VCAP::CloudController
   module Jobs
@@ -33,7 +33,7 @@ module VCAP::CloudController
       end
 
       def logger
-        Steno.logger("cc.background")
+        Steno.logger('cc.background')
       end
     end
   end

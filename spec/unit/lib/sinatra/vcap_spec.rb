@@ -14,7 +14,7 @@ describe 'Sinatra::VCAP', type: :controller do
   class TestApp < Sinatra::Base
     register Sinatra::VCAP
 
-    vcap_configure :logger_name => 'vcap_spec'
+    vcap_configure logger_name: 'vcap_spec'
 
     def in_test_mode?
       false
@@ -48,7 +48,7 @@ describe 'Sinatra::VCAP', type: :controller do
     end
 
     get '/vcap_error' do
-      e = VCAP::Errors::ApiError.new_from_details("MessageParseError", 'some message')
+      e = VCAP::Errors::ApiError.new_from_details('MessageParseError', 'some message')
       e.set_backtrace(['/vcap:1', '/error:2'])
       raise e
     end
@@ -129,8 +129,8 @@ describe 'Sinatra::VCAP', type: :controller do
 
     it 'should return a 404' do
       expect(last_response.status).to eq(404)
-      expect(decoded_response["code"]).to eq(10000)
-      expect(decoded_response["description"]).to match(/Unknown request/)
+      expect(decoded_response['code']).to eq(10000)
+      expect(decoded_response['description']).to match(/Unknown request/)
     end
 
     include_examples 'vcap sinatra varz stats', 404
@@ -218,7 +218,7 @@ describe 'Sinatra::VCAP', type: :controller do
 
   describe 'caller provided x-vcap-request-id' do
     before do
-      get '/request_id', {}, {'HTTP_X_VCAP_REQUEST_ID' => 'abcdef'}
+      get '/request_id', {}, { 'HTTP_X_VCAP_REQUEST_ID' => 'abcdef' }
     end
 
     it 'should set the X-VCAP-Request-ID to the caller specified value' do
@@ -234,7 +234,7 @@ describe 'Sinatra::VCAP', type: :controller do
 
   describe 'caller provided x-request-id' do
     before do
-      get '/request_id', {}, {'HTTP_X_REQUEST_ID' => 'abcdef'}
+      get '/request_id', {}, { 'HTTP_X_REQUEST_ID' => 'abcdef' }
     end
 
     it 'should set the X-VCAP-Request-ID to the caller specified value' do
@@ -250,7 +250,7 @@ describe 'Sinatra::VCAP', type: :controller do
 
   describe 'caller provided x-request-id and x-vcap-request-id' do
     before do
-      get '/request_id', {}, {'HTTP_X_REQUEST_ID' => 'abc', 'HTTP_X_VCAP_REQUEST_ID' => 'def'}
+      get '/request_id', {}, { 'HTTP_X_REQUEST_ID' => 'abc', 'HTTP_X_VCAP_REQUEST_ID' => 'def' }
     end
 
     it 'should set the X-VCAP-Request-ID to the caller specified value of X-VCAP-Request-ID' do

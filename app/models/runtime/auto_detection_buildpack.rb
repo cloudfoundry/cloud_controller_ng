@@ -16,16 +16,16 @@ module VCAP::CloudController
       nil
     end
 
-    def eql?(another)
-      another.nil? || another.is_a?(AutoDetectionBuildpack)
+    def eql?(other)
+      other.nil? || other.is_a?(AutoDetectionBuildpack)
     end
 
     def to_s
-      "Auto Detection Buildpack"
+      'Auto Detection Buildpack'
     end
 
     def to_json
-      %Q{null}
+      %(null)
     end
 
     def nil_object?

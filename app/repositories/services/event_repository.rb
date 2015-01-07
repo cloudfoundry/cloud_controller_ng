@@ -2,14 +2,13 @@ module VCAP::CloudController
   module Repositories
     module Services
       class EventRepository
-
         def initialize(security_context)
           @user = security_context.current_user
           @current_user_email = security_context.current_user_email
         end
 
         def logger
-          Steno.logger("cc.event_repository")
+          Steno.logger('cc.event_repository')
         end
 
         def record_service_plan_visibility_event(type, visibility, params)
@@ -62,7 +61,7 @@ module VCAP::CloudController
 
         def record_service_dashboard_client_event(type, client_attrs, broker)
           metadata = {}
-          if client_attrs.has_key?('redirect_uri')
+          if client_attrs.key?('redirect_uri')
             metadata = {
               secret: '[REDACTED]',
               redirect_uri: client_attrs['redirect_uri']
@@ -83,7 +82,7 @@ module VCAP::CloudController
             actee_type: 'service_instance',
             actee_name: service_instance.name,
           }
-          space_data = {space: service_instance.space}
+          space_data = { space: service_instance.space }
           create_event("audit.service_instance.#{type}", user_actor, actee, { request: params }, space_data)
         end
 
@@ -95,8 +94,8 @@ module VCAP::CloudController
           }
 
           metadata = { request: params.dup }
-          if params.has_key?('credentials')
-            metadata[:request]['credentials'] = "[REDACTED]"
+          if params.key?('credentials')
+            metadata[:request]['credentials'] = '[REDACTED]'
           end
 
           space_data = { space: service_instance.space }
@@ -116,7 +115,7 @@ module VCAP::CloudController
             actee_type: 'service_binding',
             actee_name: '',
           }
-          space_data = {space: service_binding.space}
+          space_data = { space: service_binding.space }
           create_event("audit.service_binding.#{type}", user_actor, actee, metadata, space_data)
         end
 
@@ -136,7 +135,7 @@ module VCAP::CloudController
 
         def with_service_event(service, &saveBlock)
           actee = {
-            actee_type: "service",
+            actee_type: 'service',
             actee_name: service.label,
           }
           actor = broker_actor(service.service_broker)
@@ -145,7 +144,7 @@ module VCAP::CloudController
 
         def with_service_plan_event(plan, &saveBlock)
           actee = {
-            actee_type: "service_plan",
+            actee_type: 'service_plan',
             actee_name: plan.name,
           }
           actor = broker_actor(plan.service.service_broker)
@@ -167,7 +166,7 @@ module VCAP::CloudController
           [:name, :broker_url, :auth_username].each do |key|
             request_hash[key] = params[key] unless params[key].nil?
           end
-          request_hash[:auth_password] = '[REDACTED]' if params.has_key? :auth_password
+          request_hash[:auth_password] = '[REDACTED]' if params.key? :auth_password
 
           metadata = { request: {} }
           if request_hash.length > 0

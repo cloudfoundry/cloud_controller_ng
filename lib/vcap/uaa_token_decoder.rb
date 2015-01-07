@@ -1,17 +1,17 @@
-require "uaa/info"
+require 'uaa/info'
 
 module VCAP
   class UaaTokenDecoder
-    class BadToken < StandardError;
+    class BadToken < StandardError
     end
 
     attr_reader :config
 
-    def initialize(config, grace_period_in_seconds = 0)
+    def initialize(config, grace_period_in_seconds=0)
       @config = config
       @logger = Steno.logger('cc.uaa_token_decoder')
 
-      raise ArgumentError, "grace period should be an integer" unless grace_period_in_seconds.is_a? Integer
+      raise ArgumentError.new('grace period should be an integer') unless grace_period_in_seconds.is_a? Integer
 
       @grace_period_in_seconds = grace_period_in_seconds
       if grace_period_in_seconds < 0
@@ -29,7 +29,7 @@ module VCAP
         decode_token_with_asymmetric_key(auth_token)
       end
     rescue CF::UAA::TokenExpired => e
-      @logger.warn("Token expired")
+      @logger.warn('Token expired')
       raise BadToken.new(e.message)
     rescue CF::UAA::DecodeError, CF::UAA::AuthError => e
       @logger.warn("Invalid bearer token: #{e.inspect} #{e.backtrace}")
@@ -39,26 +39,26 @@ module VCAP
     private
 
     def token_format_valid?(auth_token)
-      auth_token && auth_token.upcase.start_with?("BEARER")
+      auth_token && auth_token.upcase.start_with?('BEARER')
     end
 
     def decode_token_with_symmetric_key(auth_token)
-      decode_token_with_key(auth_token, :skey => symmetric_key)
+      decode_token_with_key(auth_token, skey: symmetric_key)
     end
 
     def decode_token_with_asymmetric_key(auth_token)
       tries = 2
       begin
         tries -= 1
-        decode_token_with_key(auth_token, :pkey => asymmetric_key.value)
-      rescue CF::UAA::InvalidSignature => e
+        decode_token_with_key(auth_token, pkey: asymmetric_key.value)
+      rescue CF::UAA::InvalidSignature
         asymmetric_key.refresh
         tries > 0 ? retry : raise
       end
     end
 
     def decode_token_with_key(auth_token, options)
-      options = {:audience_ids => config[:resource_id]}.merge(options)
+      options = { audience_ids: config[:resource_id] }.merge(options)
       token = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, Time.now.to_i - @grace_period_in_seconds)
       expiration_time = token['exp'] || token[:exp]
       if expiration_time && expiration_time < Time.now.to_i

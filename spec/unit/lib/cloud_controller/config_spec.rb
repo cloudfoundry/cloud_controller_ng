@@ -1,160 +1,160 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe Config do
     let(:message_bus) { Config.message_bus }
 
-    describe ".from_file" do
-      it "raises if the file does not exist" do
+    describe '.from_file' do
+      it 'raises if the file does not exist' do
         expect {
-          Config.from_file("nonexistent.yml")
+          Config.from_file('nonexistent.yml')
         }.to raise_error(Errno::ENOENT, /No such file or directory @ rb_sysopen - nonexistent.yml/)
       end
 
-      it "raises if the config is invalid" do
+      it 'raises if the config is invalid' do
         expect {
-          Config.from_file(File.join(Paths::FIXTURES, "config/invalid_diego.yml"))
+          Config.from_file(File.join(Paths::FIXTURES, 'config/invalid_diego.yml'))
         }.to raise_error /required doesn't validate/
       end
     end
 
-    describe ".merge_defaults" do
-      context "when no config values are provided" do
-        let (:config) { Config.from_file(File.join(Paths::FIXTURES, "config/minimal_config.yml")) }
-        it "sets default stacks_file" do
-          expect(config[:stacks_file]).to eq(File.join(Config.config_dir, "stacks.yml"))
+    describe '.merge_defaults' do
+      context 'when no config values are provided' do
+        let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml')) }
+        it 'sets default stacks_file' do
+          expect(config[:stacks_file]).to eq(File.join(Config.config_dir, 'stacks.yml'))
         end
 
-        it "sets default maximum_app_disk_in_mb" do
+        it 'sets default maximum_app_disk_in_mb' do
           expect(config[:maximum_app_disk_in_mb]).to eq(2048)
         end
 
-        it "sets default directories" do
+        it 'sets default directories' do
           expect(config[:directories]).to eq({})
         end
 
-        it "enables writing billing events" do
+        it 'enables writing billing events' do
           expect(config[:billing_event_writing_enabled]).to be true
         end
 
-        it "sets a default request_timeout_in_seconds value" do
+        it 'sets a default request_timeout_in_seconds value' do
           expect(config[:request_timeout_in_seconds]).to eq(900)
         end
 
-        it "sets a default value for skip_cert_verify" do
+        it 'sets a default value for skip_cert_verify' do
           expect(config[:skip_cert_verify]).to eq false
         end
 
-        it "sets a default value for app_bits_upload_grace_period_in_seconds" do
+        it 'sets a default value for app_bits_upload_grace_period_in_seconds' do
           expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(0)
         end
 
-        it "sets a default value for database" do
-          expect(config[:db][:database]).to eq(ENV["DB_CONNECTION_STRING"])
+        it 'sets a default value for database' do
+          expect(config[:db][:database]).to eq(ENV['DB_CONNECTION_STRING'])
         end
 
-        it "sets a default value for allowed_cors_domains" do
+        it 'sets a default value for allowed_cors_domains' do
           expect(config[:allowed_cors_domains]).to eq([])
         end
 
-        it "disables diego" do
-          expect(config[:diego][:staging]).to eq("disabled")
-          expect(config[:diego][:running]).to eq("disabled")
+        it 'disables diego' do
+          expect(config[:diego][:staging]).to eq('disabled')
+          expect(config[:diego][:running]).to eq('disabled')
           expect(config[:diego_docker]).to eq(false)
         end
 
-        it "sets a default value for advertisement_timeout_in_seconds" do
+        it 'sets a default value for advertisement_timeout_in_seconds' do
           expect(config[:dea_advertisement_timeout_in_seconds]).to eq(10)
         end
       end
 
-      context "when config values are provided" do
-        context "and the values are valid" do
-          let (:config) { Config.from_file(File.join(Paths::FIXTURES, "config/default_overriding_config.yml")) }
+      context 'when config values are provided' do
+        context 'and the values are valid' do
+          let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/default_overriding_config.yml')) }
 
-          it "preserves the stacks_file value from the file" do
-            expect(config[:stacks_file]).to eq("/tmp/foo")
+          it 'preserves the stacks_file value from the file' do
+            expect(config[:stacks_file]).to eq('/tmp/foo')
           end
 
-          it "preserves the default_app_disk_in_mb value from the file" do
+          it 'preserves the default_app_disk_in_mb value from the file' do
             expect(config[:default_app_disk_in_mb]).to eq(512)
           end
 
-          it "preserves the maximum_app_disk_in_mb value from the file" do
+          it 'preserves the maximum_app_disk_in_mb value from the file' do
             expect(config[:maximum_app_disk_in_mb]).to eq(3)
           end
 
-          it "preserves the directories value from the file" do
-            expect(config[:directories]).to eq({some: "value"})
+          it 'preserves the directories value from the file' do
+            expect(config[:directories]).to eq({ some: 'value' })
           end
 
-          it "preserves the external_protocol value from the file" do
-            expect(config[:external_protocol]).to eq("http")
+          it 'preserves the external_protocol value from the file' do
+            expect(config[:external_protocol]).to eq('http')
           end
 
-          it "preserves the billing_event_writing_enabled value from the file" do
+          it 'preserves the billing_event_writing_enabled value from the file' do
             expect(config[:billing_event_writing_enabled]).to be false
           end
 
-          it "preserves the request_timeout_in_seconds value from the file" do
+          it 'preserves the request_timeout_in_seconds value from the file' do
             expect(config[:request_timeout_in_seconds]).to eq(600)
           end
 
-          it "preserves the value of skip_cert_verify from the file" do
+          it 'preserves the value of skip_cert_verify from the file' do
             expect(config[:skip_cert_verify]).to eq true
           end
 
-          it "preserves the value for app_bits_upload_grace_period_in_seconds" do
+          it 'preserves the value for app_bits_upload_grace_period_in_seconds' do
             expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(600)
           end
 
-          it "preserves the value of the staging auth user/password" do
-            expect(config[:staging][:auth][:user]).to eq("user")
-            expect(config[:staging][:auth][:password]).to eq("password")
+          it 'preserves the value of the staging auth user/password' do
+            expect(config[:staging][:auth][:user]).to eq('user')
+            expect(config[:staging][:auth][:password]).to eq('password')
           end
 
-          it "preserves the value of the allowed cross-origin domains" do
-            expect(config[:allowed_cors_domains]).to eq(["http://andrea.corr", "http://caroline.corr", "http://jim.corr", "http://sharon.corr"])
+          it 'preserves the value of the allowed cross-origin domains' do
+            expect(config[:allowed_cors_domains]).to eq(['http://andrea.corr', 'http://caroline.corr', 'http://jim.corr', 'http://sharon.corr'])
           end
 
-          it "preserves the diego configuration from the file" do
-            expect(config[:diego][:staging]).to eq("optional")
-            expect(config[:diego][:running]).to eq("optional")
+          it 'preserves the diego configuration from the file' do
+            expect(config[:diego][:staging]).to eq('optional')
+            expect(config[:diego][:running]).to eq('optional')
             expect(config[:diego_docker]).to eq(true)
           end
 
-          context "when the staging auth is already url encoded" do
+          context 'when the staging auth is already url encoded' do
             let(:tmpdir) { Dir.mktmpdir }
-            let (:config_from_file) { Config.from_file(File.join(tmpdir, "overridden_with_urlencoded_values.yml")) }
+            let(:config_from_file) { Config.from_file(File.join(tmpdir, 'overridden_with_urlencoded_values.yml')) }
 
             before do
-              config_hash = YAML.load_file(File.join(Paths::FIXTURES, "config/minimal_config.yml"))
-              config_hash["staging"]["auth"]["user"] = "f%40t%3A%25a"
-              config_hash["staging"]["auth"]["password"] = "m%40%2Fn!"
+              config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
+              config_hash['staging']['auth']['user'] = 'f%40t%3A%25a'
+              config_hash['staging']['auth']['password'] = 'm%40%2Fn!'
 
-              File.open(File.join(tmpdir, "overridden_with_urlencoded_values.yml"), "w") do |f|
+              File.open(File.join(tmpdir, 'overridden_with_urlencoded_values.yml'), 'w') do |f|
                 YAML.dump(config_hash, f)
               end
             end
 
-            it "preserves the url-encoded values" do
-              config_from_file[:staging][:auth][:user] = "f%40t%3A%25a"
-              config_from_file[:staging][:auth][:password] = "m%40%2Fn!"
+            it 'preserves the url-encoded values' do
+              config_from_file[:staging][:auth][:user] = 'f%40t%3A%25a'
+              config_from_file[:staging][:auth][:password] = 'm%40%2Fn!'
             end
           end
         end
 
-        context "and the values are invalid" do
+        context 'and the values are invalid' do
           let(:tmpdir) { Dir.mktmpdir }
-          let (:config_from_file) { Config.from_file(File.join(tmpdir, "incorrect_overridden_config.yml")) }
+          let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }
 
           before do
-            config_hash = YAML.load_file(File.join(Paths::FIXTURES, "config/minimal_config.yml"))
-            config_hash["app_bits_upload_grace_period_in_seconds"] = -2345
-            config_hash["staging"]["auth"]["user"] = "f@t:%a"
-            config_hash["staging"]["auth"]["password"] = "m@/n!"
+            config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
+            config_hash['app_bits_upload_grace_period_in_seconds'] = -2345
+            config_hash['staging']['auth']['user'] = 'f@t:%a'
+            config_hash['staging']['auth']['password'] = 'm@/n!'
 
-            File.open(File.join(tmpdir, "incorrect_overridden_config.yml"), "w") do |f|
+            File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
               YAML.dump(config_hash, f)
             end
           end
@@ -163,49 +163,49 @@ module VCAP::CloudController
             FileUtils.rm_r(tmpdir)
           end
 
-          it "reset the negative value of app_bits_upload_grace_period_in_seconds to 0" do
+          it 'reset the negative value of app_bits_upload_grace_period_in_seconds to 0' do
             expect(config_from_file[:app_bits_upload_grace_period_in_seconds]).to eq(0)
           end
 
-          it "URL-encodes staging auth as neccesary" do
-            expect(config_from_file[:staging][:auth][:user]).to eq("f%40t%3A%25a")
-            expect(config_from_file[:staging][:auth][:password]).to eq("m%40%2Fn!")
+          it 'URL-encodes staging auth as neccesary' do
+            expect(config_from_file[:staging][:auth][:user]).to eq('f%40t%3A%25a')
+            expect(config_from_file[:staging][:auth][:password]).to eq('m%40%2Fn!')
           end
         end
       end
     end
 
-    describe ".configure_components" do
+    describe '.configure_components' do
       before do
         @test_config = {
-            packages: {
-              fog_connection: {},
-              app_package_directory_key: 'app_key',
+          packages: {
+            fog_connection: {},
+            app_package_directory_key: 'app_key',
+          },
+          droplets: {
+            fog_connection: {},
+            droplet_directory_key: 'droplet_key',
+          },
+          buildpacks: {
+            fog_connection: {},
+            buildpack_directory_key: 'bp_key',
+          },
+          resource_pool: {
+            minimum_size: 0,
+            maximum_size: 0,
+            fog_connection: {},
+            resource_directory_key: 'resource_key',
+          },
+          cc_partition: 'ng',
+          bulk_api: {},
+          external_host: 'host',
+          external_port: 1234,
+          staging: {
+            auth: {
+              user: 'user',
+              password: 'password',
             },
-            droplets: {
-              fog_connection: {},
-              droplet_directory_key: 'droplet_key',
-            },
-            buildpacks: {
-              fog_connection: {},
-              buildpack_directory_key: 'bp_key',
-            },
-            resource_pool: {
-              minimum_size: 0,
-              maximum_size: 0,
-              fog_connection: {},
-              resource_directory_key: 'resource_key',
-            },
-            cc_partition: "ng",
-            bulk_api: {},
-            external_host: 'host',
-            external_port: 1234,
-            staging: {
-              auth: {
-                user: 'user',
-                password: 'password',
-                },
-            },
+          },
           diego: {
             staging: 'optional',
             running: 'optional',
@@ -213,59 +213,59 @@ module VCAP::CloudController
         }
       end
 
-      it "sets up the db encryption key" do
-        Config.configure_components(@test_config.merge(db_encryption_key: "123-456"))
-        expect(Encryptor.db_encryption_key).to eq("123-456")
+      it 'sets up the db encryption key' do
+        Config.configure_components(@test_config.merge(db_encryption_key: '123-456'))
+        expect(Encryptor.db_encryption_key).to eq('123-456')
       end
 
-      it "sets up the account capacity" do
-        Config.configure_components(@test_config.merge(admin_account_capacity: {memory: 64*1024}))
-        expect(AccountCapacity.admin[:memory]).to eq(64*1024)
+      it 'sets up the account capacity' do
+        Config.configure_components(@test_config.merge(admin_account_capacity: { memory: 64 * 1024 }))
+        expect(AccountCapacity.admin[:memory]).to eq(64 * 1024)
 
         AccountCapacity.admin[:memory] = AccountCapacity::ADMIN_MEM
       end
 
-      it "sets up the resource pool instance" do
-        Config.configure_components(@test_config.merge(resource_pool: {minimum_size: 9001}))
+      it 'sets up the resource pool instance' do
+        Config.configure_components(@test_config.merge(resource_pool: { minimum_size: 9001 }))
         expect(ResourcePool.instance.minimum_size).to eq(9001)
       end
 
-      it "creates the runners" do
+      it 'creates the runners' do
         expect(VCAP::CloudController::Runners).to receive(:new).with(
-                                    @test_config,
-                                    message_bus,
-                                    instance_of(Dea::Pool),
-                                    instance_of(Dea::StagerPool))
+          @test_config,
+          message_bus,
+          instance_of(Dea::Pool),
+          instance_of(Dea::StagerPool))
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
       end
 
-      it "creates the stagers" do
+      it 'creates the stagers' do
         expect(VCAP::CloudController::Stagers).to receive(:new).with(
-                                    @test_config,
-                                    message_bus,
-                                    instance_of(Dea::Pool),
-                                    instance_of(Dea::StagerPool),
-                                    instance_of(Runners))
+          @test_config,
+          message_bus,
+          instance_of(Dea::Pool),
+          instance_of(Dea::StagerPool),
+          instance_of(Runners))
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
       end
 
-      it "creates the dea stager pool" do
+      it 'creates the dea stager pool' do
         expect(Dea::StagerPool).to receive(:new).and_call_original
 
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
       end
 
-      it "sets up the app manager" do
+      it 'sets up the app manager' do
         expect(AppObserver).to receive(:configure).with(instance_of(VCAP::CloudController::Stagers), instance_of(VCAP::CloudController::Runners))
 
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
       end
 
-      it "sets the dea client" do
+      it 'sets the dea client' do
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
         expect(Dea::Client.config).to eq(@test_config)
@@ -275,27 +275,27 @@ module VCAP::CloudController
         Dea::Client.dea_pool.register_subscriptions
       end
 
-      it "sets the legacy bulk" do
-        bulk_config = {bulk_api: {auth_user: "user", auth_password: "password"}}
+      it 'sets the legacy bulk' do
+        bulk_config = { bulk_api: { auth_user: 'user', auth_password: 'password' } }
         Config.configure_components(@test_config.merge(bulk_config))
         Config.configure_components_depending_on_message_bus(message_bus)
-        expect(LegacyBulk.config[:auth_user]).to eq("user")
-        expect(LegacyBulk.config[:auth_password]).to eq("password")
+        expect(LegacyBulk.config[:auth_user]).to eq('user')
+        expect(LegacyBulk.config[:auth_password]).to eq('password')
         expect(LegacyBulk.message_bus).to eq(message_bus)
       end
 
-      it "sets up the quota definition" do
+      it 'sets up the quota definition' do
         expect(QuotaDefinition).to receive(:configure).with(@test_config)
         Config.configure_components(@test_config)
       end
 
-      it "sets up the stack" do
-        config = @test_config.merge(stacks_file: "path/to/stacks/file")
-        expect(Stack).to receive(:configure).with("path/to/stacks/file")
+      it 'sets up the stack' do
+        config = @test_config.merge(stacks_file: 'path/to/stacks/file')
+        expect(Stack).to receive(:configure).with('path/to/stacks/file')
         Config.configure_components(config)
       end
 
-      it "sets up app with whether custom buildpacks are enabled" do
+      it 'sets up app with whether custom buildpacks are enabled' do
         config = @test_config.merge(disable_custom_buildpacks: true)
 
         expect {
@@ -313,52 +313,52 @@ module VCAP::CloudController
         }.to(false)
       end
 
-      context "when newrelic is disabled" do
+      context 'when newrelic is disabled' do
         let(:config) do
           @test_config.merge(newrelic_enabled: false)
         end
 
         before do
           GC::Profiler.disable
-          Config.instance_eval("@initialized = false")
+          Config.instance_eval('@initialized = false')
         end
 
-        it "does not enable GC profiling" do
+        it 'does not enable GC profiling' do
           Config.configure_components(config)
           expect(GC::Profiler.enabled?).to eq(false)
         end
       end
 
-      context "when newrelic is enabled" do
+      context 'when newrelic is enabled' do
         let(:config) do
           @test_config.merge(newrelic_enabled: true)
         end
 
         before do
           GC::Profiler.disable
-          Config.instance_eval("@initialized = false")
+          Config.instance_eval('@initialized = false')
         end
 
-        it "enables GC profiling" do
+        it 'enables GC profiling' do
           Config.configure_components(config)
           expect(GC::Profiler.enabled?).to eq(true)
         end
       end
     end
 
-    describe "diego config validation" do
-      base_config = {staging: {auth: {user: "user", password: "password"}}}
+    describe 'diego config validation' do
+      base_config = { staging: { auth: { user: 'user', password: 'password' } } }
 
-      context "valid configurations" do
+      context 'valid configurations' do
         let(:valid_configs) do
           [
-            {diego: {staging: "optional", running: "optional"}},
-            {diego: {staging: "optional", running: "disabled"}},
-            {diego: {staging: "disabled", running: "disabled"}},
+            { diego: { staging: 'optional', running: 'optional' } },
+            { diego: { staging: 'optional', running: 'disabled' } },
+            { diego: { staging: 'disabled', running: 'disabled' } },
           ]
         end
 
-        it "allows valid configurations" do
+        it 'allows valid configurations' do
           valid_configs.each do |config|
             config.merge!(base_config)
             expect {
@@ -368,13 +368,12 @@ module VCAP::CloudController
         end
       end
 
-
-      context "invalid configurations" do
+      context 'invalid configurations' do
         let(:invalid_config) do
-          {diego: {staging: "disabled", running: "optional"}}
+          { diego: { staging: 'disabled', running: 'optional' } }
         end
 
-        it "raises a validation exception" do
+        it 'raises a validation exception' do
           invalid_config.merge!(base_config)
           expect {
             Config.validate!(Config.merge_defaults(invalid_config))

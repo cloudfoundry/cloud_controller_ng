@@ -1,4 +1,4 @@
-RSpec::Matchers.define :have_associated do |association, options = {}|
+RSpec::Matchers.define :have_associated do |association, options={}|
   description do
     "have associated #{association}"
   end
@@ -7,7 +7,7 @@ RSpec::Matchers.define :have_associated do |association, options = {}|
     instance ||= described_class.make
     associated_instance = get_associated_instance(instance, association, options)
 
-    if association[-1] == "s"
+    if association[-1] == 's'
       instance.send("add_#{association.to_s.singularize}", associated_instance)
       instance.send(association).include? associated_instance.reload
     else

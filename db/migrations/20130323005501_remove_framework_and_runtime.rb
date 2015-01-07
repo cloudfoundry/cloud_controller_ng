@@ -7,8 +7,8 @@ Sequel.migration do
     # requires type=foreign_key to be present for such operations.
     if self.class.name.match /mysql/i
       alter_table :apps do
-        drop_constraint :fk_apps_framework_id, :type => :foreign_key
-        drop_constraint :fk_apps_runtime_id, :type => :foreign_key
+        drop_constraint :fk_apps_framework_id, type: :foreign_key
+        drop_constraint :fk_apps_runtime_id, type: :foreign_key
       end
     end
 

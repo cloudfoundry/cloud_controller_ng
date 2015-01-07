@@ -5,8 +5,8 @@ module VCAP::RestAPI
   # fetched/set on a controller.  These ultimately get used to auto-generate
   # a Membrane based json validator on a per request type basis.
   class NamedAttribute
-    attr_reader :name
-    attr_reader :default
+    attr_reader :name, :default, :has_default
+    alias_method :has_default?, :has_default
 
     # Create a NamedAttribute.  By default, the attribute is considered to
     # be required.
@@ -22,12 +22,12 @@ module VCAP::RestAPI
     #
     # @option opts [Object] :default default value for the attribute if it
     # isn't supplied.
-    def initialize(name, opts = {})
+    def initialize(name, opts={})
       @name        = name
       @exclude_in  = Set.new(Array(opts[:exclude_in]))
       @optional_in = Set.new(Array(opts[:optional_in]))
       @default     = opts[:default]
-      @has_default = opts.has_key?(:default)
+      @has_default = opts.key?(:default)
     end
 
     # Predicate to check if the attribute is excluded for a certain type of
@@ -48,10 +48,6 @@ module VCAP::RestAPI
     # @return [Boolean] True if the attribute is optional.
     def optional_in?(operation_type)
       @optional_in.include?(operation_type)
-    end
-
-    def has_default?
-      @has_default
     end
   end
 
@@ -74,7 +70,7 @@ module VCAP::RestAPI
     #
     # @option opts [Object] :default default value for the attribute if it
     # isn't supplied.
-    def initialize(name, schema, opts = {})
+    def initialize(name, schema, opts={})
       if schema.respond_to?(:call)
         @block = schema
         @schema = nil

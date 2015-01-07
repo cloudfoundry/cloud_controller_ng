@@ -9,13 +9,13 @@ module VCAP::CloudController
 
       def publish_stop(message)
         logger.debug "sending 'dea.stop' with '#{message}'"
-        message_bus.publish("dea.stop", message)
+        message_bus.publish('dea.stop', message)
       end
 
       private
 
       def logger
-        @logger ||= Steno.logger("cc.appstopper")
+        @logger ||= Steno.logger('cc.appstopper')
       end
     end
   end

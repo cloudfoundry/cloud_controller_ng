@@ -1,4 +1,4 @@
-require "spec_helper"
+require 'spec_helper'
 
 describe MaxServiceInstancePolicy do
   let(:org) { VCAP::CloudController::Organization.make quota_definition: quota }
@@ -26,51 +26,51 @@ describe MaxServiceInstancePolicy do
     expect(policy).to validate_without_error(service_instance)
   end
 
-  context "when quota is nil" do
+  context 'when quota is nil' do
     let(:quota) { nil }
-    it "does not add errors" do
+    it 'does not add errors' do
       expect(policy).to validate_without_error(service_instance)
     end
   end
 
-  context "when the quota is not reached" do
-    it "does not add errors" do
+  context 'when the quota is not reached' do
+    it 'does not add errors' do
       expect(policy).to validate_without_error(service_instance)
     end
   end
 
-  context "when the quota is unlimited" do
+  context 'when the quota is unlimited' do
     let(:total_services) { -1 }
 
-    it "does not add errors" do
+    it 'does not add errors' do
       make_service_instance
       expect(policy).to validate_without_error(service_instance)
     end
   end
 
-  context "when the quota is reached" do
+  context 'when the quota is reached' do
     let(:existing_service_count) { total_services }
     before { total_services.times { make_service_instance } }
 
-    context "and the request is for a new service" do
-      it "adds a service_instance_quota_exceeded error on the quota" do
+    context 'and the request is for a new service' do
+      it 'adds a service_instance_quota_exceeded error on the quota' do
         expect(policy).to validate_with_error(service_instance, :quota, error_name)
       end
     end
 
-    context "and the request is to update an existing service" do
+    context 'and the request is to update an existing service' do
       let(:service_instance) do
         VCAP::CloudController::ManagedServiceInstance.first
       end
 
-      it "allows updating the service" do
+      it 'allows updating the service' do
         expect(policy).to validate_without_error(service_instance)
       end
 
-      context "and the quota is actually exceeded" do
+      context 'and the quota is actually exceeded' do
         let(:existing_service_count) { total_services + 1 }
 
-        it "adds an error on the quota if the quota is actually exceeded" do
+        it 'adds an error on the quota if the quota is actually exceeded' do
           expect(policy).to validate_with_error(service_instance, :quota, error_name)
         end
       end

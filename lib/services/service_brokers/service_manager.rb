@@ -42,7 +42,7 @@ module VCAP::Services::ServiceBrokers
         )
 
         @services_event_repository.with_service_event(obj) do
-          obj.save(:changed => true)
+          obj.save(changed: true)
         end
       end
     end
@@ -66,17 +66,17 @@ module VCAP::Services::ServiceBrokers
           extra:       catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
         })
         @services_event_repository.with_service_plan_event(plan) do
-          plan.save(:changed => true)
+          plan.save(changed: true)
         end
       end
     end
 
     def find_or_new_model(model_class, cond)
-        obj = model_class.first(cond)
-        unless obj
-          obj = model_class.new(cond)
-        end
-        obj
+      obj = model_class.first(cond)
+      unless obj
+        obj = model_class.new(cond)
+      end
+      obj
     end
 
     def deactivate_services(catalog)

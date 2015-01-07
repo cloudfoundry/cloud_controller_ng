@@ -1,11 +1,11 @@
-require "cloudfront-signer"
+require 'cloudfront-signer'
 
 module CCInitializers
   def self.cloudfront_signer(cc_config)
     cdn_config = cc_config[:droplets][:cdn]
     return unless cdn_config && cdn_config[:private_key].present?
 
-    key_file = Tempfile.open("pk-cdn.pem") do |file|
+    key_file = Tempfile.open('pk-cdn.pem') do |file|
       file.write(cc_config[:droplets][:cdn][:private_key])
       file
     end

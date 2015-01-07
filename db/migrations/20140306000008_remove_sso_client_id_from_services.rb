@@ -13,7 +13,7 @@ Sequel.migration do
 
   down do
     alter_table :services do
-      add_column :sso_client_id, String, :unique => true
+      add_column :sso_client_id, String, unique: true
     end
     run <<-SQL
       UPDATE services

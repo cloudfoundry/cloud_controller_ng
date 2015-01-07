@@ -1,7 +1,6 @@
 require 'presenters/message_bus/service_instance_presenter'
 
 class ServiceBindingPresenter
-
   def initialize(service_binding)
     @service_binding = service_binding
   end
@@ -14,5 +13,3 @@ class ServiceBindingPresenter
     }.merge(ServiceInstancePresenter.new(@service_binding.service_instance).to_hash)
   end
 end
-
-

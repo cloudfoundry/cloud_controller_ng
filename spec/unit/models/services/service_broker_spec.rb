@@ -19,7 +19,7 @@ module VCAP::CloudController
     describe 'Associations' do
       it { is_expected.to have_associated :services }
 
-      it "has associated service_plans" do
+      it 'has associated service_plans' do
         service = Service.make(:v2)
         service_plan = ServicePlan.make(service: service)
         service_broker = service.service_broker
@@ -52,7 +52,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "Serialization" do
+    describe 'Serialization' do
       it { is_expected.to export_attributes :name, :broker_url, :auth_username }
       it { is_expected.to import_attributes :name, :broker_url, :auth_username, :auth_password }
     end
@@ -65,33 +65,33 @@ module VCAP::CloudController
       end
     end
 
-    describe "#destroy" do
+    describe '#destroy' do
       let(:service_broker) { ServiceBroker.make }
 
-      it "destroys all services associated with the broker" do
-        service = Service.make(:service_broker => service_broker)
+      it 'destroys all services associated with the broker' do
+        service = Service.make(service_broker: service_broker)
         expect {
           begin
             service_broker.destroy
           rescue Sequel::ForeignKeyConstraintViolation
           end
         }.to change {
-          Service.where(:id => service.id).any?
+          Service.where(id: service.id).any?
         }.to(false)
       end
 
       context 'when a service instance exists' do
         it 'does not allow the broker to be destroyed' do
-          service = Service.make(:service_broker => service_broker)
-          service_plan = ServicePlan.make(:service => service)
-          ManagedServiceInstance.make(:service_plan => service_plan)
+          service = Service.make(service_broker: service_broker)
+          service_plan = ServicePlan.make(service: service)
+          ManagedServiceInstance.make(service_plan: service_plan)
           expect {
             begin
               service_broker.destroy
             rescue Sequel::ForeignKeyConstraintViolation
             end
           }.to_not change {
-            Service.where(:id => service.id).count
+            Service.where(id: service.id).count
           }
         end
       end

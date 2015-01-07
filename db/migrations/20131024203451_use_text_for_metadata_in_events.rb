@@ -7,7 +7,7 @@ Sequel.migration do
     alter_table(:events) do
       set_column_allow_null :metadata
       set_column_default :metadata, nil
-      set_column_type :metadata, String, :text => "true"
+      set_column_type :metadata, String, text: 'true'
     end
   end
 
@@ -17,7 +17,7 @@ Sequel.migration do
 
     alter_table(:events) do
       set_column_type :metadata, String
-      set_column_default :metadata, "{}"
+      set_column_default :metadata, '{}'
       set_column_not_null :metadata
     end
   end

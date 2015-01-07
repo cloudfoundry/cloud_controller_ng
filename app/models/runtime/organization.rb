@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class Organization < Sequel::Model
     ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
-    ORG_STATUS_VALUES = %w[active suspended]
+    ORG_STATUS_VALUES = %w(active suspended)
 
     one_to_many :spaces
 
@@ -17,8 +17,12 @@ module VCAP::CloudController
     one_to_many :app_events,
                 dataset: -> { VCAP::CloudController::AppEvent.filter(app: apps) }
 
-    one_to_many :private_domains, key: :owning_organization_id,
-                before_add: proc { |org, private_domain| private_domain.addable_to_organization!(org)}
+    one_to_many(
+      :private_domains,
+      key: :owning_organization_id,
+      before_add: proc { |org, private_domain| private_domain.addable_to_organization!(org) }
+    )
+
     one_to_many :service_plan_visibilities
     many_to_one :quota_definition
 
@@ -50,11 +54,13 @@ module VCAP::CloudController
     one_to_many :space_quota_definitions,
                 before_add: proc { |org, quota| quota.organization.id == org.id }
 
-    add_association_dependencies spaces: :destroy,
+    add_association_dependencies(
+      spaces: :destroy,
       service_instances: :destroy,
       private_domains: :destroy,
       service_plan_visibilities: :destroy,
       space_quota_definitions: :destroy
+    )
 
     define_user_group :users
     define_user_group :managers,
@@ -63,7 +69,7 @@ module VCAP::CloudController
     define_user_group :billing_managers, reciprocal: :billing_managed_organizations
     define_user_group :auditors, reciprocal: :audited_organizations
 
-    strip_attributes  :name
+    strip_attributes :name
 
     export_attributes :name, :billing_enabled, :quota_definition_guid, :status
     import_attributes :name, :billing_enabled,
@@ -71,7 +77,8 @@ module VCAP::CloudController
                       :auditor_guids, :quota_definition_guid, :status
 
     def remove_user(user)
-      raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "user", "spaces in the org") unless ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).empty?
+      can_remove = ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).empty?
+      raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'user', 'spaces in the org') unless can_remove
       super(user)
     end
 
@@ -116,9 +123,9 @@ module VCAP::CloudController
 
     def validate
       validates_presence :name
-      validates_unique   :name
+      validates_unique :name
       validates_format ORG_NAME_REGEX, :name
-      validates_includes ORG_STATUS_VALUES, :status, :allow_missing => true
+      validates_includes ORG_STATUS_VALUES, :status, allow_missing: true
     end
 
     def has_remaining_memory(mem)
@@ -143,16 +150,16 @@ module VCAP::CloudController
       return if quota_definition
 
       if QuotaDefinition.default.nil?
-        err_msg = Errors::ApiError.new_from_details("QuotaDefinitionNotFound", QuotaDefinition.default_quota_name).message
-        raise Errors::ApiError.new_from_details("OrganizationInvalid", err_msg)
+        err_msg = Errors::ApiError.new_from_details('QuotaDefinitionNotFound', QuotaDefinition.default_quota_name).message
+        raise Errors::ApiError.new_from_details('OrganizationInvalid', err_msg)
       end
       self.quota_definition_id = QuotaDefinition.default.id
     end
 
     def validate_quota_on_update
       if column_changed?(:quota_definition_id) && quota_definition.nil?
-        err_msg = Errors::ApiError.new_from_details("QuotaDefinitionNotFound", "null").message
-        raise Errors::ApiError.new_from_details("OrganizationInvalid", err_msg)
+        err_msg = Errors::ApiError.new_from_details('QuotaDefinitionNotFound', 'null').message
+        raise Errors::ApiError.new_from_details('OrganizationInvalid', err_msg)
       end
     end
 

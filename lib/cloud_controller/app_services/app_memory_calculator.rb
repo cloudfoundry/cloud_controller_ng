@@ -25,17 +25,17 @@ module VCAP::CloudController
     private
 
     def app_from_db
-      error_message = "Expected app record not found in database with guid %s"
+      error_message = 'Expected app record not found in database with guid %s'
       app_from_db   = App.find(guid: app.guid)
       if app_from_db.nil?
-        logger.fatal("app.find.missing", guid: app.guid, self: app.inspect)
-        raise Errors::ApplicationMissing, error_message % app.guid
+        logger.fatal('app.find.missing', guid: app.guid, self: app.inspect)
+        raise Errors::ApplicationMissing.new(error_message % app.guid)
       end
       app_from_db
     end
 
     def logger
-      @logger ||= Steno.logger("cc.app_memory_calculator")
+      @logger ||= Steno.logger('cc.app_memory_calculator')
     end
   end
 end

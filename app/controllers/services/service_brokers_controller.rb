@@ -1,12 +1,10 @@
 require 'presenters/api/service_broker_presenter'
 
 module VCAP::CloudController
-
   # This controller is an experiment breaking away from the old
   # cloudcontroller metaprogramming. We manually generate the JSON
   # expected by CFoundry and CF.
   class ServiceBrokersController < RestController::ModelController
-
     define_attributes do
       attribute :name,       String
       attribute :broker_url, String
@@ -17,7 +15,7 @@ module VCAP::CloudController
     query_parameters :name
 
     def self.dependencies
-      [ :service_manager, :services_event_repository ]
+      [:service_manager, :services_event_repository]
     end
 
     def inject_dependencies(dependencies)
@@ -43,7 +41,7 @@ module VCAP::CloudController
         registration.warnings.each { |warning| add_warning(warning) }
       end
 
-      headers = {'Location' => url_of(broker)}
+      headers = { 'Location' => url_of(broker) }
       body = ServiceBrokerPresenter.new(broker).to_json
       [HTTP::CREATED, headers, body]
     end
@@ -73,7 +71,7 @@ module VCAP::CloudController
 
     def delete(guid)
       validate_access(:delete, ServiceBroker)
-      broker = ServiceBroker.find(:guid => guid)
+      broker = ServiceBroker.find(guid: guid)
       return HTTP::NOT_FOUND unless broker
 
       VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker, @services_event_repository).execute!
@@ -81,16 +79,16 @@ module VCAP::CloudController
 
       HTTP::NO_CONTENT
     rescue Sequel::ForeignKeyConstraintViolation
-      raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerNotRemovable")
+      raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerNotRemovable')
     end
 
     def self.translate_validation_exception(e, _)
       if e.errors.on(:name) && e.errors.on(:name).include?(:unique)
-        Errors::ApiError.new_from_details("ServiceBrokerNameTaken", e.model.name)
+        Errors::ApiError.new_from_details('ServiceBrokerNameTaken', e.model.name)
       elsif e.errors.on(:broker_url) && e.errors.on(:broker_url).include?(:unique)
-        Errors::ApiError.new_from_details("ServiceBrokerUrlTaken", e.model.broker_url)
+        Errors::ApiError.new_from_details('ServiceBrokerUrlTaken', e.model.broker_url)
       else
-        Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", e.errors.full_messages)
+        Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', e.errors.full_messages)
       end
     end
 
@@ -108,15 +106,15 @@ module VCAP::CloudController
       broker = registration.broker
 
       if errors.on(:broker_url) && errors.on(:broker_url).include?(:url)
-        Errors::ApiError.new_from_details("ServiceBrokerUrlInvalid", broker.broker_url)
+        Errors::ApiError.new_from_details('ServiceBrokerUrlInvalid', broker.broker_url)
       elsif errors.on(:broker_url) && errors.on(:broker_url).include?(:unique)
-        Errors::ApiError.new_from_details("ServiceBrokerUrlTaken", broker.broker_url)
+        Errors::ApiError.new_from_details('ServiceBrokerUrlTaken', broker.broker_url)
       elsif errors.on(:name) && errors.on(:name).include?(:unique)
-        Errors::ApiError.new_from_details("ServiceBrokerNameTaken", broker.name)
+        Errors::ApiError.new_from_details('ServiceBrokerNameTaken', broker.name)
       elsif errors.on(:services)
-        Errors::ApiError.new_from_details("ServiceBrokerInvalid", errors.on(:services))
+        Errors::ApiError.new_from_details('ServiceBrokerInvalid', errors.on(:services))
       else
-        Errors::ApiError.new_from_details("ServiceBrokerInvalid", errors.full_messages)
+        Errors::ApiError.new_from_details('ServiceBrokerInvalid', errors.full_messages)
       end
     end
   end

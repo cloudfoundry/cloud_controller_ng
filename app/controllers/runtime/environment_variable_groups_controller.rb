@@ -25,9 +25,10 @@ module VCAP::CloudController
     end
 
     private
+
     def read(group)
       validate_access(:read, model)
-      [ HTTP::OK, MultiJson.dump(group.environment_json, pretty: true) ]
+      [HTTP::OK, MultiJson.dump(group.environment_json, pretty: true)]
     end
 
     def update(group)
@@ -40,7 +41,7 @@ module VCAP::CloudController
         raise Errors::ApiError.new_from_details('MessageParseError', e.message)
       end
 
-      [ HTTP::OK, MultiJson.dump(group.environment_json, pretty: true) ]
+      [HTTP::OK, MultiJson.dump(group.environment_json, pretty: true)]
     end
   end
 end

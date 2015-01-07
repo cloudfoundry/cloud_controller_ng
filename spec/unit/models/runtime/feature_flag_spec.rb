@@ -36,7 +36,7 @@ module VCAP::CloudController
           end
         end
       end
-      
+
       describe 'error message' do
         subject(:feature_flag) { FeatureFlag.make }
 
@@ -48,14 +48,14 @@ module VCAP::CloudController
         end
 
         it 'should allow backslash characters' do
-          feature_flag.error_message = "a\\word"
+          feature_flag.error_message = 'a\\word'
           expect {
             feature_flag.save
           }.to_not raise_error
         end
 
         it 'should allow unicode characters' do
-          feature_flag.error_message = "防御力¡"
+          feature_flag.error_message = '防御力¡'
           expect {
             feature_flag.save
           }.to_not raise_error
@@ -150,7 +150,7 @@ module VCAP::CloudController
         end
 
         context 'and there is a custom operator defined error message' do
-          let(:feature_flag) { FeatureFlag.make(error_message: "foobar") }
+          let(:feature_flag) { FeatureFlag.make(error_message: 'foobar') }
 
           it 'raises FeatureDisabled with the custom error message' do
             expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(VCAP::Errors::ApiError) do |error|

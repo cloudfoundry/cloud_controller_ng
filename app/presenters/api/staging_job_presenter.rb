@@ -1,4 +1,4 @@
-require_relative "job_presenter"
+require_relative 'job_presenter'
 
 class StagingJobPresenter < JobPresenter
   def status_url

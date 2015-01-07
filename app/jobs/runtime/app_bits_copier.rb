@@ -11,7 +11,7 @@ module VCAP::CloudController
         end
 
         def perform
-          logger = Steno.logger("cc.background")
+          logger = Steno.logger('cc.background')
           logger.info("Copying the app bits from app '#{@src_app.guid}' to app '#{@dest_app.guid}'")
 
           package_blobstore = CloudController::DependencyLocator.instance.package_blobstore

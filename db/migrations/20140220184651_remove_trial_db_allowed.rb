@@ -7,7 +7,7 @@ Sequel.migration do
 
   down do
     alter_table :quota_definitions do
-      add_column :trial_db_allowed, TrueClass, :default => false
+      add_column :trial_db_allowed, TrueClass, default: false
     end
   end
 end

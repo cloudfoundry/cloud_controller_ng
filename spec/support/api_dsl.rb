@@ -3,7 +3,7 @@ require 'active_support/concern'
 module ApiDsl
   extend ActiveSupport::Concern
 
-  def validate_response(model, json, expected_values = {}, ignored_attributes = [])
+  def validate_response(model, json, expected_values={}, ignored_attributes=[])
     ignored_attributes.push :guid
     expected_attributes_for_model(model).each do |expected_attribute|
       # refactor: pass exclusions, and figure out which are valid to not be there
@@ -13,36 +13,36 @@ module ApiDsl
       next if field_is_url_and_relationship_not_present?(json, expected_attribute)
 
       expect(json).to have_key expected_attribute.to_s
-      if expected_values.has_key? expected_attribute.to_sym
+      if expected_values.key? expected_attribute.to_sym
         expect(json[expected_attribute.to_s]).to eq(expected_values[expected_attribute.to_sym])
       end
     end
   end
 
-  def standard_list_response response_json, model
+  def standard_list_response(response_json, model)
     standard_paginated_response_format? response_json
-    resource = response_json["resources"].first
+    resource = response_json['resources'].first
     standard_entity_response resource, model
   end
 
-  def standard_entity_response json, model, expected_values={}
-    expect(json).to include("metadata")
-    expect(json).to include("entity")
-    standard_metadata_response_format? json["metadata"], model
-    validate_response model, json["entity"], expected_values
+  def standard_entity_response(json, model, expected_values={})
+    expect(json).to include('metadata')
+    expect(json).to include('entity')
+    standard_metadata_response_format? json['metadata'], model
+    validate_response model, json['entity'], expected_values
   end
 
-  def standard_paginated_response_format? json
+  def standard_paginated_response_format?(json)
     validate_response VCAP::RestAPI::PaginatedResponse, json
   end
 
-  def standard_metadata_response_format? json, model
+  def standard_metadata_response_format?(json, model)
     ignored_attributes = []
     ignored_attributes = [:updated_at] unless model_has_updated_at?(model)
     validate_response VCAP::RestAPI::MetadataMessage, json, {}, ignored_attributes
   end
 
-  def expected_attributes_for_model model
+  def expected_attributes_for_model(model)
     return model.fields.keys if model.respond_to? :fields
     "VCAP::CloudController::#{model.to_s.classify}".constantize.export_attrs
   end
@@ -53,21 +53,21 @@ module ApiDsl
 
   def field_is_url_and_relationship_not_present?(json, field)
     if field =~ /(.*)_url$/
-      !json["#$1_guid".to_sym]
+      !json["#{Regexp.last_match[1]}_guid".to_sym]
     end
   end
 
-  def audited_event event
+  def audited_event(event)
     attributes = event.columns.map do |column|
       if column == :metadata
-        {attribute_name: column.to_s, value: JSON.pretty_generate(JSON.parse(event[column])), is_json: true}
+        { attribute_name: column.to_s, value: JSON.pretty_generate(JSON.parse(event[column])), is_json: true }
       else
-        {attribute_name: column.to_s, value: event[column], is_json: false}
+        { attribute_name: column.to_s, value: event[column], is_json: false }
       end
     end
 
     RSpec.current_example.metadata[:audit_records] ||= []
-    RSpec.current_example.metadata[:audit_records] << {type: event[:type], attributes: attributes}
+    RSpec.current_example.metadata[:audit_records] << { type: event[:type], attributes: attributes }
   end
 
   def field_data(name)
@@ -76,14 +76,13 @@ module ApiDsl
     end
   end
 
-  def fields_json(overrides = {})
+  def fields_json(overrides={})
     MultiJson.dump(required_fields.merge(overrides), pretty: true)
   end
 
   def required_fields
-    self.class.metadata[:fields].inject({}) do |memo, field|
+    self.class.metadata[:fields].each_with_object({}) do |field, memo|
       memo[field[:name].to_sym] = (field[:valid_values] || field[:example_values]).first if field[:required]
-      memo
     end
   end
 
@@ -94,19 +93,19 @@ module ApiDsl
   end
 
   def add_deprecation_warning
-    example.metadata[:description] << " (deprecated)" if response_headers['X-Cf-Warnings'] && response_headers['X-Cf-Warnings'][/deprecated/i]
+    example.metadata[:description] << ' (deprecated)' if response_headers['X-Cf-Warnings'] && response_headers['X-Cf-Warnings'][/deprecated/i]
   end
 
   module ClassMethods
     def api_version
-      "/v2"
+      '/v2'
     end
 
     def root(model)
       "#{api_version}/#{model.to_s.pluralize}"
     end
 
-    def standard_model_list(model, controller, options = {})
+    def standard_model_list(model, controller, options={})
       outer_model_description = ''
       model_name = options[:path] || model
       title = options[:title] || model_name.to_s.pluralize.titleize
@@ -145,14 +144,14 @@ module ApiDsl
       delete path_name do
         example "Remove #{model.to_s.titleize} from the #{outer_model.to_s.titleize}" do
           path = "#{self.class.api_version}/#{outer_model.to_s.pluralize}/#{send(:guid)}/#{model.to_s.pluralize}/#{send("associated_#{model}_guid")}"
-          client.delete path, "", headers
+          client.delete path, '', headers
           expect(status).to eq 201
           standard_entity_response parsed_response, outer_model
         end
       end
     end
 
-    def standard_model_get(model, options = {})
+    def standard_model_get(model, options={})
       path = options[:path] || model
       title = options[:title] || path.to_s.singularize.titleize
       get "#{root(path)}/:guid" do
@@ -168,7 +167,7 @@ module ApiDsl
       end
     end
 
-    def standard_model_delete(model, options = {})
+    def standard_model_delete(model, options={})
       title = options[:title] || model.to_s.titleize
       delete "#{root(model)}/:guid" do
         parameter :guid, "The guid of the #{title}"
@@ -192,36 +191,36 @@ module ApiDsl
 
     def standard_list_parameters(controller)
       if controller.query_parameters.size > 0
-        query_parameter_description = "Parameters used to filter the result set.<br/>"
-        query_parameter_description += "Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/>"
-        query_parameter_description += " Valid ops: : &gt;= &lt;= &lt; &gt; IN<br/>"
-        query_parameter_description += " Valid filters: #{controller.query_parameters.to_a.join(", ")}"
+        query_parameter_description = 'Parameters used to filter the result set.<br/>'
+        query_parameter_description += 'Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/>'
+        query_parameter_description += ' Valid ops: : &gt;= &lt;= &lt; &gt; IN<br/>'
+        query_parameter_description += " Valid filters: #{controller.query_parameters.to_a.join(', ')}"
 
-        examples = ["q=filter:value", "q=filter>value", "q=filter IN a,b,c"]
+        examples = ['q=filter:value', 'q=filter>value', 'q=filter IN a,b,c']
         request_parameter :q, query_parameter_description, { html: true, example_values: examples }
       end
-      request_parameter :page, "Page of results to fetch"
-      request_parameter :'results-per-page', "Number of results per page"
-      request_parameter :'order-direction', "Order of the results: asc (default) or desc"
+      request_parameter :page, 'Page of results to fetch'
+      request_parameter :'results-per-page', 'Number of results per page'
+      request_parameter :'order-direction', 'Order of the results: asc (default) or desc'
       request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N.", deprecated: true
-      request_parameter :'orphan-relations', "0 - de-duplicate object entries in response", deprecated: true
-      request_parameter :'exclude-relations', "comma-delimited list of relations to drop from response", deprecated: true
-      request_parameter :'include-relations', "comma-delimited list of the only relations to include in response", deprecated: true
+      request_parameter :'orphan-relations', '0 - de-duplicate object entries in response', deprecated: true
+      request_parameter :'exclude-relations', 'comma-delimited list of relations to drop from response', deprecated: true
+      request_parameter :'include-relations', 'comma-delimited list of the only relations to include in response', deprecated: true
     end
 
-    def request_parameter(name, description, options = {})
+    def request_parameter(name, description, options={})
       if options[:html]
         options[:description_html] = description
       end
 
       parameter name, description, options
       metadata[:request_parameters] ||= []
-      metadata[:request_parameters].push(options.merge(:name => name.to_s, :description => description))
+      metadata[:request_parameters].push(options.merge(name: name.to_s, description: description))
     end
 
-    def field(name, description = "", options = {})
+    def field(name, description='', options={})
       metadata[:fields] = metadata[:fields] ? metadata[:fields].dup : []
-      metadata[:fields].push(options.merge(:name => name.to_s, :description => description))
+      metadata[:fields].push(options.merge(name: name.to_s, description: description))
     end
 
     def modify_fields_for_update
@@ -233,7 +232,7 @@ module ApiDsl
     end
 
     def authenticated_request
-      header "AUTHORIZATION", :admin_auth_header
+      header 'AUTHORIZATION', :admin_auth_header
     end
   end
 end

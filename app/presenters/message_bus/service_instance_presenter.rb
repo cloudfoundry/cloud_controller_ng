@@ -18,7 +18,7 @@ class ServiceInstancePresenter
 
     def to_hash
       {
-        label: "user-provided",
+        label: 'user-provided',
         name: @service_instance.name,
         tags: @service_instance.tags
       }

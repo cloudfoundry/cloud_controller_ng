@@ -12,7 +12,7 @@ module VCAP::CloudController
       end
     end
 
-    SHARED_DOMAIN_CONDITION =  {owning_organization_id: nil}
+    SHARED_DOMAIN_CONDITION =  { owning_organization_id: nil }
 
     dataset_module do
       def shared_domains
@@ -29,8 +29,8 @@ module VCAP::CloudController
     end
 
     one_to_many :spaces_sti_eager_load,
-                class: "VCAP::CloudController::Space",
-                dataset: -> { raise "Must be used for eager loading" },
+                class: 'VCAP::CloudController::Space',
+                dataset: -> { raise 'Must be used for eager loading' },
                 eager_loader: proc { |eo|
                   id_map = {}
                   eo[:rows].each do |domain|
@@ -47,19 +47,22 @@ module VCAP::CloudController
                   end
                 }
 
-    many_to_one :owning_organization, class: "VCAP::CloudController::Organization",
-                  :before_set => :validate_change_owning_organization
+    many_to_one(
+      :owning_organization,
+      class: 'VCAP::CloudController::Organization',
+      before_set: :validate_change_owning_organization
+    )
     one_to_many :routes
 
     add_association_dependencies routes: :destroy
 
     export_attributes :name, :owning_organization_guid
     import_attributes :name, :owning_organization_guid
-    strip_attributes  :name
+    strip_attributes :name
 
     def validate
       validates_presence :name
-      validates_unique   :name
+      validates_unique :name
 
       validates_format DOMAIN_REGEX, :name
       validates_length_range 3..255, :name
@@ -74,26 +77,26 @@ module VCAP::CloudController
         d.nil? || d.owning_organization == owning_organization || d.shared?
       end
 
-      return false
+      false
     end
 
     def routes_match?
-      return false unless name and name =~ DOMAIN_REGEX
+      return false unless name && name =~ DOMAIN_REGEX
 
       if name.include?('.')
         route_host = name[0, name.index('.')]
-        route_domain_name = name[name.index('.')+1, name.length]
+        route_domain_name = name[name.index('.') + 1, name.length]
         route_domain = Domain.find(name: route_domain_name)
         return false if route_domain.nil?
-        return true if Route.dataset.filter(:host => route_host, :domain => route_domain).count > 0
+        return true if Route.dataset.filter(host: route_host, domain: route_domain).count > 0
       end
       false
     end
 
     def self.intermediate_domains(name)
-      return [] unless name and name =~ DOMAIN_REGEX
+      return [] unless name && name =~ DOMAIN_REGEX
 
-      name.split(".").reverse.inject([]) do |a, e|
+      name.split('.').reverse.inject([]) do |a, e|
         a.push(a.empty? ? e : "#{e}.#{a.last}")
       end
     end

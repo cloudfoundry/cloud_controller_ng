@@ -3,12 +3,12 @@ require 'spec_helper'
 module VCAP::CloudController
   describe EventAccess, type: :access do
     subject(:access) { EventAccess.new(Security::AccessContext.new) }
-    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(:organization => org) }
-    let!(:object) { VCAP::CloudController::Event.make(:space => space) }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let!(:object) { VCAP::CloudController::Event.make(space: space) }
 
     before do
       SecurityContext.set(user, token)
@@ -85,7 +85,7 @@ module VCAP::CloudController
       it_behaves_like :no_access
     end
 
-    describe "finding permissions when the related space is deleted" do
+    describe 'finding permissions when the related space is deleted' do
       context 'admin' do
         before do
           space.destroy
@@ -182,7 +182,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.write' do
-      let(:token) { {'scope' => ['cloud_controller.read']}}
+      let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
       before do
         org.add_user(user)
@@ -198,7 +198,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
-      let(:token) { {'scope' => []}}
+      let(:token) { { 'scope' => [] } }
 
       before do
         org.add_user(user)

@@ -4,9 +4,9 @@
 # If there are other attributes, such as in legacy calls to "match_resources",
 # they will be ignored and preserved.
 
-require "fog"
-require "httpclient"
-require "steno"
+require 'fog'
+require 'httpclient'
+require 'steno'
 
 class VCAP::CloudController::ResourcePool
   VALID_SHA_LENGTH = 40
@@ -18,13 +18,13 @@ class VCAP::CloudController::ResourcePool
     attr_accessor :instance
   end
 
-  def initialize(config = {})
+  def initialize(config={})
     options = config[:resource_pool] || {}
     @cdn = options[:cdn]
 
     @blobstore = CloudController::Blobstore::Client.new(
         options[:fog_connection],
-        options[:resource_directory_key] || "cc-resources"
+        options[:resource_directory_key] || 'cc-resources'
     )
 
     @minimum_size = options[:minimum_size] || 0
@@ -37,11 +37,11 @@ class VCAP::CloudController::ResourcePool
 
   # Adds everything under source directory +dir+ to the resource pool.
   def add_directory(dir)
-    unless File.exists?(dir) && File.directory?(dir)
-      raise ArgumentError, "Source directory #{dir} is not valid"
+    unless File.exist?(dir) && File.directory?(dir)
+      raise ArgumentError.new("Source directory #{dir} is not valid")
     end
 
-    pattern = File.join(dir, "**", "*")
+    pattern = File.join(dir, '**', '*')
     files = Dir.glob(pattern, File::FNM_DOTMATCH).select do |f|
       resource_allowed?(f)
     end
@@ -58,9 +58,9 @@ class VCAP::CloudController::ResourcePool
 
     File.open(path) do |file|
       blobstore.files.create(
-        :key    => key,
-        :body   => file,
-        :public => false,
+        key: key,
+        body: file,
+        public: false,
       )
     end
   end
@@ -68,10 +68,10 @@ class VCAP::CloudController::ResourcePool
   def resource_sizes(resources)
     sizes = []
     resources.each do |descriptor|
-      key = key_from_sha1(descriptor["sha1"])
+      key = key_from_sha1(descriptor['sha1'])
       if (head = blobstore.files.head(key))
         entry = descriptor.dup
-        entry["size"] = head.content_length
+        entry['size'] = head.content_length
         sizes << entry
       end
     end
@@ -80,24 +80,24 @@ class VCAP::CloudController::ResourcePool
 
   def copy(descriptor, destination)
     if resource_known?(descriptor)
-      logger.debug "resource_pool.sync.start", :resource => descriptor, :destination => destination
+      logger.debug 'resource_pool.sync.start', resource: descriptor, destination: destination
       overwrite_destination_with!(descriptor, destination)
     else
-      logger.warn "resource_pool.sync.failed", :unknown_resource => descriptor, :destination => destination
-      raise ArgumentError, "Can not copy bits we do not have #{descriptor}"
+      logger.warn 'resource_pool.sync.failed', unknown_resource: descriptor, destination: destination
+      raise ArgumentError.new("Can not copy bits we do not have #{descriptor}")
     end
   end
 
   private
 
   def logger
-    @logger ||= Steno.logger("cc.resource_pool")
+    @logger ||= Steno.logger('cc.resource_pool')
   end
 
   def resource_known?(descriptor)
-    size = descriptor["size"]
-    sha1 = descriptor["sha1"]
-    if size_allowed?(size) and valid_sha?(sha1)
+    size = descriptor['size']
+    sha1 = descriptor['sha1']
+    if size_allowed?(size) && valid_sha?(sha1)
       key = key_from_sha1(sha1)
       blobstore.files.head(key)
     end
@@ -120,26 +120,26 @@ class VCAP::CloudController::ResourcePool
   # Create a new path on disk containing the resource described by +descriptor+
   def overwrite_destination_with!(descriptor, destination)
     FileUtils.mkdir_p File.dirname(destination)
-    s3_key = key_from_sha1(descriptor["sha1"])
+    s3_key = key_from_sha1(descriptor['sha1'])
 
-    logger.debug "resource_pool.download.starting",
-      :destination => destination
+    logger.debug 'resource_pool.download.starting',
+      destination: destination
 
     start = Time.now
 
     if @cdn && @cdn[:uri]
-      logger.debug "resource_pool.download.using-cdn"
+      logger.debug 'resource_pool.download.using-cdn'
 
       uri = "#{@cdn[:uri]}/#{s3_key}"
       for_real_uri = AWS::CF::Signer.is_configured? ? AWS::CF::Signer.sign_url(uri) : uri
 
-      File.open(destination, "w") do |file|
+      File.open(destination, 'w') do |file|
         HTTPClient.new.get(for_real_uri) do |chunk|
           file.write(chunk)
         end
       end
     else
-      File.open(destination, "w") do |file|
+      File.open(destination, 'w') do |file|
         blobstore.files.get(s3_key) do |chunk, _, _|
           file.write(chunk)
         end
@@ -148,8 +148,7 @@ class VCAP::CloudController::ResourcePool
 
     took = Time.now - start
 
-    logger.debug "resource_pool.download.complete", :took => took,
-      :destination => destination
+    logger.debug 'resource_pool.download.complete', took: took, destination: destination
   end
 
   def key_from_sha1(sha1)

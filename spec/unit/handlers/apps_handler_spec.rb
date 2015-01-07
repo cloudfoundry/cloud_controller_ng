@@ -3,7 +3,6 @@ require 'handlers/apps_handler'
 
 module VCAP::CloudController
   describe AppsHandler do
-
     let(:process_handler) { double(:process_handler) }
     let(:apps_handler) { described_class.new(process_handler) }
     let(:access_context) { double(:access_context) }
@@ -158,13 +157,13 @@ module VCAP::CloudController
         context 'when the app has a web process' do
           let(:space) { Space.find(guid: app_model.space_guid) }
           let(:user) { User.make }
-          let(:process_opts) { {space: space} }
+          let(:process_opts) { { space: space } }
           let(:process) { AppFactory.make(process_opts) }
           let(:process_guid) { process.guid }
 
           before do
             allow(access_context).to receive(:user).and_return(user)
-            allow(access_context).to receive(:user_email).and_return("email")
+            allow(access_context).to receive(:user_email).and_return('email')
             apps_handler.add_process(app_model, process, access_context)
 
             allow(process_handler).to receive(:update) do
@@ -373,7 +372,6 @@ module VCAP::CloudController
             apps_handler.remove_process(app_model, process, access_context)
           }.not_to raise_error
         end
-
       end
 
       context 'when user can remove the app' do

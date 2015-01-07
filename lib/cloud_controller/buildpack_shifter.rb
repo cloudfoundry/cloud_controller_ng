@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
 
     def shift_positions_up(position)
-      Buildpack.for_update.where("position >= ?", position).update(position: Sequel.+(:position, 1))
+      Buildpack.for_update.where('position >= ?', position).update(position: Sequel.+(:position, 1))
     end
   end
 end

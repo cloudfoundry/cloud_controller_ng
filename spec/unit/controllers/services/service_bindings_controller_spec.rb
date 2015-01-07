@@ -1,36 +1,35 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe ServiceBindingsController do
-
-    describe "Query Parameters" do
+    describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:app_guid) }
       it { expect(described_class).to be_queryable_by(:service_instance_guid) }
     end
 
-    describe "Attributes" do
+    describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
-          binding_options: {type: "hash", default: {}},
-          app_guid: {type: "string", required: true},
-          service_instance_guid: {type: "string", required: true}
+          binding_options: { type: 'hash', default: {} },
+          app_guid: { type: 'string', required: true },
+          service_instance_guid: { type: 'string', required: true }
         })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-          binding_options: {type: "hash"},
-          app_guid: {type: "string"},
-          service_instance_guid: {type: "string"}
+          binding_options: { type: 'hash' },
+          app_guid: { type: 'string' },
+          service_instance_guid: { type: 'string' }
         })
       end
     end
 
-    CREDENTIALS = {'foo' => 'bar'}
+    CREDENTIALS = { 'foo' => 'bar' }
 
     def fake_app_staging(app)
-      app.package_hash = "abc"
-      app.droplet_hash = "def"
+      app.package_hash = 'abc'
+      app.droplet_hash = 'def'
       app.save
       expect(app.needs_staging?).to eq(false)
     end
@@ -46,113 +45,117 @@ module VCAP::CloudController
       allow_any_instance_of(Service).to receive(:client).and_return(broker_client)
     end
 
-    describe "Permissions" do
-      include_context "permissions"
+    describe 'Permissions' do
+      include_context 'permissions'
 
       before do
-        @app_a = AppFactory.make(:space => @space_a)
-        @service_instance_a = ManagedServiceInstance.make(:space => @space_a)
-        @obj_a = ServiceBinding.make(:app => @app_a,
-                                             :service_instance => @service_instance_a)
+        @app_a = AppFactory.make(space: @space_a)
+        @service_instance_a = ManagedServiceInstance.make(space: @space_a)
+        @obj_a = ServiceBinding.make(
+          app: @app_a,
+          service_instance: @service_instance_a
+        )
 
-        @app_b = AppFactory.make(:space => @space_b)
-        @service_instance_b = ManagedServiceInstance.make(:space => @space_b)
-        @obj_b = ServiceBinding.make(:app => @app_b,
-                                             :service_instance => @service_instance_b)
+        @app_b = AppFactory.make(space: @space_b)
+        @service_instance_b = ManagedServiceInstance.make(space: @space_b)
+        @obj_b = ServiceBinding.make(
+          app: @app_b,
+          service_instance: @service_instance_b
+        )
       end
 
-      describe "Org Level Permissions" do
-        describe "OrgManager" do
+      describe 'Org Level Permissions' do
+        describe 'OrgManager' do
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
 
-          include_examples "permission enumeration", "OrgManager",
-            :name => 'service binding',
-            :path => "/v2/service_bindings",
-            :enumerate => 0
+          include_examples 'permission enumeration', 'OrgManager',
+            name: 'service binding',
+            path: '/v2/service_bindings',
+            enumerate: 0
         end
 
-        describe "OrgUser" do
+        describe 'OrgUser' do
           let(:member_a) { @org_a_member }
           let(:member_b) { @org_b_member }
 
-          include_examples "permission enumeration", "OrgUser",
-            :name => 'service binding',
-            :path => "/v2/service_bindings",
-            :enumerate => 0
+          include_examples 'permission enumeration', 'OrgUser',
+            name: 'service binding',
+            path: '/v2/service_bindings',
+            enumerate: 0
         end
 
-        describe "BillingManager" do
+        describe 'BillingManager' do
           let(:member_a) { @org_a_billing_manager }
           let(:member_b) { @org_b_billing_manager }
 
-          include_examples "permission enumeration", "BillingManager",
-            :name => 'service binding',
-            :path => "/v2/service_bindings",
-            :enumerate => 0
+          include_examples 'permission enumeration', 'BillingManager',
+            name: 'service binding',
+            path: '/v2/service_bindings',
+            enumerate: 0
         end
 
-        describe "Auditor" do
+        describe 'Auditor' do
           let(:member_a) { @org_a_auditor }
           let(:member_b) { @org_b_auditor }
 
-          include_examples "permission enumeration", "Auditor",
-            :name => 'service binding',
-            :path => "/v2/service_bindings",
-            :enumerate => 0
+          include_examples 'permission enumeration', 'Auditor',
+            name: 'service binding',
+            path: '/v2/service_bindings',
+            enumerate: 0
         end
       end
 
-      describe "App Space Level Permissions" do
-        describe "SpaceManager" do
+      describe 'App Space Level Permissions' do
+        describe 'SpaceManager' do
           let(:member_a) { @space_a_manager }
           let(:member_b) { @space_b_manager }
 
-          include_examples "permission enumeration", "SpaceManager",
-            :name => 'service binding',
-            :path => "/v2/service_bindings",
-            :enumerate => 0
+          include_examples 'permission enumeration', 'SpaceManager',
+            name: 'service binding',
+            path: '/v2/service_bindings',
+            enumerate: 0
         end
 
-        describe "Developer" do
+        describe 'Developer' do
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
 
-          include_examples "permission enumeration", "Developer",
-            :name => 'service binding',
-            :path => "/v2/service_bindings",
-            :enumerate => 1
+          include_examples 'permission enumeration', 'Developer',
+            name: 'service binding',
+            path: '/v2/service_bindings',
+            enumerate: 1
         end
 
-        describe "SpaceAuditor" do
+        describe 'SpaceAuditor' do
           let(:member_a) { @space_a_auditor }
           let(:member_b) { @space_b_auditor }
 
-          include_examples "permission enumeration", "SpaceAuditor",
-            :name => 'service binding',
-            :path => "/v2/service_bindings",
-            :enumerate => 1
+          include_examples 'permission enumeration', 'SpaceAuditor',
+            name: 'service binding',
+            path: '/v2/service_bindings',
+            enumerate: 1
         end
       end
     end
 
-    describe "create" do
+    describe 'create' do
       context 'for user provided instances' do
         let(:space) { Space.make }
         let(:developer) { make_developer_for_space(space) }
-        let(:application) { AppFactory.make(:space => space) }
-        let(:service_instance) { UserProvidedServiceInstance.make(:space => space) }
+        let(:application) { AppFactory.make(space: space) }
+        let(:service_instance) { UserProvidedServiceInstance.make(space: space) }
         let(:params) do
           {
-            "app_guid" => application.guid,
-            "service_instance_guid" => service_instance.guid
+            'app_guid' => application.guid,
+            'service_instance_guid' => service_instance.guid
           }
         end
 
         it 'creates a service binding with the provided binding options' do
           binding_options = Sham.binding_options
-          body =  params.merge("binding_options" => binding_options).to_json
-          post "/v2/service_bindings", body, headers_for(developer)
+          body =  params.merge('binding_options' => binding_options).to_json
+          post '/v2/service_bindings', body, headers_for(developer)
 
           expect(last_response.status).to eq(201)
           expect(ServiceBinding.last.binding_options).to eq(binding_options)
@@ -169,11 +172,11 @@ module VCAP::CloudController
 
         it 'binds a service instance to an app' do
           req = {
-            :app_guid => app_obj.guid,
-            :service_instance_guid => instance.guid
+            app_guid: app_obj.guid,
+            service_instance_guid: instance.guid
           }.to_json
 
-          post "/v2/service_bindings", req, json_headers(headers_for(developer))
+          post '/v2/service_bindings', req, json_headers(headers_for(developer))
           expect(last_response.status).to eq(201)
 
           expect(broker_client).to have_received(:bind)
@@ -184,12 +187,12 @@ module VCAP::CloudController
 
         it 'creates an audit event upon binding' do
           req = {
-            :app_guid => app_obj.guid,
-            :service_instance_guid => instance.guid
+            app_guid: app_obj.guid,
+            service_instance_guid: instance.guid
           }
 
           email = 'email@example.com'
-          post "/v2/service_bindings", req.to_json, json_headers(headers_for(developer, email: email))
+          post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer, email: email))
 
           service_binding = ServiceBinding.last
 
@@ -211,18 +214,17 @@ module VCAP::CloudController
               'app_guid' => req[:app_guid]
             }
           })
-
         end
 
         it 'unbinds the service instance when an exception is raised' do
           req = MultiJson.dump(
-            :app_guid => app_obj.guid,
-            :service_instance_guid => instance.guid
+            app_guid: app_obj.guid,
+            service_instance_guid: instance.guid
           )
 
           allow_any_instance_of(ServiceBinding).to receive(:save).and_raise
 
-          post "/v2/service_bindings", req, json_headers(headers_for(developer))
+          post '/v2/service_bindings', req, json_headers(headers_for(developer))
           expect(broker_client).to have_received(:unbind).with(an_instance_of(ServiceBinding))
           expect(last_response.status).to eq(500)
         end
@@ -233,11 +235,11 @@ module VCAP::CloudController
             service.save
 
             req = {
-              :app_guid => app_obj.guid,
-              :service_instance_guid => instance.guid
+              app_guid: app_obj.guid,
+              service_instance_guid: instance.guid
             }.to_json
 
-            post "/v2/service_bindings", req, json_headers(headers_for(developer))
+            post '/v2/service_bindings', req, json_headers(headers_for(developer))
           end
 
           it 'raises UnbindableService error' do
@@ -321,12 +323,12 @@ module VCAP::CloudController
               app_guid: app_obj.guid,
               service_instance_guid: instance.guid
             }.to_json
-            post "/v2/service_bindings", req, json_headers(headers_for(developer))
+            post '/v2/service_bindings', req, json_headers(headers_for(developer))
           end
 
           context 'when attempting to bind and the service binding already exists' do
             before do
-              ServiceBinding.make(:app => app_obj, :service_instance => instance)
+              ServiceBinding.make(app: app_obj, service_instance: instance)
             end
 
             it 'returns a ServiceBindingAppServiceTaken error' do
@@ -401,7 +403,7 @@ module VCAP::CloudController
       end
 
       it 'records an audit event after the binding has been deleted' do
-        email = "email@example.com"
+        email = 'email@example.com'
         space = service_binding.service_instance.space
 
         delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer, email: email))
@@ -421,10 +423,9 @@ module VCAP::CloudController
         expect(event.metadata).to include({
           'request' => {}
         })
-
       end
 
-      context "with ?async=true" do
+      context 'with ?async=true' do
         it 'returns a job id' do
           delete "/v2/service_bindings/#{service_binding.guid}?async=true", '', json_headers(headers_for(developer))
           expect(last_response.status).to eq 202
@@ -442,12 +443,12 @@ module VCAP::CloudController
         user_provided_service_instance = UserProvidedServiceInstance.make
         ServiceBinding.make(service_instance: user_provided_service_instance)
 
-        get "/v2/service_bindings?inline-relations-depth=1", {}, admin_headers
+        get '/v2/service_bindings?inline-relations-depth=1', {}, admin_headers
         expect(last_response.status).to eql(200)
 
-        service_bindings = decoded_response["resources"]
+        service_bindings = decoded_response['resources']
         service_instance_guids = service_bindings.map do |res|
-          res["entity"]["service_instance"]["metadata"]["guid"]
+          res['entity']['service_instance']['metadata']['guid']
         end
 
         expect(service_instance_guids).to match_array([

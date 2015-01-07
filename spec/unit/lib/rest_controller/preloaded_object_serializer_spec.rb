@@ -1,4 +1,4 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe RestController::PreloadedObjectSerializer do
@@ -104,12 +104,14 @@ module VCAP::CloudController
           'entity' => {
             'test_model_second_levels_url' => "/v2/test_model_many_to_manies/#{test_model_many_to_many.guid}/test_model_second_levels",
             'test_model_second_levels' => [
-              {'metadata' =>
-                 {'guid' => test_model_second_level.guid,
+              {
+                'metadata' =>
+                {
+                  'guid' => test_model_second_level.guid,
                   'url' => "/v2/test_model_second_levels/#{test_model_second_level.guid}",
                   'created_at' => test_model_second_level.created_at
-                 },
-               'entity' => {}
+                },
+                'entity' => {}
               }
             ]
           }
@@ -155,7 +157,7 @@ module VCAP::CloudController
 
           orphans = {}
           hash = subject.serialize(TestModelManyToOnesController, test_model_many_to_one, opts.merge(inline_relations_depth: 1), orphans)
-          expect(hash["entity"]).not_to have_key "test_model"
+          expect(hash['entity']).not_to have_key 'test_model'
           expect(orphans.keys.size).to eql(1)
           expect(orphans[test_model_many_to_one.test_model.guid]).to eql(
             'metadata' => {
@@ -164,7 +166,7 @@ module VCAP::CloudController
               'created_at' => test_model_many_to_one.test_model.created_at,
               'updated_at' => test_model_many_to_one.test_model.updated_at
             },
-            'entity'=>{
+            'entity' => {
               'unique_value' => test_model_many_to_one.test_model.unique_value,
               'test_model_many_to_ones_url' => "/v2/test_models/#{test_model_many_to_one.test_model.guid}/test_model_many_to_ones",
               'test_model_many_to_manies_url' => "/v2/test_models/#{test_model_many_to_one.test_model.guid}/test_model_many_to_manies",

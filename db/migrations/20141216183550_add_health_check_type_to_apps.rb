@@ -1,6 +1,6 @@
 Sequel.migration do
   up do
-    add_column :apps, :health_check_type, String, :default => 'port'
+    add_column :apps, :health_check_type, String, default: 'port'
 
     run <<-SQL
       UPDATE apps a1

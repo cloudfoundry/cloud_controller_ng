@@ -1,10 +1,10 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::StatsController do
-    describe "GET /v2/apps/:id/stats" do
+    describe 'GET /v2/apps/:id/stats' do
       before :each do
-        @app = AppFactory.make(:package_hash => "abc", :package_state => "STAGED")
+        @app = AppFactory.make(package_hash: 'abc', package_state: 'STAGED')
         @user =  make_user_for_space(@app.space)
         @developer = make_developer_for_space(@app.space)
         @auditor = make_auditor_for_space(@app.space)
@@ -14,12 +14,12 @@ module VCAP::CloudController
         let(:stats) do
           {
             0 => {
-              :state => "RUNNING",
-              :stats => "mock stats",
+              state: 'RUNNING',
+              stats: 'mock stats',
             },
             1 => {
-              :state => "DOWN",
-              :since => 1,
+              state: 'DOWN',
+              since: 1,
             }
           }
         end
@@ -31,21 +31,21 @@ module VCAP::CloudController
         end
 
         context 'because they are a developer' do
-          it "should return the stats" do
-            @app.state = "STARTED"
+          it 'should return the stats' do
+            @app.state = 'STARTED'
             @app.instances = 1
             @app.save
 
             @app.refresh
 
             expected = {
-              "0" => {
-                "state" => "RUNNING",
-                "stats" => "mock stats",
+              '0' => {
+                'state' => 'RUNNING',
+                'stats' => 'mock stats',
               },
-              "1" => {
-                "state" => "DOWN",
-                "since" => 1,
+              '1' => {
+                'state' => 'DOWN',
+                'since' => 1,
               }
             }
 
@@ -61,21 +61,21 @@ module VCAP::CloudController
         end
 
         context 'because they are an auditor' do
-          it "should return the stats" do
-            @app.state = "STARTED"
+          it 'should return the stats' do
+            @app.state = 'STARTED'
             @app.instances = 1
             @app.save
 
             @app.refresh
 
             expected = {
-              "0" => {
-                "state" => "RUNNING",
-                "stats" => "mock stats",
+              '0' => {
+                'state' => 'RUNNING',
+                'stats' => 'mock stats',
               },
-              "1" => {
-                "state" => "DOWN",
-                "since" => 1,
+              '1' => {
+                'state' => 'DOWN',
+                'since' => 1,
               }
             }
 
@@ -120,7 +120,7 @@ module VCAP::CloudController
 
       context 'when the client cannot see stats' do
         context 'because they are a user' do
-          it "should return 403" do
+          it 'should return 403' do
             get("/v2/apps/#{@app.guid}/stats",
                 {},
                 headers_for(@user))

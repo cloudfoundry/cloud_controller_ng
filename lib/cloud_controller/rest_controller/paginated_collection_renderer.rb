@@ -1,5 +1,5 @@
 require 'addressable/uri'
-require "cloud_controller/rest_controller/order_applicator"
+require 'cloud_controller/rest_controller/order_applicator'
 
 module VCAP::CloudController::RestController
   class PaginatedCollectionRenderer
@@ -41,12 +41,12 @@ module VCAP::CloudController::RestController
 
       page_size = opts[:results_per_page] || @default_results_per_page
       if page_size > @max_results_per_page
-        raise VCAP::Errors::ApiError.new_from_details("BadQueryParameter", "results_per_page must be <= #{@max_results_per_page}")
+        raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', "results_per_page must be <= #{@max_results_per_page}")
       end
 
       inline_relations_depth = opts[:inline_relations_depth] || @default_inline_relations_depth
       if inline_relations_depth > @max_inline_relations_depth
-        raise VCAP::Errors::ApiError.new_from_details("BadQueryParameter", "inline_relations_depth must be <= #{@max_inline_relations_depth}")
+        raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
       end
 
       ordered_dataset = order_applicator.apply(ds)
@@ -70,20 +70,20 @@ module VCAP::CloudController::RestController
       opts[:max_inline] ||= PreloadedObjectSerializer::MAX_INLINE_DEFAULT
       orphans = opts[:orphan_relations] == 1 ? {} : nil
       resources = dataset.all.map { |obj| @serializer.serialize(controller, obj, opts, orphans) }
- 
+
       result = {
-         :total_results => paginated_dataset.pagination_record_count,
-         :total_pages => paginated_dataset.page_count,
-         :prev_url => prev_url,
-         :next_url => next_url,
-         :resources => resources,
+         total_results: paginated_dataset.pagination_record_count,
+         total_pages: paginated_dataset.page_count,
+         prev_url: prev_url,
+         next_url: next_url,
+         resources: resources,
       }
 
       if orphans
         result[:orphans] = orphans
       end
 
-      MultiJson.dump(result, :pretty => true)
+      MultiJson.dump(result, pretty: true)
     end
 
     private

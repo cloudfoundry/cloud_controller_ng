@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class DatabaseUriGenerator
-    VALID_DB_TYPES = %w[mysql mysql2 postgres postgresql].freeze
+    VALID_DB_TYPES = %w(mysql mysql2 postgres postgresql).freeze
     RAILS_STYLE_DATABASE_TO_ADAPTER_MAPPING = {
       'mysql' => 'mysql2',
       'postgresql' => 'postgres'
@@ -26,7 +26,7 @@ module VCAP::CloudController
         end
       end
 
-      return nil
+      nil
     end
 
     def convert_scheme_to_rails_style_adapter(uri)

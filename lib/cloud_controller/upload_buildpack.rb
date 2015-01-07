@@ -44,11 +44,11 @@ module VCAP::CloudController
     private
 
     def new_bits?(buildpack, key)
-      return buildpack.key != key
+      buildpack.key != key
     end
 
     def new_filename?(buildpack, filename)
-      return buildpack.filename != filename
+      buildpack.filename != filename
     end
   end
 end

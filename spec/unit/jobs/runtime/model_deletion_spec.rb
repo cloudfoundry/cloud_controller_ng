@@ -1,22 +1,21 @@
-require "spec_helper"
-require "jobs/runtime/model_deletion"
-require "models/runtime/app"
-require "models/runtime/space"
+require 'spec_helper'
+require 'jobs/runtime/model_deletion'
+require 'models/runtime/app'
+require 'models/runtime/space'
 
 module VCAP::CloudController
   module Jobs::Runtime
     describe ModelDeletion do
-
       it { is_expected.to be_a_valid_job }
 
-      describe "#perform" do
+      describe '#perform' do
         let(:space) { Space.make }
         let!(:app) { App.make(space: space) }
 
         subject(:job) { ModelDeletion.new(Space, space.guid) }
 
-        context "deleting a space" do
-          it "can delete the space" do
+        context 'deleting a space' do
+          it 'can delete the space' do
             expect { job.perform }.to change { Space.count }.by(-1)
           end
 
@@ -25,10 +24,10 @@ module VCAP::CloudController
           end
         end
 
-        context "deleting an app" do
+        context 'deleting an app' do
           subject(:job) { ModelDeletion.new(App, app.guid) }
 
-          it "can delete an app" do
+          it 'can delete an app' do
             expect {
               job.perform
             }.to change {
@@ -37,17 +36,17 @@ module VCAP::CloudController
           end
         end
 
-        context "when nothing matches the given guid" do
-          subject(:job) { ModelDeletion.new(Space, "not_a_guid_at_all") }
+        context 'when nothing matches the given guid' do
+          subject(:job) { ModelDeletion.new(Space, 'not_a_guid_at_all') }
 
-          it "just returns" do
+          it 'just returns' do
             expect {
               job.perform
             }.not_to change { Space.count }
           end
         end
 
-        it "knows its job name" do
+        it 'knows its job name' do
           expect(job.job_name_in_configuration).to equal(:model_deletion)
         end
       end

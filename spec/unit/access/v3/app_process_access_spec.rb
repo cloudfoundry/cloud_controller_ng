@@ -19,39 +19,39 @@ module VCAP::CloudController
       SecurityContext.clear
     end
 
-    describe "#read?" do
-      context "admin user" do
+    describe '#read?' do
+      context 'admin user' do
         let(:admin) { true }
 
-        it "allows the user to read" do
+        it 'allows the user to read' do
           access_control = AppProcessAccess.new(access_context)
           expect(access_control.read?(nil)).to be_truthy
         end
       end
 
-      context "non admin users" do
-        context "when the user has sufficient scope and permission" do
-          let(:token) {{ 'scope' => ['cloud_controller.read'] }}
+      context 'non admin users' do
+        context 'when the user has sufficient scope and permission' do
+          let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
-          it "allows the user to read" do
+          it 'allows the user to read' do
             allow(App).to receive(:user_visible).and_return(App.where(guid: process.guid))
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.read?(process)).to be_truthy
           end
         end
 
-        context "when the user has insufficient scope" do
-          it "disallows the user from reading" do
+        context 'when the user has insufficient scope' do
+          it 'disallows the user from reading' do
             allow(App).to receive(:user_visible).and_return(App.where(guid: process.guid))
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.read?(process)).to be_falsey
           end
         end
 
-        context "when the process is not visible to the user" do
+        context 'when the process is not visible to the user' do
           let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
-          it "disallows the user from reading" do
+          it 'disallows the user from reading' do
             allow(App).to receive(:user_visible).and_return(App.where(guid: nil))
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.read?(process)).to be_falsey
@@ -60,14 +60,14 @@ module VCAP::CloudController
       end
     end
 
-    describe "#create?, #update?, and #delete?" do
+    describe '#create?, #update?, and #delete?' do
       let(:space) { Space.make }
       let(:process) { AppProcess.new({ space_guid: space.guid }) }
 
-      context "admin user" do
+      context 'admin user' do
         let(:admin) { true }
 
-        it "allows the user to read" do
+        it 'allows the user to read' do
           access_control = AppProcessAccess.new(access_context)
           expect(access_control.create?(process, space)).to be_truthy
           expect(access_control.delete?(process, space)).to be_truthy
@@ -75,16 +75,16 @@ module VCAP::CloudController
         end
       end
 
-      context "non admin users" do
-        context "when the user has sufficient scope and permissions" do
-          let(:token) { { "scope" => ["cloud_controller.write"] } }
+      context 'non admin users' do
+        context 'when the user has sufficient scope and permissions' do
+          let(:token) { { 'scope' => ['cloud_controller.write'] } }
 
           before do
             space.organization.add_user(user)
             space.add_developer(user)
           end
 
-          it "allows the user to create" do
+          it 'allows the user to create' do
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.create?(process, space)).to be_truthy
             expect(access_control.delete?(process, space)).to be_truthy
@@ -92,15 +92,15 @@ module VCAP::CloudController
           end
         end
 
-        context "when the user has insufficient scope" do
-          let(:token) { { "scope" => ["cloud_controller.read"] } }
+        context 'when the user has insufficient scope' do
+          let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
           before do
             space.organization.add_user(user)
             space.add_developer(user)
           end
 
-          it "disallows the user from creating" do
+          it 'disallows the user from creating' do
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.create?(process, space)).to be_falsey
             expect(access_control.delete?(process, space)).to be_falsey
@@ -108,10 +108,10 @@ module VCAP::CloudController
           end
         end
 
-        context "when the user has insufficient permissions" do
-          let(:token) { { "scope" => ["cloud_controller.write"] } }
+        context 'when the user has insufficient permissions' do
+          let(:token) { { 'scope' => ['cloud_controller.write'] } }
 
-          it "disallows the user from creating" do
+          it 'disallows the user from creating' do
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.create?(process, space)).to be_falsey
             expect(access_control.delete?(process, space)).to be_falsey
@@ -119,16 +119,16 @@ module VCAP::CloudController
           end
         end
 
-        context "when the organization is suspended" do
-          let(:token) { { "scope" => ["cloud_controller.write"] } }
+        context 'when the organization is suspended' do
+          let(:token) { { 'scope' => ['cloud_controller.write'] } }
 
           before do
             space.organization.add_user(user)
             space.add_developer(user)
-            space.organization.update(status: "suspended")
+            space.organization.update(status: 'suspended')
           end
 
-          it "disallows the user from creating" do
+          it 'disallows the user from creating' do
             access_control = AppProcessAccess.new(access_context)
             expect(access_control.create?(process, space)).to be_falsey
             expect(access_control.delete?(process, space)).to be_falsey

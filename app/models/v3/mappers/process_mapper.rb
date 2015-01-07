@@ -1,6 +1,5 @@
 module VCAP::CloudController
   class ProcessMapper
-
     def self.map_model_to_domain(model)
       AppProcess.new({
         'guid'                 => model.values[:guid],
@@ -35,8 +34,6 @@ module VCAP::CloudController
       attrs = get_attrs(domain, app)
       map(attrs, domain, app)
     end
-
-    private
 
     def self.get_attrs(domain, app)
       attrs = {}

@@ -1,12 +1,12 @@
-require "cloud_controller/app_observer"
-require "cloud_controller/database_uri_generator"
-require "cloud_controller/undo_app_changes"
-require "cloud_controller/errors/application_missing"
-require "cloud_controller/errors/invalid_route_relation"
-require "repositories/runtime/app_usage_event_repository"
-require "presenters/message_bus/service_binding_presenter"
+require 'cloud_controller/app_observer'
+require 'cloud_controller/database_uri_generator'
+require 'cloud_controller/undo_app_changes'
+require 'cloud_controller/errors/application_missing'
+require 'cloud_controller/errors/invalid_route_relation'
+require 'repositories/runtime/app_usage_event_repository'
+require 'presenters/message_bus/service_binding_presenter'
 
-require_relative "buildpack"
+require_relative 'buildpack'
 
 module VCAP::CloudController
   # rubocop:disable ClassLength
@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     one_to_many :droplets
     one_to_many :service_bindings
-    one_to_many :events, :class => VCAP::CloudController::AppEvent
+    one_to_many :events, class: VCAP::CloudController::AppEvent
     one_to_one :app, class: 'VCAP::CloudController::AppModel', key: :guid, primary_key: :app_guid
     many_to_one :admin_buildpack, class: VCAP::CloudController::Buildpack
     many_to_one :space, after_set: :validate_space
@@ -33,24 +33,24 @@ module VCAP::CloudController
     many_to_many :routes, before_add: :validate_route, after_add: :handle_add_route, after_remove: :handle_remove_route
 
     one_to_one :current_saved_droplet,
-      :class => "::VCAP::CloudController::Droplet",
-      :key => :droplet_hash,
-      :primary_key => :droplet_hash
+               class: '::VCAP::CloudController::Droplet',
+               key: :droplet_hash,
+               primary_key: :droplet_hash
 
     add_association_dependencies routes: :nullify, service_bindings: :destroy, events: :delete, droplets: :destroy
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
-      :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
-      :state, :version, :command, :console, :debug, :staging_task_id,
-      :package_state, :health_check_type, :health_check_timeout,
-      :staging_failed_reason, :docker_image, :package_updated_at,
-      :detected_start_command
+                      :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
+                      :state, :version, :command, :console, :debug, :staging_task_id,
+                      :package_state, :health_check_type, :health_check_timeout,
+                      :staging_failed_reason, :docker_image, :package_updated_at,
+                      :detected_start_command
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
-      :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
-      :state, :command, :console, :debug, :staging_task_id,
-      :service_binding_guids, :route_guids, :health_check_type,
-      :health_check_timeout, :docker_image, :app_guid
+                      :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
+                      :state, :command, :console, :debug, :staging_task_id,
+                      :service_binding_guids, :route_guids, :health_check_type,
+                      :health_check_timeout, :docker_image, :app_guid
 
     strip_attributes :name
 
@@ -58,10 +58,10 @@ module VCAP::CloudController
 
     encrypt :environment_json, salt: :salt, column: :encrypted_environment_json
 
-    APP_STATES = %w[STOPPED STARTED].map(&:freeze).freeze
-    PACKAGE_STATES = %w[PENDING STAGED FAILED].map(&:freeze).freeze
-    STAGING_FAILED_REASONS = %w[StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed BuildpackReleaseFailed].map(&:freeze).freeze
-    HEALTH_CHECK_TYPES = %w[port none].map(&:freeze).freeze
+    APP_STATES = %w(STOPPED STARTED).map(&:freeze).freeze
+    PACKAGE_STATES = %w(PENDING STAGED FAILED).map(&:freeze).freeze
+    STAGING_FAILED_REASONS = %w(StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed BuildpackReleaseFailed).map(&:freeze).freeze
+    HEALTH_CHECK_TYPES = %w(port none).map(&:freeze).freeze
 
     # marked as true on changing the associated routes, and reset by
     # +Dea::Client.start+
@@ -74,28 +74,27 @@ module VCAP::CloudController
 
     def copy_buildpack_errors
       bp = buildpack
+      return if bp.valid?
 
-      unless bp.valid?
-        bp.errors.each do |err|
-          errors.add(:buildpack, err)
-        end
+      bp.errors.each do |err|
+        errors.add(:buildpack, err)
       end
     end
 
     def validation_policies
       [
-          AppEnvironmentPolicy.new(self),
-          DiskQuotaPolicy.new(self, max_app_disk_in_mb),
-          MetadataPolicy.new(self, metadata_deserialized),
-          MinMemoryPolicy.new(self),
-          MaxMemoryPolicy.new(self, space, :space_quota_exceeded),
-          MaxMemoryPolicy.new(self, organization, :quota_exceeded),
-          MaxInstanceMemoryPolicy.new(self, organization && organization.quota_definition, :instance_memory_limit_exceeded),
-          MaxInstanceMemoryPolicy.new(self, space && space.space_quota_definition, :space_instance_memory_limit_exceeded),
-          InstancesPolicy.new(self),
-          HealthCheckPolicy.new(self, health_check_timeout),
-          CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?),
-          DockerPolicy.new(self),
+        AppEnvironmentPolicy.new(self),
+        DiskQuotaPolicy.new(self, max_app_disk_in_mb),
+        MetadataPolicy.new(self, metadata_deserialized),
+        MinMemoryPolicy.new(self),
+        MaxMemoryPolicy.new(self, space, :space_quota_exceeded),
+        MaxMemoryPolicy.new(self, organization, :quota_exceeded),
+        MaxInstanceMemoryPolicy.new(self, organization && organization.quota_definition, :instance_memory_limit_exceeded),
+        MaxInstanceMemoryPolicy.new(self, space && space.space_quota_definition, :space_instance_memory_limit_exceeded),
+        InstancesPolicy.new(self),
+        HealthCheckPolicy.new(self, health_check_timeout),
+        CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?),
+        DockerPolicy.new(self)
       ]
     end
 
@@ -107,10 +106,10 @@ module VCAP::CloudController
 
       copy_buildpack_errors
 
-      validates_includes PACKAGE_STATES, :package_state, :allow_missing => true
-      validates_includes APP_STATES, :state, :allow_missing => true, :message => 'must be one of ' + APP_STATES.join(', ')
-      validates_includes STAGING_FAILED_REASONS, :staging_failed_reason, :allow_nil => true
-      validates_includes HEALTH_CHECK_TYPES, :health_check_type, :allow_missing => true, :message => 'must be one of ' + HEALTH_CHECK_TYPES.join(', ')
+      validates_includes PACKAGE_STATES, :package_state, allow_missing: true
+      validates_includes APP_STATES, :state, allow_missing: true, message: 'must be one of ' + APP_STATES.join(', ')
+      validates_includes STAGING_FAILED_REASONS, :staging_failed_reason, allow_nil: true
+      validates_includes HEALTH_CHECK_TYPES, :health_check_type, allow_missing: true, message: 'must be one of ' + HEALTH_CHECK_TYPES.join(', ')
 
       validation_policies.map(&:validate)
     end
@@ -132,7 +131,7 @@ module VCAP::CloudController
 
     def before_save
       if generate_start_event? && !package_hash
-        raise VCAP::Errors::ApiError.new_from_details("AppPackageInvalid", "bits have not been uploaded")
+        raise VCAP::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
       end
 
       self.stack ||= Stack.default
@@ -145,20 +144,18 @@ module VCAP::CloudController
       AppStartEvent.create_from_app(self) if generate_start_event?
 
       # make this conditional for when we remove the diego column later.
-      if self.class.columns.include?(:diego)
-        self.diego = run_with_diego?
-      end
+      self.diego = run_with_diego? if self.class.columns.include?(:diego)
 
       super
     end
 
     # Call VCAP::CloudController::Runners.run_with_diego? for the true answer
     def run_with_diego?
-      !!(environment_json && environment_json["DIEGO_RUN_BETA"] == "true")
+      !!(environment_json && environment_json['DIEGO_RUN_BETA'] == 'true')
     end
 
     def stage_with_diego?
-      run_with_diego? || !!(environment_json && environment_json["DIEGO_STAGE_BETA"] == "true")
+      run_with_diego? || !!(environment_json && environment_json['DIEGO_STAGE_BETA'] == 'true')
     end
 
     def version_needs_to_be_updated?
@@ -206,8 +203,8 @@ module VCAP::CloudController
       # If app is not in started state and/or is new, then the changes
       # to the footprint shouldn't trigger a billing event.
       !new? &&
-          (being_stopped? || (footprint_changed? && started?)) &&
-          !has_stop_event_for_latest_run?
+        (being_stopped? || (footprint_changed? && started?)) &&
+        !has_stop_event_for_latest_run?
     end
 
     def in_suspended_org?
@@ -239,19 +236,19 @@ module VCAP::CloudController
     end
 
     def has_stop_event_for_latest_run?
-      latest_run_id = AppStartEvent.filter(:app_guid => guid).order(Sequel.desc(:id)).select_map(:app_run_id).first
-      !!AppStopEvent.find(:app_run_id => latest_run_id)
+      latest_run_id = AppStartEvent.filter(app_guid: guid).order(Sequel.desc(:id)).select_map(:app_run_id).first
+      !!AppStopEvent.find(app_run_id: latest_run_id)
     end
 
     def before_destroy
       lock!
-      self.state = "STOPPED"
+      self.state = 'STOPPED'
       super
     end
 
     def after_destroy
       super
-      AppStopEvent.create_from_app(self) unless initial_value(:state) == "STOPPED" || has_stop_event_for_latest_run?
+      AppStopEvent.create_from_app(self) unless initial_value(:state) == 'STOPPED' || has_stop_event_for_latest_run?
       create_app_usage_event
     end
 
@@ -262,53 +259,53 @@ module VCAP::CloudController
 
     def command=(cmd)
       self.metadata ||= {}
-      self.metadata["command"] = (cmd.nil? || cmd.empty?) ? nil : cmd
+      self.metadata['command'] = (cmd.nil? || cmd.empty?) ? nil : cmd
     end
 
     def command
-      self.metadata && self.metadata["command"]
+      self.metadata && self.metadata['command']
     end
 
     def execution_metadata
-      (current_droplet && current_droplet.execution_metadata) || ""
+      (current_droplet && current_droplet.execution_metadata) || ''
     end
 
     def detected_start_command
-      (current_droplet && current_droplet.detected_start_command) || ""
+      (current_droplet && current_droplet.detected_start_command) || ''
     end
 
     def console=(c)
       self.metadata ||= {}
-      self.metadata["console"] = c
+      self.metadata['console'] = c
     end
 
     def console
       # without the == true check, this expression can return nil if
       # the key doesn't exist, rather than false
-      self.metadata && self.metadata["console"] == true
+      self.metadata && self.metadata['console'] == true
     end
 
     def debug=(d)
       self.metadata ||= {}
       # We don't support sending nil through API
-      self.metadata["debug"] = (d == "none") ? nil : d
+      self.metadata['debug'] = (d == 'none') ? nil : d
     end
 
     def debug
-      self.metadata && self.metadata["debug"]
+      self.metadata && self.metadata['debug']
     end
 
     def environment_json_with_serialization=(env)
       self.environment_json_without_serialization = MultiJson.dump(env)
     end
-    alias_method_chain :environment_json=, "serialization"
+    alias_method_chain :environment_json=, 'serialization'
 
     def environment_json_with_serialization
       string = environment_json_without_serialization
       return if string.blank?
       MultiJson.load string
     end
-    alias_method_chain :environment_json, "serialization"
+    alias_method_chain :environment_json, 'serialization'
 
     def system_env_json
       vcap_services
@@ -316,33 +313,33 @@ module VCAP::CloudController
 
     def vcap_application
       {
-          limits: {
-              mem: memory,
-              disk: disk_quota,
-              fds: file_descriptors
-          },
-          application_version: version,
-          application_name: name,
-          application_uris: uris,
-          version: version,
-          name: name,
-          space_name: space.name,
-          space_id: space_guid,
-          uris: uris,
-          users: nil
+        limits: {
+          mem: memory,
+          disk: disk_quota,
+          fds: file_descriptors
+        },
+        application_version: version,
+        application_name: name,
+        application_uris: uris,
+        version: version,
+        name: name,
+        space_name: space.name,
+        space_id: space_guid,
+        uris: uris,
+        users: nil
       }
     end
 
     def database_uri
-      service_uris = service_bindings.map { |binding| binding.credentials["uri"] }.compact
+      service_uris = service_bindings.map { |binding| binding.credentials['uri'] }.compact
       DatabaseUriGenerator.new(service_uris).database_uri
     end
 
     def validate_space(space)
       objection = Errors::InvalidRouteRelation.new(space.guid)
 
-      raise objection unless routes.all?{ |route| route.space_id == space.id }
-      service_bindings.each{ |binding| binding.validate_app_and_service_instance(self, binding.service_instance)}
+      raise objection unless routes.all? { |route| route.space_id == space.id }
+      service_bindings.each { |binding| binding.validate_app_and_service_instance(self, binding.service_instance) }
     end
 
     def validate_route(route)
@@ -379,12 +376,12 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       Sequel.or([
-          [:space, user.spaces_dataset],
-          [:space, user.managed_spaces_dataset],
-          [:space, user.audited_spaces_dataset],
-          [:apps__space_id, user.managed_organizations_dataset.join(
-            :spaces, spaces__organization_id: :organizations__id
-          ).select(:spaces__id)]
+        [:space, user.spaces_dataset],
+        [:space, user.managed_spaces_dataset],
+        [:space, user.audited_spaces_dataset],
+        [:apps__space_id, user.managed_organizations_dataset.join(
+          :spaces, spaces__organization_id: :organizations__id
+        ).select(:spaces__id)]
       ])
     end
 
@@ -393,23 +390,23 @@ module VCAP::CloudController
     end
 
     def staged?
-      self.package_state == "STAGED"
+      package_state == 'STAGED'
     end
 
     def staging_failed?
-      self.package_state == "FAILED"
+      package_state == 'FAILED'
     end
 
     def pending?
-      self.package_state == "PENDING"
+      package_state == 'PENDING'
     end
 
     def started?
-      self.state == "STARTED"
+      state == 'STARTED'
     end
 
     def stopped?
-      self.state == "STOPPED"
+      state == 'STOPPED'
     end
 
     def uris
@@ -417,19 +414,19 @@ module VCAP::CloudController
     end
 
     def mark_as_staged
-      self.package_state = "STAGED"
+      self.package_state = 'STAGED'
       self.package_pending_since = nil
     end
 
-    def mark_as_failed_to_stage(reason="StagingError")
-      self.package_state = "FAILED"
+    def mark_as_failed_to_stage(reason='StagingError')
+      self.package_state = 'FAILED'
       self.staging_failed_reason = reason
       self.package_pending_since = nil
       save
     end
 
     def mark_for_restaging
-      self.package_state = "PENDING"
+      self.package_state = 'PENDING'
       self.staging_failed_reason = nil
       self.package_pending_since = Time.now
     end
@@ -451,7 +448,7 @@ module VCAP::CloudController
 
       if admin_buildpack
         self.admin_buildpack = admin_buildpack
-      elsif buildpack_name != "" #git url case
+      elsif buildpack_name != '' # git url case
         super(buildpack_name)
       end
     end
@@ -484,23 +481,23 @@ module VCAP::CloudController
     def add_new_droplet(hash)
       self.droplet_hash = hash
       add_droplet(droplet_hash: hash)
-      self.save
+      save
     end
 
     def current_droplet
       return nil unless droplet_hash
       # The droplet may not be in the droplet table as we did not backfill
       # existing droplets when creating the table.
-      current_saved_droplet || Droplet.create(app: self, droplet_hash: self.droplet_hash)
+      current_saved_droplet || Droplet.create(app: self, droplet_hash: droplet_hash)
     end
 
     def start!
-      self.state = "STARTED"
+      self.state = 'STARTED'
       save
     end
 
     def stop!
-      self.state = "STOPPED"
+      self.state = 'STOPPED'
       save
     end
 
@@ -532,7 +529,7 @@ module VCAP::CloudController
 
     def to_hash(opts={})
       if !VCAP::CloudController::SecurityContext.admin? && !space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
-        opts.merge!({redact: ['environment_json', 'system_env_json']})
+        opts.merge!(redact: %w(environment_json system_env_json))
       end
       super(opts)
     end
@@ -551,7 +548,7 @@ module VCAP::CloudController
 
     private
 
-    def mark_routes_changed(_ = nil)
+    def mark_routes_changed(_=nil)
       routes_already_changed = @routes_changed
       @routes_changed = true
 
@@ -574,9 +571,7 @@ module VCAP::CloudController
     # registry-name:registry-port/[scope-name/]repo-name:tag-name
     def fill_docker_string(value)
       segs = value.split('/')
-      if not segs.last.include?(':')
-        segs[-1] = segs.last + ':latest'
-      end
+      segs[-1] = segs.last + ':latest' unless segs.last.include?(':')
       segs.join('/')
     end
 
@@ -584,9 +579,9 @@ module VCAP::CloudController
       deserialized_values[:metadata]
     end
 
-    WHITELIST_SERVICE_KEYS = %W[name label tags plan credentials syslog_drain_url].freeze
+    WHITELIST_SERVICE_KEYS = %w(name label tags plan credentials syslog_drain_url).freeze
 
-    def service_binding_json (binding)
+    def service_binding_json(binding)
       vcap_service = {}
       WHITELIST_SERVICE_KEYS.each do |key|
         vcap_service[key] = binding[key.to_sym] if binding[key.to_sym]
@@ -596,13 +591,13 @@ module VCAP::CloudController
 
     def vcap_services
       services_hash = {}
-      self.service_bindings.each do |sb|
+      service_bindings.each do |sb|
         binding = ServiceBindingPresenter.new(sb).to_hash
         service = service_binding_json(binding)
         services_hash[binding[:label]] ||= []
         services_hash[binding[:label]] << service
       end
-      {"VCAP_SERVICES" => services_hash}
+      { 'VCAP_SERVICES' => services_hash }
     end
 
     def app_usage_event_repository
@@ -611,7 +606,7 @@ module VCAP::CloudController
 
     def create_app_usage_buildpack_event
       return unless staged? && started?
-      app_usage_event_repository.create_from_app(self, "BUILDPACK_SET")
+      app_usage_event_repository.create_from_app(self, 'BUILDPACK_SET')
     end
 
     def create_app_usage_event
@@ -633,7 +628,7 @@ module VCAP::CloudController
 
     class << self
       def logger
-        @logger ||= Steno.logger("cc.models.app")
+        @logger ||= Steno.logger('cc.models.app')
       end
     end
   end

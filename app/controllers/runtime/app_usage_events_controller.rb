@@ -1,18 +1,18 @@
-require "repositories/runtime/app_usage_event_repository"
+require 'repositories/runtime/app_usage_event_repository'
 
 module VCAP::CloudController
   class AppUsageEventsController < RestController::ModelController
     def self.dependencies
-      [ :large_paginated_collection_renderer ]
+      [:large_paginated_collection_renderer]
     end
 
     preserve_query_parameters :after_guid
 
-    get "/v2/app_usage_events", :enumerate
+    get '/v2/app_usage_events', :enumerate
 
     get "#{path_guid}", :read
 
-    post "/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps", :reset
+    post '/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps', :reset
 
     def reset
       validate_access(:reset, model)
@@ -24,7 +24,7 @@ module VCAP::CloudController
     end
 
     def self.not_found_exception_name
-      "EventNotFound"
+      'EventNotFound'
     end
 
     def inject_dependencies(dependencies)
@@ -35,12 +35,12 @@ module VCAP::CloudController
     private
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      after_guid = params["after_guid"]
+      after_guid = params['after_guid']
       if after_guid
         repository = Repositories::Runtime::AppUsageEventRepository.new
         previous_event = repository.find(after_guid)
-        raise Errors::ApiError.new_from_details("BadQueryParameter", after_guid) unless previous_event
-        ds = ds.filter{ id > previous_event.id }
+        raise Errors::ApiError.new_from_details('BadQueryParameter', after_guid) unless previous_event
+        ds = ds.filter { id > previous_event.id }
       end
       super(model, ds, qp, opts)
     end

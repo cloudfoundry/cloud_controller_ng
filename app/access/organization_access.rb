@@ -11,7 +11,7 @@ module VCAP::CloudController
       return false unless org.managers.include?(context.user)
 
       if params
-        return false if params.has_key?(:quota_definition_guid.to_s) || params.has_key?(:billing_enabled.to_s)
+        return false if params.key?(:quota_definition_guid.to_s) || params.key?(:billing_enabled.to_s)
       end
 
       true

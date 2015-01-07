@@ -14,7 +14,7 @@ module VCAP::CloudController
           use NewRelic::Rack::DeveloperMode
         end
 
-        map "/" do
+        map '/' do
           run FrontController.new(config, token_decoder)
         end
       end
@@ -24,8 +24,8 @@ module VCAP::CloudController
 
     def access_log(config)
       if !config[:nginx][:use_nginx] && config[:logging][:file]
-        access_filename = File.join(File.dirname(config[:logging][:file]), "cc.access.log")
-        access_log ||= File.open(access_filename, "a")
+        access_filename = File.join(File.dirname(config[:logging][:file]), 'cc.access.log')
+        access_log ||= File.open(access_filename, 'a')
         access_log.sync = true
         return access_log
       end

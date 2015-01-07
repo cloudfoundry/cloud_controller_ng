@@ -1,10 +1,10 @@
-require "cloud_controller/dea/stager"
-require "cloud_controller/diego/stager"
-require "cloud_controller/diego/traditional/protocol"
-require "cloud_controller/diego/traditional/staging_completion_handler"
-require "cloud_controller/diego/docker/protocol"
-require "cloud_controller/diego/docker/staging_completion_handler"
-require "cloud_controller/diego/common/protocol"
+require 'cloud_controller/dea/stager'
+require 'cloud_controller/diego/stager'
+require 'cloud_controller/diego/traditional/protocol'
+require 'cloud_controller/diego/traditional/staging_completion_handler'
+require 'cloud_controller/diego/docker/protocol'
+require 'cloud_controller/diego/docker/staging_completion_handler'
+require 'cloud_controller/diego/common/protocol'
 
 module VCAP::CloudController
   class Stagers
@@ -17,21 +17,20 @@ module VCAP::CloudController
     end
 
     def validate_app(app)
-
       if app.docker_image.present? && docker_disabled?
-        raise Errors::ApiError.new_from_details("DockerDisabled")
+        raise Errors::ApiError.new_from_details('DockerDisabled')
       end
 
       if app.package_hash.blank?
-        raise Errors::ApiError.new_from_details("AppPackageInvalid", "The app package hash is empty")
+        raise Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty')
       end
 
       if app.buildpack.custom? && !app.custom_buildpacks_enabled?
-        raise Errors::ApiError.new_from_details("CustomBuildpacksDisabled")
+        raise Errors::ApiError.new_from_details('CustomBuildpacksDisabled')
       end
 
       if Buildpack.count == 0 && app.buildpack.custom? == false
-        raise Errors::ApiError.new_from_details("NoBuildpacksFound")
+        raise Errors::ApiError.new_from_details('NoBuildpacksFound')
       end
     end
 

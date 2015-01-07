@@ -5,7 +5,7 @@ module VCAP::CloudController
       Thread.current[:vcap_token] = nil
     end
 
-    def self.set(user, token = nil)
+    def self.set(user, token=nil)
       Thread.current[:vcap_user] = user
       Thread.current[:vcap_token] = token
     end

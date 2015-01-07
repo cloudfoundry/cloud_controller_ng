@@ -1,4 +1,4 @@
-require "vcap/rest_api/http_constants"
+require 'vcap/rest_api/http_constants'
 
 module VCAP::RestAPI
   module Errors
@@ -58,4 +58,3 @@ module VCAP::RestAPI
     end
   end
 end
-

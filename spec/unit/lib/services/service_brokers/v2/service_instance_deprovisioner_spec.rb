@@ -1,4 +1,4 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   module ServiceBrokers::V2

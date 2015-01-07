@@ -1,4 +1,4 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   module Dea
@@ -24,7 +24,7 @@ module VCAP::CloudController
       end
 
       let(:app) do
-        App.new(guid: "fake-app-guid")
+        App.new(guid: 'fake-app-guid')
       end
 
       let(:runner) { double(:Runner) }
@@ -33,21 +33,21 @@ module VCAP::CloudController
         Stager.new(app, config, message_bus, dea_pool, stager_pool, runners)
       end
 
-      describe "#stage" do
+      describe '#stage' do
         let(:stager_task) do
           double(AppStagerTask)
         end
 
         before do
           allow(AppStagerTask).to receive(:new).and_return(stager_task)
-          allow(stager_task).to receive(:stage).and_yield("fake-staging-result").and_return("fake-stager-response")
+          allow(stager_task).to receive(:stage).and_yield('fake-staging-result').and_return('fake-stager-response')
           allow(runners).to receive(:runner_for_app).with(app).and_return(runner)
-          allow(runner).to receive(:start).with("fake-staging-result")
+          allow(runner).to receive(:start).with('fake-staging-result')
 
           stager.stage
         end
 
-        it "stages the app with a stager task" do
+        it 'stages the app with a stager task' do
           expect(stager_task).to have_received(:stage)
           expect(AppStagerTask).to have_received(:new).with(config,
                                                             message_bus,
@@ -57,12 +57,12 @@ module VCAP::CloudController
                                                             an_instance_of(CloudController::Blobstore::UrlGenerator))
         end
 
-        it "starts the app with the returned staging result" do
-          expect(runner).to have_received(:start).with("fake-staging-result")
+        it 'starts the app with the returned staging result' do
+          expect(runner).to have_received(:start).with('fake-staging-result')
         end
 
-        it "records the stager response on the app" do
-          expect(app.last_stager_response).to eq("fake-stager-response")
+        it 'records the stager response on the app' do
+          expect(app.last_stager_response).to eq('fake-stager-response')
         end
       end
     end

@@ -6,7 +6,7 @@ module VCAP::CloudController
     # sad: can we declare this in parent class one day
     strip_attributes :name, :syslog_drain_url
 
-    add_association_dependencies :service_bindings => :destroy
+    add_association_dependencies service_bindings: :destroy
 
     def tags
       []

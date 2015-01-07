@@ -5,7 +5,7 @@ module VCAP::CloudController::RestController
     end
 
     module ClassMethods
-      def define_route(verb, path, method = nil, &blk)
+      def define_route(verb, path, method=nil, &blk)
         opts = {}
         klass = self
         controller.send(verb, path, opts) do |*args|
@@ -48,7 +48,6 @@ module VCAP::CloudController::RestController
 
       def define_to_many_routes
         to_many_relationships.each do |name, attr|
-
           route_for = Array(attr.route_for)
 
           if route_for.include?(:get)
@@ -68,7 +67,6 @@ module VCAP::CloudController::RestController
               api.dispatch(:remove_related, id, name, other_id)
             end
           end
-
         end
       end
 

@@ -32,9 +32,9 @@ module VCAP::CloudController
           response = app_state_request(app)
           return [] unless response
 
-          response["instance_heartbeats"].each_with_object([]) do |instance, result|
-            if instance["state"] == "CRASHED"
-              result << {"instance" => instance["instance"], "since" => instance["state_timestamp"]}
+          response['instance_heartbeats'].each_with_object([]) do |instance, result|
+            if instance['state'] == 'CRASHED'
+              result << { 'instance' => instance['instance'], 'since' => instance['state_timestamp'] }
             end
           end
         rescue UseDeprecatedNATSClient
@@ -45,9 +45,9 @@ module VCAP::CloudController
           response = app_state_request(app)
           return [] unless response
 
-          response["crash_counts"].each_with_object([]) do |crash_count, result|
-            if crash_count["crash_count"] >= @config[:flapping_crash_count_threshold]
-              result << {"index" => crash_count["instance_index"], "since" => crash_count["created_at"]}
+          response['crash_counts'].each_with_object([]) do |crash_count, result|
+            if crash_count['crash_count'] >= @config[:flapping_crash_count_threshold]
+              result << { 'index' => crash_count['instance_index'], 'since' => crash_count['created_at'] }
             end
           end
         rescue UseDeprecatedNATSClient
@@ -91,7 +91,7 @@ module VCAP::CloudController
         end
 
         def make_request(message)
-          logger.info("requesting bulk_app_state", message: message)
+          logger.info('requesting bulk_app_state', message: message)
 
           response = post_bulk_app_state(message.to_json)
           raise UseDeprecatedNATSClient if response.status == 404
@@ -100,24 +100,24 @@ module VCAP::CloudController
 
           responses = JSON.parse(response.body)
 
-          logger.info("received bulk_app_state response", { message: message, responses: responses })
+          logger.info('received bulk_app_state response', { message: message, responses: responses })
           responses
         end
 
         def healthy_instance_count(app, response)
-          if response.nil? || response["instance_heartbeats"].nil?
+          if response.nil? || response['instance_heartbeats'].nil?
             return -1
           end
 
-          response["instance_heartbeats"].each_with_object(Set.new) do |heartbeats, result|
-            if heartbeats["index"] < app.instances && (heartbeats["state"] == "RUNNING" || heartbeats["state"] == "STARTING")
-              result.add(heartbeats["index"])
+          response['instance_heartbeats'].each_with_object(Set.new) do |heartbeats, result|
+            if heartbeats['index'] < app.instances && (heartbeats['state'] == 'RUNNING' || heartbeats['state'] == 'STARTING')
+              result.add(heartbeats['index'])
             end
           end.length
         end
 
         def logger
-          @logger ||= Steno.logger("cc.healthmanager.client")
+          @logger ||= Steno.logger('cc.healthmanager.client')
         end
       end
     end

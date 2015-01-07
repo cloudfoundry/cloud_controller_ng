@@ -2,14 +2,14 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe AppEventAccess, type: :access do
-        subject(:access) { AppEventAccess.new(Security::AccessContext.new) }
-    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    subject(:access) { AppEventAccess.new(Security::AccessContext.new) }
+    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(:organization => org) }
-    let(:app) { VCAP::CloudController::AppFactory.make(:space => space) }
-    let(:object) { VCAP::CloudController::AppEvent.make(:app => app) }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:app) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:object) { VCAP::CloudController::AppEvent.make(app: app) }
 
     before do
       SecurityContext.set(user, token)
@@ -89,7 +89,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.write' do
-      let(:token) { {'scope' => ['cloud_controller.read']}}
+      let(:token) { { 'scope' => ['cloud_controller.read'] } }
       before do
         org.add_user(user)
         org.add_manager(user)
@@ -104,7 +104,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
-      let(:token) { {'scope' => []}}
+      let(:token) { { 'scope' => [] } }
       before do
         org.add_user(user)
         org.add_manager(user)

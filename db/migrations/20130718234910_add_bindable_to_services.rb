@@ -4,7 +4,7 @@ Sequel.migration do
       add_column :bindable, TrueClass
     end
 
-    from(:services).update(:bindable => true)
+    from(:services).update(bindable: true)
 
     alter_table(:services) do
       set_column_not_null :bindable

@@ -6,8 +6,8 @@ module VCAP::CloudController
       attribute :description,       String
       attribute :extra,             String,           default: nil
       attribute :unique_id,         String,           default: nil
-      to_one    :service
-      to_many   :service_instances
+      to_one :service
+      to_many :service_instances
       attribute :public, Message::Boolean, default: true
     end
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
       service_guid = single_filter.split(':')[1] if single_filter && single_filter.start_with?('service_guid')
 
       plans = ServicePlan.where(active: true, public: true)
-      if (service_guid.present?)
+      if service_guid.present?
         services = Service.where(guid: service_guid)
         plans = plans.where(service_id: services.select(:id))
       end
@@ -42,20 +42,20 @@ module VCAP::CloudController
       plan = find_guid_and_validate_access(:delete, guid)
 
       if plan.service_instances.present?
-        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "service_instances", plan.class.table_name)
+        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instances', plan.class.table_name)
       end
 
       plan.destroy
 
-      [ HTTP::NO_CONTENT, nil ]
+      [HTTP::NO_CONTENT, nil]
     end
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:service_id, :name])
       if name_errors && name_errors.include?(:unique)
-        Errors::ApiError.new_from_details("ServicePlanNameTaken", "#{attributes["service_id"]}-#{attributes["name"]}")
+        Errors::ApiError.new_from_details('ServicePlanNameTaken', "#{attributes['service_id']}-#{attributes['name']}")
       else
-        Errors::ApiError.new_from_details("ServicePlanInvalid", e.errors.full_messages)
+        Errors::ApiError.new_from_details('ServicePlanInvalid', e.errors.full_messages)
       end
     end
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
           select_all(:service_plans).
           left_join(:services, id: :service_plans__service_id).
           left_join(:service_brokers, id: :services__service_broker_id).
-          where(:service_brokers__guid => service_broker_guid)
+          where(service_brokers__guid: service_broker_guid)
       else
         super(model, ds, qp, opts)
       end

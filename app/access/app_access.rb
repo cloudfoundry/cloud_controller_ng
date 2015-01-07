@@ -10,8 +10,8 @@ module VCAP::CloudController
       return true if admin_user?
       return false unless create?(app, params)
       return true if params.nil?
-      if %w(instances memory disk_quota).any? {|k| params.has_key?(k) && params[k] != app.send(k.to_sym)}
-        FeatureFlag.raise_unless_enabled!("app_scaling")
+      if %w(instances memory disk_quota).any? { |k| params.key?(k) && params[k] != app.send(k.to_sym) }
+        FeatureFlag.raise_unless_enabled!('app_scaling')
       end
       true
     end

@@ -9,7 +9,7 @@ describe StructuredError do
       exception.set_backtrace(['/foo:1', '/bar:2'])
 
       expect(exception.to_h).to eq({
-        'description' => "some msg",
+        'description' => 'some msg',
         'backtrace' => ['/foo:1', '/bar:2'],
         'source' => source,
       })
@@ -70,4 +70,3 @@ describe StructuredError do
     end
   end
 end
-

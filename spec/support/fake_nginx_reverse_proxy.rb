@@ -1,5 +1,5 @@
-require "rack/test"
-require "tmpdir"
+require 'rack/test'
+require 'tmpdir'
 
 class FakeNginxReverseProxy
   def initialize(app)
@@ -10,14 +10,14 @@ class FakeNginxReverseProxy
     tmpdir = nil
     if multipart?(env)
       form_hash = Rack::Multipart::Parser.new(env.dup).parse
-      tmpdir = Dir.mktmpdir("ngx.uploads")
+      tmpdir = Dir.mktmpdir('ngx.uploads')
       offload_files!(form_hash, tmpdir)
       offload_staging!(form_hash, tmpdir)
       data = Rack::Multipart::Generator.new(form_hash).dump
       raise ArgumentError unless data
-      env["rack.input"] = StringIO.new(data)
-      env["CONTENT_LENGTH"] = data.size.to_s
-      env["CONTENT_TYPE"] = "multipart/form-data; boundary=#{Rack::Utils::Multipart::MULTIPART_BOUNDARY}"
+      env['rack.input'] = StringIO.new(data)
+      env['CONTENT_LENGTH'] = data.size.to_s
+      env['CONTENT_TYPE'] = "multipart/form-data; boundary=#{Rack::Utils::Multipart::MULTIPART_BOUNDARY}"
     end
     @app.call(env)
   ensure
@@ -25,9 +25,10 @@ class FakeNginxReverseProxy
   end
 
   private
+
   def multipart?(env)
-    return false unless ["PUT", "POST"].include?(env["REQUEST_METHOD"])
-    env["CONTENT_TYPE"].downcase.start_with?("multipart/form-data; boundary")
+    return false unless ['PUT', 'POST'].include?(env['REQUEST_METHOD'])
+    env['CONTENT_TYPE'].downcase.start_with?('multipart/form-data; boundary')
   end
 
   # @param [Hash] form_hash an env hash containing multipart file fields
@@ -54,7 +55,7 @@ class FakeNginxReverseProxy
         "#{key}_path" => File.join(tmpdir, File.basename(v[:tempfile].path)),
         # keeps the uploaded file to trick the multipart encoder, but
         # obfuscates the form field name so we're not likely gonna use it
-        ("%06x" % rand(0x1000000)) => Rack::Multipart::UploadedFile.new(v[:tempfile].path),
+        sprintf('%06x', rand(0x1000000)) => Rack::Multipart::UploadedFile.new(v[:tempfile].path),
       }
     )
     v[:tempfile].unlink
@@ -63,12 +64,12 @@ class FakeNginxReverseProxy
 
   # similar to +offload_files!+, but only replaces upload[droplet] to droplet_path
   def offload_staging!(form_hash, tmpdir)
-    if form_hash["upload"]
+    if form_hash['upload']
       upload_form = replace_form_field(
-        form_hash.delete("upload"),
-        "droplet",
+        form_hash.delete('upload'),
+        'droplet',
         tmpdir
-      ).reject {|k, _| k == "droplet_name" }
+      ).reject { |k, _| k == 'droplet_name' }
       form_hash.update(upload_form)
     end
   end

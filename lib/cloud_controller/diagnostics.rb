@@ -1,6 +1,5 @@
 module VCAP::CloudController
   class Diagnostics
-
     def self.collect(output_directory)
       data = {
         time: Time.now,
@@ -25,8 +24,6 @@ module VCAP::CloudController
     def self.request_complete
       Thread.current[:current_request] = nil
     end
-
-    private
 
     def self.request_info(request)
       {
@@ -64,4 +61,3 @@ module VCAP::CloudController
     end
   end
 end
-

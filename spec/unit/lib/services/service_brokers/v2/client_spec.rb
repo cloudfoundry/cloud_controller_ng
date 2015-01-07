@@ -18,43 +18,40 @@ module VCAP::Services::ServiceBrokers::V2
         exception.set_backtrace(['/foo:1', '/bar:2'])
 
         expect(exception.to_h).to eq({
-          'description' => "Service broker error: Some error text",
+          'description' => 'Service broker error: Some error text',
           'backtrace' => ['/foo:1', '/bar:2'],
-          "http" => {
-            "status" => 500,
-            "uri" => uri,
-            "method" => "PUT"
+          'http' => {
+            'status' => 500,
+            'uri' => uri,
+            'method' => 'PUT'
           },
           'source' => {
             'description' => 'Some error text'
           }
         })
       end
-
     end
 
     context 'without a description in the body' do
       let(:response_body) do
-        {'foo' => 'bar'}.to_json
+        { 'foo' => 'bar' }.to_json
       end
       it 'generates the correct hash' do
         exception = described_class.new(uri, method, response)
         exception.set_backtrace(['/foo:1', '/bar:2'])
 
         expect(exception.to_h).to eq({
-          'description' => "The service broker API returned an error from http://www.example.com/: 500 Internal Server Error",
+          'description' => 'The service broker API returned an error from http://www.example.com/: 500 Internal Server Error',
           'backtrace' => ['/foo:1', '/bar:2'],
-          "http" => {
-            "status" => 500,
-            "uri" => uri,
-            "method" => "PUT"
+          'http' => {
+            'status' => 500,
+            'uri' => uri,
+            'method' => 'PUT'
           },
-          'source' => {'foo' => 'bar'}
+          'source' => { 'foo' => 'bar' }
         })
       end
-
     end
-
   end
 
   describe 'the remaining ServiceBrokers::V2 exceptions' do
@@ -66,9 +63,9 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_body) { 'foo' }
       let(:response) { double(code: 200, reason: 'OK', body: response_body) }
 
-      it "initializes the base class correctly" do
+      it 'initializes the base class correctly' do
         exception = ServiceBrokerResponseMalformed.new(uri, method, response)
-        expect(exception.message).to eq("The service broker response was not understood")
+        expect(exception.message).to eq('The service broker response was not understood')
         expect(exception.uri).to eq(uri)
         expect(exception.method).to eq(method)
         expect(exception.source).to be(response.body)
@@ -79,7 +76,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_body) { 'foo' }
       let(:response) { double(code: 401, reason: 'Auth Error', body: response_body) }
 
-      it "initializes the base class correctly" do
+      it 'initializes the base class correctly' do
         exception = ServiceBrokerApiAuthenticationFailed.new(uri, method, response)
         expect(exception.message).to eq("Authentication failed for the service broker API. Double-check that the username and password are correct: #{uri}")
         expect(exception.uri).to eq(uri)
@@ -92,49 +89,49 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_body) { '{"message": "error message"}' }
       let(:response) { double(code: 409, reason: 'Conflict', body: response_body) }
 
-      it "initializes the base class correctly" do
+      it 'initializes the base class correctly' do
         exception = ServiceBrokerConflict.new(uri, method, response)
-        expect(exception.message).to eq("error message")
+        expect(exception.message).to eq('error message')
         expect(exception.uri).to eq(uri)
         expect(exception.method).to eq(method)
         expect(exception.source).to eq(MultiJson.load(response.body))
       end
 
-      it "has a response_code of 409" do
+      it 'has a response_code of 409' do
         exception = ServiceBrokerConflict.new(uri, method, response)
         expect(exception.response_code).to eq(409)
       end
 
-      context "when the response body has no message" do
+      context 'when the response body has no message' do
         let(:response_body) { '{"description": "error description"}' }
 
-        context "and there is a description field" do
-            it "initializes the base class correctly" do
-              exception = ServiceBrokerConflict.new(uri, method, response)
-              expect(exception.message).to eq("error description")
-              expect(exception.uri).to eq(uri)
-              expect(exception.method).to eq(method)
-              expect(exception.source).to eq(MultiJson.load(response.body))
-            end
+        context 'and there is a description field' do
+          it 'initializes the base class correctly' do
+            exception = ServiceBrokerConflict.new(uri, method, response)
+            expect(exception.message).to eq('error description')
+            expect(exception.uri).to eq(uri)
+            expect(exception.method).to eq(method)
+            expect(exception.source).to eq(MultiJson.load(response.body))
+          end
         end
 
-        context "and there is no description field" do
+        context 'and there is no description field' do
           let(:response_body) { '{"field": "value"}' }
 
-            it "initializes the base class correctly" do
-              exception = ServiceBrokerConflict.new(uri, method, response)
-              expect(exception.message).to eq("Resource conflict: #{uri}")
-              expect(exception.uri).to eq(uri)
-              expect(exception.method).to eq(method)
-              expect(exception.source).to eq(MultiJson.load(response.body))
-            end
+          it 'initializes the base class correctly' do
+            exception = ServiceBrokerConflict.new(uri, method, response)
+            expect(exception.message).to eq("Resource conflict: #{uri}")
+            expect(exception.uri).to eq(uri)
+            expect(exception.method).to eq(method)
+            expect(exception.source).to eq(MultiJson.load(response.body))
           end
+        end
       end
 
-      context "when the body is not JSON-parsable" do
+      context 'when the body is not JSON-parsable' do
         let(:response_body) { 'foo' }
 
-        it "initializes the base class correctly" do
+        it 'initializes the base class correctly' do
           exception = ServiceBrokerConflict.new(uri, method, response)
           expect(exception.message).to eq("Resource conflict: #{uri}")
           expect(exception.uri).to eq(uri)
@@ -170,7 +167,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     shared_examples 'handles standard error conditions' do
       context 'when the API returns an error code' do
-        let(:response_data) {{ 'foo' => 'bar' }}
+        let(:response_data) { { 'foo' => 'bar' } }
         let(:code) { '500' }
         let(:message) { 'Internal Server Error' }
 
@@ -181,7 +178,7 @@ module VCAP::Services::ServiceBrokers::V2
             expect(e).to be_a(ServiceBrokerBadResponse)
             error_hash = e.to_h
             expect(error_hash.fetch('description')).to eq("The service broker API returned an error from #{service_broker.broker_url}#{path}: 500 Internal Server Error")
-            expect(error_hash.fetch('source')).to include({'foo' => 'bar'})
+            expect(error_hash.fetch('source')).to include({ 'foo' => 'bar' })
           }
         end
       end
@@ -195,9 +192,9 @@ module VCAP::Services::ServiceBrokers::V2
             expect {
               operation
             }.to raise_error(
-                   ServiceBrokerBadResponse,
-                   "The service broker API returned an error from #{service_broker.broker_url}#{path}: 404 Not Found"
-                 )
+              ServiceBrokerBadResponse,
+              "The service broker API returned an error from #{service_broker.broker_url}#{path}: 404 Not Found"
+            )
           end
         end
 
@@ -325,21 +322,21 @@ module VCAP::Services::ServiceBrokers::V2
         client.provision(instance)
 
         expect(http_client).to have_received(:put).
-                                 with("/v2/service_instances/#{instance.guid}", anything())
+          with("/v2/service_instances/#{instance.guid}", anything)
       end
 
       it 'makes a put request with correct message' do
         client.provision(instance)
 
         expect(http_client).to have_received(:put).
-                                 with(anything(),
-                                      {
-                                        service_id:        instance.service.broker_provided_id,
-                                        plan_id:           instance.service_plan.broker_provided_id,
-                                        organization_guid: instance.organization.guid,
-                                        space_guid:        instance.space.guid
-                                      }
-                               )
+          with(anything,
+               {
+            service_id:        instance.service.broker_provided_id,
+            plan_id:           instance.service_plan.broker_provided_id,
+            organization_guid: instance.organization.guid,
+            space_guid:        instance.space.guid
+          }
+              )
       end
 
       it 'sets the dashboard_url on the instance' do
@@ -386,7 +383,7 @@ module VCAP::Services::ServiceBrokers::V2
             }.to raise_error(ServiceBrokerApiTimeout)
 
             expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                                   to have_received(:deprovision).with(client_attrs, instance)
+              to have_received(:deprovision).with(client_attrs, instance)
           end
         end
 
@@ -398,12 +395,12 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'raises ServiceBrokerBadResponse and deprovisions' do
               expect {
-                  client.provision(instance)
+                client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                                     to have_received(:deprovision).
-                                     with(client_attrs, instance)
+                to have_received(:deprovision).
+                with(client_attrs, instance)
             end
           end
 
@@ -414,12 +411,12 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'raises ServiceBrokerBadResponse and deprovisions' do
               expect {
-                  client.provision(instance)
+                client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                                     to have_received(:deprovision).
-                                     with(client_attrs, instance)
+                to have_received(:deprovision).
+                with(client_attrs, instance)
             end
           end
 
@@ -430,12 +427,12 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'raises ServiceBrokerBadResponse and deprovisions' do
               expect {
-                  client.provision(instance)
+                client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                                     to have_received(:deprovision).
-                                     with(client_attrs, instance)
+                to have_received(:deprovision).
+                with(client_attrs, instance)
             end
           end
 
@@ -446,12 +443,12 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'raises ServiceBrokerBadResponse and deprovisions' do
               expect {
-                  client.provision(instance)
+                client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                                     to have_received(:deprovision).
-                                     with(client_attrs, instance)
+                to have_received(:deprovision).
+                with(client_attrs, instance)
             end
           end
 
@@ -462,12 +459,12 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'raises ServiceBrokerBadResponse and deprovisions' do
               expect {
-                  client.provision(instance)
+                client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                                     to have_received(:deprovision).
-                                     with(client_attrs, instance)
+                to have_received(:deprovision).
+                with(client_attrs, instance)
             end
           end
 
@@ -478,12 +475,12 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'raises ServiceBrokerBadResponse and deprovisions' do
               expect {
-                  client.provision(instance)
+                client.provision(instance)
               }.to raise_error(ServiceBrokerBadResponse)
 
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                                     to have_received(:deprovision).
-                                     with(client_attrs, instance)
+                to have_received(:deprovision).
+                with(client_attrs, instance)
             end
           end
         end
@@ -507,8 +504,8 @@ module VCAP::Services::ServiceBrokers::V2
             }.to raise_error(ServiceBrokerApiTimeout)
 
             expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                                   to have_received(:deprovision).
-                                   with(client_attrs, instance)
+              to have_received(:deprovision).
+              with(client_attrs, instance)
           end
         end
 
@@ -563,7 +560,7 @@ module VCAP::Services::ServiceBrokers::V2
         client.update_service_plan(instance, new_plan)
 
         expect(http_client).to have_received(:patch).with(
-          anything(),
+          anything,
           {
             plan_id:	new_plan.broker_provided_id,
             previous_values: {
@@ -581,7 +578,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         client.update_service_plan(instance, new_plan)
 
-        expect(http_client).to have_received(:patch).with(path, anything())
+        expect(http_client).to have_received(:patch).with(path, anything)
       end
 
       describe 'error handling' do
@@ -594,7 +591,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:status_code) { '400' }
           let(:body) { { description: 'the request was malformed' }.to_json }
           it 'raises a ServiceBrokerBadResponse error' do
-            expect{ client.update_service_plan(instance, new_plan) }.to raise_error(
+            expect { client.update_service_plan(instance, new_plan) }.to raise_error(
               ServiceBrokerBadResponse, /the request was malformed/
             )
           end
@@ -602,9 +599,9 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'when the broker returns a 404' do
           let(:status_code) { '404' }
-          let(:body) { { description: 'service instance not found'}.to_json }
+          let(:body) { { description: 'service instance not found' }.to_json }
           it 'raises a ServiceBrokerBadRequest error' do
-            expect{ client.update_service_plan(instance, new_plan) }.to raise_error(
+            expect { client.update_service_plan(instance, new_plan) }.to raise_error(
               ServiceBrokerBadResponse, /service instance not found/
             )
           end
@@ -614,7 +611,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:status_code) { '422' }
           let(:body) { { description: 'cannot update to this plan' }.to_json }
           it 'raises a ServiceBrokerBadResponse error' do
-            expect{ client.update_service_plan(instance, new_plan) }.to raise_error(
+            expect { client.update_service_plan(instance, new_plan) }.to raise_error(
               ServiceBrokerBadResponse, /cannot update to this plan/
             )
           end
@@ -659,20 +656,20 @@ module VCAP::Services::ServiceBrokers::V2
         client.bind(binding)
 
         expect(http_client).to have_received(:put).
-                                 with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}", anything())
+          with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}", anything)
       end
 
       it 'makes a put request with correct message' do
         client.bind(binding)
 
         expect(http_client).to have_received(:put).
-                                 with(anything(),
-                                      {
-                                        plan_id:    binding.service_plan.broker_provided_id,
-                                        service_id: binding.service.broker_provided_id,
-                                        app_guid:   binding.app_guid
-                                      }
-                               )
+          with(anything,
+               {
+            plan_id:    binding.service_plan.broker_provided_id,
+            service_id: binding.service.broker_provided_id,
+            app_guid:   binding.app_guid
+          }
+              )
       end
 
       it 'sets the credentials on the binding' do
@@ -685,11 +682,10 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'with a syslog drain url' do
-
         let(:response_data) do
           {
-              'credentials' => { },
-              'syslog_drain_url' => 'syslog://example.com:514'
+            'credentials' => {},
+            'syslog_drain_url' => 'syslog://example.com:514'
           }
         end
 
@@ -697,14 +693,12 @@ module VCAP::Services::ServiceBrokers::V2
           client.bind(binding)
           expect(binding.syslog_drain_url).to eq('syslog://example.com:514')
         end
-
       end
 
       context 'without a syslog drain url' do
-
         let(:response_data) do
           {
-              'credentials' => { }
+            'credentials' => {}
           }
         end
 
@@ -712,7 +706,6 @@ module VCAP::Services::ServiceBrokers::V2
           client.bind(binding)
           expect(binding.syslog_drain_url).to_not be
         end
-
       end
 
       context 'when bind takes longer than broker configured timeout' do
@@ -739,8 +732,8 @@ module VCAP::Services::ServiceBrokers::V2
             }.to raise_error(ServiceBrokerApiTimeout)
 
             expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
-                                   to have_received(:unbind).
-                                   with(client_attrs, binding)
+              to have_received(:unbind).
+              with(client_attrs, binding)
           end
         end
 
@@ -788,7 +781,6 @@ module VCAP::Services::ServiceBrokers::V2
           let(:operation) { client.bind(binding) }
         end
       end
-
     end
 
     describe '#unbind' do
@@ -818,19 +810,19 @@ module VCAP::Services::ServiceBrokers::V2
         client.unbind(binding)
 
         expect(http_client).to have_received(:delete).
-                                 with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}", anything())
+          with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}", anything)
       end
 
       it 'makes a delete request with correct message' do
         client.unbind(binding)
 
         expect(http_client).to have_received(:delete).
-                                 with(anything(),
-                                      {
-                                        plan_id:    binding.service_plan.broker_provided_id,
-                                        service_id: binding.service.broker_provided_id,
-                                      }
-                               )
+          with(anything,
+               {
+            plan_id:    binding.service_plan.broker_provided_id,
+            service_id: binding.service.broker_provided_id,
+          }
+              )
       end
 
       context 'DEPRECATED: the broker should not return 204, but we still support the case when it does' do
@@ -880,19 +872,19 @@ module VCAP::Services::ServiceBrokers::V2
         client.deprovision(instance)
 
         expect(http_client).to have_received(:delete).
-                                 with("/v2/service_instances/#{instance.guid}", anything())
+          with("/v2/service_instances/#{instance.guid}", anything)
       end
 
       it 'makes a delete request with correct message' do
         client.deprovision(instance)
 
         expect(http_client).to have_received(:delete).
-                                 with(anything(),
-                                      {
-                                        service_id: instance.service.broker_provided_id,
-                                        plan_id:    instance.service_plan.broker_provided_id
-                                      }
-                               )
+          with(anything,
+               {
+            service_id: instance.service.broker_provided_id,
+            plan_id:    instance.service_plan.broker_provided_id
+          }
+              )
       end
 
       describe 'handling errors' do
@@ -910,5 +902,4 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
   end
-
 end

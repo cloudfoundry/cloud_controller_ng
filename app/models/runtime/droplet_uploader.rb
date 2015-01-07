@@ -24,6 +24,7 @@ module CloudController
     end
 
     private
+
     attr_reader :blobstore, :app
   end
 end

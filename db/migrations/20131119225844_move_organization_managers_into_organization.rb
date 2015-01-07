@@ -1,7 +1,18 @@
 Sequel.migration do
   up do
-    run("insert into organizations_users select * from organizations_managers m where NOT EXISTS (select * from organizations_users u where u.user_id = m.user_id and u.organization_id = m.organization_id)")
-    run("insert into organizations_users select * from organizations_billing_managers m where NOT EXISTS (select * from organizations_users u where u.user_id = m.user_id and u.organization_id = m.organization_id)")
-    run("insert into organizations_users select * from organizations_auditors m where NOT EXISTS (select * from organizations_users u where u.user_id = m.user_id and u.organization_id = m.organization_id)")
+    run <<-SQL
+      INSERT INTO organizations_users SELECT * FROM organizations_managers m
+      WHERE NOT EXISTS (SELECT * FROM organizations_users u WHERE u.user_id = m.user_id AND u.organization_id = m.organization_id)
+    SQL
+
+    run <<-SQL
+      INSERT INTO organizations_users SELECT * FROM organizations_billing_managers m
+      WHERE NOT EXISTS (SELECT * FROM organizations_users u WHERE u.user_id = m.user_id AND u.organization_id = m.organization_id)
+    SQL
+
+    run <<-SQL
+      INSERT INTO organizations_users SELECT * FROM organizations_auditors m
+      WHERE NOT EXISTS (SELECT * FROM organizations_users u WHERE u.user_id = m.user_id AND u.organization_id = m.organization_id)
+    SQL
   end
 end

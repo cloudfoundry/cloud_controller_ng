@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
-
   describe ServiceBrokerApiUnreachable do
     let(:uri) { 'http://www.example.com/' }
     let(:error) { SocketError.new('some message') }
@@ -34,7 +33,7 @@ module VCAP::Services::ServiceBrokers::V2
     let(:method) { 'POST' }
     let(:error) { StandardError.new }
 
-    it "initializes the base class correctly" do
+    it 'initializes the base class correctly' do
       exception = ServiceBrokerApiTimeout.new(uri, method, error)
       expect(exception.message).to eq("The service broker API timed out: #{uri}")
       expect(exception.uri).to eq(uri)
@@ -42,7 +41,6 @@ module VCAP::Services::ServiceBrokers::V2
       expect(exception.source).to be(error)
     end
   end
-
 
   describe HttpClient do
     let(:auth_username) { 'me' }
@@ -78,29 +76,29 @@ module VCAP::Services::ServiceBrokers::V2
       it 'sets X-Broker-Api-Version header correctly' do
         make_request
         expect(a_request(http_method, full_url).
-          with(:query => hash_including({})).
-          with(:headers => {'X-Broker-Api-Version' => '2.4'})).
+          with(query: hash_including({})).
+          with(headers: { 'X-Broker-Api-Version' => '2.4' })).
           to have_been_made
       end
 
       it 'sets the X-Vcap-Request-Id header to the current request id' do
         make_request
         expect(a_request(http_method, full_url).
-          with(:query => hash_including({})).
-          with(:headers => { 'X-Vcap-Request-Id' => request_id })).
+          with(query: hash_including({})).
+          with(headers: { 'X-Vcap-Request-Id' => request_id })).
           to have_been_made
       end
 
       it 'sets the Accept header to application/json' do
         make_request
         expect(a_request(http_method, full_url).
-          with(:query => hash_including({})).
-          with(:headers => { 'Accept' => 'application/json' })).
+          with(query: hash_including({})).
+          with(headers: { 'Accept' => 'application/json' })).
           to have_been_made
       end
 
       context 'when an https URL is used' do
-        let(:url) { "https://broker.example.com" }
+        let(:url) { 'https://broker.example.com' }
         let(:full_url) { "https://#{auth_username}:#{auth_password}@broker.example.com#{path}" }
 
         it 'uses SSL' do
@@ -111,33 +109,33 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         describe 'ssl cert verification' do
-          let(:response) { double(code: nil, body: nil, to_hash: nil)}
+          let(:response) { double(code: nil, body: nil, to_hash: nil) }
 
           before do
             allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
           end
 
           context 'and the skip_cert_verify is set to true' do
-            let(:config) { {skip_cert_verify: true } }
+            let(:config) { { skip_cert_verify: true } }
 
             it 'accepts self-signed cert from the broker' do
               expect(Net::HTTP).to receive(:start) { |host, port, opts, &blk|
                 expect(host).to eq 'broker.example.com'
                 expect(port).to eq 443
-                expect(opts).to eq({use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE})
+                expect(opts).to eq({ use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE })
               }.and_return(response)
               make_request
             end
           end
 
           context 'and the skip_cert_verify is set to false' do
-            let(:config) { {skip_cert_verify: false } }
+            let(:config) { { skip_cert_verify: false } }
 
             it 'does not accept self-signed cert from the broker' do
               expect(Net::HTTP).to receive(:start) { |host, port, opts, &blk|
                 expect(host).to eq 'broker.example.com'
                 expect(port).to eq 443
-                expect(opts).to eq({use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_PEER})
+                expect(opts).to eq({ use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_PEER })
               }.and_return(response)
               make_request
             end
@@ -200,7 +198,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker client timeout is set' do
-        let(:config) { {broker_client_timeout_seconds: 100} }
+        let(:config) { { broker_client_timeout_seconds: 100 } }
 
         it 'sets HTTP timeouts on request' do
           expect_timeout_to_be 100
@@ -209,7 +207,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker client timeout is not set' do
-        let(:config) { {missing_broker_client_timeout: nil} }
+        let(:config) { { missing_broker_client_timeout: nil } }
 
         it 'defaults to a 60 second timeout' do
           expect_timeout_to_be 60
@@ -268,8 +266,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:http_method) { :put }
       let(:message) do
         {
-          :key1 => 'value1',
-          :key2 => 'value2'
+          key1: 'value1',
+          key2: 'value2'
         }
       end
 
@@ -320,8 +318,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:http_method) { :patch }
       let(:message) do
         {
-          :key1 => 'value1',
-          :key2 => 'value2'
+          key1: 'value1',
+          key2: 'value2'
         }
       end
 
@@ -372,8 +370,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:http_method) { :delete }
       let(:message) do
         {
-          :key1 => 'value1',
-          :key2 => 'value2'
+          key1: 'value1',
+          key2: 'value2'
         }
       end
 

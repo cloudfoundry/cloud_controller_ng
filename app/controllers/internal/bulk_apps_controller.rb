@@ -1,7 +1,7 @@
-require "sinatra"
-require "controllers/base/base_controller"
-require "cloud_controller/diego/client"
-require "cloud_controller/internal_api"
+require 'sinatra'
+require 'controllers/base/base_controller'
+require 'cloud_controller/diego/client'
+require 'cloud_controller/internal_api'
 
 module VCAP::CloudController
   class BulkAppsController < RestController::BaseController
@@ -12,14 +12,14 @@ module VCAP::CloudController
       super
       auth = Rack::Auth::Basic::Request.new(env)
       unless auth.provided? && auth.basic? && auth.credentials == InternalApi.credentials
-        raise Errors::ApiError.new_from_details("NotAuthenticated")
+        raise Errors::ApiError.new_from_details('NotAuthenticated')
       end
     end
 
     def bulk_apps
-      batch_size = Integer(params.fetch("batch_size"))
-      bulk_token = MultiJson.load(params.fetch("token"))
-      last_id = Integer(bulk_token["id"] || 0)
+      batch_size = Integer(params.fetch('batch_size'))
+      bulk_token = MultiJson.load(params.fetch('token'))
+      last_id = Integer(bulk_token['id'] || 0)
 
       dependency_locator = ::CloudController::DependencyLocator.instance
       runners = dependency_locator.runners
@@ -30,12 +30,12 @@ module VCAP::CloudController
 
       MultiJson.dump(
         apps: messages,
-        token: {"id" => id_for_next_token}
+        token: { 'id' => id_for_next_token }
       )
     rescue IndexError => e
-      raise ApiError.new_from_details("BadQueryParameter", e.message)
+      raise ApiError.new_from_details('BadQueryParameter', e.message)
     end
 
-    get "/internal/bulk/apps", :bulk_apps
+    get '/internal/bulk/apps', :bulk_apps
   end
 end

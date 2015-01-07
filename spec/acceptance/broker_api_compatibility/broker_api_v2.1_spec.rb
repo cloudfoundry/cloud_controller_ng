@@ -23,7 +23,7 @@ describe 'Service Broker API integration' do
 
       describe 'service binding request' do
         before do
-          stub_request(:put, %r(/v2/service_instances/#{service_instance_guid}/service_bindings/.*$)).
+          stub_request(:put, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/.*$}).
             to_return(status: 200, body: '{}')
 
           post('/v2/service_bindings',
@@ -32,7 +32,7 @@ describe 'Service Broker API integration' do
         end
 
         it 'sends the app_guid as part of the request' do
-          expect(a_request(:put, %r(broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/.*$)).
+          expect(a_request(:put, %r{broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/.*$}).
             with(body: hash_including(app_guid: app_guid))).
             to have_been_made
         end

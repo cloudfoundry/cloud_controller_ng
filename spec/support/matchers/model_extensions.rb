@@ -3,14 +3,14 @@ RSpec::Matchers.define :strip_whitespace do |attribute|
     "strip #{attribute}"
   end
   match do |instance|
-    instance[attribute] = " foo "
-    instance[attribute] == "foo"
+    instance[attribute] = ' foo '
+    instance[attribute] == 'foo'
   end
 end
 
 RSpec::Matchers.define :export_attributes do |*attributes|
   description do
-    "exports #{attributes.join(", ")}"
+    "exports #{attributes.join(', ')}"
   end
 
   match do |_|
@@ -20,10 +20,9 @@ RSpec::Matchers.define :export_attributes do |*attributes|
   end
 end
 
-
 RSpec::Matchers.define :import_attributes do |*attributes|
   description do
-    "imports #{attributes.join(", ")}"
+    "imports #{attributes.join(', ')}"
   end
 
   match do |_|

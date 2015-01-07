@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     it { is_expected.to have_timestamp_columns }
 
-    describe "Associations" do
+    describe 'Associations' do
       it { is_expected.to have_associated :service_broker }
     end
 

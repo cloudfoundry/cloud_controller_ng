@@ -66,7 +66,7 @@ resource 'Apps (Experimental)', type: :api do
       example 'Create an App' do
         expect {
           do_request_with_error_handling
-        }.to change{ VCAP::CloudController::AppModel.count }.by(1)
+        }.to change { VCAP::CloudController::AppModel.count }.by(1)
 
         expected_guid = VCAP::CloudController::AppModel.last.guid
         expected_response = {
@@ -135,7 +135,7 @@ resource 'Apps (Experimental)', type: :api do
       example 'Delete an App' do
         expect {
           do_request_with_error_handling
-        }.to change{ VCAP::CloudController::AppModel.count }.by(-1)
+        }.to change { VCAP::CloudController::AppModel.count }.by(-1)
         expect(response_status).to eq(204)
       end
     end
@@ -164,7 +164,7 @@ resource 'Apps (Experimental)', type: :api do
       example 'Add a Process' do
         expect {
           do_request_with_error_handling
-        }.not_to change{ VCAP::CloudController::App.count }
+        }.not_to change { VCAP::CloudController::App.count }
 
         expect(response_status).to eq(204)
         expect(app_model.reload.processes.first).to eq(process.reload)
@@ -230,7 +230,7 @@ resource 'Apps (Experimental)', type: :api do
       example 'Remove a Process' do
         expect {
           do_request_with_error_handling
-        }.not_to change{ VCAP::CloudController::App.count }
+        }.not_to change { VCAP::CloudController::App.count }
 
         expect(response_status).to eq(204)
         expect(app_model.reload.processes).to eq([])

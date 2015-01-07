@@ -12,7 +12,7 @@ module VCAP::Services::SSO
     let(:security_context) { double(:security_context, current_user: user, current_user_email: email) }
 
     describe '#initialize' do
-      subject{ manager }
+      subject { manager }
 
       it 'sets the service_broker' do
         manager = DashboardClientManager.new(service_broker, services_event_repository)
@@ -76,7 +76,7 @@ module VCAP::Services::SSO
           it 'creates clients only for all services that specify dashboard_client' do
             expect(client_manager).to receive(:modify_transaction) do |changeset|
               expect(changeset.length).to eq 2
-              expect(changeset.all? {|change| change.is_a? Commands::CreateClientCommand}).to be true
+              expect(changeset.all? { |change| change.is_a? Commands::CreateClientCommand }).to be true
               expect(changeset[0].client_attrs).to eq dashboard_client_attrs_1
               expect(changeset[1].client_attrs).to eq dashboard_client_attrs_2
             end
@@ -122,7 +122,7 @@ module VCAP::Services::SSO
 
         context 'when some, but not all dashboard sso clients exist in UAA' do
           before do
-            allow(client_manager).to receive(:get_clients).and_return([{'client_id' => catalog_service.dashboard_client['id']}])
+            allow(client_manager).to receive(:get_clients).and_return([{ 'client_id' => catalog_service.dashboard_client['id'] }])
           end
 
           context 'when the broker has already claimed a requested UAA client' do
@@ -135,7 +135,7 @@ module VCAP::Services::SSO
 
             it 'creates the clients that do not currently exist' do
               expect(client_manager).to receive(:modify_transaction) do |changeset|
-                create_commands = changeset.select { |command| command.is_a? Commands::CreateClientCommand}
+                create_commands = changeset.select { |command| command.is_a? Commands::CreateClientCommand }
                 expect(create_commands.length).to eq 1
                 expect(create_commands[0].client_attrs).to eq dashboard_client_attrs_2
               end
@@ -145,7 +145,7 @@ module VCAP::Services::SSO
 
             it 'updates the client that is already in uaa' do
               expect(client_manager).to receive(:modify_transaction) do |changeset|
-                update_commands = changeset.select { |command| command.is_a? Commands::UpdateClientCommand}
+                update_commands = changeset.select { |command| command.is_a? Commands::UpdateClientCommand }
                 expect(update_commands.length).to eq 1
                 expect(update_commands[0].client_attrs).to eq dashboard_client_attrs_1
               end
@@ -199,7 +199,7 @@ module VCAP::Services::SSO
 
             it 'does not claim any clients for CC' do
               expect(VCAP::CloudController::ServiceDashboardClient.count).to eq(0)
-              expect { manager.synchronize_clients_with_catalog(catalog) }.not_to change{ VCAP::CloudController::ServiceDashboardClient.count }
+              expect { manager.synchronize_clients_with_catalog(catalog) }.not_to change { VCAP::CloudController::ServiceDashboardClient.count }
             end
 
             it 'returns false' do
@@ -240,7 +240,7 @@ module VCAP::Services::SSO
 
           it 'deletes the client from the uaa' do
             expect(client_manager).to receive(:modify_transaction) do |changeset|
-              delete_commands = changeset.select { |command| command.is_a? Commands::DeleteClientCommand}
+              delete_commands = changeset.select { |command| command.is_a? Commands::DeleteClientCommand }
               expect(delete_commands.length).to eq 1
               expect(delete_commands[0].client_id).to eq(unused_id)
             end
@@ -276,7 +276,7 @@ module VCAP::Services::SSO
         end
 
         context 'when a different broker has already claimed the requested UAA client' do
-          let(:other_broker) { double(:other_broker, id: SecureRandom.uuid)}
+          let(:other_broker) { double(:other_broker, id: SecureRandom.uuid) }
           let(:existing_client) do
             double(:client,
               uaa_id: dashboard_client_attrs_1['id'],
@@ -323,7 +323,7 @@ module VCAP::Services::SSO
           let(:unused_id) { 'no-longer-used' }
 
           before do
-            allow(client_manager).to receive(:get_clients).and_return([{'client_id' => unused_id}])
+            allow(client_manager).to receive(:get_clients).and_return([{ 'client_id' => unused_id }])
             allow(client_manager).to receive(:modify_transaction).and_raise(VCAP::Services::SSO::UAA::UaaError.new('error message'))
 
             VCAP::CloudController::ServiceDashboardClient.new(
@@ -410,7 +410,7 @@ module VCAP::Services::SSO
             manager.synchronize_clients_with_catalog(catalog)
 
             expect(manager.has_warnings?).to be true
-            expect(manager.warnings).to include('Warning: This broker includes configuration for a dashboard client. Auto-creation of OAuth2 clients has been disabled in this Cloud Foundry instance. The broker catalog has been updated but its dashboard client configuration will be ignored.')
+            expect(manager.warnings).to include(VCAP::Services::SSO::DashboardClientManager::REQUESTED_FEATURE_DISABLED_WARNING)
           end
         end
 
@@ -446,14 +446,14 @@ module VCAP::Services::SSO
 
         allow(client_manager).to receive(:get_clients).and_return(
           [
-            {'client_id' => client_to_delete_1},
-            {'client_id' => client_to_delete_2}
+            { 'client_id' => client_to_delete_1 },
+            { 'client_id' => client_to_delete_2 }
           ])
       end
 
       it 'deletes all clients for the service broker in UAA' do
         expect(client_manager).to receive(:modify_transaction) do |changeset|
-          delete_commands = changeset.select { |command| command.is_a? Commands::DeleteClientCommand}
+          delete_commands = changeset.select { |command| command.is_a? Commands::DeleteClientCommand }
           expect(changeset.length).to eq(2)
           expect(delete_commands.length).to eq(2)
           expect(delete_commands[0].client_attrs['id']).to eq(client_to_delete_1)
@@ -532,11 +532,11 @@ module VCAP::Services::SSO
 
       context 'when removing CC claims raises an exception' do
         before do
-          allow(VCAP::CloudController::ServiceDashboardClient).to receive(:remove_claim_on_client).and_raise("test error")
+          allow(VCAP::CloudController::ServiceDashboardClient).to receive(:remove_claim_on_client).and_raise('test error')
         end
 
         it 'reraises the error' do
-          expect { manager.remove_clients_for_broker }.to raise_error("test error")
+          expect { manager.remove_clients_for_broker }.to raise_error('test error')
         end
 
         it 'does not delete the UAA clients' do

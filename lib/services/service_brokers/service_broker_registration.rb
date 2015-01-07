@@ -24,7 +24,7 @@ module VCAP::Services::ServiceBrokers
         broker.destroy
         raise e
       end
-      return self
+      self
     end
 
     def update
@@ -36,7 +36,7 @@ module VCAP::Services::ServiceBrokers
         broker.save
         synchronize_services_and_plans!
       end
-      return self
+      self
     end
 
     def errors
@@ -81,7 +81,7 @@ module VCAP::Services::ServiceBrokers
 
     def raise_humanized_exception(errors)
       humanized_message = formatter.format(errors)
-      raise VCAP::Errors::ApiError.new_from_details("ServiceBrokerCatalogInvalid", humanized_message)
+      raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', humanized_message)
     end
   end
 end

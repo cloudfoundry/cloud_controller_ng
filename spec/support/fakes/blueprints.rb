@@ -1,6 +1,6 @@
-require "securerandom"
-require_relative "app_factory"
-require_relative "../test_models"
+require 'securerandom'
+require_relative 'app_factory'
+require_relative '../test_models'
 
 Sham.define do
   email               { |index| "email-#{index}@somedomain.com" }
@@ -13,7 +13,7 @@ Sham.define do
   url                 { |index| "https://foo.com/url-#{index}" }
   type                { |index| "type-#{index}" }
   description         { |index| "desc-#{index}" }
-  long_description    { |index| "long description-#{index} over 255 characters #{"-"*255}"}
+  long_description    { |index| "long description-#{index} over 255 characters #{'-' * 255}" }
   version             { |index| "version-#{index}" }
   service_credentials { |index| { "creds-key-#{index}" => "creds-val-#{index}" } }
   binding_options     { |index| { "binding-options-#{index}" => "value-#{index}" } }
@@ -21,10 +21,10 @@ Sham.define do
   domain              { |index| "domain-#{index}.example.com" }
   host                { |index| "host-#{index}" }
   guid                { |_| "guid-#{SecureRandom.uuid}" }
-  extra               { |index| "extra-#{index}"}
+  extra               { |index| "extra-#{index}" }
   instance_index      { |index| index }
   unique_id           { |index| "unique-id-#{index}" }
-  status              { |_| %w[active suspended cancelled].sample(1).first }
+  status              { |_| %w(active suspended cancelled).sample(1).first }
   error_message       { |index| "error-message-#{index}" }
 end
 
@@ -42,7 +42,7 @@ module VCAP::CloudController
   Organization.blueprint do
     name              { Sham.name }
     quota_definition  { QuotaDefinition.make }
-    status            { "active" }
+    status            { 'active' }
   end
 
   Domain.blueprint do
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
     domain do
       PrivateDomain.make(
-        :owning_organization => space.organization,
+        owning_organization: space.organization,
       )
     end
 
@@ -150,13 +150,13 @@ module VCAP::CloudController
     space             { Space.make }
     stack             { Stack.make }
     instances         { 1 }
-    type              { "web" }
+    type              { 'web' }
   end
 
   ServiceBinding.blueprint do
     credentials       { Sham.service_credentials }
     service_instance  { ManagedServiceInstance.make }
-    app               { AppFactory.make(:space => service_instance.space) }
+    app               { AppFactory.make(space: service_instance.space) }
     syslog_drain_url  { nil }
   end
 
@@ -203,7 +203,7 @@ module VCAP::CloudController
 
   Event.blueprint do
     timestamp  { Time.now }
-    type       { Sham.name}
+    type       { Sham.name }
     actor      { Sham.guid }
     actor_type { Sham.name }
     actor_name { Sham.name }
@@ -224,7 +224,7 @@ module VCAP::CloudController
     app_guid          { Sham.guid }
     app_name          { Sham.name }
     app_run_id        { Sham.guid }
-    app_plan_name     { "free" }
+    app_plan_name     { 'free' }
     app_memory        { 256 }
     app_instance_count { 1 }
   end
@@ -287,8 +287,8 @@ module VCAP::CloudController
   end
 
   AppUsageEvent.blueprint do
-    state { "STARTED" }
-    package_state { "STAGED" }
+    state { 'STARTED' }
+    package_state { 'STAGED' }
     instance_count { 1 }
     memory_in_mb_per_instance { 564 }
     app_guid { Sham.guid }
@@ -301,7 +301,7 @@ module VCAP::CloudController
   end
 
   ServiceUsageEvent.blueprint do
-    state { "CREATED" }
+    state { 'CREATED' }
     org_guid { Sham.guid }
     space_guid { Sham.guid }
     space_name { Sham.name }
@@ -319,9 +319,9 @@ module VCAP::CloudController
     rules do
       [
         {
-          "protocol" => "udp",
-          "ports" => "8080",
-          "destination" => "198.41.191.47/1",
+          'protocol' => 'udp',
+          'ports' => '8080',
+          'destination' => '198.41.191.47/1',
         }
       ]
     end
@@ -341,8 +341,8 @@ module VCAP::CloudController
     name { "runtime-#{Sham.instance_index}" }
     environment_json do
       {
-        "MOTD" => "Because of your smile, you make life more beautiful.",
-        "COROPRATE_PROXY_SERVER" => "abc:8080",
+        'MOTD' => 'Because of your smile, you make life more beautiful.',
+        'COROPRATE_PROXY_SERVER' => 'abc:8080',
       }
     end
   end

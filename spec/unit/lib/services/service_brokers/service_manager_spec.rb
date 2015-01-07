@@ -5,7 +5,6 @@ require 'cloud_controller/security_context'
 
 module VCAP::Services::ServiceBrokers
   describe ServiceManager do
-
     let(:broker) { VCAP::CloudController::ServiceBroker.make }
 
     let(:service_id) { Sham.guid }
@@ -17,10 +16,10 @@ module VCAP::Services::ServiceBrokers
     let(:plan_name) { Sham.name }
     let(:plan_description) { Sham.description }
     let(:service_metadata_hash) do
-      {'metadata' => {'foo' => 'bar'}}
+      { 'metadata' => { 'foo' => 'bar' } }
     end
     let(:plan_metadata_hash) do
-      {'metadata' => { "cost" => "0.0" }}
+      { 'metadata' => { 'cost' => '0.0' } }
     end
     let(:dashboard_client_attrs) do
       {
@@ -78,7 +77,7 @@ module VCAP::Services::ServiceBrokers
       subject { described_class.new(service_event_repository) }
 
       its(:has_warnings?) { should eq false }
-      its(:warnings) { should eq []}
+      its(:warnings) { should eq [] }
     end
 
     describe '#sync_services_and_plans' do
@@ -93,7 +92,7 @@ module VCAP::Services::ServiceBrokers
         expect(service.description).to eq(service_description)
         expect(service.bindable).to be true
         expect(service.tags).to match_array(['mysql', 'relational'])
-        expect(JSON.parse(service.extra)).to eq( {'foo' => 'bar'} )
+        expect(JSON.parse(service.extra)).to eq({ 'foo' => 'bar' })
         expect(service.requires).to eq(['ultimate', 'power'])
         expect(service.plan_updateable).to eq true
       end
@@ -145,19 +144,19 @@ module VCAP::Services::ServiceBrokers
         expect(event.space_guid).to eq('')
         expect(event.organization_guid).to eq('')
         expect(event.metadata).to include({
-          "name"=>service_plan.name,
-          "free"=>service_plan.free,
-          "description"=>service_plan.description,
-          "service_guid"=>service_plan.service.guid,
-          "extra"=>"{\"cost\":\"0.0\"}",
-          "unique_id"=>service_plan.unique_id,
-          "public"=>service_plan.public,
-          "active"=>service_plan.active
+          'name' => service_plan.name,
+          'free' => service_plan.free,
+          'description' => service_plan.description,
+          'service_guid' => service_plan.service.guid,
+          'extra' => "{\"cost\":\"0.0\"}",
+          'unique_id' => service_plan.unique_id,
+          'public' => service_plan.public,
+          'active' => service_plan.active
         })
       end
 
       context 'when catalog service metadata is nil' do
-        let(:service_metadata_hash) { {'metadata' => nil} }
+        let(:service_metadata_hash) { { 'metadata' => nil } }
 
         it 'leaves the extra field as nil' do
           service_manager.sync_services_and_plans(catalog)
@@ -199,7 +198,7 @@ module VCAP::Services::ServiceBrokers
       end
 
       context 'when the catalog service plan metadata is empty' do
-        let(:plan_metadata_hash) { {'metadata' => nil} }
+        let(:plan_metadata_hash) { { 'metadata' => nil } }
 
         it 'leaves the plan extra field as nil' do
           service_manager.sync_services_and_plans(catalog)
@@ -306,7 +305,7 @@ module VCAP::Services::ServiceBrokers
         end
 
         context 'and a plan exists that has been removed from the broker catalog' do
-          let(:missing_plan_name) { "111" }
+          let(:missing_plan_name) { '111' }
           let!(:missing_plan) do
             VCAP::CloudController::ServicePlan.make(
               service: service,
@@ -317,7 +316,7 @@ module VCAP::Services::ServiceBrokers
 
           it 'deletes the plan from the db' do
             service_manager.sync_services_and_plans(catalog)
-            expect(VCAP::CloudController::ServicePlan.find(:id => missing_plan.id)).to be_nil
+            expect(VCAP::CloudController::ServicePlan.find(id: missing_plan.id)).to be_nil
           end
 
           it 'creates service audit events for each service plan deleted' do
@@ -338,10 +337,10 @@ module VCAP::Services::ServiceBrokers
           end
 
           context 'when an instance for the plan exists' do
-            let(:service_name) { "AAA" }
-            let(:missing_plan2_name) { "222" }
-            let(:missing_service2_name) { "BBB" }
-            let(:missing_service2_plan_name) { "111-B" }
+            let(:service_name) { 'AAA' }
+            let(:missing_plan2_name) { '222' }
+            let(:missing_service2_name) { 'BBB' }
+            let(:missing_service2_plan_name) { '111-B' }
 
             before do
               VCAP::CloudController::ManagedServiceInstance.make(service_plan: missing_plan)
@@ -359,7 +358,7 @@ module VCAP::Services::ServiceBrokers
               expect(missing_plan).not_to be_active
             end
 
-            context "when there are existing service instances" do
+            context 'when there are existing service instances' do
               before do
                 missing_service2 = VCAP::CloudController::Service.make(service_broker: broker, label: missing_service2_name)
                 missing_service2_plan = VCAP::CloudController::ServicePlan.make(service: missing_service2, unique_id: 'i_be_gone', name: missing_service2_plan_name)
@@ -368,7 +367,7 @@ module VCAP::Services::ServiceBrokers
 
               it 'adds a formatted warning' do
                 service_manager.sync_services_and_plans(catalog)
-# rubocop:disable LineLength
+                # rubocop:disable LineLength
                 expect(service_manager.warnings).to include(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
@@ -377,14 +376,14 @@ Warning: Service plans are missing from the broker's catalog (#{broker.broker_ur
 #{missing_service2_name}
   #{missing_service2_plan_name}
 HEREDOC
-# rubocop:enable LineLength
+                # rubocop:enable LineLength
               end
             end
 
-            context "when there are no existing service instances" do
+            context 'when there are no existing service instances' do
               it 'does not add a formatted warning' do
                 service_manager.sync_services_and_plans(catalog)
-# rubocop:disable LineLength
+                # rubocop:disable LineLength
                 expect(service_manager.warnings).to_not include(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
@@ -393,7 +392,7 @@ Warning: Service plans are missing from the broker's catalog (#{broker.broker_ur
 #{missing_service2_name}
   #{missing_service2_plan_name}
 HEREDOC
-# rubocop:enable LineLength
+                # rubocop:enable LineLength
               end
             end
           end
@@ -420,7 +419,7 @@ HEREDOC
 
         it 'should delete the service' do
           service_manager.sync_services_and_plans(catalog)
-          expect(VCAP::CloudController::Service.find(:id => service.id)).to be_nil
+          expect(VCAP::CloudController::Service.find(id: service.id)).to be_nil
         end
 
         it 'creates service audit events for each service deleted' do
@@ -442,7 +441,7 @@ HEREDOC
 
         it 'should not delete services owned by other brokers' do
           service_manager.sync_services_and_plans(catalog)
-          expect(VCAP::CloudController::Service.find(:id => service_owned_by_other_broker.id)).not_to be_nil
+          expect(VCAP::CloudController::Service.find(id: service_owned_by_other_broker.id)).not_to be_nil
         end
 
         context 'but it has an active plan' do

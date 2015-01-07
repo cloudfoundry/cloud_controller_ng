@@ -12,7 +12,7 @@ describe 'User Provided Service Instance' do
   let(:syslog_drain_url2) { 'syslog://example2.com:514' }
 
   it 'can be created, bound, unbound, updated' do
-    #create
+    # create
     post('/v2/user_provided_service_instances', {
       name:             'my-v2-user-provided-service',
       space_guid:       @space_guid,
@@ -22,7 +22,7 @@ describe 'User Provided Service Instance' do
     json_body             = JSON.parse(last_response.body)
     service_instance_guid = json_body.fetch('metadata').fetch('guid')
 
-    #bind
+    # bind
     post('/v2/service_bindings', {
       service_instance_guid: service_instance_guid,
       app_guid:              @app_guid
@@ -32,11 +32,11 @@ describe 'User Provided Service Instance' do
     binding_guid = json_body.fetch('metadata').fetch('guid')
     expect(json_body.fetch('entity').fetch('syslog_drain_url')).to eq(syslog_drain_url)
 
-    #unbind
+    # unbind
     delete("/v2/service_bindings/#{binding_guid}", nil, json_headers(admin_headers))
     expect(last_response.status).to eq(204)
 
-    #update service instance
+    # update service instance
     put("/v2/user_provided_service_instances/#{service_instance_guid}", {
       name:             'my-v2-user-provided-service',
       space_guid:       @space_guid,
@@ -44,7 +44,7 @@ describe 'User Provided Service Instance' do
     }.to_json, json_headers(admin_headers))
     expect(last_response.status).to eq(201)
 
-    #rebind after update
+    # rebind after update
     post('/v2/service_bindings', {
       service_instance_guid: service_instance_guid,
       app_guid:              @app_guid
@@ -54,4 +54,3 @@ describe 'User Provided Service Instance' do
     expect(json_body.fetch('entity').fetch('syslog_drain_url')).to eq(syslog_drain_url2)
   end
 end
-

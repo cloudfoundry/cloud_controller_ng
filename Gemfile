@@ -57,7 +57,8 @@ group :test do
   gem 'rspec_api_documentation', git: 'https://github.com/zipmark/rspec_api_documentation.git'
   gem 'rspec-collection_matchers'
   gem 'rspec-its'
-  gem 'rubocop', '0.18.1'
+  gem 'rubocop'
+  gem 'astrolabe'
   gem 'timecop'
   gem 'webmock'
 end

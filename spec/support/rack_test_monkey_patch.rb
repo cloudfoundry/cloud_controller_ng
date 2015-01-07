@@ -8,15 +8,15 @@ module Rack
         params = env[:params]
         new_env = orig_env_for(path, env)
 
-        if env[:method] == "GET"
+        if env[:method] == 'GET'
           # merge :params with the query string
           uri = URI.parse(path)
 
           if params
             params = parse_nested_query(params) if params.is_a?(String)
-            uri.query = [uri.query, build_nested_query(params)].compact.join("&")
+            uri.query = [uri.query, build_nested_query(params)].compact.join('&')
           end
-          new_env["QUERY_STRING"] = uri.query
+          new_env['QUERY_STRING'] = uri.query
         end
 
         new_env

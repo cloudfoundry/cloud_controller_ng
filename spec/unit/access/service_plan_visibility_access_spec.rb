@@ -3,14 +3,14 @@ require 'spec_helper'
 module VCAP::CloudController
   describe ServicePlanVisibilityAccess, type: :access do
     subject(:access) { ServicePlanVisibilityAccess.new(Security::AccessContext.new) }
-    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
     let(:user) { VCAP::CloudController::User.make }
     let(:service) { VCAP::CloudController::Service.make }
     let(:org) { VCAP::CloudController::Organization.make }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(:service => service) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
 
-    let(:object) { VCAP::CloudController::ServicePlanVisibility.make(:organization => org, :service_plan => service_plan) }
+    let(:object) { VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: service_plan) }
 
     before do
       SecurityContext.set(user, token)

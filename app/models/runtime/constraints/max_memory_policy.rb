@@ -2,7 +2,7 @@ require 'cloud_controller/app_services/app_memory_calculator'
 
 class MaxMemoryPolicy
   attr_reader :policy_target
-  
+
   def initialize(app, policy_target, error_name)
     @app = app
     @errors = app.errors

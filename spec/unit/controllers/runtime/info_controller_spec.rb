@@ -1,22 +1,22 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::InfoController do
-    describe "GET /v2/info" do
+    describe 'GET /v2/info' do
       it "returns a 'user' entry when authenticated" do
-        get "/v2/info", {}, admin_headers
+        get '/v2/info', {}, admin_headers
         hash = MultiJson.load(last_response.body)
-        expect(hash).to have_key("user")
+        expect(hash).to have_key('user')
       end
 
       it "excludes the 'user' entry when not authenticated" do
-        get "/v2/info", {}, {}
+        get '/v2/info', {}, {}
         hash = MultiJson.load(last_response.body)
-        expect(hash).not_to have_key("user")
+        expect(hash).not_to have_key('user')
       end
 
-      it "includes data from the config" do
-        get "/v2/info", {}, {}
+      it 'includes data from the config' do
+        get '/v2/info', {}, {}
         hash = MultiJson.load(last_response.body)
         expect(hash['name']).to eq(TestConfig.config[:info][:name])
         expect(hash['build']).to eq(TestConfig.config[:info][:build])
@@ -28,38 +28,38 @@ module VCAP::CloudController
         expect(hash['api_version']).to eq(VCAP::CloudController::Constants::API_VERSION)
       end
 
-      it "includes login url when configured" do
-        TestConfig.override(:login => { :url => "login_url" })
-        get "/v2/info", {}, {}
+      it 'includes login url when configured' do
+        TestConfig.override(login: { url: 'login_url' })
+        get '/v2/info', {}, {}
         hash = MultiJson.load(last_response.body)
-        expect(hash['authorization_endpoint']).to eq("login_url")
+        expect(hash['authorization_endpoint']).to eq('login_url')
       end
 
-      it "includes the logging endpoint when configured" do
-        TestConfig.override(:loggregator => { :url => "loggregator_url" })
-        get "/v2/info", {}, {}
+      it 'includes the logging endpoint when configured' do
+        TestConfig.override(loggregator: { url: 'loggregator_url' })
+        get '/v2/info', {}, {}
         hash = MultiJson.load(last_response.body)
-        expect(hash['logging_endpoint']).to eq("loggregator_url")
+        expect(hash['logging_endpoint']).to eq('loggregator_url')
       end
 
-      describe "custom fields" do
-        context "without custom fields in config" do
-          it "does not have custom fields in the hash" do
-            get "/v2/info"
+      describe 'custom fields' do
+        context 'without custom fields in config' do
+          it 'does not have custom fields in the hash' do
+            get '/v2/info'
             hash = MultiJson.load(last_response.body)
-            expect(hash).not_to have_key("custom")
+            expect(hash).not_to have_key('custom')
           end
         end
 
-        context "with custom fields in config" do
-          before { TestConfig.override(:info => { :custom => { :foo => "bar", :baz => "foobar" } }) }
+        context 'with custom fields in config' do
+          before { TestConfig.override(info: { custom: { foo: 'bar', baz: 'foobar' } }) }
 
-          it "contains the custom fields" do
-            get "/v2/info"
+          it 'contains the custom fields' do
+            get '/v2/info'
 
             hash = MultiJson.load(last_response.body)
-            expect(hash).to have_key("custom")
-            expect(hash["custom"]).to eq({ "foo" => "bar", "baz" => "foobar" })
+            expect(hash).to have_key('custom')
+            expect(hash['custom']).to eq({ 'foo' => 'bar', 'baz' => 'foobar' })
           end
         end
       end

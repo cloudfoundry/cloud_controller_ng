@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe OrganizationPresenter do
-  describe "#to_hash" do
+  describe '#to_hash' do
     let(:org) { VCAP::CloudController::Organization.make }
     before do
       VCAP::CloudController::Space.make(organization: org)
@@ -11,7 +11,7 @@ describe OrganizationPresenter do
     end
     subject { OrganizationPresenter.new(org) }
 
-    it "creates a valid JSON" do
+    it 'creates a valid JSON' do
       expect(subject.to_hash).to eq({
         metadata: {
           guid: org.guid,

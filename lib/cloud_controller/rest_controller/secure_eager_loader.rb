@@ -24,8 +24,8 @@ module VCAP::CloudController::RestController
       associated_controller ||= VCAP::CloudController.controller_from_model_name(model_class.name)
 
       all_relationships = {}
-      [ associated_controller.to_one_relationships,
-        associated_controller.to_many_relationships,
+      [associated_controller.to_one_relationships,
+       associated_controller.to_many_relationships,
       ].each do |rel|
         all_relationships.merge!(rel) if rel && rel.any?
       end
@@ -44,9 +44,10 @@ module VCAP::CloudController::RestController
         end
 
         unless association_model_class
-          raise ArgumentError,
-            "Cannot resolve association #{association_name} on #{model_class} " +
-              "while trying to build eager loading hash"
+          raise ArgumentError.new(
+            "Cannot resolve association #{association_name} on #{model_class} " \
+              'while trying to build eager loading hash'
+          )
         end
 
         visibility_filter = default_visibility_filter
@@ -63,14 +64,12 @@ module VCAP::CloudController::RestController
                 association_model_class.associated_class,
                 default_visibility_filter,
                 additional_visibility_filters,
-                depth-1,
+                depth - 1,
               )
             }
           elsif association.is_a?(ControllerDSL::ToOneAttribute)
             # Preload one-to-one since we need to know record's guid
             eager_load_hash[association_name] = visibility_filter
-          else
-            # Do not preload many association
           end
         end
       end
@@ -79,4 +78,3 @@ module VCAP::CloudController::RestController
     end
   end
 end
-

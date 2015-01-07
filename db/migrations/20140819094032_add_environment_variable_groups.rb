@@ -3,10 +3,10 @@ Sequel.migration do
     create_table :env_groups do
       VCAP::Migration.common(self, :evg)
 
-      String :name, :null => false
-      String :environment_json, :default => '{}', :null => false
+      String :name, null: false
+      String :environment_json, default: '{}', null: false
 
-      index :name, :unique => true
+      index :name, unique: true
     end
   end
 end

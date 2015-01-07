@@ -4,9 +4,9 @@ module VCAP::CloudController
 
     many_to_one :service_broker
     one_to_many :service_plans
-    one_to_one  :service_auth_token, :key => [:label, :provider], :primary_key => [:label, :provider]
+    one_to_one :service_auth_token, key: [:label, :provider], primary_key: [:label, :provider]
 
-    add_association_dependencies :service_plans => :destroy
+    add_association_dependencies service_plans: :destroy
 
     export_attributes :label, :provider, :url, :description, :long_description,
                       :version, :info_url, :active, :bindable,
@@ -16,15 +16,15 @@ module VCAP::CloudController
                       :version, :info_url, :active, :bindable,
                       :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable
 
-    strip_attributes  :label, :provider
+    strip_attributes :label, :provider
 
     def validate
       validates_presence :label,              message:  Sequel.lit('Service name is required')
       validates_presence :description,        message: 'is required'
       validates_presence :bindable,           message: 'is required'
-      validates_url      :url,                message: 'must be a valid url'
-      validates_url      :info_url,           message: 'must be a valid url'
-      validates_unique   :unique_id,          message: Sequel.lit('Service ids must be unique')
+      validates_url :url,                message: 'must be a valid url'
+      validates_url :info_url,           message: 'must be a valid url'
+      validates_unique :unique_id,          message: Sequel.lit('Service ids must be unique')
 
       if v2?
         validates_unique :label, message: Sequel.lit('Service name must be unique') do |ds|
@@ -43,23 +43,23 @@ module VCAP::CloudController
     def self.organization_visible(organization)
       service_ids = ServicePlan.
           organization_visible(organization).
-          inject([]) { |service_ids,service_plan| service_ids << service_plan.service_id }
+          inject([]) { |ids_so_far, service_plan| ids_so_far << service_plan.service_id }
       dataset.filter(id: service_ids)
     end
 
     def self.public_visible
       public_active_plans = ServicePlan.where(active: true, public: true).all
-      service_ids = public_active_plans.map {|plan| plan.service_id }.uniq
+      service_ids = public_active_plans.map(&:service_id).uniq
       dataset.filter(id: service_ids)
     end
 
     def self.user_visibility_filter(current_user)
-      plans_I_can_see = ServicePlan.user_visible(current_user)
-      {id: plans_I_can_see.map(&:service_id).uniq}
+      plans_i_can_see = ServicePlan.user_visible(current_user)
+      { id: plans_i_can_see.map(&:service_id).uniq }
     end
 
     def self.unauthenticated_visibility_filter
-      {id: self.public_visible.map(&:id)}
+      { id: self.public_visible.map(&:id) }
     end
 
     def provider
@@ -85,7 +85,7 @@ module VCAP::CloudController
       elsif v2?
         service_broker.client
       else
-        raise VCAP::Errors::ApiError.new_from_details("MissingServiceAuthToken", label) if service_auth_token.nil?
+        raise VCAP::Errors::ApiError.new_from_details('MissingServiceAuthToken', label) if service_auth_token.nil?
 
         @v1_client ||= VCAP::Services::ServiceBrokers::V1::Client.new(
           url: url,

@@ -1,10 +1,10 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
     describe BlobstoreUpload do
-      let(:local_file) { Tempfile.new("tmpfile") }
-      let(:blobstore_key) { "key" }
+      let(:local_file) { Tempfile.new('tmpfile') }
+      let(:blobstore_key) { 'key' }
       let(:blobstore_name) { :droplet_blobstore }
 
       subject(:job) do
@@ -19,8 +19,8 @@ module VCAP::CloudController
 
       it { is_expected.to be_a_valid_job }
 
-      describe "#perform" do
-        it "uploads the file to the blostore" do
+      describe '#perform' do
+        it 'uploads the file to the blostore' do
           expect {
             job.perform
           }.to change {
@@ -28,18 +28,18 @@ module VCAP::CloudController
           }.to(true)
         end
 
-        it "cleans up the file at the end" do
+        it 'cleans up the file at the end' do
           job.perform
-          expect(File.exists?(local_file.path)).to be false
+          expect(File.exist?(local_file.path)).to be false
         end
       end
 
-      describe "#error" do
+      describe '#error' do
         let(:worker) { Delayed::Worker.new }
         let(:blobstore_upload_job) do
           BlobstoreUpload.class_eval do
-            def reschedule_at(_, _= nil)
-              #induce the jobs to reschedule almost immediately instead of waiting around for the backoff algorithm
+            def reschedule_at(_, _=nil)
+              # induce the jobs to reschedule almost immediately instead of waiting around for the backoff algorithm
               Time.now
             end
           end
@@ -51,51 +51,50 @@ module VCAP::CloudController
           Delayed::Job.enqueue(blobstore_upload_job, queue: worker.name)
         end
 
-        context "copying to the blobstore fails" do
+        context 'copying to the blobstore fails' do
           before do
-            allow(blobstore).to receive(:cp_to_blobstore) { raise "UPLOAD FAILED" }
+            allow(blobstore).to receive(:cp_to_blobstore) { raise 'UPLOAD FAILED' }
             worker.work_off 1
           end
 
-          context "retrying" do
-            it "does not delete the file" do
-              expect(File.exists?(local_file.path)).to be true
+          context 'retrying' do
+            it 'does not delete the file' do
+              expect(File.exist?(local_file.path)).to be true
             end
           end
 
-
-          context "when its the final attempt" do
-            it "it deletes the file" do
+          context 'when its the final attempt' do
+            it 'it deletes the file' do
               worker.work_off 1
 
               expect {
                 worker.work_off 1
-              }.to change{
-                File.exists?(local_file.path)
+              }.to change {
+                File.exist?(local_file.path)
               }.from(true).to(false)
             end
           end
         end
 
-        context "if the file is missing" do
+        context 'if the file is missing' do
           before do
             FileUtils.rm_f(local_file)
-            allow(blobstore).to receive(:cp_to_blobstore) { raise "File not found" }
+            allow(blobstore).to receive(:cp_to_blobstore) { raise 'File not found' }
             worker.work_off 1
           end
 
-          it "receives an error" do
+          it 'receives an error' do
             expect(Delayed::Job.last.last_error).to match /File not found/
           end
 
-          it "does not retry" do
+          it 'does not retry' do
             worker.work_off 1
             expect(Delayed::Job.last.attempts).to eq 1
           end
         end
       end
 
-      it "knows its job name" do
+      it 'knows its job name' do
         expect(job.job_name_in_configuration).to equal(:blobstore_upload)
       end
     end

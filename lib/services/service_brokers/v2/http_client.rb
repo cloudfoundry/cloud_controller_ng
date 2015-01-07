@@ -2,7 +2,6 @@ require 'net/http'
 
 module VCAP::Services
   module ServiceBrokers::V2
-
     class ServiceBrokerApiUnreachable < HttpRequestError
       def initialize(uri, method, source)
         super(
@@ -30,7 +29,6 @@ module VCAP::Services
     end
 
     class HttpClient
-
       attr_reader :url
 
       def initialize(attrs)
@@ -68,26 +66,24 @@ module VCAP::Services
       end
 
       def make_request(method, uri, body, content_type)
-        begin
-          req = build_request(method, uri, body, content_type)
-          opts = build_options(uri)
+        req = build_request(method, uri, body, content_type)
+        opts = build_options(uri)
 
-          response = Net::HTTP.start(uri.hostname, uri.port, opts) do |http|
-            http.open_timeout = broker_client_timeout
-            http.read_timeout = broker_client_timeout
+        response = Net::HTTP.start(uri.hostname, uri.port, opts) do |http|
+          http.open_timeout = broker_client_timeout
+          http.read_timeout = broker_client_timeout
 
-            http.request(req)
-          end
-
-          log_response(uri, response)
-          return response
-        rescue SocketError, Errno::ECONNREFUSED => error
-          raise ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
-        rescue Timeout::Error => error
-          raise ServiceBrokerApiTimeout.new(uri.to_s, method, error)
-        rescue => error
-          raise HttpRequestError.new(error.message, uri.to_s, method, error)
+          http.request(req)
         end
+
+        log_response(uri, response)
+        return response
+      rescue SocketError, Errno::ECONNREFUSED => error
+        raise ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
+      rescue Timeout::Error => error
+        raise ServiceBrokerApiTimeout.new(uri.to_s, method, error)
+      rescue => error
+        raise HttpRequestError.new(error.message, uri.to_s, method, error)
       end
 
       def log_request(uri, req)

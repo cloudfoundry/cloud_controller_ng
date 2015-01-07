@@ -52,7 +52,7 @@ resource 'Processes (Experimental)', type: :api do
     example 'Delete a Process' do
       expect {
         do_request_with_error_handling
-      }.to change{ VCAP::CloudController::App.count }.by(-1)
+      }.to change { VCAP::CloudController::App.count }.by(-1)
       expect(response_status).to eq(204)
     end
   end
@@ -102,7 +102,7 @@ resource 'Processes (Experimental)', type: :api do
       }
       expect {
         do_request_with_error_handling
-      }.to change{ VCAP::CloudController::Event.count }.by(1)
+      }.to change { VCAP::CloudController::Event.count }.by(1)
       parsed_response = JSON.parse(response_body)
 
       expect(response_status).to eq(200)
@@ -168,7 +168,7 @@ resource 'Processes (Experimental)', type: :api do
         }
         expect {
           do_request_with_error_handling
-        }.to change{ VCAP::CloudController::App.count }.by(1)
+        }.to change { VCAP::CloudController::App.count }.by(1)
         parsed_response = JSON.parse(response_body)
 
         expect(response_status).to eq(201)
@@ -192,7 +192,7 @@ resource 'Processes (Experimental)', type: :api do
         }
         expect {
           do_request_with_error_handling
-        }.to change{ VCAP::CloudController::App.count }.by(1)
+        }.to change { VCAP::CloudController::App.count }.by(1)
         parsed_response = JSON.parse(response_body)
 
         expect(response_status).to eq(201)

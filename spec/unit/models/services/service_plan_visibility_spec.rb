@@ -1,26 +1,26 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe ServicePlanVisibility, type: :model do
     it { is_expected.to have_timestamp_columns }
 
-    describe "Associations" do
+    describe 'Associations' do
       it { is_expected.to have_associated :service_plan }
       it { is_expected.to have_associated :organization }
     end
 
-    describe "Validations" do
+    describe 'Validations' do
       it { is_expected.to validate_presence :service_plan }
       it { is_expected.to validate_presence :organization }
       it { is_expected.to validate_uniqueness [:organization_id, :service_plan_id] }
     end
 
-    describe "Serialization" do
+    describe 'Serialization' do
       it { is_expected.to export_attributes :service_plan_guid, :organization_guid }
       it { is_expected.to import_attributes :service_plan_guid, :organization_guid }
     end
 
-    describe ".visible_private_plan_ids_for_user(user)" do
+    describe '.visible_private_plan_ids_for_user(user)' do
       let!(:user) { User.make }
       let!(:org1) { Organization.make }
       let!(:org2) { Organization.make }
@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
     end
 
-    describe ".visible_private_plan_ids_for_organization" do
+    describe '.visible_private_plan_ids_for_organization' do
       let!(:organization) { Organization.make }
       let!(:visible_plan) { ServicePlan.make(public: false) }
       let!(:hidden_plan) { ServicePlan.make(public: false) }

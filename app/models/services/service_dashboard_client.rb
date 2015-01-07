@@ -37,8 +37,6 @@ module VCAP::CloudController
       validates_unique :uaa_id
     end
 
-    private
-
     def self.unclaimed_client_with_uaa_id(uaa_id)
       where(service_broker_id: nil, uaa_id: uaa_id).first
     end

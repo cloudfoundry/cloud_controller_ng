@@ -6,7 +6,7 @@ module VCAP::Services::ServiceBrokers::V2
       rescue MultiJson::ParseError
       end
 
-      if hash.is_a?(Hash) && hash.has_key?('description')
+      if hash.is_a?(Hash) && hash.key?('description')
         message = "Service broker error: #{hash['description']}"
       else
         message = "The service broker API returned an error from #{uri}: #{response.code} #{response.message}"
@@ -23,7 +23,7 @@ module VCAP::Services::ServiceBrokers::V2
   class ServiceBrokerResponseMalformed < HttpResponseError
     def initialize(uri, method, response)
       super(
-        "The service broker response was not understood",
+        'The service broker response was not understood',
         uri,
         method,
         response
@@ -49,10 +49,10 @@ module VCAP::Services::ServiceBrokers::V2
   class ServiceBrokerConflict < HttpResponseError
     def initialize(uri, method, response)
       error_message = nil
-      if parsed_json(response.body).has_key?('message')
-        error_message = parsed_json(response.body)["message"]
+      if parsed_json(response.body).key?('message')
+        error_message = parsed_json(response.body)['message']
       else
-        error_message = parsed_json(response.body)["description"]
+        error_message = parsed_json(response.body)['description']
       end
 
       super(
@@ -77,7 +77,6 @@ module VCAP::Services::ServiceBrokers::V2
   end
 
   class Client
-
     CATALOG_PATH = '/v2/catalog'.freeze
 
     def initialize(attrs)
@@ -123,7 +122,7 @@ module VCAP::Services::ServiceBrokers::V2
       parsed_response = parse_response(:put, path, response)
 
       binding.credentials = parsed_response['credentials']
-      if parsed_response.has_key?('syslog_drain_url')
+      if parsed_response.key?('syslog_drain_url')
         binding.syslog_drain_url = parsed_response['syslog_drain_url']
       end
 
@@ -154,7 +153,7 @@ module VCAP::Services::ServiceBrokers::V2
       parse_response(:delete, path, response)
 
     rescue VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict => e
-      raise VCAP::Errors::ApiError.new_from_details("ServiceInstanceDeprovisionFailed", e.message)
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
 
     def update_service_plan(instance, plan)
@@ -184,37 +183,37 @@ module VCAP::Services::ServiceBrokers::V2
       code = response.code.to_i
 
       case code
-        when 204
-          return nil # no body
+      when 204
+        return nil # no body
 
-        when 200..299
+      when 200..299
 
-          begin
-            response_hash = MultiJson.load(response.body)
-          rescue MultiJson::ParseError
-            logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
-          end
+        begin
+          response_hash = MultiJson.load(response.body)
+        rescue MultiJson::ParseError
+          logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
+        end
 
-          unless response_hash.is_a?(Hash)
-            raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
-          end
+        unless response_hash.is_a?(Hash)
+          raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
+        end
 
-          return response_hash
+        return response_hash
 
-        when HTTP::Status::UNAUTHORIZED
-          raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
+      when HTTP::Status::UNAUTHORIZED
+        raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
 
-        when 408
-          raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
+      when 408
+        raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
 
-        when 409
-          raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict.new(uri.to_s, method, response)
+      when 409
+        raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict.new(uri.to_s, method, response)
 
-        when 410
-          if method == :delete
-            logger.warn("Already deleted: #{uri.to_s}")
-            return nil
-          end
+      when 410
+        if method == :delete
+          logger.warn("Already deleted: #{uri}")
+          return nil
+        end
       end
 
       raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerBadResponse.new(uri.to_s, method, response)

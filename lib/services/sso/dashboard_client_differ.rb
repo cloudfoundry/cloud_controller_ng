@@ -5,7 +5,7 @@ module VCAP::Services::SSO
     end
 
     def create_db_changeset(requested_clients, existing_cc_clients)
-      requested_ids = requested_clients.map{|client| client.fetch('id')}
+      requested_ids = requested_clients.map { |client| client.fetch('id') }
 
       create_and_update_commands = requested_clients.map do |requested_client|
         Commands::ClaimClientCommand.new(requested_client.fetch('id'), broker)
@@ -22,7 +22,7 @@ module VCAP::Services::SSO
     end
 
     def create_uaa_changeset(requested_clients, existing_uaa_clients)
-      requested_ids = requested_clients.map{|client| client.fetch('id')}
+      requested_ids = requested_clients.map { |client| client.fetch('id') }
 
       create_and_update_commands = requested_clients.map do |requested_client|
         existing_uaa_client = existing_uaa_clients.detect { |client| client == requested_client.fetch('id') }

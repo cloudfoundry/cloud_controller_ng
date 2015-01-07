@@ -1,4 +1,4 @@
-require "presenters/message_bus/service_binding_presenter"
+require 'presenters/message_bus/service_binding_presenter'
 
 module VCAP::CloudController
   module Dea
@@ -11,7 +11,7 @@ module VCAP::CloudController
         self[:uris]           = app.uris
         self[:prod]           = app.production
         self[:sha1]           = app.droplet_hash
-        self[:executableFile] = "deprecated"
+        self[:executableFile] = 'deprecated'
         self[:executableUri]  = blobstore_url_generator.droplet_download_url(app)
         self[:version]        = app.version
 
@@ -41,7 +41,7 @@ module VCAP::CloudController
       end
 
       def has_app_package?
-        return !self[:executableUri].nil?
+        !self[:executableUri].nil?
       end
     end
   end

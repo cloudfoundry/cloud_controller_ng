@@ -72,7 +72,7 @@ module VCAP::CloudController
     end
 
     def object_is_visible_to_user?(object, user)
-      object.class.user_visible(user, false).where(:guid => object.guid).count > 0
+      object.class.user_visible(user, false).where(guid: object.guid).count > 0
     end
 
     def admin_user?

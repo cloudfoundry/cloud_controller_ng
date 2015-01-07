@@ -2,15 +2,15 @@ module VCAP::CloudController
   class UsersController < RestController::ModelController
     define_attributes do
       attribute :guid, String, exclude_in: :update
-      attribute :admin, Message::Boolean, :default => false
-      to_many   :spaces
-      to_many   :organizations
-      to_many   :managed_organizations
-      to_many   :billing_managed_organizations
-      to_many   :audited_organizations
-      to_many   :managed_spaces
-      to_many   :audited_spaces
-      to_one    :default_space, :optional_in => [:create]
+      attribute :admin, Message::Boolean, default: false
+      to_many :spaces
+      to_many :organizations
+      to_many :managed_organizations
+      to_many :billing_managed_organizations
+      to_many :audited_organizations
+      to_many :managed_spaces
+      to_many :audited_spaces
+      to_one :default_space, optional_in: [:create]
     end
 
     query_parameters :space_guid, :organization_guid,
@@ -23,9 +23,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       guid_errors = e.errors.on(:guid)
       if guid_errors && guid_errors.include?(:unique)
-        Errors::ApiError.new_from_details("UaaIdTaken", attributes["guid"])
+        Errors::ApiError.new_from_details('UaaIdTaken', attributes['guid'])
       else
-        Errors::ApiError.new_from_details("UserInvalid", e.errors.full_messages)
+        Errors::ApiError.new_from_details('UserInvalid', e.errors.full_messages)
       end
     end
 

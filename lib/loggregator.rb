@@ -1,16 +1,13 @@
 class Loggregator
+  class << self
+    attr_accessor :emitter
 
-  @@emitter = nil
+    def emit(app_id, message)
+      emitter.emit(app_id, message) if emitter
+    end
 
-  def self.emit(app_id, message)
-    @@emitter.emit(app_id, message) if @@emitter
-  end
-
-  def self.emit_error(app_id, message)
-    @@emitter.emit_error(app_id, message) if @@emitter
-  end
-
-  def self.emitter=(emitter)
-    @@emitter = emitter
+    def emit_error(app_id, message)
+      emitter.emit_error(app_id, message) if emitter
+    end
   end
 end

@@ -1,6 +1,6 @@
-require "cloud_controller/multi_response_message_bus_request"
-require "models/runtime/droplet_uploader"
-require "cloud_controller/dea/app_stopper"
+require 'cloud_controller/multi_response_message_bus_request'
+require 'models/runtime/droplet_uploader'
+require 'cloud_controller/dea/app_stopper'
 
 module VCAP::CloudController
   module AppObserver
@@ -23,27 +23,27 @@ module VCAP::CloudController
         changes = app.previous_changes
         return unless changes
 
-        if changes.has_key?(:state)
+        if changes.key?(:state)
           react_to_state_change(app)
-        elsif changes.has_key?(:instances)
+        elsif changes.key?(:instances)
           react_to_instances_change(app)
         end
       end
 
       def routes_changed(app)
-        @runners.runner_for_app(app).update_routes()
+        @runners.runner_for_app(app).update_routes
       end
 
       private
 
       def delete_buildpack_cache(app)
         delete_job = Jobs::Runtime::BlobstoreDelete.new(app.guid, :buildpack_cache_blobstore)
-        Jobs::Enqueuer.new(delete_job, queue: "cc-generic").enqueue()
+        Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
       end
 
       def delete_package(app)
         delete_job = Jobs::Runtime::BlobstoreDelete.new(app.guid, :package_blobstore)
-        Jobs::Enqueuer.new(delete_job, queue: "cc-generic").enqueue()
+        Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
       end
 
       def react_to_state_change(app)

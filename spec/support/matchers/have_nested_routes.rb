@@ -1,4 +1,4 @@
-RSpec::Matchers.define :have_nested_routes do |association_routes, options = {}|
+RSpec::Matchers.define :have_nested_routes do |association_routes, options={}|
   errors = []
 
   match do |controller|

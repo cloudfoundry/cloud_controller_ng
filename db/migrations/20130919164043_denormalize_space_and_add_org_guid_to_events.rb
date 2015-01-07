@@ -15,12 +15,12 @@ Sequel.migration do
       # only be seen by admins.
       drop_foreign_key([:space_id])
       set_column_allow_null(:space_id)
-      add_foreign_key [:space_id], :spaces, :name => :fk_no_cascade_events_space_id, :on_delete => :set_null
+      add_foreign_key [:space_id], :spaces, name: :fk_no_cascade_events_space_id, on_delete: :set_null
 
       # Store these columns in denormalized form so they survive deletions of
       # the respective relations.
-      add_column :organization_guid, String, :null => false, :default => ""
-      add_column :space_guid, String, :null => false, :default => ""
+      add_column :organization_guid, String, null: false, default: ''
+      add_column :space_guid, String, null: false, default: ''
     end
   end
 

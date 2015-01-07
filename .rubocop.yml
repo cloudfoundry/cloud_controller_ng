@@ -1,11 +1,130 @@
-inherit_from: rubocop-todo.yml
-
 AllCops:
-  Includes:
+  Include:
     - Gemfile
     - Rakefile
-  Excludes:
-    - vendor/**
+  Exclude:
+    - vendor/**/*
 
 RegexpLiteral:
   MaxSlashes: 1
+
+UnusedMethodArgument:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/SpaceAroundEqualsInParameterDefault:
+  EnforcedStyle: no_space
+
+Style/SignalException:
+  Enabled: false
+
+LineLength:
+  Max: 180
+
+MethodLength:
+  Max: 60
+ 
+Metrics/AbcSize:
+  Max: 30
+
+Style/DoubleNegation:
+  Enabled: false
+
+CyclomaticComplexity:
+  Max: 12
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/Blocks:
+  Enabled: false
+
+Style/TrailingComma:
+  Enabled: false
+
+Style/BracesAroundHashParameters:
+  Enabled: false
+
+Style/IndentHash:
+  Enabled: false
+
+Style/DotPosition:
+  EnforcedStyle: trailing
+
+Style/AlignParameters:
+  Enabled: false
+
+Style/NumericLiterals:
+  Enabled: false
+
+Style/MultilineOperationIndentation:
+  Enabled: false
+
+Style/WordArray:
+  Enabled: false
+
+Style/GuardClause:
+  Enabled: false
+
+Lint/AmbiguousRegexpLiteral:
+  Enabled: false
+
+Lint/UnusedBlockArgument:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/RaiseArgs:
+  EnforcedStyle: compact
+
+Style/MultilineBlockChain:
+  Enabled: false
+
+Style/MultilineBlockLayout:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Style/RescueModifier:
+  Enabled: false
+
+Style/RedundantSelf:
+  Enabled: false
+
+# enable me for #85546748
+Lint/HandleExceptions:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Style/PredicateName:
+  Enabled: false
+
+Style/NegatedIf:
+  Enabled: false
+
+Style/Next:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Enabled: false
+
+Style/Lambda:
+  Enabled: false
+
+Style/FormatString:
+  EnforcedStyle: sprintf
+
+Style/SingleLineBlockParams:
+  Enabled: false
+
+Style/TrivialAccessors:
+  Enabled: false

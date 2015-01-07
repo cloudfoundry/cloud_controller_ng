@@ -1,4 +1,4 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe Runners do
@@ -35,7 +35,7 @@ module VCAP::CloudController
       true
     end
 
-    let (:buildpack) do
+    let(:buildpack) do
       instance_double(AutoDetectionBuildpack,
         custom?: false
       )
@@ -59,41 +59,41 @@ module VCAP::CloudController
       Runners.new(config, message_bus, dea_pool, stager_pool)
     end
 
-    def make_diego_app(options = {})
+    def make_diego_app(options={})
       AppFactory.make(options).tap do |app|
-        app.environment_json = (app.environment_json || {}).merge("DIEGO_RUN_BETA" => "true")
-        app.package_state = "STAGED"
+        app.environment_json = (app.environment_json || {}).merge('DIEGO_RUN_BETA' => 'true')
+        app.package_state = 'STAGED'
         app.save
       end
     end
 
-    def make_dea_app(options = {})
+    def make_dea_app(options={})
       AppFactory.make(options).tap do |app|
-        app.package_state = "STAGED"
+        app.package_state = 'STAGED'
         app.save
       end
     end
 
-    describe "#runner_for_app" do
+    describe '#runner_for_app' do
       subject(:runner) do
         runners.runner_for_app(app)
       end
 
-      context "when the app is configured to run on Diego" do
+      context 'when the app is configured to run on Diego' do
         before do
           allow(app).to receive(:run_with_diego?).and_return(true)
         end
 
         context 'when diego running is enabled' do
-          it "finds a diego backend" do
+          it 'finds a diego backend' do
             expect(runners).to receive(:diego_runner).with(app).and_call_original
             expect(runner).to be_a(Diego::Runner)
           end
 
           context 'when the app has a docker image' do
-            let(:docker_image) {'foobar'}
+            let(:docker_image) { 'foobar' }
 
-            it "finds a diego backend" do
+            it 'finds a diego backend' do
               expect(runners).to receive(:diego_runner).with(app).and_call_original
               expect(runner).to be_a(Diego::Runner)
             end
@@ -104,21 +104,19 @@ module VCAP::CloudController
               config[:diego][:running] = 'disabled'
             end
 
-            it "finds a dea backend" do
+            it 'finds a dea backend' do
               expect(runners).to receive(:dea_runner).with(app).and_call_original
               expect(runner).to be_a(Dea::Runner)
             end
-
           end
-
         end
 
-        context "when the app is not configured to run on Diego" do
+        context 'when the app is not configured to run on Diego' do
           before do
             allow(app).to receive(:run_with_diego?).and_return(false)
           end
 
-          it "finds a DEA backend" do
+          it 'finds a DEA backend' do
             expect(runners).to receive(:dea_runner).with(app).and_call_original
             expect(runner).to be_a(Dea::Runner)
           end
@@ -126,81 +124,81 @@ module VCAP::CloudController
       end
     end
 
-    describe "#run_with_diego?" do
-      let(:diego_app) {make_diego_app}
-      let(:dea_app) {make_dea_app}
+    describe '#run_with_diego?' do
+      let(:diego_app) { make_diego_app }
+      let(:dea_app) { make_dea_app }
 
-      context "when diego is enabled" do
-        it "returns true for a diego app" do
+      context 'when diego is enabled' do
+        it 'returns true for a diego app' do
           expect(runners.run_with_diego?(diego_app)).to be_truthy
         end
 
-        it "returns false for a dea app" do
+        it 'returns false for a dea app' do
           expect(runners.run_with_diego?(dea_app)).to be_falsey
         end
       end
 
-      context "when diego is disabled" do
+      context 'when diego is disabled' do
         before do
           config[:diego][:running] = 'disabled'
         end
 
-        it "returns false for a diego app" do
+        it 'returns false for a diego app' do
           expect(runners.run_with_diego?(diego_app)).to be_falsey
         end
 
-        it "returns false for a dea app" do
+        it 'returns false for a dea app' do
           expect(runners.run_with_diego?(dea_app)).to be_falsey
         end
       end
     end
 
-    describe "#diego_apps" do
+    describe '#diego_apps' do
       before do
         allow(runners).to receive(:diego_running_disabled?).and_return(false)
 
         5.times do |i|
-          app = make_diego_app(id: i+1, state: "STARTED")
+          app = make_diego_app(id: i + 1, state: 'STARTED')
           app.add_route(Route.make(space: app.space))
         end
 
-        make_dea_app(id:99, state: "STARTED")
+        make_dea_app(id: 99, state: 'STARTED')
       end
 
-      it "returns apps that have the desired data" do
+      it 'returns apps that have the desired data' do
         last_app = make_diego_app({
-          "id" => 6,
-          "state" => "STARTED",
-          "package_hash" => "package-hash",
-          "disk_quota" => 1_024,
-          "package_state" => "STAGED",
-          "environment_json" => {
-            "env-key-3" => "env-value-3",
-            "env-key-4" => "env-value-4",
+          'id' => 6,
+          'state' => 'STARTED',
+          'package_hash' => 'package-hash',
+          'disk_quota' => 1_024,
+          'package_state' => 'STAGED',
+          'environment_json' => {
+            'env-key-3' => 'env-value-3',
+            'env-key-4' => 'env-value-4',
           },
-          "file_descriptors" => 16_384,
-          "instances" => 4,
-          "memory" => 1_024,
-          "guid" => "app-guid-6",
-          "command" => "start-command-6",
-          "stack" => Stack.make(name: "stack-6"),
+          'file_descriptors' => 16_384,
+          'instances' => 4,
+          'memory' => 1_024,
+          'guid' => 'app-guid-6',
+          'command' => 'start-command-6',
+          'stack' => Stack.make(name: 'stack-6'),
         })
 
         route1 = Route.make(
           space: last_app.space,
-          host: "arsenio",
-          domain: SharedDomain.make(name: "lo-mein.com"),
+          host: 'arsenio',
+          domain: SharedDomain.make(name: 'lo-mein.com'),
         )
         last_app.add_route(route1)
 
         route2 = Route.make(
           space: last_app.space,
-          host: "conan",
-          domain: SharedDomain.make(name: "doe-mane.com"),
+          host: 'conan',
+          domain: SharedDomain.make(name: 'doe-mane.com'),
         )
         last_app.add_route(route2)
 
-        last_app.version = "app-version-6"
+        last_app.version = 'app-version-6'
         last_app.save
 
         apps = runners.diego_apps(100, 0)
@@ -210,7 +208,7 @@ module VCAP::CloudController
         expect(apps.last.to_json).to match_object(last_app.to_json)
       end
 
-      it "respects the batch_size" do
+      it 'respects the batch_size' do
         app_counts = [3, 5].map do |batch_size|
           runners.diego_apps(batch_size, 0).count
         end
@@ -218,7 +216,7 @@ module VCAP::CloudController
         expect(app_counts).to eq([3, 5])
       end
 
-      it "returns non-intersecting apps across subsequent batches" do
+      it 'returns non-intersecting apps across subsequent batches' do
         first_batch = runners.diego_apps(3, 0)
         expect(first_batch.count).to eq(3)
 
@@ -228,9 +226,9 @@ module VCAP::CloudController
         expect(second_batch & first_batch).to eq([])
       end
 
-      it "does not return unstaged apps" do
-        unstaged_app = make_diego_app(id: 6, state: "STARTED")
-        unstaged_app.package_state = "PENDING"
+      it 'does not return unstaged apps' do
+        unstaged_app = make_diego_app(id: 6, state: 'STARTED')
+        unstaged_app.package_state = 'PENDING'
         unstaged_app.save
 
         batch = runners.diego_apps(100, 0)
@@ -239,23 +237,23 @@ module VCAP::CloudController
       end
 
       it "does not return apps which aren't expected to be started" do
-        stopped_app = make_diego_app(id: 6, state: "STOPPED")
+        stopped_app = make_diego_app(id: 6, state: 'STOPPED')
 
         batch = runners.diego_apps(100, 0)
 
         expect(batch).not_to include(stopped_app)
       end
 
-      it "does not return deleted apps" do
-        deleted_app = make_diego_app(id: 6, state: "STARTED", deleted_at: DateTime.current)
+      it 'does not return deleted apps' do
+        deleted_app = make_diego_app(id: 6, state: 'STARTED', deleted_at: DateTime.current)
 
         batch = runners.diego_apps(100, 0)
 
         expect(batch).not_to include(deleted_app)
       end
 
-      it "only includes apps that have DIEGO_RUN_BETA set" do
-        non_diego_app = make_diego_app(id: 6, state: "STARTED")
+      it 'only includes apps that have DIEGO_RUN_BETA set' do
+        non_diego_app = make_diego_app(id: 6, state: 'STARTED')
         non_diego_app.environment_json = {}
         non_diego_app.save
 
@@ -264,7 +262,7 @@ module VCAP::CloudController
         expect(batch).not_to include(non_diego_app)
       end
 
-      it "loads all of the associations eagerly" do
+      it 'loads all of the associations eagerly' do
         expect {
           runners.diego_apps(100, 0).each do |app|
             app.current_droplet
@@ -272,7 +270,7 @@ module VCAP::CloudController
             app.stack
             app.routes
             app.service_bindings
-            app.routes.map { |route| route.domain }
+            app.routes.map(&:domain)
           end
         }.to have_queried_db_times(/SELECT/, [
           :apps,
@@ -291,57 +289,57 @@ module VCAP::CloudController
         end
 
         it 'returns no apps' do
-          expect(runners.diego_apps(100, 0)).to be_empty()
+          expect(runners.diego_apps(100, 0)).to be_empty
         end
       end
     end
 
-    describe "#dea_apps" do
-      let!(:diego_app) {make_diego_app(id: 99, state: "STARTED")}
+    describe '#dea_apps' do
+      let!(:diego_app) { make_diego_app(id: 99, state: 'STARTED') }
 
       before do
         allow(runners).to receive(:diego_running_optional?).and_return(true)
 
         5.times do |i|
-          app = make_dea_app(id: i+1, state: "STARTED")
+          app = make_dea_app(id: i + 1, state: 'STARTED')
           app.add_route(Route.make(space: app.space))
         end
       end
 
-      it "returns apps that have the desired data" do
+      it 'returns apps that have the desired data' do
         last_app = make_dea_app({
-          "id" => 6,
-          "state" => "STARTED",
-          "package_hash" => "package-hash",
-          "disk_quota" => 1_024,
-          "package_state" => "STAGED",
-          "environment_json" => {
-            "env-key-3" => "env-value-3",
-            "env-key-4" => "env-value-4",
+          'id' => 6,
+          'state' => 'STARTED',
+          'package_hash' => 'package-hash',
+          'disk_quota' => 1_024,
+          'package_state' => 'STAGED',
+          'environment_json' => {
+            'env-key-3' => 'env-value-3',
+            'env-key-4' => 'env-value-4',
           },
-          "file_descriptors" => 16_384,
-          "instances" => 4,
-          "memory" => 1_024,
-          "guid" => "app-guid-6",
-          "command" => "start-command-6",
-          "stack" => Stack.make(name: "stack-6"),
+          'file_descriptors' => 16_384,
+          'instances' => 4,
+          'memory' => 1_024,
+          'guid' => 'app-guid-6',
+          'command' => 'start-command-6',
+          'stack' => Stack.make(name: 'stack-6'),
         })
 
         route1 = Route.make(
           space: last_app.space,
-          host: "arsenio",
-          domain: SharedDomain.make(name: "lo-mein.com"),
+          host: 'arsenio',
+          domain: SharedDomain.make(name: 'lo-mein.com'),
         )
         last_app.add_route(route1)
 
         route2 = Route.make(
           space: last_app.space,
-          host: "conan",
-          domain: SharedDomain.make(name: "doe-mane.com"),
+          host: 'conan',
+          domain: SharedDomain.make(name: 'doe-mane.com'),
         )
         last_app.add_route(route2)
 
-        last_app.version = "app-version-6"
+        last_app.version = 'app-version-6'
         last_app.save
 
         apps = runners.dea_apps(100, 0)
@@ -351,7 +349,7 @@ module VCAP::CloudController
         expect(apps.last.to_json).to match_object(last_app.to_json)
       end
 
-      it "respects the batch_size" do
+      it 'respects the batch_size' do
         app_counts = [3, 5].map do |batch_size|
           runners.dea_apps(batch_size, 0).count
         end
@@ -359,7 +357,7 @@ module VCAP::CloudController
         expect(app_counts).to eq([3, 5])
       end
 
-      it "returns non-intersecting apps across subsequent batches" do
+      it 'returns non-intersecting apps across subsequent batches' do
         first_batch = runners.dea_apps(3, 0)
         expect(first_batch.count).to eq(3)
 
@@ -369,8 +367,8 @@ module VCAP::CloudController
         expect(second_batch & first_batch).to eq([])
       end
 
-      it "does not return deleted apps" do
-        deleted_app = make_dea_app(id: 6, state: "STARTED", deleted_at: DateTime.current)
+      it 'does not return deleted apps' do
+        deleted_app = make_dea_app(id: 6, state: 'STARTED', deleted_at: DateTime.current)
 
         batch = runners.dea_apps(100, 0)
 

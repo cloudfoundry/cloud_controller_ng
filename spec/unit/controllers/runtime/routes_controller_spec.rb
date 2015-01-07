@@ -1,36 +1,35 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::RoutesController do
-
-    describe "Query Parameters" do
+    describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:host) }
       it { expect(described_class).to be_queryable_by(:domain_guid) }
     end
 
-    describe "Attributes" do
+    describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
-          host:        { type: "string", default: "" },
-          domain_guid: { type: "string", required: true },
-          space_guid:  { type: "string", required: true },
-          app_guids:   { type: "[string]" }
+          host:        { type: 'string', default: '' },
+          domain_guid: { type: 'string', required: true },
+          space_guid:  { type: 'string', required: true },
+          app_guids:   { type: '[string]' }
         })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-          host:        { type: "string" },
-          domain_guid: { type: "string" },
-          space_guid:  { type: "string" },
-          app_guids:   { type: "[string]" }
+          host:        { type: 'string' },
+          domain_guid: { type: 'string' },
+          space_guid:  { type: 'string' },
+          app_guids:   { type: '[string]' }
         })
       end
     end
 
-    describe "Permissions" do
-      context "with a custom domain" do
-        include_context "permissions"
+    describe 'Permissions' do
+      context 'with a custom domain' do
+        include_context 'permissions'
 
         before do
           @domain_a = PrivateDomain.make(owning_organization: @org_a)
@@ -40,135 +39,135 @@ module VCAP::CloudController
           @obj_b    = Route.make(domain: @domain_b, space: @space_b)
         end
 
-        describe "Org Level Permissions" do
-          describe "OrgManager" do
+        describe 'Org Level Permissions' do
+          describe 'OrgManager' do
             let(:member_a) { @org_a_manager }
             let(:member_b) { @org_b_manager }
 
-            include_examples "permission enumeration", "OrgManager",
+            include_examples 'permission enumeration', 'OrgManager',
               name: 'route',
-              path: "/v2/routes",
+              path: '/v2/routes',
               enumerate: 1
           end
 
-          describe "OrgUser" do
+          describe 'OrgUser' do
             let(:member_a) { @org_a_member }
             let(:member_b) { @org_b_member }
 
-            include_examples "permission enumeration", "OrgUser",
+            include_examples 'permission enumeration', 'OrgUser',
               name: 'route',
-              path: "/v2/routes",
+              path: '/v2/routes',
               enumerate: 0
           end
 
-          describe "BillingManager" do
+          describe 'BillingManager' do
             let(:member_a) { @org_a_billing_manager }
             let(:member_b) { @org_b_billing_manager }
 
-            include_examples "permission enumeration", "BillingManager",
+            include_examples 'permission enumeration', 'BillingManager',
               name: 'route',
-              path: "/v2/routes",
+              path: '/v2/routes',
               enumerate: 0
           end
 
-          describe "Auditor" do
+          describe 'Auditor' do
             let(:member_a) { @org_a_auditor }
             let(:member_b) { @org_b_auditor }
 
-            include_examples "permission enumeration", "Auditor",
+            include_examples 'permission enumeration', 'Auditor',
               name: 'route',
-              path: "/v2/routes",
+              path: '/v2/routes',
               enumerate: 1
           end
         end
 
-        describe "App Space Level Permissions" do
-          describe "SpaceManager" do
+        describe 'App Space Level Permissions' do
+          describe 'SpaceManager' do
             let(:member_a) { @space_a_manager }
             let(:member_b) { @space_b_manager }
 
-            include_examples "permission enumeration", "SpaceManager",
+            include_examples 'permission enumeration', 'SpaceManager',
               name: 'route',
-              path: "/v2/routes",
+              path: '/v2/routes',
               enumerate: 1
           end
 
-          describe "Developer" do
+          describe 'Developer' do
             let(:member_a) { @space_a_developer }
             let(:member_b) { @space_b_developer }
 
-            include_examples "permission enumeration", "Developer",
+            include_examples 'permission enumeration', 'Developer',
               name: 'route',
-              path: "/v2/routes",
+              path: '/v2/routes',
               enumerate: 1
           end
 
-          describe "SpaceAuditor" do
+          describe 'SpaceAuditor' do
             let(:member_a) { @space_a_auditor }
             let(:member_b) { @space_b_auditor }
 
-            include_examples "permission enumeration", "SpaceAuditor",
+            include_examples 'permission enumeration', 'SpaceAuditor',
               name: 'route',
-              path: "/v2/routes",
+              path: '/v2/routes',
               enumerate: 1
           end
         end
       end
     end
 
-    describe "Validation messages" do
+    describe 'Validation messages' do
       let(:domain) { SharedDomain.make }
       let(:space) { Space.make }
 
-      it "returns the RouteHostTaken message" do
-        taken_host = "someroute"
+      it 'returns the RouteHostTaken message' do
+        taken_host = 'someroute'
         Route.make(host: taken_host, domain: domain)
 
-        post "/v2/routes", MultiJson.dump(host: taken_host, domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
+        post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response["code"]).to eq(210003)
+        expect(decoded_response['code']).to eq(210003)
       end
 
-      it "returns the SpaceQuotaTotalRoutesExceeded message" do
+      it 'returns the SpaceQuotaTotalRoutesExceeded message' do
         quota_definition = SpaceQuotaDefinition.make(total_routes: 0, organization: space.organization)
         space.space_quota_definition = quota_definition
         space.save
 
-        post "/v2/routes", MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
+        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response["code"]).to eq(310005)
+        expect(decoded_response['code']).to eq(310005)
       end
 
-      it "returns the OrgQuotaTotalRoutesExceeded message" do
+      it 'returns the OrgQuotaTotalRoutesExceeded message' do
         quota_definition = space.organization.quota_definition
         quota_definition.total_routes = 0
         quota_definition.save
 
-        post "/v2/routes", MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
+        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response["code"]).to eq(310006)
+        expect(decoded_response['code']).to eq(310006)
       end
 
-      it "returns the RouteInvalid message" do
-        post "/v2/routes", MultiJson.dump(host: 'myexample!*', domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
+      it 'returns the RouteInvalid message' do
+        post '/v2/routes', MultiJson.dump(host: 'myexample!*', domain_guid: domain.guid, space_guid: space.guid), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response["code"]).to eq(210001)
+        expect(decoded_response['code']).to eq(210001)
       end
     end
 
-    describe "Associations" do
+    describe 'Associations' do
       it do
         expect(described_class).to have_nested_routes({ apps: [:get, :put, :delete] })
       end
     end
 
     describe 'POST /v2/routes' do
-      let(:space) {Space.make}
-      let(:user) {User.make}
+      let(:space) { Space.make }
+      let(:user) { User.make }
       let(:req) {{
                    domain_guid: SharedDomain.make.guid,
                    space_guid:  space.guid,
@@ -193,28 +192,28 @@ module VCAP::CloudController
       end
     end
 
-    describe "GET /v2/routes/reserved/domain/:domain_guid/host/:hostname" do
-      let(:user) {User.make}
+    describe 'GET /v2/routes/reserved/domain/:domain_guid/host/:hostname' do
+      let(:user) { User.make }
 
-      context "when the domain does not exist" do
-        it "returns a NOT_FOUND (404)" do
+      context 'when the domain does not exist' do
+        it 'returns a NOT_FOUND (404)' do
           get '/v2/routes/reserved/domain/nothere/host/myhost', nil, headers_for(user)
           expect(last_response.status).to eq(404)
         end
       end
 
-      context "when the domain exists" do
-        let(:route) {Route.make}
+      context 'when the domain exists' do
+        let(:route) { Route.make }
 
-        context "when the hostname is not reserved" do
-          it "returns a NOT_FOUND (404)" do
+        context 'when the hostname is not reserved' do
+          it 'returns a NOT_FOUND (404)' do
             get "/v2/routes/reserved/domain/#{route.domain_guid}/host/myhost", nil, headers_for(user)
             expect(last_response.status).to eq(404)
           end
         end
 
-        context "when the hostname is reserved" do
-          it "returns a NO_CONTENT (204)" do
+        context 'when the hostname is reserved' do
+          it 'returns a NO_CONTENT (204)' do
             get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}", nil, headers_for(user)
             expect(last_response.status).to eq(204)
           end

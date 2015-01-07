@@ -6,7 +6,7 @@ describe 'Service Broker API integration' do
 
     before { setup_cc }
 
-    let(:space_guid) { @space_guid}
+    let(:space_guid) { @space_guid }
     let(:org_guid) { @org_guid }
 
     let(:api_header) { 'X-Broker-Api-Version' }
@@ -82,7 +82,7 @@ describe 'Service Broker API integration' do
           end
 
           it 'sends basic auth info' do
-            expect(a_request(:get, %r(http://#{username_pattern}:#{password_pattern}@broker-url/v2/catalog))).to have_been_made
+            expect(a_request(:get, %r{http://#{username_pattern}:#{password_pattern}@broker-url/v2/catalog})).to have_been_made
           end
 
           it 'uses correct version header' do
@@ -154,10 +154,10 @@ describe 'Service Broker API integration' do
         let(:broker_response_status) { 201 }
 
         before do
-          stub_request(:put, %r(#{broker_url}/v2/service_instances/#{guid_pattern})).
+          stub_request(:put, %r{#{broker_url}/v2/service_instances/#{guid_pattern}}).
             to_return(status: broker_response_status, body: broker_response_body)
 
-          stub_request(:delete, %r(#{broker_url}/v2/service_instances/#{guid_pattern})).
+          stub_request(:delete, %r{#{broker_url}/v2/service_instances/#{guid_pattern}}).
             to_return(status: broker_response_status, body: broker_response_body)
 
           post('/v2/service_instances',
@@ -172,17 +172,17 @@ describe 'Service Broker API integration' do
         include_examples 'broker errors'
 
         it 'sends all required fields' do
-          expect(a_request(:put, %r(broker-url/v2/service_instances/#{guid_pattern})).
+          expect(a_request(:put, %r{broker-url/v2/service_instances/#{guid_pattern}}).
             with(body: hash_including(request_from_cc_to_broker))).
             to have_been_made
         end
 
         it 'uses the correct version header' do
-          request_has_version_header(:put, %r(broker-url/v2/service_instances/#{guid_pattern}))
+          request_has_version_header(:put, %r{broker-url/v2/service_instances/#{guid_pattern}})
         end
 
         it 'sends request with basic auth' do
-          expect(a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern}))).to have_been_made
+          expect(a_request(:put, %r{http://username:password@broker-url/v2/service_instances/#{guid_pattern}})).to have_been_made
         end
 
         context 'when the response from broker does not contain a dashboard_url' do
@@ -205,7 +205,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 409 }
 
           it 'makes the request to the broker' do
-            expect(a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{guid_pattern}))).to have_been_made
+            expect(a_request(:put, %r{http://username:password@broker-url/v2/service_instances/#{guid_pattern}})).to have_been_made
           end
 
           it 'responds to user with 409' do
@@ -233,8 +233,8 @@ describe 'Service Broker API integration' do
       let(:service_instance_guid) { @service_instance_guid }
       let(:request_from_cc_to_broker) do
         {
-          plan_id: "plan1-guid-here",
-          service_id:"service-guid-here"
+          plan_id: 'plan1-guid-here',
+          service_id: 'service-guid-here'
         }
       end
 
@@ -250,7 +250,7 @@ describe 'Service Broker API integration' do
 
       describe 'service binding request' do
         before do
-          stub_request(:put, %r(/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern})).
+          stub_request(:put, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).
             to_return(status: broker_response_status, body: broker_response_body)
 
           post('/v2/service_bindings',
@@ -261,21 +261,22 @@ describe 'Service Broker API integration' do
         include_examples 'broker errors'
 
         it 'uses the correct version header' do
-          request_has_version_header(:put, %r(/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$))
+          request_has_version_header(:put, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$})
         end
 
         it 'sends request with basic auth' do
-          expect(a_request(:put, %r(http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$))).to have_been_made
+          expect(a_request(:put, %r{http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$})).
+            to have_been_made
         end
 
         it 'sends all required fields' do
-          expect(a_request(:put, %r(broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$)).
+          expect(a_request(:put, %r{broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$}).
             with(body: hash_including(request_from_cc_to_broker))).
             to have_been_made
         end
 
         it 'makes a request' do
-          expect(a_request(:put, %r(/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$))).to have_been_made
+          expect(a_request(:put, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$})).to have_been_made
         end
 
         context 'when broker responds with 200' do
@@ -332,7 +333,7 @@ describe 'Service Broker API integration' do
 
       describe 'service unbinding request' do
         before do
-          stub_request(:delete, %r(/v2/service_instances/#{service_instance_guid}/service_bindings/#{binding_id})).
+          stub_request(:delete, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{binding_id}}).
             to_return(status: broker_response_status, body: '{}')
 
           delete("v2/service_bindings/#{binding_id}",
@@ -344,8 +345,10 @@ describe 'Service Broker API integration' do
         include_examples 'broker errors'
 
         it 'sends all required fields' do
-          expect(a_request(:delete, %r(broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}\?plan_id=plan1-guid-here&service_id=service-guid-here))).
-            to have_been_made
+          # rubocop:disable Metrics/LineLength
+          expected_url = %r{broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}\?plan_id=plan1-guid-here&service_id=service-guid-here}
+          # rubocop:enable Metrics/LineLength
+          expect(a_request(:delete, expected_url)).to have_been_made
         end
 
         context 'broker returns a 200 response' do
@@ -390,7 +393,7 @@ describe 'Service Broker API integration' do
 
       describe 'service unprovision request' do
         before do
-          stub_request(:delete, %r(/v2/service_instances/#{service_instance_guid})).
+          stub_request(:delete, %r{/v2/service_instances/#{service_instance_guid}}).
             to_return(status: broker_response_status, body: broker_response_body)
 
           delete("v2/service_instances/#{service_instance_guid}",
@@ -402,7 +405,7 @@ describe 'Service Broker API integration' do
         include_examples 'broker errors'
 
         it 'sends all required fields' do
-          expect(a_request(:delete, %r(broker-url/v2/service_instances/#{service_instance_guid}\?plan_id=plan1-guid-here&service_id=service-guid-here))).
+          expect(a_request(:delete, %r{broker-url/v2/service_instances/#{service_instance_guid}\?plan_id=plan1-guid-here&service_id=service-guid-here})).
             to have_been_made
         end
 

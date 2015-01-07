@@ -1,4 +1,4 @@
-require "cloud_controller/dea/nats_messages/stager_advertisment"
+require 'cloud_controller/dea/nats_messages/stager_advertisment'
 
 module VCAP::CloudController
   module Dea
@@ -40,13 +40,13 @@ module VCAP::CloudController
       private
 
       def register_subscriptions
-        message_bus.subscribe("staging.advertise") do |msg|
+        message_bus.subscribe('staging.advertise') do |msg|
           process_advertise_message(msg)
         end
       end
 
       def publish_buildpacks
-        message_bus.publish("buildpacks", admin_buildpacks)
+        message_bus.publish('buildpacks', admin_buildpacks)
       end
 
       def admin_buildpacks
@@ -55,7 +55,7 @@ module VCAP::CloudController
 
       def validate_stack_availability(stack)
         unless @stager_advertisements.any? { |ad| ad.has_stack?(stack) }
-          raise Errors::ApiError.new_from_details("StackNotFound", "The requested app stack #{stack} is not available on this system.")
+          raise Errors::ApiError.new_from_details('StackNotFound', "The requested app stack #{stack} is not available on this system.")
         end
       end
 

@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   describe ServiceAuthTokenAccess, type: :access do
     subject(:access) { ServiceAuthTokenAccess.new(Security::AccessContext.new) }
-    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
     let(:user) { VCAP::CloudController::User.make }
     let(:service) { VCAP::CloudController::Service.make }

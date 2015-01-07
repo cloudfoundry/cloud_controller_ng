@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Apps', :type => [:api, :legacy_api] do
+resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:tmpdir) { Dir.mktmpdir }
   let(:valid_zip) {
@@ -13,17 +13,17 @@ resource 'Apps', :type => [:api, :legacy_api] do
 
   let(:req_body) do
     {
-      :resources => '[]',
-      :application => valid_zip
+      resources: '[]',
+      application: valid_zip
     }
   end
 
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make(:space => space, :droplet_hash => nil, :package_state => 'PENDING') }
+  let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space, droplet_hash: nil, package_state: 'PENDING') }
 
   authenticated_request
 
-  parameter :guid, "The guid of the App"
+  parameter :guid, 'The guid of the App'
   let(:async) { true }
   let(:app_bits_put_params) do
     {
@@ -35,8 +35,8 @@ resource 'Apps', :type => [:api, :legacy_api] do
 
   let(:fingerprints) {
     [
-        {fn: 'path/to/content.txt', size: 123, sha1: 'b907173290db6a155949ab4dc9b2d019dea0c901'},
-        {fn: 'path/to/code.jar', size: 123, sha1: 'ff84f89760317996b9dd180ab996b079f418396f'}
+      { fn: 'path/to/content.txt', size: 123, sha1: 'b907173290db6a155949ab4dc9b2d019dea0c901' },
+      { fn: 'path/to/code.jar', size: 123, sha1: 'ff84f89760317996b9dd180ab996b079f418396f' }
     ]
   }
 
@@ -58,8 +58,8 @@ resource 'Apps', :type => [:api, :legacy_api] do
           required: true,
           example_values: [
             [
-              {fn: 'path/to/content.txt', size: 123, sha1: 'b907173290db6a155949ab4dc9b2d019dea0c901'},
-              {fn: 'path/to/code.jar', size: 123, sha1: 'ff84f89760317996b9dd180ab996b079f418396f'}
+              { fn: 'path/to/content.txt', size: 123, sha1: 'b907173290db6a155949ab4dc9b2d019dea0c901' },
+              { fn: 'path/to/code.jar', size: 123, sha1: 'ff84f89760317996b9dd180ab996b079f418396f' }
             ].to_json
           ]
 
@@ -72,6 +72,7 @@ resource 'Apps', :type => [:api, :legacy_api] do
         Bits that have not already been uploaded to Cloud Foundry must be included as a zipped binary file named "application".
       eos
 
+      # rubocop:disable LineLength
       request_body_example = <<-eos.gsub(/^ */, '')
         --AaB03x
         Content-Disposition: form-data; name="async"
@@ -90,6 +91,7 @@ resource 'Apps', :type => [:api, :legacy_api] do
         &lt;&lt;binary artifact bytes&gt;&gt;
         --AaB03x
       eos
+      # rubocop:enable LineLength
 
       client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers
       example.metadata[:requests].each do |req|
@@ -110,19 +112,19 @@ resource 'Apps', :type => [:api, :legacy_api] do
 
       no_doc { client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers }
       client.get "/v2/apps/#{app_obj.guid}/download", {}, headers
-      expect(response_headers["Location"]).to include("cc-packages.s3.amazonaws.com")
+      expect(response_headers['Location']).to include('cc-packages.s3.amazonaws.com')
       expect(status).to eq(302)
     end
   end
 
-  post "/v2/apps/:guid/copy_bits" do
+  post '/v2/apps/:guid/copy_bits' do
     let(:src_app) { VCAP::CloudController::AppFactory.make }
     let(:dest_app) { VCAP::CloudController::AppFactory.make }
-    let(:json_payload) { { :source_app_guid => src_app.guid }.to_json }
+    let(:json_payload) { { source_app_guid: src_app.guid }.to_json }
 
     field :source_app_guid, 'The guid for the source app', required: true
 
-    example "Copy the app bits for an App" do
+    example 'Copy the app bits for an App' do
       explanation <<-eos
         This endpoint will copy the package bits in the blobstore from the source app to the destination app.
         It will always return a job which you can query for success or failure.
@@ -130,7 +132,7 @@ resource 'Apps', :type => [:api, :legacy_api] do
       eos
 
       blobstore = double(:blobstore, cp_file_between_keys: nil)
-      stub_const("CloudController::Blobstore::Client", double(:blobstore_client, new: blobstore))
+      stub_const('CloudController::Blobstore::Client', double(:blobstore_client, new: blobstore))
 
       dest_app.update(package_updated_at: dest_app.package_updated_at - 1)
       client.post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, headers

@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class SnapshotsController < RestController::ModelController
-    path_base "/v2"
+    path_base '/v2'
     model_class_name :ManagedServiceInstance
 
     define_attributes do
@@ -9,13 +9,13 @@ module VCAP::CloudController
     end
     define_messages
 
-    post "/v2/snapshots", :create
+    post '/v2/snapshots', :create
     def create
       req = self.class::CreateMessage.decode(body)
-      instance = VCAP::CloudController::ManagedServiceInstance.find(:guid => req.service_instance_guid)
+      instance = VCAP::CloudController::ManagedServiceInstance.find(guid: req.service_instance_guid)
       validate_access(:update, instance)
       snapshot = instance.create_snapshot(req.name)
-      snap_guid = "%s_%s" % [instance.guid, snapshot.snapshot_id]
+      snap_guid = sprintf('%s_%s', instance.guid, snapshot.snapshot_id)
       [
         HTTP::CREATED,
         MultiJson.dump(
@@ -30,9 +30,9 @@ module VCAP::CloudController
       ]
     end
 
-    get  "/v2/service_instances/:service_guid/snapshots", :index
+    get '/v2/service_instances/:service_guid/snapshots', :index
     def index(service_guid)
-      instance = VCAP::CloudController::ManagedServiceInstance.find(:guid => service_guid)
+      instance = VCAP::CloudController::ManagedServiceInstance.find(guid: service_guid)
       validate_access(:read, instance)
       snapshots = instance.enum_snapshots
       [

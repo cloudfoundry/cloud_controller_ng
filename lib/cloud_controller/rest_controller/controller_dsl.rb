@@ -5,23 +5,20 @@ module VCAP::CloudController::RestController
     include VCAP::RestAPI
 
     class ToRelationshipAttribute < NamedAttribute
-      attr_reader :association_name
+      attr_reader :association_name, :link_only
+      alias_method :link_only?, :link_only
 
-      def initialize(name, opts = {})
+      def initialize(name, opts={})
         @association_name = opts[:association_name] || name
         @link_only = opts[:link_only] || false
         super
-      end
-
-      def link_only?
-        @link_only
       end
     end
 
     class ToManyAttribute < ToRelationshipAttribute
       attr_reader :route_for
 
-      def initialize(name, opts = {})
+      def initialize(name, opts={})
         @route_for = opts[:route_for] || [:get, :put, :delete]
         super
       end
@@ -49,7 +46,7 @@ module VCAP::CloudController::RestController
     #
     # @option opts [Object] :default default value for the attribute if it
     # isn't supplied.
-    def attribute(name, schema, opts = {})
+    def attribute(name, schema, opts={})
       attributes[name] = SchemaAttribute.new(name, schema, opts)
     end
 
@@ -63,7 +60,7 @@ module VCAP::CloudController::RestController
     #
     # @option opts [[Symbol]] :optional_in One or more symbols representing
     # an operation types that the attribute is considered optional in.
-    def to_many(name, opts = {})
+    def to_many(name, opts={})
       to_many_relationships[name] = ToManyAttribute.new(name, opts)
     end
 
@@ -77,7 +74,7 @@ module VCAP::CloudController::RestController
     #
     # @option opts [[Symbol]] :optional_in One or more symbols representing
     # an operation types that the attribute is considered optional in.
-    def to_one(name, opts = {})
+    def to_one(name, opts={})
       to_one_relationships[name] = ToOneAttribute.new(name, opts)
     end
 

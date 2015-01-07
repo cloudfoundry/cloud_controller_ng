@@ -1,4 +1,4 @@
-shared_context "resource pool" do
+shared_context 'resource pool' do
   before(:all) do
     num_dirs = 3
     num_unique_allowed_files_per_dir = 7
@@ -8,7 +8,7 @@ shared_context "resource pool" do
     @total_allowed_files =
         num_dirs * num_unique_allowed_files_per_dir * file_duplication_factor
 
-    @dummy_descriptor = {"sha1" => Digest::SHA1.hexdigest("abc"), "size" => 1}
+    @dummy_descriptor = { 'sha1' => Digest::SHA1.hexdigest('abc'), 'size' => 1 }
     @tmpdir = Dir.mktmpdir
 
     @descriptors = []
@@ -21,19 +21,19 @@ shared_context "resource pool" do
         contents = SecureRandom.uuid
 
         descriptor = {
-            "sha1" => Digest::SHA1.hexdigest(contents),
-            "size" => contents.length
+            'sha1' => Digest::SHA1.hexdigest(contents),
+            'size' => contents.length
         }
         @descriptors << descriptor
 
         file_duplication_factor.times do |i|
-          File.open("#{path}-#{i}", "w") do |f|
+          File.open("#{path}-#{i}", 'w') do |f|
             f.write contents
           end
         end
 
-        File.open("#{path}-not-allowed", "w") do |f|
-          f.write "A" * @max_file_size
+        File.open("#{path}-not-allowed", 'w') do |f|
+          f.write 'A' * @max_file_size
         end
       end
     end
@@ -43,19 +43,19 @@ shared_context "resource pool" do
 
   let(:resource_pool_config) do
     {
-        :maximum_size => @max_file_size,
-        :resource_directory_key => "spec-cc-resources",
-        :fog_connection => {
-            :provider => "AWS",
-            :aws_access_key_id => "fake_aws_key_id",
-            :aws_secret_access_key => "fake_secret_access_key",
+        maximum_size: @max_file_size,
+        resource_directory_key: 'spec-cc-resources',
+        fog_connection: {
+            provider: 'AWS',
+            aws_access_key_id: 'fake_aws_key_id',
+            aws_secret_access_key: 'fake_secret_access_key',
         }
     }
   end
 
   before do
     @resource_pool = VCAP::CloudController::ResourcePool.new(
-        :resource_pool => resource_pool_config
+        resource_pool: resource_pool_config
     )
   end
 

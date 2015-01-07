@@ -6,7 +6,7 @@ Sequel.migration do
     end
 
     if self.class.name.match /mysql/i
-      run "ALTER TABLE `tasks` CHANGE COLUMN `secure_token` `secure_token` TEXT"
+      run 'ALTER TABLE `tasks` CHANGE COLUMN `secure_token` `secure_token` TEXT'
     end
   end
 end

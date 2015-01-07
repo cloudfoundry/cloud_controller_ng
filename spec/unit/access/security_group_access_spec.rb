@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   describe SecurityGroupAccess, type: :access do
     subject(:access) { SecurityGroupAccess.new(Security::AccessContext.new) }
-    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:user) { User.make }
     let(:object) { SecurityGroup.make }
 

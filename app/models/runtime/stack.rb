@@ -10,26 +10,24 @@ module VCAP::CloudController
     export_attributes :name, :description
     import_attributes :name, :description
 
-    strip_attributes  :name
+    strip_attributes :name
 
     def validate
       validates_presence :name
       validates_presence :description
-      validates_unique   :name
+      validates_unique :name
     end
 
     def before_destroy
       if apps.present?
-        raise VCAP::Errors::ApiError.new_from_details("AssociationNotEmpty", "app", "stack")
+        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'app', 'stack')
       end
     end
 
     def self.configure(file_path)
       @config_file = if file_path
-        ConfigFile.new(file_path)
-      else
-        nil
-      end
+                       ConfigFile.new(file_path)
+                     end
     end
 
     def self.populate
@@ -43,10 +41,9 @@ module VCAP::CloudController
     def self.default
       raise MissingConfigFileError unless @config_file
 
-      self[:name => @config_file.default].tap do |found_stack|
+      self[name: @config_file.default].tap do |found_stack|
         unless found_stack
-          raise MissingDefaultStackError,
-            "Default stack with name '#{@config_file.default}' not found"
+          raise MissingDefaultStackError.new("Default stack with name '#{@config_file.default}' not found")
         end
       end
     end
@@ -55,17 +52,15 @@ module VCAP::CloudController
       full_dataset_filter
     end
 
-    private
-
     def self.populate_from_hash(hash)
-      stack = find(name: hash["name"])
+      stack = find(name: hash['name'])
       if stack
         stack.set(hash)
         if stack.modified?
-          Steno.logger("cc.stack").warn("stack.populate.collision", hash)
+          Steno.logger('cc.stack').warn('stack.populate.collision', hash)
         end
       else
-        create(hash.slice("name", "description"))
+        create(hash.slice('name', 'description'))
       end
     end
 
@@ -76,16 +71,19 @@ module VCAP::CloudController
         end
       end
 
-      def stacks; @hash["stacks"]; end
-      def default; @hash["default"]; end
+      def stacks
+        @hash['stacks']
+      end
 
-      private
+      def default
+        @hash['default']
+      end
 
       Schema = Membrane::SchemaParser.parse {{
-        "default" => String,
-        "stacks" => [{
-          "name" => String,
-          "description" => String,
+        'default' => String,
+        'stacks' => [{
+          'name' => String,
+          'description' => String,
         }]
       }}
     end

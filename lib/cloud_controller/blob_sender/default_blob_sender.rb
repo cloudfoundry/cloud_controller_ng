@@ -16,7 +16,7 @@ module CloudController
       end
 
       def logger
-        @logger ||= Steno.logger("cc.default_blob_sender")
+        @logger ||= Steno.logger('cc.default_blob_sender')
       end
     end
   end

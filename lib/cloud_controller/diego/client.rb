@@ -1,4 +1,4 @@
-require "cloud_controller/diego/unavailable"
+require 'cloud_controller/diego/unavailable'
 
 module VCAP::CloudController
   module Diego
@@ -54,7 +54,7 @@ module VCAP::CloudController
       private
 
       def logger
-        @logger ||= Steno.logger("cc.diego.client")
+        @logger ||= Steno.logger('cc.diego.client')
       end
     end
   end

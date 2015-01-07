@@ -1,10 +1,10 @@
 module VCAP::CloudController
   class RestagesController < RestController::ModelController
     def self.dependencies
-      [ :app_event_repository ]
+      [:app_event_repository]
     end
 
-    path_base "apps"
+    path_base 'apps'
     model_class_name :App
 
     def inject_dependencies(dependencies)
@@ -21,7 +21,7 @@ module VCAP::CloudController
         app.lock!
 
         if app.pending?
-          raise VCAP::Errors::ApiError.new_from_details("NotStaged")
+          raise VCAP::Errors::ApiError.new_from_details('NotStaged')
         end
 
         app.restage!
@@ -30,9 +30,9 @@ module VCAP::CloudController
       @app_event_repository.record_app_restage(app, SecurityContext.current_user, SecurityContext.current_user_email)
 
       [
-          HTTP::CREATED,
-          {"Location" => "#{self.class.path}/#{app.guid}"},
-          object_renderer.render_json(self.class, app, @opts)
+        HTTP::CREATED,
+        { 'Location' => "#{self.class.path}/#{app.guid}" },
+        object_renderer.render_json(self.class, app, @opts)
       ]
     end
   end

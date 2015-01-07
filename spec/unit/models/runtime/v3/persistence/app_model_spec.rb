@@ -64,14 +64,14 @@ module VCAP::CloudController
         end
 
         it 'should allow backslash characters' do
-          app.name = "a \\ word"
+          app.name = 'a \\ word'
           expect {
             app.save
           }.to_not raise_error
         end
 
         it 'should allow unicode characters' do
-          app.name = "防御力¡"
+          app.name = '防御力¡'
           expect {
             app.save
           }.to_not raise_error

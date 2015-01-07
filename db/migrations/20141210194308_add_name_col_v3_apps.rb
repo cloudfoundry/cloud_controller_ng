@@ -8,8 +8,8 @@ Sequel.migration do
       set_column_type :name, String, case_insensitive: true
     end
     if self.class.name.match /mysql/i
-      tableName = tables.select { |t| t =~ /apps_v3/ }.first
-      run "ALTER TABLE `#{tableName}` CONVERT TO CHARACTER SET utf8;"
+      table_name = tables.select { |t| t =~ /apps_v3/ }.first
+      run "ALTER TABLE `#{table_name}` CONVERT TO CHARACTER SET utf8;"
     end
   end
 

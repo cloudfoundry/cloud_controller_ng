@@ -14,7 +14,7 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      {:app => App.user_visible(user)}
+      { app: App.user_visible(user) }
     end
   end
 end

@@ -13,17 +13,17 @@ module VCAP::CloudController
     define_user_group :managers, reciprocal: :managed_spaces, before_add: :validate_manager
     define_user_group :auditors, reciprocal: :audited_spaces, before_add: :validate_auditor
 
-    many_to_one  :organization, before_set: :validate_change_organization
-    one_to_many  :apps
-    one_to_many  :app_models, primary_key: :guid, key: :space_guid
-    one_to_many  :events
-    one_to_many  :service_instances
-    one_to_many  :managed_service_instances
-    one_to_many  :routes
+    many_to_one :organization, before_set: :validate_change_organization
+    one_to_many :apps
+    one_to_many :app_models, primary_key: :guid, key: :space_guid
+    one_to_many :events
+    one_to_many :service_instances
+    one_to_many :managed_service_instances
+    one_to_many :routes
     many_to_many :security_groups,
     dataset: -> {
-      SecurityGroup.left_join(:security_groups_spaces, security_group_id: :id)
-      .where(Sequel.or(security_groups_spaces__space_id: id, security_groups__running_default: true))
+      SecurityGroup.left_join(:security_groups_spaces, security_group_id: :id).
+        where(Sequel.or(security_groups_spaces__space_id: id, security_groups__running_default: true))
     },
     eager_loader: ->(spaces_map) {
       space_ids = spaces_map[:id_map].keys
@@ -46,45 +46,50 @@ module VCAP::CloudController
     one_to_many :app_events,
       dataset: -> { AppEvent.filter(app: apps) }
 
-    one_to_many :default_users, class: "VCAP::CloudController::User", key: :default_space_id
+    one_to_many :default_users, class: 'VCAP::CloudController::User', key: :default_space_id
 
     one_to_many :domains,
       dataset: -> { organization.domains_dataset },
       adder: ->(domain) { domain.addable_to_organization!(organization) },
-    eager_loader: proc { |eo|
-      id_map = {}
-      eo[:rows].each do |space|
-        space.associations[:domains] = []
-        id_map[space.organization_id] ||= []
-        id_map[space.organization_id] << space
-      end
-
-      ds = Domain.shared_or_owned_by(id_map.keys)
-      ds = ds.eager(eo[:associations]) if eo[:associations]
-      ds = eo[:eager_block].call(ds) if eo[:eager_block]
-
-      ds.all do |domain|
-        if domain.shared?
-          id_map.each { |_, spaces| spaces.each { |space| space.associations[:domains] << domain } }
-        else
-          id_map[domain.owning_organization_id].each { |space| space.associations[:domains] << domain }
+      eager_loader: proc { |eo|
+        id_map = {}
+        eo[:rows].each do |space|
+          space.associations[:domains] = []
+          id_map[space.organization_id] ||= []
+          id_map[space.organization_id] << space
         end
-      end
-    }
+
+        ds = Domain.shared_or_owned_by(id_map.keys)
+        ds = ds.eager(eo[:associations]) if eo[:associations]
+        ds = eo[:eager_block].call(ds) if eo[:eager_block]
+
+        ds.all do |domain|
+          if domain.shared?
+            id_map.each { |_, spaces| spaces.each { |space| space.associations[:domains] << domain } }
+          else
+            id_map[domain.owning_organization_id].each { |space| space.associations[:domains] << domain }
+          end
+        end
+      }
 
     many_to_one :space_quota_definition
 
-    add_association_dependencies default_users: :nullify, apps: :destroy,
-      service_instances: :destroy, routes: :destroy,
-      events: :nullify, security_groups: :nullify,
+    add_association_dependencies(
+      default_users: :nullify,
+      apps: :destroy,
+      service_instances: :destroy,
+      routes: :destroy,
+      events: :nullify,
+      security_groups: :nullify,
       app_models: :destroy
+    )
 
     export_attributes :name, :organization_guid, :space_quota_definition_guid
 
     import_attributes :name, :organization_guid, :developer_guids,
       :manager_guids, :auditor_guids, :security_group_guids, :space_quota_definition_guid
 
-    strip_attributes  :name
+    strip_attributes :name
 
     dataset_module do
       def having_developers(*users)
@@ -100,7 +105,7 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_presence :organization
-      validates_unique   [:organization_id, :name]
+      validates_unique [:organization_id, :name]
       validates_format SPACE_NAME_REGEX, :name
 
       if space_quota_definition && space_quota_definition.organization.guid != organization.guid

@@ -24,7 +24,7 @@ module VCAP::CloudController
         private
 
         def custom_buildpack_entry(buildpack)
-          {name: "custom", key: buildpack.url, url: buildpack.url}
+          { name: 'custom', key: buildpack.url, url: buildpack.url }
         end
 
         def default_admin_buildpacks

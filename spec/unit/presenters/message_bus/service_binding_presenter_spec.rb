@@ -3,7 +3,7 @@ require 'presenters/message_bus/service_binding_presenter'
 
 describe ServiceBindingPresenter do
   context 'for a managed service instance' do
-    let(:service) { VCAP::CloudController::Service.make(requires: ["syslog_drain"], label: Sham.label) }
+    let(:service) { VCAP::CloudController::Service.make(requires: ['syslog_drain'], label: Sham.label) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(name: Sham.name, service: service) }
     let(:service_instance) do
       VCAP::CloudController::ManagedServiceInstance.make(
@@ -19,24 +19,24 @@ describe ServiceBindingPresenter do
       )
     end
 
-    context "with syslog_drain_url" do
+    context 'with syslog_drain_url' do
       before do
-        service_binding.update(syslog_drain_url: "syslog://example.com:514")
+        service_binding.update(syslog_drain_url: 'syslog://example.com:514')
       end
 
-      describe "#to_hash" do
+      describe '#to_hash' do
         subject { ServiceBindingPresenter.new(service_binding).to_hash }
 
         specify do
-          expect(subject.fetch(:syslog_drain_url)).to eq("syslog://example.com:514")
+          expect(subject.fetch(:syslog_drain_url)).to eq('syslog://example.com:514')
         end
       end
     end
 
-    context "with binding options" do
+    context 'with binding options' do
       let(:binding_options) { Sham.binding_options }
 
-      describe "#to_hash" do
+      describe '#to_hash' do
         subject { ServiceBindingPresenter.new(service_binding).to_hash }
 
         specify do
@@ -59,8 +59,8 @@ describe ServiceBindingPresenter do
       end
     end
 
-    context "without binding options" do
-      describe "#to_hash" do
+    context 'without binding options' do
+      describe '#to_hash' do
         subject { ServiceBindingPresenter.new(service_binding).to_hash }
 
         specify do
@@ -79,7 +79,7 @@ describe ServiceBindingPresenter do
       VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
     end
 
-    describe "#to_hash" do
+    describe '#to_hash' do
       subject { ServiceBindingPresenter.new(service_binding).to_hash }
 
       specify do

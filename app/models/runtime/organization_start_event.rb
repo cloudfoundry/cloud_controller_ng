@@ -10,15 +10,15 @@ module VCAP::CloudController
     )
 
     def event_type
-      "organization_billing_start"
+      'organization_billing_start'
     end
 
     def self.create_from_org(org)
       raise BillingNotEnabled unless org.billing_enabled?
       OrganizationStartEvent.create(
-        :timestamp => Time.now,
-        :organization_guid => org.guid,
-        :organization_name => org.name,
+        timestamp: Time.now,
+        organization_guid: org.guid,
+        organization_name: org.name,
       )
     end
   end

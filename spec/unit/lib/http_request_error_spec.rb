@@ -24,5 +24,3 @@ describe HttpRequestError do
     })
   end
 end
-
-

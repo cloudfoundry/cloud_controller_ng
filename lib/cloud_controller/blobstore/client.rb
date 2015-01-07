@@ -1,9 +1,9 @@
-require "fileutils"
-require "find"
-require "fog"
-require "cloud_controller/blobstore/directory"
-require "cloud_controller/blobstore/blob"
-require "cloud_controller/blobstore/idempotent_directory"
+require 'fileutils'
+require 'find'
+require 'fog'
+require 'cloud_controller/blobstore/directory'
+require 'cloud_controller/blobstore/blob'
+require 'cloud_controller/blobstore/idempotent_directory'
 
 module CloudController
   module Blobstore
@@ -20,7 +20,7 @@ module CloudController
       end
 
       def local?
-        @connection_config[:provider].downcase == "local"
+        @connection_config[:provider].downcase == 'local'
       end
 
       def exists?(key)
@@ -29,7 +29,7 @@ module CloudController
 
       def download_from_blobstore(source_key, destination_path)
         FileUtils.mkdir_p(File.dirname(destination_path))
-        File.open(destination_path, "w") do |file|
+        File.open(destination_path, 'w') do |file|
           (@cdn || files).get(partitioned_key(source_key)) do |*chunk|
             file.write(chunk[0])
           end
@@ -50,9 +50,9 @@ module CloudController
 
       def cp_to_blobstore(source_path, destination_key, retries=2)
         start = Time.now
-        logger.info("blobstore.cp-start", destination_key: destination_key, source_path: source_path, bucket: @directory_key)
+        logger.info('blobstore.cp-start', destination_key: destination_key, source_path: source_path, bucket: @directory_key)
         size = -1
-        log_entry = "blobstore.cp-skip"
+        log_entry = 'blobstore.cp-skip'
 
         File.open(source_path) do |file|
           size = file.size
@@ -60,12 +60,12 @@ module CloudController
 
           begin
             files.create(
-              :key => partitioned_key(destination_key),
-              :body => file,
-              :public => local?,
+              key: partitioned_key(destination_key),
+              body: file,
+              public: local?,
             )
           rescue SystemCallError => e # work around https://github.com/fog/fog/issues/3137
-            logger.debug("blobstore.cp-retry",
+            logger.debug('blobstore.cp-retry',
                         error: e,
                         destination_key: destination_key,
                         remaining_retries: retries
@@ -75,7 +75,7 @@ module CloudController
             raise e
           end
 
-          log_entry = "blobstore.cp-finish"
+          log_entry = 'blobstore.cp-finish'
         end
 
         duration = Time.now - start
@@ -152,16 +152,16 @@ module CloudController
 
       def connection
         options = @connection_config
-        options = options.merge(:endpoint => "") if local?
+        options = options.merge(endpoint: '') if local?
         Fog::Storage.new(options)
       end
 
       def logger
-        @logger ||= Steno.logger("cc.blobstore")
+        @logger ||= Steno.logger('cc.blobstore')
       end
 
       def within_limits?(size)
-        size>=@min_size && (@max_size.nil? || size<=@max_size)
+        size >= @min_size && (@max_size.nil? || size <= @max_size)
       end
     end
   end

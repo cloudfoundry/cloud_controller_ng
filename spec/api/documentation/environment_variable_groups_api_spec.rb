@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Environment Variable Groups', :type => [:api, :legacy_api] do
+resource 'Environment Variable Groups', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:staging_group) { VCAP::CloudController::EnvironmentVariableGroup.staging }
   let(:running_group) { VCAP::CloudController::EnvironmentVariableGroup.running }
@@ -11,7 +11,6 @@ resource 'Environment Variable Groups', :type => [:api, :legacy_api] do
   describe 'Standard endpoints' do
     get '/v2/config/environment_variable_groups/staging' do
       example 'Getting the contents of the staging environment variable group' do
-
         explanation 'returns the set of default environment variables available during staging'
 
         staging_group.update(environment_json: {

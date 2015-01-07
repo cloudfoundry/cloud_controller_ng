@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   describe SpaceAccess, type: :access do
     subject(:access) { SpaceAccess.new(Security::AccessContext.new) }
-    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:object) { VCAP::CloudController::Space.make(organization: org) }
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.write' do
-      let(:token) {{'scope' => ['cloud_controller.read']}}
+      let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
       before do
         org.add_user(user)
@@ -122,7 +122,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
-      let(:token) {{'scope' => []}}
+      let(:token) { { 'scope' => [] } }
 
       before do
         org.add_user(user)

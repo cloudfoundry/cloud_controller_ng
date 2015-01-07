@@ -24,12 +24,12 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       Sequel.or([
-                    [:spaces, user.spaces_dataset],
-                    [:spaces, user.managed_spaces_dataset],
-                    [:spaces, user.audited_spaces_dataset],
-                    [:running_default, true],
-                    [:security_groups_spaces__space_id, user.managed_organizations_dataset.join(:spaces, :spaces__organization_id => :organizations__id).select(:spaces__id)]
-                ])
+        [:spaces, user.spaces_dataset],
+        [:spaces, user.managed_spaces_dataset],
+        [:spaces, user.audited_spaces_dataset],
+        [:running_default, true],
+        [:security_groups_spaces__space_id, user.managed_organizations_dataset.join(:spaces, spaces__organization_id: :organizations__id).select(:spaces__id)]
+      ])
     end
 
     private
@@ -46,15 +46,15 @@ module VCAP::CloudController
         protocol = rule['protocol']
 
         validation_errors = case protocol
-        when "tcp", "udp"
-          CloudController::TransportRuleValidator.validate(rule)
-        when "icmp"
-          CloudController::ICMPRuleValidator.validate(rule)
-        when "all"
-          CloudController::RuleValidator.validate(rule)
-        else
-          ["contains an unsupported protocol"]
-        end
+                            when 'tcp', 'udp'
+                              CloudController::TransportRuleValidator.validate(rule)
+                            when 'icmp'
+                              CloudController::ICMPRuleValidator.validate(rule)
+                            when 'all'
+                              CloudController::RuleValidator.validate(rule)
+                            else
+                              ['contains an unsupported protocol']
+                            end
 
         validation_errors.each do |error_text|
           errors.add(:rules, "rule number #{index + 1} #{error_text}")

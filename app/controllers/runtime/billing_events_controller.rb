@@ -8,10 +8,10 @@ module VCAP::CloudController
     # better controll over the dataset returned, and we don't have generic
     # functionality for the controller to configure its dataset.
     def enumerate
-      raise Errors::ApiError.new_from_details("NotAuthenticated") unless user
+      raise Errors::ApiError.new_from_details('NotAuthenticated') unless user
 
       unless start_time && end_time
-        raise Errors::ApiError.new_from_details("BillingEventQueryInvalid")
+        raise Errors::ApiError.new_from_details('BillingEventQueryInvalid')
       end
 
       ds = model.user_visible(SecurityContext.current_user, SecurityContext.admin?)
@@ -24,23 +24,23 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
-    deprecated_endpoint "/v2/billing_events"
+    deprecated_endpoint '/v2/billing_events'
 
     private
 
     def start_time
-      @start_time ||= parse_date_param("start_date")
+      @start_time ||= parse_date_param('start_date')
     end
 
     def end_time
-      @end_time ||= parse_date_param("end_date")
+      @end_time ||= parse_date_param('end_date')
     end
 
     def parse_date_param(param)
       str = @params[param]
       Time.parse(str).localtime if str
     rescue
-      raise Errors::ApiError.new_from_details("BillingEventQueryInvalid")
+      raise Errors::ApiError.new_from_details('BillingEventQueryInvalid')
     end
 
     def inject_dependencies(dependencies)

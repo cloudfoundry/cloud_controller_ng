@@ -1,4 +1,4 @@
-require "cgi"
+require 'cgi'
 
 module VCAP::CloudController::RestController
   class CommonParams
@@ -12,22 +12,22 @@ module VCAP::CloudController::RestController
       # than an array (which we might have for q)
       res = {}
       [
-        ["inline-relations-depth", Integer],
-        ["page",                   Integer],
-        ["results-per-page",       Integer],
-        ["q",                      String],
-        ["order-direction",        String],
-        ["orphan-relations",       Integer],
-        ["exclude-relations",      String],
-        ["include-relations",      String],
+        ['inline-relations-depth', Integer],
+        ['page',                   Integer],
+        ['results-per-page',       Integer],
+        ['q',                      String],
+        ['order-direction',        String],
+        ['orphan-relations',       Integer],
+        ['exclude-relations',      String],
+        ['include-relations',      String],
 
       ].each do |key, klass|
         val = params[key]
         res[key.underscore.to_sym] = Object.send(klass.name, val) if val
       end
 
-      if res[:q] && query_string && query_string.count("q=") > 1
-        res[:q] = CGI.parse(query_string)["q"]
+      if res[:q] && query_string && query_string.count('q=') > 1
+        res[:q] = CGI.parse(query_string)['q']
       end
 
       # relationship names should be specified as a comma separated list

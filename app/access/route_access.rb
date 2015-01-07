@@ -28,6 +28,5 @@ module VCAP::CloudController
     def reserved_with_token?(_)
       admin_user? || has_read_scope?
     end
-
   end
 end

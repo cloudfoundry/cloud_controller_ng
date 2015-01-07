@@ -1,4 +1,4 @@
-require "sequel"
+require 'sequel'
 
 # The AssociationDependencies plugin allows you do easily set up before and/or after
 # destroy hooks for destroying, deleting, or nullifying associated model objects.

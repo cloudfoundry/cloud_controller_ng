@@ -3,7 +3,7 @@ require 'securerandom'
 
 module VCAP::Services::ServiceBrokers::V2
   describe CatalogPlan do
-    def build_valid_plan_attrs(opts = {})
+    def build_valid_plan_attrs(opts={})
       {
         'id'          => opts[:id] || 'broker-provided-plan-id',
         'metadata'    => opts[:metadata] || {},
@@ -115,7 +115,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:cc_service) { VCAP::CloudController::Service.make(service_broker: service_broker) }
       let(:plan_broker_provided_id) { SecureRandom.uuid }
       let(:catalog_service) do
-        CatalogService.new( service_broker,
+        CatalogService.new(service_broker,
           'id' => cc_service.broker_provided_id,
           'name' => 'my-service-name',
           'description' => 'my service description',

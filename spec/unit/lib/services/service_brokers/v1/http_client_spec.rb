@@ -27,7 +27,6 @@ module VCAP::Services
         allow(VCAP::Request).to receive(:current_id).and_return(request_id)
       end
 
-
       describe 'http client timeout' do
         let(:http) { double('http', request: response) }
         let(:response) { Net::HTTPOK.new('1.0', 200, nil) }
@@ -36,8 +35,8 @@ module VCAP::Services
         let(:expected_response) do
           {
             'service_id' => '456',
-            'configuration' => {'setting' => true},
-            'credentials' => {'user' => 'admin', 'pass' => 'secret'}
+            'configuration' => { 'setting' => true },
+            'credentials' => { 'user' => 'admin', 'pass' => 'secret' }
           }.to_json
         end
 
@@ -53,7 +52,7 @@ module VCAP::Services
         end
 
         context 'when the broker client timeout is set' do
-          let(:config) { {broker_client_timeout_seconds: 100} }
+          let(:config) { { broker_client_timeout_seconds: 100 } }
 
           it 'sets HTTP timeouts on provisions' do
             expect_timeout_to_be 100
@@ -62,8 +61,7 @@ module VCAP::Services
         end
 
         context 'when the broker timeout is not set' do
-          let(:config) { {missing_broker_client_timeout: nil} }
-
+          let(:config) { { missing_broker_client_timeout: nil } }
 
           it 'sets HTTP timeouts on provisions' do
             expect_timeout_to_be 60
@@ -75,10 +73,10 @@ module VCAP::Services
       context 'when an https URL is used' do
         let(:url) { 'https://broker.example.com' }
         it 'uses SSL' do
-          stub_request(:post, "https://broker.example.com/gateway/v1/configurations").
-              to_return(:status => 200, :body => "", :headers => {})
-          client.provision("unique_id", "name")
-          expect(WebMock).to have_requested(:post, "https://broker.example.com/gateway/v1/configurations")
+          stub_request(:post, 'https://broker.example.com/gateway/v1/configurations').
+              to_return(status: 200, body: '', headers: {})
+          client.provision('unique_id', 'name')
+          expect(WebMock).to have_requested(:post, 'https://broker.example.com/gateway/v1/configurations')
         end
       end
 
@@ -111,8 +109,8 @@ module VCAP::Services
         let(:expected_response) do
           {
             'service_id' => '456',
-            'configuration' => {'setting' => true},
-            'credentials' => {'user' => 'admin', 'pass' => 'secret'}
+            'configuration' => { 'setting' => true },
+            'credentials' => { 'user' => 'admin', 'pass' => 'secret' }
           }
         end
 
@@ -159,8 +157,8 @@ module VCAP::Services
         let(:expected_response) do
           {
             'service_id' => binding_id,
-            'configuration' => {'setting' => true},
-            'credentials' => {'user' => 'admin', 'pass' => 'secret'}
+            'configuration' => { 'setting' => true },
+            'credentials' => { 'user' => 'admin', 'pass' => 'secret' }
           }
         end
 

@@ -1,7 +1,7 @@
-require "spec_helper"
-require "thread"
+require 'spec_helper'
+require 'thread'
 
-describe "Cloud controller", type: :integration do
+describe 'Cloud controller', type: :integration do
   before(:all) do
     start_nats
     start_cc
@@ -12,8 +12,8 @@ describe "Cloud controller", type: :integration do
     stop_nats
   end
 
-  context "upon shutdown" do
-    it "unregisters its route" do
+  context 'upon shutdown' do
+    it 'unregisters its route' do
       received = nil
 
       ready = Queue.new
@@ -22,7 +22,7 @@ describe "Cloud controller", type: :integration do
         NATS.start do
           received_count = 0
 
-          sid = NATS.subscribe("router.unregister") do |msg|
+          sid = NATS.subscribe('router.unregister') do |msg|
             if received_count == 0
               ready << true
             elsif received_count == 1
@@ -33,9 +33,9 @@ describe "Cloud controller", type: :integration do
             received_count += 1
           end
 
-          NATS.publish("router.unregister", "hello") do
+          NATS.publish('router.unregister', 'hello') do
             NATS.timeout(sid, 15) do
-              fail "never got anything over NATS"
+              fail 'never got anything over NATS'
             end
           end
         end
@@ -48,11 +48,11 @@ describe "Cloud controller", type: :integration do
       thd.join
 
       expected = {
-        "host" => "127.0.0.1",
-        "port" => 8181,
-        "tags" => {"component" => "CloudController"},
-        "uris" => ["api2.vcap.me"],
-        "private_instance_id" => nil,
+        'host' => '127.0.0.1',
+        'port' => 8181,
+        'tags' => { 'component' => 'CloudController' },
+        'uris' => ['api2.vcap.me'],
+        'private_instance_id' => nil,
       }
 
       expect(received).to match_json(include(expected))

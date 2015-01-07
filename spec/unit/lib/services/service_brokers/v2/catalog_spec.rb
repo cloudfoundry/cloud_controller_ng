@@ -4,7 +4,7 @@ module VCAP::Services::ServiceBrokers::V2
   describe Catalog do
     let(:broker) { VCAP::CloudController::ServiceBroker.make }
 
-    def service_entry(opts = {})
+    def service_entry(opts={})
       {
         'id'          => opts[:id] || Sham.guid,
         'name'        => opts[:name] || Sham.name,
@@ -49,18 +49,18 @@ module VCAP::Services::ServiceBrokers::V2
         @index ||= 0
         @index += 1
         {
-          "id" =>"#{@index}",
-          "name" =>"#{@index}",
-          "description" =>"the service description",
-          "bindable" =>true,
-          "tags" =>["tag1"],
-          "metadata" => {"foo" =>"bar"},
-          "plans" =>[
+          'id' => "#{@index}",
+          'name' => "#{@index}",
+          'description' => 'the service description',
+          'bindable' => true,
+          'tags' => ['tag1'],
+          'metadata' => { 'foo' => 'bar' },
+          'plans' => [
             {
-              "id" => "#{@index}",
-              "name" => "#{@index}",
-              "description" => "the plan description",
-              "metadata" => {"foo" =>"bar"}
+              'id' => "#{@index}",
+              'name' => "#{@index}",
+              'description' => 'the plan description',
+              'metadata' => { 'foo' => 'bar' }
             }
           ]
         }.merge(attrs)
@@ -69,7 +69,7 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when two services in the catalog have the same id' do
         let(:catalog_hash) do
           {
-            "services" => [build_service('id' => '1'), build_service('id' => '1')]
+            'services' => [build_service('id' => '1'), build_service('id' => '1')]
           }
         end
 
@@ -83,7 +83,7 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when two services in the catalog have the same dashboard_client id' do
         let(:catalog_hash) do
           {
-            "services" => [
+            'services' => [
               build_service('dashboard_client' => {
                 'id' => 'client-1',
                 'secret' => 'secret',
@@ -107,7 +107,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context "when a service's dashboard_client attribute is not a hash" do
         let(:catalog_hash) do
-          {"services" => [build_service('dashboard_client' => 1)]}
+          { 'services' => [build_service('dashboard_client' => 1)] }
         end
 
         it 'gives an error' do
@@ -118,7 +118,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when there are multiple services without a dashboard_client' do
         let(:catalog_hash) do
-          {"services" => [build_service, build_service]}
+          { 'services' => [build_service, build_service] }
         end
 
         it 'does not give a uniqueness error on dashboard_client id' do
@@ -130,9 +130,9 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when there are multiple services with a nil dashboard_client id' do
         let(:catalog_hash) do
           {
-            "services" => [
-              build_service("dashboard_client" => {"id" => nil}),
-              build_service("dashboard_client" => {"id" => nil})
+            'services' => [
+              build_service('dashboard_client' => { 'id' => nil }),
+              build_service('dashboard_client' => { 'id' => nil })
             ]
           }
         end
@@ -146,7 +146,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when there are multiple services with an empty id' do
         let(:catalog_hash) do
-          {"services" => [build_service('id' => nil), build_service('id' => nil)]}
+          { 'services' => [build_service('id' => nil), build_service('id' => nil)] }
         end
 
         it 'is invalid, but not due to uniqueness constraints' do
@@ -159,9 +159,9 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when there are both service validation problems and uniqueness problems' do
         let(:catalog_hash) do
           {
-            "services" => [
-              build_service('id' => 'service-1', 'dashboard_client' => {'id' => 'client-1'}),
-              build_service('id' => 'service-1', 'dashboard_client' => {'id' => 'client-1'}),
+            'services' => [
+              build_service('id' => 'service-1', 'dashboard_client' => { 'id' => 'client-1' }),
+              build_service('id' => 'service-1', 'dashboard_client' => { 'id' => 'client-1' }),
             ]
           }
         end

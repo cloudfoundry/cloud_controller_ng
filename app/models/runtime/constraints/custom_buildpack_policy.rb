@@ -1,5 +1,5 @@
 class CustomBuildpackPolicy
-  ERROR_MSG = "custom buildpacks are disabled"
+  ERROR_MSG = 'custom buildpacks are disabled'
 
   def initialize(app, custom_buildpacks_enabled)
     @custom_buildpacks_enabled = custom_buildpacks_enabled

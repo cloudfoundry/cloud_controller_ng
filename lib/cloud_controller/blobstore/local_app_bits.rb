@@ -1,18 +1,18 @@
-require "cloud_controller/safe_zipper"
-require "ext/file"
+require 'cloud_controller/safe_zipper'
+require 'ext/file'
 
 module CloudController
   module Blobstore
     class LocalAppBits
-      PACKAGE_NAME = "package.zip".freeze
-      UNCOMPRESSED_DIR = "uncompressed"
+      PACKAGE_NAME = 'package.zip'.freeze
+      UNCOMPRESSED_DIR = 'uncompressed'
 
       def self.from_compressed_bits(compressed_bits_path, tmp_dir, &block)
-        Dir.mktmpdir("safezipper", tmp_dir) do |root_path|
+        Dir.mktmpdir('safezipper', tmp_dir) do |root_path|
           unzip_path = File.join(root_path, UNCOMPRESSED_DIR)
           FileUtils.mkdir(unzip_path)
           storage_size = 0
-          if compressed_bits_path && File.exists?(compressed_bits_path)
+          if compressed_bits_path && File.exist?(compressed_bits_path)
             storage_size = SafeZipper.unzip(compressed_bits_path, unzip_path)
           end
           block.yield new(root_path, storage_size)

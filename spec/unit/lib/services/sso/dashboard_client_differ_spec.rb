@@ -2,7 +2,6 @@ require 'spec_helper'
 
 module VCAP::Services::SSO
   describe DashboardClientDiffer do
-
     let(:differ) { DashboardClientDiffer.new(service_broker) }
     let(:service_broker) { double(:service_broker, id: 'service-broker-1') }
     let(:dashboard_client) do
@@ -35,7 +34,7 @@ module VCAP::Services::SSO
           expect(changeset).to have(1).items
           expect(changeset.first).to be_a Commands::UpdateClientCommand
           expect(changeset.first.client_attrs).to eq(dashboard_client)
-         end
+        end
       end
 
       context 'when an existing client is removed from the catalog' do
@@ -137,10 +136,10 @@ module VCAP::Services::SSO
         let(:requested_clients) { [] }
         let(:existing_db_clients) do
           [
-          double(:client,
-                   service_id_on_broker: service_broker.id,
-                   uaa_id: dashboard_client['id']
-            )
+            double(:client,
+                     service_id_on_broker: service_broker.id,
+                     uaa_id: dashboard_client['id']
+              )
           ]
         end
 

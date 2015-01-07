@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe UserSummaryPresenter do
-  describe "#to_hash" do
+  describe '#to_hash' do
     let(:org) { VCAP::CloudController::Organization.make }
     let(:managed_org) { VCAP::CloudController::Organization.make }
     let(:billing_managed_org) { VCAP::CloudController::Organization.make }
@@ -27,7 +27,7 @@ describe UserSummaryPresenter do
 
     subject { UserSummaryPresenter.new(user) }
 
-    it "creates a valid JSON" do
+    it 'creates a valid JSON' do
       expect(subject.to_hash).to eq({
         metadata: {
           guid: user.guid,
@@ -35,7 +35,12 @@ describe UserSummaryPresenter do
           updated_at: nil,
         },
         entity: {
-          organizations: [OrganizationPresenter.new(org).to_hash, OrganizationPresenter.new(managed_org).to_hash, OrganizationPresenter.new(billing_managed_org).to_hash, OrganizationPresenter.new(audited_org).to_hash],
+          organizations: [
+            OrganizationPresenter.new(org).to_hash,
+            OrganizationPresenter.new(managed_org).to_hash,
+            OrganizationPresenter.new(billing_managed_org).to_hash,
+            OrganizationPresenter.new(audited_org).to_hash
+          ],
           managed_organizations: [OrganizationPresenter.new(managed_org).to_hash],
           billing_managed_organizations: [OrganizationPresenter.new(billing_managed_org).to_hash],
           audited_organizations: [OrganizationPresenter.new(audited_org).to_hash],

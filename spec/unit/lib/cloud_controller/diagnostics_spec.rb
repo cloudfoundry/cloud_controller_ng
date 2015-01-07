@@ -1,22 +1,21 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe Diagnostics do
-
-    let(:request_method) { "GET" }
-    let(:path) { "/path" }
-    let(:query_string) { "query" }
-    let(:request_id) { "request_id" }
+    let(:request_method) { 'GET' }
+    let(:path) { '/path' }
+    let(:query_string) { 'query' }
+    let(:request_id) { 'request_id' }
 
     let(:request) do
-      double("Request", {
-        :request_method => request_method,
-        :path => path,
-        :query_string => query_string,
+      double('Request', {
+        request_method: request_method,
+        path: path,
+        query_string: query_string,
       })
     end
 
-    describe "::request_received" do
+    describe '::request_received' do
       before do
         VCAP::Request.current_id = request_id
         Diagnostics.request_received(request)
@@ -26,48 +25,48 @@ module VCAP::CloudController
         Thread.current[:current_request]
       end
 
-      it "saves request info in a thread local" do
+      it 'saves request info in a thread local' do
         expect(current_request).to_not be_nil
       end
 
-      it "saves the request info as a hash" do
+      it 'saves the request info as a hash' do
         expect(current_request).to be_an_instance_of(Hash)
       end
 
-      it "populates the start time to now" do
+      it 'populates the start time to now' do
         now = Time.now
         Timecop.freeze now do
           expect(current_request[:start_time]).to be_within(0.01).of(now.to_f)
         end
       end
 
-      it "populates the request ID from VCAP::Request" do
+      it 'populates the request ID from VCAP::Request' do
         expect(current_request[:request_id]).to eq(request_id)
       end
 
-      it "populates the request method" do
+      it 'populates the request method' do
         expect(current_request[:request_method]).to eq(request_method)
       end
 
-      context "when a query string is not present" do
-        let(:query_string) { "" }
+      context 'when a query string is not present' do
+        let(:query_string) { '' }
 
-        it "sets the request uri to the path" do
+        it 'sets the request uri to the path' do
           expect(current_request[:request_uri]).to eq(path)
         end
       end
 
-      context "when a query string is present" do
-        it "includes the query string in the request uri" do
+      context 'when a query string is present' do
+        it 'includes the query string in the request uri' do
           expect(current_request[:request_uri]).to eq("#{path}?#{query_string}")
         end
       end
     end
 
-    describe "::request_complete" do
+    describe '::request_complete' do
       before { Thread.current[:current_request] = {} }
 
-      it "clears the request info from the thread local" do
+      it 'clears the request info from the thread local' do
         expect {
           Diagnostics.request_complete
         }.to change {
@@ -76,42 +75,42 @@ module VCAP::CloudController
       end
     end
 
-    describe "::collect" do
+    describe '::collect' do
       let(:temp_dir) { Dir.mktmpdir }
-      let(:output_dir) { File.join(temp_dir, "diagnostics") }
+      let(:output_dir) { File.join(temp_dir, 'diagnostics') }
 
       after do
         FileUtils.rm_rf(temp_dir)
       end
 
-      it "creates the destination directory if needed" do
-        expect(File.exists?(output_dir)).to be false
+      it 'creates the destination directory if needed' do
+        expect(File.exist?(output_dir)).to be false
         Diagnostics.collect(output_dir)
-        expect(File.exists?(output_dir)).to be true
+        expect(File.exist?(output_dir)).to be true
       end
 
-      it "returns the name of the output file" do
+      it 'returns the name of the output file' do
         filename = Diagnostics.collect(output_dir)
         expect(filename).to_not be_nil
-        expect(File.exists?(filename)).to be true
+        expect(File.exist?(filename)).to be true
       end
 
-      describe "file name" do
-        it "uses a file name that includes a time stamp" do
+      describe 'file name' do
+        it 'uses a file name that includes a time stamp' do
           Timecop.freeze Time.now do
             filename = Diagnostics.collect(output_dir)
-            timestamp = Time.now.strftime("%Y%m%d-%H:%M:%S.%L")
+            timestamp = Time.now.strftime('%Y%m%d-%H:%M:%S.%L')
             expect(filename).to match_regex(/#{timestamp}/)
           end
         end
 
-        it "uses a file name that includes the pid" do
+        it 'uses a file name that includes the pid' do
           expect(Diagnostics.collect(output_dir)).to match_regex(/#{Process.pid}/)
         end
       end
 
-      describe "file contents" do
-        it "captures the data as json" do
+      describe 'file contents' do
+        it 'captures the data as json' do
           filename = Diagnostics.collect(output_dir)
           contents = IO.read(filename)
           expect {
@@ -123,12 +122,12 @@ module VCAP::CloudController
           JSON.parse(IO.read(Diagnostics.collect(output_dir)), symbolize_names: true)
         end
 
-        it "captures thread information" do
+        it 'captures thread information' do
           expect(data[:threads]).to_not be_nil
           expect(data[:threads].empty?).to be false
         end
 
-        it "captures varz information" do
+        it 'captures varz information' do
           expect(data[:varz]).to_not be_nil
           expect(data[:varz].empty?).to be false
         end

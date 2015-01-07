@@ -16,15 +16,15 @@ module VCAP::CloudController
     end
 
     def self.update_job_queue_length
-      pending_job_count_by_queue = get_pending_job_count_by_queue
+      local_pending_job_count_by_queue = pending_job_count_by_queue
 
-      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_job_queue_length] = pending_job_count_by_queue }
+      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_job_queue_length] = local_pending_job_count_by_queue }
     end
 
     def self.update_thread_info
-      thread_info = get_thread_info
+      local_thread_info = thread_info
 
-      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:thread_info] = thread_info }
+      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:thread_info] = local_thread_info }
     end
 
     def self.update!
@@ -33,18 +33,15 @@ module VCAP::CloudController
       update_thread_info
     end
 
-    private
-
-    def self.get_pending_job_count_by_queue
+    def self.pending_job_count_by_queue
       jobs_by_queue_with_count = Delayed::Job.where(attempts: 0).group_and_count(:queue)
 
-      jobs_by_queue_with_count.reduce({}) do |hash, row|
+      jobs_by_queue_with_count.each_with_object({}) do |row, hash|
         hash[row[:queue].to_sym] = row[:count]
-        hash
       end
     end
 
-    def self.get_thread_info
+    def self.thread_info
       threadqueue = EM.instance_variable_get(:@threadqueue) || []
       resultqueue = EM.instance_variable_get(:@resultqueue) || []
       {

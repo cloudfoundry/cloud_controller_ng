@@ -3,11 +3,11 @@ require 'spec_helper'
 module VCAP::CloudController
   describe DomainAccess, type: :access do
     subject(:access) { DomainAccess.new(Security::AccessContext.new) }
-    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
     let(:user) { User.make }
     let(:org) { Organization.make }
-    let(:space) { Space.make(:organization => org) }
+    let(:space) { Space.make(organization: org) }
 
     let(:object) { Domain.make }
 
@@ -25,7 +25,7 @@ module VCAP::CloudController
       context 'admin' do
         include_context :admin_setup
 
-        before { FeatureFlag.make(name: "private_domain_creation", enabled: false) }
+        before { FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
 
         it_behaves_like :full_access
       end
@@ -36,8 +36,8 @@ module VCAP::CloudController
 
         context 'when private_domain_creation FeatureFlag is disabled' do
           it 'cannot create a private domain' do
-            FeatureFlag.make(name: "private_domain_creation", enabled: false, error_message: nil)
-            expect{subject.create?(object)}.to raise_error(VCAP::Errors::ApiError, /private_domain_creation/)
+            FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
+            expect { subject.create?(object) }.to raise_error(VCAP::Errors::ApiError, /private_domain_creation/)
           end
         end
       end
@@ -81,7 +81,7 @@ module VCAP::CloudController
       end
 
       context 'any user using client without cloud_controller.write' do
-        let(:token) {{'scope' => ['cloud_controller.read']}}
+        let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
         before do
           org.add_user(user)
@@ -97,7 +97,7 @@ module VCAP::CloudController
       end
 
       context 'any user using client without cloud_controller.read' do
-        let(:token) {{'scope' => []}}
+        let(:token) { { 'scope' => [] } }
 
         before do
           org.add_user(user)
@@ -121,13 +121,13 @@ module VCAP::CloudController
 
       context 'a user that isnt logged in (defensive)' do
         let(:user) { nil }
-        let(:token) {{'scope' => []}}
+        let(:token) { { 'scope' => [] } }
 
         it_behaves_like :no_access
       end
 
       context 'any user using client without cloud_controller.read' do
-        let(:token) {{'scope' => []}}
+        let(:token) { { 'scope' => [] } }
 
         before do
           org.add_user(user)

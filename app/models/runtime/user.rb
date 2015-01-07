@@ -7,42 +7,41 @@ module VCAP::CloudController
     many_to_many :organizations,
       before_remove: :validate_organization_roles
 
-    many_to_one :default_space, key: :default_space_id,
-      class: "VCAP::CloudController::Space"
+    many_to_one :default_space, key: :default_space_id, class: 'VCAP::CloudController::Space'
 
     many_to_many :managed_organizations,
-      class: "VCAP::CloudController::Organization",
-      join_table: "organizations_managers",
+      class: 'VCAP::CloudController::Organization',
+      join_table: 'organizations_managers',
       right_key: :organization_id, reciprocal: :managers,
       before_add: :validate_organization,
       before_remove: proc { |user, org| org.manager_guids.count > 1 }
 
     many_to_many :billing_managed_organizations,
-      class: "VCAP::CloudController::Organization",
-      join_table: "organizations_billing_managers",
+      class: 'VCAP::CloudController::Organization',
+      join_table: 'organizations_billing_managers',
       right_key: :organization_id,
       reciprocal: :billing_managers,
       before_add: :validate_organization
 
     many_to_many :audited_organizations,
-      class: "VCAP::CloudController::Organization",
-      join_table: "organizations_auditors",
+      class: 'VCAP::CloudController::Organization',
+      join_table: 'organizations_auditors',
       right_key: :organization_id, reciprocal: :auditors,
       before_add: :validate_organization
 
     many_to_many :spaces,
-      class: "VCAP::CloudController::Space",
-      join_table: "spaces_developers",
+      class: 'VCAP::CloudController::Space',
+      join_table: 'spaces_developers',
       right_key: :space_id, reciprocal: :developers
 
     many_to_many :managed_spaces,
-      class: "VCAP::CloudController::Space",
-      join_table: "spaces_managers",
+      class: 'VCAP::CloudController::Space',
+      join_table: 'spaces_managers',
       right_key: :space_id, reciprocal: :managers
 
     many_to_many :audited_spaces,
-      class: "VCAP::CloudController::Space",
-      join_table: "spaces_auditors",
+      class: 'VCAP::CloudController::Space',
+      join_table: 'spaces_auditors',
       right_key: :space_id, reciprocal: :auditors
 
     add_association_dependencies organizations: :nullify
@@ -67,7 +66,7 @@ module VCAP::CloudController
 
     def validate
       validates_presence :guid
-      validates_unique   :guid
+      validates_unique :guid
     end
 
     def validate_organization(org)

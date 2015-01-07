@@ -12,19 +12,19 @@ module VCAP::CloudController
         @token   = service.service_auth_token
         @service_id = service_id
         unless token
-          raise VCAP::Errors::ApiError.new_from_details("MissingServiceAuthToken", service)
+          raise VCAP::Errors::ApiError.new_from_details('MissingServiceAuthToken', service)
         end
       end
 
       def create_snapshot(name)
-        payload = VCAP::Services::Api::CreateSnapshotV2Request.new(:name => name).encode
+        payload = VCAP::Services::Api::CreateSnapshotV2Request.new(name: name).encode
         response = do_request(:post, payload)
         VCAP::Services::Api::SnapshotV2.decode(response)
       end
 
       def enum_snapshots
         list = VCAP::Services::Api::SnapshotListV2.decode(do_request(:get))
-        list.snapshots.collect{|e| VCAP::Services::Api::SnapshotV2.new(e) }
+        list.snapshots.collect { |e| VCAP::Services::Api::SnapshotV2.new(e) }
       end
 
       private
@@ -34,15 +34,19 @@ module VCAP::CloudController
         u = URI.parse(service.url)
         u.path = "/gateway/v2/configurations/#{service_id}/snapshots"
 
-        response = client.public_send(method, u,
-          :header => { VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token,
-            "Content-Type" => "application/json"
+        response = client.public_send(
+          method,
+          u,
+          header: {
+            VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token,
+            'Content-Type' => 'application/json'
           },
-          :body   => payload)
+          body: payload
+        )
         if response.ok?
           response.body
         else
-          raise ServiceGatewayError, "Service gateway upstream failure, responded with #{response.status}: #{response.body}"
+          raise ServiceGatewayError.new("Service gateway upstream failure, responded with #{response.status}: #{response.body}")
         end
       end
     end
@@ -55,7 +59,7 @@ module VCAP::CloudController
     import_attributes :name, :service_plan_guid,
       :space_guid, :gateway_data
 
-    strip_attributes  :name
+    strip_attributes :name
 
     plugin :after_initialize
 
@@ -64,7 +68,7 @@ module VCAP::CloudController
 
     delegate :client, to: :service_plan
 
-    add_association_dependencies :service_bindings => :destroy
+    add_association_dependencies service_bindings: :destroy
 
     def validation_policies
       if space
@@ -147,7 +151,7 @@ module VCAP::CloudController
     end
 
     def logger
-      @logger ||= Steno.logger("cc.models.service_instance")
+      @logger ||= Steno.logger('cc.models.service_instance')
     end
 
     def bindable?

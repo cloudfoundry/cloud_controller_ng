@@ -2,7 +2,7 @@ module CloudController
   module Blobstore
     class Cdn
       def self.make(host)
-        return nil if host.nil? || host == ""
+        return nil if host.nil? || host == ''
         new(host)
       end
 

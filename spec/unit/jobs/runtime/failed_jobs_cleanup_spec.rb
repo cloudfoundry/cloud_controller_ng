@@ -1,17 +1,25 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-
     class FailingJob
-      def perform; raise "Hell"; end
+      def perform
+        raise 'Hell'
+      end
+
       def failure; end
-      def max_attempts; 1; end
+
+      def max_attempts
+        1
+      end
     end
 
     class SuccessJob
       def perform; end
-      def max_attempts; 1; end
+
+      def max_attempts
+        1
+      end
     end
 
     describe FailedJobsCleanup do
@@ -22,44 +30,44 @@ module VCAP::CloudController
 
       it { is_expected.to be_a_valid_job }
 
-      it "knows its job name" do
+      it 'knows its job name' do
         expect(cleanup_job.job_name_in_configuration).to equal(:failed_jobs)
       end
 
-      describe "#perform" do
+      describe '#perform' do
         before do
           Delayed::Worker.destroy_failed_jobs = false
           @delayed_job = Delayed::Job.enqueue(the_job, run_at: run_at, queue: worker.name)
           worker.work_off 1
         end
 
-        context "non-failing jobs" do
+        context 'non-failing jobs' do
           let(:run_at) { Time.now + 1.day }
           let(:the_job) { SuccessJob.new }
 
-          it "the job is not removed" do
+          it 'the job is not removed' do
             expect {
               cleanup_job.perform
             }.not_to change { Delayed::Job.find(id: @delayed_job.id) }
           end
         end
 
-        context "failing jobs" do
+        context 'failing jobs' do
           let(:run_at) { Time.now - 1.day }
           let(:the_job) { FailingJob.new }
 
-          context "when younger than specified cut-off" do
-            it "the job is not removed" do
+          context 'when younger than specified cut-off' do
+            it 'the job is not removed' do
               expect {
                 cleanup_job.perform
               }.not_to change { Delayed::Job.find(id: @delayed_job.id) }
             end
           end
 
-          context "when older than specified cut-off" do
+          context 'when older than specified cut-off' do
             let(:run_at) { Time.now - 3.days }
 
-            it "removes the job" do
+            it 'removes the job' do
               expect {
                 cleanup_job.perform
               }.to change {

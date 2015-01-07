@@ -3,7 +3,7 @@ begin
   require "rubocop/rake_task"
 
   desc "Run RuboCop"
-  Rubocop::RakeTask.new(:rubocop)
+  RuboCop::RakeTask.new(:rubocop)
 
 rescue LoadError
 

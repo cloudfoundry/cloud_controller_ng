@@ -7,7 +7,7 @@ module ModelCreation
   end
 
   def make_domain_for_org(org)
-    VCAP::CloudController::PrivateDomain.make(:owning_organization => org)
+    VCAP::CloudController::PrivateDomain.make(owning_organization: org)
   end
 
   def make_user_for_space(space)
@@ -57,16 +57,16 @@ module ModelCreation
   end
 
   def make_app_for_service_instance(service_instance)
-    VCAP::CloudController::AppFactory.make(:space => service_instance.space)
+    VCAP::CloudController::AppFactory.make(space: service_instance.space)
   end
 
   def make_service_binding_for_service_instance(service_instance)
-    app = VCAP::CloudController::AppFactory.make(:space => service_instance.space)
+    app = VCAP::CloudController::AppFactory.make(space: service_instance.space)
     app.space = service_instance.space
     VCAP::CloudController::ServiceBinding.make(
-      :app => app,
-      :service_instance => service_instance,
-      :credentials => Sham.service_credentials
+      app: app,
+      service_instance: service_instance,
+      credentials: Sham.service_credentials
     )
   end
 
@@ -77,14 +77,14 @@ module ModelCreation
     space
   end
 
-  def make_user_with_default_space(opts = {})
-    user = VCAP::CloudController::User.make(:admin => opts.has_key?(:admin), :active => true)
+  def make_user_with_default_space(opts={})
+    user = VCAP::CloudController::User.make(admin: opts.key?(:admin), active: true)
     space = make_space_for_user(user)
     user.default_space = space
     user
   end
 
-  def make_user(opts = {})
-    VCAP::CloudController::User.make(:admin => opts.has_key?(:admin), :active => true)
+  def make_user(opts={})
+    VCAP::CloudController::User.make(admin: opts.key?(:admin), active: true)
   end
 end

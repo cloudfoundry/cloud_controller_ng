@@ -31,7 +31,7 @@ class UploadHandler
     resource_params = params[resource_name]
     return unless resource_params.respond_to?(:[])
 
-    tempfile = resource_params[:tempfile] || resource_params["tempfile"]
+    tempfile = resource_params[:tempfile] || resource_params['tempfile']
     tempfile.respond_to?(:path) ? tempfile.path : tempfile
   end
 end

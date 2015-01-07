@@ -1,5 +1,5 @@
-require "cloud_controller/dea/instances_reporter"
-require "cloud_controller/diego/instances_reporter"
+require 'cloud_controller/dea/instances_reporter'
+require 'cloud_controller/diego/instances_reporter'
 
 module VCAP::CloudController
   class InstancesReporters

@@ -3,11 +3,11 @@ require 'spec_helper'
 describe 'Broker API Versions' do
   let(:spec_sha) do
     {
-      'broker_api_v2.0_spec.rb' => '08cbdd8b14eedad017fd6417509cef80',
-      'broker_api_v2.1_spec.rb' => '79cb09f2525a4006c8da0c6eb9ad9322',
-      'broker_api_v2.2_spec.rb' => 'e2828295dd36f93462a537a7c0f5fd57',
-      'broker_api_v2.3_spec.rb' => '4b1b24cc22887fc4ad8868359148f9df',
-      'broker_api_v2.4_spec.rb' => '78bc610d757424327571ee98ea371636',
+      'broker_api_v2.0_spec.rb' => '8bb9022a35444b4a4f509f2001dd50c4',
+      'broker_api_v2.1_spec.rb' => '4d031aeec862463e7a4b9d74702ac254',
+      'broker_api_v2.2_spec.rb' => '29d240c39137cc654c1aeff6e0e2abf1',
+      'broker_api_v2.3_spec.rb' => '784b3ca4f7afbac4428c55a37b82b7e4',
+      'broker_api_v2.4_spec.rb' => '9be296cb6ce21259cafa15c9a6f06004',
     }
   end
 
@@ -38,7 +38,6 @@ describe 'Broker API Versions' do
       filename = "#{current_directory}/#{spec}"
       actual_checksums[spec] = Digest::MD5.hexdigest(File.read(filename))
     end
-
 
     # These tests are not meant to be changed since they help ensure backwards compatibility.
     # If you do need to update this test, you can update the expected sha

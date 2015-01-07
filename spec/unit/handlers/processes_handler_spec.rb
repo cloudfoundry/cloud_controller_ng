@@ -32,7 +32,7 @@ module VCAP::CloudController
     let(:process_event_repo) { double(:process_event_repo) }
     let(:space) { Space.make }
     let!(:handler) { ProcessesHandler.new(process_repo, process_event_repo) }
-    let(:process_opts) { {space: space} }
+    let(:process_opts) { { space: space } }
     let!(:process) do
       process_model = AppFactory.make(process_opts)
       ProcessMapper.map_model_to_domain(process_model)
@@ -46,7 +46,7 @@ module VCAP::CloudController
           process_model2 = AppFactory.make(space: space, type: 'worker')
 
           updated_process = process.with_changes(update_opts)
-          neighbor_processes = [ ProcessMapper.map_model_to_domain(process_model2) ]
+          neighbor_processes = [ProcessMapper.map_model_to_domain(process_model2)]
 
           ac = double(:ac, cannot?: false, user: User.make, user_email: 'jim@jim.com')
 
@@ -80,9 +80,8 @@ module VCAP::CloudController
         expect(process).to have_received(:with_changes).with(update_opts)
         expect(process_repo).to have_received(:find_for_update).with(process.guid)
         expect(process_repo).to have_received(:update!).with(updated_process)
-        expect(process_event_repo).to have_received(:record_app_update)
-          .with(updated_process, space, ac.user, ac.user_email, update_opts)
-
+        expect(process_event_repo).to have_received(:record_app_update).
+          with(updated_process, space, ac.user, ac.user_email, update_opts)
       end
     end
 
@@ -121,8 +120,8 @@ module VCAP::CloudController
         allow(process_repo).to receive(:find_for_delete).and_yield(process, space)
         allow(process_repo).to receive(:delete).and_return(process)
 
-        expect(process_event_repo).to receive(:record_app_delete_request)
-          .with(process, space, ac.user, ac.user_email, true)
+        expect(process_event_repo).to receive(:record_app_delete_request).
+          with(process, space, ac.user, ac.user_email, true)
 
         expect(handler.delete(process.guid, ac)).to eq(process)
       end

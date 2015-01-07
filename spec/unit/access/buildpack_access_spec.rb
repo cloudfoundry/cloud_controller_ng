@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   describe BuildpackAccess, type: :access do
     subject(:access) { BuildpackAccess.new(Security::AccessContext.new) }
-    let(:token) {{ 'scope' => ['cloud_controller.read', 'cloud_controller.write'] }}
+    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:user) { VCAP::CloudController::User.make }
     let(:object) { VCAP::CloudController::Buildpack.make }
 
@@ -26,7 +26,7 @@ module VCAP::CloudController
       it { is_expected.not_to allow_op_on_object :upload, object }
 
       context 'using a client without cloud_controller.read' do
-        let(:token) { {'scope' => []}}
+        let(:token) { { 'scope' => [] } }
 
         it_behaves_like :no_access
         it { is_expected.not_to allow_op_on_object :upload, object }

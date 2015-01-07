@@ -6,13 +6,16 @@ module VCAP::CloudController
     let(:runners) { double(:runners, runner_for_app: runner) }
     let(:stager) { double(:stager) }
     let(:runner) { double(:runner, stop: nil, start: nil) }
-    let(:app) { double(:app,
-      package_hash: package_hash,
-      guid: 'app-guid',
-      previous_changes: previous_changes,
-      started?: app_started,
-      needs_staging?: app_needs_staging,
-    )}
+    let(:app) do
+      double(
+        :app,
+        package_hash: package_hash,
+        guid: 'app-guid',
+        previous_changes: previous_changes,
+        started?: app_started,
+        needs_staging?: app_needs_staging,
+      )
+    end
     let(:app_started) { false }
     let(:app_needs_staging) { false }
     let(:previous_changes) { nil }

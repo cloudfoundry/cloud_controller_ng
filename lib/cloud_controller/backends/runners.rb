@@ -1,8 +1,8 @@
-require "cloud_controller/dea/runner"
-require "cloud_controller/diego/runner"
-require "cloud_controller/diego/traditional/protocol"
-require "cloud_controller/diego/docker/protocol"
-require "cloud_controller/diego/common/protocol"
+require 'cloud_controller/dea/runner'
+require 'cloud_controller/diego/runner'
+require 'cloud_controller/diego/traditional/protocol'
+require 'cloud_controller/diego/docker/protocol'
+require 'cloud_controller/diego/common/protocol'
 
 module VCAP::CloudController
   class Runners
@@ -20,18 +20,18 @@ module VCAP::CloudController
     end
 
     def run_with_diego?(app)
-      return app.run_with_diego? && !diego_running_disabled?
+      app.run_with_diego? && !diego_running_disabled?
     end
 
     def diego_apps(batch_size, last_id)
       return [] if diego_running_disabled?
 
       App.
-        eager(:current_saved_droplet, :space, :stack, :service_bindings, {:routes => :domain}).
-        where("apps.id > ?", last_id).
-        where("deleted_at IS NULL").
-        where(state: "STARTED").
-        where(package_state: "STAGED").
+        eager(:current_saved_droplet, :space, :stack, :service_bindings, { routes: :domain }).
+        where('apps.id > ?', last_id).
+        where('deleted_at IS NULL').
+        where(state: 'STARTED').
+        where(package_state: 'STAGED').
         where(diego: true).
         order(:id).
         limit(batch_size).
@@ -40,8 +40,8 @@ module VCAP::CloudController
 
     def dea_apps(batch_size, last_id)
       query = App.
-        where("id > ?", last_id).
-        where("deleted_at IS NULL").
+        where('id > ?', last_id).
+        where('deleted_at IS NULL').
         order(:id).
         limit(batch_size)
 

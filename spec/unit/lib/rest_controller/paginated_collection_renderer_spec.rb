@@ -39,7 +39,7 @@ module VCAP::CloudController::RestController
       let(:include_relations) { nil }
 
       subject(:render_json_call) do
-        paginated_collection_renderer.render_json(controller, dataset, "/v2/cars", opts, {})
+        paginated_collection_renderer.render_json(controller, dataset, '/v2/cars', opts, {})
       end
 
       context 'when results_per_page' do
@@ -79,7 +79,7 @@ module VCAP::CloudController::RestController
           let(:default_results_per_page) { 1 }
 
           it 'renders limits number of results to default_results_per_page' do
-            expect(JSON.parse(render_json_call)["resources"].size).to eq(1)
+            expect(JSON.parse(render_json_call)['resources'].size).to eq(1)
           end
         end
       end
@@ -131,13 +131,13 @@ module VCAP::CloudController::RestController
           it 'renders json response with orphans' do
             result = render_json_call
             expect(result).to be_instance_of(String)
-            orphans = JSON.parse(result)["orphans"]
+            orphans = JSON.parse(result)['orphans']
             expect(orphans).to eql({})
           end
 
           it 'includes orphan-relations in next_url and prev_url' do
-            prev_url = JSON.parse(render_json_call)["prev_url"]
-            next_url = JSON.parse(render_json_call)["next_url"]
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
             expect(prev_url).to include("orphan-relations=#{orphan_relations}")
             expect(next_url).to include("orphan-relations=#{orphan_relations}")
           end
@@ -149,14 +149,14 @@ module VCAP::CloudController::RestController
           it 'renders json response without orphans' do
             result = render_json_call
             expect(result).to be_instance_of(String)
-            expect(JSON.parse(result)).not_to have_key("orphans")
+            expect(JSON.parse(result)).not_to have_key('orphans')
           end
 
           it 'does not include orphan-relations in next_url and prev_url' do
-            prev_url = JSON.parse(render_json_call)["prev_url"]
-            next_url = JSON.parse(render_json_call)["next_url"]
-            expect(prev_url).to_not include("orphan-relations")
-            expect(next_url).to_not include("orphan-relations")
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
+            expect(prev_url).to_not include('orphan-relations')
+            expect(next_url).to_not include('orphan-relations')
           end
         end
       end
@@ -177,11 +177,11 @@ module VCAP::CloudController::RestController
         end
 
         context 'is specified' do
-          let(:exclude_relations) { "relation1,relation2" }
+          let(:exclude_relations) { 'relation1,relation2' }
 
           it 'includes exclude-relations in next_url and prev_url' do
-            prev_url = JSON.parse(render_json_call)["prev_url"]
-            next_url = JSON.parse(render_json_call)["next_url"]
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
             expect(prev_url).to include("exclude-relations=#{exclude_relations}")
             expect(next_url).to include("exclude-relations=#{exclude_relations}")
           end
@@ -191,10 +191,10 @@ module VCAP::CloudController::RestController
           let(:exclude_relations) { nil }
 
           it 'does not include exclude-relations in next_url and prev_url' do
-            prev_url = JSON.parse(render_json_call)["prev_url"]
-            next_url = JSON.parse(render_json_call)["next_url"]
-            expect(prev_url).to_not include("exclude-relations")
-            expect(next_url).to_not include("exclude-relations")
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
+            expect(prev_url).to_not include('exclude-relations')
+            expect(next_url).to_not include('exclude-relations')
           end
         end
       end
@@ -215,11 +215,11 @@ module VCAP::CloudController::RestController
         end
 
         context 'is specified' do
-          let(:include_relations) { "relation1,relation2" }
+          let(:include_relations) { 'relation1,relation2' }
 
           it 'includes include-relations in next_url and prev_url' do
-            prev_url = JSON.parse(render_json_call)["prev_url"]
-            next_url = JSON.parse(render_json_call)["next_url"]
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
             expect(prev_url).to include("include-relations=#{include_relations}")
             expect(next_url).to include("include-relations=#{include_relations}")
           end
@@ -229,10 +229,10 @@ module VCAP::CloudController::RestController
           let(:include_relations) { nil }
 
           it 'does not include include-relations in next_url and prev_url' do
-            prev_url = JSON.parse(render_json_call)["prev_url"]
-            next_url = JSON.parse(render_json_call)["next_url"]
-            expect(prev_url).to_not include("include-relations")
-            expect(next_url).to_not include("include-relations")
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
+            expect(prev_url).to_not include('include-relations')
+            expect(next_url).to_not include('include-relations')
           end
         end
       end
@@ -261,30 +261,30 @@ module VCAP::CloudController::RestController
           end
 
           it 'defaults to asc' do
-            prev_url = JSON.parse(render_json_call)["prev_url"]
-            next_url = JSON.parse(render_json_call)["next_url"]
-            expect(prev_url).to include("order-direction=asc")
-            expect(next_url).to include("order-direction=asc")
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
+            expect(prev_url).to include('order-direction=asc')
+            expect(next_url).to include('order-direction=asc')
           end
         end
 
         context 'when ascending' do
-          let (:order_direction) { 'asc' }
+          let(:order_direction) { 'asc' }
 
           it 'includes order-direction in next_url and prev_url' do
-            prev_url = JSON.parse(render_json_call)["prev_url"]
-            next_url = JSON.parse(render_json_call)["next_url"]
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
             expect(prev_url).to include("order-direction=#{order_direction}")
             expect(next_url).to include("order-direction=#{order_direction}")
           end
         end
 
         context 'when descending' do
-          let (:order_direction) { 'desc' }
+          let(:order_direction) { 'desc' }
 
           it 'includes order-direction in next_url and prev_url' do
-            prev_url = JSON.parse(render_json_call)["prev_url"]
-            next_url = JSON.parse(render_json_call)["next_url"]
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
             expect(prev_url).to include("order-direction=#{order_direction}")
             expect(next_url).to include("order-direction=#{order_direction}")
           end

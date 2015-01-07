@@ -1,4 +1,4 @@
-require "securerandom"
+require 'securerandom'
 
 module Sequel::Plugins::VcapGuid
   module ClassMethods

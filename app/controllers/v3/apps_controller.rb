@@ -5,7 +5,7 @@ require 'handlers/apps_handler'
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
     def self.dependencies
-      [ :processes_handler, :process_presenter, :apps_handler, :app_presenter ]
+      [:processes_handler, :process_presenter, :apps_handler, :app_presenter]
     end
 
     def inject_dependencies(dependencies)

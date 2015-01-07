@@ -1,7 +1,6 @@
 require_relative 'api_presenter'
 
 class JobPresenter < ApiPresenter
-
   def initialize(object, url_host_name=nil)
     super(object)
     @object ||= NullJob.new
@@ -9,6 +8,7 @@ class JobPresenter < ApiPresenter
   end
 
   protected
+
   def metadata_hash
     {
       guid: @object.guid,
@@ -34,7 +34,7 @@ class JobPresenter < ApiPresenter
   private
 
   def status_url
-    [@url_host_name, "v2/jobs/#{@object.guid}"].join("/")
+    [@url_host_name, "v2/jobs/#{@object.guid}"].join('/')
   end
 
   def error_details
@@ -48,8 +48,6 @@ class JobPresenter < ApiPresenter
   def job_exception_or_nil
     if job_has_exception?
       VCAP::CloudController::ExceptionMarshaler.unmarshal(@object.cf_api_error)
-    else
-      nil
     end
   end
 
@@ -58,18 +56,18 @@ class JobPresenter < ApiPresenter
   end
 
   def error_deprecation_message
-    "Use of entity>error is deprecated in favor of entity>error_details."
+    'Use of entity>error is deprecated in favor of entity>error_details.'
   end
 
   def status
     if job_errored?
-      "failed"
+      'failed'
     elsif job_missing?
-      "finished"
+      'finished'
     elsif job_queued?
-      "queued"
+      'queued'
     else
-      "running"
+      'running'
     end
   end
 
@@ -87,11 +85,11 @@ class JobPresenter < ApiPresenter
 
   class NullJob
     def id
-      "0"
+      '0'
     end
 
     def guid
-      "0"
+      '0'
     end
 
     def created_at

@@ -1,41 +1,41 @@
-$:.unshift(File.expand_path("../../lib", __FILE__))
-$:.unshift(File.expand_path("../../app", __FILE__))
+$LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
+$LOAD_PATH.unshift(File.expand_path('../../app', __FILE__))
 
-require "rubygems"
-require "bundler"
-require "bundler/setup"
+require 'rubygems'
+require 'bundler'
+require 'bundler/setup'
 
-if ENV["CODECLIMATE_REPO_TOKEN"] && ENV["COVERAGE"]
-  require "codeclimate-test-reporter"
+if ENV['CODECLIMATE_REPO_TOKEN'] && ENV['COVERAGE']
+  require 'codeclimate-test-reporter'
   CodeClimate::TestReporter.start
 end
 
-require "fakefs/safe"
-require "machinist/sequel"
-require "machinist/object"
-require "rack/test"
-require "timecop"
+require 'fakefs/safe'
+require 'machinist/sequel'
+require 'machinist/object'
+require 'rack/test'
+require 'timecop'
 
-require "steno"
-require "webmock/rspec"
-require "cf_message_bus/mock_message_bus"
+require 'steno'
+require 'webmock/rspec'
+require 'cf_message_bus/mock_message_bus'
 
-require "cloud_controller"
-require "allowy/rspec"
+require 'cloud_controller'
+require 'allowy/rspec'
 
-require "pry"
-require "posix/spawn"
+require 'pry'
+require 'posix/spawn'
 
-require "rspec_api_documentation"
-require "services"
+require 'rspec_api_documentation'
+require 'services'
 
-require "support/bootstrap/spec_bootstrap"
-require "rspec/collection_matchers"
-require "rspec/its"
+require 'support/bootstrap/spec_bootstrap'
+require 'rspec/collection_matchers'
+require 'rspec/its'
 
 VCAP::CloudController::SpecBootstrap.init
 
-Dir[File.expand_path("support/**/*.rb", File.dirname(__FILE__))].each { |file| require file }
+Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].each { |file| require file }
 
 RSpec.configure do |rspec_config|
   rspec_config.expect_with(:rspec) { |config| config.syntax = :expect }
@@ -43,9 +43,9 @@ RSpec.configure do |rspec_config|
   rspec_config.include ModelCreation
 
   rspec_config.include ServiceBrokerHelpers
-  rspec_config.include ControllerHelpers, type: :controller, :file_path => EscapedPath.join(%w[spec unit controllers])
+  rspec_config.include ControllerHelpers, type: :controller, file_path: EscapedPath.join(%w(spec unit controllers))
   rspec_config.include ControllerHelpers, type: :api
-  rspec_config.include ControllerHelpers, :file_path => EscapedPath.join(%w[spec acceptance])
+  rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec acceptance))
   rspec_config.include ApiDsl, type: :legacy_api
 
   rspec_config.include IntegrationHelpers, type: :integration
@@ -53,9 +53,9 @@ RSpec.configure do |rspec_config|
   rspec_config.include IntegrationSetupHelpers, type: :integration
   rspec_config.include IntegrationSetup, type: :integration
 
-  rspec_config.before(:all) { WebMock.disable_net_connect!(:allow => "codeclimate.com") }
+  rspec_config.before(:all) { WebMock.disable_net_connect!(allow: 'codeclimate.com') }
   rspec_config.before(:all, type: :integration) { WebMock.allow_net_connect! }
-  rspec_config.after(:all, type: :integration) { WebMock.disable_net_connect!(:allow => "codeclimate.com") }
+  rspec_config.after(:all, type: :integration) { WebMock.disable_net_connect!(allow: 'codeclimate.com') }
 
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
 
@@ -86,14 +86,13 @@ RSpec.configure do |rspec_config|
     TmpdirCleaner.clean
   end
 
-
   rspec_config.after(:each, type: :legacy_api) { add_deprecation_warning }
 
   RspecApiDocumentation.configure do |c|
     c.format = [:html, :json]
-    c.api_name = "Cloud Foundry API"
-    c.template_path = "spec/api/documentation/templates"
-    c.curl_host = "https://api.[your-domain.com]"
+    c.api_name = 'Cloud Foundry API'
+    c.template_path = 'spec/api/documentation/templates'
+    c.curl_host = 'https://api.[your-domain.com]'
     c.app = FakeFrontController.new(TestConfig.config)
   end
 end

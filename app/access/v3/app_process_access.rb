@@ -18,7 +18,7 @@ module VCAP::CloudController
       return true if context.roles.admin?
 
       has_read_scope = SecurityContext.scopes.include?('cloud_controller.read')
-      user_visible = App.user_visible(context.user, false).where(:guid => process.guid).count > 0
+      user_visible = App.user_visible(context.user, false).where(guid: process.guid).count > 0
 
       has_read_scope && user_visible
     end

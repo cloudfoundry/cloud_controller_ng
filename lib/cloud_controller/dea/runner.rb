@@ -10,7 +10,7 @@ module VCAP::CloudController
       ]
 
       def initialize(app, config, message_bus, dea_pool, stager_pool)
-        @logger ||= Steno.logger("cc.dea.backend")
+        @logger ||= Steno.logger('cc.dea.backend')
         @app = app
         @config = config
         @message_bus = message_bus
@@ -47,8 +47,8 @@ module VCAP::CloudController
         EXPORT_ATTRIBUTES.each do |field|
           hash[field.to_s] = @app.values.fetch(field)
         end
-        hash["id"] = @app.guid
-        hash["updated_at"] = @app.updated_at || @app.created_at
+        hash['id'] = @app.guid
+        hash['updated_at'] = @app.updated_at || @app.created_at
         hash
       end
 

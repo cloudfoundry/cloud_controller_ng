@@ -34,7 +34,7 @@ module Sinatra
         # We don't really have a class to attach a member variable to, so we have to
         # use the env to flag this.
         unless request.env['vcap_exception_body_set']
-          error = ::VCAP::Errors::ApiError.new_from_details("NotFound")
+          error = ::VCAP::Errors::ApiError.new_from_details('NotFound')
           presenter = ErrorPresenter.new(error, in_test_mode?)
 
           body MultiJson.dump(presenter.error_hash, pretty: true)
@@ -75,7 +75,7 @@ module Sinatra
     # @option opts [String] :reload_path If specified and the app is running in
     # :development mode, sinatra will reload all files under the provided path
     # whenever they change.
-    def vcap_configure(opts = {})
+    def vcap_configure(opts={})
       # we can't just do this in registered sinatra seems to reset
       # our configuration after register
       configure do
@@ -135,16 +135,16 @@ module Sinatra
     def self.init_varz
       ::VCAP::Component.varz.threadsafe!
 
-      requests = {:outstanding => 0, :completed => 0}
+      requests = { outstanding: 0, completed: 0 }
       http_status = {}
       [(100..101), (200..206), (300..307), (400..417), (500..505)].each do |r|
         r.each { |c| http_status[c] = 0 }
       end
       recent_errors = ::VCAP::RingBuffer.new(50)
       vcap_sinatra = {
-        :requests => requests,
-        :http_status => http_status,
-        :recent_errors => recent_errors
+        requests: requests,
+        http_status: http_status,
+        recent_errors: recent_errors
       }
       ::VCAP::Component.varz.synchronize do
         ::VCAP::Component.varz[:vcap_sinatra] ||= vcap_sinatra

@@ -3,11 +3,11 @@ Sequel.migration do
     create_table :buildpacks do
       VCAP::Migration.common(self)
 
-      String :name, :null => false
+      String :name, null: false
       String :key
-      Integer :priority, :null => false
+      Integer :priority, null: false
 
-      index :name, :unique => true
+      index :name, unique: true
     end
   end
 end

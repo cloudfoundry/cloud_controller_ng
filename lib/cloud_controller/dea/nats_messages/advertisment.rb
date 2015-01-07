@@ -10,15 +10,15 @@ module VCAP::CloudController
         end
 
         def available_memory
-          stats["available_memory"]
+          stats['available_memory']
         end
 
         def decrement_memory(mem)
-          stats["available_memory"] -= mem
+          stats['available_memory'] -= mem
         end
 
         def available_disk
-          stats["available_disk"]
+          stats['available_disk']
         end
 
         def expired?(now)
@@ -30,7 +30,7 @@ module VCAP::CloudController
         end
 
         def has_stack?(stack)
-          stats["stacks"].include?(stack)
+          stats['stacks'].include?(stack)
         end
 
         def has_sufficient_memory?(mem)

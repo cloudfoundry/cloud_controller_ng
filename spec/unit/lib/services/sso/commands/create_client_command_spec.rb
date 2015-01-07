@@ -17,7 +17,7 @@ module VCAP::Services::SSO::Commands
     describe '#uaa_command' do
       it 'renders the correct hash request to create in a UAA transaction' do
         uaa_command = command.uaa_command
-        expect(uaa_command).to eq({action: 'add'})
+        expect(uaa_command).to eq({ action: 'add' })
       end
     end
   end

@@ -1,6 +1,6 @@
-require "sequel"
-require "sequel/adapters/postgres"
-require "sequel/adapters/mysql2"
+require 'sequel'
+require 'sequel/adapters/postgres'
+require 'sequel/adapters/mysql2'
 
 # Add :case_insensitive as an option to the string type during migrations.
 # This results in case insensitive comparisions for indexing and querying, but
@@ -28,7 +28,7 @@ require "sequel/adapters/mysql2"
 
 Sequel::Postgres::Database.class_eval do
   def case_insensitive_string_column_type
-    "CIText"
+    'CIText'
   end
 
   def case_insensitive_string_column_opts
@@ -39,19 +39,20 @@ end
 Sequel::Mysql2::Database.class_eval do
   # Mysql is case insensitive by default
   def case_insensitive_string_column_type
-    "VARCHAR(255)"
+    'VARCHAR(255)'
   end
 
   def case_insensitive_string_column_opts
-    { :collate => "latin1_general_ci" }
+    { collate: 'latin1_general_ci' }
   end
 end
 
 Sequel::Schema::Generator.class_eval do
-  def String(name, opts = {})
+  # rubocop:disable Style/MethodName
+  def String(name, opts={})
     if opts[:case_insensitive]
       unless @db.respond_to?(:case_insensitive_string_column_type)
-        raise Error, "DB adapater does not support case insensitive strings"
+        raise Error.new('DB adapater does not support case insensitive strings')
       end
 
       column(
@@ -63,15 +64,16 @@ Sequel::Schema::Generator.class_eval do
       column(name, String, opts)
     end
   end
+  # rubocop:enable Style/MethodName
 end
 
 Sequel::Schema::AlterTableGenerator.class_eval do
   alias_method :set_column_type_original, :set_column_type
 
-  def set_column_type(name, type, opts = {})
-    if type.to_s == "String" && opts[:case_insensitive]
+  def set_column_type(name, type, opts={})
+    if type.to_s == 'String' && opts[:case_insensitive]
       unless @db.respond_to?(:case_insensitive_string_column_type)
-        raise Error, "DB adapater does not support case insensitive strings"
+        raise Error.new('DB adapater does not support case insensitive strings')
       end
 
       set_column_type_original(

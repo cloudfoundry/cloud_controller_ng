@@ -32,8 +32,8 @@ module VCAP::Services
       let(:response) do
         {
           'service_id' => '123',
-          'configuration' => {'setting' => true},
-          'credentials' => {'user' => 'admin', 'pass' => 'secret'},
+          'configuration' => { 'setting' => true },
+          'credentials' => { 'user' => 'admin', 'pass' => 'secret' },
           'dashboard_url' => 'http://dashboard.example.com'
         }
       end
@@ -44,13 +44,13 @@ module VCAP::Services
           plan.unique_id,
           instance.name,
           {
-            :label => "#{service.label}-#{service.version}",
-            :email => current_user_email,
-            :plan  => plan.name,
-            :version => service.version,
-            :provider => service.provider,
-            :space_guid => space.guid,
-            :organization_guid => space.organization_guid
+            label: "#{service.label}-#{service.version}",
+            email: current_user_email,
+            plan: plan.name,
+            version: service.version,
+            provider: service.provider,
+            space_guid: space.guid,
+            organization_guid: space.organization_guid
           }
         ).and_return(response)
       end
@@ -92,7 +92,7 @@ module VCAP::Services
         VCAP::CloudController::ServiceBinding.new(
           service_instance: instance,
           app: app,
-          binding_options: {'this' => 'that'}
+          binding_options: { 'this' => 'that' }
         )
       end
 
@@ -100,7 +100,7 @@ module VCAP::Services
         {
           'service_id' => '123',
           'configuration' => 'config',
-          'credentials' => {'foo' => 'bar'},
+          'credentials' => { 'foo' => 'bar' },
           'syslog_drain_url' => 'drain url'
         }
       end
@@ -112,7 +112,7 @@ module VCAP::Services
           app.guid,
           "#{service.label}-#{service.version}",
           current_user_email,
-          {'this' => 'that'}
+          { 'this' => 'that' }
         ).and_return(response)
       end
 
@@ -129,7 +129,7 @@ module VCAP::Services
     describe '#unbind' do
       let(:binding) do
         VCAP::CloudController::ServiceBinding.make(
-          binding_options: {'this' => 'that'}
+          binding_options: { 'this' => 'that' }
         )
       end
       let(:instance) { binding.service_instance }

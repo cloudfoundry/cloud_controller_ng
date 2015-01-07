@@ -32,7 +32,7 @@ module VCAP::Services
       instance.dashboard_url = response.fetch('dashboard_url', nil)
     rescue HttpResponseError => e
       if e.source.is_a?(Hash) && e.source['code'] == 33106
-        raise VCAP::Errors::ApiError.new_from_details("ServiceInstanceDuplicateNotAllowed")
+        raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDuplicateNotAllowed')
       else
         raise
       end
@@ -58,7 +58,6 @@ module VCAP::Services
       else
         binding.syslog_drain_url =  response.fetch('syslog_drain_url')
       end
-
     end
 
     def unbind(binding)
@@ -76,12 +75,13 @@ module VCAP::Services
 
       @http_client.deprovision(broker_instance_id)
     rescue HttpResponseError => e
-      raise VCAP::Errors::ApiError.new_from_details("ServiceInstanceDeprovisionFailed", e.message)
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
 
     private
+
     def logger
-      @logger ||= Steno.logger("cc.services.v1_client")
+      @logger ||= Steno.logger('cc.services.v1_client')
     end
   end
 end

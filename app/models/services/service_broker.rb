@@ -6,10 +6,10 @@ module VCAP::CloudController
     import_attributes :name, :broker_url, :auth_username, :auth_password
     export_attributes :name, :broker_url, :auth_username
 
-    add_association_dependencies :services => :destroy
-    add_association_dependencies :service_dashboard_client => :nullify
+    add_association_dependencies services: :destroy
+    add_association_dependencies service_dashboard_client: :nullify
 
-    many_to_many :service_plans, :join_table => :services, :right_key => :id, :right_primary_key => :service_id
+    many_to_many :service_plans, join_table: :services, right_key: :id, right_primary_key: :service_id
 
     encrypt :auth_password, salt: :salt
 

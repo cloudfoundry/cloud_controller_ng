@@ -27,8 +27,8 @@ module VCAP::CloudController
 
       def upper_half_by_memory
         unless @filtered_advertisements.empty?
-          @filtered_advertisements.sort_by! { |ad| ad.available_memory }
-          min_eligible_memory = @filtered_advertisements[@filtered_advertisements.size/2].available_memory
+          @filtered_advertisements.sort_by!(&:available_memory)
+          min_eligible_memory = @filtered_advertisements[@filtered_advertisements.size / 2].available_memory
           @filtered_advertisements.select! { |ad| ad.available_memory >= min_eligible_memory }
         end
 

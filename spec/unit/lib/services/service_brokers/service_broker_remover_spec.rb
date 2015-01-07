@@ -8,7 +8,7 @@ module VCAP::Services::ServiceBrokers
     let(:dashboard_client_manager) { double(:client_manager) }
     let(:security_context) { double(:security_context, current_user: user, current_user_email: email) }
     let(:user) { VCAP::CloudController::User.make }
-    let(:email) { "email@example.com" }
+    let(:email) { 'email@example.com' }
 
     describe '#execute!' do
       before do
@@ -64,11 +64,11 @@ module VCAP::Services::ServiceBrokers
 
       context 'when removing the dashboard clients raises an exception' do
         before do
-          allow(dashboard_client_manager).to receive(:remove_clients_for_broker).and_raise("the error")
+          allow(dashboard_client_manager).to receive(:remove_clients_for_broker).and_raise('the error')
         end
 
         it 'reraises the error' do
-          expect { remover.execute! }.to raise_error("the error")
+          expect { remover.execute! }.to raise_error('the error')
         end
 
         it 'does not delete the broker' do

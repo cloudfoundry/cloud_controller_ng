@@ -1,4 +1,4 @@
-require "spec_helper"
+require 'spec_helper'
 
 module VCAP::CloudController
   describe Stagers do
@@ -37,7 +37,7 @@ module VCAP::CloudController
       true
     end
 
-    let (:buildpack) do
+    let(:buildpack) do
       instance_double(AutoDetectionBuildpack,
         custom?: false
       )
@@ -61,20 +61,19 @@ module VCAP::CloudController
       Stagers.new(config, message_bus, dea_pool, stager_pool, runners)
     end
 
-    describe "#validate_app" do
-
-      context "when the app package hash is blank" do
+    describe '#validate_app' do
+      context 'when the app package hash is blank' do
         let(:package_hash) { '' }
 
-        it "raises" do
+        it 'raises' do
           expect {
             subject.validate_app(app)
           }.to raise_error(Errors::ApiError, /app package is invalid/)
         end
       end
 
-      context "when a custom buildpack is specified" do
-        let (:buildpack) do
+      context 'when a custom buildpack is specified' do
+        let(:buildpack) do
           instance_double(CustomBuildpack, custom?: true)
         end
 
@@ -82,12 +81,12 @@ module VCAP::CloudController
           allow(app).to receive(:buildpack_specified?).and_return(true)
         end
 
-        context "and custom buildpacks are disabled" do
+        context 'and custom buildpacks are disabled' do
           let(:custom_buildpacks_enabled?) do
             false
           end
 
-          it "raises" do
+          it 'raises' do
             expect {
               subject.validate_app(app)
             }.to raise_error(Errors::ApiError, /Custom buildpacks are disabled/)
@@ -95,38 +94,38 @@ module VCAP::CloudController
         end
       end
 
-      context "when an admin buildpack is specified" do
-        let (:buildpack) { instance_double(Buildpack, custom?: false) }
+      context 'when an admin buildpack is specified' do
+        let(:buildpack) { instance_double(Buildpack, custom?: false) }
 
         before do
           allow(app).to receive(:buildpack_specified?).and_return(true)
           allow(Buildpack).to receive(:count).and_return(1)
         end
 
-        context "and custom buildpacks are disabled" do
+        context 'and custom buildpacks are disabled' do
           let(:custom_buildpacks_enabled?) do
             false
           end
 
-          it "does not raise" do
+          it 'does not raise' do
             expect {
               subject.validate_app(app)
-            }.to_not raise_error()
+            }.to_not raise_error
           end
         end
       end
 
-      context "if diego docker support is not enabled" do
+      context 'if diego docker support is not enabled' do
         before do
           config[:diego_docker] = false
         end
 
-        context "and the app has a docker_image" do
+        context 'and the app has a docker_image' do
           let(:docker_image) do
             'fake-docker-image'
           end
 
-          it "raises" do
+          it 'raises' do
             expect {
               subject.validate_app(app)
             }.to raise_error(Errors::ApiError, /Docker support has not been enabled/)
@@ -134,23 +133,23 @@ module VCAP::CloudController
         end
       end
 
-      context "when there are no buildpacks installed on the system" do
+      context 'when there are no buildpacks installed on the system' do
         before { Buildpack.dataset.delete }
 
-        context "and a custom buildpack is NOT specified" do
-          it "raises NoBuildpacksFound" do
+        context 'and a custom buildpack is NOT specified' do
+          it 'raises NoBuildpacksFound' do
             expect {
               subject.validate_app(app)
             }.to raise_error(Errors::ApiError, /There are no buildpacks available/)
           end
         end
 
-        context "and a custom buildpack is specified" do
+        context 'and a custom buildpack is specified' do
           let(:buildpack) do
             instance_double(CustomBuildpack, custom?: true)
           end
 
-          it "does not raise" do
+          it 'does not raise' do
             expect {
               subject.validate_app(app)
             }.not_to raise_error
@@ -159,7 +158,7 @@ module VCAP::CloudController
       end
     end
 
-    describe "#stager_for_app" do
+    describe '#stager_for_app' do
       let(:stager) do
         stagers.stager_for_app(app)
       end
@@ -170,7 +169,7 @@ module VCAP::CloudController
         end
 
         context 'when diego staging is enabled' do
-          it "finds a diego stager" do
+          it 'finds a diego stager' do
             expect(stagers).to receive(:diego_stager).with(app).and_call_original
 
             expect(stager).to be_a(Diego::Stager)
@@ -178,9 +177,9 @@ module VCAP::CloudController
         end
 
         context 'when the app has a docker image' do
-          let(:docker_image) {'foobar'}
+          let(:docker_image) { 'foobar' }
 
-          it "finds a diego stager" do
+          it 'finds a diego stager' do
             expect(stagers).to receive(:diego_stager).with(app).and_call_original
 
             expect(stager).to be_a(Diego::Stager)
@@ -192,19 +191,19 @@ module VCAP::CloudController
             config[:diego][:staging] = 'disabled'
           end
 
-          it "finds a dea stager" do
+          it 'finds a dea stager' do
             expect(stagers).to receive(:dea_stager).with(app).and_call_original
             expect(stager).to be_a(Dea::Stager)
           end
         end
       end
 
-      context "when the App is staging to the DEA" do
+      context 'when the App is staging to the DEA' do
         before do
           allow(app).to receive(:stage_with_diego?).and_return(false)
         end
 
-        it "finds a DEA backend" do
+        it 'finds a DEA backend' do
           expect(stagers).to receive(:dea_stager).with(app).and_call_original
           expect(stager).to be_a(Dea::Stager)
         end

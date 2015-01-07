@@ -19,19 +19,19 @@ module VCAP::CloudController
     it_behaves_like :admin_full_access
 
     context 'a user that has cloud_controller.read' do
-      let(:token) { { 'scope' => ['cloud_controller.read']} }
+      let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
       it_behaves_like :read_only
     end
 
     context 'a user that does not have cloud_controller.read' do
-      let(:token) { { 'scope' => []} }
+      let(:token) { { 'scope' => [] } }
 
       it_behaves_like :no_access
     end
 
     context 'a user that isnt logged in (defensive)' do
-      let(:token) { { 'scope' => []} }
+      let(:token) { { 'scope' => [] } }
       let(:user) { nil }
       let(:roles) { double(:roles, admin?: false, none?: true, present?: false) }
 

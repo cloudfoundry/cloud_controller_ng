@@ -3,9 +3,9 @@ module VCAP::CloudController
     export_attributes :label, :provider
     import_attributes :label, :provider, :token
 
-    strip_attributes  :label, :provider
+    strip_attributes :label, :provider
 
-    many_to_one   :service, :key => [:label, :provider], :primary_key => [:label, :provider]
+    many_to_one :service, key: [:label, :provider], primary_key: [:label, :provider]
 
     encrypt :token, salt: :salt
 
@@ -13,7 +13,7 @@ module VCAP::CloudController
       validates_presence :label
       validates_presence :provider
       validates_presence :token
-      validates_unique   [:label, :provider]
+      validates_unique [:label, :provider]
     end
 
     def token_matches?(unencrypted_token)

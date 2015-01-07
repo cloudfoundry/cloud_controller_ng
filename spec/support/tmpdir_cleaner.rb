@@ -8,7 +8,7 @@ class TmpdirCleaner
     tmpdir_path = File.realpath(Dir.tmpdir)
 
     unless dir_path.start_with?(tmpdir_path)
-      raise ArgumentError, "dir '#{dir_path}' is not in #{tmpdir_path}"
+      raise ArgumentError.new("dir '#{dir_path}' is not in #{tmpdir_path}")
     end
     dir_paths << dir_path
   end
