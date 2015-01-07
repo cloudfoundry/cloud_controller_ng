@@ -88,4 +88,7 @@ require 'cloud_controller/upload_buildpack'
 
 require 'cloud_controller/errors/instances_unavailable'
 
+require 'cloud_controller/uaa/errors'
+require 'cloud_controller/uaa/uaa_client'
+
 require 'services'

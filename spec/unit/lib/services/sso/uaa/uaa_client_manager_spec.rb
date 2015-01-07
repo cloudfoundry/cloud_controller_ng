@@ -9,49 +9,6 @@ module VCAP::Services::SSO::UAA
         'redirect_uri' => 'http://redirect.com'
       }
     end
-    let(:scim) { double('scim') }
-
-    describe 'building a scim' do
-      it 'knows how to build a valid scim' do
-        creator = UaaClientManager.new
-        token_info = double('info', auth_header: 'bearer BLAH')
-        token_issuer = double('issuer', client_credentials_grant: token_info)
-
-        opts = { skip_ssl_validation: false }
-        allow(CF::UAA::TokenIssuer).to receive(:new).with('http://localhost:8080/uaa', 'cc-service-dashboards', 'some-sekret', opts).and_return(token_issuer)
-
-        expect(creator.send(:scim)).to be_a(CF::UAA::Scim)
-        expect(token_issuer).to have_received(:client_credentials_grant)
-      end
-    end
-
-    describe '#get_clients' do
-      it 'returns the clients that are in uaa' do
-        allow(scim).to receive(:get).and_return({ 'client_id' => 'existing-id' })
-        client_manager = UaaClientManager.new(scim: scim)
-
-        result = client_manager.get_clients(['existing-id'])
-
-        expect(scim).to have_received(:get).with(:client, 'existing-id').once
-        expect(result).to be_a(Array)
-        expect(result.length).to eq(1)
-        expect(result[0]).to include('client_id' => 'existing-id')
-      end
-
-      it 'does not return clients that are not in uaa' do
-        allow(scim).to receive(:get).with(:client, 'existing-id').and_return({ 'client_id' => 'existing-id' })
-        allow(scim).to receive(:get).with(:client, 'non-existing-id').and_raise(CF::UAA::NotFound.new)
-        client_manager = UaaClientManager.new(scim: scim)
-
-        result = client_manager.get_clients(['existing-id', 'non-existing-id'])
-
-        expect(scim).to have_received(:get).with(:client, 'existing-id').once
-        expect(scim).to have_received(:get).with(:client, 'non-existing-id').once
-        expect(result).to be_a(Array)
-        expect(result.length).to eq(1)
-        expect(result[0]).to include('client_id' => 'existing-id')
-      end
-    end
 
     describe '#modify_transaction' do
       let(:uaa_uri) { VCAP::CloudController::Config.config[:uaa][:url] }
@@ -152,7 +109,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(UaaResourceNotFound)
+          }.to raise_error(VCAP::CloudController::UaaResourceNotFound)
         end
       end
 
@@ -171,7 +128,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(UaaUnavailable)
+          }.to raise_error(VCAP::CloudController::UaaUnavailable)
         end
       end
 
@@ -189,7 +146,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(UaaResourceAlreadyExists)
+          }.to raise_error(VCAP::CloudController::UaaResourceAlreadyExists)
         end
       end
 
@@ -207,7 +164,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(UaaResourceInvalid)
+          }.to raise_error(VCAP::CloudController::UaaResourceInvalid)
         end
       end
 
@@ -225,7 +182,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(UaaUnexpectedResponse)
+          }.to raise_error(VCAP::CloudController::UaaUnexpectedResponse)
         end
       end
 
@@ -243,7 +200,7 @@ module VCAP::Services::SSO::UAA
 
           expect {
             client_manager.modify_transaction(changeset)
-          }.to raise_error(UaaUnavailable)
+          }.to raise_error(VCAP::CloudController::UaaUnavailable)
         end
       end
 

@@ -7,16 +7,11 @@ module VCAP::Services::SSO::UAA
 
     def initialize(opts={})
       @opts = opts
+      @uaa_client = create_uaa_client
     end
 
     def get_clients(client_ids)
-      client_ids.map do |id|
-        begin
-          scim.get(:client, id)
-        rescue CF::UAA::NotFound
-          nil
-        end
-      end.compact
+      @uaa_client.get_clients(client_ids)
     end
 
     def modify_transaction(changeset)
@@ -29,7 +24,7 @@ module VCAP::Services::SSO::UAA
       request                  = Net::HTTP::Post.new(uri.path)
       request.body             = request_body.to_json
       request.content_type     = 'application/json'
-      request['Authorization'] = token_info.auth_header
+      request['Authorization'] = uaa_client.token_info.auth_header
 
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = use_ssl
@@ -45,24 +40,25 @@ module VCAP::Services::SSO::UAA
         return
       when 400
         log_bad_uaa_response(response)
-        raise UaaResourceInvalid.new
+        raise VCAP::CloudController::UaaResourceInvalid.new
       when 404
         log_bad_uaa_response(response)
         if response[ROUTER_404_KEY] == ROUTER_404_VALUE
-          raise UaaUnavailable.new
+          raise VCAP::CloudController::UaaUnavailable.new
         else
-          raise UaaResourceNotFound.new
+          raise VCAP::CloudController::UaaResourceNotFound.new
         end
       when 409
         log_bad_uaa_response(response)
-        raise UaaResourceAlreadyExists.new
+        raise VCAP::CloudController::UaaResourceAlreadyExists.new
       else
         log_bad_uaa_response(response)
-        raise UaaUnexpectedResponse.new
+        raise VCAP::CloudController::UaaUnexpectedResponse.new
       end
     end
 
     private
+    attr_reader :uaa_client
 
     def verify_certs?
       !VCAP::CloudController::Config.config[:skip_cert_verify]
@@ -86,34 +82,6 @@ module VCAP::Services::SSO::UAA
       end
     end
 
-    def scim
-      @opts.fetch(:scim) do
-        CF::UAA::Scim.new(uaa_target, token_info.auth_header, uaa_connection_opts)
-      end
-    end
-
-    def uaa_target
-      VCAP::CloudController::Config.config[:uaa][:url]
-    end
-
-    def uaa_connection_opts
-      {
-        skip_ssl_validation: !verify_certs?
-      }
-    end
-
-    def issuer
-      uaa_client, uaa_client_secret = issuer_client_config
-      CF::UAA::TokenIssuer.new(uaa_target, uaa_client, uaa_client_secret, uaa_connection_opts)
-    end
-
-    def token_info
-      issuer.client_credentials_grant
-    rescue CF::UAA::NotFound => e
-      logger.error("UAA request for token failed: #{e.inspect}")
-      raise UaaUnavailable.new
-    end
-
     def sso_client_info(client_attrs)
       {
         client_id:              client_attrs['id'],
@@ -122,13 +90,6 @@ module VCAP::Services::SSO::UAA
         scope:                  filter_uaa_client_scope,
         authorized_grant_types: ['authorization_code']
       }
-    end
-
-    def issuer_client_config
-      uaa_client        = VCAP::CloudController::Config.config[:uaa_client_name]
-      uaa_client_secret = VCAP::CloudController::Config.config[:uaa_client_secret]
-
-      [uaa_client, uaa_client_secret] if uaa_client && uaa_client_secret
     end
 
     def logger
@@ -142,6 +103,28 @@ module VCAP::Services::SSO::UAA
       end
 
       filtered_scope
+    end
+
+    def create_uaa_client
+      VCAP::CloudController::UaaClient.new(uaa_target, uaa_client_name, uaa_client_secret, uaa_connection_opts)
+    end
+
+    def uaa_target
+      VCAP::CloudController::Config.config[:uaa][:url]
+    end
+
+    def uaa_client_name
+      VCAP::CloudController::Config.config[:uaa_client_name]
+    end
+
+    def uaa_client_secret
+      VCAP::CloudController::Config.config[:uaa_client_secret]
+    end
+
+    def uaa_connection_opts
+      {
+        skip_ssl_validation: !verify_certs?
+      }
     end
   end
 end

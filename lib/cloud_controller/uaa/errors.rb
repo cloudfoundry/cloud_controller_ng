@@ -1,4 +1,4 @@
-module VCAP::Services::SSO::UAA
+module VCAP::CloudController
   class UaaError < StandardError; end
 
   class UaaResourceNotFound < UaaError
