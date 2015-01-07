@@ -90,7 +90,7 @@ module VCAP::Services::SSO
 
     def fetch_clients_from_uaa(requested_client_ids)
       client_manager.get_clients(requested_client_ids)
-    rescue VCAP::Services::SSO::UAA::UaaError => e
+    rescue VCAP::CloudController::UaaError => e
       raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerDashboardClientFailure', e.message)
     end
 
@@ -109,7 +109,7 @@ module VCAP::Services::SSO
           db_changeset.each(&:db_command)
           client_manager.modify_transaction(uaa_changeset)
         end
-      rescue VCAP::Services::SSO::UAA::UaaError => e
+      rescue VCAP::CloudController::UaaError => e
         raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerDashboardClientFailure', e.message)
       end
 

@@ -230,5 +230,18 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#export_attrs' do
+      let(:user) { User.make }
+
+      it 'does not include username when username has not been set' do
+        expect(user.export_attrs).to_not include(:username)
+      end
+
+      it 'includes username when username has been set' do
+        user.username = 'somebody'
+        expect(user.export_attrs).to include(:username)
+      end
+    end
   end
 end

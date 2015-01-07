@@ -63,6 +63,7 @@ module VCAP::CloudController
       include_context 'permissions'
       before do
         @obj_a = member_a
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({})
       end
 
       context 'normal user' do

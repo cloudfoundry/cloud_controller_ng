@@ -93,6 +93,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         space.organization.add_user(associated_developer)
         space.organization.add_user(developer)
         space.add_developer(associated_developer)
+        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_developer.guid => 'developer@example.com' })
       end
 
       let!(:associated_developer) { VCAP::CloudController::User.make }
@@ -110,6 +111,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         space.organization.add_user(associated_manager)
         space.organization.add_user(manager)
         space.add_manager(associated_manager)
+        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_manager.guid => 'manager@example.com' })
       end
 
       let!(:associated_manager) { VCAP::CloudController::User.make }
@@ -127,6 +129,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         space.organization.add_user(associated_auditor)
         space.organization.add_user(auditor)
         space.add_auditor(associated_auditor)
+        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_auditor.guid => 'auditor@example.com' })
       end
 
       let!(:associated_auditor) { VCAP::CloudController::User.make }

@@ -591,6 +591,9 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
       let(:space) { Space.make(organization: org, manager_guids: [mgr.guid], developer_guids: [user.guid]) }
+      before do
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({})
+      end
 
       it 'allows space managers' do
         get "/v2/spaces/#{space.guid}/developers", '', headers_for(mgr)

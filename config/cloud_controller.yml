@@ -142,6 +142,9 @@ uaa_client_name: 'cc-service-dashboards'
 uaa_client_secret: 'some-sekret'
 uaa_client_scope: openid,cloud_controller_service_permissions.read
 
+cloud_controller_username_lookup_client_name: 'username_lookup_client_name'
+cloud_controller_username_lookup_client_secret: 'username_lookup_secret'
+
 diego:
  staging: optional # disabled|optional|required
  running: optional # disabled|optional|required

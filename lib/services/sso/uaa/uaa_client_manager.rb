@@ -58,6 +58,7 @@ module VCAP::Services::SSO::UAA
     end
 
     private
+
     attr_reader :uaa_client
 
     def verify_certs?

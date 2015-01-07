@@ -198,6 +198,18 @@ module CloudController
       create_paginated_collection_renderer(serializer: VCAP::CloudController::RestController::EntityOnlyPreloadedObjectSerializer.new)
     end
 
+    def username_populating_collection_renderer
+      create_paginated_collection_renderer(collection_transformer: UsernamePopulator.new(username_lookup_uaa_client))
+    end
+
+    def username_lookup_uaa_client
+      client_id = @config[:cloud_controller_username_lookup_client_name]
+      secret = @config[:cloud_controller_username_lookup_client_secret]
+      target = @config[:uaa][:url]
+      skip_cert_verify = @config[:skip_cert_verify]
+      UaaClient.new(target, client_id, secret, { skip_ssl_validation: skip_cert_verify })
+    end
+
     def missing_blob_handler
       CloudController::BlobSender::MissingBlobHandler.new
     end
@@ -218,11 +230,13 @@ module CloudController
       max_results_per_page       = opts[:max_results_per_page] || @config[:renderer][:max_results_per_page]
       default_results_per_page   = opts[:default_results_per_page] || @config[:renderer][:default_results_per_page]
       max_inline_relations_depth = opts[:max_inline_relations_depth] || @config[:renderer][:max_inline_relations_depth]
+      collection_transformer     = opts[:collection_transformer]
 
       VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(eager_loader, serializer, {
         max_results_per_page:       max_results_per_page,
         default_results_per_page:   default_results_per_page,
         max_inline_relations_depth: max_inline_relations_depth,
+        collection_transformer: collection_transformer
       })
     end
   end

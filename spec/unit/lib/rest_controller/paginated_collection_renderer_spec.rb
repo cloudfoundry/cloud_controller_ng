@@ -14,11 +14,13 @@ module VCAP::CloudController::RestController
         default_results_per_page: default_results_per_page,
         max_results_per_page: max_results_per_page,
         max_inline_relations_depth: max_inline_relations_depth,
+        collection_transformer: collection_transformer
       }
     end
     let(:default_results_per_page) { 100_000 }
     let(:max_results_per_page) { 100_000 }
     let(:max_inline_relations_depth) { 100_000 }
+    let(:collection_transformer) { nil }
 
     describe '#render_json' do
       let(:opts) do
@@ -288,6 +290,27 @@ module VCAP::CloudController::RestController
             expect(prev_url).to include("order-direction=#{order_direction}")
             expect(next_url).to include("order-direction=#{order_direction}")
           end
+        end
+      end
+
+      context 'when collection_transformer is given' do
+        let(:collection_transformer) { double('collection_transformer') }
+        let!(:test_model) { VCAP::CloudController::TestModel.make }
+
+        it 'passes the populated dataset to the transformer' do
+          expect(collection_transformer).to receive(:transform) do |collection|
+            expect(collection).to eq([test_model])
+          end
+
+          render_json_call
+        end
+
+        it 'serializes the transformed collection' do
+          expect(collection_transformer).to receive(:transform) do |collection|
+            collection.first.unique_value = 'test_value'
+          end
+
+          expect(JSON.parse(render_json_call)['resources'][0]['entity']['unique_value']).to eq('test_value')
         end
       end
     end

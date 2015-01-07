@@ -445,6 +445,9 @@ module VCAP::CloudController
       let(:mgr) { User.make }
       let(:user) { User.make }
       let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
+      before do
+        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({})
+      end
 
       it 'allows org managers' do
         get "/v2/organizations/#{org.guid}/users", '', headers_for(mgr)

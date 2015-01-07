@@ -307,7 +307,7 @@ module VCAP::Services::SSO
       describe 'exception handling' do
         context 'when getting UAA clients raises an error' do
           before do
-            error = VCAP::Services::SSO::UAA::UaaError.new('my test error')
+            error = VCAP::CloudController::UaaError.new('my test error')
             expect(client_manager).to receive(:get_clients).and_raise(error)
           end
 
@@ -324,7 +324,7 @@ module VCAP::Services::SSO
 
           before do
             allow(client_manager).to receive(:get_clients).and_return([{ 'client_id' => unused_id }])
-            allow(client_manager).to receive(:modify_transaction).and_raise(VCAP::Services::SSO::UAA::UaaError.new('error message'))
+            allow(client_manager).to receive(:modify_transaction).and_raise(VCAP::CloudController::UaaError.new('error message'))
 
             VCAP::CloudController::ServiceDashboardClient.new(
               uaa_id: unused_id,
@@ -491,7 +491,7 @@ module VCAP::Services::SSO
 
       context 'when deleting UAA clients fails' do
         before do
-          error = VCAP::Services::SSO::UAA::UaaError.new('error message')
+          error = VCAP::CloudController::UaaError.new('error message')
           allow(client_manager).to receive(:modify_transaction).and_raise(error)
         end
 
@@ -518,7 +518,7 @@ module VCAP::Services::SSO
 
       context 'when getting UAA clients raises an error' do
         before do
-          error = VCAP::Services::SSO::UAA::UaaError.new('my test error')
+          error = VCAP::CloudController::UaaError.new('my test error')
           expect(client_manager).to receive(:get_clients).and_raise(error)
         end
 

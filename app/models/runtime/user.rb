@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class User < Sequel::Model
     class InvalidOrganizationRelation < VCAP::Errors::InvalidRelation; end
+    attr_accessor :username
 
     no_auto_guid
 
@@ -78,6 +79,15 @@ module VCAP::CloudController
     def validate_organization_roles(org)
       if org && (managed_organizations.include?(org) || billing_managed_organizations.include?(org) || audited_organizations.include?(org))
         raise InvalidOrganizationRelation.new(org.guid)
+      end
+    end
+
+    def export_attrs
+      attrs = super
+      if username
+        attrs + [:username]
+      else
+        attrs
       end
     end
 

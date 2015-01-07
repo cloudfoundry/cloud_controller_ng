@@ -83,6 +83,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
     describe 'Users' do
       before do
         organization.add_user(associated_user)
+        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_user.guid => 'user@example.com' })
       end
 
       let!(:associated_user) { VCAP::CloudController::User.make }
@@ -98,6 +99,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
     describe 'Managers' do
       before do
         organization.add_manager(associated_manager)
+        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_manager.guid => 'manager@example.com' })
         make_manager_for_org(organization)
       end
 
@@ -114,6 +116,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
     describe 'Billing Managers' do
       before do
         organization.add_billing_manager(associated_billing_manager)
+        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_billing_manager.guid => 'billing_manager@example.com' })
       end
 
       let!(:associated_billing_manager) { VCAP::CloudController::User.make }
@@ -129,6 +132,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
     describe 'Auditors' do
       before do
         organization.add_auditor(associated_auditor)
+        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_auditor.guid => 'auditor@example.com' })
       end
 
       let!(:associated_auditor) { VCAP::CloudController::User.make }

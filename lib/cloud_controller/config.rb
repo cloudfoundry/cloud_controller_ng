@@ -180,6 +180,9 @@ module VCAP::CloudController
         optional(:uaa_client_secret) => String,
         optional(:uaa_client_scope) => String,
 
+        optional(:cloud_controller_username_lookup_client_name) => String,
+        optional(:cloud_controller_username_lookup_client_secret) => String,
+
         :renderer => {
           max_results_per_page: Integer,
           default_results_per_page: Integer,

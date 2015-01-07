@@ -687,6 +687,15 @@ module VCAP::CloudController
               expect(found_guids).to match_array([associated_model1.guid, associated_model2.guid])
             end
 
+            it 'uses the collection_renderer for the associated class' do
+              collection_renderer = double('Collection Renderer', render_json: 'JSON!')
+              allow_any_instance_of(TestModelManyToManiesController).to receive(:collection_renderer).and_return(collection_renderer)
+
+              get "/v2/test_models/#{model.guid}/test_model_many_to_manies", '', admin_headers
+
+              expect(last_response.body).to eq('JSON!')
+            end
+
             it 'fails when you do not have access to the associated model' do
               allow_any_instance_of(TestModelManyToOneAccess).to receive(:index?).
                 with(TestModelManyToOne, { related_obj: instance_of(TestModel), related_model: TestModel }).and_return(false)

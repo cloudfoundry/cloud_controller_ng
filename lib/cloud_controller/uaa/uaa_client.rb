@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class UaaClient
     attr_reader :uaa_target, :client_id, :secret, :options
-    def initialize(uaa_target, client_id, secret, options = {})
+    def initialize(uaa_target, client_id, secret, options={})
       @uaa_target = uaa_target
       @client_id = client_id
       @secret = secret
@@ -27,6 +27,19 @@ module VCAP::CloudController
     rescue CF::UAA::NotFound => e
       logger.error("UAA request for token failed: #{e.inspect}")
       raise UaaUnavailable.new
+    end
+
+    def usernames_for_ids(user_ids)
+      return {} unless user_ids.present?
+      filter_string = user_ids.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
+      results = scim.query(:user_id, filter: filter_string)
+
+      results['resources'].each_with_object({}) do |resource, results_hash|
+        results_hash[resource['id']] = resource['username']
+        results_hash
+      end
+    rescue UaaUnavailable, CF::UAA::TargetError
+      {}
     end
 
     private

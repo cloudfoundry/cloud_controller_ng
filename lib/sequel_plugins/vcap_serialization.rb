@@ -17,7 +17,7 @@ module Sequel::Plugins::VcapSerialization
     def to_hash(opts={})
       hash = {}
       redact_vals = opts[:redact]
-      attrs = opts[:attrs] || self.class.export_attrs || []
+      attrs = opts[:attrs] || self.export_attrs
 
       attrs.each do |k|
         if opts[:only].nil? || opts[:only].include?(k)
@@ -34,6 +34,11 @@ module Sequel::Plugins::VcapSerialization
         end
       end
       hash
+    end
+
+    # Returns an array of attribute names that will be used when calling to_hash
+    def export_attrs
+      self.class.export_attrs || []
     end
 
     # Update the model instance from the supplied json string.  Only update
@@ -100,7 +105,7 @@ module Sequel::Plugins::VcapSerialization
     # @param [Array<Symbol>] List of attributes to include when serializing to
     # json or a hash.
     def export_attributes(*attributes)
-      self.export_attrs = attributes
+      self.export_attrs = attributes.freeze
     end
 
     # @param [Array<Symbol>] List of attributes to include when importing

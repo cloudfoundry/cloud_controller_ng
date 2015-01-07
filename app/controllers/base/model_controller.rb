@@ -5,6 +5,8 @@ module VCAP::CloudController::RestController
   class ModelController < BaseController
     include Routes
 
+    attr_reader :object_renderer, :collection_renderer
+
     def inject_dependencies(dependencies)
       super
       @object_renderer = dependencies.fetch(:object_renderer)
@@ -130,7 +132,9 @@ module VCAP::CloudController::RestController
         @opts
       )
 
-      collection_renderer.render_json(
+      associated_controller_instance = CloudController::ControllerFactory.new(@config, @logger, @env, @params, @body, @sinatra).create_controller(associated_controller)
+
+      associated_controller_instance.collection_renderer.render_json(
         associated_controller,
         filtered_dataset,
         associated_path,
@@ -227,10 +231,6 @@ module VCAP::CloudController::RestController
     def model
       self.class.model
     end
-
-    protected
-
-    attr_reader :object_renderer, :collection_renderer
 
     private
 

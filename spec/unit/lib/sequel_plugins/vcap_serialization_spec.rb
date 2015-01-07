@@ -54,4 +54,19 @@ describe 'Sequel::Plugins::VcapSerialization' do
       expect(instance.unique_value).to eq('unique')
     end
   end
+
+  describe '#to_hash' do
+    context 'when the instance defines different attributes to export' do
+      class TestModel < Sequel::Model
+        def export_attrs
+          super + [:required_attr]
+        end
+      end
+
+      it 'uses the attributes defined by the instance' do
+        hash = TestModel.new.to_hash
+        expect(hash.keys).to eq(['required_attr'])
+      end
+    end
+  end
 end

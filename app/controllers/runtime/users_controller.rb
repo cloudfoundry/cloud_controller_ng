@@ -1,5 +1,9 @@
 module VCAP::CloudController
   class UsersController < RestController::ModelController
+    def self.dependencies
+      [:username_populating_collection_renderer]
+    end
+
     define_attributes do
       attribute :guid, String, exclude_in: :update
       attribute :admin, Message::Boolean, default: false
@@ -31,6 +35,11 @@ module VCAP::CloudController
 
     def delete(guid)
       do_delete(find_guid_and_validate_access(:delete, guid))
+    end
+
+    def inject_dependencies(dependencies)
+      super
+      @collection_renderer = dependencies[:username_populating_collection_renderer]
     end
 
     define_messages

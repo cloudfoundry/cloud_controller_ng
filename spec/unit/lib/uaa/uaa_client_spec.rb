@@ -12,11 +12,11 @@ module VCAP::CloudController
     let(:token_info) { double(CF::UAA::TokenInfo, auth_header: auth_header) }
     let(:token_issuer) { double(CF::UAA::TokenIssuer, client_credentials_grant: token_info) }
 
-    describe 'scim' do
-      before do
-        allow(CF::UAA::TokenIssuer).to receive(:new).with(url, client_id, secret, uaa_options).and_return(token_issuer)
-      end
+    before do
+      allow(CF::UAA::TokenIssuer).to receive(:new).with(url, client_id, secret, uaa_options).and_return(token_issuer)
+    end
 
+    describe '#scim' do
       it 'knows how to build a valid scim' do
         scim = uaa_client.scim
         expect(scim).to be_a(CF::UAA::Scim)
@@ -64,6 +64,60 @@ module VCAP::CloudController
         expect(result).to be_a(Array)
         expect(result.length).to eq(1)
         expect(result[0]).to include('client_id' => 'existing-id')
+      end
+    end
+
+    describe '#usernames_for_ids' do
+      let(:userid_1) { '111' }
+      let(:userid_2) { '222' }
+
+      it 'returns a map of the given ids to the corresponding usernames from UAA' do
+        response_body = {
+          'resources'    => [
+            { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
+            { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
+          ],
+          'schemas'      => ['urn:scim:schemas:core:1.0'],
+          'startindex'   => 1,
+          'itemsperpage' => 100,
+          'totalresults' => 2 }
+
+        WebMock::API.stub_request(:get, "#{url}/ids/Users").
+        with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
+        to_return(
+          status: 200,
+          headers: { 'content-type' => 'application/json' },
+          body: response_body.to_json)
+
+        mapping = uaa_client.usernames_for_ids([userid_1, userid_2])
+        expect(mapping[userid_1]).to eq('user_1')
+        expect(mapping[userid_2]).to eq('user_2')
+      end
+
+      it 'returns an empty hash when given no ids' do
+        expect(uaa_client.usernames_for_ids([])).to eq({})
+      end
+
+      context 'when UAA is unavailable' do
+        before do
+          allow(uaa_client).to receive(:token_info).and_raise(UaaUnavailable)
+        end
+
+        it 'returns an empty hash' do
+          expect(uaa_client.usernames_for_ids([userid_1])).to eq({})
+        end
+      end
+
+      context 'when the endpoint returns an error' do
+        before do
+          scim = double('scim')
+          allow(scim).to receive(:query).and_raise(CF::UAA::TargetError)
+          allow(uaa_client).to receive(:scim).and_return(scim)
+        end
+
+        it 'returns an empty hash' do
+          expect(uaa_client.usernames_for_ids([userid_1])).to eq({})
+        end
       end
     end
   end
