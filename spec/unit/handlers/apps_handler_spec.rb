@@ -11,6 +11,64 @@ module VCAP::CloudController
       allow(access_context).to receive(:cannot?).and_return(false)
     end
 
+    describe '#list' do
+      let(:space) { Space.make }
+      let!(:app_model1) { AppModel.make(space_guid: space.guid) }
+      let!(:app_model2) { AppModel.make(space_guid: space.guid) }
+      let(:user) { User.make }
+      let(:page) { 1 }
+      let(:per_page) { 1 }
+      let(:pagination_request) { PaginationRequest.new(page, per_page) }
+      let(:paginator) { double(:paginator) }
+      let(:apps_handler) { described_class.new(process_handler, paginator) }
+      let(:roles) { double(:roles, admin?: admin_role) }
+      let(:admin_role) { false }
+
+      before do
+        allow(access_context).to receive(:roles).and_return(roles)
+        allow(access_context).to receive(:user).and_return(user)
+        allow(paginator).to receive(:get_page)
+      end
+
+      context 'when the user is an admin' do
+        let(:admin_role) { true }
+        before do
+          allow(access_context).to receive(:roles).and_return(roles)
+          AppModel.make
+        end
+
+        it 'allows viewing all apps' do
+          apps_handler.list(pagination_request, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(3)
+          end
+        end
+      end
+
+      context 'when the user cannot list any apps' do
+        it 'applies a user visibility filter properly' do
+          apps_handler.list(pagination_request, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(0)
+          end
+        end
+      end
+
+      context 'when the user can list apps' do
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+        end
+
+        it 'applies a user visibility filter properly' do
+          apps_handler.list(pagination_request, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(2)
+          end
+        end
+      end
+    end
+
     describe '#show' do
       let(:app_model) { AppModel.make }
 
@@ -177,7 +235,7 @@ module VCAP::CloudController
             expect(result.guid).to eq(guid)
             expect(result.name).to eq(new_name)
 
-            updated_app = AppModel.find(guid: guid)
+            updated_app     = AppModel.find(guid: guid)
             updated_process = App.find(guid: process_guid)
 
             expect(updated_app.name).to eq(new_name)
@@ -190,7 +248,7 @@ module VCAP::CloudController
               apps_handler.update(empty_update_message, access_context)
             }.to raise_error
 
-            updated_app = AppModel.find(guid: guid)
+            updated_app     = AppModel.find(guid: guid)
             updated_process = App.find(guid: process_guid)
 
             expect(updated_app.name).to eq(app_model.name)

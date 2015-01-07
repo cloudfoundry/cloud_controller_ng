@@ -17,6 +17,65 @@ resource 'Apps (Experimental)', type: :api do
   end
 
   context 'standard endpoints' do
+    get '/v3/apps' do
+      parameter :page, 'Page to display', valid_values: '>= 1'
+      parameter :per_page, 'Number of results per page', valid_values: '1-5000'
+
+      let(:name1) { 'my_app1' }
+      let(:name2) { 'my_app2' }
+      let(:name3) { 'my_app3' }
+      let!(:app_model1) { VCAP::CloudController::AppModel.make(name: name1, space_guid: space.guid) }
+      let!(:app_model2) { VCAP::CloudController::AppModel.make(name: name2, space_guid: space.guid) }
+      let!(:app_model3) { VCAP::CloudController::AppModel.make(name: name3, space_guid: space.guid) }
+      let!(:app_model4) { VCAP::CloudController::AppModel.make(space_guid: VCAP::CloudController::Space.make.guid) }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:page) { 1 }
+      let(:per_page) { 2 }
+
+      before do
+        space.organization.add_user user
+        space.add_developer user
+      end
+
+      example 'List all Apps' do
+        expected_response = {
+          'pagination' => {
+            'total_results' => 3,
+            'first_url'     => '/v3/apps?page=1&per_page=2',
+            'last_url'      => '/v3/apps?page=2&per_page=2',
+            'next_url'      => '/v3/apps?page=2&per_page=2',
+            'previous_url'  => nil,
+          },
+          'resources'  => [
+            {
+              'name'   => name1,
+              'guid'   => app_model1.guid,
+              '_links' => {
+                'self'      => { 'href' => "/v3/apps/#{app_model1.guid}" },
+                'processes' => { 'href' => "/v3/apps/#{app_model1.guid}/processes" },
+                'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
+                }
+            },
+            {
+              'name'   => name2,
+              'guid'   => app_model2.guid,
+              '_links' => {
+                'self'      => { 'href' => "/v3/apps/#{app_model2.guid}" },
+                'processes' => { 'href' => "/v3/apps/#{app_model2.guid}/processes" },
+                'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
+              }
+            }
+          ]
+        }
+
+        do_request_with_error_handling
+
+        parsed_response = MultiJson.load(response_body)
+        expect(response_status).to eq(200)
+        expect(parsed_response).to match(expected_response)
+      end
+    end
+
     get '/v3/apps/:guid' do
       let(:app_model) { VCAP::CloudController::AppModel.make(name: name) }
       let(:guid) { app_model.guid }
@@ -68,7 +127,7 @@ resource 'Apps (Experimental)', type: :api do
           do_request_with_error_handling
         }.to change { VCAP::CloudController::AppModel.count }.by(1)
 
-        expected_guid = VCAP::CloudController::AppModel.last.guid
+        expected_guid     = VCAP::CloudController::AppModel.last.guid
         expected_response = {
           'name'   => name,
           'guid'   => expected_guid,

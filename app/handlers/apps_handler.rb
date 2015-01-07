@@ -1,3 +1,6 @@
+require 'cloud_controller/paging/sequel_paginator'
+require 'cloud_controller/paging/paginated_result'
+
 module VCAP::CloudController
   class AppCreateMessage
     attr_reader :name, :space_guid
@@ -46,14 +49,26 @@ module VCAP::CloudController
     class InvalidApp < StandardError; end
     class IncorrectProcessSpace < StandardError; end
 
-    def initialize(process_handler)
+    def initialize(process_handler, paginator=SequelPaginator.new)
       @process_handler = process_handler
+      @paginator = paginator
     end
 
     def show(guid, access_context)
       app = AppModel.find(guid: guid)
       return nil if app.nil? || access_context.cannot?(:read, app)
       app
+    end
+
+    def list(pagination_request, access_context)
+      dataset = nil
+      if access_context.roles.admin?
+        dataset = AppModel.dataset
+      else
+        dataset = AppModel.user_visible(access_context.user)
+      end
+
+      @paginator.get_page(dataset, pagination_request)
     end
 
     def create(message, access_context)

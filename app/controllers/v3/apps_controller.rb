@@ -1,6 +1,7 @@
 require 'presenters/v3/app_presenter'
 require 'handlers/processes_handler'
 require 'handlers/apps_handler'
+require 'cloud_controller/paging/pagination_request'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
@@ -13,6 +14,17 @@ module VCAP::CloudController
       @app_handler = dependencies[:apps_handler]
       @app_presenter = dependencies[:app_presenter]
       @process_presenter = dependencies[:process_presenter]
+    end
+
+    get '/v3/apps', :list
+    def list
+      page     = params['page'].to_i
+      per_page = params['per_page'].to_i
+
+      pagination_request = PaginationRequest.new(page, per_page)
+      paginated_result   = @app_handler.list(pagination_request, @access_context)
+
+      [HTTP::OK, @app_presenter.present_json_list(paginated_result)]
     end
 
     get '/v3/apps/:guid', :show

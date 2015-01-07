@@ -5,6 +5,7 @@ module VCAP::CloudController
     let(:logger) { instance_double(Steno::Logger) }
     let(:user) { User.make }
     let(:req_body) { '' }
+    let(:params) { {} }
     let(:process_handler) { double(:process_handler) }
     let(:process_presenter) { double(:process_presenter) }
     let(:apps_handler) { double(:apps_handler) }
@@ -12,19 +13,19 @@ module VCAP::CloudController
     let(:app_presenter) { double(:app_presenter) }
     let(:apps_controller) do
       AppsV3Controller.new(
-        {},
-        logger,
-        {},
-        {},
-        req_body,
-        nil,
-        {
-          apps_handler: apps_handler,
-          app_presenter: app_presenter,
-          processes_handler: process_handler,
-          process_presenter: process_presenter
-        },
-      )
+          {},
+          logger,
+          {},
+          params,
+          req_body,
+          nil,
+          {
+            apps_handler: apps_handler,
+            app_presenter: app_presenter,
+            processes_handler: process_handler,
+            process_presenter: process_presenter
+          },
+        )
     end
     let(:app_response) { 'app_response_body' }
     let(:process_response) { 'process_response_body' }
@@ -34,6 +35,27 @@ module VCAP::CloudController
       allow(apps_handler).to receive(:show).and_return(app_model)
       allow(app_presenter).to receive(:present_json).and_return(app_response)
       allow(process_presenter).to receive(:present_json_list).and_return(process_response)
+    end
+
+    describe '#list' do
+      let(:page) { 1 }
+      let(:per_page) { 2 }
+      let(:params) { { 'page' => page, 'per_page' => per_page } }
+      let(:list_response) { 'list_response' }
+
+      before do
+        allow(app_presenter).to receive(:present_json_list).and_return(app_response)
+        allow(apps_handler).to receive(:list).and_return(list_response)
+      end
+
+      it 'returns 200 and lists the apps' do
+        response_code, response_body = apps_controller.list
+
+        expect(apps_handler).to have_received(:list)
+        expect(app_presenter).to have_received(:present_json_list).with(list_response)
+        expect(response_code).to eq(200)
+        expect(response_body).to eq(app_response)
+      end
     end
 
     describe '#show' do
