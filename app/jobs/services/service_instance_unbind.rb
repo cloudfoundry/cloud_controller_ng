@@ -17,7 +17,7 @@ module VCAP::CloudController
         end
 
         def max_attempts
-          3
+          1
         end
       end
     end

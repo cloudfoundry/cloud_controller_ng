@@ -36,8 +36,8 @@ module VCAP::CloudController
       end
 
       describe '#max_attempts' do
-        it 'returns 3' do
-          expect(job.max_attempts).to eq 3
+        it 'returns 1' do
+          expect(job.max_attempts).to eq 1
         end
       end
     end
