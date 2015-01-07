@@ -29,7 +29,7 @@ module VCAP::Services
             return response_hash
 
           when HTTP::Status::UNAUTHORIZED
-            raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
+            raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
 
           when 408
             raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, response)

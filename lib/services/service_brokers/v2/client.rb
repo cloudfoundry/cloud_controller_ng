@@ -20,21 +20,6 @@ module VCAP::Services::ServiceBrokers::V2
     end
   end
 
-  class ServiceBrokerApiAuthenticationFailed < HttpResponseError
-    def initialize(uri, method, response)
-      super(
-        "Authentication failed for the service broker API. Double-check that the username and password are correct: #{uri}",
-        uri,
-        method,
-        response
-      )
-    end
-
-    def response_code
-      502
-    end
-  end
-
   class ServiceBrokerConflict < HttpResponseError
     def initialize(uri, method, response)
       error_message = nil

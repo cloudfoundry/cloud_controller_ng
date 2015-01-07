@@ -57,7 +57,7 @@ module VCAP::Services
             it 'raises a ServiceBrokerApiAuthenticationFailed error' do
               expect {
                 parser.parse(:get, '/v2/catalog', response)
-              }.to raise_error(ServiceBrokerApiAuthenticationFailed)
+              }.to raise_error(Errors::ServiceBrokerApiAuthenticationFailed)
             end
           end
 
