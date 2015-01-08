@@ -3,6 +3,7 @@ require 'cloud_controller/blobstore/fingerprints_collection'
 
 class AppBitsPackage
   class PackageNotFound < StandardError; end
+  class ZipSizeExceeded < StandardError; end
 
   attr_reader :package_blobstore, :global_app_bits_cache, :max_package_size, :tmp_dir
 
@@ -32,19 +33,21 @@ class AppBitsPackage
     FileUtils.rm_f(uploaded_tmp_compressed_path) if uploaded_tmp_compressed_path
   end
 
-  def create_package_in_blobstore(package_guid, uploaded_tmp_compressed_path)
-    return unless uploaded_tmp_compressed_path
+  def create_package_in_blobstore(package_guid, package_path)
+    return unless package_path
 
     package = VCAP::CloudController::PackageModel.find(guid: package_guid)
     raise PackageNotFound if package.nil?
 
     begin
-      zip_file = File.new(uploaded_tmp_compressed_path)
-      package_blobstore.cp_to_blobstore(uploaded_tmp_compressed_path, package_guid)
+      package_file = File.new(package_path)
+      raise ZipSizeExceeded if @max_package_size && package_size(package_path) > @max_package_size
+
+      package_blobstore.cp_to_blobstore(package_path, package_guid)
 
       package.db.transaction do
         package.lock!
-        package.package_hash = zip_file.hexdigest
+        package.package_hash = package_file.hexdigest
         package.state = 'READY'
         package.save
       end
@@ -57,10 +60,15 @@ class AppBitsPackage
       raise e
     end
   ensure
-    FileUtils.rm_f(uploaded_tmp_compressed_path) if uploaded_tmp_compressed_path
+    FileUtils.rm_f(package_path) if package_path
   end
 
   private
+
+  def package_size(package_path)
+    zip_info = `unzip -l #{package_path}`
+    zip_info.split("\n").last.match(/^\s*(\d+)/)[1].to_i
+  end
 
   def validate_size!(fingerprints_in_app_cache, local_app_bits)
     return unless max_package_size

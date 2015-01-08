@@ -39,6 +39,7 @@ describe AppBitsPackage do
   end
 
   describe "#create_package_in_blobstore" do
+    let(:max_package_size) { nil }
     let(:package_guid) { package.guid }
     subject(:create) { packer.create_package_in_blobstore(package_guid, compressed_path) }
 
@@ -89,6 +90,17 @@ describe AppBitsPackage do
       it "removes the compressed path afterwards" do
         expect(FileUtils).to receive(:rm_f).with(compressed_path)
         create
+      end
+    end
+
+    context "when the app bits are too large" do
+      let(:max_package_size) { 10 }
+
+      it "raises an exception and deletes the bits" do
+        expect(FileUtils).to receive(:rm_f).with(compressed_path)
+        expect {
+          create
+        }.to raise_error(AppBitsPackage::ZipSizeExceeded)
       end
     end
   end
