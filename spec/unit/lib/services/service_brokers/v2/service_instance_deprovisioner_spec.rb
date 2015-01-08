@@ -12,18 +12,26 @@ module VCAP::CloudController
       let(:name) { 'fake-name' }
 
       describe 'deprovision' do
-        it 'creates a ServiceInstanceDeprovision Job' do
-          job = ServiceInstanceDeprovisioner.deprovision(client_attrs, service_instance)
-          expect(job).to be_instance_of(VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision)
-          expect(job.client_attrs).to be(client_attrs)
-          expect(job.service_instance_guid).to be(service_instance.guid)
-          expect(job.service_plan_guid).to be(service_instance.service_plan.guid)
-        end
+        it 'enqueues a retryable ServiceInstanceDeprovision job' do
+          allow(Delayed::Job).to receive(:enqueue)
 
-        it 'enqueues a ServiceInstanceDeprovision Job' do
-          expect(Delayed::Job).to receive(:enqueue).with(an_instance_of(VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision),
-                                                         hash_including(queue: 'cc-generic'))
-          ServiceInstanceDeprovisioner.deprovision(client_attrs, service_instance)
+          Timecop.freeze do
+            ServiceInstanceDeprovisioner.deprovision(client_attrs, service_instance)
+
+            expect(Delayed::Job).to have_received(:enqueue) do |job, opts|
+              expect(opts[:queue]).to eq 'cc-generic'
+              expect(opts[:run_at]).to be_within(0.01).of(Delayed::Job.db_time_now)
+
+              expect(job).to be_a VCAP::CloudController::Jobs::RetryableJob
+              expect(job.num_attempts).to eq 0
+
+              inner_job = job.job
+              expect(inner_job).to be_instance_of(VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision)
+              expect(inner_job.client_attrs).to be(client_attrs)
+              expect(inner_job.service_instance_guid).to be(service_instance.guid)
+              expect(inner_job.service_plan_guid).to be(service_instance.service_plan.guid)
+            end
+          end
         end
       end
     end
