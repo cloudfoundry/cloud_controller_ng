@@ -103,13 +103,28 @@ module VCAP::CloudController
             expect(created_package.type).to eq(result.type)
           end
 
-          it 'adds a delayed job to upload the package bits' do
-            result = nil
-            expect {
-              result = packages_handler.create(create_message, access_context)
-            }.to change{ Delayed::Job.count }.by(1)
+          context 'when the type is bits' do
+            it 'adds a delayed job to upload the package bits' do
+              result = nil
+              expect {
+                result = packages_handler.create(create_message, access_context)
+              }.to change{ Delayed::Job.count }.by(1)
 
-            expect(result.state).to eq('PENDING')
+              expect(result.state).to eq('PENDING')
+            end
+          end
+
+          context 'when the type is docker' do
+            let(:create_opts) { { 'type' => 'docker' } }
+
+            it 'adds a delayed job to upload the package bits' do
+              result = nil
+              expect {
+                result = packages_handler.create(create_message, access_context)
+              }.to_not change{ Delayed::Job.count }
+
+              expect(result.state).to eq('READY')
+            end
           end
         end
 

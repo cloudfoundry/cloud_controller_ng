@@ -50,6 +50,7 @@ module VCAP::CloudController
       package          = PackageModel.new
       package.app_guid = message.app_guid
       package.type     = message.type
+      package.state    = 'READY' if message.type == 'docker'
 
       app = AppModel.find(guid: package.app_guid)
       raise AppNotFound if app.nil?
@@ -64,8 +65,10 @@ module VCAP::CloudController
         package.save
       end
 
-      bits_packer_job = Jobs::Runtime::PackageBits.new(package.guid, message.filepath)
-      Jobs::Enqueuer.new(bits_packer_job, queue: Jobs::LocalQueue.new(@config)).enqueue()
+      if package.type == 'bits'
+        bits_packer_job = Jobs::Runtime::PackageBits.new(package.guid, message.filepath)
+        Jobs::Enqueuer.new(bits_packer_job, queue: Jobs::LocalQueue.new(@config)).enqueue()
+      end
 
       package
     rescue Sequel::ValidationFailed => e
