@@ -75,7 +75,7 @@ module VCAP::Services
             it 'raises a ServiceBrokerConflict error' do
               expect {
                 parser.parse(:get, '/v2/catalog', response)
-              }.to raise_error(ServiceBrokerConflict)
+              }.to raise_error(Errors::ServiceBrokerConflict)
             end
           end
 

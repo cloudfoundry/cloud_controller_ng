@@ -1,35 +1,4 @@
 module VCAP::Services::ServiceBrokers::V2
-
-  class ServiceBrokerConflict < HttpResponseError
-    def initialize(uri, method, response)
-      error_message = nil
-      if parsed_json(response.body).key?('message')
-        error_message = parsed_json(response.body)['message']
-      else
-        error_message = parsed_json(response.body)['description']
-      end
-
-      super(
-        error_message || "Resource conflict: #{uri}",
-        uri,
-        method,
-        response
-      )
-    end
-
-    def response_code
-      409
-    end
-
-    private
-
-    def parsed_json(str)
-      MultiJson.load(str)
-    rescue MultiJson::ParseError
-      {}
-    end
-  end
-
   class Client
     CATALOG_PATH = '/v2/catalog'.freeze
 
@@ -107,7 +76,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       @response_parser.parse(:delete, path, response)
 
-    rescue VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict => e
+    rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
 

@@ -350,7 +350,7 @@ module VCAP::CloudController
                 uri = 'http://broker.url.com'
                 method = 'PUT'
                 response = double(:response, code: 409, body: '{}')
-                raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict.new(uri, method, response)
+                raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict.new(uri, method, response)
               end
             end
 

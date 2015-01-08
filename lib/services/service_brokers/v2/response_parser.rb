@@ -35,7 +35,7 @@ module VCAP::Services
             raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
 
           when 409
-            raise VCAP::Services::ServiceBrokers::V2::ServiceBrokerConflict.new(uri.to_s, method, response)
+            raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict.new(uri.to_s, method, response)
 
           when 410
             if method == :delete
