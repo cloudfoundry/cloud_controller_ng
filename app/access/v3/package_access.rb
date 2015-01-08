@@ -11,13 +11,10 @@ module VCAP::CloudController
       has_read_scope && user_visible
     end
 
-    def create?(desired_package)
+    def create?(desired_package, app, space)
       return true if context.roles.admin?
 
       has_write_scope = SecurityContext.scopes.include?('cloud_controller.write')
-
-      app = AppModel.find(guid: desired_package.app_guid)
-      space = Space.find(guid: app.space_guid)
 
       is_space_developer = space && space.developers.include?(context.user)
 
@@ -26,12 +23,8 @@ module VCAP::CloudController
       has_write_scope && is_space_developer && org_active
     end
 
-    def delete?(app)
-      create?(app)
-    end
-
-    def update?(app)
-      create?(app)
+    def delete?(package, app, space)
+      create?(package, app, space)
     end
   end
 end

@@ -62,7 +62,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#create?, #update?, #delete?' do
+    describe '#create?, #delete?' do
       let(:space) { Space.make }
       let(:app) { AppModel.make(space_guid: space.guid) }
       let(:package) { PackageModel.new(app_guid: app.guid) }
@@ -72,9 +72,8 @@ module VCAP::CloudController
 
         it 'allows the user to perform the action' do
           access_control = PackageModelAccess.new(access_context)
-          expect(access_control.create?(package)).to be_truthy
-          expect(access_control.update?(package)).to be_truthy
-          expect(access_control.delete?(package)).to be_truthy
+          expect(access_control.create?(package, app, space)).to be_truthy
+          expect(access_control.delete?(package, app, space)).to be_truthy
         end
       end
 
@@ -89,9 +88,8 @@ module VCAP::CloudController
 
           it 'allows the user to create' do
             access_control = PackageModelAccess.new(access_context)
-            expect(access_control.create?(package)).to be_truthy
-            expect(access_control.update?(package)).to be_truthy
-            expect(access_control.delete?(package)).to be_truthy
+            expect(access_control.create?(package, app, space)).to be_truthy
+            expect(access_control.delete?(package, app, space)).to be_truthy
           end
         end
 
@@ -105,9 +103,8 @@ module VCAP::CloudController
 
           it 'disallows the user from creating' do
             access_control = PackageModelAccess.new(access_context)
-            expect(access_control.create?(package)).to be_falsey
-            expect(access_control.update?(package)).to be_falsey
-            expect(access_control.delete?(package)).to be_falsey
+            expect(access_control.create?(package, app, space)).to be_falsey
+            expect(access_control.delete?(package, app, space)).to be_falsey
           end
         end
 
@@ -116,9 +113,8 @@ module VCAP::CloudController
 
           it 'disallows the user from creating' do
             access_control = PackageModelAccess.new(access_context)
-            expect(access_control.create?(package)).to be_falsey
-            expect(access_control.update?(package)).to be_falsey
-            expect(access_control.delete?(package)).to be_falsey
+            expect(access_control.create?(package, app, space)).to be_falsey
+            expect(access_control.delete?(package, app, space)).to be_falsey
           end
         end
 
@@ -133,9 +129,8 @@ module VCAP::CloudController
 
           it 'disallows the user from creating' do
             access_control = PackageModelAccess.new(access_context)
-            expect(access_control.create?(package)).to be_falsey
-            expect(access_control.update?(package)).to be_falsey
-            expect(access_control.delete?(package)).to be_falsey
+            expect(access_control.create?(package, app, space)).to be_falsey
+            expect(access_control.delete?(package, app, space)).to be_falsey
           end
         end
       end

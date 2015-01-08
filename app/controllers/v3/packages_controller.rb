@@ -37,14 +37,19 @@ module VCAP::CloudController
       unauthorized!
     end
 
+    delete '/v3/packages/:guid', :delete
+    def delete(package_guid)
+      package = @packages_handler.delete(package_guid, @access_context)
+      package_not_found! unless package
+      [HTTP::NO_CONTENT]
+    rescue PackagesHandler::Unauthorized
+      unauthorized!
+    end
+
     private
 
     def package_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found')
-    end
-
-    def bad_request!(message)
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', message)
     end
 
     def unauthorized!

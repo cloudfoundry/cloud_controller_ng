@@ -4,11 +4,12 @@ module VCAP::CloudController
       class BlobstoreDelete < Struct.new(:key, :blobstore_name, :attributes)
         def perform
           logger = Steno.logger('cc.background')
-          logger.info("Deleting '#{key}' from blobstore '#{blobstore_name}'")
+          logger.info("Attempting delete of '#{key}' from blobstore '#{blobstore_name}'")
 
           blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_name)
           blob = blobstore.blob(key)
           if blob && same_blob(blob)
+            logger.info("Deleting '#{key}' from blobstore '#{blobstore_name}'")
             blobstore.delete_blob(blob)
           end
         end

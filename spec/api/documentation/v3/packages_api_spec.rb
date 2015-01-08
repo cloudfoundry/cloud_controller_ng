@@ -137,5 +137,29 @@ resource 'Packages (Experimental)', type: :api do
         expect(parsed_response).to match(expected_response)
       end
     end
+
+    delete '/v3/packages/:guid' do
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+
+      let!(:package_model) do
+        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      end
+
+      let(:guid) { package_model.guid }
+      let(:app_guid) { app_model.guid }
+
+      before do
+        space.organization.add_user user
+        space.add_developer user
+      end
+
+      example 'Delete a Package' do
+        expect {
+          do_request_with_error_handling
+        }.to change { VCAP::CloudController::PackageModel.count }.by(-1)
+        expect(response_status).to eq(204)
+      end
+    end
   end
 end

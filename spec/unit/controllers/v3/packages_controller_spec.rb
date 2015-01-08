@@ -182,5 +182,54 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#delete' do
+      context 'when the package does not exist' do
+        before do
+          allow(packages_handler).to receive(:delete).and_return(nil)
+        end
+
+        it 'returns a 404 Not Found' do
+          expect {
+            packages_controller.delete('non-existant')
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the package exists' do
+        let(:package) { PackageModel.make }
+        let(:package_guid) { package.guid }
+
+        context 'when a user can access a package' do
+          before do
+            allow(packages_handler).to receive(:delete).and_return(package)
+          end
+
+          it 'returns a 204 NO CONTENT' do
+            response_code, response = packages_controller.delete(package.guid)
+            expect(response_code).to eq 204
+            expect(response).to be_nil
+          end
+        end
+
+        context 'when the user cannot access the package' do
+          before do
+            allow(packages_handler).to receive(:delete).and_raise(PackagesHandler::Unauthorized)
+          end
+
+          it 'returns a 403 NotAuthorized error' do
+            expect {
+              packages_controller.delete(package_guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'NotAuthorized'
+              expect(error.response_code).to eq 403
+            end
+          end
+        end
+      end
+    end
   end
 end

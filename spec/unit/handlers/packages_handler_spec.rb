@@ -75,7 +75,8 @@ module VCAP::CloudController
     let(:config) { TestConfig.config }
     let(:packages_handler) { described_class.new(config) }
     let(:access_context) { double(:access_context) }
-    let(:app) { AppModel.make }
+    let(:app) { AppModel.make(space_guid: space.guid) }
+    let(:space) { Space.make }
 
     before do
       allow(access_context).to receive(:cannot?).and_return(false)
@@ -103,7 +104,7 @@ module VCAP::CloudController
         it 'adds a delayed job to upload the package bits' do
           result = nil
           expect {
-           result = packages_handler.create(create_message, access_context)
+            result = packages_handler.create(create_message, access_context)
           }.to change{ Delayed::Job.count }.by(1)
 
           expect(result.state).to eq('PENDING')
@@ -119,7 +120,7 @@ module VCAP::CloudController
           expect {
             packages_handler.create(create_message, access_context)
           }.to raise_error(PackagesHandler::Unauthorized)
-          expect(access_context).to have_received(:cannot?).with(:create, kind_of(PackageModel))
+          expect(access_context).to have_received(:cannot?).with(:create, kind_of(PackageModel), app, space)
         end
       end
 
@@ -169,6 +170,57 @@ module VCAP::CloudController
             }.to raise_error(PackagesHandler::Unauthorized)
             expect(access_context).to have_received(:cannot?).with(:read, kind_of(PackageModel))
           end
+        end
+      end
+    end
+
+    describe 'delete' do
+      let!(:package) { PackageModel.make(app_guid: app.guid) }
+      let(:package_guid) { package.guid }
+
+      context 'when the user can access a package' do
+        before do
+          allow(access_context).to receive(:cannot?).and_return(false)
+        end
+
+        context 'and the package does not exist' do
+          it 'returns nil' do
+            expect(packages_handler.delete('non-existant', access_context)).to eq(nil)
+          end
+        end
+
+        context 'and the package exists' do
+          it 'deletes the package and returns the deleted package' do
+            expect {
+              deleted_package = packages_handler.delete(package_guid, access_context)
+              expect(deleted_package.guid).to eq(package_guid)
+            }.to change{ PackageModel.count }.by(-1)
+            expect(PackageModel.find(guid: package_guid)).to be_nil
+          end
+
+          it 'enqueues a job to delete the corresponding blob from the blobstore' do
+            job_opts = { queue: 'cc-generic' }
+            expect(Jobs::Enqueuer).to receive(:new).with(kind_of(BlobstoreDelete), job_opts).
+              and_call_original
+
+            expect {
+              packages_handler.delete(package_guid, access_context)
+            }.to change{ Delayed::Job.count }.by(1)
+          end
+        end
+      end
+
+      context 'when the user cannot access a package' do
+        before do
+          allow(access_context).to receive(:cannot?).and_return(true)
+        end
+
+        it 'raises Unauthorized error' do
+          expect {
+            deleted_package = packages_handler.delete(package_guid, access_context)
+            expect(deleted_package).to be_nil
+          }.to raise_error(PackagesHandler::Unauthorized)
+          expect(access_context).to have_received(:cannot?).with(:delete, kind_of(PackageModel), app, space)
         end
       end
     end
