@@ -72,7 +72,7 @@ module VCAP::CloudController
       @paginator                = paginator
     end
 
-    def list(pagination_request, access_context, filter_options={})
+    def list(pagination_options, access_context, filter_options={})
       dataset = nil
       if access_context.roles.admin?
         dataset = App.dataset
@@ -82,7 +82,7 @@ module VCAP::CloudController
 
       dataset = dataset.where(app_guid: filter_options[:app_guid]) if filter_options[:app_guid]
 
-      @paginator.get_page(dataset, pagination_request)
+      @paginator.get_page(dataset, pagination_options)
     end
 
     def show(guid, access_context)

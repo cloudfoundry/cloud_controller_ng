@@ -18,7 +18,7 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:page) { 1 }
       let(:per_page) { 1 }
-      let(:pagination_request) { PaginationRequest.new(page, per_page) }
+      let(:pagination_options) { PaginationOptions.new(page, per_page) }
       let(:paginator) { double(:paginator) }
       let(:apps_handler) { described_class.new(process_handler, paginator) }
       let(:roles) { double(:roles, admin?: admin_role) }
@@ -38,7 +38,7 @@ module VCAP::CloudController
         end
 
         it 'allows viewing all apps' do
-          apps_handler.list(pagination_request, access_context)
+          apps_handler.list(pagination_options, access_context)
           expect(paginator).to have_received(:get_page) do |dataset, _|
             expect(dataset.count).to eq(3)
           end
@@ -47,7 +47,7 @@ module VCAP::CloudController
 
       context 'when the user cannot list any apps' do
         it 'applies a user visibility filter properly' do
-          apps_handler.list(pagination_request, access_context)
+          apps_handler.list(pagination_options, access_context)
           expect(paginator).to have_received(:get_page) do |dataset, _|
             expect(dataset.count).to eq(0)
           end
@@ -61,7 +61,7 @@ module VCAP::CloudController
         end
 
         it 'applies a user visibility filter properly' do
-          apps_handler.list(pagination_request, access_context)
+          apps_handler.list(pagination_options, access_context)
           expect(paginator).to have_received(:get_page) do |dataset, _|
             expect(dataset.count).to eq(2)
           end

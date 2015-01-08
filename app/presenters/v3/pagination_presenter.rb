@@ -1,8 +1,8 @@
 module VCAP::CloudController
   class PaginationPresenter
     def present_pagination_hash(paginated_result, base_url)
-      page          = paginated_result.page
-      per_page      = paginated_result.per_page
+      page          = paginated_result.pagination_options.page
+      per_page      = paginated_result.pagination_options.per_page
       total_results = paginated_result.total
 
       last_page     = (total_results.to_f / per_page.to_f).ceil

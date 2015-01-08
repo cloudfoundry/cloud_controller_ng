@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:page) { 1 }
       let(:per_page) { 1 }
       let(:total_results) { 2 }
-      let(:paginated_result) { PaginatedResult.new(double(:results), total_results, page, per_page) }
+      let(:paginated_result) { PaginatedResult.new(double(:results), total_results, PaginationOptions.new(page, per_page)) }
       let(:base_url) { '/cloudfoundry/is-great' }
 
       it 'includes total_results' do
@@ -33,7 +33,7 @@ module VCAP::CloudController
       end
 
       it 'sets first and last page to 1 if there is 1 page' do
-        paginated_result = PaginatedResult.new([], 0, page, per_page)
+        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(page, per_page))
         result      = presenter.present_pagination_hash(paginated_result, base_url)
 
         last_url  = result[:last][:href]

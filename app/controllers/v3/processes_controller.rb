@@ -1,5 +1,6 @@
 require 'presenters/v3/process_presenter'
 require 'handlers/processes_handler'
+require 'cloud_controller/paging/pagination_options'
 
 module VCAP::CloudController
   # TODO: would be nice not needing to use this BaseController
@@ -14,11 +15,8 @@ module VCAP::CloudController
 
     get '/v3/processes', :list
     def list
-      page     = params['page'].to_i
-      per_page = params['per_page'].to_i
-
-      pagination_request = PaginationRequest.new(page, per_page)
-      paginated_result   = @processes_handler.list(pagination_request, @access_context)
+      pagination_options = PaginationOptions.from_params(params)
+      paginated_result   = @processes_handler.list(pagination_options, @access_context)
 
       [HTTP::OK, @process_presenter.present_json_list(paginated_result)]
     end
