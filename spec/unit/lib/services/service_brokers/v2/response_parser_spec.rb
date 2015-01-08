@@ -99,7 +99,18 @@ module VCAP::Services
             end
           end
 
-          context 'when the status code is any other error (unhandled 4xx or 5xx)' do
+          context 'when the status code is any other 4xx error' do
+            let(:code) { 400 }
+            let(:method) { :get }
+            let(:body) { '{"description": "there was an error"}' }
+            it 'raises ServiceBrokerRequestRejected' do
+              expect {
+                parser.parse(method, '/v2/catalog', response)
+              }.to raise_error(Errors::ServiceBrokerRequestRejected, /there was an error/)
+            end
+          end
+
+          context 'when the status code is any 5xx error' do
             let(:code) { 500 }
             let(:method) { :get }
             let(:body) { '{"description": "there was an error"}' }

@@ -258,9 +258,9 @@ module VCAP::Services::ServiceBrokers::V2
           context 'when the broker returns a 422' do
             let(:status_code) { '422' }
             let(:body) { { description: 'cannot update to this plan' }.to_json }
-            it 'raises a ServiceBrokerBadResponse error' do
+            it 'raises a ServiceBrokerRequestRejected error' do
               expect { client.update_service_plan(instance, new_plan) }.to raise_error(
-                Errors::ServiceBrokerBadResponse, /cannot update to this plan/
+                Errors::ServiceBrokerRequestRejected, /cannot update to this plan/
               )
             end
           end

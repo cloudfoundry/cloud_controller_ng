@@ -42,6 +42,9 @@ module VCAP::Services
               logger.warn("Already deleted: #{uri}")
               return nil
             end
+
+          when 400..499
+            raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected.new(uri.to_s, method, response)
           end
 
           raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
