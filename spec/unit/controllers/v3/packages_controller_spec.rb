@@ -63,69 +63,86 @@ module VCAP::CloudController
         FileUtils.rm_rf(tmpdir)
       end
 
-      context 'when a user can create a package' do
-        it 'returns a 201 Created response' do
-          response_code, _ = packages_controller.create(app_guid)
-          expect(response_code).to eq 201
+      context 'when the app exists' do
+        context 'when a user can create a package' do
+          it 'returns a 201 Created response' do
+            response_code, _ = packages_controller.create(app_guid)
+            expect(response_code).to eq 201
+          end
+
+          it 'returns the package' do
+            _, response = packages_controller.create(app_guid)
+            expect(MultiJson.load(response, symbolize_keys: true)).to eq(package_response)
+          end
         end
 
-        it 'returns the package' do
-          _, response = packages_controller.create(app_guid)
-          expect(MultiJson.load(response, symbolize_keys: true)).to eq(package_response)
+        context "as an admin" do
+          let(:headers) { admin_headers }
+
+          it "allows upload even if app_bits_upload flag is disabled" do
+            FeatureFlag.make(name: 'app_bits_upload', enabled: false)
+            response_code, _ = packages_controller.create(app_guid)
+            expect(response_code).to eq 201
+          end
         end
-      end
 
-      context "as an admin" do
-        let(:headers) { admin_headers }
+        context "as a developer" do
+          let(:user) { make_developer_for_space(app_obj.space) }
 
-        it "allows upload even if app_bits_upload flag is disabled" do
-          FeatureFlag.make(name: 'app_bits_upload', enabled: false)
-          response_code, _ = packages_controller.create(app_guid)
-          expect(response_code).to eq 201
-        end
-      end
+          context "with an invalid package" do
+            let(:params) { {} }
 
-      context "as a developer" do
-        let(:user) { make_developer_for_space(app_obj.space) }
+            it 'returns an UnprocessableEntity error' do
+              expect {
+                packages_controller.create(app_guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'UnprocessableEntity'
+                expect(error.response_code).to eq 422
+              end
+            end
+          end
 
-        context "with an invalid package" do
-          let(:params) { {} }
+          context "with an invalid type field" do
+            let(:params) { { type: 'ninja' } }
 
-          it 'returns an UnprocessableEntity error' do
-            expect {
-              packages_controller.create(app_guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'UnprocessableEntity'
-              expect(error.response_code).to eq 422
+            it 'returns an UnprocessableEntity error' do
+              expect {
+                packages_controller.create(app_guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'UnprocessableEntity'
+                expect(error.response_code).to eq 422
+              end
             end
           end
         end
 
-        context "with an invalid type field" do
-          let(:params) { { type: 'ninja' } }
+        context 'when the user cannot create a package' do
+          before do
+            allow(packages_handler).to receive(:create).and_raise(PackagesHandler::Unauthorized)
+          end
 
-          it 'returns an UnprocessableEntity error' do
+          it 'returns a 403 NotAuthorized error' do
             expect {
               packages_controller.create(app_guid)
             }.to raise_error do |error|
-              expect(error.name).to eq 'UnprocessableEntity'
-              expect(error.response_code).to eq 422
+              expect(error.name).to eq 'NotAuthorized'
+              expect(error.response_code).to eq 403
             end
           end
         end
       end
 
-      context 'when the user cannot create a package' do
+      context 'when the app does not exist' do
         before do
-          allow(packages_handler).to receive(:create).and_raise(PackagesHandler::Unauthorized)
+          allow(packages_handler).to receive(:create).and_raise(PackagesHandler::AppNotFound)
         end
 
-        it 'returns a 403 NotAuthorized error' do
+        it 'returns a 404 ResourceNotFound error' do
           expect {
-            packages_controller.create(app_guid)
+            packages_controller.create('bogus')
           }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
           end
         end
       end

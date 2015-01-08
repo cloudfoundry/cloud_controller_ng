@@ -38,6 +38,7 @@ module VCAP::CloudController
   class PackagesHandler
     class Unauthorized < StandardError; end
     class InvalidPackage < StandardError; end
+    class AppNotFound < StandardError; end
 
     PACKAGE_STATES = %w[PENDING READY FAILED].map(&:freeze).freeze
 
@@ -51,6 +52,8 @@ module VCAP::CloudController
       package.type     = message.type
 
       app = AppModel.find(guid: package.app_guid)
+      raise AppNotFound if app.nil?
+
       space = Space.find(guid: app.space_guid)
 
       app.db.transaction do

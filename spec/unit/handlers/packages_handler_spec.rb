@@ -90,49 +90,62 @@ module VCAP::CloudController
           'bits_name' => 'file.zip',
         }
       end
-      let(:create_message) { PackageCreateMessage.new(app.guid, create_opts) }
 
-      context 'when a user can create a package' do
-        it 'creates the package' do
-          result = packages_handler.create(create_message, access_context)
+      context 'when the app exists' do
+        let(:create_message) { PackageCreateMessage.new(app.guid, create_opts) }
 
-          created_package = PackageModel.find(guid: result.guid)
-          expect(created_package.app_guid).to eq(result.app_guid)
-          expect(created_package.type).to eq(result.type)
-        end
-
-        it 'adds a delayed job to upload the package bits' do
-          result = nil
-          expect {
+        context 'when a user can create a package' do
+          it 'creates the package' do
             result = packages_handler.create(create_message, access_context)
-          }.to change{ Delayed::Job.count }.by(1)
 
-          expect(result.state).to eq('PENDING')
+            created_package = PackageModel.find(guid: result.guid)
+            expect(created_package.app_guid).to eq(result.app_guid)
+            expect(created_package.type).to eq(result.type)
+          end
+
+          it 'adds a delayed job to upload the package bits' do
+            result = nil
+            expect {
+              result = packages_handler.create(create_message, access_context)
+            }.to change{ Delayed::Job.count }.by(1)
+
+            expect(result.state).to eq('PENDING')
+          end
+        end
+
+        context 'when the user cannot create an package' do
+          before do
+            allow(access_context).to receive(:cannot?).and_return(true)
+          end
+
+          it 'raises Unauthorized error' do
+            expect {
+              packages_handler.create(create_message, access_context)
+            }.to raise_error(PackagesHandler::Unauthorized)
+            expect(access_context).to have_received(:cannot?).with(:create, kind_of(PackageModel), app, space)
+          end
+        end
+
+        context 'when the package is invalid' do
+          before do
+            allow_any_instance_of(PackageModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('the message'))
+          end
+
+          it 'raises an PackageInvalid error' do
+            expect {
+              packages_handler.create(create_message, access_context)
+            }.to raise_error(PackagesHandler::InvalidPackage, 'the message')
+          end
         end
       end
 
-      context 'when the user cannot create an package' do
-        before do
-          allow(access_context).to receive(:cannot?).and_return(true)
-        end
+      context 'when the app does not exist' do
+        let(:create_message) { PackageCreateMessage.new('non-existant', create_opts) }
 
-        it 'raises Unauthorized error' do
+        it 'raises AppNotFound' do
           expect {
             packages_handler.create(create_message, access_context)
-          }.to raise_error(PackagesHandler::Unauthorized)
-          expect(access_context).to have_received(:cannot?).with(:create, kind_of(PackageModel), app, space)
-        end
-      end
-
-      context 'when the package is invalid' do
-        before do
-          allow_any_instance_of(PackageModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('the message'))
-        end
-
-        it 'raises an PackageInvalid error' do
-          expect {
-            packages_handler.create(create_message, access_context)
-          }.to raise_error(PackagesHandler::InvalidPackage, 'the message')
+          }.to raise_error(PackagesHandler::AppNotFound)
         end
       end
     end

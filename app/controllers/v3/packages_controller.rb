@@ -24,6 +24,8 @@ module VCAP::CloudController
       [HTTP::CREATED, package_json]
     rescue PackagesHandler::Unauthorized
       unauthorized!
+    rescue PackagesHandler::AppNotFound
+      app_not_found!
     end
 
     get '/v3/packages/:guid', :show
@@ -50,6 +52,10 @@ module VCAP::CloudController
 
     def package_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found')
+    end
+
+    def app_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
     end
 
     def unauthorized!
