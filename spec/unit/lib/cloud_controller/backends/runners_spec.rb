@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
   describe Runners do
@@ -291,6 +292,198 @@ module VCAP::CloudController
         it 'returns no apps' do
           expect(runners.diego_apps(100, 0)).to be_empty
         end
+      end
+    end
+
+    describe '#diego_apps_from_process_guids' do
+      before do
+        5.times do
+          app = make_diego_app(state: 'STARTED')
+          app.add_route(Route.make(space: app.space))
+        end
+
+        expect(App.all.length).to eq(5)
+      end
+
+      it 'does not return unstaged apps' do
+        unstaged_app = make_diego_app(state: 'STARTED')
+        unstaged_app.package_state = 'PENDING'
+        unstaged_app.save
+
+        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_app(unstaged_app))
+
+        expect(batch).not_to include(unstaged_app)
+      end
+
+      it 'does not return apps that are stopped' do
+        stopped_app = make_diego_app(state: 'STOPPED')
+
+        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_app(stopped_app))
+
+        expect(batch).not_to include(stopped_app)
+      end
+
+      it 'does not return deleted apps' do
+        deleted_app = make_diego_app(state: 'STARTED', deleted_at: DateTime.now.utc)
+
+        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_app(deleted_app))
+
+        expect(batch).not_to include(deleted_app)
+      end
+
+      it 'only includes diego apps' do
+        non_diego_app = make_diego_app(state: 'STARTED')
+        non_diego_app.environment_json = {}
+        non_diego_app.save
+
+        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_app(non_diego_app))
+
+        expect(batch).not_to include(non_diego_app)
+      end
+
+      it 'accepts a process guid or an array of process guids' do
+        app = App.where(diego: true).order(:id).first
+        process_guid = Diego::ProcessGuid.from_app(app)
+
+        expect(runners.diego_apps_from_process_guids(process_guid)).to eq([app])
+        expect(runners.diego_apps_from_process_guids([process_guid])).to eq([app])
+      end
+
+      it 'returns diego apps for each requested process guid' do
+        diego_apps = App.where(diego: true).all
+        diego_guids = diego_apps.map { |app| Diego::ProcessGuid.from_app(app) }
+
+        expect(runners.diego_apps_from_process_guids(diego_guids)).to match_array(diego_apps)
+      end
+
+      it 'loads all of the associations eagerly' do
+        diego_apps = App.where(diego: true).all
+        diego_guids = diego_apps.map { |app| Diego::ProcessGuid.from_app(app) }
+
+        expect {
+          runners.diego_apps_from_process_guids(diego_guids).each do |app|
+            app.current_droplet
+            app.space
+            app.stack
+            app.routes
+            app.service_bindings
+            app.routes.map(&:domain)
+          end
+        }.to have_queried_db_times(/SELECT/, [
+          :apps,
+          :droplets,
+          :spaces,
+          :stacks,
+          :routes,
+          :service_bindings,
+          :domain
+        ].length)
+      end
+
+      context 'when the process guid is not found' do
+        it 'does not return an app' do
+          app = App.where(diego: true).order(:id).first
+          process_guid = Diego::ProcessGuid.from_app(app)
+
+          expect {
+            app.set_new_version
+            app.save
+          }.to change {
+            runners.diego_apps_from_process_guids(process_guid)
+          }.from([app]).to([])
+        end
+      end
+
+      context 'when diego running is disabled' do
+        before do
+          allow(runners).to receive(:diego_running_disabled?).and_return(true)
+        end
+
+        it 'returns no apps' do
+          all_process_guids = App.all.map { |app| Diego::ProcessGuid.from_app(app) }
+
+          expect(runners.diego_apps_from_process_guids(all_process_guids)).to be_empty
+        end
+      end
+    end
+
+    describe '#diego_apps_cache_data' do
+      before do
+        5.times { make_diego_app(state: 'STARTED') }
+        expect(App.all.length).to eq(5)
+      end
+
+      it 'respects the batch_size' do
+        data_count = [3, 5].map do |batch_size|
+          runners.diego_apps_cache_data(batch_size, 0).count
+        end
+
+        expect(data_count).to eq([3, 5])
+      end
+
+      it 'returns data for non-intersecting apps across subsequent batches' do
+        first_batch = runners.diego_apps_cache_data(3, 0)
+        expect(first_batch.count).to eq(3)
+
+        last_id = first_batch.last[0]
+        second_batch = runners.diego_apps_cache_data(3, last_id)
+        expect(second_batch.count).to eq(2)
+      end
+
+      it 'does not return unstaged apps' do
+        unstaged_app = make_diego_app(state: 'STARTED')
+        unstaged_app.package_state = 'PENDING'
+        unstaged_app.save
+
+        batch = runners.diego_apps_cache_data(100, 0)
+        app_ids = batch.map { |data| data[0] }
+
+        expect(app_ids).not_to include(unstaged_app.id)
+      end
+
+      it 'does not return apps that are stopped' do
+        stopped_app = make_diego_app(state: 'STOPPED')
+
+        batch = runners.diego_apps_cache_data(100, 0)
+        app_ids = batch.map { |data| data[0] }
+
+        expect(app_ids).not_to include(stopped_app.id)
+      end
+
+      it 'does not return deleted apps' do
+        deleted_app = make_diego_app(state: 'STARTED', deleted_at: DateTime.now.utc)
+
+        batch = runners.diego_apps_cache_data(100, 0)
+        app_ids = batch.map { |data| data[0] }
+
+        expect(app_ids).not_to include(deleted_app.id)
+      end
+
+      it 'only includes diego apps' do
+        non_diego_app = make_diego_app(state: 'STARTED')
+        non_diego_app.environment_json = {}
+        non_diego_app.save
+
+        batch = runners.diego_apps_cache_data(100, 0)
+        app_ids = batch.map { |data| data[0] }
+
+        expect(app_ids).not_to include(non_diego_app.id)
+      end
+
+      context 'when diego running is disabled' do
+        before do
+          allow(runners).to receive(:diego_running_disabled?).and_return(true)
+        end
+
+        it 'returns no apps' do
+          expect(runners.diego_apps_cache_data(100, 0)).to be_empty
+        end
+      end
+
+      it 'acquires the data in one select' do
+        expect {
+          runners.diego_apps_cache_data(100, 0)
+        }.to have_queried_db_times(/SELECT/, 1)
       end
     end
 
