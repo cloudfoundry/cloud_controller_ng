@@ -1,18 +1,17 @@
-require "cloud_controller/blobstore/cdn"
-require "cloud_controller/dependency_locator"
+require 'cloud_controller/blobstore/cdn'
+require 'cloud_controller/dependency_locator'
 
 module VCAP::CloudController
   module Jobs
     module Runtime
       class PackageBits
-
         def initialize(package_guid, uploaded_compressed_path)
           @package_guid = package_guid
           @uploaded_compressed_path = uploaded_compressed_path
         end
 
         def perform
-          logger = Steno.logger("cc.background")
+          logger = Steno.logger('cc.background')
           logger.info("Packing the app bits for package '#{@package_guid}'")
 
           package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
@@ -33,4 +32,3 @@ module VCAP::CloudController
     end
   end
 end
-

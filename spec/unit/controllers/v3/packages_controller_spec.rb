@@ -35,7 +35,7 @@ module VCAP::CloudController
       let(:package) { PackageModel.make }
 
       let(:valid_zip) do
-        zip_name = File.join(tmpdir, "file.zip")
+        zip_name = File.join(tmpdir, 'file.zip')
         TestZip.create(zip_name, 1, 1024)
         zip_file = File.new(zip_name)
         Rack::Test::UploadedFile.new(zip_file)
@@ -43,9 +43,9 @@ module VCAP::CloudController
 
       let(:package_response) do
         {
-          type: "bits",
-          package_hash: "a-hash",
-          created_at: "a-date",
+          type: 'bits',
+          package_hash: 'a-hash',
+          created_at: 'a-date',
           _links: {
             app: {
               href: "/v3/apps/#{app_guid}",
@@ -76,20 +76,20 @@ module VCAP::CloudController
           end
         end
 
-        context "as an admin" do
+        context 'as an admin' do
           let(:headers) { admin_headers }
 
-          it "allows upload even if app_bits_upload flag is disabled" do
+          it 'allows upload even if app_bits_upload flag is disabled' do
             FeatureFlag.make(name: 'app_bits_upload', enabled: false)
             response_code, _ = packages_controller.create(app_guid)
             expect(response_code).to eq 201
           end
         end
 
-        context "as a developer" do
+        context 'as a developer' do
           let(:user) { make_developer_for_space(app_obj.space) }
 
-          context "with an invalid package" do
+          context 'with an invalid package' do
             let(:params) { {} }
 
             it 'returns an UnprocessableEntity error' do
@@ -102,7 +102,7 @@ module VCAP::CloudController
             end
           end
 
-          context "with an invalid type field" do
+          context 'with an invalid type field' do
             let(:params) { { type: 'ninja' } }
 
             it 'returns an UnprocessableEntity error' do
@@ -169,7 +169,7 @@ module VCAP::CloudController
         let(:package_guid) { package.guid }
 
         context 'when a user can access a package' do
-          let(:expected_response) { "im a response" }
+          let(:expected_response) { 'im a response' }
 
           before do
             allow(packages_handler).to receive(:show).and_return(package)

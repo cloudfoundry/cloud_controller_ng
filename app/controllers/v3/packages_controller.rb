@@ -4,7 +4,7 @@ require 'handlers/packages_handler'
 module VCAP::CloudController
   class PackagesController < RestController::BaseController
     def self.dependencies
-      [ :packages_handler, :package_presenter ]
+      [:packages_handler, :package_presenter]
     end
 
     def inject_dependencies(dependencies)

@@ -5,7 +5,7 @@ module VCAP::CloudController
   describe PackagePresenter do
     describe '#present_json' do
       it 'presents the package as json' do
-        package = PackageModel.make(type: "package_type")
+        package = PackageModel.make(type: 'package_type')
 
         json_result = PackagePresenter.new.present_json(package)
         result      = MultiJson.load(json_result)

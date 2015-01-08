@@ -45,7 +45,7 @@ resource 'Packages (Experimental)', type: :api do
           'type'   => package_model.type,
           'guid'   => guid,
           'hash'   => nil,
-          'state'  => "PENDING",
+          'state'  => 'PENDING',
           'error'  => nil,
           'created_at' => package_model.created_at.as_json,
           '_links' => {
@@ -76,7 +76,6 @@ resource 'Packages (Experimental)', type: :api do
       parameter :guid, 'GUID of the app that is going to use the package', required: true
       parameter :type, 'Package type', required: true, valid_values: ['bits', 'docker']
       parameter :bits, 'A binary zip file containing the package bits', required: false
-
 
       context 'when the type is bits' do
         let(:type) { 'bits' }
@@ -109,7 +108,7 @@ resource 'Packages (Experimental)', type: :api do
         example 'Create a Package with application bits' do
           expect {
             do_request packages_params
-          }.to change{ VCAP::CloudController::PackageModel.count }.by(1)
+          }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
           package = VCAP::CloudController::PackageModel.last
 
@@ -158,7 +157,7 @@ resource 'Packages (Experimental)', type: :api do
         example 'Create a Package with docker image' do
           expect {
             do_request packages_params
-          }.to change{ VCAP::CloudController::PackageModel.count }.by(1)
+          }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
           package = VCAP::CloudController::PackageModel.last
 

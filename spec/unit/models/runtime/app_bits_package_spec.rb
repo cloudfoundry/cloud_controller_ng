@@ -38,30 +38,30 @@ describe AppBitsPackage do
     FileUtils.remove_entry_secure blobstore_dir
   end
 
-  describe "#create_package_in_blobstore" do
+  describe '#create_package_in_blobstore' do
     let(:max_package_size) { nil }
     let(:package_guid) { package.guid }
     subject(:create) { packer.create_package_in_blobstore(package_guid, compressed_path) }
 
-    it "uploads the package zip to the package blob store" do
+    it 'uploads the package zip to the package blob store' do
       create
       expect(package_blobstore.exists?(package_guid)).to be true
     end
 
-    it "sets the package sha to the package" do
+    it 'sets the package sha to the package' do
       expect { create }.to change { package.refresh.package_hash }
     end
 
-    it "sets the state of the package" do
-      expect { create }.to change { package.refresh.state }.to ('READY')
+    it 'sets the state of the package' do
+      expect { create }.to change { package.refresh.state }.to('READY')
     end
 
-    it "removes the compressed path afterwards" do
+    it 'removes the compressed path afterwards' do
       expect(FileUtils).to receive(:rm_f).with(compressed_path)
       create
     end
 
-    context "when there is no package uploaded" do
+    context 'when there is no package uploaded' do
       let(:compressed_path) { nil }
 
       it "doesn't try to remove the file" do
@@ -87,16 +87,16 @@ describe AppBitsPackage do
         expect(package.error).to eq('BOOM')
       end
 
-      it "removes the compressed path afterwards" do
+      it 'removes the compressed path afterwards' do
         expect(FileUtils).to receive(:rm_f).with(compressed_path)
         create
       end
     end
 
-    context "when the app bits are too large" do
+    context 'when the app bits are too large' do
       let(:max_package_size) { 10 }
 
-      it "raises an exception and deletes the bits" do
+      it 'raises an exception and deletes the bits' do
         expect(FileUtils).to receive(:rm_f).with(compressed_path)
         expect {
           create

@@ -55,7 +55,7 @@ RSpec::Matchers.define :validate_uniqueness do |*attributes|
   end
 end
 
-RSpec::Matchers.define :validates_includes do |values, attribute, options = {}|
+RSpec::Matchers.define :validates_includes do |values, attribute, options={}|
   description do
     "validate includes of #{attribute} with #{values}"
   end

@@ -14,7 +14,7 @@ module VCAP::CloudController
       errors << validate_type_field
       errors << validate_file if @type == 'bits'
       errs = errors.compact
-      return errs.length == 0, errs
+      [errs.length == 0, errs]
     end
 
     private
@@ -24,7 +24,7 @@ module VCAP::CloudController
       valid_type_fields = %w(bits docker)
 
       if !valid_type_fields.include?(@type)
-        return "The type field needs to be one of '#{valid_type_fields.join(", ")}'"
+        return "The type field needs to be one of '#{valid_type_fields.join(', ')}'"
       end
       nil
     end
@@ -40,7 +40,7 @@ module VCAP::CloudController
     class InvalidPackage < StandardError; end
     class AppNotFound < StandardError; end
 
-    PACKAGE_STATES = %w[PENDING READY FAILED].map(&:freeze).freeze
+    PACKAGE_STATES = %w(PENDING READY FAILED).map(&:freeze).freeze
 
     def initialize(config)
       @config = config
@@ -67,7 +67,7 @@ module VCAP::CloudController
 
       if package.type == 'bits'
         bits_packer_job = Jobs::Runtime::PackageBits.new(package.guid, message.filepath)
-        Jobs::Enqueuer.new(bits_packer_job, queue: Jobs::LocalQueue.new(@config)).enqueue()
+        Jobs::Enqueuer.new(bits_packer_job, queue: Jobs::LocalQueue.new(@config)).enqueue
       end
 
       package
@@ -91,7 +91,7 @@ module VCAP::CloudController
       end
 
       blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore, nil)
-      Jobs::Enqueuer.new(blobstore_delete, queue: 'cc-generic').enqueue()
+      Jobs::Enqueuer.new(blobstore_delete, queue: 'cc-generic').enqueue
 
       package
     end

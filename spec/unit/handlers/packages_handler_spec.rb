@@ -108,7 +108,7 @@ module VCAP::CloudController
               result = nil
               expect {
                 result = packages_handler.create(create_message, access_context)
-              }.to change{ Delayed::Job.count }.by(1)
+              }.to change { Delayed::Job.count }.by(1)
 
               expect(result.state).to eq('PENDING')
             end
@@ -121,7 +121,7 @@ module VCAP::CloudController
               result = nil
               expect {
                 result = packages_handler.create(create_message, access_context)
-              }.to_not change{ Delayed::Job.count }
+              }.to_not change { Delayed::Job.count }
 
               expect(result.state).to eq('READY')
             end
@@ -222,7 +222,7 @@ module VCAP::CloudController
             expect {
               deleted_package = packages_handler.delete(package_guid, access_context)
               expect(deleted_package.guid).to eq(package_guid)
-            }.to change{ PackageModel.count }.by(-1)
+            }.to change { PackageModel.count }.by(-1)
             expect(PackageModel.find(guid: package_guid)).to be_nil
           end
 
@@ -233,7 +233,7 @@ module VCAP::CloudController
 
             expect {
               packages_handler.delete(package_guid, access_context)
-            }.to change{ Delayed::Job.count }.by(1)
+            }.to change { Delayed::Job.count }.by(1)
           end
         end
       end
