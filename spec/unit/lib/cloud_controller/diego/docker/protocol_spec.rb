@@ -84,6 +84,7 @@ module VCAP::CloudController
               'log_guid' => app.guid,
               'docker_image' => app.docker_image,
               'health_check_type' => app.health_check_type,
+              'etag' => app.updated_at.to_f.to_s,
             })
           end
 

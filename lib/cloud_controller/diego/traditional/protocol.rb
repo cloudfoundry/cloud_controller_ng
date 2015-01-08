@@ -57,6 +57,7 @@ module VCAP::CloudController
             'routes' => app.uris,
             'log_guid' => app.guid,
             'health_check_type' => app.health_check_type,
+            'etag' => app.updated_at.to_f.to_s
           }
 
           message['health_check_timeout_in_seconds'] = app.health_check_timeout if app.health_check_timeout

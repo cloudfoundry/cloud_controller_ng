@@ -90,6 +90,7 @@ module VCAP::CloudController
               memory: 555,
               stack: instance_double(Stack, name: 'fake-stack'),
               version: 'version-guid',
+              updated_at: Time.at(12345.6789),
               uris: ['fake-uris'],
             )
           end
@@ -119,6 +120,7 @@ module VCAP::CloudController
               'start_command' => 'the-custom-command',
               'execution_metadata' => 'staging-metadata',
               'routes' => ['fake-uris'],
+              'etag' => '12345.6789'
             )
           end
 

@@ -77,6 +77,7 @@ module VCAP::CloudController
             'health_check_type' => app.health_check_type,
             'health_check_timeout_in_seconds' => 120,
             'log_guid' => app.guid,
+            'etag' => app.updated_at.to_f.to_s,
           }
         end
 

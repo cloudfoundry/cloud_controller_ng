@@ -150,7 +150,7 @@ module VCAP::CloudController
             expect(decoded_response['apps'].size).to eq(6)
 
             last_response_app = decoded_response['apps'][5]
-            expect(last_response_app.except('environment')).to match_object({
+            expect(last_response_app.except('environment', 'etag')).to match_object({
               'disk_mb' => 1_024,
               'file_descriptors' => 16_384,
               'num_instances' => 4,
@@ -164,6 +164,7 @@ module VCAP::CloudController
               'execution_metadata' => '',
               'health_check_type' => 'port',
             })
+            expect(last_response_app['etag']).to_not be_nil
 
             last_response_app_env = last_response_app['environment']
             expect(last_response_app_env).to(be_any) { |e| e['name'] == 'VCAP_APPLICATION' }
