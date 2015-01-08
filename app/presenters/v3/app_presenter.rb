@@ -1,30 +1,21 @@
+require 'presenters/v3/pagination_presenter'
+
 module VCAP::CloudController
   class AppPresenter
+    def initialize(pagination_presenter=PaginationPresenter.new)
+      @pagination_presenter = pagination_presenter
+    end
+
     def present_json(app)
       MultiJson.dump(app_hash(app), pretty: true)
     end
 
     def present_json_list(paginated_result)
-      apps          = paginated_result.records
-      page          = paginated_result.page
-      per_page      = paginated_result.per_page
-      total_results = paginated_result.total
-
+      apps       = paginated_result.records
       app_hashes = apps.collect { |app| app_hash(app) }
 
-      last_page     = (total_results.to_f / per_page.to_f).ceil
-      last_page     = 1 if last_page < 1
-      previous_page = page - 1
-      next_page     = page + 1
-
       paginated_response = {
-        pagination: {
-          total_results: total_results,
-          first:         { href: "/v3/apps?page=1&per_page=#{per_page}" },
-          last:          { href: "/v3/apps?page=#{last_page}&per_page=#{per_page}" },
-          previous:      previous_page > 0 ? { href: "/v3/apps?page=#{previous_page}&per_page=#{per_page}" } : nil,
-          next:          next_page <= last_page ? { href: "/v3/apps?page=#{next_page}&per_page=#{per_page}" } : nil,
-        },
+        pagination: @pagination_presenter.present_pagination_hash(paginated_result, '/v3/apps'),
         resources:  app_hashes
       }
 
