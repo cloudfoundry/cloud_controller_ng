@@ -22,16 +22,11 @@ module VCAP::CloudController
       bulk_token = MultiJson.load(params.fetch('token'))
       last_id = Integer(bulk_token['id'] || 0)
 
-      if params['format'] == 'cache'
-        messages, id_for_token = bulk_cache_format(batch_size, last_id)
+      if params['format'] == 'fingerprint'
+        bulk_fingerprint_format(batch_size, last_id)
       else
-        messages, id_for_token = bulk_desire_app_format(batch_size, last_id)
+        bulk_desire_app_format(batch_size, last_id)
       end
-
-      MultiJson.dump(
-        apps: messages,
-        token: { 'id' => id_for_token }
-      )
     rescue IndexError => e
       raise ApiError.new_from_details('BadQueryParameter', e.message)
     end
@@ -59,17 +54,23 @@ module VCAP::CloudController
       messages = apps.map { |app| runners.runner_for_app(app).desire_app_message }
       id_for_next_token = apps.empty? ? nil : apps.last.id
 
-      [messages, id_for_next_token]
+      MultiJson.dump(
+        apps: messages,
+        token: { 'id' => id_for_next_token }
+      )
     end
 
-    def bulk_cache_format(batch_size, last_id)
+    def bulk_fingerprint_format(batch_size, last_id)
       id_for_next_token = nil
       messages = runners.diego_apps_cache_data(batch_size, last_id).map do |id, guid, version, updated|
         id_for_next_token = id
         { 'process_guid' => Diego::ProcessGuid.from(guid, version), 'etag' => updated.to_f.to_s }
       end
 
-      [messages, id_for_next_token]
+      MultiJson.dump(
+        fingerprints: messages,
+        token: { 'id' => id_for_next_token }
+      )
     end
 
     def runners

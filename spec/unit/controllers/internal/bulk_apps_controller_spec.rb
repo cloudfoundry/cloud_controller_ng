@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
   describe BulkAppsController do
@@ -160,18 +161,18 @@ module VCAP::CloudController
             it 'uses the cache data format' do
               get '/internal/bulk/apps', {
                   'batch_size' => 1,
-                  'format' => 'cache',
+                  'format' => 'fingerprint',
                   'token' => { id: 0 }.to_json,
                 }
 
               expect(last_response.status).to eq(200)
-              expect(decoded_response['apps'].size).to eq(1)
+              expect(decoded_response['fingerprints'].size).to eq(1)
 
               app = App.order(:id).first
 
-              message = decoded_response['apps'][0]
+              message = decoded_response['fingerprints'][0]
               expect(message).to match_object({
-                    'process_guid' => "#{app.guid}-#{app.version}",
+                    'process_guid' => Diego::ProcessGuid.from_app(app),
                     'etag' => app.updated_at.to_f.to_s
                   })
             end
