@@ -161,20 +161,6 @@ module VCAP::Services::ServiceBrokers::V2
                 to have_received(:deprovision).with(client_attrs, instance)
             end
           end
-
-          context 'ServiceBrokerBadResponse error' do
-            let(:error) { Errors::ServiceBrokerBadResponse.new(uri, :put, response) }
-
-            it 'propagates the error and follows up with a deprovision request' do
-              expect {
-                client.provision(instance)
-              }.to raise_error(Errors::ServiceBrokerBadResponse)
-
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                to have_received(:deprovision).
-                with(client_attrs, instance)
-            end
-          end
         end
 
         context 'due to a response parser error' do
@@ -402,19 +388,6 @@ module VCAP::Services::ServiceBrokers::V2
               expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
                 to have_received(:delayed_unbind).
                 with(client_attrs, binding)
-            end
-          end
-
-          context 'ServiceBrokerBadResponse error' do
-            let(:error) { Errors::ServiceBrokerBadResponse.new(uri, :put, response) }
-
-            it 'propagates the error and follows up with a deprovision request' do
-              expect {
-                client.bind(binding)
-              }.to raise_error(Errors::ServiceBrokerBadResponse)
-
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
-                                     to have_received(:delayed_unbind).with(client_attrs, binding)
             end
           end
         end
