@@ -12,25 +12,52 @@ module VCAP::CloudController
       let(:name) { 'fake-name' }
 
       describe 'deprovision' do
-        it 'enqueues a retryable ServiceInstanceDeprovision job' do
+        let(:mock_client) { double(:client, deprovision: nil) }
+
+        before do
           allow(Delayed::Job).to receive(:enqueue)
+          allow(VCAP::Request).to receive(:current_id).and_return('current_thread_id')
+          allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(mock_client)
+        end
 
-          Timecop.freeze do
-            ServiceInstanceDeprovisioner.deprovision(client_attrs, service_instance)
+        it 'enqueues a job with the correct queue and run_at time' do
+          ServiceInstanceDeprovisioner.deprovision(client_attrs, service_instance)
 
-            expect(Delayed::Job).to have_received(:enqueue) do |job, opts|
-              expect(opts[:queue]).to eq 'cc-generic'
-              expect(opts[:run_at]).to be_within(0.01).of(Delayed::Job.db_time_now)
+          expect(Delayed::Job).to have_received(:enqueue) do |job, opts|
+            expect(opts[:queue]).to eq 'cc-generic'
+            expect(opts[:run_at]).to be_within(0.01).of(Delayed::Job.db_time_now)
+          end
+        end
 
-              expect(job).to be_a VCAP::CloudController::Jobs::RetryableJob
-              expect(job.num_attempts).to eq 0
+        it 'enqueues a job that deprovisions an instance' do
+          mock_instance = double(:instance, guid: service_instance.guid)
+          allow(VCAP::CloudController::ServiceInstance).to receive(:new).and_return(mock_instance)
 
-              inner_job = job.job
-              expect(inner_job).to be_instance_of(VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision)
-              expect(inner_job.client_attrs).to be(client_attrs)
-              expect(inner_job.service_instance_guid).to be(service_instance.guid)
-              expect(inner_job.service_plan_guid).to be(service_instance.service_plan.guid)
-            end
+          ServiceInstanceDeprovisioner.deprovision(client_attrs, service_instance)
+
+          expect(Delayed::Job).to have_received(:enqueue) do |job, opts|
+            job.perform
+          end
+          expect(mock_client).to have_received(:deprovision).with(mock_instance)
+        end
+
+        it 'creates the job in the same context as the original request' do
+          allow(VCAP::Request).to receive(:current_id=)
+
+          ServiceInstanceDeprovisioner.deprovision(client_attrs, service_instance)
+
+          expect(Delayed::Job).to have_received(:enqueue) do |job, opts|
+            job.perform
+          end
+          expect(VCAP::Request).to have_received(:current_id=).twice.with('current_thread_id')
+        end
+
+        it 'makes the job retryable' do
+          ServiceInstanceDeprovisioner.deprovision(client_attrs, service_instance)
+
+          expect(Delayed::Job).to have_received(:enqueue) do |job, opts|
+            expect(job).to be_a VCAP::CloudController::Jobs::RetryableJob
+            expect(job.num_attempts).to eq 0
           end
         end
       end

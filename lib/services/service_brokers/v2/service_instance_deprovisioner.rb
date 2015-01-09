@@ -12,7 +12,8 @@ module VCAP::CloudController
             service_instance.service_plan.guid
           )
 
-          retryable_job = VCAP::CloudController::Jobs::RetryableJob.new(deprovision_job, 0)
+          request_job = VCAP::CloudController::Jobs::RequestJob.new(deprovision_job, ::VCAP::Request.current_id)
+          retryable_job = VCAP::CloudController::Jobs::RetryableJob.new(request_job, 0)
           Delayed::Job.enqueue(retryable_job, queue: 'cc-generic', run_at: Delayed::Job.db_time_now)
         end
       end
