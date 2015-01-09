@@ -3,6 +3,9 @@ module VCAP::CloudController
     module Services
       class ServiceInstanceUnbind < Struct.new(:name, :client_attrs, :binding_guid, :service_instance_guid, :app_guid)
         def perform
+          logger = Steno.logger('cc-background')
+          logger.info('There was an error during service binding creation. Attempting to delete potentially orphaned binding.')
+
           client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
           app = VCAP::CloudController::App.first(guid: app_guid)
           service_instance = VCAP::CloudController::ServiceInstance.first(guid: service_instance_guid)
