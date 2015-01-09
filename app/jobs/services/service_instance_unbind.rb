@@ -20,7 +20,11 @@ module VCAP::CloudController
         end
 
         def max_attempts
-          1
+          10
+        end
+
+        def reschedule_at(time, attempts)
+          time + (2**attempts).minutes
         end
       end
     end

@@ -36,8 +36,17 @@ module VCAP::CloudController
       end
 
       describe '#max_attempts' do
-        it 'returns 1' do
-          expect(job.max_attempts).to eq 1
+        it 'returns 10' do
+          expect(job.max_attempts).to eq 10
+        end
+      end
+
+      describe '#reschedule_at' do
+        it 'uses exponential backoff' do
+          now = Time.now
+
+          run_at = job.reschedule_at(now, 5)
+          expect(run_at).to eq(now + (2**5).minutes)
         end
       end
     end
