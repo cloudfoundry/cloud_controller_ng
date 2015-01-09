@@ -11,7 +11,7 @@ module VCAP::CloudController
       has_read_scope && user_visible
     end
 
-    def create?(desired_package, app, space)
+    def create?(_, _, space)
       return true if context.roles.admin?
 
       has_write_scope = SecurityContext.scopes.include?('cloud_controller.write')

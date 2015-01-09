@@ -1,18 +1,31 @@
 module VCAP::CloudController
+  class PackageUploadMessage
+    attr_reader :package_path, :package_guid
+
+    def initialize(package_guid, opts)
+      @package_guid = package_guid
+      @package_path = opts['bits_path']
+    end
+
+    def validate
+      return false, 'An application zip file must be uploaded.' unless @package_path
+      true
+    end
+  end
+
   class PackageCreateMessage
-    attr_reader :app_guid, :type, :filepath
+    attr_reader :app_guid, :type, :url
 
     def initialize(app_guid, opts)
       @app_guid = app_guid
       @type     = opts['type']
-      @filepath = opts['bits_path']
-      @filename = opts['bits_name']
+      @url      = opts['url']
     end
 
     def validate
       errors = []
       errors << validate_type_field
-      errors << validate_file if @type == 'bits'
+      errors << validate_url
       errs = errors.compact
       [errs.length == 0, errs]
     end
@@ -29,18 +42,19 @@ module VCAP::CloudController
       nil
     end
 
-    def validate_file
-      return 'Must upload an application zip file' if @filepath.nil?
+    def validate_url
+      return 'The url field cannot be provided when type is bits.' if @type == 'bits' && !@url.nil?
+      return 'The url field must be provided for type docker.' if @type == 'docker' && @url.nil?
       nil
     end
   end
 
   class PackagesHandler
     class Unauthorized < StandardError; end
+    class InvalidPackageType < StandardError; end
     class InvalidPackage < StandardError; end
     class AppNotFound < StandardError; end
-
-    PACKAGE_STATES = %w(PENDING READY FAILED).map(&:freeze).freeze
+    class PackageNotFound < StandardError; end
 
     def initialize(config)
       @config = config
@@ -50,7 +64,8 @@ module VCAP::CloudController
       package          = PackageModel.new
       package.app_guid = message.app_guid
       package.type     = message.type
-      package.state    = 'READY' if message.type == 'docker'
+      package.url      = message.url
+      package.state = message.type == 'bits' ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
 
       app = AppModel.find(guid: package.app_guid)
       raise AppNotFound if app.nil?
@@ -65,14 +80,29 @@ module VCAP::CloudController
         package.save
       end
 
-      if package.type == 'bits'
-        bits_packer_job = Jobs::Runtime::PackageBits.new(package.guid, message.filepath)
-        Jobs::Enqueuer.new(bits_packer_job, queue: Jobs::LocalQueue.new(@config)).enqueue
-      end
-
       package
     rescue Sequel::ValidationFailed => e
       raise InvalidPackage.new(e.message)
+    end
+
+    def upload(message, access_context)
+      package = PackageModel.find(guid: message.package_guid)
+      raise PackageNotFound if package.nil?
+
+      app = AppModel.find(guid: package.app_guid)
+      raise AppNotFound if app.nil?
+
+      raise InvalidPackageType.new('Package type must be bits.') if package.type != 'bits'
+
+      space = Space.find(guid: app.space_guid)
+      raise Unauthorized if access_context.cannot?(:create, package, app, space)
+
+      package.update(state: PackageModel::PENDING_STATE)
+
+      bits_upload_job = Jobs::Runtime::PackageBits.new(package.guid, message.package_path)
+      Jobs::Enqueuer.new(bits_upload_job, queue: Jobs::LocalQueue.new(@config)).enqueue
+
+      package
     end
 
     def delete(guid, access_context)

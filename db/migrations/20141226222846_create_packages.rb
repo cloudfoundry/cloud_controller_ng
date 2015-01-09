@@ -9,6 +9,7 @@ Sequel.migration do
       String :package_hash
       String :state, default: 'PENDING', null: false
       String :error, text: true
+      String :url
     end
   end
 end

@@ -5,6 +5,7 @@ module VCAP::CloudController
         guid: package.guid,
         type: package.type,
         hash: package.package_hash,
+        url: package.url,
         state: package.state,
         error: package.error,
         created_at: package.created_at,

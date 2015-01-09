@@ -91,7 +91,7 @@ http {
     }
 <% end %>
 
-    location ~ (/apps/.*/application|/v2/apps/.*/bits|/services/v\d+/configurations/.*/serialized/data|/v2/buildpacks/.*/bits|/v3/apps/.*/packages) {
+    location ~ (/apps/.*/application|/v2/apps/.*/bits|/services/v\d+/configurations/.*/serialized/data|/v2/buildpacks/.*/bits|/v3/packages/.*/upload) {
       # Pass altered request body to this location
       upload_pass   @cc_uploads;
       upload_pass_args on;
@@ -112,7 +112,6 @@ http {
       #forward the following fields from existing body
       upload_pass_form_field "^resources$";
       upload_pass_form_field "^_method$";
-      upload_pass_form_field "^type$";
 
       #on any error, delete uploaded files.
       upload_cleanup 400-505;

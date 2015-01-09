@@ -148,6 +148,84 @@ module VCAP::CloudController
       end
     end
 
+    describe 'upload' do
+      let(:package) { PackageModel.make }
+      let(:params) { { 'bits_path' => 'path/to/bits' } }
+
+      context 'when the package type is not bits' do
+        before do
+          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::InvalidPackageType)
+        end
+
+        it 'returns a 400 InvalidRequest' do
+          expect {
+            packages_controller.upload(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'InvalidRequest'
+            expect(error.response_code).to eq 400
+          end
+        end
+      end
+
+      context 'when the app does not exist' do
+        before do
+          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::AppNotFound)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            packages_controller.upload(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the package does not exist' do
+        before do
+          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::PackageNotFound)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            packages_controller.upload(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the message is not valid' do
+        let(:params) { {} }
+
+        it 'returns a 422 UnprocessableEntity error' do
+          expect {
+            packages_controller.upload(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq 422
+          end
+        end
+      end
+
+      context 'when the user cannot access the package' do
+        before do
+          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::Unauthorized)
+        end
+
+        it 'returns an Unauthorized error' do
+          expect {
+            packages_controller.upload(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+        end
+      end
+    end
+
     describe '#show' do
       context 'when the package does not exist' do
         before do

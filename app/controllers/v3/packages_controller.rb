@@ -28,6 +28,26 @@ module VCAP::CloudController
       app_not_found!
     end
 
+    post '/v3/packages/:guid/upload', :upload
+    def upload(package_guid)
+      message = PackageUploadMessage.new(package_guid, params)
+      valid, error = message.validate
+      unprocessable!(error) if !valid
+
+      package = @packages_handler.upload(message, @access_context)
+      package_json = @package_presenter.present_json(package)
+
+      [HTTP::CREATED, package_json]
+    rescue PackagesHandler::InvalidPackageType => e
+      invalid_request!(e.message)
+    rescue PackagesHandler::AppNotFound
+      app_not_found!
+    rescue PackagesHandler::PackageNotFound
+      package_not_found!
+    rescue PackagesHandler::Unauthorized
+      unauthorized!
+    end
+
     get '/v3/packages/:guid', :show
     def show(package_guid)
       package = @packages_handler.show(package_guid, @access_context)
@@ -64,6 +84,10 @@ module VCAP::CloudController
 
     def unprocessable!(message)
       raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+    end
+
+    def invalid_request!(message)
+      raise VCAP::Errors::ApiError.new_from_details('InvalidRequest', message)
     end
   end
 end

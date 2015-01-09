@@ -2,10 +2,35 @@ require 'spec_helper'
 require 'handlers/packages_handler'
 
 module VCAP::CloudController
+  describe PackageUploadMessage do
+    let(:guid) { 'my-guid' }
+
+    context 'when the path is not provided' do
+      let(:opts) { {} }
+      it 'is not valid' do
+        create_message = PackageUploadMessage.new(guid, opts)
+        valid, error = create_message.validate
+        expect(valid).to be_falsey
+        expect(error).to include('An application zip file must be uploaded.')
+      end
+    end
+
+    context 'and the path is provided' do
+      let(:opts) { { 'bits_path' => 'foobar' } }
+      it 'is valid' do
+        create_message = PackageUploadMessage.new(guid, opts)
+        valid, error = create_message.validate
+        expect(valid).to be_truthy
+        expect(error).to be_nil
+      end
+    end
+  end
+
   describe PackageCreateMessage do
+    let(:guid) { 'my-guid' }
+
     context 'when a type parameter that is not allowed is provided' do
       let(:opts) { { 'type' => 'not-allowed'  } }
-      let(:guid) { 'my-guid' }
 
       it 'is not valid' do
         create_message = PackageCreateMessage.new(guid, opts)
@@ -17,7 +42,6 @@ module VCAP::CloudController
 
     context 'when nil type is provided' do
       let(:opts) { { 'type' => nil } }
-      let(:guid) { 'my-guid' }
 
       it 'is not valid' do
         create_message = PackageCreateMessage.new(guid, opts)
@@ -28,21 +52,9 @@ module VCAP::CloudController
     end
 
     context 'when type is bits' do
-      let(:opts) { { 'type' => 'bits', 'bits_path' => nil, 'bits_name' => nil } }
-      let(:guid) { 'my-guid' }
+      let(:opts) { { 'type' => 'bits' } }
 
-      context 'and no zip file is uploaded' do
-        it 'is not valid' do
-          create_message = PackageCreateMessage.new(guid, opts)
-          valid, errors = create_message.validate
-          expect(valid).to be_falsey
-          expect(errors).to include('Must upload an application zip file')
-        end
-      end
-
-      context 'and a zip file is uploaded' do
-        let(:opts) { { 'type' => 'bits', 'bits_path' => '/tmp', 'bits_name' => 'app.zip' } }
-
+      context 'no url is provided' do
         it 'is valid' do
           create_message = PackageCreateMessage.new(guid, opts)
           valid, errors = create_message.validate
@@ -51,13 +63,37 @@ module VCAP::CloudController
         end
       end
 
-      context 'when type is docker' do
-        let(:opts) { { 'type' => 'docker', 'bits_path' => nil, 'bits_name' => nil } }
-        it 'does not care about a zip file' do
+      context 'and a url is provided' do
+        let(:opts) { { 'type' => 'bits', 'url' => 'foobar' } }
+
+        it 'is not valid' do
+          create_message = PackageCreateMessage.new(guid, opts)
+          valid, errors = create_message.validate
+          expect(valid).to be_falsey
+          expect(errors).to include('The url field cannot be provided when type is bits.')
+        end
+      end
+    end
+
+    context 'when type is docker' do
+      context 'and a url is provided' do
+        let(:opts) { { 'type' => 'docker', 'url' => 'foobar' } }
+        it 'is valid' do
           create_message = PackageCreateMessage.new(guid, opts)
           valid, errors = create_message.validate
           expect(valid).to be_truthy
           expect(errors).to be_empty
+        end
+      end
+
+      context 'and a url is not provided' do
+        let(:opts) { { 'type' => 'docker' } }
+
+        it 'is not valid' do
+          create_message = PackageCreateMessage.new(guid, opts)
+          valid, errors = create_message.validate
+          expect(valid).to be_falsey
+          expect(errors).to include('The url field must be provided for type docker.')
         end
       end
     end
@@ -83,15 +119,15 @@ module VCAP::CloudController
     end
 
     describe '#create' do
+      let(:url) { 'docker://cloudfoundry/runtime-ci' }
       let(:create_opts) do
         {
-          'type' => 'bits',
-          'bits_path' =>  tmpdir,
-          'bits_name' => 'file.zip',
+          'type' => 'docker',
+          'url' => url
         }
       end
 
-      context 'when the app exists' do
+      context 'when the app exist' do
         let(:create_message) { PackageCreateMessage.new(app.guid, create_opts) }
 
         context 'when a user can create a package' do
@@ -99,31 +135,28 @@ module VCAP::CloudController
             result = packages_handler.create(create_message, access_context)
 
             created_package = PackageModel.find(guid: result.guid)
-            expect(created_package.app_guid).to eq(result.app_guid)
-            expect(created_package.type).to eq(result.type)
+            expect(created_package).to eq(result)
           end
 
           context 'when the type is bits' do
-            it 'adds a delayed job to upload the package bits' do
-              result = nil
-              expect {
-                result = packages_handler.create(create_message, access_context)
-              }.to change { Delayed::Job.count }.by(1)
+            let(:create_opts) { { 'type' => 'bits' } }
 
-              expect(result.state).to eq('PENDING')
+            it 'adds a delayed job to upload the package bits' do
+              result = packages_handler.create(create_message, access_context)
+
+              expect(result.type).to eq('bits')
+              expect(result.state).to eq('CREATED')
+              expect(result.url).to be_nil
             end
           end
 
           context 'when the type is docker' do
-            let(:create_opts) { { 'type' => 'docker' } }
-
             it 'adds a delayed job to upload the package bits' do
-              result = nil
-              expect {
-                result = packages_handler.create(create_message, access_context)
-              }.to_not change { Delayed::Job.count }
+              result = packages_handler.create(create_message, access_context)
 
+              expect(result.type).to eq('docker')
               expect(result.state).to eq('READY')
+              expect(result.url).to eq(url)
             end
           end
         end
@@ -161,6 +194,96 @@ module VCAP::CloudController
           expect {
             packages_handler.create(create_message, access_context)
           }.to raise_error(PackagesHandler::AppNotFound)
+        end
+      end
+    end
+
+    describe 'upload' do
+      let(:package) { PackageModel.make(app_guid: app_guid, type: 'bits', state: 'CREATED') }
+      let(:upload_message) { PackageUploadMessage.new(package_guid, upload_opts) }
+      let(:create_opts) { { 'bit_path' => 'path/to/bits' } }
+      let(:upload_opts) { { 'bits_path' => 'foobar' } }
+      let(:app_guid) { app.guid }
+      let(:package_guid) { package.guid }
+
+      before do
+        allow(access_context).to receive(:cannot?).and_return(false)
+      end
+
+      context 'when the package exists' do
+        context 'when the app exists' do
+          context 'when the user can access the package' do
+            context 'when the package is of type bits' do
+              before do
+                config[:name] = 'local'
+                config[:index] = '1'
+              end
+
+              it 'enqueues a upload job' do
+                expect {
+                  packages_handler.upload(upload_message, access_context)
+                }.to change { Delayed::Job.count }.by(1)
+
+                job = Delayed::Job.last
+                expect(job.queue).to eq('cc-local-1')
+                expect(job.handler).to include(package_guid)
+                expect(job.handler).to include('PackageBits')
+              end
+
+              it 'changes the state to pending' do
+                packages_handler.upload(upload_message, access_context)
+                expect(PackageModel.find(guid: package_guid).state).to eq(PackageModel::PENDING_STATE)
+              end
+
+              it 'returns the package' do
+                resulting_package = packages_handler.upload(upload_message, access_context)
+                expected_package = PackageModel.find(guid: package_guid)
+                expect(resulting_package.guid).to eq(expected_package.guid)
+              end
+            end
+
+            context 'when the package is not of type bits' do
+              let(:package) { PackageModel.make(app_guid: app_guid, type: 'docker') }
+
+              it 'raises an InvalidPackage exception' do
+                expect {
+                  packages_handler.upload(upload_message, access_context)
+                }.to raise_error(PackagesHandler::InvalidPackageType)
+              end
+            end
+          end
+
+          context 'when the user cannot access the package' do
+            before do
+              allow(access_context).to receive(:cannot?).and_return(true)
+            end
+
+            it 'raises an Unathorized exception' do
+              expect {
+                packages_handler.upload(upload_message, access_context)
+              }.to raise_error(PackagesHandler::Unauthorized)
+            end
+          end
+        end
+
+        context 'when the app does not exist' do
+          let(:app_guid) { 'non-existant' }
+
+          it 'raises an AppNotFound exception' do
+            expect {
+              packages_handler.upload(upload_message, access_context)
+            }.to raise_error(PackagesHandler::AppNotFound)
+          end
+        end
+      end
+
+      context 'when the package does not exist' do
+        let(:package_guid) { 'non-existant' }
+
+        it 'raises a PackageNotFound exception' do
+          expect {
+            packages_handler.upload(upload_message, access_context)
+          }.to raise_error(PackagesHandler::PackageNotFound)
         end
       end
     end
