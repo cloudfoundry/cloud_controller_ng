@@ -139,7 +139,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:response) { double(:response, body: nil, message: nil) }
 
         before do
-          allow(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).to receive(:deprovision)
+          allow(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).to receive(:cleanup_failed_provision)
         end
 
         context 'due to an http client error' do
@@ -157,8 +157,8 @@ module VCAP::Services::ServiceBrokers::V2
                 client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                to have_received(:deprovision).with(client_attrs, instance)
+              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
+                to have_received(:cleanup_failed_provision).with(client_attrs, instance)
             end
           end
         end
@@ -179,8 +179,8 @@ module VCAP::Services::ServiceBrokers::V2
                 client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                to have_received(:deprovision).
+              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
+                to have_received(:cleanup_failed_provision).
                 with(client_attrs, instance)
             end
           end
@@ -193,8 +193,8 @@ module VCAP::Services::ServiceBrokers::V2
                 client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceDeprovisioner).
-                to have_received(:deprovision).
+              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
+                to have_received(:cleanup_failed_provision).
                 with(client_attrs, instance)
             end
           end
@@ -367,7 +367,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:response) { double(:response, body: nil, message: nil) }
 
         before do
-          allow(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).to receive(:delayed_unbind)
+          allow(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).to receive(:cleanup_failed_bind)
         end
 
         context 'due to an http client error' do
@@ -385,8 +385,8 @@ module VCAP::Services::ServiceBrokers::V2
                 client.bind(binding)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
-                to have_received(:delayed_unbind).
+              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
+                to have_received(:cleanup_failed_bind).
                 with(client_attrs, binding)
             end
           end
@@ -408,8 +408,8 @@ module VCAP::Services::ServiceBrokers::V2
                 client.bind(binding)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
-                                     to have_received(:delayed_unbind).with(client_attrs, binding)
+              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
+                                     to have_received(:cleanup_failed_bind).with(client_attrs, binding)
             end
           end
 
@@ -421,8 +421,8 @@ module VCAP::Services::ServiceBrokers::V2
                 client.bind(binding)
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::ServiceInstanceUnbinder).
-                                     to have_received(:delayed_unbind).with(client_attrs, binding)
+              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
+                                     to have_received(:cleanup_failed_bind).with(client_attrs, binding)
             end
           end
         end
