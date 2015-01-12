@@ -48,12 +48,12 @@ class AppBitsPackage
       package.db.transaction do
         package.lock!
         package.package_hash = package_file.hexdigest
-        package.state = 'READY'
+        package.state = VCAP::CloudController::PackageModel::READY_STATE
         package.save
       end
     rescue => e
       package.db.transaction do
-        package.state = 'FAILED'
+        package.state = VCAP::CloudController::PackageModel::FAILED_STATE
         package.error = e.message
         package.save
       end

@@ -170,7 +170,7 @@ module VCAP::CloudController
               result = packages_handler.create(create_message, access_context)
 
               expect(result.type).to eq('bits')
-              expect(result.state).to eq('CREATED')
+              expect(result.state).to eq(PackageModel::CREATED_STATE)
               expect(result.url).to be_nil
             end
           end
@@ -224,7 +224,7 @@ module VCAP::CloudController
     end
 
     describe '#upload' do
-      let(:package) { PackageModel.make(space_guid: space_guid, type: 'bits', state: 'CREATED') }
+      let(:package) { PackageModel.make(space_guid: space_guid, type: 'bits', state: PackageModel::CREATED_STATE) }
       let(:upload_message) { PackageUploadMessage.new(package_guid, upload_opts) }
       let(:create_opts) { { 'bit_path' => 'path/to/bits' } }
       let(:upload_opts) { { 'bits_path' => 'foobar' } }
@@ -264,6 +264,19 @@ module VCAP::CloudController
                 resulting_package = packages_handler.upload(upload_message, access_context)
                 expected_package = PackageModel.find(guid: package_guid)
                 expect(resulting_package.guid).to eq(expected_package.guid)
+              end
+
+              context 'when the bits have already been uploaded' do
+                before do
+                  package.state =  PackageModel::PENDING_STATE
+                  package.save
+                end
+
+                it 'raises BitsAlreadyUploaded error' do
+                  expect {
+                    packages_handler.upload(upload_message, access_context)
+                  }.to raise_error(PackagesHandler::BitsAlreadyUploaded)
+                end
               end
             end
 

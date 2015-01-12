@@ -20,6 +20,17 @@ module VCAP::CloudController
         expect(result['_links']).to include('self')
         expect(result['_links']).to include('space')
       end
+
+      context 'when the package type is bits' do
+        let(:package) { PackageModel.make(type: 'bits', url: 'foobar') }
+
+        it 'includes a link to upload' do
+          json_result = PackagePresenter.new.present_json(package)
+          result      = MultiJson.load(json_result)
+
+          expect(result['_links']['upload']['href']).to eq("/v3/packages/#{package.guid}/upload")
+        end
+      end
     end
   end
 end

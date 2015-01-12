@@ -40,16 +40,17 @@ resource 'Packages (Experimental)', type: :api do
 
       example 'Get a Package' do
         expected_response = {
-          'type'   => package_model.type,
-          'guid'   => guid,
-          'hash'   => nil,
-          'state'  => 'PENDING',
-          'url' => nil,
-          'error'  => nil,
+          'type'       => package_model.type,
+          'guid'       => guid,
+          'hash'       => nil,
+          'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+          'url'        => nil,
+          'error'      => nil,
           'created_at' => package_model.created_at.as_json,
-          '_links' => {
-            'self'      => { 'href' => "/v3/packages/#{guid}" },
-            'space' => { 'href' => "/v2/spaces/#{space_guid}" },
+          '_links'     => {
+            'self'   => { 'href' => "/v3/packages/#{guid}" },
+            'upload' => { 'href' => "/v3/packages/#{guid}/upload" },
+            'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
 
@@ -110,16 +111,17 @@ resource 'Packages (Experimental)', type: :api do
         expect(job.guid).not_to be_nil
 
         expected_response = {
-          'guid' => guid,
-          'type' => type,
-          'hash' => nil,
-          'state' => 'PENDING',
-          'url' => nil,
-          'error' => nil,
+          'guid'       => guid,
+          'type'       => type,
+          'hash'       => nil,
+          'state'      => VCAP::CloudController::PackageModel::PENDING_STATE,
+          'url'        => nil,
+          'error'      => nil,
           'created_at' => package_model.created_at.as_json,
-          '_links' => {
-            'self' => { 'href' => "/v3/packages/#{package_model.guid}" },
-            'space' => { 'href' => "/v2/spaces/#{space_guid}" },
+          '_links'     => {
+            'self'   => { 'href' => "/v3/packages/#{package_model.guid}" },
+            'upload' => { 'href' => "/v3/packages/#{package_model.guid}/upload" },
+            'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
 
@@ -139,7 +141,7 @@ resource 'Packages (Experimental)', type: :api do
       let(:packages_params) do
         {
           type: type,
-          url: url
+          url:  url
         }
       end
 
@@ -161,16 +163,17 @@ resource 'Packages (Experimental)', type: :api do
         package = VCAP::CloudController::PackageModel.last
 
         expected_response = {
-          'guid' => package.guid,
-          'type' => type,
-          'hash' => nil,
-          'state' => 'READY',
-          'error' => nil,
-          'url' => url,
+          'guid'       => package.guid,
+          'type'       => type,
+          'hash'       => nil,
+          'state'      => 'READY',
+          'error'      => nil,
+          'url'        => url,
           'created_at' => package.created_at.as_json,
-          '_links' => {
-            'self' => { 'href' => "/v3/packages/#{package.guid}" },
-            'space' => { 'href' => "/v2/spaces/#{space_guid}" },
+          '_links'     => {
+            'self'   => { 'href' => "/v3/packages/#{package.guid}" },
+            'upload' => { 'href' => "/v3/packages/#{package.guid}/upload" },
+            'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
 

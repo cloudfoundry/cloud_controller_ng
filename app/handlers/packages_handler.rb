@@ -65,9 +65,9 @@ module VCAP::CloudController
     class Unauthorized < StandardError; end
     class InvalidPackageType < StandardError; end
     class InvalidPackage < StandardError; end
-    class AppNotFound < StandardError; end
     class SpaceNotFound < StandardError; end
     class PackageNotFound < StandardError; end
+    class BitsAlreadyUploaded < StandardError; end
 
     def initialize(config)
       @config = config
@@ -96,6 +96,7 @@ module VCAP::CloudController
 
       raise PackageNotFound if package.nil?
       raise InvalidPackageType.new('Package type must be bits.') if package.type != 'bits'
+      raise BitsAlreadyUploaded.new('Bits may be uploaded only once. Create a new package to upload different bits.') if package.state != PackageModel::CREATED_STATE
 
       space = Space.find(guid: package.space_guid)
       raise SpaceNotFound if space.nil?

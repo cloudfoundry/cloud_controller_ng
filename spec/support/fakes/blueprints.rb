@@ -36,7 +36,8 @@ module VCAP::CloudController
   end
 
   PackageModel.blueprint do
-    guid       { Sham.guid }
+    guid    { Sham.guid }
+    state   { VCAP::CloudController::PackageModel::CREATED_STATE }
   end
 
   User.blueprint do

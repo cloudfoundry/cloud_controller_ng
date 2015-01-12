@@ -1,9 +1,9 @@
 module VCAP::CloudController
   class PackageModel < Sequel::Model(:packages)
-    PENDING_STATE = 'PROCESSING_UPLOAD'
-    READY_STATE = 'READY'
-    FAILED_STATE = 'FAILED'
-    CREATED_STATE = 'AWAITING_UPLOAD'
+    PENDING_STATE  = 'PROCESSING_UPLOAD'
+    READY_STATE    = 'READY'
+    FAILED_STATE   = 'FAILED'
+    CREATED_STATE  = 'AWAITING_UPLOAD'
     PACKAGE_STATES = [CREATED_STATE, PENDING_STATE, READY_STATE, FAILED_STATE].map(&:freeze).freeze
 
     def validate
