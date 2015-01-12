@@ -5,8 +5,10 @@ module VCAP::CloudController
     let(:logger) { instance_double(Steno::Logger) }
     let(:user) { User.make }
     let(:params) { {} }
-    let(:packages_handler) { double(:process_handler) }
+    let(:packages_handler) { double(:packages_handler) }
+    let(:apps_handler) { double(:apps_handler) }
     let(:package_presenter) { double(:package_presenter) }
+    let(:req_body) { '{}' }
 
     let(:packages_controller) do
       PackagesController.new(
@@ -14,11 +16,12 @@ module VCAP::CloudController
         logger,
         {},
         params.stringify_keys,
-        '',
+        req_body,
         nil,
         {
           packages_handler: packages_handler,
           package_presenter: package_presenter,
+          apps_handler: apps_handler
         },
       )
     end
@@ -29,10 +32,11 @@ module VCAP::CloudController
 
     describe '#create' do
       let(:tmpdir) { Dir.mktmpdir }
-      let(:params) { { type: 'bits', bits_path: '/tmp/app.zip', bits_name: 'app.zip' } }
-      let(:app_obj) { AppModel.make }
-      let(:app_guid) { app_obj.guid }
+      let(:app_model) { AppModel.make }
+      let(:app_guid) { app_model.guid }
+      let(:space_guid) { app_model.space_guid }
       let(:package) { PackageModel.make }
+      let(:req_body) { '{"type":"bits"}' }
 
       let(:valid_zip) do
         zip_name = File.join(tmpdir, 'file.zip')
@@ -41,22 +45,12 @@ module VCAP::CloudController
         Rack::Test::UploadedFile.new(zip_file)
       end
 
-      let(:package_response) do
-        {
-          type: 'bits',
-          package_hash: 'a-hash',
-          created_at: 'a-date',
-          _links: {
-            app: {
-              href: "/v3/apps/#{app_guid}",
-            },
-          },
-        }
-      end
+      let(:package_response) { 'foobar' }
 
       before do
         allow(package_presenter).to receive(:present_json).and_return(MultiJson.dump(package_response, pretty: true))
         allow(packages_handler).to receive(:create).and_return(package)
+        allow(apps_handler).to receive(:show).and_return(app_model)
       end
 
       after do
@@ -76,21 +70,11 @@ module VCAP::CloudController
           end
         end
 
-        context 'as an admin' do
-          let(:headers) { admin_headers }
-
-          it 'allows upload even if app_bits_upload flag is disabled' do
-            FeatureFlag.make(name: 'app_bits_upload', enabled: false)
-            response_code, _ = packages_controller.create(app_guid)
-            expect(response_code).to eq 201
-          end
-        end
-
         context 'as a developer' do
-          let(:user) { make_developer_for_space(app_obj.space) }
+          let(:user) { make_developer_for_space(app_model.space) }
 
           context 'with an invalid package' do
-            let(:params) { {} }
+            let(:req_body) { 'all sorts of invalid' }
 
             it 'returns an UnprocessableEntity error' do
               expect {
@@ -103,7 +87,7 @@ module VCAP::CloudController
           end
 
           context 'with an invalid type field' do
-            let(:params) { { type: 'ninja' } }
+            let(:req_body) { '{ "type": "ninja" }' }
 
             it 'returns an UnprocessableEntity error' do
               expect {
@@ -134,7 +118,7 @@ module VCAP::CloudController
 
       context 'when the app does not exist' do
         before do
-          allow(packages_handler).to receive(:create).and_raise(PackagesHandler::AppNotFound)
+          allow(apps_handler).to receive(:show).and_return(nil)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -148,7 +132,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'upload' do
+    describe '#upload' do
       let(:package) { PackageModel.make }
       let(:params) { { 'bits_path' => 'path/to/bits' } }
 
@@ -167,9 +151,9 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app does not exist' do
+      context 'when the space does not exist' do
         before do
-          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::AppNotFound)
+          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::SpaceNotFound)
         end
 
         it 'returns a 404 ResourceNotFound error' do

@@ -6,25 +6,29 @@ module VCAP::CloudController
       return true if context.roles.admin?
 
       has_read_scope = SecurityContext.scopes.include?('cloud_controller.read')
-      user_visible = AppModel.user_visible(context.user).where(guid: package.app_guid).count > 0
+      user_visible = Space.user_visible(context.user).where(guid: package.space_guid).count > 0
 
       has_read_scope && user_visible
     end
 
-    def create?(_, _, space)
+    def create?(_, space)
       return true if context.roles.admin?
 
       has_write_scope = SecurityContext.scopes.include?('cloud_controller.write')
-
       is_space_developer = space && space.developers.include?(context.user)
-
       org_active = space && space.organization.active?
 
       has_write_scope && is_space_developer && org_active
     end
 
-    def delete?(package, app, space)
-      create?(package, app, space)
+    def delete?(package, space)
+      create?(package, space)
+    end
+
+    def upload?(package, space)
+      return true if context.roles.admin?
+      return false unless FeatureFlag.enabled?('app_bits_upload')
+      create?(package, space)
     end
   end
 end

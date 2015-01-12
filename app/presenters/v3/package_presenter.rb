@@ -13,8 +13,8 @@ module VCAP::CloudController
           self: {
             href: "/v3/packages/#{package.guid}"
           },
-          app: {
-            href: "/v3/apps/#{package.app_guid}",
+          space: {
+            href: "/v2/spaces/#{package.space_guid}",
           },
         },
       }

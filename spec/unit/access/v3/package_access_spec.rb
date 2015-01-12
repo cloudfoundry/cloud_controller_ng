@@ -19,8 +19,7 @@ module VCAP::CloudController
 
     describe '#read?' do
       let(:space) { Space.make }
-      let(:app) { AppModel.make(space_guid: space.guid) }
-      let(:package) { PackageModel.new(app_guid: app.guid) }
+      let(:package) { PackageModel.new(space_guid: space.guid) }
 
       context 'admin user' do
         let(:admin) { true }
@@ -36,7 +35,7 @@ module VCAP::CloudController
           let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
           it 'allows the user to read' do
-            allow(AppModel).to receive(:user_visible).and_return(AppModel.where(guid: app.guid))
+            allow(Space).to receive(:user_visible).and_return(Space.where(guid: space.guid))
             access_control = PackageModelAccess.new(access_context)
             expect(access_control.read?(package)).to be_truthy
           end
@@ -44,7 +43,7 @@ module VCAP::CloudController
 
         context 'when the user has insufficient scope' do
           it 'disallows the user from reading' do
-            allow(AppModel).to receive(:user_visible).and_return(AppModel.where(guid: app.guid))
+            allow(Space).to receive(:user_visible).and_return(Space.where(guid: space.guid))
             access_control = PackageModelAccess.new(access_context)
             expect(access_control.read?(package)).to be_falsey
           end
@@ -54,7 +53,7 @@ module VCAP::CloudController
           let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
           it 'disallows the user from reading' do
-            allow(AppModel).to receive(:user_visible).and_return(AppModel.where(guid: nil))
+            allow(Space).to receive(:user_visible).and_return(Space.where(guid: nil))
             access_control = PackageModelAccess.new(access_context)
             expect(access_control.read?(package)).to be_falsey
           end
@@ -62,18 +61,18 @@ module VCAP::CloudController
       end
     end
 
-    describe '#create?, #delete?' do
+    describe '#create?, #delete?, #upload?' do
       let(:space) { Space.make }
-      let(:app) { AppModel.make(space_guid: space.guid) }
-      let(:package) { PackageModel.new(app_guid: app.guid) }
+      let(:package) { PackageModel.new(space_guid: space.guid) }
 
       context 'admin user' do
         let(:admin) { true }
 
         it 'allows the user to perform the action' do
           access_control = PackageModelAccess.new(access_context)
-          expect(access_control.create?(package, app, space)).to be_truthy
-          expect(access_control.delete?(package, app, space)).to be_truthy
+          expect(access_control.create?(package, space)).to be_truthy
+          expect(access_control.delete?(package, space)).to be_truthy
+          expect(access_control.upload?(package, space)).to be_truthy
         end
       end
 
@@ -88,8 +87,9 @@ module VCAP::CloudController
 
           it 'allows the user to create' do
             access_control = PackageModelAccess.new(access_context)
-            expect(access_control.create?(package, app, space)).to be_truthy
-            expect(access_control.delete?(package, app, space)).to be_truthy
+            expect(access_control.create?(package, space)).to be_truthy
+            expect(access_control.delete?(package, space)).to be_truthy
+            expect(access_control.upload?(package, space)).to be_truthy
           end
         end
 
@@ -103,8 +103,9 @@ module VCAP::CloudController
 
           it 'disallows the user from creating' do
             access_control = PackageModelAccess.new(access_context)
-            expect(access_control.create?(package, app, space)).to be_falsey
-            expect(access_control.delete?(package, app, space)).to be_falsey
+            expect(access_control.create?(package, space)).to be_falsey
+            expect(access_control.delete?(package, space)).to be_falsey
+            expect(access_control.upload?(package, space)).to be_falsey
           end
         end
 
@@ -113,8 +114,9 @@ module VCAP::CloudController
 
           it 'disallows the user from creating' do
             access_control = PackageModelAccess.new(access_context)
-            expect(access_control.create?(package, app, space)).to be_falsey
-            expect(access_control.delete?(package, app, space)).to be_falsey
+            expect(access_control.create?(package, space)).to be_falsey
+            expect(access_control.delete?(package, space)).to be_falsey
+            expect(access_control.upload?(package, space)).to be_falsey
           end
         end
 
@@ -129,9 +131,37 @@ module VCAP::CloudController
 
           it 'disallows the user from creating' do
             access_control = PackageModelAccess.new(access_context)
-            expect(access_control.create?(package, app, space)).to be_falsey
-            expect(access_control.delete?(package, app, space)).to be_falsey
+            expect(access_control.create?(package, space)).to be_falsey
+            expect(access_control.delete?(package, space)).to be_falsey
+            expect(access_control.upload?(package, space)).to be_falsey
           end
+        end
+      end
+    end
+
+    describe '#upload? when the app_bits_upload feature flag is disabled' do
+      let(:space) { Space.make }
+      let(:package) { PackageModel.new(space_guid: space.guid) }
+
+      before do
+        FeatureFlag.make(name: 'app_bits_upload', enabled: false)
+      end
+
+      context 'as an admin user' do
+        let(:admin) { true }
+
+        it 'allows the user to upload' do
+          access_control = PackageModelAccess.new(access_context)
+          expect(access_control.upload?(package, space)).to be_truthy
+        end
+      end
+
+      context 'as a non-admin user' do
+        let(:token) { { 'scope' => ['cloud_controller.write'] } }
+
+        it 'disallows the user from uploading' do
+          access_control = PackageModelAccess.new(access_context)
+          expect(access_control.upload?(package, space)).to be_falsey
         end
       end
     end

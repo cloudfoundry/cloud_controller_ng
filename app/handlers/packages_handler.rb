@@ -14,15 +14,27 @@ module VCAP::CloudController
   end
 
   class PackageCreateMessage
-    attr_reader :app_guid, :type, :url
+    attr_reader :space_guid, :type, :url
+    attr_accessor :error
 
-    def initialize(app_guid, opts)
-      @app_guid = app_guid
+    def self.create_from_http_request(space_guid, body)
+      opts = body && MultiJson.load(body)
+      raise MultiJson::ParseError.new('invalid request body') unless opts.is_a?(Hash)
+      PackageCreateMessage.new(space_guid, opts)
+    rescue MultiJson::ParseError => e
+      message = PackageCreateMessage.new(space_guid, {})
+      message.error = e.message
+      message
+    end
+
+    def initialize(space_guid, opts)
+      @space_guid = space_guid
       @type     = opts['type']
       @url      = opts['url']
     end
 
     def validate
+      return false, [error] if error
       errors = []
       errors << validate_type_field
       errors << validate_url
@@ -54,6 +66,7 @@ module VCAP::CloudController
     class InvalidPackageType < StandardError; end
     class InvalidPackage < StandardError; end
     class AppNotFound < StandardError; end
+    class SpaceNotFound < StandardError; end
     class PackageNotFound < StandardError; end
 
     def initialize(config)
@@ -62,23 +75,16 @@ module VCAP::CloudController
 
     def create(message, access_context)
       package          = PackageModel.new
-      package.app_guid = message.app_guid
+      package.space_guid = message.space_guid
       package.type     = message.type
       package.url      = message.url
       package.state = message.type == 'bits' ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
 
-      app = AppModel.find(guid: package.app_guid)
-      raise AppNotFound if app.nil?
+      space = Space.find(guid: package.space_guid)
+      raise SpaceNotFound if space.nil?
 
-      space = Space.find(guid: app.space_guid)
-
-      app.db.transaction do
-        app.lock!
-
-        raise Unauthorized if access_context.cannot?(:create, package, app, space)
-
-        package.save
-      end
+      raise Unauthorized if access_context.cannot?(:create, package, space)
+      package.save
 
       package
     rescue Sequel::ValidationFailed => e
@@ -87,15 +93,14 @@ module VCAP::CloudController
 
     def upload(message, access_context)
       package = PackageModel.find(guid: message.package_guid)
+
       raise PackageNotFound if package.nil?
-
-      app = AppModel.find(guid: package.app_guid)
-      raise AppNotFound if app.nil?
-
       raise InvalidPackageType.new('Package type must be bits.') if package.type != 'bits'
 
-      space = Space.find(guid: app.space_guid)
-      raise Unauthorized if access_context.cannot?(:create, package, app, space)
+      space = Space.find(guid: package.space_guid)
+      raise SpaceNotFound if space.nil?
+
+      raise Unauthorized if access_context.cannot?(:create, package, space)
 
       package.update(state: PackageModel::PENDING_STATE)
 
@@ -109,14 +114,11 @@ module VCAP::CloudController
       package = PackageModel.find(guid: guid)
       return nil if package.nil?
 
-      app = AppModel.find(guid: package.app_guid)
-      space = Space.find(guid: app.space_guid)
+      space = Space.find(guid: package.space_guid)
 
       package.db.transaction do
-        app.lock!
-
-        raise Unauthorized if access_context.cannot?(:delete, package, app, space)
-
+        package.lock!
+        raise Unauthorized if access_context.cannot?(:delete, package, space)
         package.destroy
       end
 
@@ -129,7 +131,7 @@ module VCAP::CloudController
     def show(guid, access_context)
       package = PackageModel.find(guid: guid)
       return nil if package.nil?
-      raise Unauthorized if access_context.cannot?(:read,  package)
+      raise Unauthorized if access_context.cannot?(:read, package)
       package
     end
   end

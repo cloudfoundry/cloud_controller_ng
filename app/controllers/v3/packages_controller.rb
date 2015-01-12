@@ -4,17 +4,21 @@ require 'handlers/packages_handler'
 module VCAP::CloudController
   class PackagesController < RestController::BaseController
     def self.dependencies
-      [:packages_handler, :package_presenter]
+      [:packages_handler, :package_presenter, :apps_handler]
     end
 
     def inject_dependencies(dependencies)
       @packages_handler = dependencies[:packages_handler]
       @package_presenter = dependencies[:package_presenter]
+      @apps_handler = dependencies[:apps_handler]
     end
 
     post '/v3/apps/:guid/packages', :create
     def create(app_guid)
-      message = PackageCreateMessage.new(app_guid, params)
+      app = @apps_handler.show(app_guid, @access_context)
+      app_not_found! if app.nil?
+
+      message = PackageCreateMessage.create_from_http_request(app.space_guid, body)
       valid, errors = message.validate
       unprocessable!(errors.join(', ')) if !valid
 
@@ -24,8 +28,6 @@ module VCAP::CloudController
       [HTTP::CREATED, package_json]
     rescue PackagesHandler::Unauthorized
       unauthorized!
-    rescue PackagesHandler::AppNotFound
-      app_not_found!
     end
 
     post '/v3/packages/:guid/upload', :upload
@@ -40,7 +42,7 @@ module VCAP::CloudController
       [HTTP::CREATED, package_json]
     rescue PackagesHandler::InvalidPackageType => e
       invalid_request!(e.message)
-    rescue PackagesHandler::AppNotFound
+    rescue PackagesHandler::SpaceNotFound
       app_not_found!
     rescue PackagesHandler::PackageNotFound
       package_not_found!

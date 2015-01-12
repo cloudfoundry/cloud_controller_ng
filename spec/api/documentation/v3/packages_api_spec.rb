@@ -26,14 +26,12 @@ resource 'Packages (Experimental)', type: :api do
   context 'standard endpoints' do
     get '/v3/packages/:guid' do
       let(:space) { VCAP::CloudController::Space.make }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-
       let(:package_model) do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        VCAP::CloudController::PackageModel.make(space_guid: space_guid)
       end
 
       let(:guid) { package_model.guid }
-      let(:app_guid) { app_model.guid }
+      let(:space_guid) { space.guid }
 
       before do
         space.organization.add_user user
@@ -51,7 +49,7 @@ resource 'Packages (Experimental)', type: :api do
           'created_at' => package_model.created_at.as_json,
           '_links' => {
             'self'      => { 'href' => "/v3/packages/#{guid}" },
-            'app' => { 'href' => "/v3/apps/#{app_guid}" },
+            'space' => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
 
@@ -66,11 +64,10 @@ resource 'Packages (Experimental)', type: :api do
     post '/v3/packages/:guid/upload' do
       let(:type) { 'bits' }
       let!(:package_model) do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: type)
+        VCAP::CloudController::PackageModel.make(space_guid: space_guid, type: type)
       end
       let(:space) { VCAP::CloudController::Space.make }
       let(:space_guid) { space.guid }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
       let(:guid) { package_model.guid }
 
       before do
@@ -122,7 +119,7 @@ resource 'Packages (Experimental)', type: :api do
           'created_at' => package_model.created_at.as_json,
           '_links' => {
             'self' => { 'href' => "/v3/packages/#{package_model.guid}" },
-            'app' => { 'href' => "/v3/apps/#{app_model.guid}" },
+            'space' => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
 
@@ -135,7 +132,7 @@ resource 'Packages (Experimental)', type: :api do
     post '/v3/apps/:guid/packages' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:space_guid) { space.guid }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
       let(:guid) { app_model.guid }
       let(:type) { 'docker' }
       let(:url) { 'docker://cloudfoundry/runtime-ci' }
@@ -150,6 +147,8 @@ resource 'Packages (Experimental)', type: :api do
         space.organization.add_user(user)
         space.add_developer(user)
       end
+
+      let(:raw_post) { MultiJson.dump(packages_params, pretty: true) }
 
       parameter :type, 'Package type', required: true, valid_values: ['bits', 'docker']
       parameter :url, 'Url of docker image', required: false
@@ -171,7 +170,7 @@ resource 'Packages (Experimental)', type: :api do
           'created_at' => package.created_at.as_json,
           '_links' => {
             'self' => { 'href' => "/v3/packages/#{package.guid}" },
-            'app' => { 'href' => "/v3/apps/#{app_model.guid}" },
+            'space' => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
 
@@ -183,14 +182,12 @@ resource 'Packages (Experimental)', type: :api do
 
     delete '/v3/packages/:guid' do
       let(:space) { VCAP::CloudController::Space.make }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-
+      let(:space_guid) { space.guid }
       let!(:package_model) do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        VCAP::CloudController::PackageModel.make(space_guid: space_guid)
       end
 
       let(:guid) { package_model.guid }
-      let(:app_guid) { app_model.guid }
 
       before do
         space.organization.add_user user

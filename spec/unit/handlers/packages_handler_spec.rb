@@ -97,6 +97,32 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'create_from_http_request' do
+      context 'when the body is valid json' do
+        let(:body) { MultiJson.dump({ type: 'bits' }) }
+
+        it 'creates a PackageCreateMessage from the json' do
+          pcm           = PackageCreateMessage.create_from_http_request(guid, body)
+          valid, errors = pcm.validate
+
+          expect(valid).to be_truthy
+          expect(errors).to be_empty
+        end
+      end
+
+      context 'when the body is not valid json' do
+        let(:body) { '{{' }
+
+        it 'returns a PackageCreateMessage that is not valid' do
+          pcm           = PackageCreateMessage.create_from_http_request(guid, body)
+          valid, errors = pcm.validate
+
+          expect(valid).to be_falsey
+          expect(errors[0]).to include('parse error')
+        end
+      end
+    end
   end
 
   describe PackagesHandler do
@@ -111,7 +137,6 @@ module VCAP::CloudController
     let(:config) { TestConfig.config }
     let(:packages_handler) { described_class.new(config) }
     let(:access_context) { double(:access_context) }
-    let(:app) { AppModel.make(space_guid: space.guid) }
     let(:space) { Space.make }
 
     before do
@@ -127,8 +152,8 @@ module VCAP::CloudController
         }
       end
 
-      context 'when the app exist' do
-        let(:create_message) { PackageCreateMessage.new(app.guid, create_opts) }
+      context 'when the space exists' do
+        let(:create_message) { PackageCreateMessage.new(space.guid, create_opts) }
 
         context 'when a user can create a package' do
           it 'creates the package' do
@@ -170,7 +195,7 @@ module VCAP::CloudController
             expect {
               packages_handler.create(create_message, access_context)
             }.to raise_error(PackagesHandler::Unauthorized)
-            expect(access_context).to have_received(:cannot?).with(:create, kind_of(PackageModel), app, space)
+            expect(access_context).to have_received(:cannot?).with(:create, kind_of(PackageModel), space)
           end
         end
 
@@ -187,31 +212,31 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app does not exist' do
+      context 'when the space does not exist' do
         let(:create_message) { PackageCreateMessage.new('non-existant', create_opts) }
 
-        it 'raises AppNotFound' do
+        it 'raises SpaceNotFound' do
           expect {
             packages_handler.create(create_message, access_context)
-          }.to raise_error(PackagesHandler::AppNotFound)
+          }.to raise_error(PackagesHandler::SpaceNotFound)
         end
       end
     end
 
-    describe 'upload' do
-      let(:package) { PackageModel.make(app_guid: app_guid, type: 'bits', state: 'CREATED') }
+    describe '#upload' do
+      let(:package) { PackageModel.make(space_guid: space_guid, type: 'bits', state: 'CREATED') }
       let(:upload_message) { PackageUploadMessage.new(package_guid, upload_opts) }
       let(:create_opts) { { 'bit_path' => 'path/to/bits' } }
       let(:upload_opts) { { 'bits_path' => 'foobar' } }
-      let(:app_guid) { app.guid }
       let(:package_guid) { package.guid }
+      let(:space_guid) { space.guid }
 
       before do
         allow(access_context).to receive(:cannot?).and_return(false)
       end
 
       context 'when the package exists' do
-        context 'when the app exists' do
+        context 'when the space exists' do
           context 'when the user can access the package' do
             context 'when the package is of type bits' do
               before do
@@ -243,7 +268,7 @@ module VCAP::CloudController
             end
 
             context 'when the package is not of type bits' do
-              let(:package) { PackageModel.make(app_guid: app_guid, type: 'docker') }
+              let(:package) { PackageModel.make(space_guid: space_guid, type: 'docker') }
 
               it 'raises an InvalidPackage exception' do
                 expect {
@@ -266,13 +291,13 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the app does not exist' do
-          let(:app_guid) { 'non-existant' }
+        context 'when the space does not exist' do
+          let(:space_guid) { 'non-existant' }
 
-          it 'raises an AppNotFound exception' do
+          it 'raises an SpaceNotFound exception' do
             expect {
               packages_handler.upload(upload_message, access_context)
-            }.to raise_error(PackagesHandler::AppNotFound)
+            }.to raise_error(PackagesHandler::SpaceNotFound)
           end
         end
       end
@@ -288,7 +313,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'show' do
+    describe '#show' do
       let(:package) { PackageModel.make }
       let(:package_guid) { package.guid }
 
@@ -325,8 +350,8 @@ module VCAP::CloudController
       end
     end
 
-    describe 'delete' do
-      let!(:package) { PackageModel.make(app_guid: app.guid) }
+    describe '#delete' do
+      let!(:package) { PackageModel.make(space_guid: space.guid) }
       let(:package_guid) { package.guid }
 
       context 'when the user can access a package' do
@@ -371,7 +396,7 @@ module VCAP::CloudController
             deleted_package = packages_handler.delete(package_guid, access_context)
             expect(deleted_package).to be_nil
           }.to raise_error(PackagesHandler::Unauthorized)
-          expect(access_context).to have_received(:cannot?).with(:delete, kind_of(PackageModel), app, space)
+          expect(access_context).to have_received(:cannot?).with(:delete, kind_of(PackageModel), space)
         end
       end
     end
