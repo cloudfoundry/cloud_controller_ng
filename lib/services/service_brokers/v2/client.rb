@@ -6,6 +6,7 @@ module VCAP::Services::ServiceBrokers::V2
       @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(attrs)
       @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
       @attrs = attrs
+      @orphan_mitigator = VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new
     end
 
     def catalog
@@ -32,7 +33,7 @@ module VCAP::Services::ServiceBrokers::V2
       instance.credentials = {}
 
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
-      VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator.cleanup_failed_provision(@attrs, instance)
+      @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       raise e
     end
 
@@ -51,7 +52,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
-      VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator.cleanup_failed_bind(@attrs, binding)
+      @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
       raise e
     end
 

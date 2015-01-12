@@ -20,7 +20,7 @@ module VCAP::Services
           mock_enqueuer = double(:enqueuer, enqueue: nil)
           allow(VCAP::CloudController::Jobs::Enqueuer).to receive(:new).and_return(mock_enqueuer)
 
-          OrphanMitigator.cleanup_failed_provision(client_attrs, service_instance)
+          OrphanMitigator.new.cleanup_failed_provision(client_attrs, service_instance)
 
           expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
             expect(opts[:queue]).to eq 'cc-generic'
@@ -42,7 +42,7 @@ module VCAP::Services
           mock_enqueuer = double(:enqueuer, enqueue: nil)
           allow(VCAP::CloudController::Jobs::Enqueuer).to receive(:new).and_return(mock_enqueuer)
 
-          OrphanMitigator.cleanup_failed_bind(client_attrs, binding)
+          OrphanMitigator.new.cleanup_failed_bind(client_attrs, binding)
 
           expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
             expect(opts[:queue]).to eq 'cc-generic'

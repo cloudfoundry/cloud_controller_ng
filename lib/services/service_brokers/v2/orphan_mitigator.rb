@@ -5,7 +5,7 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       class OrphanMitigator
-        def self.cleanup_failed_provision(client_attrs, service_instance)
+        def cleanup_failed_provision(client_attrs, service_instance)
           deprovision_job = VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision.new(
             'service-instance-deprovision',
             client_attrs,
@@ -17,7 +17,7 @@ module VCAP::Services
           VCAP::CloudController::Jobs::Enqueuer.new(deprovision_job, opts).enqueue
         end
 
-        def self.cleanup_failed_bind(client_attrs, binding)
+        def cleanup_failed_bind(client_attrs, binding)
           unbind_job = VCAP::CloudController::Jobs::Services::ServiceInstanceUnbind.new(
             'service-instance-unbind',
             client_attrs,

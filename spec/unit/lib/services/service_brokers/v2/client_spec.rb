@@ -15,11 +15,15 @@ module VCAP::Services::ServiceBrokers::V2
     subject(:client) { Client.new(client_attrs) }
 
     let(:http_client) { double('http_client') }
+    let(:orphan_mitigator) { double('orphan_mitigator', cleanup_failed_provision: nil, cleanup_failed_bind: nil) }
 
     before do
       allow(HttpClient).to receive(:new).
         with(url: service_broker.broker_url, auth_username: service_broker.auth_username, auth_password: service_broker.auth_password).
         and_return(http_client)
+
+      allow(VCAP::Services::ServiceBrokers::V2::OrphanMitigator).to receive(:new).
+        and_return(orphan_mitigator)
 
       allow(http_client).to receive(:url).and_return(service_broker.broker_url)
     end
@@ -138,10 +142,6 @@ module VCAP::Services::ServiceBrokers::V2
         let(:uri) { 'some-uri.com/v2/service_instances/some-guid' }
         let(:response) { double(:response, body: nil, message: nil) }
 
-        before do
-          allow(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).to receive(:cleanup_failed_provision)
-        end
-
         context 'due to an http client error' do
           let(:http_client) { double(:http_client) }
 
@@ -157,8 +157,7 @@ module VCAP::Services::ServiceBrokers::V2
                 client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
-                to have_received(:cleanup_failed_provision).with(client_attrs, instance)
+              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
             end
           end
         end
@@ -179,8 +178,7 @@ module VCAP::Services::ServiceBrokers::V2
                 client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
-                to have_received(:cleanup_failed_provision).
+              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).
                 with(client_attrs, instance)
             end
           end
@@ -193,9 +191,7 @@ module VCAP::Services::ServiceBrokers::V2
                 client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
-                to have_received(:cleanup_failed_provision).
-                with(client_attrs, instance)
+              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
             end
           end
         end
@@ -366,10 +362,6 @@ module VCAP::Services::ServiceBrokers::V2
         let(:uri) { 'some-uri.com/v2/service_instances/instance-guid/service_bindings/binding-guid' }
         let(:response) { double(:response, body: nil, message: nil) }
 
-        before do
-          allow(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).to receive(:cleanup_failed_bind)
-        end
-
         context 'due to an http client error' do
           let(:http_client) { double(:http_client) }
 
@@ -385,8 +377,7 @@ module VCAP::Services::ServiceBrokers::V2
                 client.bind(binding)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
-                to have_received(:cleanup_failed_bind).
+              expect(orphan_mitigator).to have_received(:cleanup_failed_bind).
                 with(client_attrs, binding)
             end
           end
@@ -408,8 +399,7 @@ module VCAP::Services::ServiceBrokers::V2
                 client.bind(binding)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
-                                     to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+              expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
             end
           end
 
@@ -421,8 +411,7 @@ module VCAP::Services::ServiceBrokers::V2
                 client.bind(binding)
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
-              expect(VCAP::CloudController::ServiceBrokers::V2::OrphanMitigator).
-                                     to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+              expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
             end
           end
         end
