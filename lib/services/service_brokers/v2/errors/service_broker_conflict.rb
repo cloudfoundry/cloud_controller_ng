@@ -5,9 +5,7 @@ module VCAP::Services
         class ServiceBrokerConflict < HttpResponseError
           def initialize(uri, method, response)
             error_message = nil
-            if parsed_json(response.body).key?('message')
-              error_message = parsed_json(response.body)['message']
-            else
+            if parsed_json(response.body).key?('description')
               error_message = parsed_json(response.body)['description']
             end
 
