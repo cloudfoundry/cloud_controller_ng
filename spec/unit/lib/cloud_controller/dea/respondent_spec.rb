@@ -52,7 +52,7 @@ module VCAP::CloudController
         context 'the app described in the event exists' do
           it 'adds a record in the Events table' do
             time = Time.new(1990, 07, 06)
-            stub_const("Sequel::CURRENT_TIMESTAMP", time)
+            stub_const('Sequel::CURRENT_TIMESTAMP', time)
             respondent.process_droplet_exited_message(payload)
 
             app_event = Event.find(actee: app.guid)
