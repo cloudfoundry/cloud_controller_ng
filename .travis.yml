@@ -19,12 +19,12 @@ before_script:
 script:
   - bundle exec rake $TASKS
 
+after_success:
+  - "[ $TRAVIS_BRANCH == 'master' -a $UPLOAD_DOCUMENTATION == 'true' ] && travis-artifacts upload --path doc/api --target-path $TRAVIS_BUILD_ID && echo https://s3-us-east-1.amazonaws.com/cc-api-docs/$TRAVIS_BUILD_ID/index.html"
+
 services:
   - mysql
   - postgresql
-
-after_script: # and this only on success, fail the whole build if it fails
-  - "[ $TRAVIS_TEST_RESULT == 0 -a $TRAVIS_BRANCH == 'master' ] && travis-artifacts upload --path doc/api --target-path $TRAVIS_BUILD_ID && echo https://s3-us-east-1.amazonaws.com/cc-api-docs/$TRAVIS_BUILD_ID/index.html"
 
 env:
   global:
@@ -39,5 +39,5 @@ env:
     - COVERAGE=true DB=postgres TASKS=spec:all
     - DB=mysql TASKS=spec:all
 
-    - DB=postgres TASKS=spec:api
+    - DB=postgres TASKS=spec:api UPLOAD_DOCUMENTATION=true
     - TASKS=rubocop
