@@ -3,7 +3,8 @@ module VCAP::Services::ServiceBrokers::V2
     CATALOG_PATH = '/v2/catalog'.freeze
 
     def initialize(attrs)
-      @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(attrs)
+      http_client_attrs = attrs.select { |key, _| [:url, :auth_username, :auth_password].include?(key) }
+      @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(http_client_attrs)
       @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
       @attrs = attrs
       @orphan_mitigator = VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new
@@ -28,6 +29,8 @@ module VCAP::Services::ServiceBrokers::V2
 
       parsed_response = @response_parser.parse(:put, path, response)
       instance.dashboard_url = parsed_response['dashboard_url']
+      instance.state = parsed_response['state'] || 'available'
+      instance.state_description = parsed_response['state_description'] || ''
 
       # DEPRECATED, but needed because of not null constraint
       instance.credentials = {}

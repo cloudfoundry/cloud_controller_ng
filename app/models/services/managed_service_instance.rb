@@ -54,7 +54,8 @@ module VCAP::CloudController
     many_to_one :service_plan
 
     export_attributes :name, :credentials, :service_plan_guid,
-      :space_guid, :gateway_data, :dashboard_url, :type
+      :space_guid, :gateway_data, :dashboard_url, :type, :state,
+      :state_description
 
     import_attributes :name, :service_plan_guid,
       :space_guid, :gateway_data

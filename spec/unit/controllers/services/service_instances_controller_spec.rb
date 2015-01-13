@@ -178,6 +178,8 @@ module VCAP::CloudController
           allow(client).to receive(:provision) do |instance|
             instance.credentials = '{}'
             instance.dashboard_url = 'the dashboard_url'
+            instance.state = 'creating'
+            instance.state_description = ''
           end
           allow(client).to receive(:deprovision)
           allow_any_instance_of(Service).to receive(:client).and_return(client)
@@ -190,6 +192,8 @@ module VCAP::CloudController
 
           expect(instance.credentials).to eq('{}')
           expect(instance.dashboard_url).to eq('the dashboard_url')
+          expect(decoded_response['entity']['state']).to eq 'creating'
+          expect(decoded_response['entity']['state_description']).to eq ''
         end
 
         it 'creates a service audit event for creating the service instance' do

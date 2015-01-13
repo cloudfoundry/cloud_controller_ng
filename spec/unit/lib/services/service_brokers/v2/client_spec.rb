@@ -28,6 +28,14 @@ module VCAP::Services::ServiceBrokers::V2
       allow(http_client).to receive(:url).and_return(service_broker.broker_url)
     end
 
+    describe '#initialize' do
+      it 'creates HttpClient with correct attrs' do
+        Client.new(client_attrs.merge(extra_arg: 'foo'))
+
+        expect(HttpClient).to have_received(:new).with(client_attrs)
+      end
+    end
+
     describe '#catalog' do
       let(:service_id) { Sham.guid }
       let(:service_name) { Sham.name }
@@ -132,10 +140,39 @@ module VCAP::Services::ServiceBrokers::V2
         expect(instance.dashboard_url).to eq('foo')
       end
 
+      it 'defaults the state to "available"' do
+        client.provision(instance)
+
+        expect(instance.state).to eq('available')
+      end
+
+      it 'leaves the description blank' do
+        client.provision(instance)
+
+        expect(instance.state_description).to eq('')
+      end
+
       it 'DEPRECATED, maintain for database not null contraint: sets the credentials on the instance' do
         client.provision(instance)
 
         expect(instance.credentials).to eq({})
+      end
+
+      context 'when the broker returns a state' do
+        let(:response_data) do
+          {
+            state: 'creating',
+            state_description: '10% done'
+          }
+        end
+
+        it 'return immediately with the broker response' do
+          client = Client.new(client_attrs.merge(accept_unavailable: true))
+          client.provision(instance)
+
+          expect(instance.state).to eq('creating')
+          expect(instance.state_description).to eq('10% done')
+        end
       end
 
       context 'when provision fails' do
