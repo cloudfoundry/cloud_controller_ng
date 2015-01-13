@@ -1528,9 +1528,11 @@ module VCAP::CloudController
 
       it 'updates the package_pending_since date to current' do
         app.package_pending_since = nil
+        app.save
         expect {
           app.mark_for_restaging
-        }.to change { app.package_pending_since }.from(nil).to(kind_of(Time))
+          app.save
+        }.to change { app.reload.package_pending_since }.from(nil).to(kind_of(Time))
       end
     end
 

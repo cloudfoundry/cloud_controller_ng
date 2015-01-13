@@ -245,7 +245,7 @@ module VCAP::CloudController
       end
 
       it 'does not return deleted apps' do
-        deleted_app = make_diego_app(id: 6, state: 'STARTED', deleted_at: DateTime.current)
+        deleted_app = make_diego_app(id: 6, state: 'STARTED', deleted_at: DateTime.now.utc)
 
         batch = runners.diego_apps(100, 0)
 
@@ -368,7 +368,7 @@ module VCAP::CloudController
       end
 
       it 'does not return deleted apps' do
-        deleted_app = make_dea_app(id: 6, state: 'STARTED', deleted_at: DateTime.current)
+        deleted_app = make_dea_app(id: 6, state: 'STARTED', deleted_at: DateTime.now.utc)
 
         batch = runners.dea_apps(100, 0)
 

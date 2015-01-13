@@ -33,6 +33,9 @@ module VCAP::CloudController
 
       if db.database_type == :mysql
         Sequel::MySQL.default_collate = 'utf8_bin'
+        db.run("SET time_zone = 'UTC'")
+      elsif db.database_type == :postgres
+        db.run("SET time zone 'UTC'")
       end
 
       db

@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         AppStopEvent.create(
-          timestamp: Time.now,
+          timestamp: Sequel::CURRENT_TIMESTAMP,
           organization_guid: app.space.organization_guid,
           organization_name: app.space.organization.name,
           space_guid: app.space.guid,

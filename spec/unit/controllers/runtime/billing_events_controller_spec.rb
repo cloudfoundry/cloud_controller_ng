@@ -17,7 +17,7 @@ module VCAP::CloudController
       BillingEvent.plugin :scissors
       BillingEvent.delete
 
-      timestamp = Time.new(2012, 01, 01, 00, 00, 01)
+      timestamp = Time.new(2012, 01, 01, 00, 00, 01).utc
       @start_time = timestamp
 
       @org_event = OrganizationStartEvent.make(

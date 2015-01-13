@@ -605,7 +605,7 @@ module VCAP::CloudController
           'stats' => stats,
         }
 
-        allow(Time).to receive(:now) { 1 }
+        allow(Time).to receive(:now) { double(:utc_time, to_f: 1.0, utc: 1) }
 
         message_bus.respond_to_synchronous_request('dea.find.droplet', [instance])
 
@@ -654,7 +654,7 @@ module VCAP::CloudController
           'stats' => stats,
         }
 
-        allow(Time).to receive(:now).and_return(1)
+        allow(Time).to receive(:now) { double(:utc_time, to_f: 1.0, utc: 1) }
 
         message_bus.respond_to_synchronous_request('dea.find.droplet', [instance_0, instance_1, instance_2])
 
@@ -781,7 +781,7 @@ module VCAP::CloudController
           with(app, search_options, { expected: 2 }).
           and_return([starting_instance, running_instance])
 
-        allow(Time).to receive(:now) { 1 }
+        allow(Time).to receive(:now) { double(:utc_time, to_f: 1.0, utc: 1) }
 
         app_instances = Dea::Client.find_all_instances(app)
         expect(app_instances).to eq({
@@ -811,7 +811,7 @@ module VCAP::CloudController
           with(app, search_options, { expected: 2 }).
           and_return([])
 
-        allow(Time).to receive(:now) { 1 }
+        allow(Time).to receive(:now) { double(:utc_time, to_f: 1.0, utc: 1) }
 
         app_instances = Dea::Client.find_all_instances(app)
         expect(app_instances).to eq({

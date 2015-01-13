@@ -13,7 +13,7 @@ module VCAP::CloudController
         actee: 'jtravolta',
         actee_type: 'Scientologist',
         actee_name: 'John Travolta',
-        timestamp: Time.new(1997, 6, 27),
+        timestamp: Time.new(1997, 6, 27).utc,
         metadata: { 'popcorn_price' => '$(arm + leg)' },
         space: space
       )

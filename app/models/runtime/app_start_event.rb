@@ -35,7 +35,7 @@ module VCAP::CloudController
     def self.create_from_app(app)
       return unless app.space.organization.billing_enabled?
       AppStartEvent.create(
-        timestamp: Time.now,
+        timestamp: Sequel::CURRENT_TIMESTAMP,
         organization_guid: app.space.organization_guid,
         organization_name: app.space.organization.name,
         space_guid: app.space.guid,

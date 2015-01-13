@@ -49,7 +49,7 @@ module CloudController
       end
 
       def cp_to_blobstore(source_path, destination_key, retries=2)
-        start = Time.now
+        start = Time.now.utc
         logger.info('blobstore.cp-start', destination_key: destination_key, source_path: source_path, bucket: @directory_key)
         size = -1
         log_entry = 'blobstore.cp-skip'
@@ -78,7 +78,7 @@ module CloudController
           log_entry = 'blobstore.cp-finish'
         end
 
-        duration = Time.now - start
+        duration = Time.now.utc - start
         logger.info(log_entry,
                     destination_key: destination_key,
                     duration_seconds: duration,

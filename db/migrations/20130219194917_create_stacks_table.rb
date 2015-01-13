@@ -19,7 +19,7 @@ Sequel.migration do
       guid: SecureRandom.uuid,
       name: 'lucid64',
       description: 'Ubuntu 10.04 on x86-64',
-      created_at: Time.now,
+      created_at: Sequel::CURRENT_TIMESTAMP,
     )
 
     alter_table :apps do

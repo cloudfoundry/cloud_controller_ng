@@ -283,7 +283,7 @@ module VCAP::CloudController
           end
 
           it 'does not return deleted apps' do
-            make_diego_app(id: 6, state: 'STARTED', deleted_at: DateTime.now)
+            make_diego_app(id: 6, state: 'STARTED', deleted_at: DateTime.now.utc)
 
             get '/internal/bulk/apps', {
                 'batch_size' => App.count,

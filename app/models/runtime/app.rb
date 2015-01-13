@@ -428,7 +428,7 @@ module VCAP::CloudController
     def mark_for_restaging
       self.package_state = 'PENDING'
       self.staging_failed_reason = nil
-      self.package_pending_since = Time.now
+      self.package_pending_since = Sequel::CURRENT_TIMESTAMP
     end
 
     def buildpack

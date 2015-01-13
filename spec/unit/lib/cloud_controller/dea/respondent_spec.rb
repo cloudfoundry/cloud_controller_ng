@@ -51,8 +51,8 @@ module VCAP::CloudController
       context 'when the app crashed' do
         context 'the app described in the event exists' do
           it 'adds a record in the Events table' do
-            time = Time.now
-            Timecop.freeze(time) do
+            Timecop.freeze do
+              time = Time.now.utc
               respondent.process_droplet_exited_message(payload)
 
               app_event = Event.find(actee: app.guid)
