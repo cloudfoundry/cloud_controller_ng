@@ -23,19 +23,19 @@ module VCAP::Services
             end
 
             unless response_hash.is_a?(Hash)
-              raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
+              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
             end
 
             return response_hash
 
           when HTTP::Status::UNAUTHORIZED
-            raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
+            raise Errors::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
 
           when 408
-            raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
+            raise Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
 
           when 409
-            raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict.new(uri.to_s, method, response)
+            raise Errors::ServiceBrokerConflict.new(uri.to_s, method, response)
 
           when 410
             if method == :delete
@@ -44,10 +44,10 @@ module VCAP::Services
             end
 
           when 400..499
-            raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected.new(uri.to_s, method, response)
+            raise Errors::ServiceBrokerRequestRejected.new(uri.to_s, method, response)
           end
 
-          raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
+          raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
         end
 
         private
