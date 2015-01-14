@@ -19,7 +19,7 @@ describe 'orphan mitigation' do
 
     before do
       stub_request(:put, %r{#{broker_url}/v2/service_instances/#{guid_pattern}}).to_return { |request|
-        raise Timeout::Error.new('fake-timeout')
+        raise HTTPClient::TimeoutError.new('fake-timeout')
       }
 
       stub_request(:delete, %r{#{broker_url}/v2/service_instances/#{guid_pattern}}).
@@ -59,7 +59,7 @@ describe 'orphan mitigation' do
       create_app
 
       stub_request(:put, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).to_return { |request|
-        raise Timeout::Error.new('fake-timeout')
+        raise HTTPClient::TimeoutError.new('fake-timeout')
       }
 
       stub_request(:delete, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).

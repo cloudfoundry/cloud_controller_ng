@@ -1,7 +1,25 @@
-require 'net/http'
+require 'httpclient'
 
 module VCAP::Services
   module ServiceBrokers::V2
+    class HttpResponse
+      def initialize(http_client_response)
+        @http_client_response = http_client_response
+      end
+
+      def code
+        @http_client_response.code
+      end
+
+      def message
+        @http_client_response.reason
+      end
+
+      def body
+        @http_client_response.body
+      end
+    end
+
     class HttpClient
       attr_reader :url
 
@@ -40,61 +58,35 @@ module VCAP::Services
       end
 
       def make_request(method, uri, body, content_type)
-        req = build_request(method, uri, body, content_type)
-        opts = build_options(uri)
+        client = HTTPClient.new(force_basic_auth: true)
+        client.set_auth(uri, auth_username, auth_password)
 
-        response = Net::HTTP.start(uri.hostname, uri.port, opts) do |http|
-          http.open_timeout = broker_client_timeout
-          http.read_timeout = broker_client_timeout
+        client.default_header[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.4'
+        client.default_header[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
+        client.default_header['Accept'] = 'application/json'
 
-          http.request(req)
-        end
+        client.ssl_config.verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
+        client.connect_timeout = broker_client_timeout
+        client.receive_timeout = broker_client_timeout
+        client.send_timeout = broker_client_timeout
 
-        log_response(uri, response)
-        return response
+        opts = { body: body }
+        opts[:header] = { 'Content-Type' => content_type } if content_type
+
+        headers = client.default_header.merge(opts[:header]) if opts[:header]
+        logger.debug "Sending #{method} to #{uri}, BODY: #{body.inspect}, HEADERS: #{headers}"
+
+        response = client.request(method, uri, opts)
+
+        logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{response.body.inspect}, HEADERS: #{response.headers.inspect}"
+
+        HttpResponse.new(response)
       rescue SocketError, Errno::ECONNREFUSED => error
         raise Errors::ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
-      rescue Timeout::Error => error
+      rescue HTTPClient::TimeoutError => error
         raise Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, error)
       rescue => error
         raise HttpRequestError.new(error.message, uri.to_s, method, error)
-      end
-
-      def log_request(uri, req)
-        logger.debug "Sending #{req.method} to #{uri}, BODY: #{req.body.inspect}, HEADERS: #{req.to_hash.inspect}"
-      end
-
-      def log_response(uri, response)
-        logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{response.body.inspect}, HEADERS: #{response.to_hash.inspect}"
-      end
-
-      def build_request(method, uri, body, content_type)
-        req_class = method.to_s.capitalize
-        req = Net::HTTP.const_get(req_class).new(uri.request_uri)
-
-        req.basic_auth(auth_username, auth_password)
-
-        req[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
-        req[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.4'
-        req['Accept'] = 'application/json'
-
-        req.body = body
-        req.content_type = content_type if content_type
-
-        log_request(uri, req)
-
-        req
-      end
-
-      def build_options(uri)
-        opts = {}
-
-        use_ssl = uri.scheme.to_s.downcase == 'https'
-        opts.merge!(use_ssl: use_ssl)
-
-        verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
-        opts.merge!(verify_mode: verify_mode) if use_ssl
-        opts
       end
 
       def verify_certs?
