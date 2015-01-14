@@ -99,13 +99,7 @@ module VCAP::CloudController
         {}
       )
 
-      if async?
-        job = Jobs::Enqueuer.new(delete_and_audit_job, queue: 'cc-generic').enqueue
-        [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
-      else
-        delete_and_audit_job.perform
-        [HTTP::NO_CONTENT, nil]
-      end
+      enqueue_deletion_job(delete_and_audit_job)
     end
 
     define_messages

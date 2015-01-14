@@ -24,19 +24,14 @@ module VCAP::CloudController
 
     post path, :create
     def create
-      json_msg = self.class::CreateMessage.decode(body)
-
-      @request_attrs = json_msg.extract(stringify_keys: true)
+      @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
 
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
 
       raise InvalidRequest unless request_attrs
 
-      instance_guid = request_attrs['service_instance_guid']
-      app_guid      = request_attrs['app_guid']
-
-      validate_service_instance(instance_guid)
-      validate_app(app_guid)
+      validate_service_instance(request_attrs['service_instance_guid'])
+      validate_app(request_attrs['app_guid'])
 
       service_binding = ServiceBinding.new(@request_attrs)
       validate_access(:create, service_binding)
@@ -63,13 +58,7 @@ module VCAP::CloudController
       deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceBinding, guid)
       delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :record_service_binding_event, :delete, service_binding)
 
-      if async?
-        job = Jobs::Enqueuer.new(delete_and_audit_job, queue: 'cc-generic').enqueue
-        [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
-      else
-        delete_and_audit_job.perform
-        [HTTP::NO_CONTENT, nil]
-      end
+      enqueue_deletion_job(delete_and_audit_job)
     end
 
     private

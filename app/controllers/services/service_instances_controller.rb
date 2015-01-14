@@ -200,13 +200,7 @@ module VCAP::CloudController
       event_method = service_instance.type == 'managed_service_instance' ?  :record_service_instance_event : :record_user_provided_service_instance_event
       delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, event_method, :delete, service_instance, {})
 
-      if async?
-        job = Jobs::Enqueuer.new(delete_and_audit_job, queue: 'cc-generic').enqueue
-        [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
-      else
-        delete_and_audit_job.perform
-        [HTTP::NO_CONTENT, nil]
-      end
+      enqueue_deletion_job(delete_and_audit_job)
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
