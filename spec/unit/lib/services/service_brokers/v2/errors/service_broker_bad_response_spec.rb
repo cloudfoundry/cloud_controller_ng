@@ -31,12 +31,18 @@ module VCAP::Services
                 }
               })
             end
+
+            it 'renders the correct status code to the user' do
+              exception = described_class.new(uri, method, response)
+              expect(exception.response_code).to eq 502
+            end
           end
 
           context 'without a description in the body' do
             let(:response_body) do
               { 'foo' => 'bar' }.to_json
             end
+
             it 'generates the correct hash' do
               exception = described_class.new(uri, method, response)
               exception.set_backtrace(['/foo:1', '/bar:2'])
@@ -51,6 +57,11 @@ module VCAP::Services
                 },
                 'source' => { 'foo' => 'bar' }
               })
+            end
+
+            it 'renders the correct status code to the user' do
+              exception = described_class.new(uri, method, response)
+              expect(exception.response_code).to eq 502
             end
           end
         end

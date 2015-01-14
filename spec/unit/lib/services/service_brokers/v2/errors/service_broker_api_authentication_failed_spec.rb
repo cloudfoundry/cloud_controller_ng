@@ -20,6 +20,11 @@ module VCAP::Services
               expect(exception.method).to eq(method)
               expect(exception.source).to be(response.body)
             end
+
+            it 'renders the correct status code to the user' do
+              exception = ServiceBrokerApiAuthenticationFailed.new(uri, method, response)
+              expect(exception.response_code).to eq 502
+            end
           end
         end
       end
