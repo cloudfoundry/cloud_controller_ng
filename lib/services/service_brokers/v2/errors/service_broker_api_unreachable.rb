@@ -13,6 +13,10 @@ module VCAP::Services
               source
             )
           end
+
+          def response_code
+            502
+          end
         end
       end
     end

@@ -18,6 +18,10 @@ module VCAP::Services
             expect(exception.method).to eq(method)
             expect(exception.source).to be(response.body)
           end
+
+          it 'renders a 502 to the user' do
+            expect(ServiceBrokerResponseMalformed.new(uri, method, response).response_code).to eq 502
+          end
         end
       end
     end

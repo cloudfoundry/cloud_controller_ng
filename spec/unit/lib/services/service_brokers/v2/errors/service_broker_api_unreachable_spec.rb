@@ -29,6 +29,11 @@ module VCAP::Services
               }
             })
           end
+
+          it 'renders the correct status code to the user' do
+            exception = ServiceBrokerApiUnreachable.new(uri, 'PUT', error)
+            expect(exception.response_code).to eq 502
+          end
         end
       end
     end
