@@ -86,6 +86,10 @@ RSpec.configure do |rspec_config|
     TmpdirCleaner.clean
   end
 
+  rspec_config.after :each do
+    Timecop.return
+  end
+
   rspec_config.after(:each, type: :legacy_api) { add_deprecation_warning }
 
   RspecApiDocumentation.configure do |c|

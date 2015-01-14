@@ -52,6 +52,10 @@ module VCAP::CloudController
         Buildpack.dataset.destroy
       end
 
+      after do
+        Timecop.return
+      end
+
       subject(:all_buildpacks) { Buildpack.list_admin_buildpacks }
 
       context 'with prioritized buildpacks' do
