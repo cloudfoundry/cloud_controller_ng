@@ -230,15 +230,33 @@ module VCAP::RestAPI
       end
 
       describe 'boolean values on boolean column' do
-        it 'returns correctly filtered results for true' do
+        it 'returns correctly filtered results for t' do
           ds = Query.filtered_dataset_from_query_params(
             Author, Author.dataset, @queryable_attributes, q: 'published:t')
           expect(ds.all).to eq([Author.first])
         end
 
-        it 'returns correctly filtered results for false' do
+        it 'returns correctly filtered results for true' do
+          ds = Query.filtered_dataset_from_query_params(
+            Author, Author.dataset, @queryable_attributes, q: 'published:true')
+          expect(ds.all).to eq([Author.first])
+        end
+
+        it 'returns correctly filtered results for f' do
           ds = Query.filtered_dataset_from_query_params(
             Author, Author.dataset, @queryable_attributes, q: 'published:f')
+          expect(ds.all).to eq(Author.all - [Author.first])
+        end
+
+        it 'returns correctly filtered results for false' do
+          ds = Query.filtered_dataset_from_query_params(
+            Author, Author.dataset, @queryable_attributes, q: 'published:false')
+          expect(ds.all).to eq(Author.all - [Author.first])
+        end
+
+        it 'returns resulted filtered as false for any other value' do
+          ds = Query.filtered_dataset_from_query_params(
+            Author, Author.dataset, @queryable_attributes, q: 'published:foobar')
           expect(ds.all).to eq(Author.all - [Author.first])
         end
       end

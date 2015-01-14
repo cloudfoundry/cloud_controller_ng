@@ -153,19 +153,10 @@ module VCAP::RestAPI
       { foreign_key_column_name => foreign_key_value }
     end
 
-    TINYINT_TYPE = 'tinyint(1)'.freeze
-    TINYINT_FROM_TRUE_FALSE = { 't' => 1, 'f' => 0 }.freeze
-
     # Sequel uses tinyint(1) to store booleans in Mysql.
     # Mysql does not support using 't'/'f' for querying.
-    def clean_up_boolean(q_key, q_val)
-      column = model.db_schema[q_key.to_sym]
-
-      if column[:db_type] == TINYINT_TYPE
-        TINYINT_FROM_TRUE_FALSE.fetch(q_val, q_val)
-      else
-        q_val == 't'
-      end
+    def clean_up_boolean(_, q_val)
+      q_val == 't' || q_val == 'true'
     end
 
     def clean_up_datetime(q_val)
