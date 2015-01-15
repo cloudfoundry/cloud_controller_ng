@@ -16,6 +16,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     let(:http_client) { double('http_client') }
     let(:orphan_mitigator) { double('orphan_mitigator', cleanup_failed_provision: nil, cleanup_failed_bind: nil) }
+    let(:state_poller) { double('state_poller', poll_service_instance_state: nil) }
 
     before do
       allow(HttpClient).to receive(:new).
@@ -24,6 +25,9 @@ module VCAP::Services::ServiceBrokers::V2
 
       allow(VCAP::Services::ServiceBrokers::V2::OrphanMitigator).to receive(:new).
         and_return(orphan_mitigator)
+
+      allow(VCAP::Services::ServiceBrokers::V2::ServiceInstanceStatePoller).to receive(:new).
+        and_return(state_poller)
 
       allow(http_client).to receive(:url).and_return(service_broker.broker_url)
     end
@@ -98,7 +102,7 @@ module VCAP::Services::ServiceBrokers::V2
         }
       end
 
-      let(:path) { "/v2/service_instances/#{instance.guid}" }
+      let(:path) { "/v2/service_instances/#{instance.guid}?accept_unavailable=true" }
       let(:response) { double('response') }
       let(:response_body) { response_data.to_json }
       let(:code) { '201' }
@@ -117,7 +121,7 @@ module VCAP::Services::ServiceBrokers::V2
         client.provision(instance)
 
         expect(http_client).to have_received(:put).
-          with("/v2/service_instances/#{instance.guid}", anything)
+          with("/v2/service_instances/#{instance.guid}?accept_unavailable=true", anything)
       end
 
       it 'makes a put request with correct message' do
@@ -158,7 +162,27 @@ module VCAP::Services::ServiceBrokers::V2
         expect(instance.credentials).to eq({})
       end
 
-      context 'when the broker returns a state' do
+      context 'when the broker returns no state or the state is created, or available' do
+        let(:response_data) do
+          {
+          }
+        end
+
+        it 'return immediately with the broker response' do
+          client = Client.new(client_attrs.merge(accept_unavailable: true))
+          client.provision(instance)
+
+          expect(instance.state).to eq('available')
+          expect(instance.state_description).to eq('')
+        end
+
+        it 'does not enqueue a polling job' do
+          client.provision(instance)
+          expect(state_poller).to_not have_received(:poll_service_instance_state)
+        end
+      end
+
+      context 'when the broker returns the state as creating' do
         let(:response_data) do
           {
             state: 'creating',
@@ -172,6 +196,33 @@ module VCAP::Services::ServiceBrokers::V2
 
           expect(instance.state).to eq('creating')
           expect(instance.state_description).to eq('10% done')
+        end
+
+        it 'enqueues a polling job' do
+          client.provision(instance)
+          expect(state_poller).to have_received(:poll_service_instance_state).with(client_attrs, instance)
+        end
+      end
+
+      context 'when the broker returns the state as failed' do
+        let(:response_data) do
+          {
+            state: 'failed',
+            state_description: '100% failed'
+          }
+        end
+
+        it 'return immediately with the broker response' do
+          client = Client.new(client_attrs.merge(accept_unavailable: true))
+          client.provision(instance)
+
+          expect(instance.state).to eq('failed')
+          expect(instance.state_description).to eq('100% failed')
+        end
+
+        it 'does not enqueue a polling job' do
+          client.provision(instance)
+          expect(state_poller).to_not have_received(:poll_service_instance_state)
         end
       end
 
@@ -232,6 +283,56 @@ module VCAP::Services::ServiceBrokers::V2
             end
           end
         end
+      end
+    end
+
+    describe '#fetch_service_instance_state' do
+      let(:plan) { VCAP::CloudController::ServicePlan.make }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:instance) do
+        VCAP::CloudController::ManagedServiceInstance.new(
+          service_plan: plan,
+          space: space
+        )
+      end
+
+      let(:response_data) do
+        {
+          'dashboard_url' => 'bar',
+          'state' => 'created',
+          'state_description' => '100% created'
+        }
+      end
+
+      let(:path) { "/v2/service_instances/#{instance.guid}" }
+      let(:response) { double('response') }
+      let(:response_body) { response_data.to_json }
+      let(:code) { '200' }
+      let(:message) { 'OK' }
+
+      before do
+        allow(http_client).to receive(:get).and_return(response)
+
+        allow(response).to receive(:body).and_return(response_body)
+        allow(response).to receive(:code).and_return(code)
+        allow(response).to receive(:message).and_return(message)
+      end
+
+      it 'makes a put request with correct path' do
+        client.fetch_service_instance_state(instance)
+
+        expect(http_client).to have_received(:get).
+          with("/v2/service_instances/#{instance.guid}")
+      end
+
+      it 'returns the instance given with new state values' do
+        returned_instance = client.fetch_service_instance_state(instance)
+
+        expect(returned_instance).to be(instance)
+
+        expect(returned_instance.dashboard_url).to eq('bar')
+        expect(returned_instance.state).to eq('created')
+        expect(returned_instance.state_description).to eq('100% created')
       end
     end
 

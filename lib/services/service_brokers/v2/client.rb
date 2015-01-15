@@ -8,6 +8,7 @@ module VCAP::Services::ServiceBrokers::V2
       @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
       @attrs = attrs
       @orphan_mitigator = VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new
+      @state_poller = VCAP::Services::ServiceBrokers::V2::ServiceInstanceStatePoller.new
     end
 
     def catalog
@@ -18,7 +19,7 @@ module VCAP::Services::ServiceBrokers::V2
     # The broker is expected to guarantee uniqueness of instance_id.
     # raises ServiceBrokerConflict if the id is already in use
     def provision(instance)
-      path = "/v2/service_instances/#{instance.guid}"
+      path = "/v2/service_instances/#{instance.guid}?accept_unavailable=true"
 
       response = @http_client.put(path, {
         service_id:        instance.service.broker_provided_id,
@@ -29,15 +30,32 @@ module VCAP::Services::ServiceBrokers::V2
 
       parsed_response = @response_parser.parse(:put, path, response)
       instance.dashboard_url = parsed_response['dashboard_url']
-      instance.state = parsed_response['state'] || 'available'
       instance.state_description = parsed_response['state_description'] || ''
+
+      if parsed_response['state']
+        instance.state = parsed_response['state']
+        @state_poller.poll_service_instance_state(@attrs, instance) if instance.state == 'creating'
+      else
+        instance.state = 'available'
+      end
 
       # DEPRECATED, but needed because of not null constraint
       instance.credentials = {}
-
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
       @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       raise e
+    end
+
+    def fetch_service_instance_state(instance)
+      path = "/v2/service_instances/#{instance.guid}"
+
+      response = @http_client.get(path)
+      parsed_response = @response_parser.parse(:get, path, response)
+
+      instance.dashboard_url = parsed_response['dashboard_url']
+      instance.state = parsed_response['state']
+      instance.state_description = parsed_response['state_description']
+      instance
     end
 
     def bind(binding)
