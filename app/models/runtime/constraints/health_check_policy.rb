@@ -8,9 +8,9 @@ class HealthCheckPolicy
   def validate
     return unless @health_check_timeout
     @errors.add(:health_check_timeout, :less_than_zero) unless @health_check_timeout >= 0
-
-    if @health_check_timeout > VCAP::CloudController::Config.config[:maximum_health_check_timeout]
-      @errors.add(:health_check_timeout, :maximum_exceeded)
+    max_timeout = VCAP::CloudController::Config.config[:maximum_health_check_timeout]
+    if @health_check_timeout > max_timeout
+      @errors.add(:health_check_timeout, "Maximum exceeded: max #{max_timeout}s")
     end
   end
 end
