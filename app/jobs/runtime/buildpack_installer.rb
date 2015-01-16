@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class BuildpackInstaller
+      class BuildpackInstaller < VCAP::CloudController::Jobs::CCJob
         attr_accessor :name, :file, :opts
 
         def initialize(name, file, opts)

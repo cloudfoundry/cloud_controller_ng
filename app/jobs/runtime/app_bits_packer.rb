@@ -4,7 +4,7 @@ require 'cloud_controller/dependency_locator'
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class AppBitsPacker
+      class AppBitsPacker < VCAP::CloudController::Jobs::CCJob
         attr_accessor :app_guid, :uploaded_compressed_path, :fingerprints
 
         def initialize(app_guid, uploaded_compressed_path, fingerprints)

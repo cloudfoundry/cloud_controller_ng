@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class BlobstoreDelete
+      class BlobstoreDelete < VCAP::CloudController::Jobs::CCJob
         attr_accessor :key, :blobstore_name, :attributes
 
         def initialize(key, blobstore_name, attributes=nil)

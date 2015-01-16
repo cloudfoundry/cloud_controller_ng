@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class ModelDeletion
+      class ModelDeletion < VCAP::CloudController::Jobs::CCJob
         attr_accessor :model_class, :guid
 
         def initialize(model_class, guid)

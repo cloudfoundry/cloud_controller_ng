@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class AppEventsCleanup
+      class AppEventsCleanup < VCAP::CloudController::Jobs::CCJob
         attr_accessor :cutoff_age_in_days
 
         def initialize(cutoff_age_in_days)

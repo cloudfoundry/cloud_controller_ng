@@ -1,6 +1,6 @@
 module VCAP::CloudController
   module Jobs
-    class RequestJob
+    class RequestJob < VCAP::CloudController::Jobs::CCJob
       attr_accessor :job, :request_id
 
       def initialize(job, request_id)

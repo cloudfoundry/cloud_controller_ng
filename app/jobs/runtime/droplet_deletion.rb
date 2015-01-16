@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class DropletDeletion
+      class DropletDeletion < VCAP::CloudController::Jobs::CCJob
         attr_accessor :new_droplet_key, :old_droplet_key
 
         def initialize(new_droplet_key, old_droplet_key)

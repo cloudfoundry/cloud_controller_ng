@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class DropletUpload
+      class DropletUpload < VCAP::CloudController::Jobs::CCJob
         attr_reader :local_path, :app_id
         attr_reader :max_attempts
 

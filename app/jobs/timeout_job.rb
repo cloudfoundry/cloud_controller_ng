@@ -1,6 +1,6 @@
 module VCAP::CloudController
   module Jobs
-    class TimeoutJob
+    class TimeoutJob < VCAP::CloudController::Jobs::CCJob
       attr_accessor :job
 
       def initialize(job)

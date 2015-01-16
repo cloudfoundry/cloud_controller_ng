@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Services
-      class ServiceInstanceUnbind
+      class ServiceInstanceUnbind < VCAP::CloudController::Jobs::CCJob
         attr_accessor :name, :client_attrs, :binding_guid, :service_instance_guid, :app_guid
 
         def initialize(name, client_attrs, binding_guid, service_instance_guid, app_guid)

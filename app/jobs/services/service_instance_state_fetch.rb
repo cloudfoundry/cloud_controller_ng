@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Services
-      class ServiceInstanceStateFetch
+      class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
         attr_accessor :name, :client_attrs, :service_instance_guid, :service_plan_guid
 
         def initialize(name, client_attrs, service_instance_guid, service_plan_guid)

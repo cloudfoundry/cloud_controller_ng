@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class PendingPackagesCleanup
+      class PendingPackagesCleanup < VCAP::CloudController::Jobs::CCJob
         attr_accessor :expiration_in_seconds
 
         def initialize(expiration_in_seconds)

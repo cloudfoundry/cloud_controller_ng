@@ -1,6 +1,6 @@
 module VCAP::CloudController
   module Jobs
-    class AuditEventJob
+    class AuditEventJob < VCAP::CloudController::Jobs::CCJob
       attr_accessor :job, :event_repository, :event_creation_method, :event_type, :model, :params
 
       def initialize(job, event_repository, event_creation_method, event_type, model, params={})
