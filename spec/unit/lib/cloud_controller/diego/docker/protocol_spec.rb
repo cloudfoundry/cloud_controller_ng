@@ -21,6 +21,11 @@ module VCAP::CloudController
           Protocol.new(common_protocol)
         end
 
+        before do
+          allow(common_protocol).to receive(:staging_egress_rules).and_return(['staging_egress_rule'])
+          allow(common_protocol).to receive(:running_egress_rules).with(app).and_return(['running_egress_rule'])
+        end
+
         describe '#stage_app_request' do
           subject(:request) do
             protocol.stage_app_request(app, 900)
@@ -47,6 +52,7 @@ module VCAP::CloudController
               'file_descriptors' => app.file_descriptors,
               'stack' => app.stack.name,
               'docker_image' => app.docker_image,
+              'egress_rules' => ['staging_egress_rule'],
               'timeout' => 900,
             })
           end
@@ -84,6 +90,7 @@ module VCAP::CloudController
               'log_guid' => app.guid,
               'docker_image' => app.docker_image,
               'health_check_type' => app.health_check_type,
+              'egress_rules' => ['running_egress_rule'],
               'etag' => app.updated_at.to_f.to_s,
             })
           end

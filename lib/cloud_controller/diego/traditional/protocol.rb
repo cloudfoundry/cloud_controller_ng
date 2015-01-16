@@ -38,6 +38,7 @@ module VCAP::CloudController
             'droplet_upload_uri' => @blobstore_url_generator.droplet_upload_url(app),
             'build_artifacts_cache_download_uri' => @blobstore_url_generator.buildpack_cache_download_url(app),
             'build_artifacts_cache_upload_uri' => @blobstore_url_generator.buildpack_cache_upload_url(app),
+            'egress_rules' => @common_protocol.staging_egress_rules,
             'timeout' => staging_timeout,
           }
         end
@@ -57,6 +58,7 @@ module VCAP::CloudController
             'routes' => app.uris,
             'log_guid' => app.guid,
             'health_check_type' => app.health_check_type,
+            'egress_rules' => @common_protocol.running_egress_rules(app),
             'etag' => app.updated_at.to_f.to_s
           }
 

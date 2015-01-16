@@ -22,6 +22,7 @@ module VCAP::CloudController
             'file_descriptors' => app.file_descriptors,
             'stack' => app.stack.name,
             'docker_image' => app.docker_image,
+            'egress_rules' => @common_protocol.staging_egress_rules,
             'timeout' => staging_timeout,
           }
         end
@@ -49,6 +50,7 @@ module VCAP::CloudController
             'log_guid' => app.guid,
             'docker_image' => app.docker_image,
             'health_check_type' => app.health_check_type,
+            'egress_rules' => @common_protocol.running_egress_rules(app),
             'etag' => app.updated_at.to_f.to_s
           }
 

@@ -50,6 +50,7 @@ module VCAP::CloudController
             'app_bits_download_uri' => 'http://app-package.com',
             'buildpacks' => Traditional::BuildpackEntryGenerator.new(blobstore_url_generator).buildpack_entries(app),
             'droplet_upload_uri' => 'http://droplet-upload-uri',
+            'egress_rules' => [],
             'timeout' => 90,
           }
 
@@ -77,6 +78,7 @@ module VCAP::CloudController
             'health_check_type' => app.health_check_type,
             'health_check_timeout_in_seconds' => 120,
             'log_guid' => app.guid,
+            'egress_rules' => [],
             'etag' => app.updated_at.to_f.to_s,
           }
         end
