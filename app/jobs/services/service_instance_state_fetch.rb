@@ -1,7 +1,16 @@
 module VCAP::CloudController
   module Jobs
     module Services
-      class ServiceInstanceStateFetch < Struct.new(:name, :client_attrs, :service_instance_guid, :service_plan_guid)
+      class ServiceInstanceStateFetch
+        attr_accessor :name, :client_attrs, :service_instance_guid, :service_plan_guid
+
+        def initialize(name, client_attrs, service_instance_guid, service_plan_guid)
+          @name = name
+          @client_attrs = client_attrs
+          @service_instance_guid = service_instance_guid
+          @service_plan_guid = service_plan_guid
+        end
+
         def perform
           client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
           service_plan = ServicePlan.first(guid: service_plan_guid)

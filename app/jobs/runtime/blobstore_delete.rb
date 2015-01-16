@@ -1,7 +1,15 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class BlobstoreDelete < Struct.new(:key, :blobstore_name, :attributes)
+      class BlobstoreDelete
+        attr_accessor :key, :blobstore_name, :attributes
+
+        def initialize(key, blobstore_name, attributes=nil)
+          @key = key
+          @blobstore_name = blobstore_name
+          @attributes = attributes
+        end
+
         def perform
           logger = Steno.logger('cc.background')
           logger.info("Attempting delete of '#{key}' from blobstore '#{blobstore_name}'")

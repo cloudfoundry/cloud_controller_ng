@@ -10,9 +10,11 @@ module VCAP::CloudController
 
       let(:options) { { enabled: true, locked: false, position: 1 } }
 
-      let(:job) { BuildpackInstaller.new(buildpack_name, zipfile, options, TestConfig.config) }
+      let(:job) { BuildpackInstaller.new(buildpack_name, zipfile, options) }
 
-      it { is_expected.to be_a_valid_job }
+      it 'is a valid job' do
+        expect(job).to be_a_valid_job
+      end
 
       describe '#perform' do
         context 'when the buildpack is enabled and unlocked' do
@@ -34,7 +36,7 @@ module VCAP::CloudController
           it 'updates an existing buildpack' do
             buildpack1 = Buildpack.make(name: buildpack_name, key: 'new_key')
 
-            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false }, TestConfig.config)
+            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false })
             update_job.perform
 
             buildpack2 = Buildpack.find(name: buildpack_name)
@@ -48,7 +50,7 @@ module VCAP::CloudController
         context 'when the buildpack is locked' do
           it 'fails to update a locked buildpack' do
             buildpack = Buildpack.make(name: buildpack_name, locked: true)
-            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false, locked: false }, TestConfig.config)
+            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false, locked: false })
             update_job.perform
 
             buildpack2 = Buildpack.find(name: buildpack_name)

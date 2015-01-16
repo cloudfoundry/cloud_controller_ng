@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     describe BlobstoreDelete do
       let(:key) { 'key' }
-      let(:job) do
+      subject(:job) do
         BlobstoreDelete.new(key, :droplet_blobstore)
       end
 

@@ -1,7 +1,16 @@
 module VCAP::CloudController
   module Jobs
     module Services
-      class ServiceInstanceDeprovision < Struct.new(:name, :client_attrs, :service_instance_guid, :service_plan_guid)
+      class ServiceInstanceDeprovision
+        attr_accessor :name, :client_attrs, :service_instance_guid, :service_plan_guid
+
+        def initialize(name, client_attrs, service_instance_guid, service_plan_guid)
+          @name = name
+          @client_attrs = client_attrs
+          @service_instance_guid = service_instance_guid
+          @service_plan_guid = service_plan_guid
+        end
+
         def perform
           logger = Steno.logger('cc-background')
           logger.info('There was an error during service instance provisioning. Attempting to delete potentially orphaned instance.')

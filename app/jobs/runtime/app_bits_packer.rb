@@ -4,7 +4,15 @@ require 'cloud_controller/dependency_locator'
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class AppBitsPacker < Struct.new(:app_guid, :uploaded_compressed_path, :fingerprints)
+      class AppBitsPacker
+        attr_accessor :app_guid, :uploaded_compressed_path, :fingerprints
+
+        def initialize(app_guid, uploaded_compressed_path, fingerprints)
+          @app_guid = app_guid
+          @uploaded_compressed_path = uploaded_compressed_path
+          @fingerprints = fingerprints
+        end
+
         def perform
           logger = Steno.logger('cc.background')
           logger.info("Packing the app bits for app '#{app_guid}'")

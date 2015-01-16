@@ -1,6 +1,13 @@
 module VCAP::CloudController
   module Jobs
-    class RequestJob < Struct.new(:job, :request_id)
+    class RequestJob
+      attr_accessor :job, :request_id
+
+      def initialize(job, request_id)
+        @job = job
+        @request_id = request_id
+      end
+
       def perform
         current_request_id = ::VCAP::Request.current_id
         begin

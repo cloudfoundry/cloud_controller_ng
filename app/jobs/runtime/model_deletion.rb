@@ -1,7 +1,14 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class ModelDeletion < Struct.new(:model_class, :guid)
+      class ModelDeletion
+        attr_accessor :model_class, :guid
+
+        def initialize(model_class, guid)
+          @model_class = model_class
+          @guid = guid
+        end
+
         def perform
           logger = Steno.logger('cc.background')
           logger.info("Deleting model class '#{model_class}' with guid '#{guid}'")

@@ -60,10 +60,11 @@ module VCAP::CloudController
         app = AppFactory.make
         droplet = app.current_droplet
         enqueuer = double('Enqueuer', enqueue: true)
-        expect(Jobs::Enqueuer).to receive(:new).with(
-          Jobs::Runtime::DropletDeletion.new(droplet.new_blobstore_key, droplet.old_blobstore_key),
-          queue: 'cc-generic'
-        ).and_return(enqueuer)
+        expect(Jobs::Enqueuer).to receive(:new) do |job, opts|
+          expect(job.new_droplet_key).to eq droplet.new_blobstore_key
+          expect(job.old_droplet_key).to eq droplet.old_blobstore_key
+          expect(opts[:queue]).to eq 'cc-generic'
+        end.and_return(enqueuer)
         droplet.destroy
       end
     end

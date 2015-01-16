@@ -3,7 +3,13 @@ require 'repositories/runtime/app_usage_event_repository'
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class AppUsageEventsCleanup < Struct.new(:cutoff_age_in_days)
+      class AppUsageEventsCleanup
+        attr_accessor :cutoff_age_in_days
+
+        def initialize(cutoff_age_in_days)
+          @cutoff_age_in_days = cutoff_age_in_days
+        end
+
         def perform
           logger = Steno.logger('cc.background')
           logger.info('Cleaning up old AppUsageEvent rows')

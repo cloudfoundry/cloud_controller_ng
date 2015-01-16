@@ -1,7 +1,15 @@
 module VCAP::CloudController
   module Jobs
     module Runtime
-      class BuildpackInstaller < Struct.new(:name, :file, :opts, :config)
+      class BuildpackInstaller
+        attr_accessor :name, :file, :opts
+
+        def initialize(name, file, opts)
+          @name = name
+          @file = file
+          @opts = opts
+        end
+
         def perform
           logger = Steno.logger('cc.background')
           logger.info "Installing buildpack #{name}"

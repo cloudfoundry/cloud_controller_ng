@@ -1,6 +1,12 @@
 module VCAP::CloudController
   module Jobs
-    class TimeoutJob < Struct.new(:job)
+    class TimeoutJob
+      attr_accessor :job
+
+      def initialize(job)
+        @job = job
+      end
+
       def perform
         Timeout.timeout max_run_time(job.job_name_in_configuration) do
           job.perform
