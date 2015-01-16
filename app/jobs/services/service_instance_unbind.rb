@@ -20,9 +20,8 @@ module VCAP::CloudController
           app = VCAP::CloudController::App.first(guid: app_guid)
           service_instance = VCAP::CloudController::ServiceInstance.first(guid: service_instance_guid)
 
-          binding = VCAP::CloudController::ServiceBinding.new(guid: binding_guid, app: app, service_instance: service_instance)
-
-          client.unbind(binding)
+          service_binding = VCAP::CloudController::ServiceBinding.new(guid: binding_guid, app: app, service_instance: service_instance)
+          client.unbind(service_binding)
         end
 
         def job_name_in_configuration

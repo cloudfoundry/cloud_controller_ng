@@ -8,9 +8,9 @@ module VCAP::CloudController
       let(:app_guid) { 'fake-app-guid' }
       let(:binding_guid) { 'fake-binding-guid' }
 
-      let(:binding) { instance_double('VCAP::CloudController::ServiceBinding') }
+      let(:service_binding) { instance_double('VCAP::CloudController::ServiceBinding') }
       before do
-        allow(VCAP::CloudController::ServiceBinding).to receive(:new).and_return(binding)
+        allow(VCAP::CloudController::ServiceBinding).to receive(:new).and_return(service_binding)
       end
 
       let(:name) { 'fake-name' }
@@ -18,14 +18,14 @@ module VCAP::CloudController
 
       describe '#perform' do
         before do
-          allow(client).to receive(:unbind).with(binding)
+          allow(client).to receive(:unbind).with(service_binding)
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
         end
 
         it 'unbinds the binding' do
           job.perform
 
-          expect(client).to have_received(:unbind).with(binding)
+          expect(client).to have_received(:unbind).with(service_binding)
         end
       end
 
