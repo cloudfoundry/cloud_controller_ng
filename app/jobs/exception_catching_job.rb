@@ -23,6 +23,10 @@ module VCAP::CloudController
         handler.max_attempts
       end
 
+      def reschedule_at(time, attempts)
+        handler.reschedule_at(time, attempts)
+      end
+
       private
 
       def save_error(error_presenter, job)

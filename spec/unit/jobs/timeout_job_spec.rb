@@ -67,5 +67,19 @@ module VCAP::CloudController::Jobs
         end
       end
     end
+
+    describe '#reschedule_at' do
+      before do
+        allow(job).to receive(:reschedule_at) do |time, attempts|
+          time + attempts
+        end
+      end
+
+      it 'defers to the inner job' do
+        time = Time.now
+        attempts = 5
+        expect(timeout_job.reschedule_at(time, attempts)).to eq(job.reschedule_at(time, attempts))
+      end
+    end
   end
 end

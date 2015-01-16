@@ -24,6 +24,10 @@ module VCAP::CloudController
         job_config = jobs_config[job_name_in_configuration] || jobs_config[:global]
         job_config[:timeout_in_seconds]
       end
+
+      def reschedule_at(time, attempts)
+        job.reschedule_at(time, attempts)
+      end
     end
   end
 end

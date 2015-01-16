@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController::Jobs
   describe RequestJob do
-    let(:wrapped_job) { double('InnerJob', max_attempts: 2) }
+    let(:wrapped_job) { double('InnerJob', max_attempts: 2, reschedule_at: Time.now) }
     let(:request_id) { 'abc123' }
     subject(:request_job) { RequestJob.new(wrapped_job, request_id) }
 
@@ -50,6 +50,14 @@ module VCAP::CloudController::Jobs
     context '#max_attempts' do
       it 'delegates to the handler' do
         expect(subject.max_attempts).to eq(2)
+      end
+    end
+
+    describe '#reschedule_at' do
+      it 'delegates to the inner job' do
+        time = Time.now
+        attempts = 5
+        expect(request_job.reschedule_at(time, attempts)).to eq(wrapped_job.reschedule_at(time, attempts))
       end
     end
   end

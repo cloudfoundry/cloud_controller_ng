@@ -21,6 +21,10 @@ module VCAP::CloudController
       def max_attempts
         job.max_attempts
       end
+
+      def reschedule_at(time, attempts)
+        job.reschedule_at(time, attempts)
+      end
     end
   end
 end

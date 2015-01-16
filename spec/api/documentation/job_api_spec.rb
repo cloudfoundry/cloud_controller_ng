@@ -19,6 +19,10 @@ resource 'Jobs', type: [:api, :legacy_api] do
       def max_attempts
         2
       end
+
+      def reschedule_at(time, attempts)
+        Time.now + 5
+      end
     end
 
     before { Delayed::Job.delete_all }

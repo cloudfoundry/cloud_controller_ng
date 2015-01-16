@@ -7,7 +7,7 @@ module VCAP::CloudController
         ExceptionCatchingJob.new(handler)
       end
 
-      let(:handler) { double('Handler', perform: 'fake-perform', max_attempts: 1) }
+      let(:handler) { double('Handler', perform: 'fake-perform', max_attempts: 1, reschedule_at: Time.now) }
 
       context '#perform' do
         it 'delegates to the handler' do
@@ -62,6 +62,14 @@ module VCAP::CloudController
           expect(job).to receive('save')
 
           exception_catching_job.error(job, 'exception')
+        end
+      end
+
+      describe '#reschedule_at' do
+        it 'delegates to the handler' do
+          time = Time.now
+          attempts = 5
+          expect(exception_catching_job.reschedule_at(time, attempts)).to eq(handler.reschedule_at(time, attempts))
         end
       end
     end
