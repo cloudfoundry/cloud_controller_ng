@@ -48,7 +48,7 @@ module VCAP::CloudController
         response_code, response_body = process_controller.list
 
         expect(processes_handler).to have_received(:list)
-        expect(process_presenter).to have_received(:present_json_list).with(list_response)
+        expect(process_presenter).to have_received(:present_json_list).with(list_response, '/v3/processes')
         expect(response_code).to eq(200)
         expect(response_body).to eq(expected_response)
       end

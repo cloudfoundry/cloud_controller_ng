@@ -16,7 +16,7 @@ module VCAP::CloudController
     end
 
     describe '#present_json_list' do
-      let(:pagination_presenter) { double(:pagination_presenter, present_pagination_hash: 'pagination_stuff') }
+      let(:pagination_presenter) { double(:pagination_presenter) }
       let(:process1) { AppFactory.make }
       let(:process2) { AppFactory.make }
       let(:processes) { [process1, process2] }
@@ -25,9 +25,14 @@ module VCAP::CloudController
       let(:per_page) { 1 }
       let(:total_results) { 2 }
       let(:paginated_result) { PaginatedResult.new(processes, total_results, PaginationOptions.new(page, per_page)) }
+      before do
+        allow(pagination_presenter).to receive(:present_pagination_hash) do |_, url|
+          "pagination-#{url}"
+        end
+      end
 
       it 'presents the processes as a json array under resources' do
-        json_result = presenter.present_json_list(paginated_result)
+        json_result = presenter.present_json_list(paginated_result, 'potato')
         result      = MultiJson.load(json_result)
 
         guids = result['resources'].collect { |app_json| app_json['guid'] }
@@ -35,10 +40,10 @@ module VCAP::CloudController
       end
 
       it 'includes pagination section' do
-        json_result = presenter.present_json_list(paginated_result)
+        json_result = presenter.present_json_list(paginated_result, 'bazooka')
         result      = MultiJson.load(json_result)
 
-        expect(result['pagination']).to eq('pagination_stuff')
+        expect(result['pagination']).to eq('pagination-bazooka')
       end
     end
   end

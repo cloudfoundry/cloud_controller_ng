@@ -253,8 +253,8 @@ resource 'Apps (Experimental)', type: :api do
         expected_response = {
           'pagination' => {
             'total_results' => 1,
-            'first'         => { 'href' => '/v3/processes?page=1&per_page=50' },
-            'last'          => { 'href' => '/v3/processes?page=1&per_page=50' },
+            'first'         => { 'href' => "/v3/apps/#{guid}/processes?page=1&per_page=50" },
+            'last'          => { 'href' => "/v3/apps/#{guid}/processes?page=1&per_page=50" },
             'next'          => nil,
             'previous'      => nil,
           },

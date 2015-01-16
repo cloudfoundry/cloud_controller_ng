@@ -85,7 +85,7 @@ module VCAP::CloudController
       pagination_options = PaginationOptions.from_params(params)
       paginated_result   = @process_handler.list(pagination_options, @access_context, app_guid: app.guid)
 
-      [HTTP::OK, @process_presenter.present_json_list(paginated_result)]
+      [HTTP::OK, @process_presenter.present_json_list(paginated_result, "/v3/apps/#{guid}/processes")]
     end
 
     put '/v3/apps/:guid/processes', :add_process

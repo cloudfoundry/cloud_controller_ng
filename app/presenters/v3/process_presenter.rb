@@ -10,12 +10,12 @@ module VCAP::CloudController
       MultiJson.dump(process_hash(process), pretty: true)
     end
 
-    def present_json_list(paginated_result)
+    def present_json_list(paginated_result, base_url)
       processes      = paginated_result.records
       process_hashes = processes.collect { |app| process_hash(app) }
 
       paginated_response = {
-        pagination: @pagination_presenter.present_pagination_hash(paginated_result, '/v3/processes'),
+        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url),
         resources:  process_hashes
       }
 
