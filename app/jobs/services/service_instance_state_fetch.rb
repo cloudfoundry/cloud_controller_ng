@@ -28,7 +28,8 @@ module VCAP::CloudController
         private
 
         def retry_job
-          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }
+          poll_interval = 1.minute
+          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now + poll_interval }
           VCAP::CloudController::Jobs::Enqueuer.new(self, opts).enqueue
         end
       end
