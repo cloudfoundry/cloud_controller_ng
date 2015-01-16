@@ -102,7 +102,7 @@ module VCAP::Services::ServiceBrokers::V2
         }
       end
 
-      let(:path) { "/v2/service_instances/#{instance.guid}?accept_unavailable=true" }
+      let(:path) { "/v2/service_instances/#{instance.guid}?accepts_incomplete=true" }
       let(:response) { double('response') }
       let(:response_body) { response_data.to_json }
       let(:code) { '201' }
@@ -121,7 +121,7 @@ module VCAP::Services::ServiceBrokers::V2
         client.provision(instance)
 
         expect(http_client).to have_received(:put).
-          with("/v2/service_instances/#{instance.guid}?accept_unavailable=true", anything)
+          with("/v2/service_instances/#{instance.guid}?accepts_incomplete=true", anything)
       end
 
       it 'makes a put request with correct message' do
@@ -169,7 +169,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'return immediately with the broker response' do
-          client = Client.new(client_attrs.merge(accept_unavailable: true))
+          client = Client.new(client_attrs.merge(accepts_incomplete: true))
           client.provision(instance)
 
           expect(instance.state).to eq('available')
@@ -191,7 +191,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'return immediately with the broker response' do
-          client = Client.new(client_attrs.merge(accept_unavailable: true))
+          client = Client.new(client_attrs.merge(accepts_incomplete: true))
           client.provision(instance)
 
           expect(instance.state).to eq('creating')
@@ -213,7 +213,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'return immediately with the broker response' do
-          client = Client.new(client_attrs.merge(accept_unavailable: true))
+          client = Client.new(client_attrs.merge(accepts_incomplete: true))
           client.provision(instance)
 
           expect(instance.state).to eq('failed')

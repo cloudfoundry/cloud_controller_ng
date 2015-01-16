@@ -19,7 +19,7 @@ module VCAP::Services::ServiceBrokers::V2
     # The broker is expected to guarantee uniqueness of instance_id.
     # raises ServiceBrokerConflict if the id is already in use
     def provision(instance)
-      path = "/v2/service_instances/#{instance.guid}?accept_unavailable=true"
+      path = "/v2/service_instances/#{instance.guid}?accepts_incomplete=true"
 
       response = @http_client.put(path, {
         service_id:        instance.service.broker_provided_id,
