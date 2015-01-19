@@ -45,7 +45,7 @@ module VCAP::CloudController
 
     context 'organization auditor (defensive)' do
       before { org.add_auditor(user) }
-      it_behaves_like :no_access
+      it_behaves_like :read_only
     end
 
     context 'space manager (defensive)' do
@@ -129,7 +129,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_behaves_like :no_access
+        it_behaves_like :read_only
       end
 
       context 'space manager (defensive)' do
