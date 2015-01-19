@@ -48,6 +48,8 @@ module VCAP::CloudController
       package_not_found!
     rescue PackagesHandler::Unauthorized
       unauthorized!
+    rescue PackagesHandler::BitsAlreadyUploaded
+      bits_already_uploaded!
     end
 
     get '/v3/packages/:guid', :show
@@ -82,6 +84,10 @@ module VCAP::CloudController
 
     def unauthorized!
       raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+    end
+
+    def bits_already_uploaded!
+      raise VCAP::Errors::ApiError.new_from_details('PackageBitsAlreadyUploaded')
     end
 
     def unprocessable!(message)

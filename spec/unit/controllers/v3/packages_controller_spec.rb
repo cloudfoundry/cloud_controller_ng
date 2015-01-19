@@ -208,6 +208,20 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the bits have already been uploaded' do
+        before do
+          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::BitsAlreadyUploaded)
+        end
+        it 'returns a 400 PackageBitsAlreadyUploaded error' do
+          expect {
+            packages_controller.upload(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'PackageBitsAlreadyUploaded'
+            expect(error.response_code).to eq 400
+          end
+        end
+      end
     end
 
     describe '#show' do
