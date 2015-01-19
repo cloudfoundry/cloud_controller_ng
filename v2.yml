@@ -373,6 +373,11 @@
   http_code: 503
   message: "One or more instances could not be started because of insufficient running resources."
 
+150004:
+  name: PackageBitsAlreadyUploaded
+  http_code: 400
+  message: "Bits may be uploaded only once. Create a new package to upload different bits."
+
 160001:
   name: AppBitsUploadInvalid
   http_code: 400
