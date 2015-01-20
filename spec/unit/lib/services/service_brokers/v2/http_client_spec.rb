@@ -79,7 +79,7 @@ module VCAP::Services::ServiceBrokers::V2
               :request => response)
           end
 
-          let(:response) { double(:response, code: nil, body: nil, headers: nil) }
+          let(:response) { double(:response, code: nil, reason: nil, body: nil, headers: nil) }
           let(:ssl_config) { double(:ssl_config, :verify_mode= => nil) }
 
           before do
@@ -170,7 +170,7 @@ module VCAP::Services::ServiceBrokers::V2
           :request => response)
       end
 
-      let(:response) { double(:response, code: 200, body: {}.to_json, headers: {}) }
+      let(:response) { double(:response, code: 200, reason: 'OK', body: {}.to_json, headers: {}) }
       let(:ssl_config) { double(:ssl_config, :verify_mode= => nil) }
 
       def expect_timeout_to_be(timeout)

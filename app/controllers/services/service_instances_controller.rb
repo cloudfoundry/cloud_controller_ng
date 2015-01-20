@@ -128,6 +128,7 @@ module VCAP::CloudController
         end
 
         new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
+        raise VCAP::Errors::ApiError.new_from_details('InvalidRelation', 'Plan') unless new_plan
         service_instance.client.update_service_plan(service_instance, new_plan)
       end
 

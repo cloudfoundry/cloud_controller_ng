@@ -172,7 +172,7 @@ module VCAP::CloudController
         let(:space) { Space.make }
         let(:plan) { ServicePlan.make }
         let(:developer) { make_developer_for_space(space) }
-        let(:client) { double('client') }
+        let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
         before do
           allow(client).to receive(:provision) do |instance|
@@ -459,7 +459,9 @@ module VCAP::CloudController
     end
 
     describe 'PUT', '/v2/service_instances/:service_instance_guid' do
-      let(:service) { Service.make(plan_updateable: true) }
+      let(:service_broker_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{service_instance.guid}/" }
+      let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
+      let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
       let(:old_service_plan)  { ServicePlan.make(:v2, service: service) }
       let(:new_service_plan)  { ServicePlan.make(:v2, service: service) }
       let(:service_instance)  { ManagedServiceInstance.make(service_plan: old_service_plan) }
@@ -470,17 +472,18 @@ module VCAP::CloudController
         )
       end
 
-      let(:client) { double('client') }
-
-      before do
-        allow(client).to receive(:update_service_plan)
-        allow_any_instance_of(Service).to receive(:client).and_return(client)
-      end
-
       context 'when the broker declared support for plan upgrades' do
+        let(:response_body) { '{}' }
+
+        before do
+          stub_request(:patch, service_broker_url).
+            with(headers: { 'Accept' => 'application/json' }).
+            to_return(status: 200, body: response_body, headers: { 'Content-Type' => 'application/json' })
+        end
+
         it 'calls the service broker to update the plan' do
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(client).to have_received(:update_service_plan).with(service_instance, new_service_plan)
+          expect(a_request(:patch, service_broker_url)).to have_been_made.times(1)
         end
 
         it 'updates the service plan in the database' do
@@ -514,6 +517,8 @@ module VCAP::CloudController
       context 'When the broker did not declare support for plan upgrades' do
         let(:old_service_plan) { ServicePlan.make(:v2) }
 
+        before { service.update(plan_updateable: false) }
+
         it 'does not update the service plan in the database' do
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
           expect(service_instance.reload.service_plan).to eq(old_service_plan)
@@ -521,7 +526,7 @@ module VCAP::CloudController
 
         it 'does not make an api call when the plan does not support upgrades' do
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(client).not_to have_received(:update_service_plan)
+          expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
         end
 
         it 'returns a useful error to the user' do
@@ -539,7 +544,7 @@ module VCAP::CloudController
 
         it 'does not call out to the service broker' do
           put "/v2/service_instances/#{service_instance.guid}", body, headers_for(auditor)
-          expect(client).not_to have_received(:update_service_plan)
+          expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
         end
       end
 
@@ -559,13 +564,12 @@ module VCAP::CloudController
       end
 
       context 'when the broker client raises a ServiceBrokerBadResponse' do
-        let(:uri) { 'http://uri.example.com' }
-        let(:method) { 'GET' }
         let(:response_body) { '{"description": "error message"}' }
-        let(:response) { double(code: 500, reason: 'Internal Server Error', body: response_body) }
 
         before do
-          allow(client).to receive(:update_service_plan).and_raise(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(uri, method, response))
+          stub_request(:patch, service_broker_url).
+            with(headers: { 'Accept' => 'application/json' }).
+            to_return(status: 500, body: response_body, headers: { 'Content-Type' => 'application/json' })
         end
 
         it 'returns a CF-ServiceBrokerBadResponse' do
@@ -576,13 +580,12 @@ module VCAP::CloudController
       end
 
       context 'when the broker client raises a ServiceBrokerRequestRejected' do
-        let(:uri) { 'http://uri.example.com' }
-        let(:method) { 'GET' }
         let(:response_body) { '{"description": "error message"}' }
-        let(:response) { double(code: 422, reason: 'Broker rejected the upate', body: response_body) }
 
         before do
-          allow(client).to receive(:update_service_plan).and_raise(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerRequestRejected.new(uri, method, response))
+          stub_request(:patch, service_broker_url).
+            with(headers: { 'Accept' => 'application/json' }).
+            to_return(status: 404, body: response_body, headers: { 'Content-Type' => 'application/json' })
         end
 
         it 'returns a CF-ServiceBrokerBadResponse' do

@@ -3,20 +3,21 @@ require 'httpclient'
 module VCAP::Services
   module ServiceBrokers::V2
     class HttpResponse
-      def initialize(http_client_response)
+      attr_reader :code, :message, :body
+
+      def initialize(attrs={})
+        @code = attrs.fetch(:code)
+        @message = attrs.fetch(:message)
+        @body = attrs.fetch(:body)
+      end
+
+      def self.from_http_client_response(http_client_response)
         @http_client_response = http_client_response
-      end
-
-      def code
-        @http_client_response.code
-      end
-
-      def message
-        @http_client_response.reason
-      end
-
-      def body
-        @http_client_response.body
+        self.new(
+          code: http_client_response.code,
+          message: http_client_response.reason,
+          body: http_client_response.body,
+        )
       end
     end
 
@@ -80,7 +81,7 @@ module VCAP::Services
 
         logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{response.body.inspect}, HEADERS: #{response.headers.inspect}"
 
-        HttpResponse.new(response)
+        HttpResponse.from_http_client_response(response)
       rescue SocketError, Errno::ECONNREFUSED => error
         raise Errors::ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
       rescue HTTPClient::TimeoutError => error
