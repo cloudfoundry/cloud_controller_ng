@@ -16,7 +16,7 @@ module VCAP::CloudController
             }
         }
       end
-      let(:expires) { Time.now.utc.to_i + 10 }
+      let(:expires) { Time.now.to_i + 10 }
 
       subject(:ad) { DeaAdvertisement.new(message, expires) }
 
@@ -37,13 +37,13 @@ module VCAP::CloudController
       end
 
       describe '#expired?' do
-        let(:now) { Time.now.utc }
+        let(:now) { Time.now }
         context 'when the time since the advertisment is greater than or equal 10 seconds' do
           it 'returns true' do
             Timecop.freeze now do
               ad
               Timecop.travel now + 11.seconds do
-                expect(ad).to be_expired(Time.now.utc)
+                expect(ad).to be_expired(Time.now)
               end
             end
           end
@@ -54,7 +54,7 @@ module VCAP::CloudController
             Timecop.freeze now do
               ad
               Timecop.travel now + 9.seconds do
-                expect(ad).to_not be_expired(Time.now.utc)
+                expect(ad).to_not be_expired(Time.now)
               end
             end
           end

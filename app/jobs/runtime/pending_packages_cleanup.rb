@@ -9,7 +9,8 @@ module VCAP::CloudController
         end
 
         def perform
-          App.where("package_pending_since < ? - INTERVAL '?' SECOND", Sequel::CURRENT_TIMESTAMP, expiration_in_seconds.to_i).update(
+          cutoff_time = Time.now - expiration_in_seconds
+          App.where('package_pending_since < ?', cutoff_time).update(
             package_state: 'FAILED',
             staging_failed_reason: 'StagingTimeExpired',
             package_pending_since: nil,

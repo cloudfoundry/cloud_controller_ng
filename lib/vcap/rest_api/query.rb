@@ -160,7 +160,7 @@ module VCAP::RestAPI
     end
 
     def clean_up_datetime(q_val)
-      q_val.empty? ? nil : Time.parse(q_val).utc
+      q_val.empty? ? nil : Time.parse(q_val).localtime
     end
 
     def clean_up_integer(q_val)

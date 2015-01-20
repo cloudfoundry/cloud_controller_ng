@@ -28,13 +28,13 @@ module VCAP::RestAPI
         a = Author.create(num_val: i + 1,
                           str_val: "str #{i}",
                           published: (i == 0),
-                          published_at: (i == 0) ? nil : Time.at(0).utc + i)
+                          published_at: (i == 0) ? nil : Time.at(0) + i)
         2.times do |j|
           a.add_book(Book.create(num_val: j + 1, str_val: "str #{i} #{j}"))
         end
       end
 
-      @owner_nil_num = Author.create(str_val: 'no num', published: false, published_at: Time.at(0).utc + @num_authors)
+      @owner_nil_num = Author.create(str_val: 'no num', published: false, published_at: Time.at(0) + @num_authors)
       @queryable_attributes = Set.new(%w(num_val str_val author_id book_id published published_at))
     end
 

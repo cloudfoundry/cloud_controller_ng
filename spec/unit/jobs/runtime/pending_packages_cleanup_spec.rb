@@ -15,8 +15,8 @@ module VCAP::CloudController
 
       describe '#perform' do
         context 'with packages which have been pending for too long' do
-          let!(:app1) { AppFactory.make(package_pending_since: Time.now.utc - expiration_in_seconds - 1.minute) }
-          let!(:app2) { AppFactory.make(package_pending_since: Time.now.utc - expiration_in_seconds - 2.minutes) }
+          let!(:app1) { AppFactory.make(package_pending_since: Time.now - expiration_in_seconds - 1.second) }
+          let!(:app2) { AppFactory.make(package_pending_since: Time.now - expiration_in_seconds - 2.second) }
 
           before do
             cleanup_job.perform
@@ -41,8 +41,8 @@ module VCAP::CloudController
         end
 
         it "ignores apps that haven't been pending for too long" do
-          app1 = AppFactory.make(package_pending_since: Time.now.utc - expiration_in_seconds + 1.minute)
-          app2 = AppFactory.make(package_pending_since: Time.now.utc - expiration_in_seconds + 2.minutes)
+          app1 = AppFactory.make(package_pending_since: Time.now - expiration_in_seconds + 1.second)
+          app2 = AppFactory.make(package_pending_since: Time.now - expiration_in_seconds + 2.second)
 
           cleanup_job.perform
           app1.reload

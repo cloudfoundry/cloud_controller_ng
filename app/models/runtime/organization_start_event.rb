@@ -16,7 +16,7 @@ module VCAP::CloudController
     def self.create_from_org(org)
       raise BillingNotEnabled unless org.billing_enabled?
       OrganizationStartEvent.create(
-        timestamp: Sequel::CURRENT_TIMESTAMP,
+        timestamp: Time.now,
         organization_guid: org.guid,
         organization_name: org.name,
       )

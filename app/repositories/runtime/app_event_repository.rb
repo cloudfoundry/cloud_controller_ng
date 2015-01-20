@@ -73,7 +73,7 @@ module VCAP::CloudController
           Event.create(
             space: space,
             type: type,
-            timestamp: Sequel::CURRENT_TIMESTAMP,
+            timestamp: Time.now,
             actee: app.guid,
             actee_type: 'app',
             actee_name: app.name,

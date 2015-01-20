@@ -214,7 +214,7 @@ module VCAP::CloudController
         def create_event(type, actor_data, actee_data, metadata, space_data=nil)
           base_data = {
             type: type,
-            timestamp: Sequel::CURRENT_TIMESTAMP,
+            timestamp: Time.now,
             metadata: metadata
           }
 

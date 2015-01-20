@@ -21,8 +21,6 @@ require 'active_support/core_ext/hash'
 require 'active_support/core_ext/object/to_query'
 require 'active_support/json/encoding'
 
-Sequel.default_timezone = :utc
-
 module VCAP::CloudController; end
 
 require 'vcap/errors/invalid_relation'

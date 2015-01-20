@@ -93,11 +93,11 @@ class JobPresenter < ApiPresenter
     end
 
     def created_at
-      Time.at(0).utc
+      Time.at(0)
     end
 
     def run_at
-      Time.at(0).utc
+      Time.at(0)
     end
 
     def cf_api_error

@@ -361,7 +361,7 @@ module VCAP::CloudController
     end
 
     describe '#enumerate' do
-      let(:timestamp) { Time.now.utc.change(usec: 0) }
+      let(:timestamp) { Time.now.change(usec: 0) }
       let!(:model1) { TestModel.make(created_at: timestamp) }
       let!(:model2) { TestModel.make(created_at: timestamp + 1.second) }
       let!(:model3) { TestModel.make(created_at: timestamp + 2.seconds) }
