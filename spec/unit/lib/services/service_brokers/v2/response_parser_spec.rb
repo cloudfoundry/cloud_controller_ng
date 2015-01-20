@@ -33,6 +33,10 @@ module VCAP::Services
           context 'when the body cannot be json parsed' do
             let(:body) { '{ "not json" }' }
 
+            before do
+              allow(response).to receive(:message).and_return('OK')
+            end
+
             it 'raises a MalformedResponse error' do
               expect {
                 parser.parse(:get, '/v2/catalog', response)
@@ -44,11 +48,32 @@ module VCAP::Services
           context 'when the body is JSON, but not a hash' do
             let(:body) { '["just", "a", "list"]' }
 
+            before do
+              allow(response).to receive(:message).and_return('OK')
+            end
+
             it 'raises a MalformedResponse error' do
               expect {
                 parser.parse(:get, '/v2/catalog', response)
               }.to raise_error(Errors::ServiceBrokerResponseMalformed)
               expect(logger).not_to have_received(:warn)
+            end
+          end
+
+          context 'when the body is an array with empty hash' do
+            let(:body) { '[{}]' }
+
+            before do
+              allow(response).to receive(:message).and_return('OK')
+            end
+
+            it 'raises a MalformedResponse error' do
+              expect {
+                parser.parse(:get, '/v2/catalog', response)
+              }.to raise_error do |error|
+                expect(error).to be_a Errors::ServiceBrokerResponseMalformed
+                expect(error.to_h['source']).to eq('[{}]')
+              end
             end
           end
 

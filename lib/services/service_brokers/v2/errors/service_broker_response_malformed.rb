@@ -5,7 +5,7 @@ module VCAP::Services
         class ServiceBrokerResponseMalformed < HttpResponseError
           def initialize(uri, method, response)
             super(
-              'The service broker response was not understood',
+              description_from_response(response),
               uri,
               method,
               response
@@ -14,6 +14,12 @@ module VCAP::Services
 
           def response_code
             502
+          end
+
+          private
+
+          def description_from_response(response)
+            "The service broker response was not understood: #{response.body}"
           end
         end
       end

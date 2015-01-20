@@ -23,7 +23,12 @@ module VCAP::Services
             end
 
             unless response_hash.is_a?(Hash)
-              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
+              sanitized_response = HttpResponse.new(
+                code: response.code,
+                message: response.message,
+                body: "\"#{response.body}\""
+              )
+              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, sanitized_response)
             end
 
             return response_hash

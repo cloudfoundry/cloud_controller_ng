@@ -13,7 +13,7 @@ module VCAP::Services
 
           it 'initializes the base class correctly' do
             exception = ServiceBrokerResponseMalformed.new(uri, method, response)
-            expect(exception.message).to eq('The service broker response was not understood')
+            expect(exception.message).to eq('The service broker response was not understood: foo')
             expect(exception.uri).to eq(uri)
             expect(exception.method).to eq(method)
             expect(exception.source).to be(response.body)
