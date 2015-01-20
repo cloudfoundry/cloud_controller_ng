@@ -24,16 +24,16 @@ module VCAP::CloudController
             SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
             SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '8080,9090', 'destination' => '198.41.191.48/1', 'log' => true }], staging_default: true)
             SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '198.41.191.49/1' }], staging_default: true)
-            SecurityGroup.make(rules: [{ 'protocol' => 'icmp', 'destination' => '0.0.0.0/0', 'type' => 0, 'code' => 1 }], staging_default: true)
+            SecurityGroup.make(rules: [{ 'protocol' => 'icmp', 'destination' => '1.1.1.1-2.2.2.2', 'type' => 0, 'code' => 1 }], staging_default: true)
             SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0' }], staging_default: false)
           end
 
           it 'includes egress security group staging information by aggregating all sg with staging_default=true' do
             expect(protocol.staging_egress_rules).to match_array([
-              { 'protocol' => 'udp', 'port_range' => { 'start' => 8080, 'end' => 9090 }, 'destination' => '198.41.191.47/1' },
-              { 'protocol' => 'tcp', 'ports' => [8080, 9090], 'destination' => '198.41.191.48/1', 'log' => true },
-              { 'protocol' => 'tcp', 'ports' => [443], 'destination' => '198.41.191.49/1' },
-              { 'protocol' => 'icmp', 'icmp_info' => { 'type' => 0, 'code' => 1 }, 'destination' => '0.0.0.0/0' },
+              { 'protocol' => 'udp', 'port_range' => { 'start' => 8080, 'end' => 9090 }, 'destinations' => ['198.41.191.47/1'] },
+              { 'protocol' => 'tcp', 'ports' => [8080, 9090], 'destinations' => ['198.41.191.48/1'], 'log' => true },
+              { 'protocol' => 'tcp', 'ports' => [443], 'destinations' => ['198.41.191.49/1'] },
+              { 'protocol' => 'icmp', 'icmp_info' => { 'type' => 0, 'code' => 1 }, 'destinations' => ['1.1.1.1-2.2.2.2'] },
             ])
           end
         end
@@ -52,9 +52,9 @@ module VCAP::CloudController
 
           it 'should provide the egress rules in the start message' do
             expect(protocol.running_egress_rules(app)).to match_array([
-              { 'protocol' => 'udp', 'ports' => [8080], 'destination' => '198.41.191.47/1' },
-              { 'protocol' => 'tcp', 'port_range' => { 'start' => 9090, 'end' => 9095 }, 'destination' => '198.41.191.48/1', 'log' => true },
-              { 'protocol' => 'udp', 'ports' => [1010, 2020], 'destination' => '198.41.191.49/1' },
+              { 'protocol' => 'udp', 'ports' => [8080], 'destinations' => ['198.41.191.47/1'] },
+              { 'protocol' => 'tcp', 'port_range' => { 'start' => 9090, 'end' => 9095 }, 'destinations' => ['198.41.191.48/1'], 'log' => true },
+              { 'protocol' => 'udp', 'ports' => [1010, 2020], 'destinations' => ['198.41.191.49/1'] },
             ])
           end
         end

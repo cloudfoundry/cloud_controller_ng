@@ -28,7 +28,7 @@ module VCAP::CloudController
           protocol = rule['protocol']
           template = {
             'protocol' => protocol,
-            'destination' => rule['destination'],
+            'destinations' => [rule['destination']],
           }
 
           case protocol
