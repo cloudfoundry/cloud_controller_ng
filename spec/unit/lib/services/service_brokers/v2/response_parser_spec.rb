@@ -7,15 +7,16 @@ module VCAP::Services
         let(:url) { 'my.service-broker.com' }
         subject(:parser) { ResponseParser.new(url) }
 
-        let(:logger) { double(:logger, warn: nil) }
+        let(:logger) { instance_double(Steno::Logger, warn: nil) }
         before do
           allow(Steno).to receive(:logger).and_return(logger)
         end
 
         describe '#parse' do
-          let(:response) { double(:response, body: body, code: code) }
+          let(:response) { VCAP::Services::ServiceBrokers::V2::HttpResponse.new(body: body, code: code, message: message) }
           let(:body) { '{"foo": "bar"}' }
           let(:code) { 200 }
+          let(:message) { 'OK' }
 
           it 'returns the response body hash' do
             response_hash = parser.parse(:get, '/v2/catalog', response)
@@ -24,6 +25,7 @@ module VCAP::Services
 
           context 'when the status code is 204' do
             let(:code) { 204 }
+            let(:message) { 'No Content' }
             it 'returns a nil response' do
               response_hash = parser.parse(:get, '/v2/catalog', response)
               expect(response_hash).to be_nil
@@ -79,6 +81,7 @@ module VCAP::Services
 
           context 'when the status code is HTTP Unauthorized (401)' do
             let(:code) { 401 }
+            let(:message) { 'Unauthorized' }
             it 'raises a ServiceBrokerApiAuthenticationFailed error' do
               expect {
                 parser.parse(:get, '/v2/catalog', response)
@@ -88,6 +91,7 @@ module VCAP::Services
 
           context 'when the status code is HTTP Request Timeout (408)' do
             let(:code) { 408 }
+            let(:message) { 'Request Timeout' }
             it 'raises a Errors::ServiceBrokerApiTimeout error' do
               expect {
                 parser.parse(:get, '/v2/catalog', response)
@@ -97,6 +101,7 @@ module VCAP::Services
 
           context 'when the status code is HTTP Conflict (409)' do
             let(:code) { 409 }
+            let(:message) { 'Conflict' }
             it 'raises a ServiceBrokerConflict error' do
               expect {
                 parser.parse(:get, '/v2/catalog', response)
@@ -106,6 +111,7 @@ module VCAP::Services
 
           context 'when the status code is HTTP Gone (410)' do
             let(:code) { 410 }
+            let(:message) { 'Gone' }
             let(:method) { :get }
             let(:body) { '{"description": "there was an error"}' }
             it 'raises ServiceBrokerBadResponse' do
@@ -126,6 +132,7 @@ module VCAP::Services
 
           context 'when the status code is any other 4xx error' do
             let(:code) { 400 }
+            let(:message) { 'Bad Request' }
             let(:method) { :get }
             let(:body) { '{"description": "there was an error"}' }
             it 'raises ServiceBrokerRequestRejected' do
@@ -137,6 +144,7 @@ module VCAP::Services
 
           context 'when the status code is any 5xx error' do
             let(:code) { 500 }
+            let(:message) { 'Internal Server Error' }
             let(:method) { :get }
             let(:body) { '{"description": "there was an error"}' }
             it 'raises ServiceBrokerBadResponse' do

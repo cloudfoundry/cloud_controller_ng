@@ -90,7 +90,11 @@ module VCAP::CloudController
         raise Sequel::ValidationFailed.new(service_instance)
       end
 
-      service_instance.client.provision(service_instance)
+      if ['true', 'false', nil].include? params['accepts_incomplete']
+        service_instance.client.provision(service_instance, async: params['accepts_incomplete'])
+      else
+        raise Errors::ApiError.new_from_details('InvalidRequest')
+      end
 
       begin
         service_instance.save

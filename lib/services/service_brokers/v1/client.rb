@@ -4,7 +4,7 @@ module VCAP::Services
       @http_client = ServiceBrokers::V1::HttpClient.new(attrs)
     end
 
-    def provision(instance)
+    def provision(instance, opts={})
       space = instance.space
       plan = instance.service_plan
       service = plan.service

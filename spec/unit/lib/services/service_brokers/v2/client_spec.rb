@@ -102,7 +102,7 @@ module VCAP::Services::ServiceBrokers::V2
         }
       end
 
-      let(:path) { "/v2/service_instances/#{instance.guid}?accepts_incomplete=true" }
+      let(:path) { "/v2/service_instances/#{instance.guid}" }
       let(:response) { double('response') }
       let(:response_body) { response_data.to_json }
       let(:code) { '201' }
@@ -121,7 +121,7 @@ module VCAP::Services::ServiceBrokers::V2
         client.provision(instance)
 
         expect(http_client).to have_received(:put).
-          with("/v2/service_instances/#{instance.guid}?accepts_incomplete=true", anything)
+          with(path, anything)
       end
 
       it 'makes a put request with correct message' do
@@ -385,7 +385,7 @@ module VCAP::Services::ServiceBrokers::V2
       describe 'error handling' do
         describe 'non-standard errors' do
           before do
-            fake_response = double('response', code: status_code, body: body)
+            fake_response = HttpResponse.new(code: status_code, body: body, message: 'Unprocessable Entity')
             allow(http_client).to receive(:patch).and_return(fake_response)
           end
 

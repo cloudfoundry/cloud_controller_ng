@@ -9,10 +9,14 @@ module VCAP::Services
             rescue MultiJson::ParseError
             end
 
-            if hash.is_a?(Hash) && hash.key?('description')
-              message = "Service broker error: #{hash['description']}"
-            else
-              message = "The service broker API returned an error from #{uri}: #{response.code} #{response.message}"
+            message = VCAP::Errors::ApiError.new_from_details('ServiceBrokerRequestRejected', uri, response.code, response.message).message
+            if hash.is_a?(Hash)
+              if hash['error'] == 'AsyncRequired'
+                details = VCAP::Errors::Details.new(hash['error'])
+                message = details.message_format
+              elsif !hash.key?('error') && hash.key?('description')
+                message = VCAP::Errors::ApiError.new_from_details('ServiceBrokerRequestRejectedWithDescription', hash['description']).message
+              end
             end
 
             super(message, uri, method, response)

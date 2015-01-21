@@ -169,20 +169,28 @@ module VCAP::CloudController
 
     describe 'POST', '/v2/service_instances' do
       context 'with a v2 service' do
+        let(:service_broker_url_regex) { %r{http://auth_username:auth_password@example.com/v2/service_instances/(.*)} }
+        let(:service_broker_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{ServiceInstance.last.guid}" }
+        let(:service_broker_url_with_async) { "#{service_broker_url}?accepts_incomplete=true" }
+        let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
+        let(:service) { Service.make(service_broker: service_broker) }
         let(:space) { Space.make }
-        let(:plan) { ServicePlan.make }
+        let(:plan) { ServicePlan.make(service: service) }
         let(:developer) { make_developer_for_space(space) }
-        let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
+        let(:response_body) { MultiJson.dump(dashboard_url: 'the dashboard_url', state: 'creating', state_description: '') }
+
+        def stub_delete_and_return(status, body)
+          stub_request(:delete, service_broker_url_regex).
+            with(headers: { 'Accept' => 'application/json' }).
+            to_return(status: status, body: body, headers: { 'Content-Type' => 'application/json' })
+        end
 
         before do
-          allow(client).to receive(:provision) do |instance|
-            instance.credentials = '{}'
-            instance.dashboard_url = 'the dashboard_url'
-            instance.state = 'creating'
-            instance.state_description = ''
-          end
-          allow(client).to receive(:deprovision)
-          allow_any_instance_of(Service).to receive(:client).and_return(client)
+          stub_request(:put, service_broker_url_regex).
+            with(headers: { 'Accept' => 'application/json' }).
+            to_return(status: 200, body: response_body, headers: { 'Content-Type' => 'application/json' })
+
+          stub_delete_and_return(200, '{}')
         end
 
         it 'provisions a service instance' do
@@ -190,10 +198,36 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(201)
 
-          expect(instance.credentials).to eq('{}')
+          expect(instance.credentials).to eq({})
           expect(instance.dashboard_url).to eq('the dashboard_url')
           expect(decoded_response['entity']['state']).to eq 'creating'
           expect(decoded_response['entity']['state_description']).to eq ''
+        end
+
+        context 'when the client does not support asynchronous provisioning' do
+          it 'tells the service broker to provision a new service instance synchronously' do
+            create_managed_service_instance(async: false)
+
+            expect(a_request(:put, service_broker_url)).to have_been_made.times(1)
+            expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
+          end
+
+          it 'fails with with InvalidRequest when accepts_incomplete is not true or false strings' do
+            create_managed_service_instance(async: 'lol')
+
+            expect(a_request(:put, service_broker_url_regex)).to have_been_made.times(0)
+            expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(0)
+            expect(last_response.status).to eq(400)
+          end
+        end
+
+        context 'when the client supports asynchronous provisioning' do
+          it 'tells the service broker to provision a new service instance asynchronously' do
+            create_managed_service_instance
+
+            expect(a_request(:put, service_broker_url_with_async)).to have_been_made.times(1)
+            expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
+          end
         end
 
         it 'creates a service audit event for creating the service instance' do
@@ -251,8 +285,8 @@ module VCAP::CloudController
           it 'does not provision or deprovision an instance' do
             post '/v2/service_instances', body, headers
 
-            expect(client).to_not have_received(:provision)
-            expect(client).to_not have_received(:deprovision)
+            expect(a_request(:put, service_broker_url_regex)).to have_been_made.times(0)
+            expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(0)
           end
 
           it 'does not create a service instance' do
@@ -274,7 +308,8 @@ module VCAP::CloudController
           post '/v2/service_instances', req, json_headers(headers_for(developer))
 
           expect(last_response.status).to eq(500)
-          expect(client).to have_received(:deprovision).with(an_instance_of(ManagedServiceInstance))
+          expect(a_request(:put, service_broker_url_regex)).to have_been_made.times(1)
+          expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
         end
 
         context 'when the model save and the subsequent deprovision both raise errors' do
@@ -282,7 +317,7 @@ module VCAP::CloudController
           let(:deprovision_error_text) { 'NotAuthorized' }
 
           before do
-            allow(client).to receive(:deprovision).and_raise(Errors::ApiError.new_from_details(deprovision_error_text))
+            stub_delete_and_return(403, '{}')
             allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise(Errors::ApiError.new_from_details(save_error_text))
           end
 
@@ -1024,9 +1059,15 @@ module VCAP::CloudController
         space_guid: space.guid,
         service_plan_guid: plan.guid
       )
+
+      use_async = user_opts.delete(:async) { |_| 'true' }
       headers = json_headers(headers_for(developer, user_opts))
 
-      post '/v2/service_instances', req, headers
+      if use_async
+        post "/v2/service_instances?accepts_incomplete=#{use_async}", req, headers
+      else
+        post '/v2/service_instances', req, headers
+      end
 
       ServiceInstance.last
     end
