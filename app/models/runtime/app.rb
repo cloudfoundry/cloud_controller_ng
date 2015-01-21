@@ -31,6 +31,7 @@ module VCAP::CloudController
     many_to_one :space, after_set: :validate_space
     many_to_one :stack
     many_to_many :routes, before_add: :validate_route, after_add: :handle_add_route, after_remove: :handle_remove_route
+    one_through_one :organization, join_table: :spaces, left_key: :id, left_primary_key: :space_id, right_key: :organization_id
 
     one_to_one :current_saved_droplet,
                class: '::VCAP::CloudController::Droplet',
