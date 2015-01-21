@@ -138,6 +138,21 @@
   http_code: 500
   message: "Missing service auth token: %s"
 
+50005:
+  name: AsyncRequired
+  http_code: 400
+  message: "Service broker error: This service plan requires support for asynchronous provisioning by Cloud Foundry and its clients."
+
+50006:
+  name: ServiceBrokerRequestRejected
+  http_code: 400
+  message: "The service broker API returned an error from %s: %d %s"
+
+50007:
+  name: ServiceBrokerRequestRejectedWithDescription
+  http_code: 400
+  message: "Service broker error: %s"
+
 60001:
   name: ServiceInstanceNameEmpty
   http_code: 400
