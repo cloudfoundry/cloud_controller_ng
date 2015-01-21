@@ -45,7 +45,7 @@ module VCAP::CloudController
 
       allow_unauthenticated_access only: :test_unauthenticated
       def test_unauthenticated
-        'unathenticated_response'
+        'unauthenticated_response'
       end
       define_route :get, '/test_unauthenticated', :test_unauthenticated
 
@@ -147,9 +147,17 @@ module VCAP::CloudController
 
       describe 'authentication' do
         context 'when the token contains a valid user' do
+          let(:headers) { headers_for(user) }
           it 'allows the operation' do
-            get '/test_endpoint', '', headers_for(user)
+            get '/test_endpoint', '', headers
             expect(last_response.body).to eq 'test_response'
+          end
+
+          context 'and the endpoint allows authenticated access' do
+            it 'allows the operation' do
+              get '/test_unauthenticated', '', headers
+              expect(last_response.body).to eq 'unauthenticated_response'
+            end
           end
         end
 
@@ -163,7 +171,7 @@ module VCAP::CloudController
           context 'when a particular operation is allowed to skip authentication' do
             it 'does not raise error' do
               get '/test_unauthenticated'
-              expect(last_response.body).to eq 'unathenticated_response'
+              expect(last_response.body).to eq 'unauthenticated_response'
             end
           end
         end
@@ -172,6 +180,15 @@ module VCAP::CloudController
           it 'returns InvalidAuthToken' do
             get '/test_endpoint', '', 'HTTP_AUTHORIZATION' => 'BEARER fake_token'
             expect(decoded_response['code']).to eq 1000
+            expect(last_response.status).to eq 401
+          end
+
+          context 'and the endpoint allows unauthenticated access' do
+            it 'still raise InvalidAuthToken' do
+              get '/test_unauthenticated', '', 'HTTP_AUTHORIZATION' => 'BEARER fake_token'
+              expect(decoded_response['code']).to eq 1000
+              expect(last_response.status).to eq 401
+            end
           end
         end
 

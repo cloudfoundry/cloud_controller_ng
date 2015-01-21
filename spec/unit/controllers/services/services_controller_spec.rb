@@ -208,7 +208,20 @@ module VCAP::CloudController
         expect(decoded_guids).to eq(visible_services.map(&:guid))
       end
 
-      context 'when the user is not authenticated' do
+      context 'when the user has an invalid auth token' do
+        let(:headers) do
+          {
+            'HTTP_AUTHORIZATION' => "bearer #{SecureRandom.uuid}"
+          }
+        end
+
+        it 'raises an InvalidAuthToken error' do
+          get '/v2/services', {}, headers
+          expect(last_response.status).to eq 401
+        end
+      end
+
+      context 'when the user has no auth token' do
         let(:headers) { {} }
 
         it 'does not allow the unauthed user to use inline-relations-depth' do

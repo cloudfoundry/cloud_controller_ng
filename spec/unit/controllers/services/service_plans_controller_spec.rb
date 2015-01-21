@@ -265,6 +265,19 @@ module VCAP::CloudController
           expect(plans[0]['unique_id']).to eq(service_plan.unique_id)
         end
       end
+
+      context 'when the user has an expired token' do
+        let(:headers) do
+          {
+            'HTTP_AUTHORIZATION' => "bearer #{SecureRandom.uuid}"
+          }
+        end
+
+        it 'raises an InvalidAuthToken error' do
+          get '/v2/service_plans', {}, headers
+          expect(last_response.status).to eq 401
+        end
+      end
     end
 
     describe 'PUT', '/v2/service_plans/:guid' do
