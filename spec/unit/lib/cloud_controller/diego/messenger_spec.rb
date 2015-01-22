@@ -7,6 +7,7 @@ module VCAP::CloudController
       let(:staging_config) { TestConfig.config[:staging] }
       let(:protocol) { instance_double('Traditional::Protocol') }
       let(:instances) { 3 }
+      let(:default_health_check_timeout) { 9999 }
 
       let(:app) do
         app = AppFactory.make
@@ -46,9 +47,9 @@ module VCAP::CloudController
         end
 
         it 'sends a nats message with the appropriate subject and payload' do
-          messenger.send_desire_request(app)
+          messenger.send_desire_request(app, default_health_check_timeout)
 
-          expect(protocol).to have_received(:desire_app_request).with(app)
+          expect(protocol).to have_received(:desire_app_request).with(app, default_health_check_timeout)
           expect(message_bus.published_messages.size).to eq(1)
 
           nats_message = message_bus.published_messages.first

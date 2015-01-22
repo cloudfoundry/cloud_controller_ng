@@ -14,6 +14,7 @@ module VCAP::CloudController
           )
         end
 
+        let(:default_health_check_timeout) { 9999 }
         let(:staging_config) { TestConfig.config[:staging] }
         let(:common_protocol) { double(:common_protocol) }
         let(:app) { AppFactory.make }
@@ -110,12 +111,12 @@ module VCAP::CloudController
         end
 
         describe '#desire_app_request' do
-          let(:request) { protocol.desire_app_request(app) }
+          let(:request) { protocol.desire_app_request(app, default_health_check_timeout) }
 
           it 'returns arguments intended for CfMessageBus::MessageBus#publish' do
             expect(request.size).to eq(2)
             expect(request.first).to eq('diego.desire.app')
-            expect(request.last).to match_json(protocol.desire_app_message(app))
+            expect(request.last).to match_json(protocol.desire_app_message(app, default_health_check_timeout))
           end
         end
 
@@ -138,7 +139,7 @@ module VCAP::CloudController
             )
           end
 
-          let(:message) { protocol.desire_app_message(app) }
+          let(:message) { protocol.desire_app_message(app, default_health_check_timeout) }
 
           before do
             environment = instance_double(Environment, as_json: [{ 'name' => 'fake', 'value' => 'environment' }])
@@ -166,13 +167,15 @@ module VCAP::CloudController
             })
           end
 
-          context 'when the app does not have a health_check_timeout set' do
+          context 'when the app health check timeout is not set' do
             before do
-              allow(app).to receive(:health_check_timeout).and_return(nil)
+              TestConfig.override(default_health_check_timeout: default_health_check_timeout)
             end
 
-            it 'omits health_check_timeout_in_seconds' do
-              expect(message).not_to have_key('health_check_timeout_in_seconds')
+            let(:app) { AppFactory.make(health_check_timeout: nil) }
+
+            it 'uses the default app health check from the config' do
+              expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)
             end
           end
         end

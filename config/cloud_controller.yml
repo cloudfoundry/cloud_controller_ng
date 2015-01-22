@@ -131,6 +131,7 @@ varz_port: 7800
 varz_user: varz
 varz_password: password
 
+default_health_check_timeout: 60
 maximum_health_check_timeout: 180
 
 flapping_crash_count_threshold: 3

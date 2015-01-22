@@ -105,6 +105,7 @@ staging:
     user: zxsfhgjg
     password: ZNVfdase9
 
+default_health_check_timeout: 60
 maximum_health_check_timeout: 180
 
 renderer:

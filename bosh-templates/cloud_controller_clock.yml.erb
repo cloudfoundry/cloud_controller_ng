@@ -157,6 +157,7 @@ staging:
     user: <%= p("cc.staging_upload_user") %>
     password: "<%= p("cc.staging_upload_password") %>"
 
+default_health_check_timeout: <%= p("cc.default_health_check_timeout") %>
 maximum_health_check_timeout: <%= p("cc.maximum_health_check_timeout") %>
 
 runtimes_file: /var/vcap/jobs/cloud_controller_ng/config/runtimes.yml

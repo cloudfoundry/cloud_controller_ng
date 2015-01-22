@@ -141,6 +141,14 @@ module VCAP::CloudController
             expect(config[:diego_docker]).to eq(true)
           end
 
+          it 'preserves the default_health_check_timeout value from the file' do
+            expect(config[:default_health_check_timeout]).to eq(30)
+          end
+
+          it 'preserves the maximum_health_check_timeout value from the file' do
+            expect(config[:maximum_health_check_timeout]).to eq(90)
+          end
+
           context 'when the staging auth is already url encoded' do
             let(:tmpdir) { Dir.mktmpdir }
             let(:config_from_file) { Config.from_file(File.join(tmpdir, 'overridden_with_urlencoded_values.yml')) }

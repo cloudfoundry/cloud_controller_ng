@@ -3,21 +3,12 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     describe Runner do
-      let(:messenger) do
-        instance_double(Messenger, send_desire_request: nil)
-      end
+      let(:messenger) { instance_double(Messenger, send_desire_request: nil) }
+      let(:app) { instance_double(App) }
+      let(:protocol) { instance_double(Diego::Traditional::Protocol, desire_app_message: {}) }
+      let(:default_health_check_timeout) { 9999 }
 
-      let(:app) do
-        instance_double(App)
-      end
-
-      let(:protocol) do
-        instance_double(Diego::Traditional::Protocol, desire_app_message: {})
-      end
-
-      subject(:runner) do
-        Runner.new(app, messenger, protocol)
-      end
+      subject(:runner) { Runner.new(app, messenger, protocol, default_health_check_timeout) }
 
       describe '#scale' do
         before do
@@ -25,7 +16,7 @@ module VCAP::CloudController
         end
 
         it 'desires an app, relying on its state to convey the change' do
-          expect(messenger).to have_received(:send_desire_request).with(app)
+          expect(messenger).to have_received(:send_desire_request).with(app, default_health_check_timeout)
         end
       end
 
@@ -35,7 +26,7 @@ module VCAP::CloudController
         end
 
         it 'desires an app, relying on its state to convey the change' do
-          expect(messenger).to have_received(:send_desire_request).with(app)
+          expect(messenger).to have_received(:send_desire_request).with(app, default_health_check_timeout)
         end
       end
 
@@ -45,7 +36,7 @@ module VCAP::CloudController
         end
 
         it 'desires an app, relying on its state to convey the change' do
-          expect(messenger).to have_received(:send_desire_request).with(app)
+          expect(messenger).to have_received(:send_desire_request).with(app, default_health_check_timeout)
         end
       end
 
@@ -55,14 +46,14 @@ module VCAP::CloudController
         end
 
         it 'desires an app, relying on its state to convey the change' do
-          expect(messenger).to have_received(:send_desire_request).with(app)
+          expect(messenger).to have_received(:send_desire_request).with(app, default_health_check_timeout)
         end
       end
 
       describe '#desire_app_message' do
         it "gets the procotol's desire_app_message" do
           expect(runner.desire_app_message).to eq({})
-          expect(protocol).to have_received(:desire_app_message).with(app)
+          expect(protocol).to have_received(:desire_app_message).with(app, default_health_check_timeout)
         end
       end
     end

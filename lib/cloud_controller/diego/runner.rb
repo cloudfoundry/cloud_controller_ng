@@ -1,30 +1,31 @@
 module VCAP::CloudController
   module Diego
     class Runner
-      def initialize(app, messenger, protocol)
+      def initialize(app, messenger, protocol, default_health_check_timeout)
         @app = app
         @messenger = messenger
         @protocol = protocol
+        @default_health_check_timeout = default_health_check_timeout
       end
 
       def scale
-        @messenger.send_desire_request(@app)
+        @messenger.send_desire_request(@app, @default_health_check_timeout)
       end
 
       def start(_={})
-        @messenger.send_desire_request(@app)
+        @messenger.send_desire_request(@app, @default_health_check_timeout)
       end
 
       def stop
-        @messenger.send_desire_request(@app)
+        @messenger.send_desire_request(@app, @default_health_check_timeout)
       end
 
       def update_routes
-        @messenger.send_desire_request(@app)
+        @messenger.send_desire_request(@app, @default_health_check_timeout)
       end
 
       def desire_app_message
-        @protocol.desire_app_message(@app)
+        @protocol.desire_app_message(@app, @default_health_check_timeout)
       end
 
       def desired_app_info

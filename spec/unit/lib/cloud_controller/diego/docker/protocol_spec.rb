@@ -9,9 +9,10 @@ module VCAP::CloudController
           TestConfig.override(diego: { staging: 'optional', running: 'optional' }, diego_docker: true)
         end
 
+        let(:default_health_check_timeout) { 9999 }
         let(:staging_config) { TestConfig.config[:staging] }
         let(:common_protocol) { double(:common_protocol) }
-        let(:app) { AppFactory.make(docker_image: 'fake/docker_image') }
+        let(:app) { AppFactory.make(docker_image: 'fake/docker_image', health_check_timeout: 120) }
 
         subject(:protocol) do
           Protocol.new(common_protocol)
@@ -101,19 +102,19 @@ module VCAP::CloudController
 
         describe '#desire_app_request' do
           subject(:request) do
-            protocol.desire_app_request(app)
+            protocol.desire_app_request(app, default_health_check_timeout)
           end
 
           it 'includes a subject and message for CfMessageBus::MessageBus#publish' do
             expect(request.size).to eq(2)
             expect(request.first).to eq('diego.docker.desire.app')
-            expect(request.last).to match_json(protocol.desire_app_message(app))
+            expect(request.last).to match_json(protocol.desire_app_message(app, default_health_check_timeout))
           end
         end
 
         describe '#desire_app_message' do
           subject(:message) do
-            protocol.desire_app_message(app)
+            protocol.desire_app_message(app, default_health_check_timeout)
           end
 
           it 'includes the fields needed to desire a Docker app' do
@@ -131,18 +132,21 @@ module VCAP::CloudController
               'log_guid' => app.guid,
               'docker_image' => app.docker_image,
               'health_check_type' => app.health_check_type,
+              'health_check_timeout_in_seconds' => app.health_check_timeout,
               'egress_rules' => ['running_egress_rule'],
               'etag' => app.updated_at.to_f.to_s,
             })
           end
 
-          context 'when the app has a health_check_timeout' do
+          context 'when the app health check timeout is not set' do
             before do
-              app.health_check_timeout = 123
+              TestConfig.override(default_health_check_timeout: default_health_check_timeout)
             end
 
-            it 'includes the timeout in the message' do
-              expect(message['health_check_timeout_in_seconds']).to eq(app.health_check_timeout)
+            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', health_check_timeout: nil) }
+
+            it 'uses the default app health check from the config' do
+              expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)
             end
           end
         end

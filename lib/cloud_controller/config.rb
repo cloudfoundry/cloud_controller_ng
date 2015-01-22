@@ -42,6 +42,7 @@ module VCAP::CloudController
         :default_app_memory => Fixnum,
         :default_app_disk_in_mb => Fixnum,
         optional(:maximum_app_disk_in_mb) => Fixnum,
+        :default_health_check_timeout => Fixnum,
         :maximum_health_check_timeout => Fixnum,
 
         optional(:allow_debug) => bool,

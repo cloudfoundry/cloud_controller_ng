@@ -37,7 +37,9 @@ failed_jobs:
 
 default_app_memory: 1024 #mb
 default_app_disk_in_mb: 1024
-maximum_health_check_timeout: 180
+
+default_health_check_timeout: 60  #seconds
+maximum_health_check_timeout: 180 #seconds
 
 hm9000:
   url: "http://localhost:5155"

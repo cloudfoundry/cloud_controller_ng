@@ -16,8 +16,8 @@ module VCAP::CloudController
           ['diego.staging.start', stage_app_message(app, staging_config).to_json]
         end
 
-        def desire_app_request(app)
-          ['diego.desire.app', desire_app_message(app).to_json]
+        def desire_app_request(app, default_health_check_timeout)
+          ['diego.desire.app', desire_app_message(app, default_health_check_timeout).to_json]
         end
 
         def stop_staging_app_request(app, task_id)
@@ -43,7 +43,7 @@ module VCAP::CloudController
           }
         end
 
-        def desire_app_message(app)
+        def desire_app_message(app, default_health_check_timeout)
           message = {
             'process_guid' => ProcessGuid.from_app(app),
             'memory_mb' => app.memory,
@@ -58,11 +58,10 @@ module VCAP::CloudController
             'routes' => app.uris,
             'log_guid' => app.guid,
             'health_check_type' => app.health_check_type,
+            'health_check_timeout_in_seconds' => app.health_check_timeout || default_health_check_timeout,
             'egress_rules' => @common_protocol.running_egress_rules(app),
             'etag' => app.updated_at.to_f.to_s
           }
-
-          message['health_check_timeout_in_seconds'] = app.health_check_timeout if app.health_check_timeout
 
           message
         end
