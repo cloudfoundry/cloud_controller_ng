@@ -21,10 +21,10 @@ module VCAP::CloudController
           allow(enqueuer).to receive(:enqueue)
         end
 
-        context 'when all operations succeed and the state is available' do
+        context 'when all operations succeed and the state is `succeeded`' do
           before do
             allow(client).to receive(:fetch_service_instance_state) do |instance|
-              instance.state = 'available'
+              instance.state = 'succeeded'
             end
           end
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
             end
 
             db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
-            expect(db_service_instance.state).to eq('available')
+            expect(db_service_instance.state).to eq('succeeded')
           end
 
           it 'should not enqueue another fetch job' do
@@ -47,10 +47,10 @@ module VCAP::CloudController
           end
         end
 
-        context 'when all operations succeed, but the state is not available' do
+        context 'when all operations succeed, but the state is not `succeeded`' do
           before do
             allow(client).to receive(:fetch_service_instance_state) do |instance|
-              instance.state = 'creating'
+              instance.state = 'in progress'
             end
           end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
             end
 
             db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
-            expect(db_service_instance.state).to eq('creating')
+            expect(db_service_instance.state).to eq('in progress')
           end
 
           it 'should enqueue another fetch job' do

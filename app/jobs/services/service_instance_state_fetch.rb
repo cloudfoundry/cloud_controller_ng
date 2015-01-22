@@ -19,7 +19,7 @@ module VCAP::CloudController
 
           service_instance.save
 
-          if service_instance.state != 'available'
+          if service_instance.state != 'succeeded'
             retry_job
           end
         rescue HttpRequestError, Sequel::Error

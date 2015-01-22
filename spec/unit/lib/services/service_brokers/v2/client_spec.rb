@@ -144,10 +144,10 @@ module VCAP::Services::ServiceBrokers::V2
         expect(instance.dashboard_url).to eq('foo')
       end
 
-      it 'defaults the state to "available"' do
+      it 'defaults the state to "succeeded"' do
         client.provision(instance)
 
-        expect(instance.state).to eq('available')
+        expect(instance.state).to eq('succeeded')
       end
 
       it 'leaves the description blank' do
@@ -162,7 +162,7 @@ module VCAP::Services::ServiceBrokers::V2
         expect(instance.credentials).to eq({})
       end
 
-      context 'when the broker returns no state or the state is created, or available' do
+      context 'when the broker returns no state or the state is created, or succeeded' do
         let(:response_data) do
           {
           }
@@ -172,7 +172,7 @@ module VCAP::Services::ServiceBrokers::V2
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
           client.provision(instance)
 
-          expect(instance.state).to eq('available')
+          expect(instance.state).to eq('succeeded')
           expect(instance.state_description).to eq('')
         end
 
@@ -182,10 +182,10 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
-      context 'when the broker returns the state as creating' do
+      context 'when the broker returns the state as `in progress`' do
         let(:response_data) do
           {
-            state: 'creating',
+            state: 'in progress',
             state_description: '10% done'
           }
         end
@@ -194,7 +194,7 @@ module VCAP::Services::ServiceBrokers::V2
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
           client.provision(instance)
 
-          expect(instance.state).to eq('creating')
+          expect(instance.state).to eq('in progress')
           expect(instance.state_description).to eq('10% done')
         end
 

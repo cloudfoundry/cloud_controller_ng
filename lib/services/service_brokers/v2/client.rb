@@ -37,9 +37,11 @@ module VCAP::Services::ServiceBrokers::V2
 
       if parsed_response['state']
         instance.state = parsed_response['state']
-        @state_poller.poll_service_instance_state(@attrs, instance) if instance.state == 'creating'
+        if instance.state == 'in progress'
+          @state_poller.poll_service_instance_state(@attrs, instance)
+        end
       else
-        instance.state = 'available'
+        instance.state = 'succeeded'
       end
 
       # DEPRECATED, but needed because of not null constraint
