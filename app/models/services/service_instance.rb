@@ -81,7 +81,9 @@ module VCAP::CloudController
       {
         'guid' => guid,
         'name' => name,
-        'bound_app_count' => service_bindings_dataset.count
+        'bound_app_count' => service_bindings_dataset.count,
+        'state' => state,
+        'state_description' => state_description,
       }
     end
 

@@ -108,6 +108,8 @@ module VCAP::CloudController
             'name' => svc.name,
             'bound_app_count' => 1,
             'dashboard_url' => svc.dashboard_url,
+            'state' => 'in progress',
+            'state_description' => 'state_description goes here',
             'service_plan' => {
               'guid' => svc.service_plan.guid,
               'name' => svc.service_plan.name,

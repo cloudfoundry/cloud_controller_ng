@@ -153,13 +153,20 @@ module VCAP::CloudController
 
     describe '#as_summary_json' do
       it 'contains name, guid, and binding count' do
-        instance = VCAP::CloudController::ServiceInstance.make(guid: 'ABCDEFG12', name: 'Random-Number-Service')
+        instance = VCAP::CloudController::ServiceInstance.make(
+          guid: 'ABCDEFG12',
+          name: 'Random-Number-Service',
+          state: 'in progress',
+          state_description: '50% all the time'
+        )
         VCAP::CloudController::ServiceBinding.make(service_instance: instance)
 
         expect(instance.as_summary_json).to eq({
           'guid' => 'ABCDEFG12',
           'name' => 'Random-Number-Service',
-          'bound_app_count' => 1
+          'bound_app_count' => 1,
+          'state' => 'in progress',
+          'state_description' => '50% all the time',
         })
       end
     end

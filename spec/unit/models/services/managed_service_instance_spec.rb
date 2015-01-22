@@ -142,7 +142,7 @@ module VCAP::CloudController
     describe '#as_summary_json' do
       let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ', provider: 'Bill Gates', version: '1.2.3') }
       let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service) }
-      subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+      subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, state: 'in progress', state_description: 'its happening!!') }
 
       it 'returns detailed summary' do
         service_instance.dashboard_url = 'http://dashboard.example.com'
@@ -152,6 +152,8 @@ module VCAP::CloudController
           'name' => subject.name,
           'bound_app_count' => 0,
           'dashboard_url' => 'http://dashboard.example.com',
+          'state' => 'in progress',
+          'state_description' => 'its happening!!',
           'service_plan' => {
             'guid' => '12763abc',
             'name' => 'Gold Plan',
