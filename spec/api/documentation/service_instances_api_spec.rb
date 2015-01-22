@@ -19,6 +19,7 @@ resource 'Service Instances', type: [:api, :legacy_api] do
       field :service_plan_guid, 'The guid of the service plan to associate with the instance', required: true
       field :space_guid, 'The guid of the space in which the instance will be created', required: true
       field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
+      parameter :accepts_incomplete, 'Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.', valid_values: [true, false]
 
       example 'Creating a Service Instance' do
         space_guid = VCAP::CloudController::Space.make.guid
@@ -26,6 +27,15 @@ resource 'Service Instances', type: [:api, :legacy_api] do
         request_hash = { space_guid: space_guid, name: 'my-service-instance', service_plan_guid: service_plan_guid }
 
         client.post '/v2/service_instances', MultiJson.dump(request_hash, pretty: true), headers
+        expect(status).to eq(201)
+      end
+
+      example 'Creating a Service Instance asynchronously' do
+        space_guid = VCAP::CloudController::Space.make.guid
+        service_plan_guid = VCAP::CloudController::ServicePlan.make(public: true).guid
+        request_hash = { space_guid: space_guid, name: 'my-service-instance', service_plan_guid: service_plan_guid }
+
+        client.post '/v2/service_instances?accepts_incomplete=true', MultiJson.dump(request_hash, pretty: true), headers
         expect(status).to eq(201)
       end
     end
