@@ -24,6 +24,81 @@ resource 'Packages (Experimental)', type: :api do
   end
 
   context 'standard endpoints' do
+    get '/v3/packages' do
+      parameter :page, 'Page to display', valid_values: '>= 1'
+      parameter :per_page, 'Number of results per page', valid_values: '1-5000'
+
+      let(:type1) { 'bits' }
+      let(:type2) { 'docker' }
+      let(:type3) { 'docker' }
+      let!(:package1) { VCAP::CloudController::PackageModel.make(type: type1, space_guid: space.guid) }
+      let!(:package2) do
+        VCAP::CloudController::PackageModel.make(type: type2, space_guid: space.guid,
+                                                 state: VCAP::CloudController::PackageModel::READY_STATE,
+                                                 url: 'http://docker-repo/my-image')
+      end
+      let!(:package3) { VCAP::CloudController::PackageModel.make(type: type3, space_guid: space.guid) }
+      let!(:package4) { VCAP::CloudController::PackageModel.make(space_guid: VCAP::CloudController::Space.make.guid) }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:page) { 1 }
+      let(:per_page) { 2 }
+
+      let(:space_guid) { space.guid }
+
+      before do
+        space.organization.add_user user
+        space.add_developer user
+      end
+
+      example 'List all Packages' do
+        expected_response =
+          {
+            'pagination' => {
+              'total_results' => 3,
+              'first'         => { 'href' => '/v3/packages?page=1&per_page=2' },
+              'last'          => { 'href' => '/v3/packages?page=2&per_page=2' },
+              'next'          => { 'href' => '/v3/packages?page=2&per_page=2' },
+              'previous'      => nil,
+            },
+            'resources'  => [
+              {
+                'guid'       => package1.guid,
+                'type'       => 'bits',
+                'hash'       => nil,
+                'url'        => nil,
+                'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+                'error'      => nil,
+                'created_at' => package1.created_at.as_json,
+                '_links'     => {
+                  'self'   => { 'href' => "/v3/packages/#{package1.guid}" },
+                  'upload' => { 'href' => "/v3/packages/#{package1.guid}/upload" },
+                  'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
+                }
+              },
+              {
+                'guid'       => package2.guid,
+                'type'       => 'docker',
+                'hash'       => nil,
+                'url'        => 'http://docker-repo/my-image',
+                'state'      => VCAP::CloudController::PackageModel::READY_STATE,
+                'error'      => nil,
+                'created_at' => package2.created_at.as_json,
+                '_links'     => {
+                  'self'  => { 'href' => "/v3/packages/#{package2.guid}" },
+                  'space' => { 'href' => "/v2/spaces/#{space_guid}" },
+                }
+              }
+            ]
+          }
+
+        do_request_with_error_handling
+
+        parsed_response = MultiJson.load(response_body)
+        expect(response_status).to eq(200)
+        expect(parsed_response).to match(expected_response)
+      end
+    end
+
     get '/v3/packages/:guid' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:package_model) do
@@ -171,9 +246,8 @@ resource 'Packages (Experimental)', type: :api do
           'url'        => url,
           'created_at' => package.created_at.as_json,
           '_links'     => {
-            'self'   => { 'href' => "/v3/packages/#{package.guid}" },
-            'upload' => { 'href' => "/v3/packages/#{package.guid}/upload" },
-            'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
+            'self'  => { 'href' => "/v3/packages/#{package.guid}" },
+            'space' => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
 

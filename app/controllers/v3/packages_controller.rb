@@ -13,6 +13,14 @@ module VCAP::CloudController
       @apps_handler = dependencies[:apps_handler]
     end
 
+    get '/v3/packages', :list
+    def list
+      pagination_options = PaginationOptions.from_params(params)
+      paginated_result   = @packages_handler.list(pagination_options, @access_context)
+      packages_json      = @package_presenter.present_json_list(paginated_result, '/v3/packages')
+      [HTTP::OK, packages_json]
+    end
+
     post '/v3/apps/:guid/packages', :create
     def create(app_guid)
       app = @apps_handler.show(app_guid, @access_context)

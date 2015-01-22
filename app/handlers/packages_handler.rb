@@ -69,8 +69,20 @@ module VCAP::CloudController
     class PackageNotFound < StandardError; end
     class BitsAlreadyUploaded < StandardError; end
 
-    def initialize(config)
-      @config = config
+    def initialize(config, paginator=SequelPaginator.new)
+      @config    = config
+      @paginator = paginator
+    end
+
+    def list(pagination_options, access_context)
+      dataset = nil
+      if access_context.roles.admin?
+        dataset = PackageModel.dataset
+      else
+        dataset = PackageModel.user_visible(access_context.user)
+      end
+
+      @paginator.get_page(dataset, pagination_options)
     end
 
     def create(message, access_context)

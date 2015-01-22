@@ -9,7 +9,7 @@ module VCAP::CloudController
       let(:opts) { {} }
       it 'is not valid' do
         create_message = PackageUploadMessage.new(guid, opts)
-        valid, error = create_message.validate
+        valid, error   = create_message.validate
         expect(valid).to be_falsey
         expect(error).to include('An application zip file must be uploaded.')
       end
@@ -19,7 +19,7 @@ module VCAP::CloudController
       let(:opts) { { 'bits_path' => 'foobar' } }
       it 'is valid' do
         create_message = PackageUploadMessage.new(guid, opts)
-        valid, error = create_message.validate
+        valid, error   = create_message.validate
         expect(valid).to be_truthy
         expect(error).to be_nil
       end
@@ -30,11 +30,11 @@ module VCAP::CloudController
     let(:guid) { 'my-guid' }
 
     context 'when a type parameter that is not allowed is provided' do
-      let(:opts) { { 'type' => 'not-allowed'  } }
+      let(:opts) { { 'type' => 'not-allowed' } }
 
       it 'is not valid' do
         create_message = PackageCreateMessage.new(guid, opts)
-        valid, errors = create_message.validate
+        valid, errors  = create_message.validate
         expect(valid).to be_falsey
         expect(errors).to include('The type field needs to be one of \'bits, docker\'')
       end
@@ -45,7 +45,7 @@ module VCAP::CloudController
 
       it 'is not valid' do
         create_message = PackageCreateMessage.new(guid, opts)
-        valid, errors = create_message.validate
+        valid, errors  = create_message.validate
         expect(valid).to be_falsey
         expect(errors).to include('The type field is required')
       end
@@ -57,7 +57,7 @@ module VCAP::CloudController
       context 'no url is provided' do
         it 'is valid' do
           create_message = PackageCreateMessage.new(guid, opts)
-          valid, errors = create_message.validate
+          valid, errors  = create_message.validate
           expect(valid).to be_truthy
           expect(errors).to be_empty
         end
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           create_message = PackageCreateMessage.new(guid, opts)
-          valid, errors = create_message.validate
+          valid, errors  = create_message.validate
           expect(valid).to be_falsey
           expect(errors).to include('The url field cannot be provided when type is bits.')
         end
@@ -80,7 +80,7 @@ module VCAP::CloudController
         let(:opts) { { 'type' => 'docker', 'url' => 'foobar' } }
         it 'is valid' do
           create_message = PackageCreateMessage.new(guid, opts)
-          valid, errors = create_message.validate
+          valid, errors  = create_message.validate
           expect(valid).to be_truthy
           expect(errors).to be_empty
         end
@@ -91,7 +91,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           create_message = PackageCreateMessage.new(guid, opts)
-          valid, errors = create_message.validate
+          valid, errors  = create_message.validate
           expect(valid).to be_falsey
           expect(errors).to include('The url field must be provided for type docker.')
         end
@@ -148,7 +148,7 @@ module VCAP::CloudController
       let(:create_opts) do
         {
           'type' => 'docker',
-          'url' => url
+          'url'  => url
         }
       end
 
@@ -240,7 +240,7 @@ module VCAP::CloudController
           context 'when the user can access the package' do
             context 'when the package is of type bits' do
               before do
-                config[:name] = 'local'
+                config[:name]  = 'local'
                 config[:index] = '1'
               end
 
@@ -262,13 +262,13 @@ module VCAP::CloudController
 
               it 'returns the package' do
                 resulting_package = packages_handler.upload(upload_message, access_context)
-                expected_package = PackageModel.find(guid: package_guid)
+                expected_package  = PackageModel.find(guid: package_guid)
                 expect(resulting_package.guid).to eq(expected_package.guid)
               end
 
               context 'when the bits have already been uploaded' do
                 before do
-                  package.state =  PackageModel::PENDING_STATE
+                  package.state = PackageModel::PENDING_STATE
                   package.save
                 end
 
@@ -410,6 +410,64 @@ module VCAP::CloudController
             expect(deleted_package).to be_nil
           }.to raise_error(PackagesHandler::Unauthorized)
           expect(access_context).to have_received(:cannot?).with(:delete, kind_of(PackageModel), space)
+        end
+      end
+    end
+
+    describe '#list' do
+      let!(:package1) { PackageModel.make(space_guid: space.guid) }
+      let!(:package2) { PackageModel.make(space_guid: space.guid) }
+      let(:user) { User.make }
+      let(:page) { 1 }
+      let(:per_page) { 1 }
+      let(:pagination_options) { PaginationOptions.new(page, per_page) }
+      let(:paginator) { double(:paginator) }
+      let(:handler) { described_class.new(nil, paginator) }
+      let(:roles) { double(:roles, admin?: admin_role) }
+      let(:admin_role) { false }
+
+      before do
+        allow(access_context).to receive(:roles).and_return(roles)
+        allow(access_context).to receive(:user).and_return(user)
+        allow(paginator).to receive(:get_page)
+      end
+
+      context 'when the user is an admin' do
+        let(:admin_role) { true }
+        before do
+          allow(access_context).to receive(:roles).and_return(roles)
+          PackageModel.make
+        end
+
+        it 'allows viewing all packages' do
+          handler.list(pagination_options, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(3)
+          end
+        end
+      end
+
+      context 'when the user cannot list any packages' do
+        it 'applies a user visibility filter properly' do
+          handler.list(pagination_options, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(0)
+          end
+        end
+      end
+
+      context 'when the user can list packages' do
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+          PackageModel.make
+        end
+
+        it 'applies a user visibility filter properly' do
+          handler.list(pagination_options, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(2)
+          end
         end
       end
     end
