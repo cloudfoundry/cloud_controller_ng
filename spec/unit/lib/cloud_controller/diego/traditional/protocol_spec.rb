@@ -14,11 +14,9 @@ module VCAP::CloudController
           )
         end
 
+        let(:staging_config) { TestConfig.config[:staging] }
         let(:common_protocol) { double(:common_protocol) }
-
-        let(:app) do
-          AppFactory.make
-        end
+        let(:app) { AppFactory.make }
 
         subject(:protocol) do
           Protocol.new(blobstore_url_generator, common_protocol)
@@ -30,26 +28,33 @@ module VCAP::CloudController
         end
 
         describe '#stage_app_request' do
-          let(:request) { protocol.stage_app_request(app, 900) }
+          let(:request) { protocol.stage_app_request(app, staging_config) }
 
           it 'returns arguments intended for CfMessageBus::MessageBus#publish' do
             expect(request.size).to eq(2)
             expect(request.first).to eq('diego.staging.start')
-            expect(request.last).to match_json(protocol.stage_app_message(app, 900))
+            expect(request.last).to match_json(protocol.stage_app_message(app, staging_config))
           end
         end
 
         describe '#stage_app_message' do
-          let(:message) { protocol.stage_app_message(app, 900) }
-
           before do
-            app.update(staging_task_id: 'fake-staging-task-id') # Mimic Diego::Messenger#send_stage_request
+            staging_override = {
+              minimum_staging_memory_mb: 128,
+              minimum_staging_disk_mb: 128,
+              minimum_staging_file_descriptor_limit: 128,
+              timeout_in_seconds: 90,
+              auth: { user: 'user', password: 'password' },
+            }
+            TestConfig.override(staging: staging_override)
           end
 
-          it 'is a nats message with the appropriate staging subject and payload' do
-            buildpack_entry_generator = BuildpackEntryGenerator.new(blobstore_url_generator)
+          let(:message) { protocol.stage_app_message(app, staging_config) }
+          let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id') }
+          let(:buildpack_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
 
-            expect(message).to eq(
+          it 'contains the correct payload for staging a Docker app' do
+            expect(message).to eq({
               'app_id' => app.guid,
               'task_id' => 'fake-staging-task-id',
               'memory_mb' => app.memory,
@@ -60,11 +65,47 @@ module VCAP::CloudController
               'build_artifacts_cache_download_uri' => 'http://buildpack-artifacts-cache.com',
               'build_artifacts_cache_upload_uri' => 'http://buildpack-artifacts-cache.up.com',
               'app_bits_download_uri' => 'http://app-package.com',
-              'buildpacks' => buildpack_entry_generator.buildpack_entries(app),
+              'buildpacks' => buildpack_generator.buildpack_entries(app),
               'droplet_upload_uri' => 'http://droplet-upload-uri',
               'egress_rules' => ['staging_egress_rule'],
-              'timeout' => 900,
-            )
+              'timeout' => 90,
+            })
+          end
+
+          context 'when the app memory is less than the minimum staging memory' do
+            let(:app) { AppFactory.make(memory: 127) }
+
+            subject(:message) do
+              protocol.stage_app_message(app, staging_config)
+            end
+
+            it 'uses the minimum staging memory' do
+              expect(message['memory_mb']).to eq(staging_config[:minimum_staging_memory_mb])
+            end
+          end
+
+          context 'when the app disk is less than the minimum staging disk' do
+            let(:app) { AppFactory.make(disk_quota: 127) }
+
+            subject(:message) do
+              protocol.stage_app_message(app, staging_config)
+            end
+
+            it 'includes the fields needed to stage a Docker app' do
+              expect(message['disk_mb']).to eq(staging_config[:minimum_staging_disk_mb])
+            end
+          end
+
+          context 'when the app fd limit is less than the minimum staging fd limit' do
+            let(:app) { AppFactory.make(file_descriptors: 127) }
+
+            subject(:message) do
+              protocol.stage_app_message(app, staging_config)
+            end
+
+            it 'includes the fields needed to stage a Docker app' do
+              expect(message['file_descriptors']).to eq(staging_config[:minimum_staging_file_descriptor_limit])
+            end
           end
         end
 
@@ -105,7 +146,7 @@ module VCAP::CloudController
           end
 
           it 'is a messsage with the information nsync needs to desire the app' do
-            expect(message).to eq(
+            expect(message).to eq({
               'disk_mb' => 222,
               'droplet_uri' => 'fake-droplet_uri',
               'environment' => [{ 'name' => 'fake', 'value' => 'environment' }],
@@ -122,7 +163,7 @@ module VCAP::CloudController
               'routes' => ['fake-uris'],
               'egress_rules' => ['running_egress_rule'],
               'etag' => '12345.6789'
-            )
+            })
           end
 
           context 'when the app does not have a health_check_timeout set' do

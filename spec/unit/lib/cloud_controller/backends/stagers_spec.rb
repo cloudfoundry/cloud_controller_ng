@@ -3,49 +3,24 @@ require 'spec_helper'
 module VCAP::CloudController
   describe Stagers do
     let(:config) do
-      {
+      TestConfig.override(
         diego: {
           staging: 'optional',
           running: 'optional',
         },
         diego_docker: true,
-        staging: {
-          timeout_in_seconds: 90
-        }
-      }
-    end
-
-    let(:message_bus) do
-      instance_double(CfMessageBus::MessageBus)
-    end
-
-    let(:dea_pool) do
-      instance_double(Dea::Pool)
-    end
-
-    let(:stager_pool) do
-      instance_double(Dea::StagerPool)
-    end
-
-    let(:runners) { Runners.new(config, message_bus, dea_pool, stager_pool) }
-
-    let(:package_hash) do
-      'fake-package-hash'
-    end
-
-    let(:custom_buildpacks_enabled?) do
-      true
-    end
-
-    let(:buildpack) do
-      instance_double(AutoDetectionBuildpack,
-        custom?: false
       )
+      TestConfig.config
     end
 
-    let(:docker_image) do
-      nil
-    end
+    let(:message_bus)  { instance_double(CfMessageBus::MessageBus) }
+    let(:dea_pool)     { instance_double(Dea::Pool) }
+    let(:stager_pool)  { instance_double(Dea::StagerPool) }
+    let(:runners)      { Runners.new(config, message_bus, dea_pool, stager_pool) }
+    let(:package_hash) { 'fake-package-hash' }
+    let(:buildpack)    { instance_double(AutoDetectionBuildpack, custom?: false) }
+    let(:docker_image) { nil }
+    let(:custom_buildpacks_enabled?) { true }
 
     let(:app) do
       instance_double(App,
