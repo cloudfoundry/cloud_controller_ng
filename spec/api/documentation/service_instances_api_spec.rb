@@ -19,7 +19,11 @@ resource 'Service Instances', type: [:api, :legacy_api] do
       field :service_plan_guid, 'The guid of the service plan to associate with the instance', required: true
       field :space_guid, 'The guid of the space in which the instance will be created', required: true
       field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
-      parameter :accepts_incomplete, 'Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.', valid_values: [true, false]
+
+      param_description = <<EOF
+Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
+EOF
+      parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
       example 'Creating a Service Instance' do
         space_guid = VCAP::CloudController::Space.make.guid
