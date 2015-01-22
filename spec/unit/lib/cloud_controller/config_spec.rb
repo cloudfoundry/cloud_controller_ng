@@ -63,6 +63,18 @@ module VCAP::CloudController
           expect(config[:diego_docker]).to eq(false)
         end
 
+        it 'sets a default value for min staging memory' do
+          expect(config[:staging][:minimum_staging_memory_mb]).to eq(1024)
+        end
+
+        it 'sets a default value for min staging disk' do
+          expect(config[:staging][:minimum_staging_disk_mb]).to eq(4096)
+        end
+
+        it 'sets a default value for min staging file descriptor limit' do
+          expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(16384)
+        end
+
         it 'sets a default value for advertisement_timeout_in_seconds' do
           expect(config[:dea_advertisement_timeout_in_seconds]).to eq(10)
         end
@@ -111,6 +123,12 @@ module VCAP::CloudController
           it 'preserves the value of the staging auth user/password' do
             expect(config[:staging][:auth][:user]).to eq('user')
             expect(config[:staging][:auth][:password]).to eq('password')
+          end
+
+          it 'preserves the values of the minimum staging limits' do
+            expect(config[:staging][:minimum_staging_memory_mb]).to eq(512)
+            expect(config[:staging][:minimum_staging_disk_mb]).to eq(1024)
+            expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(2048)
           end
 
           it 'preserves the value of the allowed cross-origin domains' do

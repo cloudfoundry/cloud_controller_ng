@@ -98,6 +98,7 @@ module VCAP::CloudController
           :timeout_in_seconds => Fixnum,
           optional(:minimum_staging_memory_mb) => Fixnum,
           optional(:minimum_staging_disk_mb) => Fixnum,
+          optional(:minimum_staging_file_descriptor_limit) => Fixnum,
           :auth => {
             user: String,
             password: String,
@@ -323,6 +324,9 @@ module VCAP::CloudController
         config[:diego][:running] ||= 'disabled'
         config[:diego_docker] ||= false
         config[:dea_advertisement_timeout_in_seconds] ||= 10
+        config[:staging][:minimum_staging_memory_mb] ||= 1024
+        config[:staging][:minimum_staging_disk_mb] ||= 4096
+        config[:staging][:minimum_staging_file_descriptor_limit] ||= 16384
         sanitize(config)
       end
 
