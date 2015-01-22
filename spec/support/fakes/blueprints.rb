@@ -121,9 +121,11 @@ module VCAP::CloudController
   end
 
   ServiceInstance.blueprint do
-    name        { Sham.name }
-    credentials { Sham.service_credentials }
-    space       { Space.make }
+    name              { Sham.name }
+    credentials       { Sham.service_credentials }
+    space             { Space.make }
+    state             { 'in progress' }
+    state_description { 'state_description goes here' }
   end
 
   ManagedServiceInstance.blueprint do
