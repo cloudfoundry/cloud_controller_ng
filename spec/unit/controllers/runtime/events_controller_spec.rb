@@ -33,9 +33,9 @@ module VCAP::CloudController
       describe 'default order' do
         it 'sorts by timestamp' do
           type = SecureRandom.uuid
-          Event.make(timestamp: Time.new(1990, 1, 1), type: type, actor: 'earlier')
-          Event.make(timestamp: Time.new(2000, 1, 1), type: type, actor: 'later')
-          Event.make(timestamp: Time.new(1995, 1, 1), type: type, actor: 'middle')
+          Event.make(timestamp: Time.new(1990, 1, 1).utc, type: type, actor: 'earlier')
+          Event.make(timestamp: Time.new(2000, 1, 1).utc, type: type, actor: 'later')
+          Event.make(timestamp: Time.new(1995, 1, 1).utc, type: type, actor: 'middle')
 
           get '/v2/events', {}, admin_headers
           parsed_body = MultiJson.load(last_response.body)

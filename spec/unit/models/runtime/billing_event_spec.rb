@@ -9,11 +9,13 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe '.create' do
-      let(:values) { {
-          timestamp: Time.now,
+      let(:values) {
+        {
+          timestamp: Time.now.utc,
           organization_guid: 'abc',
           organization_name: 'def',
-      } }
+        }
+      }
 
       context 'when billing event writing is enabled' do
         before do

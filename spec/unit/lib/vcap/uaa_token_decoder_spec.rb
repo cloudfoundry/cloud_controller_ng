@@ -44,12 +44,12 @@ module VCAP
     end
 
     describe '#decode_token' do
-      before { Timecop.freeze(Time.now) }
+      before { Timecop.freeze(Time.now.utc) }
       after { Timecop.return }
 
       context 'when symmetric key is used' do
         let(:token_content) do
-          { 'aud' => 'resource-id', 'payload' => 123, 'exp' => Time.now.to_i + 10_000 }
+          { 'aud' => 'resource-id', 'payload' => 123, 'exp' => Time.now.utc.to_i + 10_000 }
         end
 
         before { config_hash[:symmetric_secret] = 'symmetric-key' }
@@ -81,7 +81,7 @@ module VCAP
 
         context 'when token is valid' do
           let(:token_content) do
-            { 'aud' => 'resource-id', 'payload' => 123, 'exp' => Time.now.to_i + 10_000 }
+            { 'aud' => 'resource-id', 'payload' => 123, 'exp' => Time.now.utc.to_i + 10_000 }
           end
 
           it 'successfully decodes token and caches key' do
@@ -118,7 +118,7 @@ module VCAP
 
         context 'when token has invalid audience' do
           let(:token_content) do
-            { 'aud' => 'invalid-audience', 'payload' => 123, 'exp' => Time.now.to_i + 10_000 }
+            { 'aud' => 'invalid-audience', 'payload' => 123, 'exp' => Time.now.utc.to_i + 10_000 }
           end
 
           it 'raises an BadToken error' do
@@ -131,7 +131,7 @@ module VCAP
 
         context 'when token has expired' do
           let(:token_content) do
-            { 'aud' => 'resource-id', 'payload' => 123, 'exp' => Time.now.to_i }
+            { 'aud' => 'resource-id', 'payload' => 123, 'exp' => Time.now.utc.to_i }
           end
 
           it 'raises a BadToken error' do
@@ -155,14 +155,14 @@ module VCAP
           subject { described_class.new(config_hash, 100) }
 
           let(:token_content) do
-            { 'aud' => 'resource-id', 'payload' => 123, 'exp' => Time.now.to_i }
+            { 'aud' => 'resource-id', 'payload' => 123, 'exp' => Time.now.utc.to_i }
           end
 
           let(:token) { generate_token(rsa_key, token_content) }
 
           context 'and the token is currently expired but had not expired within the grace period' do
             it 'decodes the token and logs a warning about expiration within the grace period' do
-              token_content['exp'] = Time.now.to_i - 50
+              token_content['exp'] = Time.now.utc.to_i - 50
               expect(logger).to receive(:warn).with(/token currently expired but accepted within grace period of 100 seconds/i)
               expect(subject.decode_token("bearer #{token}")).to eq token_content
             end
@@ -170,7 +170,7 @@ module VCAP
 
           context 'and the token expired outside of the grace period' do
             it 'raises and logs a warning about the expired token' do
-              token_content['exp'] = Time.now.to_i - 150
+              token_content['exp'] = Time.now.utc.to_i - 150
               expect(logger).to receive(:warn).with(/token expired/i)
               expect {
                 subject.decode_token("bearer #{token}")
@@ -182,14 +182,14 @@ module VCAP
             subject { described_class.new(config_hash, -10) }
 
             it 'sets the grace period to be 0 instead' do
-              token_content['exp'] = Time.now.to_i
+              token_content['exp'] = Time.now.utc.to_i
               expired_token = generate_token(rsa_key, token_content)
               allow(logger).to receive(:warn)
               expect {
                 subject.decode_token("bearer #{expired_token}")
               }.to raise_error(VCAP::UaaTokenDecoder::BadToken)
 
-              token_content['exp'] = Time.now.to_i + 1
+              token_content['exp'] = Time.now.utc.to_i + 1
               valid_token = generate_token(rsa_key, token_content)
               expect(subject.decode_token("bearer #{valid_token}")).to eq token_content
             end

@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       def process_advertise_message(msg)
-        advertisement = NatsMessages::StagerAdvertisement.new(msg, Time.now.to_i + @advertise_timeout)
+        advertisement = NatsMessages::StagerAdvertisement.new(msg, Time.now.utc.to_i + @advertise_timeout)
         publish_buildpacks unless stager_in_pool?(advertisement.stager_id)
 
         mutex.synchronize do
@@ -68,7 +68,7 @@ module VCAP::CloudController
       end
 
       def prune_stale_advertisements
-        now = Time.now.to_i
+        now = Time.now.utc.to_i
         @stager_advertisements.delete_if { |ad| ad.expired?(now) }
       end
 

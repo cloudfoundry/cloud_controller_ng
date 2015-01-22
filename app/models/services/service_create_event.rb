@@ -41,7 +41,7 @@ module VCAP::CloudController
 
       return unless org.billing_enabled?
       ServiceCreateEvent.create(
-        timestamp: Time.now,
+        timestamp: Sequel::CURRENT_TIMESTAMP,
         organization_guid: org.guid,
         organization_name: org.name,
         space_guid: space.guid,

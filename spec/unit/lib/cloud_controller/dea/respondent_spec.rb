@@ -51,24 +51,23 @@ module VCAP::CloudController
       context 'when the app crashed' do
         context 'the app described in the event exists' do
           it 'adds a record in the Events table' do
-            time = Time.now
-            Timecop.freeze(time) do
-              respondent.process_droplet_exited_message(payload)
+            time = Time.new(1990, 07, 06)
+            stub_const('Sequel::CURRENT_TIMESTAMP', time)
+            respondent.process_droplet_exited_message(payload)
 
-              app_event = Event.find(actee: app.guid)
+            app_event = Event.find(actee: app.guid)
 
-              expect(app_event).to be
-              expect(app_event.space).to eq(app.space)
-              expect(app_event.type).to eq('app.crash')
-              expect(app_event.timestamp.to_i).to eq(time.to_i)
-              expect(app_event.actor_type).to eq('app')
-              expect(app_event.actor).to eq(app.guid)
-              expect(app_event.metadata['instance']).to eq(payload['instance'])
-              expect(app_event.metadata['index']).to eq(payload['index'])
-              expect(app_event.metadata['exit_status']).to eq(payload['exit_status'])
-              expect(app_event.metadata['exit_description']).to eq(payload['exit_description'])
-              expect(app_event.metadata['reason']).to eq(reason)
-            end
+            expect(app_event).to be
+            expect(app_event.space).to eq(app.space)
+            expect(app_event.type).to eq('app.crash')
+            expect(app_event.timestamp.to_i).to eq(time.to_i)
+            expect(app_event.actor_type).to eq('app')
+            expect(app_event.actor).to eq(app.guid)
+            expect(app_event.metadata['instance']).to eq(payload['instance'])
+            expect(app_event.metadata['index']).to eq(payload['index'])
+            expect(app_event.metadata['exit_status']).to eq(payload['exit_status'])
+            expect(app_event.metadata['exit_description']).to eq(payload['exit_description'])
+            expect(app_event.metadata['reason']).to eq(reason)
           end
         end
       end

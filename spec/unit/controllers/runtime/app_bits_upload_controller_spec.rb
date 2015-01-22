@@ -172,7 +172,7 @@ module VCAP::CloudController
                 it 'succeeds' do
                   headers = headers_for(user)
 
-                  Timecop.travel(Time.now + 1.week + 100.seconds) do
+                  Timecop.travel(Time.now.utc + 1.week + 100.seconds) do
                     put "/v2/apps/#{app_obj.guid}/bits", req_body, headers
                   end
                   expect(last_response.status).to eq(201)
@@ -183,7 +183,7 @@ module VCAP::CloudController
                 it 'fails to authorize the upload' do
                   headers = headers_for(user)
 
-                  Timecop.travel(Time.now + 1.week + 10000.seconds) do
+                  Timecop.travel(Time.now.utc + 1.week + 10000.seconds) do
                     put "/v2/apps/#{app_obj.guid}/bits", req_body, headers
                   end
                   expect(last_response.status).to eq(401)

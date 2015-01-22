@@ -12,7 +12,7 @@ module VCAP::CloudController
             actor: actor.guid,
             actor_type: 'user',
             actor_name: actor_name,
-            timestamp: Time.now,
+            timestamp: Sequel::CURRENT_TIMESTAMP,
             metadata: {
               request: request_attrs
             }
@@ -29,7 +29,7 @@ module VCAP::CloudController
             actor: actor.guid,
             actor_type: 'user',
             actor_name: actor_name,
-            timestamp: Time.now,
+            timestamp: Sequel::CURRENT_TIMESTAMP,
             metadata: {
               request: request_attrs
             }
@@ -45,7 +45,7 @@ module VCAP::CloudController
             actor: actor.guid,
             actor_type: 'user',
             actor_name: actor_name,
-            timestamp: Time.now,
+            timestamp: Sequel::CURRENT_TIMESTAMP,
             space_guid: space.guid,
             organization_guid: space.organization.guid,
             metadata: {
