@@ -27,15 +27,21 @@ module VCAP::CloudController
         connection_options[:charset] = 'utf8'
       end
 
+      connection_options[:after_connect] = proc do |conn|
+        # time zone is a per connection setting, ensure it is set for each connection in the pool
+        if conn.class.to_s =~ /mysql/i
+          conn.query("SET time_zone = '+0:00'")
+        elsif conn.class.to_s =~ /postgres/i
+          conn.exec("SET time zone 'UTC'")
+        end
+      end
+
       db = Sequel.connect(opts[:database], connection_options)
       db.logger = logger
       db.sql_log_level = opts[:log_level] || :debug2
 
       if db.database_type == :mysql
         Sequel::MySQL.default_collate = 'utf8_bin'
-        db.run("SET time_zone = '+0:00'")
-      elsif db.database_type == :postgres
-        db.run("SET time zone 'UTC'")
       end
 
       db
