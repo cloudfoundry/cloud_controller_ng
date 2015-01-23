@@ -37,6 +37,7 @@ module VCAP::CloudController
       let(:space_guid) { app_model.space_guid }
       let(:package) { PackageModel.make }
       let(:req_body) { '{"type":"bits"}' }
+      let(:added_package) { 'the added_package' }
 
       let(:valid_zip) do
         zip_name = File.join(tmpdir, 'file.zip')
@@ -51,6 +52,7 @@ module VCAP::CloudController
         allow(package_presenter).to receive(:present_json).and_return(MultiJson.dump(package_response, pretty: true))
         allow(packages_handler).to receive(:create).and_return(package)
         allow(apps_handler).to receive(:show).and_return(app_model)
+        allow(apps_handler).to receive(:add_package).and_return(added_package)
       end
 
       after do
@@ -66,7 +68,13 @@ module VCAP::CloudController
 
           it 'returns the package' do
             _, response = packages_controller.create(app_guid)
+            expect(package_presenter).to have_received(:present_json).with(added_package)
             expect(MultiJson.load(response, symbolize_keys: true)).to eq(package_response)
+          end
+
+          it 'associates the package to the app' do
+            packages_controller.create(app_guid)
+            expect(apps_handler).to have_received(:add_package).with(app_model, package, anything)
           end
         end
 
@@ -103,6 +111,21 @@ module VCAP::CloudController
         context 'when the user cannot create a package' do
           before do
             allow(packages_handler).to receive(:create).and_raise(PackagesHandler::Unauthorized)
+          end
+
+          it 'returns a 403 NotAuthorized error' do
+            expect {
+              packages_controller.create(app_guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'NotAuthorized'
+              expect(error.response_code).to eq 403
+            end
+          end
+        end
+
+        context 'when the user cannot update the app' do
+          before do
+            allow(apps_handler).to receive(:add_package).and_raise(AppsHandler::Unauthorized)
           end
 
           it 'returns a 403 NotAuthorized error' do

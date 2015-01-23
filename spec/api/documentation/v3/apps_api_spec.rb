@@ -53,6 +53,7 @@ resource 'Apps (Experimental)', type: :api do
               '_links' => {
                 'self'      => { 'href' => "/v3/apps/#{app_model1.guid}" },
                 'processes' => { 'href' => "/v3/apps/#{app_model1.guid}/processes" },
+                'packages'  => { 'href' => "/v3/apps/#{app_model1.guid}/packages" },
                 'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
               }
             },
@@ -62,6 +63,7 @@ resource 'Apps (Experimental)', type: :api do
               '_links' => {
                 'self'      => { 'href' => "/v3/apps/#{app_model2.guid}" },
                 'processes' => { 'href' => "/v3/apps/#{app_model2.guid}/processes" },
+                'packages'  => { 'href' => "/v3/apps/#{app_model2.guid}/packages" },
                 'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
               }
             }
@@ -95,6 +97,7 @@ resource 'Apps (Experimental)', type: :api do
           '_links' => {
             'self'      => { 'href' => "/v3/apps/#{guid}" },
             'processes' => { 'href' => "/v3/apps/#{guid}/processes" },
+            'packages'  => { 'href' => "/v3/apps/#{guid}/packages" },
             'space'     => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
@@ -134,6 +137,7 @@ resource 'Apps (Experimental)', type: :api do
           '_links' => {
             'self'      => { 'href' => "/v3/apps/#{expected_guid}" },
             'processes' => { 'href' => "/v3/apps/#{expected_guid}/processes" },
+            'packages'  => { 'href' => "/v3/apps/#{expected_guid}/packages" },
             'space'     => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
@@ -170,6 +174,7 @@ resource 'Apps (Experimental)', type: :api do
           '_links' => {
             'self'      => { 'href' => "/v3/apps/#{app_model.guid}" },
             'processes' => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
+            'packages'  => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
             'space'     => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }

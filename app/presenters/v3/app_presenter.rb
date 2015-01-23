@@ -32,6 +32,7 @@ module VCAP::CloudController
         _links: {
           self:      { href: "/v3/apps/#{app.guid}" },
           processes: { href: "/v3/apps/#{app.guid}/processes" },
+          packages:  { href: "/v3/apps/#{app.guid}/packages" },
           space:     { href: "/v2/spaces/#{app.space_guid}" },
         }
       }

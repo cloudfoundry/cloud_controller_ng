@@ -31,10 +31,12 @@ module VCAP::CloudController
       unprocessable!(errors.join(', ')) if !valid
 
       package = @packages_handler.create(message, @access_context)
-      package_json = @package_presenter.present_json(package)
+      package = @apps_handler.add_package(app, package, @access_context)
 
-      [HTTP::CREATED, package_json]
+      [HTTP::CREATED, @package_presenter.present_json(package)]
     rescue PackagesHandler::Unauthorized
+      unauthorized!
+    rescue AppsHandler::Unauthorized
       unauthorized!
     end
 

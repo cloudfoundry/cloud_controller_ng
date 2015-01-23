@@ -3,6 +3,7 @@ module VCAP::CloudController
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
     one_to_many :processes, class: 'VCAP::CloudController::App', key: :app_guid, primary_key: :guid
+    one_to_many :packages, class: 'VCAP::CloudController::PackageModel', key: :app_guid, primary_key: :guid
 
     def validate
       validates_presence :name

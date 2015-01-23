@@ -48,6 +48,7 @@ module VCAP::CloudController
     class DuplicateProcessType < StandardError; end
     class InvalidApp < StandardError; end
     class IncorrectProcessSpace < StandardError; end
+    class IncorrectPackageSpace < StandardError; end
 
     def initialize(process_handler, paginator=SequelPaginator.new)
       @process_handler = process_handler
@@ -137,6 +138,17 @@ module VCAP::CloudController
 
         app.add_process_by_guid(process.guid)
       end
+    end
+
+    def add_package(app, package, access_context)
+      raise Unauthorized if access_context.cannot?(:update, app)
+      raise IncorrectPackageSpace if app.space_guid != package.space_guid
+
+      app.db.transaction do
+        app.lock!
+        app.add_package_by_guid(package.guid)
+      end
+      package.reload
     end
 
     def update_web_process_name(process, name, access_context)

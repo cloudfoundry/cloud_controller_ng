@@ -72,6 +72,7 @@ resource 'Packages (Experimental)', type: :api do
                 '_links'     => {
                   'self'   => { 'href' => "/v3/packages/#{package1.guid}" },
                   'upload' => { 'href' => "/v3/packages/#{package1.guid}/upload" },
+                  'app'    => { 'href' => "/v3/apps/#{package1.app_guid}" },
                   'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
                 }
               },
@@ -85,6 +86,7 @@ resource 'Packages (Experimental)', type: :api do
                 'created_at' => package2.created_at.as_json,
                 '_links'     => {
                   'self'  => { 'href' => "/v3/packages/#{package2.guid}" },
+                  'app'   => { 'href' => "/v3/apps/#{package2.app_guid}" },
                   'space' => { 'href' => "/v2/spaces/#{space_guid}" },
                 }
               }
@@ -125,6 +127,7 @@ resource 'Packages (Experimental)', type: :api do
           '_links'     => {
             'self'   => { 'href' => "/v3/packages/#{guid}" },
             'upload' => { 'href' => "/v3/packages/#{guid}/upload" },
+            'app'    => { 'href' => "/v3/apps/#{package_model.app_guid}" },
             'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
@@ -196,6 +199,7 @@ resource 'Packages (Experimental)', type: :api do
           '_links'     => {
             'self'   => { 'href' => "/v3/packages/#{package_model.guid}" },
             'upload' => { 'href' => "/v3/packages/#{package_model.guid}/upload" },
+            'app'    => { 'href' => "/v3/apps/#{package_model.app_guid}" },
             'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }
@@ -247,6 +251,7 @@ resource 'Packages (Experimental)', type: :api do
           'created_at' => package.created_at.as_json,
           '_links'     => {
             'self'  => { 'href' => "/v3/packages/#{package.guid}" },
+            'app'   => { 'href' => "/v3/apps/#{guid}" },
             'space' => { 'href' => "/v2/spaces/#{space_guid}" },
           }
         }

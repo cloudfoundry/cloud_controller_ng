@@ -18,6 +18,7 @@ module VCAP::CloudController
         expect(result['url']).to eq(package.url)
         expect(result['created_at']).to eq(package.created_at.as_json)
         expect(result['_links']).to include('self')
+        expect(result['_links']).to include('app')
         expect(result['_links']).to include('space')
       end
 

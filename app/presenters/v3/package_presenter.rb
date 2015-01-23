@@ -48,6 +48,9 @@ module VCAP::CloudController
           href: "/v3/packages/#{package.guid}"
         },
         upload: upload_link,
+        app:  {
+          href: "/v3/apps/#{package.app_guid}",
+        },
         space:  {
           href: "/v2/spaces/#{package.space_guid}",
         }
