@@ -38,12 +38,6 @@ module VCAP::CloudController
         end
       end
 
-      describe '#max_attempts' do
-        it 'returns 10' do
-          expect(job.max_attempts).to eq 10
-        end
-      end
-
       describe '#reschedule_at' do
         it 'uses exponential backoff' do
           now = Time.now
@@ -51,6 +45,36 @@ module VCAP::CloudController
 
           run_at = job.reschedule_at(now, attempts)
           expect(run_at).to eq(now + (2**attempts).minutes)
+        end
+      end
+
+      describe 'exponential backoff when the job fails' do
+        def run_job
+          expect(Delayed::Job.count).to eq 1
+          expect(Delayed::Worker.new.work_off).to eq [0, 1]
+        end
+
+        it 'retries 10 times, doubling its back_off time with each attempt' do
+          allow(client).to receive(:deprovision).and_raise(StandardError.new('I always fail'))
+          allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
+
+          start = Delayed::Job.db_time_now
+          opts = { queue: 'cc-generic', run_at: start }
+          Jobs::Enqueuer.new(job, opts).enqueue
+
+          run_at_time = start
+          10.times do |i|
+            Timecop.travel(run_at_time)
+            run_job
+            expect(Delayed::Job.first.run_at).to be_within(1.second).of(run_at_time + (2**(i + 1)).minutes)
+            run_at_time = Delayed::Job.first.run_at
+          end
+
+          Timecop.travel(run_at_time)
+          run_job
+          expect(Delayed::Worker.new.work_off).to eq [0, 0] # not running any jobs
+
+          expect(run_at_time).to be_within(1.minute).of(start + (2**11).minutes - 2.minutes)
         end
       end
     end
