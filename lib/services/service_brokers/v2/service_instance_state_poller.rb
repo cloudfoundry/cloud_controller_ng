@@ -9,10 +9,10 @@ module VCAP::Services
             'service-instance-state-fetch',
             client_attrs,
             service_instance.guid,
-            service_instance.service_plan.guid
           )
 
-          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }
+          poll_interval = 1.minute
+          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now + poll_interval }
           VCAP::CloudController::Jobs::Enqueuer.new(job, opts).enqueue
         end
       end

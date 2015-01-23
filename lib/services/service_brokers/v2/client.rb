@@ -56,11 +56,11 @@ module VCAP::Services::ServiceBrokers::V2
 
       response = @http_client.get(path)
       parsed_response = @response_parser.parse(:get, path, response)
-
-      instance.dashboard_url = parsed_response['dashboard_url']
-      instance.state = parsed_response['state']
-      instance.state_description = parsed_response['state_description']
-      instance
+      {
+        dashboard_url:     parsed_response['dashboard_url'],
+        state:             parsed_response['state'],
+        state_description: parsed_response['state_description'],
+      }
     end
 
     def bind(binding)
