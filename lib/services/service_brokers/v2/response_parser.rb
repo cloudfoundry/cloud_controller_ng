@@ -15,7 +15,6 @@ module VCAP::Services
             return nil # no body
 
           when 200..299
-
             begin
               response_hash = MultiJson.load(response.body)
             rescue MultiJson::ParseError
@@ -23,12 +22,11 @@ module VCAP::Services
             end
 
             unless response_hash.is_a?(Hash)
-              sanitized_response = HttpResponse.new(
-                code: response.code,
-                message: response.message,
-                body: "\"#{response.body}\""
-              )
-              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, sanitized_response)
+              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, sanitize_response(response))
+            end
+
+            if !valid_broker_response?(path, code, response_hash['state'])
+              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, sanitize_response(response))
             end
 
             return response_hash
@@ -55,7 +53,23 @@ module VCAP::Services
           raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
         end
 
+        def valid_broker_response?(path, code, state)
+          return true if !(['/v2/service_instances'].include?(path))
+
+          return true if code == 201 && (state == 'succeeded' || state.nil?)
+          return true if code == 202 && state == 'in progress'
+          false
+        end
+
         private
+
+        def sanitize_response(response)
+          return HttpResponse.new(
+                  code: response.code,
+                  message: response.message,
+                  body: "\"#{response.body}\""
+          )
+        end
 
         def uri_for(path)
           URI(@url + path)

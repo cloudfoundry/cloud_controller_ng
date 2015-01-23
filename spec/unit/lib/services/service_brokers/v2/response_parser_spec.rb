@@ -14,13 +14,13 @@ module VCAP::Services
 
         describe '#parse' do
           let(:response) { VCAP::Services::ServiceBrokers::V2::HttpResponse.new(body: body, code: code, message: message) }
-          let(:body) { '{"foo": "bar"}' }
+          let(:body) { '{"foo": "bar", "state": "succeeded"}' }
           let(:code) { 200 }
           let(:message) { 'OK' }
 
           it 'returns the response body hash' do
             response_hash = parser.parse(:get, '/v2/catalog', response)
-            expect(response_hash).to eq({ 'foo' => 'bar' })
+            expect(response_hash).to eq({ 'foo' => 'bar', 'state' => 'succeeded' })
           end
 
           context 'when the status code is 204' do
@@ -151,6 +151,223 @@ module VCAP::Services
               expect {
                 parser.parse(method, '/v2/catalog', response)
               }.to raise_error(Errors::ServiceBrokerBadResponse, /there was an error/)
+            end
+          end
+        end
+
+        describe '#parse with different state/code values' do
+          let(:response) { VCAP::Services::ServiceBrokers::V2::HttpResponse.new(body: body, code: code, message: message) }
+          let(:body) { '{"foo": "bar", "state": "succeeded"}' }
+          let(:code) { 201 }
+          let(:message) { 'OK' }
+
+          context 'when the code is 201' do
+            let(:code) { 201 }
+
+            context 'when the state is `succeeded`' do
+              let(:body) { '{"foo": "bar", "state": "succeeded"}' }
+
+              it 'treats the request as a successful asynchronous request' do
+                response_hash = parser.parse(:put, '/v2/service_instances', response)
+
+                expect(response_hash).to eq({ 'foo' => 'bar', 'state' => 'succeeded' })
+              end
+            end
+
+            context 'when the state is `failed`' do
+              let(:body) { '{"foo": "bar", "state": "failed"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'when the state is `in progress`' do
+              let(:body) { '{"foo": "bar", "state": "in progress"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'when the state is not present' do
+              let(:body) { '{"foo": "bar"}' }
+
+              it 'treats the request as a successful synchronous request' do
+                response_hash = parser.parse(:put, '/v2/service_instances', response)
+
+                expect(response_hash).to eq({ 'foo' => 'bar' })
+              end
+            end
+
+            context 'when the state is any other values, e.g., fake-state' do
+              let(:body) { '{"foo": "bar", "state": "fake-state"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+          end
+
+          context 'when the code is 202' do
+            let(:code) { 202 }
+
+            context 'when the state is `succeeded`' do
+              let(:body) { '{"foo": "bar", "state": "succeeded"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'when the state is `failed`' do
+              let(:body) { '{"foo": "bar", "state": "failed"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'when the state is `in progress`' do
+              let(:body) { '{"foo": "bar", "state": "in progress"}' }
+
+              it 'treats the request as a successful asynchronous request' do
+                response_hash = parser.parse(:put, '/v2/service_instances', response)
+
+                expect(response_hash).to eq({ 'foo' => 'bar', 'state' => 'in progress' })
+              end
+            end
+
+            context 'when the state is not present' do
+              let(:body) { '{"foo": "bar"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'when the state is any other values, e.g., fake-state' do
+              let(:body) { '{"foo": "bar", "state": "fake-state"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+          end
+
+          context 'when the code is 200' do
+            let(:code) { 200 }
+
+            context 'when state value is valid' do
+              let(:body) { '{"foo": "bar", "state": "succeeded"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'when state value is nil' do
+              let(:body) { '{"foo": "bar"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'when state value is not valid, e.g., fake-state' do
+              let(:body) { '{"foo": "bar", "state": "fake-state"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+          end
+
+          context 'when the code is 4xx' do
+            let(:code) { 400 }
+
+            context 'when state value is valid' do
+              let(:body) { '{"foo": "bar", "state": "succeeded"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerRequestRejected)
+              end
+            end
+
+            context 'when state value is nil' do
+              let(:body) { '{"foo": "bar"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerRequestRejected)
+              end
+            end
+
+            context 'when state value is not valid, e.g., fake-state' do
+              let(:body) { '{"foo": "bar", "state": "fake-state"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerRequestRejected)
+              end
+            end
+          end
+
+          context 'when the code is 5xx' do
+            let(:code) { 500 }
+
+            context 'when state value is valid' do
+              let(:body) { '{"foo": "bar", "state": "succeeded"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
+              end
+            end
+
+            context 'when state value is nil' do
+              let(:body) { '{"foo": "bar"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
+              end
+            end
+
+            context 'when state value is not valid, e.g., fake-state' do
+              let(:body) { '{"foo": "bar", "state": "fake-state"}' }
+
+              it 'treats the response as invalid' do
+                expect {
+                  parser.parse(:put, '/v2/service_instances', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
+              end
             end
           end
         end
