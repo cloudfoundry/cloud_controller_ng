@@ -6,14 +6,16 @@ require 'cloud_controller/paging/pagination_options'
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
     def self.dependencies
-      [:processes_handler, :process_presenter, :apps_handler, :app_presenter]
+      [:processes_handler, :process_presenter, :apps_handler, :app_presenter, :packages_handler, :package_presenter]
     end
 
     def inject_dependencies(dependencies)
-      @process_handler = dependencies[:processes_handler]
-      @app_handler = dependencies[:apps_handler]
-      @app_presenter = dependencies[:app_presenter]
+      @app_handler       = dependencies[:apps_handler]
+      @app_presenter     = dependencies[:app_presenter]
+      @process_handler   = dependencies[:processes_handler]
       @process_presenter = dependencies[:process_presenter]
+      @package_handler   = dependencies[:packages_handler]
+      @package_presenter = dependencies[:package_presenter]
     end
 
     get '/v3/apps', :list
@@ -129,35 +131,50 @@ module VCAP::CloudController
     rescue AppsHandler::Unauthorized
       app_not_found!
     end
-  end
 
-  private
+    ###
+    ### Packages
+    ###
 
-  def unable_to_perform!(msg, details)
-    raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', msg, details)
-  end
+    get '/v3/apps/:guid/packages', :list_packages
+    def list_packages(guid)
+      app = @app_handler.show(guid, @access_context)
+      app_not_found! if app.nil?
 
-  def app_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
-  end
+      pagination_options = PaginationOptions.from_params(params)
+      paginated_result   = @package_handler.list(pagination_options, @access_context, app_guid: app.guid)
 
-  def process_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
-  end
+      [HTTP::OK, @package_presenter.present_json_list(paginated_result, "/v3/apps/#{guid}/packages")]
+    end
 
-  def invalid_process_type!(type)
-    raise VCAP::Errors::ApiError.new_from_details('ProcessInvalid', "Type '#{type}' is already in use")
-  end
+    private
 
-  def bad_request!(message)
-    raise VCAP::Errors::ApiError.new_from_details('MessageParseError', message)
-  end
+    def unable_to_perform!(msg, details)
+      raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', msg, details)
+    end
 
-  def unauthorized!
-    raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
-  end
+    def app_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+    end
 
-  def unprocessable!(message)
-    raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+    def process_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
+    end
+
+    def invalid_process_type!(type)
+      raise VCAP::Errors::ApiError.new_from_details('ProcessInvalid', "Type '#{type}' is already in use")
+    end
+
+    def bad_request!(message)
+      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', message)
+    end
+
+    def unauthorized!
+      raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+    end
+
+    def unprocessable!(message)
+      raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+    end
   end
 end

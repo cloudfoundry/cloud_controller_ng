@@ -206,108 +206,166 @@ resource 'Apps (Experimental)', type: :api do
   end
 
   context 'nested endpoints' do
-    put '/v3/apps/:guid/processes' do
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:stack) { VCAP::CloudController::Stack.make }
+    context 'processes' do
+      put '/v3/apps/:guid/processes' do
+        let(:space) { VCAP::CloudController::Space.make }
+        let(:stack) { VCAP::CloudController::Stack.make }
 
-      parameter :process_guid, 'GUID of process', required: true
+        parameter :process_guid, 'GUID of process', required: true
 
-      let!(:process) { VCAP::CloudController::AppFactory.make(space_guid: space.guid) }
-      let(:process_guid) { process.guid }
+        let!(:process) { VCAP::CloudController::AppFactory.make(space_guid: space.guid) }
+        let(:process_guid) { process.guid }
 
-      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-      let(:guid) { app_model.guid }
+        let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+        let(:guid) { app_model.guid }
 
-      let(:raw_post) { MultiJson.dump(params, pretty: true) }
+        let(:raw_post) { MultiJson.dump(params, pretty: true) }
 
-      before do
-        space.organization.add_user(user)
-        space.add_developer(user)
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+        end
+
+        example 'Add a Process' do
+          expect {
+            do_request_with_error_handling
+          }.not_to change { VCAP::CloudController::App.count }
+
+          expect(response_status).to eq(204)
+          expect(app_model.reload.processes.first).to eq(process.reload)
+        end
       end
 
-      example 'Add a Process' do
-        expect {
-          do_request_with_error_handling
-        }.not_to change { VCAP::CloudController::App.count }
+      get '/v3/apps/:guid/processes' do
+        parameter :page, 'Page to display', valid_values: '>= 1'
+        parameter :per_page, 'Number of results per page', valid_values: '1-5000'
+        parameter :process_guid, 'GUID of process', required: false
 
-        expect(response_status).to eq(204)
-        expect(app_model.reload.processes.first).to eq(process.reload)
+        let(:space) { VCAP::CloudController::Space.make }
+        let(:stack) { VCAP::CloudController::Stack.make }
+        let!(:process) { VCAP::CloudController::AppFactory.make(space_guid: space.guid) }
+        let(:process_guid) { process.guid }
+        let(:process_type) { process.type }
+
+        let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+        let(:guid) { app_model.guid }
+
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+          app_model.add_process_by_guid(process_guid)
+        end
+
+        example 'List associated processes' do
+          expected_response = {
+            'pagination' => {
+              'total_results' => 1,
+              'first'         => { 'href' => "/v3/apps/#{guid}/processes?page=1&per_page=50" },
+              'last'          => { 'href' => "/v3/apps/#{guid}/processes?page=1&per_page=50" },
+              'next'          => nil,
+              'previous'      => nil,
+            },
+            'resources'  => [
+              {
+                'guid' => process_guid,
+                'type' => process_type,
+              }
+            ]
+          }
+
+          do_request_with_error_handling
+
+          parsed_response = MultiJson.load(response_body)
+
+          expect(response_status).to eq(200)
+          expect(parsed_response).to match(expected_response)
+        end
+      end
+
+      delete '/v3/apps/:guid/processes' do
+        let(:space) { VCAP::CloudController::Space.make }
+        let(:stack) { VCAP::CloudController::Stack.make }
+
+        parameter :process_guid, 'GUID of process', required: true
+
+        let!(:process) { VCAP::CloudController::AppFactory.make(space_guid: space.guid) }
+        let(:process_guid) { process.guid }
+
+        let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+        let(:guid) { app_model.guid }
+
+        let(:raw_post) { MultiJson.dump(params, pretty: true) }
+
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+
+          app_model.add_process_by_guid(process_guid)
+        end
+
+        example 'Remove a Process' do
+          expect {
+            do_request_with_error_handling
+          }.not_to change { VCAP::CloudController::App.count }
+
+          expect(response_status).to eq(204)
+          expect(app_model.reload.processes).to eq([])
+        end
       end
     end
 
-    get '/v3/apps/:guid/processes' do
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:stack) { VCAP::CloudController::Stack.make }
+    context 'packages' do
+      get '/v3/apps/:guid/packages' do
+        parameter :page, 'Page to display', valid_values: '>= 1'
+        parameter :per_page, 'Number of results per page', valid_values: '1-5000'
 
-      parameter :process_guid, 'GUID of process', required: true
+        let(:space) { VCAP::CloudController::Space.make }
+        let!(:package) { VCAP::CloudController::PackageModel.make(space_guid: space.guid) }
 
-      let!(:process) { VCAP::CloudController::AppFactory.make(space_guid: space.guid) }
-      let(:process_guid) { process.guid }
-      let(:process_type) { process.type }
+        let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+        let(:guid) { app_model.guid }
 
-      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-      let(:guid) { app_model.guid }
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+          app_model.add_package_by_guid(package.guid)
+        end
 
-      before do
-        space.organization.add_user(user)
-        space.add_developer(user)
-        app_model.add_process_by_guid(process_guid)
-      end
+        example 'List associated packages' do
+          expected_response = {
+            'pagination' => {
+              'total_results' => 1,
+              'first'         => { 'href' => "/v3/apps/#{guid}/packages?page=1&per_page=50" },
+              'last'          => { 'href' => "/v3/apps/#{guid}/packages?page=1&per_page=50" },
+              'next'          => nil,
+              'previous'      => nil,
+            },
+            'resources'  => [
+              {
+                'guid'       => package.guid,
+                'type'       => 'bits',
+                'hash'       => nil,
+                'url'        => nil,
+                'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+                'error'      => nil,
+                'created_at' => package.created_at.as_json,
+                '_links'     => {
+                  'self'   => { 'href' => "/v3/packages/#{package.guid}" },
+                  'upload' => { 'href' => "/v3/packages/#{package.guid}/upload" },
+                  'app'    => { 'href' => "/v3/apps/#{guid}" },
+                  'space'  => { 'href' => "/v2/spaces/#{space.guid}" },
+                }
+              }
+            ]
+          }
 
-      example 'List associated processes' do
-        expected_response = {
-          'pagination' => {
-            'total_results' => 1,
-            'first'         => { 'href' => "/v3/apps/#{guid}/processes?page=1&per_page=50" },
-            'last'          => { 'href' => "/v3/apps/#{guid}/processes?page=1&per_page=50" },
-            'next'          => nil,
-            'previous'      => nil,
-          },
-          'resources'  => [
-            {
-              'guid'     => process_guid,
-              'type'     => process_type,
-            }
-          ]
-        }
-
-        do_request_with_error_handling
-
-        parsed_response = MultiJson.load(response_body)
-
-        expect(response_status).to eq(200)
-        expect(parsed_response).to match(expected_response)
-      end
-    end
-
-    delete '/v3/apps/:guid/processes' do
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:stack) { VCAP::CloudController::Stack.make }
-
-      parameter :process_guid, 'GUID of process', required: true
-
-      let!(:process) { VCAP::CloudController::AppFactory.make(space_guid: space.guid) }
-      let(:process_guid) { process.guid }
-
-      let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-      let(:guid) { app_model.guid }
-
-      let(:raw_post) { MultiJson.dump(params, pretty: true) }
-
-      before do
-        space.organization.add_user(user)
-        space.add_developer(user)
-
-        app_model.add_process_by_guid(process_guid)
-      end
-
-      example 'Remove a Process' do
-        expect {
           do_request_with_error_handling
-        }.not_to change { VCAP::CloudController::App.count }
 
-        expect(response_status).to eq(204)
-        expect(app_model.reload.processes).to eq([])
+          parsed_response = MultiJson.load(response_body)
+
+          expect(response_status).to eq(200)
+          expect(parsed_response).to match(expected_response)
+        end
       end
     end
   end

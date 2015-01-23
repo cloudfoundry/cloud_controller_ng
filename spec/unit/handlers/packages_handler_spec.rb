@@ -469,6 +469,20 @@ module VCAP::CloudController
             expect(dataset.count).to eq(2)
           end
         end
+
+        it 'can filter by app_guid' do
+          v3app = AppModel.make
+          package1.app_guid = v3app.guid
+          package1.save
+
+          filter_options = { app_guid: v3app.guid }
+
+          handler.list(pagination_options, access_context, filter_options)
+
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(1)
+          end
+        end
       end
     end
   end

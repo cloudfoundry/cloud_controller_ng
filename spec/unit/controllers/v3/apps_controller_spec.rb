@@ -8,24 +8,28 @@ module VCAP::CloudController
     let(:params) { {} }
     let(:process_handler) { double(:process_handler) }
     let(:process_presenter) { double(:process_presenter) }
+    let(:package_handler) { double(:package_handler) }
+    let(:package_presenter) { double(:package_presenter) }
     let(:apps_handler) { double(:apps_handler) }
     let(:app_model) { nil }
     let(:app_presenter) { double(:app_presenter) }
     let(:apps_controller) do
       AppsV3Controller.new(
-          {},
-          logger,
-          {},
-          params,
-          req_body,
-          nil,
-          {
-            apps_handler: apps_handler,
-            app_presenter: app_presenter,
-            processes_handler: process_handler,
-            process_presenter: process_presenter
-          },
-        )
+        {},
+        logger,
+        {},
+        params,
+        req_body,
+        nil,
+        {
+          apps_handler:      apps_handler,
+          app_presenter:     app_presenter,
+          processes_handler: process_handler,
+          process_presenter: process_presenter,
+          packages_handler:  package_handler,
+          package_presenter: package_presenter
+        },
+      )
     end
     let(:app_response) { 'app_response_body' }
     let(:process_response) { 'process_response_body' }
@@ -526,6 +530,43 @@ module VCAP::CloudController
         it 'returns the processes' do
           _, response = apps_controller.list_processes(guid)
           expect(response).to eq(process_response)
+        end
+      end
+    end
+
+    describe '#list_packages' do
+      context 'when the app does not exist' do
+        let(:guid) { 'ABC123' }
+
+        it 'raises an ApiError with a 404 code' do
+          expect {
+            apps_controller.list_packages(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the app does exist' do
+        let(:app_model) { AppModel.make }
+        let(:guid) { app_model.guid }
+        let(:list_response) { 'list_response' }
+        let(:package_response) { 'package_response' }
+
+        before do
+          allow(package_presenter).to receive(:present_json_list).and_return(package_response)
+          allow(package_handler).to receive(:list).and_return(list_response)
+        end
+
+        it 'returns a 200' do
+          response_code, _ = apps_controller.list_packages(guid)
+          expect(response_code).to eq 200
+        end
+
+        it 'returns the packages' do
+          _, response = apps_controller.list_packages(guid)
+          expect(response).to eq(package_response)
         end
       end
     end
