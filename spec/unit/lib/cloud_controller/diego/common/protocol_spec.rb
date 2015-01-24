@@ -36,6 +36,11 @@ module VCAP::CloudController
               { 'protocol' => 'icmp', 'icmp_info' => { 'type' => 0, 'code' => 1 }, 'destinations' => ['1.1.1.1-2.2.2.2'] },
             ])
           end
+
+          it 'orders the rules with logged rules last' do
+            logged = protocol.staging_egress_rules.drop_while { |rule| !rule['log'] }
+            expect(logged).to have(1).items
+          end
         end
 
         describe 'running_egress_rules' do
@@ -56,6 +61,11 @@ module VCAP::CloudController
               { 'protocol' => 'tcp', 'port_range' => { 'start' => 9090, 'end' => 9095 }, 'destinations' => ['198.41.191.48/1'], 'log' => true },
               { 'protocol' => 'udp', 'ports' => [1010, 2020], 'destinations' => ['198.41.191.49/1'] },
             ])
+          end
+
+          it 'orders the rules with logged rules last' do
+            logged = protocol.running_egress_rules(app).drop_while { |rule| !rule['log'] }
+            expect(logged).to have(1).items
           end
         end
       end

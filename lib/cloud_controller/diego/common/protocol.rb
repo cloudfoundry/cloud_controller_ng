@@ -8,11 +8,11 @@ module VCAP::CloudController
 
         def staging_egress_rules
           staging_security_groups = SecurityGroup.where(staging_default: true).all
-          EgressNetworkRulesPresenter.new(staging_security_groups).to_array.collect { |sg| transform_rule(sg) }.flatten
+          order_rules(EgressNetworkRulesPresenter.new(staging_security_groups).to_array)
         end
 
         def running_egress_rules(app)
-          EgressNetworkRulesPresenter.new(app.space.security_groups).to_array.collect { |sg| transform_rule(sg) }.flatten
+          order_rules(EgressNetworkRulesPresenter.new(app.space.security_groups).to_array)
         end
 
         private
@@ -22,6 +22,18 @@ module VCAP::CloudController
             'process_guid' => ProcessGuid.from_app(app),
             'index' => index,
           }
+        end
+
+        def order_rules(rules)
+          logging_rules = []
+          normal_rules = []
+
+          rules.each do |rule|
+            rule = transform_rule(rule)
+            rule['log'] ? logging_rules << rule : normal_rules << rule
+          end
+
+          normal_rules | logging_rules
         end
 
         def transform_rule(rule)
