@@ -438,6 +438,16 @@
   http_code: 504
   message: "Staging time expired: %s"
 
+170008:
+  name: InsufficientResources
+  http_code: 400
+  message: "Insufficient resources"
+
+170009:
+  name: NoCompatibleCell
+  http_code: 400
+  message: "Found no compatible cell"
+
 180001:
   name: SnapshotNotFound
   http_code: 404
