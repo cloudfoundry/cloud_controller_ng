@@ -61,7 +61,8 @@ module VCAP::CloudController
 
     APP_STATES = %w(STOPPED STARTED).map(&:freeze).freeze
     PACKAGE_STATES = %w(PENDING STAGED FAILED).map(&:freeze).freeze
-    STAGING_FAILED_REASONS = %w(StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed BuildpackReleaseFailed).map(&:freeze).freeze
+    STAGING_FAILED_REASONS = %w(StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed
+                                BuildpackReleaseFailed InsufficientResources NoCompatibleCell).map(&:freeze).freeze
     HEALTH_CHECK_TYPES = %w(port none).map(&:freeze).freeze
 
     # marked as true on changing the associated routes, and reset by

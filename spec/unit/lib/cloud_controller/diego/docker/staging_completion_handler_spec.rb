@@ -147,7 +147,7 @@ module VCAP::CloudController
             {
               'app_id' => app.guid,
               'task_id' => app.staging_task_id,
-              'error' => 'fake-error',
+              'error' => { 'id' => 'InsufficientResources', 'message' => 'Insufficient resources' }
             }
           end
 
@@ -159,10 +159,15 @@ module VCAP::CloudController
             }.from('PENDING').to('FAILED')
           end
 
+          it 'records the error' do
+            handler.staging_complete(payload)
+            expect(app.reload.staging_failed_reason).to eq('InsufficientResources')
+          end
+
           it 'logs an error for the CF user' do
             handler.staging_complete(payload)
 
-            expect(Loggregator).to have_received(:emit_error).with(app.guid, /fake-error/)
+            expect(Loggregator).to have_received(:emit_error).with(app.guid, /Insufficient resources/)
           end
 
           it 'returns without sending a desired request for the app' do

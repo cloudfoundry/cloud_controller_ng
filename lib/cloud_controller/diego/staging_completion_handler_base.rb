@@ -23,8 +23,11 @@ module VCAP::CloudController
         app = get_app(payload)
         return if app.nil?
 
-        app.mark_as_failed_to_stage
-        Loggregator.emit_error(app.guid, "Failed to stage application: #{payload['error']}")
+        error = payload['error']
+        id = error['id'] || 'StagingError'
+        message = error['message']
+        app.mark_as_failed_to_stage(id)
+        Loggregator.emit_error(app.guid, "Failed to stage application: #{message}")
       end
 
       def handle_success(payload)

@@ -27,7 +27,7 @@ module VCAP::CloudController
       {
         'app_id' => app_id,
         'task_id' => staged_app.staging_task_id,
-        'error' => "Sumpin' bad happened",
+        'error' => { 'id' => 'NoCompatibleCell', 'message' => 'Found no compatible cell' }
       }
     end
 
@@ -121,8 +121,13 @@ module VCAP::CloudController
           expect(staged_app.reload.package_state).to eq('FAILED')
         end
 
+        it 'records the error' do
+          handle_staging_result(fail_response)
+          expect(staged_app.reload.staging_failed_reason).to eq('NoCompatibleCell')
+        end
+
         it 'should emit a loggregator error' do
-          expect(Loggregator).to receive(:emit_error).with(staged_app.guid, /bad/)
+          expect(Loggregator).to receive(:emit_error).with(staged_app.guid, /Found no compatible cell/)
           handle_staging_result(fail_response)
         end
 

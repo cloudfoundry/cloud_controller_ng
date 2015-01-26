@@ -117,17 +117,6 @@ module VCAP::CloudController
       end
     end
 
-    context 'when the app has already been marked as failed to stage' do
-      before { staged_app.mark_as_failed_to_stage }
-
-      it 'fails with a 400' do
-        post url, MultiJson.dump(staging_response)
-
-        expect(last_response.status).to eq(400)
-        expect(last_response.body).to match /failed to stage application: staging had already been marked as failed, this could mean that staging took too long/
-      end
-    end
-
     context 'when the app does no longer exist' do
       before { staged_app.delete }
 
