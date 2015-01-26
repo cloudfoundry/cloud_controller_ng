@@ -41,8 +41,16 @@ module VCAP::CloudController
               expect { route.space = Space.make(organization: org) }.not_to raise_error
             end
 
-            it 'fails if in a different organization' do
-              expect { route.space = Space.make }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
+            context 'with a different organization' do
+              it 'fails' do
+                expect { route.space = Space.make }.to raise_error(Route::InvalidOrganizationRelation)
+              end
+
+              it 'succeeds if the organization shares the domain' do
+                space = Space.make
+                domain.add_shared_organization(space.organization)
+                expect { route.space = space }.to_not raise_error
+              end
             end
           end
         end

@@ -19,8 +19,15 @@ module VCAP::CloudController
 
     one_to_many(
       :private_domains,
+      read_only: true,
       key: :owning_organization_id,
-      before_add: proc { |org, private_domain| private_domain.addable_to_organization!(org) }
+    )
+
+    many_to_many(
+      :shared_private_domains,
+      class: 'VCAP::CloudController::PrivateDomain',
+      right_key: :private_domain_id,
+      before_add: proc { |org, private_domain| private_domain.addable_to_organization?(org) }
     )
 
     one_to_many :service_plan_visibilities
@@ -58,6 +65,7 @@ module VCAP::CloudController
       spaces: :destroy,
       service_instances: :destroy,
       private_domains: :destroy,
+      shared_private_domains: :nullify,
       service_plan_visibilities: :destroy,
       space_quota_definitions: :destroy
     )

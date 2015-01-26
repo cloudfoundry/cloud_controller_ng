@@ -4,6 +4,10 @@ module VCAP::CloudController
   describe Domain do
     it { is_expected.to have_timestamp_columns }
 
+    it 'cannot create top level domains' do
+      expect { Domain.make name: 'com' }.to raise_error
+    end
+
     it "can't be created if a would become parent" do
       PrivateDomain.make name: 'bar.foo.com'
       expect { PrivateDomain.make name: 'foo.com' }.to raise_error
@@ -58,7 +62,7 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :owning_organization_guid }
+      it { is_expected.to export_attributes :name, :owning_organization_guid, :shared_organizations }
       it { is_expected.to import_attributes :name, :owning_organization_guid }
     end
 

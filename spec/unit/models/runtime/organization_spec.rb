@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :spaces }
-      it { is_expected.to have_associated :private_domains, associated_instance: ->(org) { PrivateDomain.make(owning_organization: org) } }
+      it { is_expected.to have_associated :shared_private_domains, associated_instance: ->(org) { PrivateDomain.make } }
       it { is_expected.to have_associated :service_plan_visibilities }
       it { is_expected.to have_associated :quota_definition }
       it { is_expected.to have_associated :domains, class: SharedDomain }
@@ -16,6 +16,12 @@ module VCAP::CloudController
       it { is_expected.to have_associated :billing_managers, class: User }
       it { is_expected.to have_associated :auditors, class: User }
       it { is_expected.to have_associated :space_quota_definitions, associated_instance: ->(org) { SpaceQuotaDefinition.make(organization: org) } }
+
+      it 'has associated private domains' do
+        domain = PrivateDomain.make
+        organization = domain.owning_organization
+        expect(organization.private_domains).to include(domain)
+      end
 
       it 'has associated apps' do
         app = App.make
@@ -132,16 +138,32 @@ module VCAP::CloudController
       end
 
       describe 'private_domains' do
-        it 'adds the domain when it belongs to this org' do
+        it 'fails when the organization is not the owner' do
+          org = Organization.make
+          domain = PrivateDomain.make
+
+          expect { org.add_private_domain(domain) }.to raise_error
+        end
+
+        it 'fails when the organization is the owner' do
           org = Organization.make
           domain = PrivateDomain.make(owning_organization: org)
 
-          expect { org.add_private_domain(domain) }.to_not raise_error
+          expect { org.add_private_domain(domain) }.to raise_error
         end
+      end
 
-        it 'does not add the domain when it belongs to a different org' do
+      describe 'shared private domains' do
+        it 'adds the domain when it is not the owner' do
           org = Organization.make
           domain = PrivateDomain.make
+
+          expect { org.add_shared_private_domain(domain) }.to_not raise_error
+        end
+
+        it 'does not add the domain when it is the owner' do
+          org = Organization.make
+          domain = PrivateDomain.make(owning_organization: org)
 
           expect { org.add_private_domain(domain) }.to raise_error
         end
@@ -347,6 +369,17 @@ module VCAP::CloudController
         }.to change {
           Domain[id: domain.id]
         }.from(domain).to(nil)
+      end
+
+      it 'destroys shared private domains' do
+        domain = PrivateDomain.make
+        org.add_shared_private_domain(domain)
+
+        expect {
+          org.destroy
+        }.to change {
+          Domain[id: domain.id].shared_organizations
+        }.from([org]).to([])
       end
     end
 

@@ -133,6 +133,7 @@ module VCAP::CloudController
             auditors:                [:get, :put, :delete],
             app_events:              [:get, :put, :delete],
             space_quota_definitions: [:get, :put, :delete],
+            shared_private_domains:  [:get, :put, :delete],
           }
         )
       end

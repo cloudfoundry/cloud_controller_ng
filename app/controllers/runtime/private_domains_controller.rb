@@ -3,6 +3,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       to_one :owning_organization
+      to_many :shared_organizations, link_only: true, exclude_in: [:create, :update], route_for: :get
     end
 
     query_parameters :name

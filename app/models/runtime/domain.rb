@@ -53,10 +53,21 @@ module VCAP::CloudController
       before_set: :validate_change_owning_organization
     )
     one_to_many :routes
+    many_to_many(
+      :shared_organizations,
+      class: 'VCAP::CloudController::Organization',
+      join_table: 'organizations_private_domains',
+      left_key: :private_domain_id,
+      right_key: :organization_id,
+      before_set: :validate_add_shared_organization
+    )
 
-    add_association_dependencies routes: :destroy
+    add_association_dependencies(
+      routes: :destroy,
+      shared_organizations: :nullify,
+    )
 
-    export_attributes :name, :owning_organization_guid
+    export_attributes :name, :owning_organization_guid, :shared_organizations
     import_attributes :name, :owning_organization_guid
     strip_attributes :name
 
@@ -72,7 +83,7 @@ module VCAP::CloudController
     end
 
     def name_overlaps?
-      return true unless intermediate_domains.all? do |suffix|
+      return true unless intermediate_domains.drop(1).all? do |suffix|
         d = Domain.find(name: suffix)
         d.nil? || d.owning_organization == owning_organization || d.shared?
       end
@@ -134,6 +145,10 @@ module VCAP::CloudController
 
     def intermediate_domains
       self.class.intermediate_domains(name)
+    end
+
+    def validate_add_shared_organization(organization)
+      !shared? && !owned_by(organization)
     end
   end
 end

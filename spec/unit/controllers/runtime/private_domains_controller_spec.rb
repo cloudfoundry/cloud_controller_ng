@@ -51,5 +51,29 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'Associations' do
+      it do
+        expect(described_class).to have_nested_routes(
+          {
+            shared_organizations: [:get],
+          })
+      end
+
+      describe 'shared organizations associations' do
+        let(:private_domain) { PrivateDomain.make }
+
+        before do
+          Organization.make.add_shared_private_domain(private_domain)
+        end
+
+        it 'returns links for shared organizations' do
+          get "/v2/private_domains/#{private_domain.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
+
+          expect(entity).to have_key('shared_organizations_url')
+          expect(entity).to_not have_key('shared_organizations')
+        end
+      end
+    end
   end
 end

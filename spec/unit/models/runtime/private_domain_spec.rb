@@ -119,5 +119,23 @@ module VCAP::CloudController
         }.to_not raise_error
       end
     end
+
+    describe 'usable_by_organization?' do
+      it 'returns true when its the owner' do
+        expect(private_domain.usable_by_organization?(private_domain.owning_organization)).to eq true
+      end
+
+      context 'when not the owner' do
+        it 'returns true when allowed to share the domain' do
+          org = Organization.make
+          private_domain.add_shared_organization(org)
+          expect(private_domain.usable_by_organization?(org)).to eq true
+        end
+
+        it 'returns false if not allowed to share the domain' do
+          expect(private_domain.usable_by_organization?(Organization.new)).to eq false
+        end
+      end
+    end
   end
 end
