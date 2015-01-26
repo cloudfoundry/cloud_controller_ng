@@ -24,7 +24,7 @@ module VCAP::CloudController
               service_instance.save
             end
 
-            if service_instance.state != 'succeeded'
+            if !service_instance.terminal_state?
               poller.poll_service_instance_state(client_attrs, service_instance)
             end
           rescue HttpRequestError, Sequel::Error

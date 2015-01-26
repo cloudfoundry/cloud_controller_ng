@@ -26,21 +26,32 @@ module VCAP::CloudController
                 and_return(state: 'succeeded', dashboard_url: 'my-dash')
             end
 
-            it 'fetches the service instance state' do
-              job.perform
-
-              expect(client).to have_received(:fetch_service_instance_state) do |instance|
-                expect(instance.guid).to eq service_instance.guid
-                expect(instance.service_plan.guid).to eq service_instance.service_plan.guid
-              end
-            end
-
-            it 'updates the service instance' do
+            it 'fetches and updates the service instance state' do
               job.perform
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
               expect(db_service_instance.state).to eq('succeeded')
               expect(db_service_instance.dashboard_url).to eq('my-dash')
+            end
+
+            it 'should not enqueue another fetch job' do
+              job.perform
+
+              expect(Delayed::Job.count).to eq 0
+            end
+          end
+
+          context 'when the state is `failed`' do
+            before do
+              allow(client).to receive(:fetch_service_instance_state).
+                and_return(state: 'failed')
+            end
+
+            it 'fetches and updates the service instance state' do
+              job.perform
+
+              db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
+              expect(db_service_instance.state).to eq('failed')
             end
 
             it 'should not enqueue another fetch job' do
@@ -56,13 +67,8 @@ module VCAP::CloudController
                 and_return(state: 'in progress')
             end
 
-            it 'fetches the service instance state' do
+            it 'fetches and updates the service instance state' do
               job.perform
-
-              expect(client).to have_received(:fetch_service_instance_state) do |instance|
-                expect(instance.guid).to eq service_instance.guid
-                expect(instance.service_plan.guid).to eq service_instance.service_plan.guid
-              end
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
               expect(db_service_instance.state).to eq('in progress')

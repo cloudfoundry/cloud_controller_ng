@@ -405,5 +405,22 @@ module VCAP::CloudController
         expect(service_instance.tags).to eq %w(relational mysql)
       end
     end
+
+    describe '#terminal_state?' do
+      it 'returns true when state is `succeeded`' do
+        instance = ManagedServiceInstance.make(state: 'succeeded')
+        expect(instance.terminal_state?).to be true
+      end
+
+      it 'returns true when state is `failed`' do
+        instance = ManagedServiceInstance.make(state: 'failed')
+        expect(instance.terminal_state?).to be true
+      end
+
+      it 'returns false otherwise' do
+        instance = ManagedServiceInstance.make(state: 'other')
+        expect(instance.terminal_state?).to be false
+      end
+    end
   end
 end

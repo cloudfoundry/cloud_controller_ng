@@ -162,5 +162,9 @@ module VCAP::CloudController
     def tags
       service.tags
     end
+
+    def terminal_state?
+      state == 'succeeded' || state == 'failed'
+    end
   end
 end
