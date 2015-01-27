@@ -90,18 +90,25 @@ module VCAP::CloudController
         raise Sequel::ValidationFailed.new(service_instance)
       end
 
+      attributes_to_update = {}
       if ['true', 'false', nil].include? params['accepts_incomplete']
-        service_instance.client.provision(service_instance, async: params['accepts_incomplete'])
+        attributes_to_update, error = service_instance.client.provision(service_instance, async: params['accepts_incomplete'])
       else
         raise Errors::ApiError.new_from_details('InvalidRequest')
       end
 
       begin
-        service_instance.save
+        ServiceInstance.db.transaction do
+          service_instance.lock!
+          service_instance.set_all(attributes_to_update)
+          service_instance.save
+        end
       rescue => e
         safe_deprovision_instance(service_instance)
         raise e
       end
+
+      raise error if error
 
       @services_event_repository.record_service_instance_event(:create, service_instance, request_attrs)
 

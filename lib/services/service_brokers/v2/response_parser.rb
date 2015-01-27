@@ -10,23 +10,23 @@ module VCAP::Services
           uri = uri_for(path)
           code = response.code.to_i
 
+          begin
+            response_hash = MultiJson.load(response.body)
+          rescue MultiJson::ParseError
+            logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
+          end
+
           case code
           when 204
             return nil # no body
 
           when 200..299
-            begin
-              response_hash = MultiJson.load(response.body)
-            rescue MultiJson::ParseError
-              logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
-            end
-
             unless response_hash.is_a?(Hash)
               raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, sanitize_response(response))
             end
 
-            if !valid_broker_response?(path, code, response_hash['state'])
-              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, sanitize_response(response))
+            if !valid_broker_response?(method, path, code, response_hash['state'])
+              raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, sanitize_response(response))
             end
 
             return response_hash
@@ -53,21 +53,25 @@ module VCAP::Services
           raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
         end
 
-        def valid_broker_response?(path, code, state)
-          return true if !(['/v2/service_instances'].include?(path))
+        # Move these to ValidateBrokerResponse class when we do update and delete
+        def valid_broker_response?(method, path, code, state)
+          return true if ![:put, :get].include?(method) || !%r{/v2/service_instances/.+}.match(path)
+
+          return true if code == 200 && ['in progress', 'succeeded', 'failed', nil].include?(state)
 
           return true if code == 201 && (state == 'succeeded' || state.nil?)
           return true if code == 202 && state == 'in progress'
+
           false
         end
 
         private
 
         def sanitize_response(response)
-          return HttpResponse.new(
-                  code: response.code,
-                  message: response.message,
-                  body: "\"#{response.body}\""
+          HttpResponse.new(
+            code: response.code,
+            message: response.message,
+            body: "\"#{response.body}\""
           )
         end
 

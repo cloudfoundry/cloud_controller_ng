@@ -177,7 +177,7 @@ module VCAP::CloudController
         let(:space) { Space.make }
         let(:plan) { ServicePlan.make(service: service) }
         let(:developer) { make_developer_for_space(space) }
-        let(:response_body) { MultiJson.dump(dashboard_url: 'the dashboard_url', state: 'creating', state_description: '') }
+        let(:response_body) { MultiJson.dump(dashboard_url: 'the dashboard_url', state: 'in progress', state_description: '') }
 
         def stub_delete_and_return(status, body)
           stub_request(:delete, service_broker_url_regex).
@@ -200,7 +200,7 @@ module VCAP::CloudController
 
           expect(instance.credentials).to eq({})
           expect(instance.dashboard_url).to eq('the dashboard_url')
-          expect(decoded_response['entity']['state']).to eq 'creating'
+          expect(decoded_response['entity']['state']).to eq 'in progress'
           expect(decoded_response['entity']['state_description']).to eq ''
         end
 
@@ -513,7 +513,7 @@ module VCAP::CloudController
         before do
           stub_request(:patch, service_broker_url).
             with(headers: { 'Accept' => 'application/json' }).
-            to_return(status: 200, body: response_body, headers: { 'Content-Type' => 'application/json' })
+            to_return(status: 201, body: response_body, headers: { 'Content-Type' => 'application/json' })
         end
 
         it 'calls the service broker to update the plan' do

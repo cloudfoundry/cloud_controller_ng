@@ -168,7 +168,7 @@ module VCAP::Services
               let(:body) { '{"foo": "bar", "state": "succeeded"}' }
 
               it 'treats the request as a successful asynchronous request' do
-                response_hash = parser.parse(:put, '/v2/service_instances', response)
+                response_hash = parser.parse(:put, '/v2/service_instances/some-guid', response)
 
                 expect(response_hash).to eq({ 'foo' => 'bar', 'state' => 'succeeded' })
               end
@@ -179,8 +179,8 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
             end
 
@@ -189,8 +189,8 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
             end
 
@@ -198,7 +198,7 @@ module VCAP::Services
               let(:body) { '{"foo": "bar"}' }
 
               it 'treats the request as a successful synchronous request' do
-                response_hash = parser.parse(:put, '/v2/service_instances', response)
+                response_hash = parser.parse(:put, '/v2/service_instances/some-guid', response)
 
                 expect(response_hash).to eq({ 'foo' => 'bar' })
               end
@@ -209,8 +209,28 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
+              end
+            end
+
+            context 'when the path is not `/v2/service_instances/:id`' do
+              let(:body) { '{"foo": "bar", "state": "in progress"}' }
+
+              it 'treats the response as valid' do
+                response_hash = parser.parse(:put, '/v2/fake_path', response)
+
+                expect(response_hash).to eq({ 'foo' => 'bar', 'state' => 'in progress' })
+              end
+            end
+
+            context 'when the path is not `/v2/service_instances/:id` but method is :delete' do
+              let(:body) { '{"foo": "bar", "state": "in progress"}' }
+
+              it 'treats the response as valid' do
+                response_hash = parser.parse(:delete, '/v2/fake_path', response)
+
+                expect(response_hash).to eq({ 'foo' => 'bar', 'state' => 'in progress' })
               end
             end
           end
@@ -223,8 +243,8 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
             end
 
@@ -233,8 +253,8 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
             end
 
@@ -242,7 +262,7 @@ module VCAP::Services
               let(:body) { '{"foo": "bar", "state": "in progress"}' }
 
               it 'treats the request as a successful asynchronous request' do
-                response_hash = parser.parse(:put, '/v2/service_instances', response)
+                response_hash = parser.parse(:put, '/v2/service_instances/some-guid', response)
 
                 expect(response_hash).to eq({ 'foo' => 'bar', 'state' => 'in progress' })
               end
@@ -253,8 +273,8 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
             end
 
@@ -263,8 +283,8 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
             end
           end
@@ -275,20 +295,20 @@ module VCAP::Services
             context 'when state value is valid' do
               let(:body) { '{"foo": "bar", "state": "succeeded"}' }
 
-              it 'treats the response as invalid' do
-                expect {
-                  parser.parse(:put, '/v2/service_instances', response)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              it 'treats the response as valid' do
+                response_hash = parser.parse(:put, '/v2/service_instances/some-guid', response)
+
+                expect(response_hash).to eq({ 'foo' => 'bar', 'state' => 'succeeded' })
               end
             end
 
             context 'when state value is nil' do
               let(:body) { '{"foo": "bar"}' }
 
-              it 'treats the response as invalid' do
-                expect {
-                  parser.parse(:put, '/v2/service_instances', response)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              it 'treats the response as valid' do
+                response_hash = parser.parse(:put, '/v2/service_instances/some-guid', response)
+
+                expect(response_hash).to eq({ 'foo' => 'bar' })
               end
             end
 
@@ -297,8 +317,8 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
-                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
+                }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
             end
           end
@@ -311,7 +331,7 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
                 }.to raise_error(Errors::ServiceBrokerRequestRejected)
               end
             end
@@ -321,7 +341,7 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
                 }.to raise_error(Errors::ServiceBrokerRequestRejected)
               end
             end
@@ -331,7 +351,7 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
                 }.to raise_error(Errors::ServiceBrokerRequestRejected)
               end
             end
@@ -345,7 +365,7 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
                 }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
             end
@@ -355,7 +375,7 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
                 }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
             end
@@ -365,7 +385,7 @@ module VCAP::Services
 
               it 'treats the response as invalid' do
                 expect {
-                  parser.parse(:put, '/v2/service_instances', response)
+                  parser.parse(:put, '/v2/service_instances/some-guid', response)
                 }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
             end

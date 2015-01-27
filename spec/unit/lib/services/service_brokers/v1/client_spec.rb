@@ -23,7 +23,7 @@ module VCAP::Services
       let(:plan) { VCAP::CloudController::ServicePlan.make }
       let(:service) { plan.service }
       let(:instance) do
-        VCAP::CloudController::ManagedServiceInstance.new(
+        VCAP::CloudController::ManagedServiceInstance.make(
           space: space,
           service_plan: plan
         )
@@ -56,7 +56,9 @@ module VCAP::Services
       end
 
       it 'sets relevant attributes on the instance' do
-        client.provision(instance)
+        attributes = client.provision(instance)
+        instance.set_all(attributes)
+        instance.save
 
         expect(instance.broker_provided_id).to eq('123')
         expect(instance.gateway_data).to eq('setting' => true)

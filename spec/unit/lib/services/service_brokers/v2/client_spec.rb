@@ -86,7 +86,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:plan) { VCAP::CloudController::ServicePlan.make }
       let(:space) { VCAP::CloudController::Space.make }
       let(:instance) do
-        VCAP::CloudController::ManagedServiceInstance.new(
+        VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: plan,
           space: space
         )
@@ -121,37 +121,42 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(http_client).to have_received(:put).
           with(anything,
-               {
             service_id:        instance.service.broker_provided_id,
             plan_id:           instance.service_plan.broker_provided_id,
             organization_guid: instance.organization.guid,
             space_guid:        instance.space.guid
-          }
-              )
+          )
       end
 
-      it 'sets the dashboard_url on the instance' do
-        client.provision(instance)
+      it 'returns the attributes to update on a service instance' do
+        attributes, error = client.provision(instance)
+        # ensure updating attributes and saving to service instance works
+        instance.set_all(attributes)
+        instance.save
 
         expect(instance.dashboard_url).to eq('foo')
+        expect(error).to be_nil
       end
 
       it 'defaults the state to "succeeded"' do
-        client.provision(instance)
+        attributes, error = client.provision(instance)
 
-        expect(instance.state).to eq('succeeded')
+        expect(attributes[:state]).to eq('succeeded')
+        expect(error).to be_nil
       end
 
       it 'leaves the description blank' do
-        client.provision(instance)
+        attributes, error = client.provision(instance)
 
-        expect(instance.state_description).to eq('')
+        expect(attributes[:state_description]).to eq('')
+        expect(error).to be_nil
       end
 
       it 'DEPRECATED, maintain for database not null contraint: sets the credentials on the instance' do
-        client.provision(instance)
+        attributes, error = client.provision(instance)
 
-        expect(instance.credentials).to eq({})
+        expect(attributes[:credentials]).to eq({})
+        expect(error).to be_nil
       end
 
       context 'when the broker returns no state or the state is created, or succeeded' do
@@ -162,10 +167,11 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'return immediately with the broker response' do
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          client.provision(instance)
+          attributes, error = client.provision(instance)
 
-          expect(instance.state).to eq('succeeded')
-          expect(instance.state_description).to eq('')
+          expect(attributes[:state]).to eq('succeeded')
+          expect(attributes[:state_description]).to eq('')
+          expect(error).to be_nil
         end
 
         it 'does not enqueue a polling job' do
@@ -175,6 +181,8 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns the state as `in progress`' do
+        let(:code) { 202 }
+        let(:message) { 'Accepted' }
         let(:response_data) do
           {
             state: 'in progress',
@@ -184,10 +192,11 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'return immediately with the broker response' do
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          client.provision(instance)
+          attributes, error = client.provision(instance)
 
-          expect(instance.state).to eq('in progress')
-          expect(instance.state_description).to eq('10% done')
+          expect(attributes[:state]).to eq('in progress')
+          expect(attributes[:state_description]).to eq('10% done')
+          expect(error).to be_nil
         end
 
         it 'enqueues a polling job' do
@@ -197,19 +206,21 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns the state as failed' do
+        let(:code) { 400 }
+        let(:message) { 'Failed' }
         let(:response_data) do
           {
-            state: 'failed',
             state_description: '100% failed'
           }
         end
 
         it 'return immediately with the broker response' do
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          client.provision(instance)
+          attributes, error = client.provision(instance)
 
-          expect(instance.state).to eq('failed')
-          expect(instance.state_description).to eq('100% failed')
+          expect(attributes[:state]).to eq('failed')
+          expect(attributes[:state_description]).to eq('100% failed')
+          expect(error).to be_a(Errors::ServiceBrokerRequestRejected)
         end
 
         it 'does not enqueue a polling job' do
@@ -291,7 +302,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_data) do
         {
           'dashboard_url' => 'bar',
-          'state' => 'created',
+          'state' => 'succeeded',
           'state_description' => '100% created'
         }
       end

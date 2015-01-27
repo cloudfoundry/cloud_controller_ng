@@ -32,23 +32,34 @@ module VCAP::Services::ServiceBrokers::V2
       })
 
       parsed_response = @response_parser.parse(:put, path, response)
-      instance.dashboard_url = parsed_response['dashboard_url']
-      instance.state_description = parsed_response['state_description'] || ''
+      attributes = {
+        # DEPRECATED, but needed because of not null constraint
+        credentials: {},
+        dashboard_url: parsed_response['dashboard_url'],
+        state_description: parsed_response['state_description'] || '',
+      }
 
       if parsed_response['state']
-        instance.state = parsed_response['state']
-        if instance.state == 'in progress'
+        attributes[:state] = parsed_response['state']
+        if attributes[:state] == 'in progress'
           @state_poller.poll_service_instance_state(@attrs, instance)
         end
       else
-        instance.state = 'succeeded'
+        attributes[:state] = 'succeeded'
       end
 
-      # DEPRECATED, but needed because of not null constraint
-      instance.credentials = {}
+      [attributes, nil]
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
       @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       raise e
+    rescue Errors::ServiceBrokerRequestRejected => e
+      attributes = {
+        state: 'failed',
+        state_description: e.parsed_response['state_description'],
+        credentials: {}
+      }
+
+      [attributes, e]
     end
 
     def fetch_service_instance_state(instance)
