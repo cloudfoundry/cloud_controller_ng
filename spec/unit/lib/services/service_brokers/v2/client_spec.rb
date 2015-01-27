@@ -285,6 +285,18 @@ module VCAP::Services::ServiceBrokers::V2
               expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
             end
           end
+
+          context 'ServiceBrokerResponseMalformed error' do
+            let(:error) { Errors::ServiceBrokerResponseMalformed.new(uri, :put, response) }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.provision(instance)
+              }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+
+              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
+            end
+          end
         end
       end
     end

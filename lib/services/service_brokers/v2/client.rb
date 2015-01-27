@@ -49,7 +49,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       [attributes, nil]
-    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
+    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse, Errors::ServiceBrokerResponseMalformed => e
       @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       raise e
     rescue Errors::ServiceBrokerRequestRejected => e
