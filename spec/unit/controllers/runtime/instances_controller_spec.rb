@@ -96,6 +96,7 @@ module VCAP::CloudController
             instances = {
               0 => {
                 state: 'FLAPPING',
+                details: 'busted-app',
                 since: 1,
               },
             }
@@ -103,6 +104,7 @@ module VCAP::CloudController
             expected = {
               '0' => {
                 'state' => 'FLAPPING',
+                'details' => 'busted-app',
                 'since' => 1,
               },
             }

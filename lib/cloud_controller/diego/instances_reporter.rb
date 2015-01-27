@@ -12,10 +12,12 @@ module VCAP::CloudController
         instances = diego_client.lrp_instances(app)
 
         for_each_desired_instance(instances, app) do |instance|
-          result[instance[:index]] = {
-              state: instance[:state],
-              since: instance[:since],
+          info = {
+            state: instance[:state],
+            since: instance[:since],
           }
+          info[:details] = instance[:details] if instance[:details]
+          result[instance[:index]] = info
         end
 
         fill_unreported_instances_with_down_instances(result, app)
@@ -69,18 +71,20 @@ module VCAP::CloudController
         instances = diego_client.lrp_instances(app)
 
         for_each_desired_instance(instances, app) do |instance|
-          result[instance[:index]] = {
-              'state' => instance[:state],
-              'stats' => {
-                  'mem_quota'  => 0,
-                  'disk_quota' => 0,
-                  'usage'      => {
-                      'cpu'  => 0,
-                      'mem'  => 0,
-                      'disk' => 0,
-                  }
+          info = {
+            'state' => instance[:state],
+            'stats' => {
+              'mem_quota'  => 0,
+              'disk_quota' => 0,
+              'usage'      => {
+                  'cpu'  => 0,
+                  'mem'  => 0,
+                  'disk' => 0,
               }
+            }
           }
+          info['details'] = instance[:details] if instance[:details]
+          result[instance[:index]] = info
         end
 
         fill_unreported_instances_with_down_instances(result, app)

@@ -19,6 +19,7 @@ module VCAP::CloudController
             },
             1 => {
               state: 'DOWN',
+              details: 'start-me',
               since: 1,
             }
           }
@@ -45,6 +46,7 @@ module VCAP::CloudController
               },
               '1' => {
                 'state' => 'DOWN',
+                'details' => 'start-me',
                 'since' => 1,
               }
             }
@@ -75,6 +77,7 @@ module VCAP::CloudController
               },
               '1' => {
                 'state' => 'DOWN',
+                'details' => 'start-me',
                 'since' => 1,
               }
             }

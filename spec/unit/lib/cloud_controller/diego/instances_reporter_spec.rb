@@ -9,7 +9,7 @@ module VCAP::CloudController
       let(:desired_instances) { 3 }
       let(:instances_to_return) {
         [
-          { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', since: 1 },
+          { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', details: 'some-details', since: 1 },
           { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', since: 2 },
           { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', since: 3 },
           { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'RUNNING', since: 4 },
@@ -30,7 +30,7 @@ module VCAP::CloudController
           expect(diego_client).to have_received(:lrp_instances).with(app)
           expect(result).to eq(
                                 {
-                                    0 => { state: 'RUNNING', since: 1 },
+                                    0 => { state: 'RUNNING', details: 'some-details', since: 1 },
                                     1 => { state: 'CRASHED', since: 3 },
                                     2 => { state: 'STARTING', since: 5 },
                                 })
@@ -216,6 +216,7 @@ module VCAP::CloudController
                                 {
                                     0 => {
                                         'state' => 'RUNNING',
+                                        'details' => 'some-details',
                                         'stats' => {
                                             'mem_quota'  => 0,
                                             'disk_quota' => 0,

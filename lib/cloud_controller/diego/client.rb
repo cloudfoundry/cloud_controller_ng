@@ -36,13 +36,15 @@ module VCAP::CloudController
 
         tps_instances = JSON.parse(response.body)
         tps_instances.each do |instance|
-          result << {
+          info = {
             process_guid: instance['process_guid'],
             instance_guid: instance['instance_guid'],
             index: instance['index'],
             state: instance['state'].upcase,
             since: instance['since_in_ns'].to_i / 1_000_000_000,
           }
+          info[:details] = instance['details'] if instance['details']
+          result << info
         end
 
         logger.info "Returning lrp instances for #{guid}: #{result.inspect}"
