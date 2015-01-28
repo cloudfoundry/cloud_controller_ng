@@ -35,12 +35,16 @@ module VCAP::CloudController
       self.organization_guid = space.organization.guid
     end
 
-    def self.user_visibility_filter(user)
-      Sequel.or([
-        [:space, user.audited_spaces_dataset],
-        [:space, user.spaces_dataset],
-        [:organization_guid, user.audited_organizations_dataset.map(&:guid)]
-      ])
+    def self.user_visible(user, admin_override=false)
+      if admin_override
+        dataset.filter(full_dataset_filter)
+      elsif user
+        where(space: user.spaces_dataset).
+          union(where(space: user.audited_spaces_dataset), from_self: false).
+          union(where(organization_guid: user.audited_organizations_dataset.map(&:guid)), from_self: false)
+      else
+        dataset.filter(unauthenticated_visibility_filter)
+      end
     end
   end
 end
