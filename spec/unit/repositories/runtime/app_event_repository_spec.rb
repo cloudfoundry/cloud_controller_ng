@@ -48,6 +48,32 @@ module VCAP::CloudController
           request = event.metadata.fetch('request')
           expect(request).to eq(expected_request_field)
         end
+
+        it 'records the prior state of app in metadata on the event ' do
+          expected_request_field = {
+           'name' => 'old',
+           'instances' => 1,
+           'memory' => 84,
+           'state' => 'STOPPED',
+           'environment_json' => 'PRIVATE DATA HIDDEN',
+          }
+
+          expect(Loggregator).to receive(:emit).with(app.guid, "Updated app with guid #{app.guid} (#{expected_request_field})")
+
+          event = app_event_repository.record_app_update(app, space, user, user_email, attrs).reload
+
+          expect(event.space).to eq space
+          expect(event.type).to eq 'audit.app.update'
+          expect(event.actee).to eq app.guid
+          expect(event.actee_type).to eq 'app'
+          expect(event.actee_name).to eq app.name
+          expect(event.actor).to eq user.guid
+          expect(event.actor_type).to eq 'user'
+          expect(event.actor_name).to eq user_email
+
+          prior_state = event.metadata.fetch('prior_state')
+          expect(prior_state).to eq('STOPPED')
+        end
       end
 
       describe '#record_app_create' do

@@ -165,6 +165,7 @@ resource 'Events', type: [:api, :legacy_api] do
                                space_guid: test_app.space.guid,
                                metadata: {
                                  'request' => expected_app_request,
+                                 'prior_state' => test_app.prior_state,
                                }
     end
 
