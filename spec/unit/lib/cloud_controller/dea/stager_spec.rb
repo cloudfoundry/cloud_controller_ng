@@ -26,7 +26,7 @@ module VCAP::CloudController
       let(:runner) { double(:Runner) }
 
       subject(:stager) do
-        Stager.new(app, config, message_bus, dea_pool, stager_pool, runners)
+        Stager.new(thing_to_stage, config, message_bus, dea_pool, stager_pool, runners)
       end
 
       let(:stager_task) do
@@ -54,15 +54,17 @@ module VCAP::CloudController
       end
       let(:staging_result) { StagingResponse.new(reply_json) }
 
-      describe '#stage' do
-        let(:app) do
-          AppFactory.make
-        end
+      it_behaves_like 'a stager' do
+        let(:thing_to_stage) { nil }
+      end
+
+      describe '#stage_app' do
+        let(:thing_to_stage) { AppFactory.make }
 
         before do
           allow(AppStagerTask).to receive(:new).and_return(stager_task)
           allow(stager_task).to receive(:stage).and_yield('fake-staging-result').and_return('fake-stager-response')
-          allow(runners).to receive(:runner_for_app).with(app).and_return(runner)
+          allow(runners).to receive(:runner_for_app).with(thing_to_stage).and_return(runner)
           allow(runner).to receive(:start).with('fake-staging-result')
         end
 
@@ -71,7 +73,7 @@ module VCAP::CloudController
           expect(stager_task).to have_received(:stage)
           expect(AppStagerTask).to have_received(:new).with(config,
                                                             message_bus,
-                                                            app,
+                                                            thing_to_stage,
                                                             dea_pool,
                                                             stager_pool,
                                                             an_instance_of(CloudController::Blobstore::UrlGenerator))
@@ -84,7 +86,7 @@ module VCAP::CloudController
 
         it 'records the stager response on the app' do
           stager.stage_app
-          expect(app.last_stager_response).to eq('fake-stager-response')
+          expect(thing_to_stage.last_stager_response).to eq('fake-stager-response')
         end
       end
 
@@ -124,7 +126,7 @@ module VCAP::CloudController
 
         let(:package) { PackageModel.make }
         let(:droplet) { DropletModel.make }
-        let(:app) { package }
+        let(:thing_to_stage) { package }
 
         it 'stages the package with a stager task' do
           stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
