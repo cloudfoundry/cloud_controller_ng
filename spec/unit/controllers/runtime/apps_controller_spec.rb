@@ -428,7 +428,7 @@ module VCAP::CloudController
         end
 
         let(:stager_response) do
-          Dea::AppStagerTask::Response.new('task_streaming_log_url' => 'streaming-log-url')
+          Dea::StagingResponse.new('task_streaming_log_url' => 'streaming-log-url')
         end
 
         let(:app_stager_task) do

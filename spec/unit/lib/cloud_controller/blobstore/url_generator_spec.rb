@@ -212,6 +212,45 @@ module CloudController
             expect(url_generator.perma_droplet_download_url('guid-1')).to eql('http://username:password@api.example.com:9292/staging/droplets/guid-1/download')
           end
         end
+
+        context 'download package buildpack cache' do
+          let(:package) { VCAP::CloudController::PackageModel.make }
+
+          context 'when the caches are stored on local blobstore' do
+            context 'and the package exists' do
+              before { allow(buildpack_cache_blobstore).to receive_messages(download_uri: '/a/b/c') }
+
+              it 'gives a local URI to the blobstore host/port' do
+                uri = URI.parse(url_generator.package_buildpack_cache_download_url(package))
+                expect(uri.host).to eql blobstore_host
+                expect(uri.port).to eql blobstore_port
+                expect(uri.user).to eql 'username'
+                expect(uri.password).to eql 'password'
+                expect(uri.path).to eql "/staging/packages/buildpack_cache/#{package.guid}/download"
+              end
+            end
+
+            context 'and the package does not exist in the blobstore' do
+              before { allow(buildpack_cache_blobstore).to receive_messages(download_uri: nil) }
+
+              it 'returns nil' do
+                expect(url_generator.package_buildpack_cache_download_url(package)).to be_nil
+              end
+            end
+          end
+
+          context 'when the packages are stored remotely' do
+            let(:buildpack_cache_blobstore) { double(local?: false) }
+
+            it 'gives out signed url to remote blobstore for appbits' do
+              remote_uri = 'http://s3.example.com/signed'
+
+              expect(buildpack_cache_blobstore).to receive(:download_uri).with(package.guid).and_return(remote_uri)
+
+              expect(url_generator.package_buildpack_cache_download_url(package)).to eql(remote_uri)
+            end
+          end
+        end
       end
 
       context 'uploads' do
@@ -231,6 +270,16 @@ module CloudController
           expect(uri.user).to eql 'username'
           expect(uri.password).to eql 'password'
           expect(uri.path).to eql "/staging/buildpack_cache/#{app.guid}/upload"
+        end
+
+        it 'gives out url for package buildpack cache' do
+          package = VCAP::CloudController::PackageModel.make
+          uri = URI.parse(url_generator.package_buildpack_cache_upload_url(package))
+          expect(uri.host).to eql blobstore_host
+          expect(uri.port).to eql blobstore_port
+          expect(uri.user).to eql 'username'
+          expect(uri.password).to eql 'password'
+          expect(uri.path).to eql "/staging/packages/buildpack_cache/#{package.guid}/upload"
         end
       end
     end

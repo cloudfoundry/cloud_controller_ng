@@ -48,8 +48,8 @@ module VCAP::CloudController
           app1.reload
           app2.reload
 
-          expect(app1.staging_failed?).to be_falsy
-          expect(app2.staging_failed?).to be_falsy
+          expect(app1.staging_failed?).to be_falsey
+          expect(app2.staging_failed?).to be_falsey
         end
       end
     end

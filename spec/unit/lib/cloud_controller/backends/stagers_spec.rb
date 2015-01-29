@@ -184,5 +184,16 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#stager_for_package' do
+      let(:package) { double(:package) }
+
+      context 'when staging with the DEA' do
+        it 'finds a DEA backend' do
+          stager = stagers.stager_for_package(package)
+          expect(stager).to be_a(Dea::Stager)
+        end
+      end
+    end
   end
 end

@@ -6,7 +6,10 @@ module VCAP::CloudController
     let(:user) { User.make }
     let(:params) { {} }
     let(:packages_handler) { double(:packages_handler) }
+    let(:apps_handler) { double(:apps_handler) }
+    let(:droplets_handler) { double(:droplets_handler) }
     let(:package_presenter) { double(:package_presenter) }
+    let(:droplet_presenter) { double(:droplet_presenter) }
     let(:req_body) { '{}' }
 
     let(:packages_controller) do
@@ -20,6 +23,9 @@ module VCAP::CloudController
         {
           packages_handler: packages_handler,
           package_presenter: package_presenter,
+          droplets_handler: droplets_handler,
+          droplet_presenter: droplet_presenter,
+          apps_handler: apps_handler
         },
       )
     end
@@ -240,6 +246,100 @@ module VCAP::CloudController
         expect(package_presenter).to have_received(:present_json_list).with(list_response, '/v3/packages')
         expect(response_code).to eq(200)
         expect(response_body).to eq(expected_response)
+      end
+    end
+
+    describe '#stage' do
+      let(:package) { PackageModel.make }
+      let(:droplet_response) { 'barbaz' }
+
+      before do
+        allow(droplet_presenter).to receive(:present_json).and_return(droplet_response)
+      end
+
+      context 'when the package does not exist' do
+        before do
+          allow(droplets_handler).to receive(:create).and_raise(DropletsHandler::PackageNotFound)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            packages_controller.stage(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the package exists' do
+        context 'and the user is a space developer' do
+          it 'returns a 201 Created response' do
+            expect(droplets_handler).to receive(:create)
+
+            response_code, body = packages_controller.stage(package.guid)
+            expect(response_code).to eq 201
+            expect(body).to eq droplet_response
+          end
+
+          context 'when the StagingMessage is not valid' do
+            let(:req_body) { '{"memory_limit":"invalid"}' }
+
+            it 'returns an UnprocessableEntity error' do
+              expect {
+                packages_controller.stage(package.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'UnprocessableEntity'
+                expect(error.response_code).to eq 422
+              end
+            end
+          end
+        end
+      end
+
+      context 'when the space does not exist' do
+        before do
+          allow(droplets_handler).to receive(:create).and_raise(DropletsHandler::SpaceNotFound)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            packages_controller.stage(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the request is invalid' do
+        before do
+          allow(droplets_handler).to receive(:create).and_raise(DropletsHandler::InvalidRequest)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            packages_controller.stage(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'InvalidRequest'
+            expect(error.response_code).to eq 400
+          end
+        end
+      end
+
+      context 'when the user cannot access the droplet' do
+        before do
+          allow(droplets_handler).to receive(:create).and_raise(DropletsHandler::Unauthorized)
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          expect {
+            packages_controller.stage(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+        end
       end
     end
   end

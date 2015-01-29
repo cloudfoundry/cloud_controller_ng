@@ -14,8 +14,16 @@ module CloudController
         generate_download_url(@package_blobstore, "/staging/apps/#{app.guid}", app.guid)
       end
 
+      def package_download_url(package)
+        generate_download_url(@package_blobstore, "/staging/packages/#{package.guid}", package.guid)
+      end
+
       def buildpack_cache_download_url(app)
         generate_download_url(@buildpack_cache_blobstore, "/staging/buildpack_cache/#{app.guid}/download", app.guid)
+      end
+
+      def package_buildpack_cache_download_url(package)
+        generate_download_url(@buildpack_cache_blobstore, "/staging/packages/buildpack_cache/#{package.guid}/download", package.guid)
       end
 
       def admin_buildpack_download_url(buildpack)
@@ -40,6 +48,14 @@ module CloudController
       # Uploads
       def droplet_upload_url(app)
         staging_uri("/staging/droplets/#{app.guid}/upload")
+      end
+
+      def package_droplet_upload_url(droplet_guid)
+        staging_uri("/staging/packages/droplets/#{droplet_guid}/upload")
+      end
+
+      def package_buildpack_cache_upload_url(package)
+        staging_uri("/staging/packages/buildpack_cache/#{package.guid}/upload")
       end
 
       def buildpack_cache_upload_url(app)

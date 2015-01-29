@@ -276,6 +276,163 @@ module VCAP::CloudController
       include_examples 'staging bad auth', :post, 'droplets'
     end
 
+    describe 'GET /staging/packages/:guid' do
+      let(:package_without_bits) { PackageModel.make }
+      let(:package) { PackageModel.make }
+      before { authorize(staging_user, staging_password) }
+
+      def upload_package
+        tmpdir = Dir.mktmpdir
+        zipname = File.join(tmpdir, 'test.zip')
+        TestZip.create(zipname, 10, 1024)
+        file_contents = File.read(zipname)
+        Jobs::Runtime::PackageBits.new(package.guid, zipname).perform
+        FileUtils.rm_rf(tmpdir)
+        file_contents
+      end
+
+      context 'when using with nginx' do
+        before { TestConfig.override(staging_config) }
+
+        it 'succeeds for valid packages' do
+          upload_package
+
+          get "/staging/packages/#{package.guid}"
+          expect(last_response.status).to eq(200)
+
+          expect(last_response.headers['X-Accel-Redirect']).to eq("/cc-packages/gu/id/#{package.guid}")
+        end
+      end
+
+      context 'when not using with nginx' do
+        before { TestConfig.override(staging_config.merge(nginx: { use_nginx: false })) }
+
+        it 'succeeds for valid packages' do
+          encoded_expected_body = Base64.encode64(upload_package)
+
+          get "/staging/packages/#{package.guid}"
+          expect(last_response.status).to eq(200)
+
+          encoded_actual_body = Base64.encode64(last_response.body)
+          expect(encoded_actual_body).to eq(encoded_expected_body)
+        end
+      end
+
+      it 'fails if blobstore is not local' do
+        allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+        get '/staging/packages/some-guid'
+        expect(last_response.status).to eq(400)
+      end
+
+      it 'returns an error for non-existent packages' do
+        get '/staging/packages/bad-guid'
+        expect(last_response.status).to eq(404)
+      end
+
+      it 'returns an error for an package without bits' do
+        get "/staging/packages/#{package_without_bits.guid}"
+        expect(last_response.status).to eq(404)
+      end
+
+      include_examples 'staging bad auth', :get, 'packages'
+    end
+
+    describe 'POST /staging/packages/droplets/:guid/upload' do
+      include TempFileCreator
+
+      let(:droplet) { DropletModel.make }
+      let(:file_content) { 'droplet content' }
+
+      let(:upload_req) do
+        { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
+      end
+
+      before do
+        TestConfig.override(staging_config)
+        authorize staging_user, staging_password
+      end
+
+      it 'schedules a job to upload the droplet to the blobstore' do
+        expect {
+          post "/staging/packages/droplets/#{droplet.guid}/upload", upload_req
+        }.to change {
+          Delayed::Job.count
+        }.by(1)
+
+        job = Delayed::Job.last
+        expect(job.handler).to include('VCAP::CloudController::Jobs::V3::DropletUpload')
+        expect(job.handler).to include("droplet_guid: #{droplet.guid}")
+        expect(job.handler).to include('ngx.uploads')
+        expect(job.queue).to eq('cc-api_z1-99')
+        expect(job.guid).not_to be_nil
+        expect(last_response.status).to eq 200
+      end
+
+      it "returns a JSON body with full url and basic auth to query for job's status" do
+        TestConfig.config[:external_domain] = ['www.example.com', TestConfig.config[:external_domain]]
+
+        post "/staging/packages/droplets/#{droplet.guid}/upload", upload_req
+
+        job = Delayed::Job.last
+        config = VCAP::CloudController::Config.config
+        user = config[:staging][:auth][:user]
+        password = config[:staging][:auth][:password]
+        polling_url = "http://#{user}:#{password}@#{config[:external_domain].first}/staging/jobs/#{job.guid}"
+
+        expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
+      end
+
+      it 'returns a JSON body with full url containing the correct external_protocol' do
+        TestConfig.config[:external_protocol] = 'https'
+        post "/staging/packages/droplets/#{droplet.guid}/upload", upload_req
+        expect(decoded_response.fetch('metadata').fetch('url')).to start_with('https://')
+      end
+
+      context 'when a content-md5 is specified' do
+        it 'returns a 400 if the value does not match the md5 of the body' do
+          post "/staging/packages/droplets/#{droplet.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
+          expect(last_response.status).to eq(400)
+        end
+
+        it 'succeeds if the value matches the md5 of the body' do
+          content_md5 = Digest::MD5.base64digest(file_content)
+          post "/staging/packages/droplets/#{droplet.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => content_md5
+          expect(last_response.status).to eq(200)
+        end
+      end
+
+      context 'with an invalid app' do
+        it 'returns 404' do
+          post '/staging/packages/droplets/bad-droplet/upload', upload_req
+          expect(last_response.status).to eq(404)
+        end
+
+        it 'does not add a job' do
+          expect {
+            post '/staging/packages/droplets/bad-droplet/upload', upload_req
+          }.not_to change {
+            Delayed::Job.count
+          }
+        end
+
+        context 'when the upload path is nil' do
+          let(:upload_req) do
+            { upload: { droplet: nil } }
+          end
+
+          it 'does not add a job' do
+            expect {
+              post "/staging/packages/droplets/#{droplet.guid}/upload", upload_req
+            }.not_to change {
+              Delayed::Job.count
+            }
+          end
+        end
+      end
+
+      include_examples 'staging bad auth', :post, 'droplets'
+    end
+
     describe 'GET /staging/droplets/:guid/download' do
       before do
         TestConfig.override(staging_config)
@@ -528,6 +685,141 @@ module VCAP::CloudController
           get "/staging/jobs/#{job_guid}"
 
           expect(last_response.status).to eq(401)
+        end
+      end
+    end
+
+    describe 'POST /staging/packages/buildpack_cache/:guid/upload' do
+      include TempFileCreator
+
+      let(:file_content) { 'the-file-content' }
+      let(:upload_req) do
+        { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
+      end
+      let(:package) { PackageModel.make }
+      before do
+        TestConfig.override(staging_config)
+        authorize staging_user, staging_password
+      end
+
+      context 'with a valid package' do
+        it 'returns 200' do
+          post "/staging/packages/buildpack_cache/#{package.guid}/upload", upload_req
+          expect(last_response.status).to eq(200)
+        end
+
+        it 'stores file path in handle.buildpack_cache_upload_path' do
+          expect {
+            post "/staging/packages/buildpack_cache/#{package.guid}/upload", upload_req
+          }.to change {
+            Delayed::Job.count
+          }.by(1)
+
+          job = Delayed::Job.last
+          expect(job.handler).to include(package.guid)
+          expect(job.handler).to include('ngx.uploads')
+          expect(job.handler).to include('buildpack_cache_blobstore')
+          expect(job.queue).to eq('cc-api_z1-99')
+          expect(job.guid).not_to be_nil
+          expect(last_response.status).to eq 200
+        end
+
+        context 'when a content-md5 is specified' do
+          it 'returns a 400 if the value does not match the md5 of the body' do
+            post "/staging/packages/buildpack_cache/#{package.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
+            expect(last_response.status).to eq(400)
+          end
+
+          it 'succeeds if the value matches the md5 of the body' do
+            content_md5 = Digest::MD5.base64digest(file_content)
+            post "/staging/packages/buildpack_cache/#{package.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => content_md5
+            expect(last_response.status).to eq(200)
+          end
+        end
+      end
+
+      context 'with an invalid package' do
+        it 'returns 404' do
+          post '/staging/packages/buildpack_cache/bad-app/upload', upload_req
+          expect(last_response.status).to eq(404)
+        end
+
+        context 'when the upload path is nil' do
+          let(:upload_req) do
+            { upload: { droplet: nil } }
+          end
+
+          it 'does not create an upload job' do
+            expect {
+              post "/staging/packages/buildpack_cache/#{package.guid}/upload", upload_req
+            }.not_to change {
+              Delayed::Job.count
+            }
+          end
+        end
+      end
+    end
+
+    describe 'GET /staging/packages/buildpack_cache/:guid/download' do
+      let(:package) { PackageModel.make }
+      let(:buildpack_cache) { Tempfile.new(package.guid) }
+
+      before do
+        buildpack_cache.write('droplet contents')
+        buildpack_cache.close
+
+        authorize staging_user, staging_password
+      end
+
+      after { FileUtils.rm(buildpack_cache.path) }
+
+      def make_request(guid=package.guid)
+        get "/staging/packages/buildpack_cache/#{guid}/download"
+      end
+
+      context 'with a valid buildpack cache' do
+        context 'when nginx is enabled' do
+          it 'redirects nginx to serve staged droplet' do
+            buildpack_cache_blobstore.cp_to_blobstore(
+              buildpack_cache.path,
+              package.guid
+            )
+
+            make_request
+            expect(last_response.status).to eq(200)
+            expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{package.guid}")
+          end
+        end
+
+        context 'when nginx is disabled' do
+          let(:staging_config) do
+            original_staging_config.merge({ nginx: { use_nginx: false } })
+          end
+
+          it 'should return the buildpack cache' do
+            buildpack_cache_blobstore.cp_to_blobstore(
+              buildpack_cache.path,
+              package.guid
+            )
+
+            make_request
+            expect(last_response.status).to eq(200)
+            expect(last_response.body).to eq('droplet contents')
+          end
+        end
+      end
+
+      context 'with a valid buildpack cache but no file' do
+        it 'should return an error' do
+          make_request
+          expect(last_response.status).to eq(400)
+        end
+      end
+
+      context 'with an invalid buildpack cache' do
+        it 'should return an error' do
+          make_request('bad_guid')
+          expect(last_response.status).to eq(404)
         end
       end
     end

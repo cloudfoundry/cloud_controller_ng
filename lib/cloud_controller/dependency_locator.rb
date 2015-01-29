@@ -185,6 +185,14 @@ module CloudController
       PackagePresenter.new
     end
 
+    def droplets_handler
+      DropletsHandler.new(@config, stagers)
+    end
+
+    def droplet_presenter
+      DropletPresenter.new
+    end
+
     def object_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new

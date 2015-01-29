@@ -8,12 +8,12 @@ module VCAP::CloudController
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:app) do
       AppFactory.make(
-        package_hash: 'abc',
-        droplet_hash: nil,
+        package_hash:  'abc',
+        droplet_hash:  nil,
         package_state: 'PENDING',
-        state: 'STARTED',
-        instances: 1,
-        disk_quota: 1024
+        state:         'STARTED',
+        instances:     1,
+        disk_quota:    1024
       )
     end
     let(:stager_id) { 'my_stager' }
@@ -27,14 +27,14 @@ module VCAP::CloudController
 
     let(:first_reply_json) do
       {
-        'task_id' => 'task-id',
-        'task_log' => 'task-log',
+        'task_id'                => 'task-id',
+        'task_log'               => 'task-log',
         'task_streaming_log_url' => task_streaming_log_url,
-        'detected_buildpack' => nil,
+        'detected_buildpack'     => nil,
         'detected_start_command' => nil,
-        'buildpack_key' => nil,
-        'error' => first_reply_json_error,
-        'droplet_sha1' => nil
+        'buildpack_key'          => nil,
+        'error'                  => first_reply_json_error,
+        'droplet_sha1'           => nil
       }
     end
 
@@ -46,15 +46,15 @@ module VCAP::CloudController
 
     let(:reply_json) do
       {
-        'task_id' => 'task-id',
-        'task_log' => 'task-log',
+        'task_id'                => 'task-id',
+        'task_log'               => 'task-log',
         'task_streaming_log_url' => nil,
-        'detected_buildpack' => detected_buildpack,
-        'buildpack_key' => buildpack_key,
+        'detected_buildpack'     => detected_buildpack,
+        'buildpack_key'          => buildpack_key,
         'detected_start_command' => detected_start_command,
-        'error' => reply_json_error,
-        'error_info' => reply_error_info,
-        'droplet_sha1' => 'droplet-sha1'
+        'error'                  => reply_json_error,
+        'error_info'             => reply_error_info,
+        'droplet_sha1'           => 'droplet-sha1'
       }
     end
 
@@ -107,7 +107,7 @@ module VCAP::CloudController
     describe 'staging disk requirements' do
       context 'when the app disk requirement is less than the staging disk requirement' do
         it 'should request a stager with enough disk' do
-          app.disk_quota = 12
+          app.disk_quota                                  = 12
           config_hash[:staging][:minimum_staging_disk_mb] = 1025
           expect(stager_pool).to receive(:find_stager).with(app.stack.name, anything, 1025).and_return(stager_id)
           staging_task.stage
@@ -116,7 +116,7 @@ module VCAP::CloudController
 
       context 'when the app disk requirement is less than the default (4096) staging disk requirement, and it wasnt overridden' do
         it 'should request a stager with enough disk' do
-          app.disk_quota = 123
+          app.disk_quota                                  = 123
           config_hash[:staging][:minimum_staging_disk_mb] = nil
           expect(stager_pool).to receive(:find_stager).with(app.stack.name, anything, 4096).and_return(stager_id)
           staging_task.stage
@@ -125,7 +125,7 @@ module VCAP::CloudController
 
       context 'when the app disk requirement exceeds the staging disk requirement' do
         it 'should request a stager with enough disk' do
-          app.disk_quota = 123
+          app.disk_quota                                  = 123
           config_hash[:staging][:minimum_staging_disk_mb] = 122
           expect(stager_pool).to receive(:find_stager).with(app.stack.name, anything, 123).and_return(stager_id)
           staging_task.stage
@@ -275,7 +275,7 @@ module VCAP::CloudController
           end
 
           it 'copes when the app is destroyed halfway between staging (currently we dont know why this happened but seen on tabasco)' do
-            allow(VCAP::CloudController::Dea::AppStagerTask::Response).to receive(:new) do
+            allow(VCAP::CloudController::Dea::StagingResponse).to receive(:new) do
               app.destroy # We saw that app maybe destroyed half-way through staging
               raise ArgumentError.new('Some Fake Error')
             end
@@ -333,14 +333,14 @@ module VCAP::CloudController
             context 'when detected_start_command is not returned' do
               let(:reply_json) do
                 {
-                  'task_id' => 'task-id',
-                  'task_log' => 'task-log',
+                  'task_id'                => 'task-id',
+                  'task_log'               => 'task-log',
                   'task_streaming_log_url' => nil,
-                  'detected_buildpack' => detected_buildpack,
-                  'buildpack_key' => buildpack_key,
-                  'error' => reply_json_error,
-                  'error_info' => reply_error_info,
-                  'droplet_sha1' => 'droplet-sha1'
+                  'detected_buildpack'     => detected_buildpack,
+                  'buildpack_key'          => buildpack_key,
+                  'error'                  => reply_json_error,
+                  'error_info'             => reply_error_info,
+                  'droplet_sha1'           => 'droplet-sha1'
                 }
               end
 
@@ -369,7 +369,7 @@ module VCAP::CloudController
               # fake out the app refresh as the race happens after it
               allow(app).to receive(:refresh)
 
-              other_app_ref = App.find(guid: app.guid)
+              other_app_ref         = App.find(guid: app.guid)
               other_app_ref.command = 'some other command'
               other_app_ref.save
 
@@ -406,9 +406,9 @@ module VCAP::CloudController
               expect {
                 stage
               }.to raise_error(
-                       Errors::ApiError,
-                       /another staging request was initiated/
-                   )
+                Errors::ApiError,
+                /another staging request was initiated/
+              )
             end
 
             it 'does not update droplet hash on the app' do
@@ -456,9 +456,9 @@ module VCAP::CloudController
               expect {
                 stage
               }.to raise_error(
-                       Errors::ApiError,
-                       /staging had already been marked as failed, this could mean that staging took too long/
-                   )
+                Errors::ApiError,
+                /staging had already been marked as failed, this could mean that staging took too long/
+              )
             end
           end
         end
@@ -599,255 +599,31 @@ module VCAP::CloudController
       end
     end
 
-    describe '.staging_request' do
-      let(:app) { AppFactory.make droplet_hash: nil, package_state: 'PENDING' }
+    def stub_schedule_sync(&before_resolve)
+      allow(EM).to receive(:schedule_sync) do |&blk|
+        promise = VCAP::Concurrency::Promise.new
 
-      before do
-        3.times do
-          instance = ManagedServiceInstance.make(space: app.space)
-          binding = ServiceBinding.make(app: app, service_instance: instance)
-          app.add_service_binding(binding)
-        end
-
-        SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
-        SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '8080-9090', 'destination' => '198.41.191.48/1' }], staging_default: true)
-        SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80',        'destination' => '0.0.0.0/0' }], staging_default: false)
-      end
-
-      it 'includes app guid, task id and download/upload uris' do
-        allow(blobstore_url_generator).to receive(:app_package_download_url).with(app).and_return('http://www.app.uri')
-        allow(blobstore_url_generator).to receive(:droplet_upload_url).with(app).and_return('http://www.droplet.upload.uri')
-        allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app).and_return('http://www.buildpack.cache.download.uri')
-        allow(blobstore_url_generator).to receive(:buildpack_cache_upload_url).with(app).and_return('http://www.buildpack.cache.upload.uri')
-        request = staging_task.staging_request
-
-        expect(request[:app_id]).to eq(app.guid)
-        expect(request[:task_id]).to eq(staging_task.task_id)
-        expect(request[:download_uri]).to eq('http://www.app.uri')
-        expect(request[:upload_uri]).to eq('http://www.droplet.upload.uri')
-        expect(request[:buildpack_cache_upload_uri]).to eq('http://www.buildpack.cache.upload.uri')
-        expect(request[:buildpack_cache_download_uri]).to eq('http://www.buildpack.cache.download.uri')
-      end
-
-      it 'includes misc app properties' do
-        request = staging_task.staging_request
-        expect(request[:properties][:meta]).to be_kind_of(Hash)
-      end
-
-      it 'includes service binding properties' do
-        request = staging_task.staging_request
-        expect(request[:properties][:services].count).to eq(3)
-        request[:properties][:services].each do |service|
-          expect(service[:credentials]).to be_kind_of(Hash)
-          expect(service[:options]).to be_kind_of(Hash)
-        end
-      end
-
-      context 'when app does not have buildpack' do
-        it 'returns nil for buildpack' do
-          app.buildpack = nil
-          request = staging_task.staging_request
-          expect(request[:properties][:buildpack]).to be_nil
-        end
-      end
-
-      context 'when app has a buildpack' do
-        it 'returns url for buildpack' do
-          app.buildpack = 'git://example.com/foo.git'
-          request = staging_task.staging_request
-          expect(request[:properties][:buildpack]).to eq('git://example.com/foo.git')
-          expect(request[:properties][:buildpack_git_url]).to eq('git://example.com/foo.git')
-        end
-
-        it "doesn't return a buildpack key" do
-          app.buildpack = 'git://example.com/foo.git'
-          request = staging_task.staging_request
-          expect(request[:properties]).to_not have_key(:buildpack_key)
-        end
-      end
-
-      it 'includes start app message' do
-        request = staging_task.staging_request
-        expect(request[:start_message]).to be_a(Dea::StartAppMessage)
-      end
-
-      it 'includes app index 0' do
-        request = staging_task.staging_request
-        expect(request[:start_message]).to include({ index: 0 })
-      end
-
-      it 'overwrites droplet sha' do
-        request = staging_task.staging_request
-        expect(request[:start_message]).to include({ sha1: nil })
-      end
-
-      it 'overwrites droplet download uri' do
-        request = staging_task.staging_request
-        expect(request[:start_message]).to include({ executableUri: nil })
-      end
-
-      describe 'the list of admin buildpacks' do
-        let!(:buildpack_a) { Buildpack.make(key: 'a key', position: 2) }
-        let!(:buildpack_b) { Buildpack.make(key: 'b key', position: 1) }
-        let!(:buildpack_c) { Buildpack.make(key: 'c key', position: 4) }
-
-        let(:buildpack_file_1) { Tempfile.new('admin buildpack 1') }
-        let(:buildpack_file_2) { Tempfile.new('admin buildpack 2') }
-        let(:buildpack_file_3) { Tempfile.new('admin buildpack 3') }
-
-        let(:buildpack_blobstore) { CloudController::DependencyLocator.instance.buildpack_blobstore }
-
-        before do
-          buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, 'a key')
-          buildpack_blobstore.cp_to_blobstore(buildpack_file_2.path, 'b key')
-          buildpack_blobstore.cp_to_blobstore(buildpack_file_3.path, 'c key')
-        end
-
-        context 'when a specific buildpack is not requested' do
-          it 'includes a list of admin buildpacks as hashes containing its blobstore URI and key' do
-            Timecop.freeze do # download_uri have an expire_at
-              request = staging_task.staging_request
-
-              admin_buildpacks = request[:admin_buildpacks]
-
-              expect(admin_buildpacks).to have(3).items
-              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('a key'), key: 'a key')
-              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('b key'), key: 'b key')
-              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('c key'), key: 'c key')
-            end
+        begin
+          if blk.arity > 0
+            blk.call(promise)
+          else
+            promise.deliver(blk.call)
           end
+        rescue => e
+          promise.fail(e)
         end
 
-        context 'when a specific buildpack is requested' do
-          before do
-            app.buildpack = Buildpack.first.name
-            app.save
-          end
+        # Call before_resolve block before trying to resolve the promise
+        before_resolve.call
 
-          it "includes a list of admin buildpacks so that the system doesn't think the buildpacks are gone" do
-            request = staging_task.staging_request
-
-            admin_buildpacks = request[:admin_buildpacks]
-
-            expect(admin_buildpacks).to have(3).items
-          end
-        end
-
-        context 'when a buildpack is disabled' do
-          before do
-            buildpack_a.enabled = false
-            buildpack_a.save
-          end
-
-          context 'when a specific buildpack is not requested' do
-            it 'includes a list of enabled admin buildpacks as hashes containing its blobstore URI and key' do
-              Timecop.freeze do # download_uri have an expire_at
-                request = staging_task.staging_request
-
-                admin_buildpacks = request[:admin_buildpacks]
-
-                expect(admin_buildpacks).to have(2).items
-                expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('b key'), key: 'b key')
-                expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('c key'), key: 'c key')
-              end
-            end
-          end
-
-          context 'when a buildpack has missing bits' do
-            it 'does not include the buildpack' do
-              Buildpack.make(key: 'd key', position: 5)
-
-              request = staging_task.staging_request
-              admin_buildpacks = request[:admin_buildpacks]
-              expect(admin_buildpacks).to have(2).items
-              expect(admin_buildpacks).to_not include(key: 'd key', url: nil)
-            end
-          end
-        end
-      end
-
-      it 'includes the key of an admin buildpack when the app has a buildpack specified' do
-        buildpack = Buildpack.make
-        app.buildpack = buildpack.name
-        app.save
-
-        request = staging_task.staging_request
-        expect(request[:properties][:buildpack_key]).to eql buildpack.key
-      end
-
-      it "doesn't include the custom buildpack url keys when the app has a buildpack specified" do
-        buildpack = Buildpack.make
-        app.buildpack = buildpack.name
-        app.save
-
-        request = staging_task.staging_request
-        expect(request[:properties]).to_not have_key(:buildpack)
-        expect(request[:properties]).to_not have_key(:buildpack_git_url)
-      end
-
-      it 'includes egress security group staging information by aggregating all sg with staging_default=true' do
-        request = staging_task.staging_request
-        expect(request[:egress_network_rules]).to match_array([
-          { 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' },
-          { 'protocol' => 'tcp', 'ports' => '8080-9090', 'destination' => '198.41.191.48/1' }
-        ])
-      end
-
-      describe 'evironment variables' do
-        before do
-          app.environment_json   = { 'KEY' => 'value' }
-        end
-
-        it 'includes app environment variables' do
-          request = staging_task.staging_request
-          expect(request[:properties][:environment]).to eq(['KEY=value'])
-        end
-
-        it 'includes environment variables from staging environment variable group' do
-          group = EnvironmentVariableGroup.staging
-          group.environment_json = { 'STAGINGKEY' => 'staging_value' }
-          group.save
-
-          request = staging_task.staging_request
-          expect(request[:properties][:environment]).to match_array(['KEY=value', 'STAGINGKEY=staging_value'])
-        end
-
-        it 'prefers app environment variables when they conflict with staging group variables' do
-          group = EnvironmentVariableGroup.staging
-          group.environment_json = { 'KEY' => 'staging_value' }
-          group.save
-
-          request = staging_task.staging_request
-          expect(request[:properties][:environment]).to match_array(['KEY=value'])
-        end
+        promise.resolve
       end
     end
-  end
-end
 
-def stub_schedule_sync(&before_resolve)
-  allow(EM).to receive(:schedule_sync) do |&blk|
-    promise = VCAP::Concurrency::Promise.new
-
-    begin
-      if blk.arity > 0
-        blk.call(promise)
-      else
-        promise.deliver(blk.call)
-      end
-    rescue => e
-      promise.fail(e)
+    def ignore_staging_error
+      yield
+    rescue VCAP::Errors::ApiError => e
+      raise e unless e.name == 'StagingError'
     end
-
-    # Call before_resolve block before trying to resolve the promise
-    before_resolve.call
-
-    promise.resolve
   end
-end
-
-def ignore_staging_error
-  yield
-rescue VCAP::Errors::ApiError => e
-  raise e unless e.name == 'StagingError'
 end

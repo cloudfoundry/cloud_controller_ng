@@ -8,8 +8,9 @@ module VCAP::CloudController
     context 'when the path is not provided' do
       let(:opts) { {} }
       it 'is not valid' do
-        create_message = PackageUploadMessage.new(guid, opts)
-        valid, error   = create_message.validate
+        upload_message = PackageUploadMessage.new(guid, opts)
+        valid, error = upload_message.validate
+
         expect(valid).to be_falsey
         expect(error).to include('An application zip file must be uploaded.')
       end
@@ -18,8 +19,9 @@ module VCAP::CloudController
     context 'and the path is provided' do
       let(:opts) { { 'bits_path' => 'foobar' } }
       it 'is valid' do
-        create_message = PackageUploadMessage.new(guid, opts)
-        valid, error   = create_message.validate
+        upload_message = PackageUploadMessage.new(guid, opts)
+        valid, error = upload_message.validate
+
         expect(valid).to be_truthy
         expect(error).to be_nil
       end

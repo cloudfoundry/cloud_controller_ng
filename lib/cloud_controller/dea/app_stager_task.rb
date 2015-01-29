@@ -63,42 +63,15 @@ module VCAP::CloudController
 
       # We never stage if there is not a start request
       def staging_request
-        {
-          app_id:                       @app.guid,
-          task_id:                      task_id,
-          properties:                   staging_task_properties(@app),
-          # All url generation should go to blobstore_url_generator
-          download_uri:                 @blobstore_url_generator.app_package_download_url(@app),
-          upload_uri:                   @blobstore_url_generator.droplet_upload_url(@app),
-          buildpack_cache_download_uri: @blobstore_url_generator.buildpack_cache_download_url(@app),
-          buildpack_cache_upload_uri:   @blobstore_url_generator.buildpack_cache_upload_url(@app),
-          start_message:                start_app_message,
-          admin_buildpacks:             admin_buildpacks,
-          egress_network_rules:         staging_egress_rules,
-        }
+        StagingMessage.new(@config, @blobstore_url_generator).staging_request(@app, task_id)
       end
 
       private
 
-      def staging_egress_rules
-        staging_security_groups = SecurityGroup.where(staging_default: true).all
-        EgressNetworkRulesPresenter.new(staging_security_groups).to_array
-      end
-
-      def admin_buildpacks
-        AdminBuildpacksPresenter.new(@blobstore_url_generator).to_staging_message_array
-      end
-
-      def start_app_message
-        msg = Dea::StartAppMessage.new(@app, 0, @config, @blobstore_url_generator)
-        msg[:sha1] = nil
-        msg
-      end
-
       def handle_first_response(response, error, promise)
         ensure_staging_is_current!
         check_staging_error!(response, error)
-        promise.deliver(Response.new(response))
+        promise.deliver(StagingResponse.new(response))
       rescue => e
         Loggregator.emit_error(@app.guid, "exception handling first response #{e.message}")
         logger.error("exception handling first response from stager with id #{@stager_id} response: #{e.inspect}, backtrace: #{e.backtrace.join("\n")}")
@@ -111,7 +84,7 @@ module VCAP::CloudController
         check_staging_error!(response, error)
         process_response(response)
       rescue => e
-        Loggregator.emit_error(@app.guid, "Encountered error: #{e.message}")
+        Loggregator.emit_error(@app.guid, "encountered error: #{e.message}")
         logger.error "Encountered error on stager with id #{@stager_id}: #{e}\n#{e.backtrace.join("\n")}"
       end
 
@@ -120,7 +93,7 @@ module VCAP::CloudController
         # to avoid executing on reactor thread
         EM.defer do
           begin
-            staging_completion(Response.new(response))
+            staging_completion(StagingResponse.new(response))
           rescue => e
             Loggregator.emit_error(@app.guid, "Encountered error: #{e.message}")
             logger.error "Encountered error on stager with id #{@stager_id}: #{e}\n#{e.backtrace.join("\n")}"
@@ -192,32 +165,6 @@ module VCAP::CloudController
         @completion_callback.call(started_instances: instance_was_started_by_dea ? 1 : 0) if @completion_callback
       end
 
-      def staging_task_properties(app)
-        staging_task_base_properties(app).merge(app.buildpack.staging_message)
-      end
-
-      def staging_task_base_properties(app)
-        staging_env = EnvironmentVariableGroup.staging.environment_json
-        app_env     = app.environment_json || {}
-        env         = staging_env.merge(app_env).map { |k, v| "#{k}=#{v}" }
-
-        {
-          services: app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
-          resources: {
-            memory: app.memory,
-            disk: app.disk_quota,
-            fds: app.file_descriptors
-          },
-
-          environment: env,
-          meta: app.metadata
-        }
-      end
-
-      def service_binding_to_staging_request(service_binding)
-        ServiceBindingPresenter.new(service_binding).to_hash
-      end
-
       def staging_timeout
         @config[:staging][:timeout_in_seconds]
       end
@@ -235,40 +182,6 @@ module VCAP::CloudController
 
       def logger
         @logger ||= Steno.logger('cc.app_stager')
-      end
-
-      class Response
-        def initialize(response)
-          @response = response
-        end
-
-        def log
-          @response['task_log']
-        end
-
-        def streaming_log_url
-          @response['task_streaming_log_url']
-        end
-
-        def detected_buildpack
-          @response['detected_buildpack']
-        end
-
-        def execution_metadata
-          @response['execution_metadata']
-        end
-
-        def detected_start_command
-          @response['detected_start_command']
-        end
-
-        def droplet_hash
-          @response['droplet_sha1']
-        end
-
-        def buildpack_key
-          @response['buildpack_key']
-        end
       end
     end
   end

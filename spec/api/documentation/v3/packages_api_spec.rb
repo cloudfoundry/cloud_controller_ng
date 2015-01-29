@@ -282,4 +282,99 @@ resource 'Packages (Experimental)', type: :api do
       expect(response_status).to eq(204)
     end
   end
+
+  post '/v3/packages/:guid/droplets' do
+    parameter :buildpack_guid, 'Admin buildpack used to stage the package (cannot be used with buildpack_git_url)', required: false
+    parameter :buildpack_git_url, 'Git url of a buildpack used to stage the package (cannot be used with buildpack_guid)', required: false
+    parameter :staging_environment_variables, 'Environment variables to use during staging', required: false
+    parameter :stack, 'Stack used to stage package', required: false
+    parameter :memory_limit, 'Memory limit used to stage package', required: false
+    parameter :disk_limit, 'Disk limit used to stage package', required: false
+
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+    let!(:package_model) do
+      VCAP::CloudController::PackageModel.make(
+        space_guid: space_guid,
+        state: VCAP::CloudController::PackageModel::READY_STATE,
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
+      )
+    end
+    let(:guid) { package_model.guid }
+    let(:buildpack_git_url) { 'http://github.com/myorg/awesome-buildpack' }
+
+    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+
+    let(:stager_id) { 'abc123' }
+    let(:stager_subject) { "staging.#{stager_id}.start" }
+    let(:advertisment) do
+      {
+        'id' => stager_id,
+        'stacks' => ['default-stack-name'],
+        'available_memory' => 2048,
+        'app_id_to_count' => {},
+      }
+    end
+    let(:message_bus) { VCAP::CloudController::Config.message_bus }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      allow(EM).to receive(:add_timer)
+      allow(EM).to receive(:defer).and_yield
+      allow(EM).to receive(:schedule_sync) do |&blk|
+        blk.call
+      end
+    end
+
+    example 'Stage a package' do
+      VCAP::CloudController::Dea::Client.dea_pool.register_subscriptions
+      message_bus.publish('dea.advertise', advertisment)
+      message_bus.publish('staging.advertise', advertisment)
+
+      expect {
+        do_request_with_error_handling
+      }.to change { VCAP::CloudController::DropletModel.count }.by(1)
+
+      droplet = VCAP::CloudController::DropletModel.last
+      expected_response = {
+        'guid'              => droplet.guid,
+        'state'             => 'PENDING',
+        'hash'              => nil,
+        'buildpack_guid'    => nil,
+        'buildpack_git_url' => 'http://github.com/myorg/awesome-buildpack',
+        'created_at'        => droplet.created_at.as_json,
+        '_links'            => {
+          'self'    => { 'href' => "/v3/droplets/#{droplet.guid}" },
+          'package' => { 'href' => "/v3/packages/#{guid}" },
+        }
+      }
+
+      expect(response_status).to eq(201)
+
+      parsed_response = MultiJson.load(response_body)
+      expect(parsed_response).to eq(expected_response)
+    end
+  end
+end
+
+def stub_schedule_sync(&before_resolve)
+  allow(EM).to receive(:schedule_sync) do |&blk|
+    promise = VCAP::Concurrency::Promise.new
+
+    begin
+      if blk.arity > 0
+        blk.call(promise)
+      else
+        promise.deliver(blk.call)
+      end
+    rescue => e
+      promise.fail(e)
+    end
+
+    # Call before_resolve block before trying to resolve the promise
+    before_resolve.call
+
+    promise.resolve
+  end
 end

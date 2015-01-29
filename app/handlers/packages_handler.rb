@@ -16,7 +16,6 @@ module VCAP::CloudController
   class PackageCreateMessage
     attr_reader :space_guid, :type, :url
     attr_accessor :error
-
     def self.create_from_http_request(space_guid, body)
       opts = body && MultiJson.load(body)
       raise MultiJson::ParseError.new('invalid request body') unless opts.is_a?(Hash)
@@ -46,7 +45,7 @@ module VCAP::CloudController
 
     def validate_type_field
       return 'The type field is required' if @type.nil?
-      valid_type_fields = %w(bits docker)
+      valid_type_fields = PackageModel::PACKAGE_TYPES
 
       if !valid_type_fields.include?(@type)
         return "The type field needs to be one of '#{valid_type_fields.join(', ')}'"
@@ -88,11 +87,11 @@ module VCAP::CloudController
     end
 
     def create(message, access_context)
-      package          = PackageModel.new
+      package            = PackageModel.new
       package.space_guid = message.space_guid
-      package.type     = message.type
-      package.url      = message.url
-      package.state = message.type == 'bits' ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
+      package.type       = message.type
+      package.url        = message.url
+      package.state      = message.type == 'bits' ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
 
       space = Space.find(guid: package.space_guid)
       raise SpaceNotFound if space.nil?

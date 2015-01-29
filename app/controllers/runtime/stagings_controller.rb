@@ -13,8 +13,10 @@ module VCAP::CloudController
 
     STAGING_PATH = '/staging'
 
-    DROPLET_PATH = "#{STAGING_PATH}/droplets"
-    BUILDPACK_CACHE_PATH = "#{STAGING_PATH}/buildpack_cache"
+    DROPLET_PATH                 = "#{STAGING_PATH}/droplets"
+    PACKAGE_DROPLET_PATH         = "#{STAGING_PATH}/packages/droplets"
+    PACKAGE_BUILDPACK_CACHE_PATH = "#{STAGING_PATH}/packages/buildpack_cache"
+    BUILDPACK_CACHE_PATH         = "#{STAGING_PATH}/buildpack_cache"
 
     # Endpoint does its own basic auth
     allow_unauthenticated_access
@@ -107,6 +109,64 @@ module VCAP::CloudController
 
       @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless blob
       @blob_sender.send_blob(app.guid, blob_name, blob, self)
+    end
+
+    ##  V3
+
+    get '/staging/packages/:guid', :download_package
+    def download_package(guid)
+      raise ApiError.new_from_details('BlobstoreNotLocal') unless package_blobstore.local?
+
+      package = PackageModel.find(guid: guid)
+      raise ApiError.new_from_details('NotFound', guid) if package.nil?
+
+      blob = package_blobstore.blob(guid)
+      if blob.nil?
+        logger.error "could not find package for #{guid}"
+        raise ApiError.new_from_details('NotFound', guid)
+      end
+      @blob_sender.send_blob(guid, 'Package', blob, self)
+    end
+
+    post "#{PACKAGE_DROPLET_PATH}/:guid/upload", :upload_package_droplet
+    def upload_package_droplet(guid)
+      droplet = DropletModel.find(guid: guid)
+
+      raise ApiError.new_from_details('NotFound', guid) if droplet.nil?
+      raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{guid}") unless upload_path
+      check_file_md5
+
+      logger.info 'v3-droplet.begin-upload', droplet_guid: guid
+
+      droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, guid)
+
+      job = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
+      [HTTP::OK, StagingJobPresenter.new(job).to_json]
+    end
+
+    post "#{PACKAGE_BUILDPACK_CACHE_PATH}/:guid/upload", :upload_package_buildpack_cache
+    def upload_package_buildpack_cache(guid)
+      package = PackageModel.find(guid: guid)
+
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if package.nil?
+      raise ApiError.new_from_details('StagingError', "malformed buildpack cache upload request for #{guid}") unless upload_path
+      check_file_md5
+
+      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, guid, :buildpack_cache_blobstore)
+      Jobs::Enqueuer.new(blobstore_upload, queue: Jobs::LocalQueue.new(config)).enqueue
+      HTTP::OK
+    end
+
+    get "#{PACKAGE_BUILDPACK_CACHE_PATH}/:guid/download", :download_package_buildpack_cache
+    def download_package_buildpack_cache(guid)
+      package = PackageModel.find(guid: guid)
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if package.nil?
+
+      blob = buildpack_cache_blobstore.blob(guid)
+      blob_name = 'buildpack cache'
+
+      @missing_blob_handler.handle_missing_blob!(guid, blob_name) unless blob
+      @blob_sender.send_blob(guid, blob_name, blob, self)
     end
 
     private
