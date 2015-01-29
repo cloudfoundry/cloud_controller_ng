@@ -393,6 +393,11 @@
   http_code: 400
   message: "Bits may be uploaded only once. Create a new package to upload different bits."
 
+150005:
+  name: BlobstoreNotLocal
+  http_code: 400
+  message: "Downloading blobs can only be done directly to the blobstore."
+
 160001:
   name: AppBitsUploadInvalid
   http_code: 400
