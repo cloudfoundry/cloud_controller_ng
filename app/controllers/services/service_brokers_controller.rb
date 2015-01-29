@@ -55,8 +55,10 @@ module VCAP::CloudController
       broker.set(params)
       registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager, @services_event_repository)
 
-      unless registration.update
-        raise get_exception_from_errors(registration)
+      if params.keys != [:name]
+        unless registration.update
+          raise get_exception_from_errors(registration)
+        end
       end
 
       @services_event_repository.record_broker_event(:update, broker, params)

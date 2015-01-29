@@ -54,6 +54,8 @@ module VCAP::Services::ServiceBrokers::V2
       services.each do |service|
         errors.add_nested(service, service.errors) unless service.valid?
       end
+
+      errors.add('Service broker must provide at least one service') if services.empty?
     end
   end
 end
