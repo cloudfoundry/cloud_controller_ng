@@ -10,6 +10,17 @@ resource 'Service Instances', type: [:api, :legacy_api] do
   authenticated_request
 
   describe 'Standard endpoints' do
+    before do
+      service_broker = service_instance.service.service_broker
+      uri = URI(service_broker.broker_url)
+      broker_url = uri.host + uri.path
+      broker_auth = "#{service_broker.auth_username}:#{service_broker.auth_password}"
+      stub_request(
+        :delete,
+        %r{https://#{broker_auth}@#{broker_url}/v2/service_instances/#{service_instance.guid}}).
+        to_return(status: 200, body: '{}')
+    end
+
     standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
     standard_model_get :managed_service_instance, path: :service_instance, nested_attributes: [:space, :service_plan]
     standard_model_delete_without_async :service_instance

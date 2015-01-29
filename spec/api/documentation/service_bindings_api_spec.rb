@@ -7,6 +7,18 @@ resource 'Service Bindings', type: [:api, :legacy_api] do
   let(:guid) { service_binding.guid }
   authenticated_request
 
+  before do
+    service_broker = service_binding.service.service_broker
+    service_instance = service_binding.service_instance
+    uri = URI(service_broker.broker_url)
+    broker_url = uri.host + uri.path
+    broker_auth = "#{service_broker.auth_username}:#{service_broker.auth_password}"
+    stub_request(
+      :delete,
+      %r{https://#{broker_auth}@#{broker_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{service_binding.guid}}).
+      to_return(status: 200, body: '{}')
+  end
+
   standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController
   standard_model_get :service_binding, nested_associations: [:app, :service_instance]
   standard_model_delete :service_binding

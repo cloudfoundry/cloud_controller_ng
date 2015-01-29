@@ -140,8 +140,20 @@ module VCAP::CloudController
     name              { Sham.name }
     credentials       { Sham.service_credentials }
     space             { Space.make }
-    service_plan      { ServicePlan.make }
+    service_plan      { ServicePlan.make(:v2) }
     gateway_name      { Sham.guid }
+  end
+
+  ManagedServiceInstance.blueprint(:v1) do
+    is_gateway_service { true }
+    name              { Sham.name }
+    credentials       { Sham.service_credentials }
+    space             { Space.make }
+    service_plan      { ServicePlan.make(:v1) }
+    gateway_name      { Sham.guid }
+  end
+
+  ManagedServiceInstance.blueprint(:v2) do
   end
 
   UserProvidedServiceInstance.blueprint do

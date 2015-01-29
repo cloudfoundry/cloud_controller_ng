@@ -276,6 +276,8 @@ module VCAP::CloudController
     describe '#destroy' do
       subject(:space) { Space.make }
 
+      let(:guid_pattern) { '[[:alnum:]-]+' }
+
       it 'creates an AppUsageEvent for each app in the STARTED state' do
         app = AppFactory.make(space: space)
         app.update(state: 'STARTED')
@@ -292,6 +294,12 @@ module VCAP::CloudController
 
       it 'destroys all service instances' do
         service_instance = ManagedServiceInstance.make(space: space)
+
+        service_broker = service_instance.service.service_broker
+        uri = URI(service_broker.broker_url)
+        broker_url = uri.host + uri.path
+        stub_request(:delete, %r{https://#{service_broker.auth_username}:#{service_broker.auth_password}@#{broker_url}/v2/service_instances/#{guid_pattern}}).
+          to_return(status: 200, body: '{}')
 
         expect {
           subject.destroy

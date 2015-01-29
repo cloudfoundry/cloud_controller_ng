@@ -2,6 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceInstancesController, :services do
+    let(:service_broker_url_regex) { %r{http://auth_username:auth_password@example.com/v2/service_instances/(.*)} }
+
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
       it { expect(described_class).to be_queryable_by(:space_guid) }
@@ -71,7 +73,7 @@ module VCAP::CloudController
                            enumerate: 1
 
           it 'prevents a developer from creating a service instance in an unauthorized space' do
-            plan = ServicePlan.make
+            plan = ServicePlan.make(:v2)
 
             req = MultiJson.dump(
               name: 'foo',
@@ -88,9 +90,18 @@ module VCAP::CloudController
 
         describe 'private plans' do
           let!(:unprivileged_organization) { Organization.make }
-          let!(:private_plan) { ServicePlan.make(public: false) }
+          let!(:private_plan) { ServicePlan.make(:v2, public: false) }
           let!(:unprivileged_space) { Space.make(organization: unprivileged_organization) }
           let!(:developer) { make_developer_for_space(unprivileged_space) }
+
+          before do
+            stub_request(:put, service_broker_url_regex).
+              with(headers: { 'Accept' => 'application/json' }).
+              to_return(
+                status: 201,
+                body: { dashboard_url: 'url.com', state: 'succeeded', state_description: '100%' }.to_json,
+                headers: { 'Content-Type' => 'application/json' })
+          end
 
           describe 'a user who does not belong to a privileged organization' do
             it 'does not allow a user to create a service instance' do
@@ -121,6 +132,13 @@ module VCAP::CloudController
             before do
               developer.add_organization(privileged_organization)
               privileged_space.add_developer(developer)
+            end
+
+            let(:service_broker_url_regex) do
+              broker = private_plan.service.service_broker
+              uri = URI(broker.broker_url)
+              broker_url = uri.host + uri.path
+              %r{https://#{broker.auth_username}:#{broker.auth_password}@#{broker_url}/v2/service_instances/(.*)}
             end
 
             it 'allows user to create a service instance in a privileged organization' do
@@ -169,13 +187,12 @@ module VCAP::CloudController
 
     describe 'POST', '/v2/service_instances' do
       context 'with a v2 service' do
-        let(:service_broker_url_regex) { %r{http://auth_username:auth_password@example.com/v2/service_instances/(.*)} }
         let(:service_broker_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{ServiceInstance.last.guid}" }
         let(:service_broker_url_with_async) { "#{service_broker_url}?accepts_incomplete=true" }
         let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
         let(:service) { Service.make(service_broker: service_broker) }
         let(:space) { Space.make }
-        let(:plan) { ServicePlan.make(service: service) }
+        let(:plan) { ServicePlan.make(:v2, service: service) }
         let(:developer) { make_developer_for_space(space) }
         let(:response_body) { MultiJson.dump(dashboard_url: 'the dashboard_url', state: 'in progress', state_description: '') }
 
@@ -664,9 +681,9 @@ module VCAP::CloudController
     end
 
     describe 'PUT', '/v2/service_plans/:service_plan_guid/services_instances' do
-      let(:first_service_plan)  { ServicePlan.make }
-      let(:second_service_plan) { ServicePlan.make }
-      let(:third_service_plan)  { ServicePlan.make }
+      let(:first_service_plan)  { ServicePlan.make(:v2) }
+      let(:second_service_plan) { ServicePlan.make(:v2) }
+      let(:third_service_plan)  { ServicePlan.make(:v2) }
       let(:space)               { Space.make }
       let(:developer)           { make_developer_for_space(space) }
       let(:new_plan_guid)       { third_service_plan.guid }
@@ -735,7 +752,7 @@ module VCAP::CloudController
     describe 'DELETE', '/v2/service_instances/:service_instance_guid' do
       context 'with a managed service instance' do
         let(:service) { Service.make(:v2) }
-        let(:service_plan) { ServicePlan.make(service: service) }
+        let(:service_plan) { ServicePlan.make(:v2, service: service) }
         let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
         let(:body) { '{}' }
         let(:status) { 200 }
@@ -948,8 +965,8 @@ module VCAP::CloudController
           non_basic_services_allowed: false
         )
       end
-      let(:paid_plan) { ServicePlan.make }
-      let(:free_plan) { ServicePlan.make(free: true) }
+      let(:paid_plan) { ServicePlan.make(:v2) }
+      let(:free_plan) { ServicePlan.make(:v2, free: true) }
       let(:org) { Organization.make(quota_definition: paid_quota) }
       let(:space) { Space.make(organization: org) }
 
@@ -1038,7 +1055,7 @@ module VCAP::CloudController
         it 'returns a user friendly error' do
           org = Organization.make
           space = Space.make(organization: org)
-          plan = ServicePlan.make(free: true)
+          plan = ServicePlan.make(:v2, free: true)
 
           body = {
             'space_guid' => 'invalid_space_guid',

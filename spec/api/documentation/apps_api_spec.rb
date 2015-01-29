@@ -125,6 +125,19 @@ resource 'Apps', type: [:api, :legacy_api] do
       let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: associated_service_instance) }
       let(:associated_service_binding_guid) { associated_service_binding.guid }
 
+      before do
+        service_broker = associated_service_binding.service.service_broker
+        instance_guid = associated_service_instance.guid
+        binding_guid = associated_service_binding.guid
+        uri = URI(service_broker.broker_url)
+        broker_url = uri.host + uri.path
+        broker_auth = "#{service_broker.auth_username}:#{service_broker.auth_password}"
+        stub_request(
+          :delete,
+          %r{https://#{broker_auth}@#{broker_url}/v2/service_instances/#{instance_guid}/service_bindings/#{binding_guid}}).
+          to_return(status: 200, body: '{}')
+      end
+
       standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :app
       nested_model_remove :service_binding, :app
     end

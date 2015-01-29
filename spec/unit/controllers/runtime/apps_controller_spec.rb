@@ -221,6 +221,18 @@ module VCAP::CloudController
         context 'with NON-empty service_binding association' do
           let!(:svc_instance) { ManagedServiceInstance.make(space: app_obj.space) }
           let!(:service_binding) { ServiceBinding.make(app: app_obj, service_instance: svc_instance) }
+          let(:guid_pattern) { '[[:alnum:]-]+' }
+
+          before do
+            service_broker = svc_instance.service.service_broker
+            uri = URI(service_broker.broker_url)
+            broker_url = uri.host + uri.path
+            broker_auth = "#{service_broker.auth_username}:#{service_broker.auth_password}"
+            stub_request(
+              :delete,
+              %r{https://#{broker_auth}@#{broker_url}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+              to_return(status: 200, body: '{}')
+          end
 
           it 'should raise an error' do
             delete_app

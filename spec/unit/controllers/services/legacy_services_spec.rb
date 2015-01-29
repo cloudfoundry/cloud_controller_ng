@@ -4,6 +4,7 @@ module VCAP::CloudController
   describe VCAP::CloudController::LegacyService, :services do
     describe 'User facing apis' do
       let(:user) { make_user_with_default_space(admin: true) }
+      let(:guid_pattern) { '[[:alnum:]-]+' }
 
       describe 'GET /services' do
         before do
@@ -172,14 +173,19 @@ module VCAP::CloudController
       describe 'DELETE /services/:name' do
         before do
           3.times { ManagedServiceInstance.make(space: user.default_space) }
+
           @svc = ManagedServiceInstance.make(space: user.default_space)
+          service_broker = @svc.service.service_broker
+          uri = URI(service_broker.broker_url)
+          broker_url = uri.host + uri.path
+          stub_request(:delete, %r{https://#{service_broker.auth_username}:#{service_broker.auth_password}@#{broker_url}/v2/service_instances/#{guid_pattern}}).
+            to_return(status: 200, body: '{}')
           @num_instances_before = ManagedServiceInstance.count
         end
 
         describe 'with a valid name' do
           it 'should reduce the services count by 1' do
             delete "/services/#{@svc.name}", {}, headers_for(user)
-
             expect(last_response.status).to eq(200)
             expect(ManagedServiceInstance.count).to eq(@num_instances_before - 1)
           end
