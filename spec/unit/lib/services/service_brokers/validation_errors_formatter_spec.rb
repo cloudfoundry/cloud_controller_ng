@@ -4,7 +4,7 @@ module VCAP::Services::ServiceBrokers
   describe ValidationErrorsFormatter do
     describe '#format(validation_errors)' do
       let(:errors) { VCAP::Services::ValidationErrors.new }
-      let(:service_broker) { double(:service_broker) }
+      let(:service_broker) { instance_double(VCAP::CloudController::ServiceBroker) }
       let(:service_1) { V2::CatalogService.new(service_broker, 'name' => 'service-1') }
       let(:service_2) { V2::CatalogService.new(service_broker, 'name' => 'service-2') }
       let(:plan_123)  { V2::CatalogPlan.new(service_2, 'name' => 'plan-123') }

@@ -4,10 +4,10 @@ module VCAP::Services::ServiceBrokers
   describe ServiceBrokerRegistration do
     subject(:registration) { ServiceBrokerRegistration.new(broker, service_manager, services_event_repository) }
 
-    let(:client_manager) { double(:dashboard_manager, synchronize_clients_with_catalog: true, warnings: []) }
-    let(:catalog) { double(:catalog, valid?: true) }
-    let(:service_manager) { double(:service_manager, sync_services_and_plans: true, has_warnings?: false) }
-    let(:services_event_repository) { double(:services_event_repository) }
+    let(:client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager, synchronize_clients_with_catalog: true, warnings: []) }
+    let(:catalog) { instance_double(VCAP::Services::ServiceBrokers::V2::Catalog, valid?: true) }
+    let(:service_manager) { instance_double(VCAP::Services::ServiceBrokers::ServiceManager, sync_services_and_plans: true, has_warnings?: false) }
+    let(:services_event_repository) { instance_double(VCAP::CloudController::Repositories::Services::EventRepository) }
 
     describe 'initializing' do
       let(:broker) { VCAP::CloudController::ServiceBroker.make }
@@ -123,7 +123,7 @@ module VCAP::Services::ServiceBrokers
 
         context 'because the catalog has errors' do
           let(:errors) { double(:errors) }
-          let(:formatter) { double(:formatter, format: 'something bad happened') }
+          let(:formatter) { instance_double(VCAP::Services::ServiceBrokers::ValidationErrorsFormatter, format: 'something bad happened') }
           before do
             allow(catalog).to receive(:valid?).and_return(false)
             allow(catalog).to receive(:errors).and_return(errors)
@@ -198,7 +198,7 @@ module VCAP::Services::ServiceBrokers
           end
 
           let(:error_text) { 'something bad happened' }
-          let(:validation_errors) { double(:validation_errors) }
+          let(:validation_errors) { instance_double(VCAP::Services::ValidationErrors) }
 
           it 'raises a ServiceBrokerCatalogInvalid error' do
             expect { registration.create }.to raise_error(VCAP::Errors::ApiError, /#{error_text}/)
@@ -394,7 +394,7 @@ module VCAP::Services::ServiceBrokers
 
         context 'because the catalog has errors' do
           let(:errors) { double(:errors) }
-          let(:formatter) { double(:formatter, format: 'something bad happened') }
+          let(:formatter) { instance_double(VCAP::Services::ServiceBrokers::ValidationErrorsFormatter, format: 'something bad happened') }
           before do
             allow(catalog).to receive(:valid?).and_return(false)
             allow(catalog).to receive(:errors).and_return(errors)
@@ -470,7 +470,7 @@ module VCAP::Services::ServiceBrokers
           end
 
           let(:error_text) { 'something bad happened' }
-          let(:validation_errors) { double(:validation_errors) }
+          let(:validation_errors) { instance_double(VCAP::Services::ValidationErrors) }
 
           it 'raises a ServiceBrokerCatalogInvalid error' do
             expect { registration.update }.to raise_error(VCAP::Errors::ApiError, /#{error_text}/)

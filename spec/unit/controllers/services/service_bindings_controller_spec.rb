@@ -34,7 +34,7 @@ module VCAP::CloudController
       expect(app.needs_staging?).to eq(false)
     end
 
-    let(:broker_client) { double('broker client') }
+    let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
     before do
       allow(broker_client).to receive(:bind) do |binding|
@@ -349,7 +349,7 @@ module VCAP::CloudController
               allow(broker_client).to receive(:bind) do
                 uri = 'http://broker.url.com'
                 method = 'PUT'
-                response = double(:response, code: 409, body: '{}')
+                response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 409, body: '{}', message: 'Conflict')
                 raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict.new(uri, method, response)
               end
             end
@@ -371,7 +371,7 @@ module VCAP::CloudController
               allow(broker_client).to receive(:bind) do
                 uri = 'http://broker.url.com'
                 method = 'PUT'
-                response = double(:response, code: 500, body: '{"description": "ERROR MESSAGE HERE"}')
+                response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 500, body: '{"description": "ERROR MESSAGE HERE"}', message: 'Internal Server Error')
                 raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(uri, method, response)
               end
             end

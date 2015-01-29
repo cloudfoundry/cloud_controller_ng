@@ -11,7 +11,7 @@ module VCAP::CloudController
     before do
       allow(VCAP::CloudController::SecurityContext).to receive(:current_user_email) { email }
 
-      client = double('broker client', unbind: nil, deprovision: nil)
+      client = instance_double(VCAP::Services::ServiceBrokers::V2::Client, unbind: nil, deprovision: nil)
       allow_any_instance_of(Service).to receive(:client).and_return(client)
     end
 
