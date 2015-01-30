@@ -1,13 +1,13 @@
 Sequel.migration do
   up do
-    alter_table :service_instances do
-      set_column_type :name, String, size: 4095
+    alter_table :apps do
+      set_column_type :metadata, String, size: 4095, text: true
     end
   end
 
   down do
-    alter_table :service_instances do
-      set_column_type :name, String
+    alter_table :apps do
+      set_column_type :metadata, String
     end
   end
 end
