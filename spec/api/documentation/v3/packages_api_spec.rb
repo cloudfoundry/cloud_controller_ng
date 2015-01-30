@@ -328,6 +328,8 @@ resource 'Packages (Experimental)', type: :api do
     end
 
     example 'Stage a package' do
+      pending 'flaky'
+      fail 'fix me, im flaky'
       VCAP::CloudController::Dea::Client.dea_pool.register_subscriptions
       message_bus.publish('dea.advertise', advertisment)
       message_bus.publish('staging.advertise', advertisment)
