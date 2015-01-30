@@ -159,6 +159,17 @@ module VCAP::Services::ServiceBrokers::V2
         expect(error).to be_nil
       end
 
+      context 'when the broker returns 204 (No Content)' do
+        let(:code) { '204' }
+        let(:client) { Client.new(client_attrs) }
+
+        it 'throws ServiceBrokerResponseMalformed and initiates orphan mitigation' do
+          expect{ client.provision(instance) }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+
+          expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
+        end
+      end
+
       context 'when the broker returns no state or the state is created, or succeeded' do
         let(:response_data) do
           {
