@@ -530,7 +530,7 @@ module VCAP::CloudController
         before do
           stub_request(:patch, service_broker_url).
             with(headers: { 'Accept' => 'application/json' }).
-            to_return(status: 201, body: response_body, headers: { 'Content-Type' => 'application/json' })
+            to_return(status: 200, body: response_body, headers: { 'Content-Type' => 'application/json' })
         end
 
         it 'calls the service broker to update the plan' do
@@ -637,10 +637,10 @@ module VCAP::CloudController
         before do
           stub_request(:patch, service_broker_url).
             with(headers: { 'Accept' => 'application/json' }).
-            to_return(status: 404, body: response_body, headers: { 'Content-Type' => 'application/json' })
+            to_return(status: 422, body: response_body, headers: { 'Content-Type' => 'application/json' })
         end
 
-        it 'returns a CF-ServiceBrokerBadResponse' do
+        it 'returns a CF-ServiceBrokerRequestRejected' do
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
           expect(last_response.status).to eq 502
           expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerRequestRejected'
@@ -836,10 +836,11 @@ module VCAP::CloudController
           let(:body) { '{"description": "service broker error"}' }
           let(:status) { 409 }
 
-          it 'forwards the error message from the service broker' do
+          it 'it returns a CF-ServiceBrokerBadResponse error' do
             delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
 
-            expect(last_response.status).to eq 409
+            # expect(last_response.status).to eq 409  old handeling, check to make sure we don't do this anymore
+            expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
             expect(JSON.parse(last_response.body)['description']).to include 'service broker error'
           end
         end

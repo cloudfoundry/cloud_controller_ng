@@ -132,7 +132,7 @@ module VCAP::Services::ServiceBrokers::V2
           }
       })
 
-      @response_parser.parse(:put, path, response)
+      @response_parser.parse(:patch, path, response)
     end
 
     private

@@ -164,10 +164,10 @@ module VCAP::Services::ServiceBrokers::V2
         let(:code) { '204' }
         let(:client) { Client.new(client_attrs) }
 
-        it 'throws ServiceBrokerResponseMalformed and initiates orphan mitigation' do
+        it 'throws ServiceBrokerBadResponse and initiates orphan mitigation' do
           expect {
             client.provision(instance)
-          }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+          }.to raise_error(Errors::ServiceBrokerBadResponse)
 
           expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
         end
@@ -611,15 +611,6 @@ module VCAP::Services::ServiceBrokers::V2
             service_id: binding.service.broker_provided_id,
           }
               )
-      end
-
-      context 'DEPRECATED: the broker should not return 204, but we still support the case when it does' do
-        let(:code) { '204' }
-        let(:response_body) { 'invalid json' }
-
-        it 'does not break' do
-          expect { client.unbind(binding) }.to_not raise_error
-        end
       end
     end
 
