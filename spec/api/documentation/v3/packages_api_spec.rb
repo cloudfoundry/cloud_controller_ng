@@ -330,32 +330,32 @@ resource 'Packages (Experimental)', type: :api do
     example 'Stage a package' do
       pending 'flaky'
       fail 'fix me, im flaky'
-      VCAP::CloudController::Dea::Client.dea_pool.register_subscriptions
-      message_bus.publish('dea.advertise', advertisment)
-      message_bus.publish('staging.advertise', advertisment)
+      # VCAP::CloudController::Dea::Client.dea_pool.register_subscriptions
+      # message_bus.publish('dea.advertise', advertisment)
+      # message_bus.publish('staging.advertise', advertisment)
 
-      expect {
-        do_request_with_error_handling
-      }.to change { VCAP::CloudController::DropletModel.count }.by(1)
+      # expect {
+      #   do_request_with_error_handling
+      # }.to change { VCAP::CloudController::DropletModel.count }.by(1)
 
-      droplet = VCAP::CloudController::DropletModel.last
-      expected_response = {
-        'guid'              => droplet.guid,
-        'state'             => 'PENDING',
-        'hash'              => nil,
-        'buildpack_guid'    => nil,
-        'buildpack_git_url' => 'http://github.com/myorg/awesome-buildpack',
-        'created_at'        => droplet.created_at.as_json,
-        '_links'            => {
-          'self'    => { 'href' => "/v3/droplets/#{droplet.guid}" },
-          'package' => { 'href' => "/v3/packages/#{guid}" },
-        }
-      }
+      # droplet = VCAP::CloudController::DropletModel.last
+      # expected_response = {
+      #   'guid'              => droplet.guid,
+      #   'state'             => 'PENDING',
+      #   'hash'              => nil,
+      #   'buildpack_guid'    => nil,
+      #   'buildpack_git_url' => 'http://github.com/myorg/awesome-buildpack',
+      #   'created_at'        => droplet.created_at.as_json,
+      #   '_links'            => {
+      #     'self'    => { 'href' => "/v3/droplets/#{droplet.guid}" },
+      #     'package' => { 'href' => "/v3/packages/#{guid}" },
+      #   }
+      # }
 
-      expect(response_status).to eq(201)
+      # expect(response_status).to eq(201)
 
-      parsed_response = MultiJson.load(response_body)
-      expect(parsed_response).to eq(expected_response)
+      # parsed_response = MultiJson.load(response_body)
+      # expect(parsed_response).to eq(expected_response)
     end
   end
 end
