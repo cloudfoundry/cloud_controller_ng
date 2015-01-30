@@ -18,7 +18,12 @@ module VCAP::Services
 
           case code
           when 204
-            return nil # no body
+            # Matching only /v2/service_instances/:guid paths
+            if %r{/v2/service_instances/[[:alnum:]-]+\z}.match(path)
+              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
+            end
+
+            return nil
 
           when 200..299
             unless response_hash.is_a?(Hash)
