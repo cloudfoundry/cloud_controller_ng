@@ -1,7 +1,47 @@
 require 'spec_helper'
 require 'handlers/apps_handler'
-
 module VCAP::CloudController
+  describe AppsRepository do
+    def facet_filters_dataset
+      o1 = Organization.make
+      s1 = Space.make(organization: o1)
+      s2 = Space.make
+      s3 = Space.make
+      app1 = AppModel.make(space_guid: s1.guid)
+      app2 = AppModel.make(name: app1.name, space_guid: s2.guid)
+      AppModel.make(space_guid: s2.guid)
+      AppModel.make(name: app1.name, space_guid: s3.guid)
+      b = binding
+      b.eval("local_variables").reduce({}){|h,v| h[v] = b.local_variable_get(v); h }
+    end
+    it "filters by facets" do
+      ac = double(:ac, roles: double(:roles, admin?: true))
+      b = facet_filters_dataset
+      a = AppsRepository.new
+
+      apps = a.get_apps(ac, {'names' => [b[:app1].name], 'space_guids' => [b[:s1].guid, b[:s2].guid]})
+
+      expect(apps.map(&:guid)).to eq([b[:app1].guid, b[:app2].guid])
+    end
+    it  "filters by orgs" do
+      ac = double(:ac, roles: double(:roles, admin?: true))
+      b = facet_filters_dataset
+      a = AppsRepository.new
+
+      apps = a.get_apps(ac, {'organization_guids' => [b[:o1].guid]})
+
+      expect(apps.map(&:guid)).to eq([b[:app1].guid])
+    end
+    it  "filters by orgs" do
+      ac = double(:ac, roles: double(:roles, admin?: true))
+      b = facet_filters_dataset
+      a = AppsRepository.new
+
+      apps = a.get_apps(ac, {'guids' => [b[:app2].guid]})
+
+      expect(apps.map(&:guid)).to eq([b[:app2].guid])
+    end
+  end
   describe AppsHandler do
     let(:process_handler) { double(:process_handler) }
     let(:apps_handler) { described_class.new(process_handler) }

@@ -2,6 +2,29 @@ require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
 
 module VCAP::CloudController
+  class AppsRepository
+    def get_apps(access_context, facets)
+      dataset = nil
+      if access_context.roles.admin?
+        dataset = AppModel.dataset
+      else
+        dataset = AppModel.user_visible(access_context.user)
+      end
+      if facets['names']
+        dataset = dataset.where(name: facets['names'])
+      end
+      if facets['space_guids']
+        dataset = dataset.where(space_guid: facets['space_guids'])
+      end
+      if facets['organization_guids']
+        dataset = dataset.where(space_guid: Organization.where(guid: facets['organization_guids']).map(&:spaces).flatten.map(&:guid))
+      end
+      if facets['guids']
+        dataset = dataset.where(guid: facets['guids'])
+      end
+      dataset
+    end
+  end
   class AppCreateMessage
     attr_reader :name, :space_guid
     attr_accessor :error
@@ -50,9 +73,10 @@ module VCAP::CloudController
     class IncorrectProcessSpace < StandardError; end
     class IncorrectPackageSpace < StandardError; end
 
-    def initialize(process_handler, paginator=SequelPaginator.new)
+    def initialize(process_handler, paginator=SequelPaginator.new, apps_repository=AppsRepository.new)
       @process_handler = process_handler
       @paginator = paginator
+      @apps_repository = apps_repository
     end
 
     def show(guid, access_context)
@@ -61,13 +85,8 @@ module VCAP::CloudController
       app
     end
 
-    def list(pagination_options, access_context)
-      dataset = nil
-      if access_context.roles.admin?
-        dataset = AppModel.dataset
-      else
-        dataset = AppModel.user_visible(access_context.user)
-      end
+    def list(pagination_options, access_context, facets={})
+      dataset = @apps_repository.get_apps(access_context, facets)
 
       @paginator.get_page(dataset, pagination_options)
     end

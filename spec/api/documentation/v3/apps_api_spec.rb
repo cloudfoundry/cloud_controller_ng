@@ -17,6 +17,10 @@ resource 'Apps (Experimental)', type: :api do
   end
 
   get '/v3/apps' do
+    parameter :names, 'Names of apps to filter by'
+    parameter :space_guids, 'Spaces to filter by'
+    parameter :organization_guids, 'Organizations to filter by'
+    parameter :guids, 'App guids to filter by'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
 
@@ -74,6 +78,21 @@ resource 'Apps (Experimental)', type: :api do
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
       expect(parsed_response).to match(expected_response)
+    end
+
+    context "faceted search" do
+      let(:app_model5) { VCAP::CloudController::AppModel.make(name: name1, space_guid: VCAP::CloudController::Space.make.guid) }
+      let(:space_guids) { [app_model5.space_guid, space.guid] }
+      let(:per_page) { 10 }
+      let(:names) { name1 }
+      example 'Filters apps by name and spaces and guids and orgs' do
+        user.admin = true
+        user.save
+        do_request_with_error_handling
+        parsed_response = MultiJson.load(response_body)
+        expect(response_status).to eq(200)
+        expect(parsed_response["resources"].map{|r| r["name"] }).to eq(["my_app1", "my_app1"])
+      end
     end
   end
 

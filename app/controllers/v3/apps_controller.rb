@@ -16,7 +16,7 @@ module VCAP::CloudController
     get '/v3/apps', :list
     def list
       pagination_options = PaginationOptions.from_params(params)
-      paginated_result   = @app_handler.list(pagination_options, @access_context)
+      paginated_result   = @app_handler.list(pagination_options, @access_context, params.slice('guids', 'space_guids', 'organization_guids', 'names'))
 
       [HTTP::OK, @app_presenter.present_json_list(paginated_result)]
     end
