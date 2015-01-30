@@ -10,6 +10,7 @@ module VCAP::CloudController
       else
         dataset = AppModel.user_visible(access_context.user)
       end
+
       if facets['names']
         dataset = dataset.where(name: facets['names'])
       end
@@ -25,6 +26,7 @@ module VCAP::CloudController
       dataset
     end
   end
+
   class AppCreateMessage
     attr_reader :name, :space_guid
     attr_accessor :error

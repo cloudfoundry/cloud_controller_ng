@@ -2,46 +2,53 @@ require 'spec_helper'
 require 'handlers/apps_handler'
 module VCAP::CloudController
   describe AppsRepository do
-    def facet_filters_dataset
-      o1 = Organization.make
-      s1 = Space.make(organization: o1)
-      s2 = Space.make
-      s3 = Space.make
-      app1 = AppModel.make(space_guid: s1.guid)
-      app2 = AppModel.make(name: app1.name, space_guid: s2.guid)
-      AppModel.make(space_guid: s2.guid)
-      AppModel.make(name: app1.name, space_guid: s3.guid)
-      b = binding
-      b.eval("local_variables").reduce({}){|h,v| h[v] = b.local_variable_get(v); h }
+    let!(:app_2) { AppModel.make(name: app_1.name, space_guid: space_2.guid) }
+    let!(:app_1) { AppModel.make(space_guid: space_1.guid) }
+    let(:space_3) { Space.make }
+    let(:space_2) { Space.make }
+    let(:space_1) { Space.make(organization: organization_1) }
+    let(:organization_1) { Organization.make }
+
+    before do
+      AppModel.make(space_guid: space_2.guid)
+      AppModel.make(name: app_1.name, space_guid: space_3.guid)
     end
-    it "filters by facets" do
-      ac = double(:ac, roles: double(:roles, admin?: true))
-      b = facet_filters_dataset
-      a = AppsRepository.new
 
-      apps = a.get_apps(ac, {'names' => [b[:app1].name], 'space_guids' => [b[:s1].guid, b[:s2].guid]})
+    it 'filters by faccess_contextets' do
+      access_context = double(:access_context, roles: double(:roles, admin?: true))
+      apps_repository = AppsRepository.new
 
-      expect(apps.map(&:guid)).to eq([b[:app1].guid, b[:app2].guid])
+      apps = apps_repository.get_apps(access_context, {
+        'names' => [app_1.name],
+        'space_guids' => [space_1.guid, space_2.guid]
+      }).all
+
+      expect(apps).to eq([app_1, app_2])
     end
-    it  "filters by orgs" do
-      ac = double(:ac, roles: double(:roles, admin?: true))
-      b = facet_filters_dataset
-      a = AppsRepository.new
 
-      apps = a.get_apps(ac, {'organization_guids' => [b[:o1].guid]})
+    it 'filters by orgs' do
+      access_context = double(:access_context, roles: double(:roles, admin?: true))
+      apps_repository = AppsRepository.new
 
-      expect(apps.map(&:guid)).to eq([b[:app1].guid])
+      apps = apps_repository.get_apps(access_context, {
+        'organization_guids' => [organization_1.guid]
+      }).all
+
+      expect(apps).to eq([app_1])
     end
-    it  "filters by orgs" do
-      ac = double(:ac, roles: double(:roles, admin?: true))
-      b = facet_filters_dataset
-      a = AppsRepository.new
 
-      apps = a.get_apps(ac, {'guids' => [b[:app2].guid]})
+    it 'filters by orgs' do
+      access_context = double(:access_context, roles: double(:roles, admin?: true))
+      apps_repository = AppsRepository.new
 
-      expect(apps.map(&:guid)).to eq([b[:app2].guid])
+      apps = apps_repository.get_apps(access_context, {
+        'guids' => [app_2.guid]
+      }).all
+
+      expect(apps).to eq([app_2])
     end
   end
+
   describe AppsHandler do
     let(:process_handler) { double(:process_handler) }
     let(:apps_handler) { described_class.new(process_handler) }

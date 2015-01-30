@@ -80,7 +80,7 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to match(expected_response)
     end
 
-    context "faceted search" do
+    context 'faceted search' do
       let(:app_model5) { VCAP::CloudController::AppModel.make(name: name1, space_guid: VCAP::CloudController::Space.make.guid) }
       let(:space_guids) { [app_model5.space_guid, space.guid] }
       let(:per_page) { 10 }
@@ -91,7 +91,7 @@ resource 'Apps (Experimental)', type: :api do
         do_request_with_error_handling
         parsed_response = MultiJson.load(response_body)
         expect(response_status).to eq(200)
-        expect(parsed_response["resources"].map{|r| r["name"] }).to eq(["my_app1", "my_app1"])
+        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(['my_app1', 'my_app1'])
       end
     end
   end
