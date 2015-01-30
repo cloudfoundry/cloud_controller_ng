@@ -162,14 +162,12 @@ http {
       proxy_pass $download_url;
     }
 
-    <% if_p("cc.newrelic.license_key") do %>
     location /nginx_status {
       stub_status on;
-      access_log  /var/vcap/sys/log/nginx_newrelic_plugin/nginx_newrelic_plugin.access.log main;
+      access_log  /var/vcap/sys/log/nginx_cc/nginx_status.access.log main;
       allow 127.0.0.1;
       deny all;
     }
-    <% end %>
 
   }
 }
