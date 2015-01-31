@@ -547,53 +547,5 @@ module VCAP::CloudController
       end
     end
 
-    describe '#process_procfile' do
-      let(:processes_handler) { ProcessesHandler.new(ProcessRepository.new, Repositories::Runtime::AppEventRepository.new) }
-      let(:app_model) { AppModel.make }
-      let(:guid) { app_model.guid }
-      let(:procfile) do
-        {
-          web: 'thing',
-          other: 'stuff',
-        }
-      end
-
-      context 'when the user cannot update the app' do
-        before do
-          allow(access_context).to receive(:cannot?).and_return(true)
-        end
-
-        it 'raises Unauthorized' do
-          expect {
-            apps_handler.process_procfile(app_model, procfile, access_context)
-          }.to raise_error(AppsHandler::Unauthorized)
-          expect(access_context).to have_received(:cannot?).with(:update, app_model)
-        end
-      end
-
-      # context 'when the app already has a process with the same type' do
-      #   before do
-      #     existing_process = AppFactory.make(type: 'web', command: 'old')
-      #     app_model.add_process_by_guid(existing_process.guid)
-      #   end
-
-      #   it 'updates the process' do
-      #     apps_handler.process_procfile(app_model, procfile, access_context)
-      #     process = App.where(app_guid: guid, type: 'web')
-      #     expect(process.command).to eq('thing')
-      #   end
-      # end
-
-      context 'when a user can process procfiles' do
-        it 'adds the process' do
-          expect(app_model.processes.count).to eq(0)
-
-          apps_handler.process_procfile(app_model, procfile, access_context)
-
-          app_model.reload
-          expect(app_model.processes.count).to eq(2)
-        end
-      end
-    end
   end
 end

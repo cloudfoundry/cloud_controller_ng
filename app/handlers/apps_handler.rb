@@ -161,21 +161,6 @@ module VCAP::CloudController
       end
     end
 
-    def process_procfile(app, procfile, access_context)
-      raise Unauthorized if access_context.cannot?(:update, app)
-
-      base_message = { app_guid: app.guid, space_guid: app.space_guid }
-      app.db.transaction do
-        app.lock!
-
-        procfile.each do |(type, command)|
-          create_message = ProcessCreateMessage.new(base_message.merge(type: type, command: command))
-          process = @processes_handler.create(create_message, access_context)
-          add_process(app, process, access_context)
-        end
-      end
-    end
-
     def add_package(app, package, access_context)
       raise Unauthorized if access_context.cannot?(:update, app)
       raise IncorrectPackageSpace if app.space_guid != package.space_guid

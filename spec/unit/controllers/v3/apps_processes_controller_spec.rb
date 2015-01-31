@@ -7,6 +7,7 @@ module VCAP::CloudController
     let(:req_body) { '' }
     let(:params) { {} }
     let(:processes_handler) { double(:processes_handler) }
+    let(:procfile_handler) { double(:procfile_handler) }
     let(:process_presenter) { double(:process_presenter) }
     let(:apps_handler) { double(:apps_handler) }
     let(:app_model) { nil }
@@ -22,6 +23,7 @@ module VCAP::CloudController
           apps_handler:      apps_handler,
           processes_handler: processes_handler,
           process_presenter: process_presenter,
+          procfile_handler: procfile_handler,
         },
       )
     end
@@ -263,7 +265,7 @@ module VCAP::CloudController
       end
 
       before do
-        allow(apps_handler).to receive(:process_procfile)
+        allow(procfile_handler).to receive(:process_procfile)
         allow(processes_handler).to receive(:list)
       end
 
@@ -284,7 +286,7 @@ module VCAP::CloudController
 
       context 'when the user cannot update the app' do
         before do
-          allow(apps_handler).to receive(:process_procfile).and_raise(AppsHandler::Unauthorized)
+          allow(procfile_handler).to receive(:process_procfile).and_raise(ProcfileHandler::Unauthorized)
         end
 
         it 'returns a 404 ResourceNotFound error' do

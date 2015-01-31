@@ -165,6 +165,10 @@ module CloudController
       ProcessesHandler.new(process_repository, app_event_repository)
     end
 
+    def procfile_handler
+      ProcfileHandler.new(apps_handler, processes_handler)
+    end
+
     def process_presenter
       ProcessPresenter.new
     end
