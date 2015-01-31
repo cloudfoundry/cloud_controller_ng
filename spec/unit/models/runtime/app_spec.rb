@@ -944,18 +944,19 @@ module VCAP::CloudController
     end
 
     describe 'command' do
-      it 'stores the command in the metadata' do
+      it 'stores the command in its own column, not metadata' do
         app = AppFactory.make(command: 'foobar')
         expect(app.metadata).to eq('command' => 'foobar')
         app.save
         expect(app.metadata).to eq('command' => 'foobar')
         app.refresh
         expect(app.metadata).to eq('command' => 'foobar')
+        expect(app.command).to eq('foobar')
       end
 
       it 'saves the field as nil when initializing to empty string' do
         app = AppFactory.make(command: '')
-        expect(app.metadata).to eq('command' => nil)
+        expect(app.command).to eq(nil)
       end
 
       it 'saves the field as nil when overriding to empty string' do
@@ -963,7 +964,7 @@ module VCAP::CloudController
         app.command = ''
         app.save
         app.refresh
-        expect(app.metadata).to eq('command' => nil)
+        expect(app.command).to eq(nil)
       end
 
       it 'saves the field as nil when set to nil' do
@@ -971,7 +972,15 @@ module VCAP::CloudController
         app.command = nil
         app.save
         app.refresh
-        expect(app.metadata).to eq('command' => nil)
+        expect(app.command).to eq(nil)
+      end
+
+      it 'falls back to metadata value if command is not present' do
+        app = AppFactory.make(metadata: { command: 'echo hi' })
+        app.command = nil
+        app.save
+        app.refresh
+        expect(app.command).to eq('echo hi')
       end
     end
 

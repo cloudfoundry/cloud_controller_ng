@@ -5,6 +5,7 @@ module VCAP
         defaults = {
             droplet_hash: Sham.guid,
             package_hash: Sham.guid,
+            metadata: {},
         }
         attributes = defaults.merge(attributes)
 

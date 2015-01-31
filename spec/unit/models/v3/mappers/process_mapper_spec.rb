@@ -93,6 +93,21 @@ module VCAP::CloudController
           expect(model.type).to eq('worker')
         end
       end
+
+      context 'and metadata is nil' do
+        let(:valid_opts) do
+          {
+            'guid'                 => '1-2-3',
+            'space_guid'           => space.guid,
+            'stack_guid'           => stack.guid,
+          }
+        end
+
+        it 'defaults it to emtpy hash' do
+          model = ProcessMapper.map_domain_to_new_model(process)
+          expect(model.metadata).to eq({})
+        end
+      end
     end
 
     describe '.map_domain_to_existing_model' do

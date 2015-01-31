@@ -47,8 +47,9 @@ resource 'Apps (Experimental)', type: :api do
         },
         'resources'  => [
           {
-            'guid' => process_guid,
-            'type' => process_type,
+            'guid'    => process_guid,
+            'type'    => process_type,
+            'command' => nil,
           }
         ]
       }

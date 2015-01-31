@@ -28,6 +28,7 @@ module VCAP::CloudController
       {
         guid: process.guid,
         type: process.type,
+        command: process.command,
       }
     end
   end

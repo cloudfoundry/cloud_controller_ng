@@ -75,8 +75,8 @@ module VCAP::CloudController
     class IncorrectProcessSpace < StandardError; end
     class IncorrectPackageSpace < StandardError; end
 
-    def initialize(process_handler, paginator=SequelPaginator.new, apps_repository=AppsRepository.new)
-      @process_handler = process_handler
+    def initialize(processes_handler, paginator=SequelPaginator.new, apps_repository=AppsRepository.new)
+      @processes_handler = processes_handler
       @paginator = paginator
       @apps_repository = apps_repository
     end
@@ -161,6 +161,21 @@ module VCAP::CloudController
       end
     end
 
+    def process_procfile(app, procfile, access_context)
+      raise Unauthorized if access_context.cannot?(:update, app)
+
+      base_message = { app_guid: app.guid, space_guid: app.space_guid }
+      app.db.transaction do
+        app.lock!
+
+        procfile.each do |(type, command)|
+          create_message = ProcessCreateMessage.new(base_message.merge(type: type, command: command))
+          process = @processes_handler.create(create_message, access_context)
+          add_process(app, process, access_context)
+        end
+      end
+    end
+
     def add_package(app, package, access_context)
       raise Unauthorized if access_context.cannot?(:update, app)
       raise IncorrectPackageSpace if app.space_guid != package.space_guid
@@ -175,7 +190,7 @@ module VCAP::CloudController
     def update_web_process_name(process, name, access_context)
       opts = { 'name' => name }
       msg = ProcessUpdateMessage.new(process.guid, opts)
-      @process_handler.update(msg, access_context)
+      @processes_handler.update(msg, access_context)
     end
 
     def remove_process(app, process, access_context)

@@ -49,10 +49,12 @@ resource 'Processes (Experimental)', type: :api do
           {
             'guid'     => process1.guid,
             'type'     => process1.type,
+            'command'  => nil,
           },
           {
             'guid'     => process2.guid,
             'type'     => process2.type,
+            'command'  => nil,
           }
         ]
       }
@@ -79,6 +81,7 @@ resource 'Processes (Experimental)', type: :api do
       expected_response = {
         'guid'     => guid,
         'type'     => type,
+        'command'  => nil,
       }
 
       do_request_with_error_handling
@@ -146,8 +149,9 @@ resource 'Processes (Experimental)', type: :api do
 
     example 'Updating a Process' do
       expected_response = {
-        'guid' => guid,
-        'type' => type,
+        'guid'     => guid,
+        'type'     => type,
+        'command'  => 'X',
       }
       expect {
         do_request_with_error_handling
@@ -212,8 +216,9 @@ resource 'Processes (Experimental)', type: :api do
     context 'without a docker image' do
       example 'Create a Process' do
         expected_response = {
-          'guid' => /^[a-z0-9\-]+$/,
-          'type' => type,
+          'guid'    => /^[a-z0-9\-]+$/,
+          'type'    => type,
+          'command' => 'run me',
         }
         expect {
           do_request_with_error_handling
@@ -236,8 +241,9 @@ resource 'Processes (Experimental)', type: :api do
 
       example 'Create a Docker Process' do
         expected_response = {
-          'guid' => /^[a-z0-9\-]+$/,
-          'type' => type,
+          'guid'    => /^[a-z0-9\-]+$/,
+          'type'    => type,
+          'command' => 'run me',
         }
         expect {
           do_request_with_error_handling

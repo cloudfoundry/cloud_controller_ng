@@ -255,14 +255,19 @@ module VCAP::CloudController
       AppObserver.deleted(self)
     end
 
-    def command=(cmd)
-      self.metadata ||= {}
-      self.metadata['command'] = (cmd.nil? || cmd.empty?) ? nil : cmd
+    def metadata_with_command
+      result = metadata_without_command
+      result.merge!('command' => command) if command
+      result
     end
+    alias_method_chain :metadata, :command
 
-    def command
-      self.metadata && self.metadata['command']
+    def command_with_fallback
+      cmd = command_without_fallback
+      cmd = (cmd.nil? || cmd.empty?) ? nil : cmd
+      cmd || metadata_without_command && metadata_without_command['command']
     end
+    alias_method_chain :command, :fallback
 
     def execution_metadata
       (current_droplet && current_droplet.execution_metadata) || ''

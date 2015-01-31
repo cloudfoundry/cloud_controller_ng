@@ -50,6 +50,7 @@ module VCAP::CloudController
       attrs[:environment_json]     = domain.environment_json
       attrs[:docker_image]         = domain.docker_image if domain.docker_image
       attrs[:type]                 = domain.type
+      attrs[:metadata]             = {}
       attrs
     end
 

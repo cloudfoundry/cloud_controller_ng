@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:user) { User.make }
     let(:req_body) { '' }
     let(:params) { {} }
-    let(:process_handler) { double(:process_handler) }
+    let(:processes_handler) { double(:processes_handler) }
     let(:process_presenter) { double(:process_presenter) }
     let(:apps_handler) { double(:apps_handler) }
     let(:app_model) { nil }
@@ -20,7 +20,7 @@ module VCAP::CloudController
         nil,
         {
           apps_handler:      apps_handler,
-          processes_handler: process_handler,
+          processes_handler: processes_handler,
           process_presenter: process_presenter,
         },
       )
@@ -43,7 +43,7 @@ module VCAP::CloudController
       end
 
       before do
-        allow(process_handler).to receive(:show).and_return(process)
+        allow(processes_handler).to receive(:show).and_return(process)
         allow(apps_handler).to receive(:show).and_return(app_model)
         allow(apps_handler).to receive(:add_process).and_return(true)
       end
@@ -157,7 +157,7 @@ module VCAP::CloudController
 
       before do
         allow(apps_handler).to receive(:show).and_return(app_model)
-        allow(process_handler).to receive(:show).and_return(process)
+        allow(processes_handler).to receive(:show).and_return(process)
       end
 
       context 'when the process is added to the app' do
@@ -205,7 +205,7 @@ module VCAP::CloudController
 
       context 'when the process does not exist' do
         before do
-          allow(process_handler).to receive(:show).and_return(nil)
+          allow(processes_handler).to receive(:show).and_return(nil)
         end
 
         it 'returns a 404 Not Found' do
@@ -240,7 +240,7 @@ module VCAP::CloudController
 
         before do
           allow(process_presenter).to receive(:present_json_list).and_return(process_response)
-          allow(process_handler).to receive(:list).and_return(list_response)
+          allow(processes_handler).to receive(:list).and_return(list_response)
         end
 
         it 'returns a 200' do
@@ -251,6 +251,72 @@ module VCAP::CloudController
         it 'returns the processes' do
           _, response = controller.list_processes(guid)
           expect(response).to eq(process_response)
+        end
+      end
+    end
+
+    describe '#process_procfile' do
+      let(:app_model) { AppModel.make }
+      let(:guid) { app_model.guid }
+      let(:req_body) do
+        'clock: bundle spec clock'
+      end
+
+      before do
+        allow(apps_handler).to receive(:process_procfile)
+        allow(processes_handler).to receive(:list)
+      end
+
+      context 'when the app does not exist' do
+        before do
+          allow(apps_handler).to receive(:show).and_return(nil)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            controller.process_procfile(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the user cannot update the app' do
+        before do
+          allow(apps_handler).to receive(:process_procfile).and_raise(AppsHandler::Unauthorized)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            controller.process_procfile(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the request body is invalid Procfile' do
+        let(:req_body) { 'invalid procfile' }
+        before do
+          allow(Procfile).to receive(:load).and_raise(Procfile::ParseError)
+        end
+
+        it 'returns an 400 Bad Request' do
+          expect {
+            controller.process_procfile(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'MessageParseError'
+            expect(error.response_code).to eq 400
+          end
+        end
+      end
+
+      context 'when the process is added to the app' do
+        it 'returns a 200 OK' do
+          response_code, _ = controller.process_procfile(guid)
+          expect(response_code).to eq(200)
         end
       end
     end

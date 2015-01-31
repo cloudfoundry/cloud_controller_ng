@@ -50,9 +50,9 @@ module VCAP::CloudController
   end
 
   describe AppsHandler do
-    let(:process_handler) { double(:process_handler) }
-    let(:apps_handler) { described_class.new(process_handler) }
-    let(:access_context) { double(:access_context) }
+    let(:processes_handler) { double(:processes_handler) }
+    let(:apps_handler) { described_class.new(processes_handler) }
+    let(:access_context) { double(:access_context, user: User.make, user_email: 'jim@jim.com') }
 
     before do
       allow(access_context).to receive(:cannot?).and_return(false)
@@ -67,7 +67,7 @@ module VCAP::CloudController
       let(:per_page) { 1 }
       let(:pagination_options) { PaginationOptions.new(page, per_page) }
       let(:paginator) { double(:paginator) }
-      let(:apps_handler) { described_class.new(process_handler, paginator) }
+      let(:apps_handler) { described_class.new(processes_handler, paginator) }
       let(:roles) { double(:roles, admin?: admin_role) }
       let(:admin_role) { false }
 
@@ -271,7 +271,7 @@ module VCAP::CloudController
             allow(access_context).to receive(:user_email).and_return('email')
             apps_handler.add_process(app_model, process, access_context)
 
-            allow(process_handler).to receive(:update) do
+            allow(processes_handler).to receive(:update) do
               process.name = new_name
               process.save
             end
@@ -543,6 +543,55 @@ module VCAP::CloudController
           expect(app_model.packages.count).to eq(1)
           expect(app_model.packages.first.guid).to eq(package.guid)
           expect(added_package.app_guid).to eq(app_model.guid)
+        end
+      end
+    end
+
+    describe '#process_procfile' do
+      let(:processes_handler) { ProcessesHandler.new(ProcessRepository.new, Repositories::Runtime::AppEventRepository.new) }
+      let(:app_model) { AppModel.make }
+      let(:guid) { app_model.guid }
+      let(:procfile) do
+        {
+          web: 'thing',
+          other: 'stuff',
+        }
+      end
+
+      context 'when the user cannot update the app' do
+        before do
+          allow(access_context).to receive(:cannot?).and_return(true)
+        end
+
+        it 'raises Unauthorized' do
+          expect {
+            apps_handler.process_procfile(app_model, procfile, access_context)
+          }.to raise_error(AppsHandler::Unauthorized)
+          expect(access_context).to have_received(:cannot?).with(:update, app_model)
+        end
+      end
+
+      # context 'when the app already has a process with the same type' do
+      #   before do
+      #     existing_process = AppFactory.make(type: 'web', command: 'old')
+      #     app_model.add_process_by_guid(existing_process.guid)
+      #   end
+
+      #   it 'updates the process' do
+      #     apps_handler.process_procfile(app_model, procfile, access_context)
+      #     process = App.where(app_guid: guid, type: 'web')
+      #     expect(process.command).to eq('thing')
+      #   end
+      # end
+
+      context 'when a user can process procfiles' do
+        it 'adds the process' do
+          expect(app_model.processes.count).to eq(0)
+
+          apps_handler.process_procfile(app_model, procfile, access_context)
+
+          app_model.reload
+          expect(app_model.processes.count).to eq(2)
         end
       end
     end

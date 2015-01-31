@@ -6,7 +6,7 @@ module VCAP::CloudController
     describe '#present_json' do
       it 'presents the process as json' do
         process_model = AppFactory.make
-        process       = AppProcess.new(process_model)
+        process       = ProcessMapper.map_model_to_domain(process_model)
 
         json_result = ProcessPresenter.new.present_json(process)
         result      = MultiJson.load(json_result)
