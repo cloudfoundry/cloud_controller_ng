@@ -26,6 +26,7 @@ module VCAP::CloudController
         end
 
         it 'notifies Diego that the app needs staging' do
+          expect(app).to receive(:mark_for_restaging)
           expect(messenger).to receive(:send_stage_request).with(app, staging_config)
           stager.stage_app
         end
