@@ -164,7 +164,9 @@ module VCAP::Services::ServiceBrokers::V2
         let(:client) { Client.new(client_attrs) }
 
         it 'throws ServiceBrokerResponseMalformed and initiates orphan mitigation' do
-          expect{ client.provision(instance) }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+          expect {
+            client.provision(instance)
+          }.to raise_error(Errors::ServiceBrokerResponseMalformed)
 
           expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
         end
