@@ -85,6 +85,7 @@ module VCAP::Services::ServiceBrokers::V2
     describe '#provision' do
       let(:plan) { VCAP::CloudController::ServicePlan.make }
       let(:space) { VCAP::CloudController::Space.make }
+      let(:service_instance_operation) { VCAP::CloudController::ServiceInstanceOperation.make }
       let(:instance) do
         VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: plan,
@@ -107,6 +108,8 @@ module VCAP::Services::ServiceBrokers::V2
       before do
         allow(http_client).to receive(:put).and_return(response)
         allow(http_client).to receive(:delete).and_return(response)
+
+        instance.service_instance_operation = service_instance_operation
       end
 
       it 'makes a put request with correct path' do
@@ -132,8 +135,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'returns the attributes to update on a service instance' do
         attributes, error = client.provision(instance)
         # ensure updating attributes and saving to service instance works
-        instance.set_all(attributes)
-        instance.save
+        instance.save_with_new_operation(attributes)
 
         expect(instance.dashboard_url).to eq('foo')
         expect(error).to be_nil
@@ -142,14 +144,14 @@ module VCAP::Services::ServiceBrokers::V2
       it 'defaults the state to "succeeded"' do
         attributes, error = client.provision(instance)
 
-        expect(attributes[:state]).to eq('succeeded')
+        expect(attributes[:last_operation][:state]).to eq('succeeded')
         expect(error).to be_nil
       end
 
       it 'leaves the description blank' do
         attributes, error = client.provision(instance)
 
-        expect(attributes[:state_description]).to eq('')
+        expect(attributes[:last_operation][:description]).to eq('')
         expect(error).to be_nil
       end
 
@@ -176,6 +178,7 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the broker returns no state or the state is created, or succeeded' do
         let(:response_data) do
           {
+            'last_operation' => {}
           }
         end
 
@@ -183,8 +186,32 @@ module VCAP::Services::ServiceBrokers::V2
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
           attributes, error = client.provision(instance)
 
-          expect(attributes[:state]).to eq('succeeded')
-          expect(attributes[:state_description]).to eq('')
+          expect(attributes[:last_operation][:type]).to eq('create')
+          expect(attributes[:last_operation][:state]).to eq('succeeded')
+          expect(attributes[:last_operation][:description]).to eq('')
+          expect(error).to be_nil
+        end
+
+        it 'does not enqueue a polling job' do
+          client.provision(instance)
+          expect(state_poller).to_not have_received(:poll_service_instance_state)
+        end
+      end
+
+      context 'when the broker returns no description' do
+        let(:response_data) do
+          {
+            'last_operation' => { 'state' => 'succeeded' }
+          }
+        end
+
+        it 'return immediately with the broker response' do
+          client = Client.new(client_attrs.merge(accepts_incomplete: true))
+          attributes, error = client.provision(instance)
+
+          expect(attributes[:last_operation][:type]).to eq('create')
+          expect(attributes[:last_operation][:state]).to eq('succeeded')
+          expect(attributes[:last_operation][:description]).to eq('')
           expect(error).to be_nil
         end
 
@@ -199,8 +226,10 @@ module VCAP::Services::ServiceBrokers::V2
         let(:message) { 'Accepted' }
         let(:response_data) do
           {
-            state: 'in progress',
-            state_description: '10% done'
+            last_operation: {
+              state: 'in progress',
+              description: '10% done'
+            },
           }
         end
 
@@ -208,8 +237,9 @@ module VCAP::Services::ServiceBrokers::V2
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
           attributes, error = client.provision(instance)
 
-          expect(attributes[:state]).to eq('in progress')
-          expect(attributes[:state_description]).to eq('10% done')
+          expect(attributes[:last_operation][:type]).to eq('create')
+          expect(attributes[:last_operation][:state]).to eq('in progress')
+          expect(attributes[:last_operation][:description]).to eq('10% done')
           expect(error).to be_nil
         end
 
@@ -224,7 +254,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:message) { 'Failed' }
         let(:response_data) do
           {
-            state_description: '100% failed'
+            description: '100% failed'
           }
         end
 
@@ -232,8 +262,9 @@ module VCAP::Services::ServiceBrokers::V2
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
           attributes, error = client.provision(instance)
 
-          expect(attributes[:state]).to eq('failed')
-          expect(attributes[:state_description]).to eq('100% failed')
+          expect(attributes[:last_operation][:type]).to eq('create')
+          expect(attributes[:last_operation][:state]).to eq('failed')
+          expect(attributes[:last_operation][:description]).to eq('100% failed')
           expect(error).to be_a(Errors::ServiceBrokerRequestRejected)
         end
 
@@ -328,8 +359,10 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_data) do
         {
           'dashboard_url' => 'bar',
-          'state' => 'succeeded',
-          'state_description' => '100% created'
+          'last_operation' => {
+            'state' => 'succeeded',
+            'description' => '100% created'
+          }
         }
       end
 
@@ -353,7 +386,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'returns the attributes to update the service instance model' do
         attrs = client.fetch_service_instance_state(instance)
         expected_attrs = response_data.symbolize_keys
-
+        expected_attrs[:last_operation] = response_data['last_operation'].symbolize_keys
         expect(attrs).to eq(expected_attrs)
       end
     end

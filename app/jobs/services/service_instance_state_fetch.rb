@@ -18,11 +18,7 @@ module VCAP::CloudController
           begin
             attrs = client.fetch_service_instance_state(service_instance)
 
-            ServiceInstance.db.transaction do
-              service_instance.lock!
-              service_instance.set_all(attrs)
-              service_instance.save
-            end
+            service_instance.update_state(attrs)
 
             if !service_instance.terminal_state?
               poller.poll_service_instance_state(client_attrs, service_instance)

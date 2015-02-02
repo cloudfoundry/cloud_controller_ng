@@ -31,8 +31,10 @@ module VCAP::Services
               let(:body) do
                 {
                   dashboard_url: 'url.com/dashboard',
-                  state: state,
-                  state_description: 'description'
+                  last_operation: {
+                    state: state,
+                    description: 'description',
+                  },
                 }.to_json
               end
 
@@ -41,8 +43,10 @@ module VCAP::Services
                 it 'returns response_hash' do
                   expect(parsed_response).to eq({
                     'dashboard_url' => 'url.com/dashboard',
-                    'state' => 'succeeded',
-                    'state_description' => 'description'
+                    'last_operation' => {
+                      'state' => 'succeeded',
+                      'description' => 'description',
+                    },
                   })
                 end
               end
@@ -52,8 +56,10 @@ module VCAP::Services
                 it 'returns response_hash' do
                   expect(parsed_response).to eq({
                     'dashboard_url' => 'url.com/dashboard',
-                    'state' => nil,
-                    'state_description' => 'description'
+                    'last_operation' => {
+                      'state' => nil,
+                      'description' => 'description',
+                    },
                   })
                 end
               end
@@ -63,8 +69,10 @@ module VCAP::Services
                 it 'returns response_hash' do
                   expect(parsed_response).to eq({
                     'dashboard_url' => 'url.com/dashboard',
-                    'state' => nil,
-                    'state_description' => 'description'
+                    'last_operation' => {
+                      'state' => nil,
+                      'description' => 'description',
+                    },
                   })
                 end
               end
@@ -74,8 +82,10 @@ module VCAP::Services
                 it 'returns response_hash' do
                   expect(parsed_response).to eq({
                     'dashboard_url' => 'url.com/dashboard',
-                    'state' => 'failed',
-                    'state_description' => 'description'
+                    'last_operation' => {
+                      'state' => 'failed',
+                      'description' => 'description',
+                    },
                   })
                 end
               end
@@ -91,7 +101,7 @@ module VCAP::Services
                 let(:path) { '/v2/service_instances/guid/service_bindings/some-other-guid' }
                 let(:state) { 'succeeded' }
 
-                it 'does not propogate a state or state_description fields if it is present' do
+                it 'does not propogate a state or description fields if it is present' do
                   expect(parsed_response).to eq({
                     'dashboard_url' => 'url.com/dashboard',
                   })
@@ -104,8 +114,10 @@ module VCAP::Services
               let(:body) do
                 {
                   dashboard_url: 'url.com/dashboard',
-                  state: state,
-                  state_description: 'description'
+                  last_operation: {
+                    state: state,
+                    description: 'description',
+                  },
                 }.to_json
               end
 
@@ -115,8 +127,10 @@ module VCAP::Services
                 it 'returns response_hash' do
                   expect(parsed_response).to eq({
                     'dashboard_url' => 'url.com/dashboard',
-                    'state' => 'in progress',
-                    'state_description' => 'description'
+                    'last_operation' => {
+                      'state' => 'in progress',
+                      'description' => 'description',
+                    },
                   })
                 end
               end
@@ -156,8 +170,10 @@ module VCAP::Services
               let(:body) do
                 {
                   dashboard_url: 'url.com/dashboard',
-                  state: state,
-                  state_description: 'description'
+                  last_operation: {
+                    state: state,
+                    description: 'description',
+                  },
                 }.to_json
               end
 
@@ -166,8 +182,10 @@ module VCAP::Services
                 it 'returns response_hash' do
                   expect(parsed_response).to eq({
                     'dashboard_url' => 'url.com/dashboard',
-                    'state' => 'succeeded',
-                    'state_description' => 'description'
+                    'last_operation' => {
+                      'state' => 'succeeded',
+                      'description' => 'description',
+                    },
                   })
                 end
               end
@@ -177,8 +195,10 @@ module VCAP::Services
                 it 'returns response_hash' do
                   expect(parsed_response).to eq({
                     'dashboard_url' => 'url.com/dashboard',
-                    'state' => nil,
-                    'state_description' => 'description'
+                    'last_operation' => {
+                      'state' => nil,
+                      'description' => 'description',
+                    },
                   })
                 end
               end
@@ -211,7 +231,7 @@ module VCAP::Services
                 let(:state) { 'whatever' }
                 let(:path) { '/v2/service_instances/guid/service_bindings/some-other-guid' }
 
-                it 'does not propagade state and state_description fields' do
+                it 'does not propagade state and description fields' do
                   expect(parsed_response).to eq({
                     'dashboard_url' => 'url.com/dashboard',
                   })
@@ -249,13 +269,15 @@ module VCAP::Services
               let(:body) do
                 {
                   dashboard_url: 'url.com/dashboard',
-                  state: state,
-                  state_description: 'description'
+                  last_operation: {
+                    state: state,
+                    description: 'description',
+                  },
                 }.to_json
               end
 
               context 'and the state is `succeeded`' do
-                let(:state) { :succeeded }
+                let(:state) { 'succeeded' }
 
                 it 'should raise ServiceBrokerBadResponse error' do
                   expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
@@ -263,7 +285,7 @@ module VCAP::Services
               end
 
               context 'and the state is `failed`' do
-                let(:state) { :failed }
+                let(:state) { 'failed' }
 
                 it 'should raise ServiceBrokerBadResponse error' do
                   expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
@@ -276,8 +298,10 @@ module VCAP::Services
                 it 'should return the response_hash' do
                   expect(parsed_response).to eq({
                     'dashboard_url' => 'url.com/dashboard',
-                    'state' => 'in progress',
-                    'state_description' => 'description'
+                    'last_operation' => {
+                      'state' => 'in progress',
+                      'description' => 'description',
+                    },
                   })
                 end
               end

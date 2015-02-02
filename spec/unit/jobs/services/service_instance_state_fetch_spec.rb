@@ -5,9 +5,28 @@ module VCAP::CloudController
     module Services
       describe ServiceInstanceStateFetch do
         let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(state: 'unset') }
+        let(:service_instance) do
+          operation = ServiceInstanceOperation.make
+          operation.save
+          service_instance = ManagedServiceInstance.make
+          service_instance.save
+
+          service_instance.service_instance_operation = operation
+          service_instance
+        end
 
         let(:name) { 'fake-name' }
+
+        let(:response) do
+          {
+            dashboard_url: 'url.com/dashboard',
+            last_operation: {
+              type: 'should-not-change',
+              state: state,
+              description: 'the description'
+            },
+          }
+        end
 
         subject(:job) do
           VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
@@ -21,17 +40,24 @@ module VCAP::CloudController
           end
 
           context 'when all operations succeed and the state is `succeeded`' do
+            let(:state) { 'succeeded' }
             before do
-              allow(client).to receive(:fetch_service_instance_state).
-                and_return(state: 'succeeded', dashboard_url: 'my-dash')
+              allow(client).to receive(:fetch_service_instance_state).and_return(response)
             end
 
             it 'fetches and updates the service instance state' do
               job.perform
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
-              expect(db_service_instance.state).to eq('succeeded')
-              expect(db_service_instance.dashboard_url).to eq('my-dash')
+              expect(db_service_instance.last_operation.state).to eq('succeeded')
+              expect(db_service_instance.dashboard_url).to eq('url.com/dashboard')
+            end
+
+            it 'does not change the type field because of the broker' do
+              job.perform
+
+              db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
+              expect(db_service_instance.last_operation.type).to eq('create')
             end
 
             it 'should not enqueue another fetch job' do
@@ -42,16 +68,16 @@ module VCAP::CloudController
           end
 
           context 'when the state is `failed`' do
+            let(:state) { 'failed' }
             before do
-              allow(client).to receive(:fetch_service_instance_state).
-                and_return(state: 'failed')
+              allow(client).to receive(:fetch_service_instance_state).and_return(response)
             end
 
             it 'fetches and updates the service instance state' do
               job.perform
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
-              expect(db_service_instance.state).to eq('failed')
+              expect(db_service_instance.last_operation.state).to eq('failed')
             end
 
             it 'should not enqueue another fetch job' do
@@ -61,17 +87,17 @@ module VCAP::CloudController
             end
           end
 
-          context 'when all operations succeed, but the state is not `succeeded`' do
+          context 'when all operations succeed, but the state is `in progress`' do
+            let(:state) { 'in progress' }
             before do
-              allow(client).to receive(:fetch_service_instance_state).
-                and_return(state: 'in progress')
+              allow(client).to receive(:fetch_service_instance_state).and_return(response)
             end
 
             it 'fetches and updates the service instance state' do
               job.perform
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
-              expect(db_service_instance.state).to eq('in progress')
+              expect(db_service_instance.last_operation.state).to eq('in progress')
             end
 
             it 'should enqueue another fetch job' do
@@ -83,9 +109,9 @@ module VCAP::CloudController
           end
 
           context 'when saving to the database fails' do
+            let(:state) { 'in progress' }
             before do
-              allow(client).to receive(:fetch_service_instance_state).
-                and_return(state: 'in progress')
+              allow(client).to receive(:fetch_service_instance_state).and_return(response)
               allow(service_instance).to receive(:save) do |instance|
                 raise Sequel::Error.new(instance)
               end

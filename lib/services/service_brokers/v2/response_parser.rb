@@ -26,7 +26,7 @@ module VCAP::Services
 
         def parse_get_response(code, uri, response)
           response_hash = parse_response(uri, :get, response)
-          state = response_hash['state']
+          state = state_from_response_hash(response_hash)
           case code
           when 200
             return response_hash if recogized_operation_state?(state)
@@ -38,18 +38,23 @@ module VCAP::Services
 
         def parse_put_response(code, uri, response)
           response_hash = parse_response(uri, :put, response)
+          state = state_from_response_hash(response_hash)
+
           case code
           when 200
-            response_hash.except!('state', 'state_description') if request_for_bindings?(uri)
-            return response_hash if recogized_operation_state?(response_hash['state'])
+            response_hash.except!('last_operation') if request_for_bindings?(uri)
+            return response_hash if recogized_operation_state?(state)
             raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, :put, response)
           when 201
-            response_hash.except!('state', 'state_description') if request_for_bindings?(uri)
-            return response_hash if ['succeeded', nil].include?(response_hash['state'])
+            if request_for_bindings?(uri)
+              response_hash.except!('last_operation')
+              return response_hash
+            end
+            return response_hash if ['succeeded', nil].include?(state)
             raise Errors::ServiceBrokerBadResponse.new(uri.to_s, :put, response)
           when 202
             raise Errors::ServiceBrokerBadResponse.new(uri.to_s, :put, response) if request_for_bindings?(uri)
-            return response_hash if response_hash['state'] == 'in progress'
+            return response_hash if state == 'in progress'
             raise Errors::ServiceBrokerBadResponse.new(uri.to_s, :put, response)
           when 409
             raise Errors::ServiceBrokerConflict.new(uri.to_s, :put, response)
@@ -84,6 +89,11 @@ module VCAP::Services
         end
 
         private
+
+        def state_from_response_hash(response_hash)
+          last_operation = response_hash['last_operation'] || {}
+          last_operation['state']
+        end
 
         def parse_response(uri, method, response)
           begin

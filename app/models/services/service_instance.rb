@@ -16,7 +16,10 @@ module VCAP::CloudController
              klazz == VCAP::CloudController::ManagedServiceInstance
            }
 
+    one_to_one :service_instance_operation
+
     one_to_many :service_bindings, before_add: :validate_service_binding
+
     many_to_one :space, after_set: :validate_space
 
     many_to_one :service_plan_sti_eager_load,
@@ -82,8 +85,6 @@ module VCAP::CloudController
         'guid' => guid,
         'name' => name,
         'bound_app_count' => service_bindings_dataset.count,
-        'state' => state,
-        'state_description' => state_description,
       }
     end
 

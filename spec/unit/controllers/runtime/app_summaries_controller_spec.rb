@@ -26,6 +26,11 @@ module VCAP::CloudController
 
       @num_services.times do
         instance = ManagedServiceInstance.make(space: @space)
+        instance.service_instance_operation = ServiceInstanceOperation.make(
+          type: 'create',
+          state: 'in progress',
+          description: 'description goes here'
+        )
         @services << instance
         ServiceBinding.make(app: @app, service_instance: instance)
       end
@@ -103,13 +108,11 @@ module VCAP::CloudController
           svc_resp = decoded_response['services'][0]
           svc = @services.find { |s| s.guid == svc_resp['guid'] }
 
-          expect(svc_resp).to eq({
+          expect(svc_resp).to include({
             'guid' => svc.guid,
             'name' => svc.name,
             'bound_app_count' => 1,
             'dashboard_url' => svc.dashboard_url,
-            'state' => 'in progress',
-            'state_description' => 'state_description goes here',
             'service_plan' => {
               'guid' => svc.service_plan.guid,
               'name' => svc.service_plan.name,
@@ -121,6 +124,14 @@ module VCAP::CloudController
               }
             }
           })
+
+          expect(svc_resp['last_operation']).to include({
+            'type' => 'create',
+            'state' => 'in progress',
+            'description' => 'description goes here',
+          })
+
+          expect(svc_resp['last_operation']['updated_at']).to be
         end
       end
 

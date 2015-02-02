@@ -31,42 +31,42 @@ describe 'Service Broker API integration' do
         let(:broker_response_status) { 400 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(502)
+          expect(last_response).to have_status_code(502)
         end
       end
       context 'when broker returns 401' do
         let(:broker_response_status) { 401 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(502)
+          expect(last_response).to have_status_code(502)
         end
       end
       context 'when broker returns 403' do
         let(:broker_response_status) { 403 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(502)
+          expect(last_response).to have_status_code(502)
         end
       end
       context 'when broker returns 422' do
         let(:broker_response_status) { 422 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(502)
+          expect(last_response).to have_status_code(502)
         end
       end
       context 'when broker returns 502' do
         let(:broker_response_status) { 502 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(502)
+          expect(last_response).to have_status_code(502)
         end
       end
       context 'when broker returns 500' do
         let(:broker_response_status) { 500 }
 
         it 'returns an error to the user' do
-          expect(last_response.status).to eq(502)
+          expect(last_response).to have_status_code(502)
         end
       end
     end
@@ -108,7 +108,7 @@ describe 'Service Broker API integration' do
           include_examples 'broker errors'
 
           it 'handles the broker response' do
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_status_code(201)
           end
         end
 
@@ -129,7 +129,7 @@ describe 'Service Broker API integration' do
           include_examples 'broker errors'
 
           it 'handles the broker response' do
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_status_code(200)
           end
         end
       end
@@ -189,7 +189,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_body) { '{}' }
 
           it 'handles the broker response' do
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_status_code(201)
           end
         end
 
@@ -197,7 +197,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_body) { '{"dashboard_url": "http://mongomgmthost/databases/9189kdfsk0vfnku?access_token=3hjdsnqadw487232lp"}' }
 
           it 'handles the broker response' do
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_status_code(201)
           end
         end
 
@@ -209,7 +209,7 @@ describe 'Service Broker API integration' do
           end
 
           it 'responds to user with 409' do
-            expect(last_response.status).to eq(409)
+            expect(last_response).to have_status_code(409)
           end
         end
       end
@@ -283,7 +283,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 200 }
 
           it 'responds to user with 201' do
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_status_code(201)
           end
         end
 
@@ -291,7 +291,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 201 }
 
           it 'responds to user with 201' do
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_status_code(201)
           end
         end
 
@@ -299,7 +299,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 409 }
 
           it 'responds to user with 409' do
-            expect(last_response.status).to eq(409)
+            expect(last_response).to have_status_code(409)
           end
         end
 
@@ -307,7 +307,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_body) { {}.to_json }
 
           it 'responds to user with 201' do
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_status_code(201)
           end
         end
       end
@@ -355,7 +355,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 200 }
 
           it 'returns a 204 response to user' do
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_status_code(204)
           end
         end
 
@@ -363,7 +363,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 410 }
 
           it 'returns a 204 response to user' do
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_status_code(204)
           end
         end
 
@@ -371,7 +371,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 411 }
 
           it 'returns a 502 response to user' do
-            expect(last_response.status).to eq(502)
+            expect(last_response).to have_status_code(502)
           end
         end
       end
@@ -413,7 +413,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 200 }
 
           it 'returns a 204 response to user' do
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_status_code(204)
           end
         end
 
@@ -421,7 +421,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 410 }
 
           it 'returns a 204 response to user' do
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_status_code(204)
           end
         end
 
@@ -429,7 +429,7 @@ describe 'Service Broker API integration' do
           let(:broker_response_status) { 411 }
 
           it 'returns a 502 response to user' do
-            expect(last_response.status).to eq(502)
+            expect(last_response).to have_status_code(502)
           end
         end
       end

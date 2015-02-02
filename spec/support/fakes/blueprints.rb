@@ -131,17 +131,15 @@ module VCAP::CloudController
     name              { Sham.name }
     credentials       { Sham.service_credentials }
     space             { Space.make }
-    state             { 'in progress' }
-    state_description { 'state_description goes here' }
   end
 
   ManagedServiceInstance.blueprint do
-    is_gateway_service { true }
-    name              { Sham.name }
-    credentials       { Sham.service_credentials }
-    space             { Space.make }
-    service_plan      { ServicePlan.make(:v2) }
-    gateway_name      { Sham.guid }
+    is_gateway_service         { true }
+    name                       { Sham.name }
+    credentials                { Sham.service_credentials }
+    space                      { Space.make }
+    service_plan               { ServicePlan.make(:v2) }
+    gateway_name               { Sham.guid }
   end
 
   ManagedServiceInstance.blueprint(:v1) do
@@ -162,6 +160,13 @@ module VCAP::CloudController
     syslog_drain_url  { Sham.url }
     space             { Space.make }
     is_gateway_service { false }
+  end
+
+  ServiceInstanceOperation.blueprint do
+    type                      { 'create' }
+    state                     { 'in progress' }
+    description               { 'description goes here' }
+    updated_at                { Time.now.utc }
   end
 
   Stack.blueprint do

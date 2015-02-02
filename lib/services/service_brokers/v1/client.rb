@@ -31,6 +31,11 @@ module VCAP::Services
         gateway_data: response.fetch('configuration'),
         credentials: response.fetch('credentials'),
         dashboard_url: response.fetch('dashboard_url', nil),
+        last_operation: {
+          type: 'create',
+          state: 'succeeded',
+          description: ''
+        }
       }
     rescue HttpResponseError => e
       if e.source.is_a?(Hash) && e.source['code'] == 33106

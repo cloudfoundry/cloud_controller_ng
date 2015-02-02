@@ -156,8 +156,6 @@ module VCAP::CloudController
         instance = VCAP::CloudController::ServiceInstance.make(
           guid: 'ABCDEFG12',
           name: 'Random-Number-Service',
-          state: 'in progress',
-          state_description: '50% all the time'
         )
         VCAP::CloudController::ServiceBinding.make(service_instance: instance)
 
@@ -165,8 +163,6 @@ module VCAP::CloudController
           'guid' => 'ABCDEFG12',
           'name' => 'Random-Number-Service',
           'bound_app_count' => 1,
-          'state' => 'in progress',
-          'state_description' => '50% all the time',
         })
       end
     end

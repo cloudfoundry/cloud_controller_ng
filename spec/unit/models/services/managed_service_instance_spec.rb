@@ -63,7 +63,7 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type, :state, :state_description }
+      it { is_expected.to export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type, :last_operation }
       it { is_expected.to import_attributes :name, :service_plan_guid, :space_guid, :gateway_data }
     end
 
@@ -88,6 +88,25 @@ module VCAP::CloudController
       end
     end
 
+    describe '#save_with_new_operation' do
+      it 'also creates a last_operation object and assoicates it with the service instance' do
+        service_instance = ManagedServiceInstance.make
+        attrs = {
+          last_operation: {
+            state: 'in progress',
+            description: '10%'
+          },
+          dashboard_url: 'a-different-url.com'
+        }
+        service_instance.save_with_new_operation(attrs)
+
+        service_instance.reload
+        expect(service_instance.dashboard_url).to eq 'a-different-url.com'
+        expect(service_instance.last_operation.state).to eq 'in progress'
+        expect(service_instance.last_operation.description).to eq '10%'
+      end
+    end
+
     describe '#delete' do
       it 'creates a DELETED service usage event' do
         instance = described_class.make
@@ -98,6 +117,16 @@ module VCAP::CloudController
         expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(2)
         expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(instance)
+      end
+
+      it 'cascade deletes all ServiceInstanceOperations for this instance' do
+        last_operation = ServiceInstanceOperation.make
+        service_instance.service_instance_operation = last_operation
+
+        service_instance.destroy
+
+        expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+        expect(ServiceInstanceOperation.find(guid: last_operation.guid)).to be_nil
       end
     end
 
@@ -142,18 +171,25 @@ module VCAP::CloudController
     describe '#as_summary_json' do
       let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ', provider: 'Bill Gates', version: '1.2.3') }
       let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service) }
-      subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, state: 'in progress', state_description: 'its happening!!') }
+      subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
 
       it 'returns detailed summary' do
+        updated_at_time = Time.now.utc
+        last_operation = ServiceInstanceOperation.make(
+          state: 'in progress',
+          description: '50% all the time',
+          type: 'create',
+          updated_at: updated_at_time
+        )
+        service_instance.service_instance_operation = last_operation
+
         service_instance.dashboard_url = 'http://dashboard.example.com'
 
-        expect(service_instance.as_summary_json).to eq({
+        expect(service_instance.as_summary_json).to include({
           'guid' => subject.guid,
           'name' => subject.name,
           'bound_app_count' => 0,
           'dashboard_url' => 'http://dashboard.example.com',
-          'state' => 'in progress',
-          'state_description' => 'its happening!!',
           'service_plan' => {
             'guid' => '12763abc',
             'name' => 'Gold Plan',
@@ -165,6 +201,22 @@ module VCAP::CloudController
             }
           }
         })
+
+        expect(service_instance.as_summary_json['last_operation']).to include(
+          {
+            'state' => 'in progress',
+            'description' => '50% all the time',
+            'type' => 'create',
+          }
+        )
+
+        expect(service_instance.as_summary_json['last_operation']['updated_at']).to be_within(1.second).of updated_at_time
+      end
+
+      context 'when the last_operation does not exist' do
+        it 'sets the field to nil' do
+          expect(service_instance.as_summary_json['last_operation']).to be_nil
+        end
       end
     end
 
@@ -407,19 +459,52 @@ module VCAP::CloudController
     end
 
     describe '#terminal_state?' do
+      def build_instance_with_op_state(state)
+        last_operation = ServiceInstanceOperation.make(state: state)
+        instance = ManagedServiceInstance.make
+        instance.service_instance_operation = last_operation
+        instance
+      end
+
       it 'returns true when state is `succeeded`' do
-        instance = ManagedServiceInstance.make(state: 'succeeded')
+        instance = build_instance_with_op_state('succeeded')
         expect(instance.terminal_state?).to be true
       end
 
       it 'returns true when state is `failed`' do
-        instance = ManagedServiceInstance.make(state: 'failed')
+        instance = build_instance_with_op_state('failed')
         expect(instance.terminal_state?).to be true
       end
 
       it 'returns false otherwise' do
-        instance = ManagedServiceInstance.make(state: 'other')
+        instance = build_instance_with_op_state('other')
         expect(instance.terminal_state?).to be false
+      end
+    end
+
+    describe '#to_hash' do
+      let(:opts)            { { attrs: [:credentials] } }
+      let(:developer)       { make_developer_for_space(service_instance.space) }
+      let(:auditor)         { make_auditor_for_space(service_instance.space) }
+      let(:user)            { make_user_for_space(service_instance.space) }
+
+      it 'includes the last operation hash' do
+        updated_at_time = Time.now.utc
+        last_operation = ServiceInstanceOperation.make(
+          state: 'in progress',
+          description: '50% all the time',
+          type: 'create',
+          updated_at: updated_at_time
+        )
+
+        service_instance.service_instance_operation = last_operation
+        expect(service_instance.to_hash['last_operation']).to include({
+          'state' => 'in progress',
+          'description' => '50% all the time',
+          'type' => 'create',
+        })
+
+        expect(service_instance.to_hash['last_operation']['updated_at']).to be_within(0.1).of(updated_at_time)
       end
     end
   end

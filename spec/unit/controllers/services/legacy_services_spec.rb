@@ -105,11 +105,22 @@ module VCAP::CloudController
             post '/services', MultiJson.dump(@req), json_headers(headers_for(user))
           end
 
-          it 'should add the servicew the default app space' do
+          it 'should add the service the default app space' do
             expect(last_response.status).to eq(200)
             svc = user.default_space.service_instances.find(name: 'instance_name')
             expect(svc).not_to be_nil
             expect(ManagedServiceInstance.count).to eq(@num_instances_before + 1)
+          end
+
+          it 'sets the last operation' do
+            expect(last_response.status).to eq(200)
+            svc = user.default_space.service_instances.select { |instance| instance.name == 'instance_name' }.first
+            op_state = svc.last_operation
+
+            expect(op_state.type).to eq 'create'
+            expect(op_state.state).to eq 'succeeded'
+            expect(op_state.description).to eq ''
+            expect(op_state.updated_at).not_to be_nil
           end
         end
 

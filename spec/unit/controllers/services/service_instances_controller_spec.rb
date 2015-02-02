@@ -194,7 +194,15 @@ module VCAP::CloudController
         let(:space) { Space.make }
         let(:plan) { ServicePlan.make(:v2, service: service) }
         let(:developer) { make_developer_for_space(space) }
-        let(:response_body) { MultiJson.dump(dashboard_url: 'the dashboard_url', state: 'in progress', state_description: '') }
+        let(:response_body) do
+          MultiJson.dump(
+            dashboard_url: 'the dashboard_url',
+            last_operation: {
+              state: 'in progress',
+              description: '',
+            },
+          )
+        end
 
         def stub_delete_and_return(status, body)
           stub_request(:delete, service_broker_url_regex).
@@ -217,8 +225,11 @@ module VCAP::CloudController
 
           expect(instance.credentials).to eq({})
           expect(instance.dashboard_url).to eq('the dashboard_url')
-          expect(decoded_response['entity']['state']).to eq 'in progress'
-          expect(decoded_response['entity']['state_description']).to eq ''
+          last_operation = decoded_response['entity']['last_operation']
+          expect(last_operation['state']).to eq 'in progress'
+          expect(last_operation['description']).to eq ''
+          expect(last_operation['type']).to eq 'create'
+          expect(last_operation['updated_at']).not_to be_nil
         end
 
         context 'when the client does not support asynchronous provisioning' do

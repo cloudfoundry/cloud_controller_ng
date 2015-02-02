@@ -61,13 +61,11 @@ module VCAP::CloudController
 
     def create
       json_msg = self.class::CreateMessage.decode(body)
-
       @request_attrs = json_msg.extract(stringify_keys: true)
 
       service_plan_guid = request_attrs['service_plan_guid']
 
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
-
       raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
 
       # Make sure the service plan exists before checking permissions
@@ -98,11 +96,7 @@ module VCAP::CloudController
       end
 
       begin
-        ServiceInstance.db.transaction do
-          service_instance.lock!
-          service_instance.set_all(attributes_to_update)
-          service_instance.save
-        end
+        service_instance.save_with_new_operation(attributes_to_update)
       rescue => e
         safe_deprovision_instance(service_instance)
         raise e
@@ -236,6 +230,19 @@ module VCAP::CloudController
     define_routes
 
     private
+
+    def raise_if_has_associations!(obj)
+      associations = obj.class.associations.select do |association|
+        association_action = obj.class.association_dependencies_hash[association]
+        if association_action == :destroy && association != :service_instance_operation
+          obj.has_one_to_many?(association) || obj.has_one_to_one?(association)
+        end
+      end
+
+      if associations.any?
+        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', associations.join(', '), obj.class.table_name)
+      end
+    end
 
     def requested_space
       space = Space.filter(guid: request_attrs['space_guid']).first
