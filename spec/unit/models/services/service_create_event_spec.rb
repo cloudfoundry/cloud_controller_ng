@@ -31,6 +31,12 @@ module VCAP::CloudController
     end
 
     describe 'create_from_service_instance' do
+      event_count = 0
+
+      before do
+        event_count = ServiceCreateEvent.count
+      end
+
       context 'on an org without billing enabled' do
         it 'should do nothing' do
           expect(ServiceCreateEvent).not_to receive(:create)
@@ -38,7 +44,9 @@ module VCAP::CloudController
           org = si.space.organization
           org.billing_enabled = false
           org.save(validate: false)
+
           ServiceCreateEvent.create_from_service_instance(si)
+          expect(ServiceCreateEvent.count).to eq(event_count)
         end
       end
 
@@ -49,7 +57,21 @@ module VCAP::CloudController
           org.billing_enabled = true
           org.save(validate: false)
           expect(ServiceCreateEvent).to receive(:create)
+
           ServiceCreateEvent.create_from_service_instance(si)
+          expect(ServiceCreateEvent.count).to eq(event_count + 1)
+        end
+      end
+
+      context 'on an org with user provided service and with billing enabled' do
+        it 'should NOT create an service create event' do
+          si = UserProvidedServiceInstance.make
+          org = si.space.organization
+          org.billing_enabled = true
+          org.save(validate: false)
+
+          ServiceCreateEvent.create_from_service_instance(si)
+          expect(ServiceCreateEvent.count).to eq(event_count)
         end
       end
     end

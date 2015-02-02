@@ -60,6 +60,10 @@ module VCAP::CloudController
       self.class.name.demodulize.underscore
     end
 
+    def user_provided_instance?
+      return self.type == UserProvidedServiceInstance.name.demodulize.underscore
+    end
+
     def validate
       validates_presence :name
       validates_presence :space

@@ -34,6 +34,8 @@ module VCAP::CloudController
     end
 
     def self.create_from_service_instance(instance)
+      return if instance.user_provided_instance?
+
       plan = instance.service_plan
       svc = plan.service
       space = instance.space
