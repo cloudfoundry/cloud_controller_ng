@@ -7,52 +7,14 @@ module VCAP::Services
         end
 
         def parse(method, path, response)
-          uri = uri_for(path)
           code = response.code.to_i
-
-          begin
-            response_hash = MultiJson.load(response.body)
-          rescue MultiJson::ParseError
-            logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
-          end
+          uri = uri_for(path)
 
           case code
-          when 204
-            # Matching only /v2/service_instances/:guid paths
-            if %r{/v2/service_instances/[[:alnum:]-]+\z}.match(path)
-              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
-            end
-
-            return nil
-
           when 200..299
-            unless response_hash.is_a?(Hash)
-              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, sanitize_response(response))
-            end
-
-            if !valid_broker_response?(method, path, code, response_hash['state'])
-              raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, sanitize_response(response))
-            end
-
-            return response_hash
-
-          when HTTP::Status::UNAUTHORIZED
-            raise Errors::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
-
-          when 408
-            raise Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
-
-          when 409
-            raise Errors::ServiceBrokerConflict.new(uri.to_s, method, response)
-
-          when 410
-            if method == :delete
-              logger.warn("Already deleted: #{uri}")
-              return nil
-            end
-
+            return handle_success_response(method, path, uri, response)
           when 400..499
-            raise Errors::ServiceBrokerRequestRejected.new(uri.to_s, method, response)
+            return handle_error_response(method, path, uri, response)
           end
 
           raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
@@ -71,6 +33,54 @@ module VCAP::Services
         end
 
         private
+
+        def parse_response(response)
+          MultiJson.load(response.body)
+        rescue MultiJson::ParseError
+          logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
+        end
+
+        def handle_success_response(method, path, uri, response)
+          response_hash = parse_response(response)
+          code = response.code.to_i
+          if code == 204
+            # Matching only /v2/service_instances/:guid paths
+            if %r{/v2/service_instances/[[:alnum:]-]+\z}.match(path)
+              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, response)
+            end
+            nil
+          else
+            unless response_hash.is_a?(Hash)
+              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, method, sanitize_response(response))
+            end
+
+            if !valid_broker_response?(method, path, code, response_hash['state'])
+              raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, sanitize_response(response))
+            end
+
+            response_hash
+          end
+        end
+
+        def handle_error_response(method, path, uri, response)
+          code = response.code.to_i
+          case code
+          when 401
+            raise Errors::ServiceBrokerApiAuthenticationFailed.new(uri.to_s, method, response)
+          when 408
+            raise Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
+          when 409
+            raise Errors::ServiceBrokerConflict.new(uri.to_s, method, response)
+          when 410
+            if method == :delete
+              logger.warn("Already deleted: #{uri}")
+              return nil
+            end
+          when 400..499
+            raise Errors::ServiceBrokerRequestRejected.new(uri.to_s, method, response)
+          end
+          raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
+        end
 
         def sanitize_response(response)
           HttpResponse.new(
