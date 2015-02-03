@@ -2,29 +2,12 @@ require 'presenters/error_presenter'
 
 module VCAP::CloudController
   module Jobs
-    class ExceptionCatchingJob < VCAP::CloudController::Jobs::CCJob
-      attr_accessor :handler
-
-      def initialize(handler)
-        @handler = handler
-      end
-
-      def perform
-        handler.perform
-      end
-
+    class ExceptionCatchingJob < WrappingJob
       def error(job, e)
         error_presenter = ErrorPresenter.new(e)
         log_error(error_presenter)
         save_error(error_presenter, job)
-      end
-
-      def max_attempts
-        handler.max_attempts
-      end
-
-      def reschedule_at(time, attempts)
-        handler.reschedule_at(time, attempts)
+        # super(job, e)
       end
 
       private

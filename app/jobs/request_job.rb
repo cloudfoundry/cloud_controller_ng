@@ -1,29 +1,29 @@
 module VCAP::CloudController
   module Jobs
-    class RequestJob < VCAP::CloudController::Jobs::CCJob
-      attr_accessor :job, :request_id
-
-      def initialize(job, request_id)
-        @job = job
+    class RequestJob < WrappingJob
+      def initialize(handler, request_id)
+        @handler = handler
         @request_id = request_id
       end
 
       def perform
         current_request_id = ::VCAP::Request.current_id
         begin
-          ::VCAP::Request.current_id = request_id
-          job.perform
+          ::VCAP::Request.current_id = @request_id
+          @handler.perform
         ensure
           ::VCAP::Request.current_id = current_request_id
         end
       end
 
-      def max_attempts
-        job.max_attempts
+      # TODO: fix bad tests that grab this
+      def job
+        @handler
       end
 
-      def reschedule_at(time, attempts)
-        job.reschedule_at(time, attempts)
+      # TODO: fix bad tests that grab this
+      def request_id
+        @request_id
       end
     end
   end
