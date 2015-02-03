@@ -247,6 +247,20 @@ module VCAP::CloudController
             expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(0)
             expect(last_response.status).to eq(400)
           end
+
+          context 'but the broker rejects synchronous provisioning' do
+            before do
+              stub_request(:put, service_broker_url_regex).
+                with(headers: { 'Accept' => 'application/json' }).
+                to_return(status: 422, body: { error: 'AsyncRequired' }.to_json, headers: { 'Content-Type' => 'application/json' })
+            end
+
+            it 'fails with an AsyncRequired error' do
+              create_managed_service_instance
+              expect(last_response).to have_status_code(400)
+              expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
+            end
+          end
         end
 
         context 'when the client supports asynchronous provisioning' do

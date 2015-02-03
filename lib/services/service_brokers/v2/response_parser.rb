@@ -38,29 +38,23 @@ module VCAP::Services
 
         def parse_put_response(code, uri, response)
           response_hash = parse_response(uri, :put, response)
+          response_hash.except!('last_operation') if request_for_bindings?(uri)
           state = state_from_response_hash(response_hash)
 
           case code
           when 200
-            response_hash.except!('last_operation') if request_for_bindings?(uri)
             return response_hash if recogized_operation_state?(state)
-            raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, :put, response)
           when 201
-            if request_for_bindings?(uri)
-              response_hash.except!('last_operation')
-              return response_hash
-            end
             return response_hash if ['succeeded', nil].include?(state)
-            raise Errors::ServiceBrokerBadResponse.new(uri.to_s, :put, response)
           when 202
-            raise Errors::ServiceBrokerBadResponse.new(uri.to_s, :put, response) if request_for_bindings?(uri)
-            return response_hash if state == 'in progress'
-            raise Errors::ServiceBrokerBadResponse.new(uri.to_s, :put, response)
+            return response_hash if state == 'in progress' && !request_for_bindings?(uri)
           when 409
             raise Errors::ServiceBrokerConflict.new(uri.to_s, :put, response)
-          else
-            raise Errors::ServiceBrokerBadResponse.new(uri.to_s, :put, response)
+          when 422
+            raise Errors::AsyncRequired.new(uri.to_s, :put, response) if response_hash['error'] == 'AsyncRequired'
           end
+
+          raise Errors::ServiceBrokerBadResponse.new(uri.to_s, :put, response)
         end
 
         def parse_patch_response(code, uri, response)

@@ -54,21 +54,10 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:last_operation][:state] = 'succeeded'
       end
 
-      [attributes, nil]
+      attributes
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse, Errors::ServiceBrokerResponseMalformed => e
       @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       raise e
-    rescue Errors::ServiceBrokerRequestRejected => e
-      attributes = {
-        credentials: {},
-        last_operation: {
-          type: 'create',
-          state: 'failed',
-          description: e.parsed_response['description'],
-        },
-      }
-
-      [attributes, e]
     end
 
     def fetch_service_instance_state(instance)

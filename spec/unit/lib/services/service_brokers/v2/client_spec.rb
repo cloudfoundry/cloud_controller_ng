@@ -258,18 +258,13 @@ module VCAP::Services::ServiceBrokers::V2
           }
         end
 
-        it 'return immediately with the broker response' do
+        it 'raises an error' do
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          attributes, error = client.provision(instance)
-
-          expect(attributes[:last_operation][:type]).to eq('create')
-          expect(attributes[:last_operation][:state]).to eq('failed')
-          expect(attributes[:last_operation][:description]).to eq('100% failed')
-          expect(error).to be_a(Errors::ServiceBrokerRequestRejected)
+          expect { client.provision(instance) }.to raise_error(Errors::ServiceBrokerRequestRejected)
         end
 
         it 'does not enqueue a polling job' do
-          client.provision(instance)
+          client.provision(instance) rescue nil
           expect(state_poller).to_not have_received(:poll_service_instance_state)
         end
       end

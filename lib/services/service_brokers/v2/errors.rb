@@ -5,3 +5,4 @@ require 'services/service_brokers/v2/errors/service_broker_api_authentication_fa
 require 'services/service_brokers/v2/errors/service_broker_bad_response'
 require 'services/service_brokers/v2/errors/service_broker_conflict'
 require 'services/service_brokers/v2/errors/service_broker_request_rejected'
+require 'services/service_brokers/v2/errors/async_required'

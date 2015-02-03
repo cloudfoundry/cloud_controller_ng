@@ -92,8 +92,8 @@ module VCAP::Services
 
               context 'and the state is not recognized' do
                 let(:state) { 'fake-state' }
-                it 'raises a ServiceBrokerResponseMalformed' do
-                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                it 'raises a ServiceBrokerBadResponse' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
                 end
               end
 
@@ -521,6 +521,13 @@ module VCAP::Services
               let(:method) { :put }
               it 'raises a ServiceBrokerBadResponse error' do
                 expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+              end
+
+              context 'when the error field is `AsyncRequired`' do
+                let(:body) { { error: 'AsyncRequired' }.to_json }
+                it 'raises an AsyncRequired error' do
+                  expect { parsed_response }.to raise_error(Errors::AsyncRequired)
+                end
               end
             end
 
