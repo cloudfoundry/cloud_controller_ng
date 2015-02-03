@@ -61,7 +61,7 @@ module VCAP::CloudController
     end
 
     def user_provided_instance?
-      return self.type == UserProvidedServiceInstance.name.demodulize.underscore
+      self.type == UserProvidedServiceInstance.name.demodulize.underscore
     end
 
     def validate
