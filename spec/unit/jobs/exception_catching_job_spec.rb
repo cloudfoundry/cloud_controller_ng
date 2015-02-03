@@ -7,7 +7,7 @@ module VCAP::CloudController
         ExceptionCatchingJob.new(handler)
       end
 
-      let(:handler) { double('Handler', perform: 'fake-perform', max_attempts: 1, reschedule_at: Time.now) }
+      let(:handler) { double('Handler', error: nil, perform: 'fake-perform', max_attempts: 1, reschedule_at: Time.now) }
 
       context '#perform' do
         it 'delegates to the handler' do
@@ -61,6 +61,14 @@ module VCAP::CloudController
           expect(job).to receive('cf_api_error=').with('marshaled hash')
           expect(job).to receive('save')
 
+          exception_catching_job.error(job, 'exception')
+        end
+
+        it 'calls the wrapped jobs error method' do
+          allow(error_presenter).to receive(:client_error?).and_return(true)
+          expect(handler).to receive(:error).with(job, 'exception')
+          expect(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
+          expect(background_logger).to receive(:info).with('log message')
           exception_catching_job.error(job, 'exception')
         end
       end

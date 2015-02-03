@@ -7,7 +7,7 @@ module VCAP::CloudController
         error_presenter = ErrorPresenter.new(e)
         log_error(error_presenter)
         save_error(error_presenter, job)
-        # super(job, e)
+        super(job, e)
       end
 
       private
