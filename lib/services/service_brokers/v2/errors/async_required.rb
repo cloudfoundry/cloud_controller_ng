@@ -4,7 +4,7 @@ module VCAP::Services
       module Errors
         class AsyncRequired < HttpResponseError
           def initialize(uri, method, response)
-            message = 'Service broker error: This service plan requires client support for asynchronous provisioning.'
+            message = 'This service plan requires client support for asynchronous provisioning.'
             super(message, uri, method, response)
           end
 
