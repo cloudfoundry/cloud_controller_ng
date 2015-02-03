@@ -73,6 +73,11 @@ module VCAP::CloudController
     end
 
     def list(pagination_options, access_context, filter_options={})
+      dataset = raw_list(access_context, filter: filter_options)
+      @paginator.get_page(dataset, pagination_options)
+    end
+
+    def raw_list(access_context, filter: {}, exclude: {})
       dataset = nil
       if access_context.roles.admin?
         dataset = App.dataset
@@ -80,9 +85,17 @@ module VCAP::CloudController
         dataset = App.user_visible(access_context.user)
       end
 
-      dataset = dataset.where(app_guid: filter_options[:app_guid]) if filter_options[:app_guid]
+      allowed_filters = %i(app_guid type)
+      filter.each do |column, value|
+        dataset = dataset.where(column => value) if allowed_filters.include?(column.to_sym)
+      end
 
-      @paginator.get_page(dataset, pagination_options)
+      allowed_exclusions = %i(type)
+      exclude.each do |column, value|
+        dataset = dataset.exclude(column => value) if allowed_exclusions.include?(column.to_sym)
+      end
+
+      dataset
     end
 
     def show(guid, access_context)

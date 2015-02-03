@@ -294,6 +294,10 @@ module VCAP::CloudController
       describe 'metadata' do
         let(:app) { AppFactory.make }
 
+        it 'defaults to an empty hash' do
+          expect(App.new.metadata).to eql({})
+        end
+
         it 'can be set and retrieved' do
           app.metadata = {}
           expect(app.metadata).to eql({})

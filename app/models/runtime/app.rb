@@ -256,7 +256,7 @@ module VCAP::CloudController
     end
 
     def metadata_with_command
-      result = metadata_without_command
+      result = metadata_without_command || self.metadata = {}
       result.merge!('command' => command) if command
       result
     end
