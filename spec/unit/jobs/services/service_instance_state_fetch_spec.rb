@@ -34,6 +34,11 @@ module VCAP::CloudController
           )
         end
 
+        def run_job(job)
+          Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
+          expect(Delayed::Worker.new.work_off).to eq [1, 0]
+        end
+
         describe '#perform' do
           before do
             allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
@@ -46,7 +51,7 @@ module VCAP::CloudController
             end
 
             it 'fetches and updates the service instance state' do
-              job.perform
+              run_job(job)
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
               expect(db_service_instance.last_operation.state).to eq('succeeded')
@@ -54,14 +59,14 @@ module VCAP::CloudController
             end
 
             it 'does not change the type field because of the broker' do
-              job.perform
+              run_job(job)
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
               expect(db_service_instance.last_operation.type).to eq('create')
             end
 
             it 'should not enqueue another fetch job' do
-              job.perform
+              run_job(job)
 
               expect(Delayed::Job.count).to eq 0
             end
@@ -74,14 +79,14 @@ module VCAP::CloudController
             end
 
             it 'fetches and updates the service instance state' do
-              job.perform
+              run_job(job)
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
               expect(db_service_instance.last_operation.state).to eq('failed')
             end
 
             it 'should not enqueue another fetch job' do
-              job.perform
+              run_job(job)
 
               expect(Delayed::Job.count).to eq 0
             end
@@ -94,14 +99,14 @@ module VCAP::CloudController
             end
 
             it 'fetches and updates the service instance state' do
-              job.perform
+              run_job(job)
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
               expect(db_service_instance.last_operation.state).to eq('in progress')
             end
 
             it 'should enqueue another fetch job' do
-              job.perform
+              run_job(job)
 
               expect(Delayed::Job.count).to eq 1
               expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
@@ -118,7 +123,7 @@ module VCAP::CloudController
             end
 
             it 'should enqueue another fetch job' do
-              job.perform
+              run_job(job)
 
               expect(Delayed::Job.count).to eq 1
               expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
@@ -132,9 +137,8 @@ module VCAP::CloudController
 
             context 'due to an HttpRequestError' do
               let(:error) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new('some-uri.com', :get, nil) }
-
               it 'should enqueue another fetch job' do
-                job.perform
+                run_job(job)
 
                 expect(Delayed::Job.count).to eq 1
                 expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)

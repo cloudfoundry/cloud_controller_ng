@@ -23,7 +23,8 @@ module VCAP::CloudController
         end
 
         it 'unbinds the binding' do
-          job.perform
+          Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
+          expect(Delayed::Worker.new.work_off).to eq [1, 0]
 
           expect(client).to have_received(:unbind).with(service_binding)
         end
