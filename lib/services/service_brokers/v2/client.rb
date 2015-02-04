@@ -55,8 +55,11 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       attributes
-    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse, Errors::ServiceBrokerResponseMalformed => e
+    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
       @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
+      raise e
+    rescue Errors::ServiceBrokerResponseMalformed => e
+      @orphan_mitigator.cleanup_failed_provision(@attrs, instance) unless e.status == 200
       raise e
     end
 
