@@ -504,7 +504,7 @@ module VCAP::CloudController
           'type' => 'create',
         })
 
-        expect(service_instance.to_hash['last_operation']['updated_at']).to be_within(0.1).of(updated_at_time)
+        expect(service_instance.to_hash['last_operation']['updated_at']).to be
       end
     end
   end
