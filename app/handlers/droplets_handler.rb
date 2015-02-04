@@ -113,6 +113,14 @@ module VCAP::CloudController
       @paginator.get_page(dataset, pagination_options)
     end
 
+    def show(guid, access_context)
+      droplet = DropletModel.find(guid: guid)
+      return nil if droplet.nil?
+      package = PackageModel.find(guid: droplet.package_guid)
+      raise Unauthorized if access_context.cannot?(:read, droplet, package)
+      droplet
+    end
+
     def create(message, access_context)
       package = PackageModel.find(guid: message.package_guid)
       raise PackageNotFound if package.nil?

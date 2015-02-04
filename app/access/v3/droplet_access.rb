@@ -2,6 +2,15 @@ module VCAP::CloudController
   class DropletModelAccess
     include Allowy::AccessControl
 
+    def read?(droplet, package)
+      return true if context.roles.admin?
+
+      has_read_scope = SecurityContext.scopes.include?('cloud_controller.read')
+      user_visible = Space.user_visible(context.user).where(guid: package.space_guid).count > 0
+
+      has_read_scope && user_visible
+    end
+
     def create?(_, space)
       return true if context.roles.admin?
 

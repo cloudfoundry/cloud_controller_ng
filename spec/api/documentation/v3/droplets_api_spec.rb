@@ -16,6 +16,45 @@ resource 'Droplets (Experimental)', type: :api do
     end
   end
 
+  get '/v3/droplets/:guid' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+    let(:guid) { droplet_model.guid }
+
+    let(:package_model) do
+      VCAP::CloudController::PackageModel.make(space_guid: space_guid)
+    end
+
+    let(:droplet_model) do
+      VCAP::CloudController::DropletModel.make(package_guid: package_model.guid)
+    end
+
+    before do
+      space.organization.add_user user
+      space.add_developer user
+    end
+
+    example 'Get a Droplet' do
+      expected_response = {
+        'guid'              => droplet_model.guid,
+        'state'             => droplet_model.state,
+        'hash'              => droplet_model.droplet_hash,
+        'buildpack_git_url' => droplet_model.buildpack_git_url,
+        'created_at'        => droplet_model.created_at.as_json,
+        '_links'            => {
+          'self'    => { 'href' => "/v3/droplets/#{guid}" },
+          'package' => { 'href' => "/v3/packages/#{package_model.guid}" },
+        }
+      }
+
+      do_request_with_error_handling
+
+      parsed_response = MultiJson.load(response_body)
+      expect(response_status).to eq(200)
+      expect(parsed_response).to match(expected_response)
+    end
+  end
+
   get '/v3/droplets' do
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
@@ -87,87 +126,5 @@ resource 'Droplets (Experimental)', type: :api do
       expect(response_status).to eq(200)
       expect(parsed_response).to match(expected_response)
     end
-  end
-
-  # get '/v3/packages/:guid' do
-  #   let(:space) { VCAP::CloudController::Space.make }
-  #   let(:package_model) do
-  #     VCAP::CloudController::PackageModel.make(space_guid: space_guid)
-  #   end
-
-  #   let(:guid) { package_model.guid }
-  #   let(:space_guid) { space.guid }
-
-  #   before do
-  #     space.organization.add_user user
-  #     space.add_developer user
-  #   end
-
-  #   example 'Get a Package' do
-  #     expected_response = {
-  #       'type'       => package_model.type,
-  #       'guid'       => guid,
-  #       'hash'       => nil,
-  #       'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
-  #       'url'        => nil,
-  #       'error'      => nil,
-  #       'created_at' => package_model.created_at.as_json,
-  #       '_links'     => {
-  #         'self'   => { 'href' => "/v3/packages/#{guid}" },
-  #         'upload' => { 'href' => "/v3/packages/#{guid}/upload" },
-  #         'app'    => { 'href' => "/v3/apps/#{package_model.app_guid}" },
-  #         'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
-  #       }
-  #     }
-
-  #     do_request_with_error_handling
-
-  #     parsed_response = MultiJson.load(response_body)
-  #     expect(response_status).to eq(200)
-  #     expect(parsed_response).to match(expected_response)
-  #   end
-  # end
-
-  # delete '/v3/packages/:guid' do
-  #   let(:space) { VCAP::CloudController::Space.make }
-  #   let(:space_guid) { space.guid }
-  #   let!(:package_model) do
-  #     VCAP::CloudController::PackageModel.make(space_guid: space_guid)
-  #   end
-
-  #   let(:guid) { package_model.guid }
-
-  #   before do
-  #     space.organization.add_user user
-  #     space.add_developer user
-  #   end
-
-  #   example 'Delete a Package' do
-  #     expect {
-  #       do_request_with_error_handling
-  #     }.to change { VCAP::CloudController::PackageModel.count }.by(-1)
-  #     expect(response_status).to eq(204)
-  #   end
-  # end
-end
-
-def stub_schedule_sync(&before_resolve)
-  allow(EM).to receive(:schedule_sync) do |&blk|
-    promise = VCAP::Concurrency::Promise.new
-
-    begin
-      if blk.arity > 0
-        blk.call(promise)
-      else
-        promise.deliver(blk.call)
-      end
-    rescue => e
-      promise.fail(e)
-    end
-
-    # Call before_resolve block before trying to resolve the promise
-    before_resolve.call
-
-    promise.resolve
   end
 end

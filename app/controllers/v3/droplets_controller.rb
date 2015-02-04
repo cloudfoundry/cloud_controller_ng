@@ -20,6 +20,16 @@ module VCAP::CloudController
       [HTTP::OK, droplets_json]
     end
 
+    get '/v3/droplets/:guid', :show
+    def show(guid)
+      droplet = @droplets_handler.show(guid, @access_context)
+      droplet_not_found! if droplet.nil?
+      droplet_json = @droplet_presenter.present_json(droplet)
+      [HTTP::OK, droplet_json]
+    rescue DropletsHandler::Unauthorized
+      unauthorized!
+    end
+
     private
 
     def droplet_not_found!

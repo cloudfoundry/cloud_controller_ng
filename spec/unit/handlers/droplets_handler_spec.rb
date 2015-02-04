@@ -325,5 +325,35 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'show' do
+      context 'when the droplet exists' do
+        let(:droplet) { DropletModel.make }
+        let(:droplet_guid) { droplet.guid }
+
+        context 'and the user has permissions to read' do
+          it 'returns the droplet' do
+            expect(access_context).to receive(:cannot?).and_return(false)
+            expect(droplets_handler.show(droplet_guid, access_context)).to eq(droplet)
+          end
+        end
+
+        context 'and the user does not have permissions to read' do
+          it 'raises an Unathorized exception' do
+            expect(access_context).to receive(:cannot?).and_return(true)
+            expect {
+              droplets_handler.show(droplet_guid, access_context)
+            }.to raise_error(DropletsHandler::Unauthorized)
+          end
+        end
+      end
+
+      context 'when the droplet does not exist' do
+        it 'returns nil' do
+          expect(access_context).not_to receive(:cannot?)
+          expect(droplets_handler.show('bogus-droplet', access_context)).to be_nil
+        end
+      end
+    end
   end
 end
