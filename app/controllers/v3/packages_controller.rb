@@ -76,6 +76,8 @@ module VCAP::CloudController
       droplet = @droplets_handler.create(staging_message, @access_context)
 
       [HTTP::CREATED, @droplet_presenter.present_json(droplet)]
+    rescue DropletsHandler::BuildpackNotFound
+      buildpack_not_found!
     rescue DropletsHandler::PackageNotFound
       package_not_found!
     rescue DropletsHandler::SpaceNotFound
@@ -96,8 +98,8 @@ module VCAP::CloudController
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
     end
 
-    def space_not_found!
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
+    def buildpack_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Buildpack not found')
     end
 
     def unauthorized!
