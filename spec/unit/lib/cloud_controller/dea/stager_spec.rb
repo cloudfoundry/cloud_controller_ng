@@ -113,7 +113,7 @@ module VCAP::CloudController
               stack,
               mem,
               disk,
-              bp_guid,
+              anything,
               buildpack_git_url,
               config,
               an_instance_of(CloudController::Blobstore::UrlGenerator)).
@@ -148,6 +148,27 @@ module VCAP::CloudController
         it 'updates the droplet with the detected buildpack' do
           stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
           expect(droplet.refresh.buildpack_guid).to eq(buildpack.guid)
+        end
+
+        context 'when buildpack is not present' do
+          let(:reply_json) do
+            {
+              'task_id' => 'task-id',
+              'task_log' => 'task-log',
+              'task_streaming_log_url' => nil,
+              'detected_buildpack' => nil,
+              'buildpack_key' => nil,
+              'detected_start_command' => detected_start_command,
+              'error' => reply_json_error,
+              'error_info' => reply_error_info,
+              'droplet_sha1' => droplet_hash,
+            }
+          end
+
+          it 'does not try to update buildpack guid if not present' do
+            stager.stage_package(droplet, stack, mem, disk, nil, buildpack_git_url)
+            expect(droplet.refresh.buildpack_guid).to eq(nil)
+          end
         end
 
         context 'when staging fails' do

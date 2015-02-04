@@ -31,7 +31,7 @@ module VCAP::CloudController
           droplet.db.transaction do
             droplet.lock!
             droplet.state = DropletModel::STAGED_STATE
-            droplet.buildpack_guid = buildpack.guid
+            droplet.buildpack_guid = buildpack.guid if buildpack
             droplet.save
           end
         end
