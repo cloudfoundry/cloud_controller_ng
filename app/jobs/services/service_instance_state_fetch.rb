@@ -11,6 +11,7 @@ module VCAP::CloudController
         end
 
         def perform
+          logger = Steno.logger('cc-background')
           client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
           service_instance = ManagedServiceInstance.first(guid: service_instance_guid)
 
@@ -23,7 +24,8 @@ module VCAP::CloudController
             if !service_instance.terminal_state?
               poller.poll_service_instance_state(client_attrs, service_instance)
             end
-          rescue HttpRequestError, Sequel::Error
+          rescue HttpRequestError, HttpResponseError, Sequel::Error => e
+            logger.error("There was an error while fetching the service instance operation state: #{e}")
             poller.poll_service_instance_state(client_attrs, service_instance)
           end
         end

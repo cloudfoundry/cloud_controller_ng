@@ -127,16 +127,36 @@ module VCAP::CloudController
 
           context 'when fetching the service instance from the broker fails' do
             before do
-              nested_error = nil
-              error = HttpRequestError.new('something', '/some/path', :get, nested_error)
               allow(client).to receive(:fetch_service_instance_state).and_raise(error)
             end
 
-            it 'should enqueue another fetch job' do
-              job.perform
+            context 'due to an HttpRequestError' do
+              let(:error) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new('some-uri.com', :get, nil) }
 
-              expect(Delayed::Job.count).to eq 1
-              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
+              it 'should enqueue another fetch job' do
+                job.perform
+
+                expect(Delayed::Job.count).to eq 1
+                expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
+              end
+            end
+
+            context 'due to an HttpResponseError' do
+              let(:response) do
+                instance_double(VCAP::Services::ServiceBrokers::V2::HttpResponse,
+                  body: '{}',
+                  code: 500,
+                  message: 'Internal Server Error'
+                )
+              end
+              let(:error) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new('some-uri.com', :get, response) }
+
+              it 'should enqueue another fetch job' do
+                job.perform
+
+                expect(Delayed::Job.count).to eq 1
+                expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
+              end
             end
           end
         end
