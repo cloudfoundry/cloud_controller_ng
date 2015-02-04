@@ -24,6 +24,8 @@ module VCAP::Services
           end
         end
 
+        private
+
         def parse_get_response(code, uri, response)
           response_hash = parse_response(uri, :get, response)
           state = state_from_response_hash(response_hash)
@@ -41,13 +43,25 @@ module VCAP::Services
           response_hash.except!('last_operation') if request_for_bindings?(uri)
           state = state_from_response_hash(response_hash)
 
+          handle_put_non_success(code, uri, response, response_hash)
+
           case code
           when 200
             return response_hash if recogized_operation_state?(state)
           when 201
             return response_hash if ['succeeded', nil].include?(state)
           when 202
-            return response_hash if state == 'in progress' && !request_for_bindings?(uri)
+            raise Errors::ServiceBrokerBadResponse.new(uri.to_s, :put, response) if request_for_bindings?(uri)
+            return response_hash if state == 'in progress'
+          end
+
+          raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, :put, response)
+        end
+
+        def handle_put_non_success(code, uri, response, response_hash)
+          case code
+          when 200, 201, 202
+            return
           when 409
             raise Errors::ServiceBrokerConflict.new(uri.to_s, :put, response)
           when 422
@@ -81,8 +95,6 @@ module VCAP::Services
             raise Errors::ServiceBrokerBadResponse.new(uri.to_s, :delete, response)
           end
         end
-
-        private
 
         def state_from_response_hash(response_hash)
           last_operation = response_hash['last_operation'] || {}

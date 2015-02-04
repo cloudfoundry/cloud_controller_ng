@@ -92,8 +92,8 @@ module VCAP::Services
 
               context 'and the state is not recognized' do
                 let(:state) { 'fake-state' }
-                it 'raises a ServiceBrokerBadResponse' do
-                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                it 'raises a ServiceBrokerResponseMalformed' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
                 end
               end
 
@@ -206,24 +206,24 @@ module VCAP::Services
               context 'and the state is `failed`' do
                 let(:state) { 'failed' }
 
-                it 'aises a ServiceBrokerBadResponse error' do
-                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                it 'raises a ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
                 end
               end
 
               context 'and the state is `in progress`' do
                 let(:state) { 'in progress' }
 
-                it 'aises a ServiceBrokerBadResponse error' do
-                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                it 'raises a ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
                 end
               end
 
               context 'and the state is unrecognized' do
                 let(:state) { 'fake-state' }
 
-                it 'aises a ServiceBrokerBadResponse error' do
-                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                it 'raises a ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
                 end
               end
 
@@ -279,16 +279,16 @@ module VCAP::Services
               context 'and the state is `succeeded`' do
                 let(:state) { 'succeeded' }
 
-                it 'should raise ServiceBrokerBadResponse error' do
-                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                it 'should raise ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
                 end
               end
 
               context 'and the state is `failed`' do
                 let(:state) { 'failed' }
 
-                it 'should raise ServiceBrokerBadResponse error' do
-                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                it 'should raise ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
                 end
               end
 
@@ -309,16 +309,16 @@ module VCAP::Services
               context 'and the state is nil' do
                 let(:state) { nil }
 
-                it 'should raise ServiceBrokerBadResponse error' do
-                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                it 'should raise ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
                 end
               end
 
               context 'and the state is unrecognized' do
                 let(:state) { :unrecognized }
 
-                it 'should raise ServiceBrokerBadResponse error' do
-                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                it 'should raise ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
                 end
               end
 
