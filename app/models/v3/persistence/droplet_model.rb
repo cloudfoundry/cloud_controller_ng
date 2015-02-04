@@ -10,5 +10,12 @@ module VCAP::CloudController
     def validate
       validates_includes DROPLET_STATES, :state, allow_missing: true
     end
+
+    def self.user_visible(user)
+      dataset.
+        join(:packages, packages__guid: :v3_droplets__package_guid).
+        where(PackageModel.user_visibility_filter(user)).
+        select_all(:v3_droplets)
+    end
   end
 end

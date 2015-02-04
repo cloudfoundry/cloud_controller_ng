@@ -17,14 +17,18 @@ module VCAP::CloudController
     end
 
     def self.user_visible(user)
-      dataset.where(Sequel.or([
+      dataset.where(user_visibility_filter(user))
+    end
+
+    def self.user_visibility_filter(user)
+      Sequel.or([
         [:space_guid, user.spaces_dataset.select(:guid)],
         [:space_guid, user.managed_spaces_dataset.select(:guid)],
         [:space_guid, user.audited_spaces_dataset.select(:guid)],
         [:space_guid, user.managed_organizations_dataset.join(
           :spaces, spaces__organization_id: :organizations__id
         ).select(:spaces__guid)],
-      ]))
+      ])
     end
 
     def stage_with_diego?

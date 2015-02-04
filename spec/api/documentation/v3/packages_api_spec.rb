@@ -341,7 +341,6 @@ resource 'Packages (Experimental)', type: :api do
         'guid'              => droplet.guid,
         'state'             => 'PENDING',
         'hash'              => nil,
-        'buildpack_guid'    => nil,
         'buildpack_git_url' => 'http://github.com/myorg/awesome-buildpack',
         'created_at'        => droplet.created_at.as_json,
         '_links'            => {

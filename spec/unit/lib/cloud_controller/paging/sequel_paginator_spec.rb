@@ -72,6 +72,15 @@ module VCAP::CloudController
         expect(first_paginated_result.records.first.guid).to eq(app_model1.guid)
         expect(second_paginated_result.records.first.guid).to eq(app_model2.guid)
       end
+
+      it 'works with a multi table result set' do
+        new_dataset = dataset.join(:packages, packages__app_guid: :apps_v3__guid)
+        pagination_options = PaginationOptions.new(2, per_page)
+
+        expect {
+          paginator.get_page(new_dataset, pagination_options)
+        }.not_to raise_error
+      end
     end
   end
 end

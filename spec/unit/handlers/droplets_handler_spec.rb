@@ -128,6 +128,66 @@ module VCAP::CloudController
       allow(access_context).to receive(:cannot?).and_return(false)
     end
 
+    describe '#list' do
+      let(:space) { Space.make }
+      let(:package) { PackageModel.make(space_guid: space.guid) }
+      let!(:droplet1) { DropletModel.make(package_guid: package.guid) }
+      let!(:droplet2) { DropletModel.make(package_guid: package.guid) }
+      let(:user) { User.make }
+      let(:page) { 1 }
+      let(:per_page) { 1 }
+      let(:pagination_options) { PaginationOptions.new(page, per_page) }
+      let(:paginator) { double(:paginator) }
+      let(:handler) { described_class.new(nil, nil, paginator) }
+      let(:roles) { double(:roles, admin?: admin_role) }
+      let(:admin_role) { false }
+
+      before do
+        allow(access_context).to receive(:roles).and_return(roles)
+        allow(access_context).to receive(:user).and_return(user)
+        allow(paginator).to receive(:get_page)
+      end
+
+      context 'when the user is an admin' do
+        let(:admin_role) { true }
+        before do
+          allow(access_context).to receive(:roles).and_return(roles)
+          DropletModel.make
+        end
+
+        it 'allows viewing all droplets' do
+          handler.list(pagination_options, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(3)
+          end
+        end
+      end
+
+      context 'when the user cannot list any droplets' do
+        it 'applies a user visibility filter properly' do
+          handler.list(pagination_options, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(0)
+          end
+        end
+      end
+
+      context 'when the user can list droplets' do
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+          DropletModel.make
+        end
+
+        it 'applies a user visibility filter properly' do
+          handler.list(pagination_options, access_context)
+          expect(paginator).to have_received(:get_page) do |dataset, _|
+            expect(dataset.count).to eq(2)
+          end
+        end
+      end
+    end
+
     describe '#create' do
       let(:space) { Space.make }
       let(:package) { PackageModel.make(space_guid: space.guid, state: PackageModel::READY_STATE, type: PackageModel::BITS_TYPE) }

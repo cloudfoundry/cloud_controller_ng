@@ -96,9 +96,21 @@ module VCAP::CloudController
     class BuildpackNotFound < StandardError; end
     class InvalidRequest < StandardError; end
 
-    def initialize(config, stagers)
+    def initialize(config, stagers, paginator=SequelPaginator.new)
       @config = config
       @stagers = stagers
+      @paginator = paginator
+    end
+
+    def list(pagination_options, access_context)
+      dataset = nil
+      if access_context.roles.admin?
+        dataset = DropletModel.dataset
+      else
+        dataset = DropletModel.user_visible(access_context.user)
+      end
+
+      @paginator.get_page(dataset, pagination_options)
     end
 
     def create(message, access_context)
