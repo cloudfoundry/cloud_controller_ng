@@ -135,7 +135,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'returns the attributes to update on a service instance' do
         attributes, error = client.provision(instance)
         # ensure updating attributes and saving to service instance works
-        instance.save_with_new_operation(attributes)
+        instance.save_with_operation(attributes)
 
         expect(instance.dashboard_url).to eq('foo')
         expect(error).to be_nil

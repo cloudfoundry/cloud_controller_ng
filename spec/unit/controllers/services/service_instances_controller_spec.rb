@@ -558,6 +558,37 @@ module VCAP::CloudController
             to_return(status: 200, body: response_body, headers: { 'Content-Type' => 'application/json' })
         end
 
+        context 'and the service instance already has a service instance operation' do
+          before do
+            operation = ServiceInstanceOperation.make(type: 'pizza', state: 'failed', description: nil)
+            service_instance.service_instance_operation = operation
+          end
+
+          it 'should show last operation state "update succeeded"' do
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+            last_operation = decoded_response['entity']['last_operation']
+            expect(last_operation['type']).to eq('update')
+            expect(last_operation['state']).to eq('succeeded')
+          end
+
+          it 'should not create an extra service instance operation' do
+            expect {
+              put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+            }.to_not change {
+              ServiceInstanceOperation.count
+            }
+          end
+        end
+
+        context 'and the service instance does not have a service instance operation' do
+          it 'should show last operation state "update succeeded"' do
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+            last_operation = decoded_response['entity']['last_operation']
+            expect(last_operation['type']).to eq('update')
+            expect(last_operation['state']).to eq('succeeded')
+          end
+        end
+
         it 'calls the service broker to update the plan' do
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
           expect(a_request(:patch, service_broker_url)).to have_been_made.times(1)

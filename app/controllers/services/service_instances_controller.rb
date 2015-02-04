@@ -96,7 +96,7 @@ module VCAP::CloudController
       end
 
       begin
-        service_instance.save_with_new_operation(attributes_to_update)
+        service_instance.save_with_operation(attributes_to_update)
       rescue => e
         safe_deprovision_instance(service_instance)
         raise e
@@ -135,10 +135,12 @@ module VCAP::CloudController
         service_instance.client.update_service_plan(service_instance, new_plan)
       end
 
-      ServiceInstance.db.transaction do
-        service_instance.lock!
-        service_instance.update_from_hash(request_attrs)
-      end
+      service_instance.save_with_operation(request_attrs.merge({
+        last_operation: {
+          type: 'update',
+          state: 'succeeded',
+        },
+      }))
 
       @services_event_repository.record_service_instance_event(:update, service_instance, request_attrs)
 

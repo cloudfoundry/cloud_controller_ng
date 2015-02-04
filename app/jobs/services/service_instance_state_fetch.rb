@@ -19,7 +19,8 @@ module VCAP::CloudController
           begin
             attrs = client.fetch_service_instance_state(service_instance)
 
-            service_instance.update_state(attrs)
+            attrs[:last_operation] = attrs[:last_operation].slice(:state, :description)
+            service_instance.save_with_operation(attrs)
 
             if !service_instance.terminal_state?
               poller.poll_service_instance_state(client_attrs, service_instance)

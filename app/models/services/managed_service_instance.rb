@@ -179,31 +179,22 @@ module VCAP::CloudController
       ['succeeded', 'failed'].include? last_operation.state
     end
 
-    def save_with_new_operation(attributes_to_update)
+    def save_with_operation(attributes_to_update)
       ManagedServiceInstance.db.transaction do
         lock!
 
         last_operation_attributes = attributes_to_update.delete(:last_operation)
-        service_instance_operation = ServiceInstanceOperation.create(last_operation_attributes)
 
         set_all(attributes_to_update)
         save
 
-        self.service_instance_operation = service_instance_operation
-      end
-    end
-
-    def update_state(attributes_to_update)
-      ManagedServiceInstance.db.transaction do
-        lock!
-        last_operation_attributes = attributes_to_update[:last_operation].slice(:state, :description)
-        instance_attributes = attributes_to_update.except(:last_operation)
-
-        set_all(instance_attributes)
-        last_operation.set_all(last_operation_attributes)
-
-        last_operation.save
-        save
+        if self.service_instance_operation
+          self.service_instance_operation.set_all(last_operation_attributes)
+          self.service_instance_operation.save
+        else
+          operation = ServiceInstanceOperation.create(last_operation_attributes)
+          self.service_instance_operation = operation
+        end
       end
     end
   end
