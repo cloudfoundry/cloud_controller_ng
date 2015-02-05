@@ -74,7 +74,7 @@ module VCAP::Services
         def parse_patch_response(code, uri, response)
           response_hash = parse_response(uri, :patch, response)
           case code
-          when 200
+          when 200, 202
             return response_hash
           when 422
             raise Errors::ServiceBrokerRequestRejected.new(uri.to_s, :patch, response)

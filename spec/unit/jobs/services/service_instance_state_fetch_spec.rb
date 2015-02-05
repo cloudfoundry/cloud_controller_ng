@@ -5,8 +5,12 @@ module VCAP::CloudController
     module Services
       describe ServiceInstanceStateFetch do
         let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
+        let(:proposed_service_plan) { ServicePlan.make }
         let(:service_instance) do
-          operation = ServiceInstanceOperation.make
+          operation = ServiceInstanceOperation.make(proposed_changes: {
+            name: 'new-fake-name',
+            service_plan_guid: proposed_service_plan.guid,
+          })
           operation.save
           service_instance = ManagedServiceInstance.make
           service_instance.save
@@ -35,8 +39,9 @@ module VCAP::CloudController
         end
 
         def run_job(job)
-          Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
-          expect(Delayed::Worker.new.work_off).to eq [1, 0]
+          job.perform
+          # Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
+          # expect(Delayed::Worker.new.work_off).to eq [1, 0]
         end
 
         describe '#perform' do
@@ -58,6 +63,14 @@ module VCAP::CloudController
               expect(db_service_instance.dashboard_url).to eq('url.com/dashboard')
             end
 
+            it 'applies the instance attributes that were proposed in the operation' do
+              run_job(job)
+
+              db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
+              expect(db_service_instance.service_plan).to eq(proposed_service_plan)
+              expect(db_service_instance.name).to eq('new-fake-name')
+            end
+
             it 'does not change the type field because of the broker' do
               run_job(job)
 
@@ -76,6 +89,14 @@ module VCAP::CloudController
             let(:state) { 'failed' }
             before do
               allow(client).to receive(:fetch_service_instance_state).and_return(response)
+            end
+
+            it 'does not apply the instance attributes that were proposed in the operation' do
+              run_job(job)
+
+              db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
+              expect(db_service_instance.service_plan).to_not eq(proposed_service_plan)
+              expect(db_service_instance.name).to eq(service_instance.name)
             end
 
             it 'fetches and updates the service instance state' do

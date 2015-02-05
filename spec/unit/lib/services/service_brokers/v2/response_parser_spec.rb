@@ -341,8 +341,24 @@ module VCAP::Services
 
             context 'and the method is patch' do
               let(:method) { :patch }
+              let(:body) do
+                {
+                  dashboard_url: 'url.com/dashboard',
+                  last_operation: {
+                    state: 'in progress',
+                    description: 'description',
+                  },
+                }.to_json
+              end
+
               it 'raises a ServiceBrokerBadResponse error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                expect(parsed_response).to eq({
+                  'dashboard_url' => 'url.com/dashboard',
+                  'last_operation' => {
+                    'state' => 'in progress',
+                    'description' => 'description',
+                  },
+                })
               end
             end
 

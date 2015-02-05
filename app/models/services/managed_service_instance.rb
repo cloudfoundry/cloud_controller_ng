@@ -197,12 +197,14 @@ module VCAP::CloudController
         set_all(attributes_to_update)
         save
 
-        if self.service_instance_operation
-          self.service_instance_operation.set_all(last_operation_attributes)
-          self.service_instance_operation.save
-        else
-          operation = ServiceInstanceOperation.create(last_operation_attributes)
-          self.service_instance_operation = operation
+        if last_operation_attributes
+          if self.service_instance_operation
+            self.service_instance_operation.set_all(last_operation_attributes)
+            self.service_instance_operation.save
+          else
+            operation = ServiceInstanceOperation.create(last_operation_attributes)
+            self.service_instance_operation = operation
+          end
         end
       end
     end

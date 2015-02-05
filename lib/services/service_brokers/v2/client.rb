@@ -123,8 +123,11 @@ module VCAP::Services::ServiceBrokers::V2
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
 
-    def update_service_plan(instance, plan)
+    def update_service_plan(instance, plan, opts={})
       path = "/v2/service_instances/#{instance.guid}/"
+      if opts.fetch(:async, false)
+        path += '?accepts_incomplete=true'
+      end
 
       response = @http_client.patch(path, {
           plan_id:	plan.broker_provided_id,
