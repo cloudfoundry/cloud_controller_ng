@@ -82,16 +82,30 @@ resource 'Apps (Experimental)', type: :api do
 
     context 'faceted search' do
       let(:app_model5) { VCAP::CloudController::AppModel.make(name: name1, space_guid: VCAP::CloudController::Space.make.guid) }
-      let(:space_guids) { [app_model5.space_guid, space.guid] }
-      let(:per_page) { 10 }
-      let(:names) { name1 }
+      let!(:app_model6) { VCAP::CloudController::AppModel.make(name: name1, space_guid: VCAP::CloudController::Space.make.guid) }
+      let(:space_guids) { [app_model5.space_guid, space.guid, app_model6.space_guid] }
+      let(:per_page) { 2 }
+      let(:names) { [name1] }
+      def space_guid_facets(space_guids)
+        space_guids.map { |sg| "space_guids[]=#{sg}" }.join('&')
+      end
       example 'Filters apps by name and spaces and guids and orgs' do
         user.admin = true
         user.save
+        expected_pagination = {
+          'total_results' => 3,
+          'first'         => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&page=1&per_page=2" },
+          'last'          => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&page=2&per_page=2" },
+          'next'          => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&page=2&per_page=2" },
+          'previous'      => nil,
+        }
+
         do_request_with_error_handling
+
         parsed_response = MultiJson.load(response_body)
         expect(response_status).to eq(200)
         expect(parsed_response['resources'].map { |r| r['name'] }).to eq(['my_app1', 'my_app1'])
+        expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
   end

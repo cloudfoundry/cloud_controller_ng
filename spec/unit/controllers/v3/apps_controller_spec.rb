@@ -50,7 +50,7 @@ module VCAP::CloudController
         response_code, response_body = apps_controller.list
 
         expect(apps_handler).to have_received(:list)
-        expect(app_presenter).to have_received(:present_json_list).with(list_response)
+        expect(app_presenter).to have_received(:present_json_list).with(list_response, {})
         expect(response_code).to eq(200)
         expect(response_body).to eq(app_response)
       end

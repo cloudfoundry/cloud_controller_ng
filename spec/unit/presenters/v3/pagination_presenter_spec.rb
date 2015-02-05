@@ -42,6 +42,33 @@ module VCAP::CloudController
         expect(first_url).to eq("/cloudfoundry/is-great?page=1&per_page=#{per_page}")
       end
 
+      it 'includes the facets in the result urls' do
+        facets = { 'facet1' => 'value1', 'facet2' => ['value2', 'value3'] }
+        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(page, per_page))
+        result      = presenter.present_pagination_hash(paginated_result, base_url, facets)
+
+        first_url = result[:first][:href]
+        expect(first_url).to eq("/cloudfoundry/is-great?facet1=value1&facet2[]=value2&facet2[]=value3&page=1&per_page=#{per_page}")
+      end
+
+      it 'includes the facet that is empty array' do
+        facets = { 'facet' => [] }
+        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(page, per_page))
+        result      = presenter.present_pagination_hash(paginated_result, base_url, facets)
+
+        first_url = result[:first][:href]
+        expect(first_url).to eq("/cloudfoundry/is-great?page=1&per_page=#{per_page}")
+      end
+
+      it 'includes the facet that is empty hash' do
+        facets = { 'facet' => {} }
+        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(page, per_page))
+        result      = presenter.present_pagination_hash(paginated_result, base_url, facets)
+
+        first_url = result[:first][:href]
+        expect(first_url).to eq("/cloudfoundry/is-great?page=1&per_page=#{per_page}")
+      end
+
       context 'when on the first page' do
         let(:page) { 1 }
 
