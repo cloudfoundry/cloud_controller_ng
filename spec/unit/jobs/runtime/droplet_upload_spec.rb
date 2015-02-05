@@ -95,21 +95,9 @@ module VCAP::CloudController
             expect(Delayed::Job.last.last_error).to match /Something Terrible Happened/
           end
 
-          context 'retrying' do
-            it 'does not delete the file' do
-              expect(File.exist?(local_file.path)).to be true
-            end
-          end
-
-          context 'when its the final attempt' do
-            it 'it deletes the file' do
-              worker.work_off 1
-
-              expect {
-                worker.work_off 1
-              }.to change {
-                File.exist?(local_file.path)
-              }.from(true).to(false)
+          context 'not retrying' do
+            it 'does delete the file' do
+              expect(File.exist?(local_file.path)).to be false
             end
           end
         end

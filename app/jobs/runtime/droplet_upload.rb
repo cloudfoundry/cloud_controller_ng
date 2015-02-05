@@ -29,10 +29,14 @@ module VCAP::CloudController
           :droplet_upload
         end
 
+        def max_attempts
+          1
+        end
+
         def error(job, _)
-          if !File.exist?(local_path)
-            @max_attempts = 1
-          end
+          # if !File.exist?(local_path)
+          #   @max_attempts = 1
+          # end
 
           if job.attempts >= max_attempts - 1
             FileUtils.rm_f(local_path)
