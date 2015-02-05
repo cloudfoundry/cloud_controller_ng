@@ -286,6 +286,32 @@ module CloudController
           end
 
           context 'handling failures' do
+            context 'and the error is a Excon::Errors::SocketError' do
+              it 'succeeds when the underlying call eventually succeds' do
+                called = 0
+                expect(client.files).to receive(:create).exactly(3).times do |_|
+                  called += 1
+                  raise Excon::Errors::SocketError.new(EOFError.new) if called <= 2
+                end
+
+                path = File.join(local_dir, 'some_file')
+                FileUtils.touch(path)
+                key = 'gonnafailnotgonnafail'
+
+                expect { client.cp_to_blobstore(path, key, 2) }.not_to raise_error
+              end
+
+              it 'fails when the max number of retries is hit' do
+                expect(client.files).to receive(:create).exactly(3).times.and_raise(Excon::Errors::SocketError.new(EOFError.new))
+
+                path = File.join(local_dir, 'some_file')
+                FileUtils.touch(path)
+                key = 'gonnafailnotgonnafail2'
+
+                expect { client.cp_to_blobstore(path, key, 2) }.to raise_error Excon::Errors::SocketError
+              end
+            end
+
             context 'when retries is 0' do
               it 'fails if the underlying operation fails' do
                 expect(client.files).to receive(:create).once.and_raise(SystemCallError.new('o no'))

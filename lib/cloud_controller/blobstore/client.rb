@@ -64,11 +64,13 @@ module CloudController
               body: file,
               public: local?,
             )
-          rescue SystemCallError => e # work around https://github.com/fog/fog/issues/3137
+          # work around https://github.com/fog/fog/issues/3137
+          # and Fog raising an EOFError SocketError intermittently
+          rescue SystemCallError, Excon::Errors::SocketError => e
             logger.debug('blobstore.cp-retry',
-                        error: e,
-                        destination_key: destination_key,
-                        remaining_retries: retries
+                         error: e,
+                         destination_key: destination_key,
+                         remaining_retries: retries
                         )
             retries -= 1
             retry unless retries < 0
@@ -83,7 +85,7 @@ module CloudController
                     destination_key: destination_key,
                     duration_seconds: duration,
                     size: size,
-                    )
+                   )
       end
 
       def cp_file_between_keys(source_key, destination_key)
