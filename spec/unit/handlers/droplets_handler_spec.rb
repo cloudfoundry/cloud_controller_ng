@@ -355,5 +355,57 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'delete' do
+      context 'when the droplet exists' do
+        let(:space) { Space.make }
+        let(:package) { PackageModel.make(space_guid: space.guid) }
+        let!(:droplet) { DropletModel.make(package_guid: package.guid, droplet_hash: 'jim') }
+        let(:droplet_guid) { droplet.guid }
+
+        context 'and the user has permissions to delete the droplet' do
+          it 'deletes the droplet' do
+            expect(access_context).to receive(:cannot?).and_return(false)
+            expect {
+              expect(droplets_handler.delete(droplet_guid, access_context)).to eq(droplet)
+            }.to change { DropletModel.count }.by(-1)
+            expect(droplets_handler.show(droplet_guid, access_context)).to be_nil
+          end
+
+          it 'enqueues a job to delete the corresponding blob from the blobstore' do
+            job_opts = { queue: 'cc-generic' }
+
+            expect(BlobstoreDelete).to receive(:new).
+              with(File.join(droplet.guid, droplet.droplet_hash), :droplet_blobstore, nil).
+              and_call_original
+
+            expect(Jobs::Enqueuer).to receive(:new).with(kind_of(BlobstoreDelete), job_opts).
+              and_call_original
+
+            expect {
+              droplets_handler.delete(droplet_guid, access_context)
+            }.to change { Delayed::Job.count }.by(1)
+          end
+        end
+
+        context 'and the user does not have permissions to delete the droplet' do
+          it 'raises an Unauthorized exception' do
+            expect(access_context).to receive(:cannot?).and_return(true)
+            expect {
+              expect {
+                droplets_handler.delete(droplet_guid, access_context)
+              }.to raise_error(DropletsHandler::Unauthorized)
+            }.not_to change { DropletModel.count }
+          end
+        end
+      end
+
+      context 'when the droplet does not exist' do
+        it 'returns nil' do
+          expect(access_context).to_not receive(:cannot?)
+          expect(droplets_handler.delete('bogus-droplet', access_context)).to be_nil
+        end
+      end
+    end
   end
 end

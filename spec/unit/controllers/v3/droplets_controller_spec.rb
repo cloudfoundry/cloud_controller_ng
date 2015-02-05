@@ -80,6 +80,55 @@ module VCAP::CloudController
       end
     end
 
+    describe '#delete' do
+      context 'when the droplet does not exist' do
+        before do
+          allow(droplets_handler).to receive(:delete).and_return(nil)
+        end
+
+        it 'returns a 404 Not Found' do
+          expect {
+            droplets_controller.delete('non-existant')
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the droplet exists' do
+        let(:droplet) { DropletModel.make }
+        let(:droplet_guid) { droplet.guid }
+
+        context 'when a user can access a droplet' do
+          before do
+            allow(droplets_handler).to receive(:delete).and_return(droplet)
+          end
+
+          it 'returns a 204 NO CONTENT' do
+            response_code, response = droplets_controller.delete(droplet_guid)
+            expect(response_code).to eq 204
+            expect(response).to eq(nil)
+          end
+        end
+
+        context 'when the user cannot access the droplet' do
+          before do
+            allow(droplets_handler).to receive(:delete).and_raise(DropletsHandler::Unauthorized)
+          end
+
+          it 'returns a 403 NotAuthorized error' do
+            expect {
+              droplets_controller.delete(droplet_guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'NotAuthorized'
+              expect(error.response_code).to eq 403
+            end
+          end
+        end
+      end
+    end
+
     describe '#list' do
       let(:page) { 1 }
       let(:per_page) { 2 }

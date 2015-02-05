@@ -30,6 +30,15 @@ module VCAP::CloudController
       unauthorized!
     end
 
+    delete '/v3/droplets/:guid', :delete
+    def delete(guid)
+      droplet = @droplets_handler.delete(guid, @access_context)
+      droplet_not_found! if droplet.nil?
+      [HTTP::NO_CONTENT]
+    rescue DropletsHandler::Unauthorized
+      unauthorized!
+    end
+
     private
 
     def droplet_not_found!

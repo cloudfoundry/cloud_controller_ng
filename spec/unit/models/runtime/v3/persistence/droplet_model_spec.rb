@@ -47,4 +47,24 @@ module VCAP::CloudController
       expect(DropletModel.user_visible(evil_hacker)).to_not include(droplet_model)
     end
   end
+
+  describe '#blobstore_key' do
+    let(:droplet) { DropletModel.make(droplet_hash: droplet_hash) }
+
+    context 'when the droplet has been uploaded' do
+      let(:droplet_hash) { 'foobar' }
+
+      it 'returns the correct blobstore key' do
+        expect(droplet.blobstore_key).to eq(File.join(droplet.guid, droplet_hash))
+      end
+    end
+
+    context 'when the droplet has not been uploaded' do
+      let(:droplet_hash) { nil }
+
+      it 'returns nil' do
+        expect(droplet.blobstore_key).to be_nil
+      end
+    end
+  end
 end

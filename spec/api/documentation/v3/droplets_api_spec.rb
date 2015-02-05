@@ -55,6 +55,33 @@ resource 'Droplets (Experimental)', type: :api do
     end
   end
 
+  delete '/v3/droplets/:guid' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+    let(:guid) { droplet_model.guid }
+
+    let(:package_model) do
+      VCAP::CloudController::PackageModel.make(space_guid: space_guid)
+    end
+
+    let!(:droplet_model) do
+      VCAP::CloudController::DropletModel.make(package_guid: package_model.guid)
+    end
+
+    before do
+      space.organization.add_user user
+      space.add_developer user
+    end
+
+    example 'Delete a Droplet' do
+      expect {
+        do_request_with_error_handling
+      }.to change { VCAP::CloudController::DropletModel.count }.by(-1)
+      expect(response_status).to eq(204)
+      expect(VCAP::CloudController::DropletModel.find(guid: guid)).to be_nil
+    end
+  end
+
   get '/v3/droplets' do
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'

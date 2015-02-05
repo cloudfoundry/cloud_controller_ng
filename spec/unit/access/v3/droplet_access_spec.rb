@@ -19,7 +19,7 @@ module VCAP::CloudController
       SecurityContext.clear
     end
 
-    describe '#create?' do
+    describe '#create?, #delete?' do
       let(:space) { Space.make }
       let(:droplet) { DropletModel.new(space_guid: space.guid) }
 
@@ -28,7 +28,8 @@ module VCAP::CloudController
 
         it 'allows the user to perform the action' do
           access_control = DropletModelAccess.new(access_context)
-          expect(access_control.create?(package, space)).to be_truthy
+          expect(access_control.create?(nil, space)).to be_truthy
+          expect(access_control.delete?(nil, space)).to be_truthy
         end
       end
 
@@ -43,7 +44,8 @@ module VCAP::CloudController
 
           it 'allows the user to create' do
             access_control = DropletModelAccess.new(access_context)
-            expect(access_control.create?(package, space)).to be_truthy
+            expect(access_control.create?(nil, space)).to be_truthy
+            expect(access_control.delete?(nil, space)).to be_truthy
           end
         end
 
@@ -57,7 +59,8 @@ module VCAP::CloudController
 
           it 'disallows the user from creating' do
             access_control = DropletModelAccess.new(access_context)
-            expect(access_control.create?(package, space)).to be_falsey
+            expect(access_control.create?(nil, space)).to be_falsey
+            expect(access_control.delete?(nil, space)).to be_falsey
           end
         end
 
@@ -66,7 +69,8 @@ module VCAP::CloudController
 
           it 'disallows the user from creating' do
             access_control = DropletModelAccess.new(access_context)
-            expect(access_control.create?(package, space)).to be_falsey
+            expect(access_control.create?(nil, space)).to be_falsey
+            expect(access_control.delete?(nil, space)).to be_falsey
           end
         end
 
@@ -81,7 +85,8 @@ module VCAP::CloudController
 
           it 'disallows the user from creating' do
             access_control = DropletModelAccess.new(access_context)
-            expect(access_control.create?(package, space)).to be_falsey
+            expect(access_control.create?(nil, space)).to be_falsey
+            expect(access_control.delete?(nil, space)).to be_falsey
           end
         end
       end

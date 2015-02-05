@@ -17,5 +17,9 @@ module VCAP::CloudController
         where(PackageModel.user_visibility_filter(user)).
         select_all(:v3_droplets)
     end
+
+    def blobstore_key
+      File.join(guid, droplet_hash) if droplet_hash
+    end
   end
 end

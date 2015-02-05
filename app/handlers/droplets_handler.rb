@@ -102,25 +102,6 @@ module VCAP::CloudController
       @paginator = paginator
     end
 
-    def list(pagination_options, access_context)
-      dataset = nil
-      if access_context.roles.admin?
-        dataset = DropletModel.dataset
-      else
-        dataset = DropletModel.user_visible(access_context.user)
-      end
-
-      @paginator.get_page(dataset, pagination_options)
-    end
-
-    def show(guid, access_context)
-      droplet = DropletModel.find(guid: guid)
-      return nil if droplet.nil?
-      package = PackageModel.find(guid: droplet.package_guid)
-      raise Unauthorized if access_context.cannot?(:read, droplet, package)
-      droplet
-    end
-
     def create(message, access_context)
       package = PackageModel.find(guid: message.package_guid)
       raise PackageNotFound if package.nil?
@@ -145,6 +126,45 @@ module VCAP::CloudController
       droplet.save
 
       @stagers.stager_for_package(package).stage_package(droplet, message.stack, message.memory_limit, message.disk_limit, buildpack_key, message.buildpack_git_url)
+      droplet
+    end
+
+    def show(guid, access_context)
+      droplet = DropletModel.find(guid: guid)
+      return nil if droplet.nil?
+      package = PackageModel.find(guid: droplet.package_guid)
+      raise Unauthorized if access_context.cannot?(:read, droplet, package)
+      droplet
+    end
+
+    def list(pagination_options, access_context)
+      dataset = nil
+      if access_context.roles.admin?
+        dataset = DropletModel.dataset
+      else
+        dataset = DropletModel.user_visible(access_context.user)
+      end
+
+      @paginator.get_page(dataset, pagination_options)
+    end
+
+    def delete(guid, access_context)
+      droplet = DropletModel.find(guid: guid)
+      return nil if droplet.nil?
+
+      package = PackageModel.find(guid: droplet.package_guid)
+      space = Space.find(guid: package.space_guid)
+
+      droplet.db.transaction do
+        droplet.lock!
+        raise Unauthorized if access_context.cannot?(:delete, droplet, space)
+        droplet.destroy
+      end
+
+      key = droplet.blobstore_key
+      blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(key, :droplet_blobstore, nil)
+      Jobs::Enqueuer.new(blobstore_delete, queue: 'cc-generic').enqueue
+
       droplet
     end
   end

@@ -20,5 +20,9 @@ module VCAP::CloudController
 
       has_write_scope && is_space_developer && org_active
     end
+
+    def delete?(droplet, space)
+      create?(droplet, space)
+    end
   end
 end
