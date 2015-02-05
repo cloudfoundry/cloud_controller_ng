@@ -294,22 +294,31 @@ module VCAP::Services::ServiceBrokers
     end
 
     describe '#update' do
+      let(:old_broker_host) { 'broker.example.com' }
       let!(:broker) do
         VCAP::CloudController::ServiceBroker.make(
           name:          'Cool Broker',
-          broker_url:    'http://broker.example.com',
+          broker_url:    "http://#{old_broker_host}",
           auth_username: 'cc',
           auth_password: 'auth1234',
         )
       end
 
+      let(:new_broker_host) { 'new-broker.com' }
+      let(:new_name) { 'new-name' }
+      let(:status) { 200 }
+      let(:body) { '{}' }
+
       before do
-        stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
+        stub_request(:get, "http://cc:auth1234@#{new_broker_host}/v2/catalog").to_return(status: status, body: body)
         allow(VCAP::Services::SSO::DashboardClientManager).to receive(:new).and_return(client_manager)
         allow(V2::Catalog).to receive(:new).and_return(catalog)
         allow(ServiceManager).to receive(:new).and_return(service_manager)
 
         allow(client_manager).to receive(:has_warnings?).and_return(false)
+
+        broker.name = new_name
+        broker.broker_url = "http://#{new_broker_host}"
       end
 
       it 'returns itself' do
@@ -330,10 +339,39 @@ module VCAP::Services::ServiceBrokers
         expect(broker.name).to eq('something-else')
       end
 
+      context 'when only the name is updated' do
+        before do
+          broker.broker_url = "http://#{old_broker_host}"
+          broker.name = new_name
+        end
+
+        it 'does not fetch the catalog' do
+          registration.update
+
+          expect(broker.name).to eq new_name
+          expect(a_request(:get, "http://cc:auth1234@#{old_broker_host}/v2/catalog")).to_not have_been_requested
+          expect(a_request(:get, "http://cc:auth1234@#{new_broker_host}/v2/catalog")).to_not have_been_requested
+        end
+      end
+
+      context 'when the name and another field is updated' do
+        before do
+          stub_request(:get, 'http://cc:auth1234@something-url.com/v2/catalog').to_return(body: '{}')
+        end
+
+        it 'fetches the catalog' do
+          broker.name = 'something-else'
+          broker.broker_url = 'http://something-url.com'
+          registration.update
+
+          expect(a_request(:get, 'http://cc:auth1234@something-url.com/v2/catalog')).to have_been_requested
+        end
+      end
+
       it 'fetches the catalog' do
         registration.update
 
-        expect(a_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog')).to have_been_requested
+        expect(a_request(:get, "http://cc:auth1234@#{new_broker_host}/v2/catalog")).to have_been_requested
       end
 
       it 'syncs services and plans' do
@@ -395,6 +433,7 @@ module VCAP::Services::ServiceBrokers
         context 'because the catalog has errors' do
           let(:errors) { double(:errors) }
           let(:formatter) { instance_double(VCAP::Services::ServiceBrokers::ValidationErrorsFormatter, format: 'something bad happened') }
+
           before do
             allow(catalog).to receive(:valid?).and_return(false)
             allow(catalog).to receive(:errors).and_return(errors)
@@ -426,9 +465,8 @@ module VCAP::Services::ServiceBrokers
         end
 
         context 'because the catalog fetch failed' do
-          before do
-            stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(status: 500)
-          end
+          let(:status) { 500 }
+          let(:body) { '{"description":"error message"}' }
 
           it "raises an error, even though we'd rather it not" do
             expect {
@@ -437,7 +475,6 @@ module VCAP::Services::ServiceBrokers
           end
 
           it 'not update the service broker' do
-            broker.name = 'something-else'
             expect {
               registration.update rescue nil
             }.to_not change { VCAP::CloudController::ServiceBroker[broker.id].name }
@@ -477,7 +514,6 @@ module VCAP::Services::ServiceBrokers
           end
 
           it 'not update the service broker' do
-            broker.name = 'something-else'
             expect {
               registration.update rescue nil
             }.to_not change { VCAP::CloudController::ServiceBroker[broker.id].name }

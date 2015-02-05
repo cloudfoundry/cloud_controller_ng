@@ -29,6 +29,12 @@ module VCAP::Services::ServiceBrokers
 
     def update
       return unless broker.valid?
+
+      if only_updating_broker_name?
+        broker.save
+        return self
+      end
+
       validate_catalog!
       synchronize_dashboard_clients!
 
@@ -44,6 +50,12 @@ module VCAP::Services::ServiceBrokers
     end
 
     private
+
+    def only_updating_broker_name?
+      current_broker_values = VCAP::CloudController::ServiceBroker.find(guid: broker.guid).values.to_a
+      update_values = current_broker_values - broker.values.to_a
+      update_values.length == 1 && update_values[0][0] == :name
+    end
 
     def synchronize_dashboard_clients!
       unless client_manager.synchronize_clients_with_catalog(catalog)

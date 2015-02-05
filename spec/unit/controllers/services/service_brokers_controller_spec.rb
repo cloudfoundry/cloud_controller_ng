@@ -452,44 +452,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      context 'when renaming a service' do
-        let(:body_hash) do
-          {
-            name: 'My Service 2.0',
-          }
-        end
-
-        it 'renames without fetching the catalog' do
-          put "/v2/service_brokers/#{broker.guid}", body, headers
-
-          expect(broker).to have_received(:set).with(body_hash)
-          expect(registration).to_not have_received(:update)
-        end
-
-        it 'creates a broker update event' do
-          old_broker_name = broker.name
-          body_hash.delete(:broker_url)
-          email = 'email@example.com'
-
-          put "/v2/service_brokers/#{broker.guid}", body, headers_for(admin_user, email: email)
-
-          event = Event.first(type: 'audit.service_broker.update')
-          expect(event.actor_type).to eq('user')
-          expect(event.timestamp).to be
-          expect(event.actor).to eq(admin_user.guid)
-          expect(event.actor_name).to eq(email)
-          expect(event.actee).to eq(broker.guid)
-          expect(event.actee_type).to eq('service_broker')
-          expect(event.actee_name).to eq(old_broker_name)
-          expect(event.space_guid).to be_empty
-          expect(event.organization_guid).to be_empty
-          expect(event.metadata['request']['name']).to eq body_hash[:name]
-          expect(event.metadata['request']).not_to have_key 'auth_username'
-          expect(event.metadata['request']).not_to have_key 'auth_password'
-          expect(event.metadata['request']).not_to have_key 'broker_url'
-        end
-      end
     end
   end
 end
