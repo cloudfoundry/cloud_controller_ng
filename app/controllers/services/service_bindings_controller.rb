@@ -55,6 +55,9 @@ module VCAP::CloudController
       service_binding = ServiceBinding.find(guid: guid)
       raise_if_has_associations!(service_binding) if v2_api? && !recursive?
 
+      service_instance = ServiceInstance.find(guid: service_binding.service_instance_guid)
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress') if service_instance.managed_instance? && service_instance.operation_in_progress?
+
       deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceBinding, guid)
       delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :record_service_binding_event, :delete, service_binding)
 
@@ -73,6 +76,7 @@ module VCAP::CloudController
 
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid) unless service_instance
       raise VCAP::Errors::ApiError.new_from_details('UnbindableService') unless service_instance.bindable?
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress') if service_instance.managed_instance? && service_instance.operation_in_progress?
     end
 
     def self.translate_validation_exception(e, attributes)

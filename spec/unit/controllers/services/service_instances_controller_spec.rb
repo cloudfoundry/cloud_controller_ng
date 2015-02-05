@@ -562,7 +562,6 @@ module VCAP::CloudController
           expect(last_response).to have_status_code 400
           expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
         end
-
       end
 
       context 'when the broker declared support for plan upgrades' do
@@ -937,7 +936,6 @@ module VCAP::CloudController
             expect(last_response.status).to eq 400
             expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
           end
-
         end
       end
 

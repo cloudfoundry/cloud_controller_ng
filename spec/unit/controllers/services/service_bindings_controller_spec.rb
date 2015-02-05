@@ -157,7 +157,7 @@ module VCAP::CloudController
           body =  params.merge('binding_options' => binding_options).to_json
           post '/v2/service_bindings', body, headers_for(developer)
 
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_status_code(201)
           expect(ServiceBinding.last.binding_options).to eq(binding_options)
         end
       end
@@ -317,6 +317,26 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the instance operation is in progress' do
+          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+          let(:instance) { ManagedServiceInstance.make }
+          before do
+            instance.service_instance_operation = last_operation
+            instance.save
+          end
+
+          it 'should show an error message for create bind operation' do
+            req = {
+                app_guid: app_obj.guid,
+                service_instance_guid: instance.guid
+            }.to_json
+
+            post '/v2/service_bindings', req, json_headers(headers_for(developer))
+            expect(last_response).to have_status_code 400
+            expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+          end
+        end
+
         describe 'binding errors' do
           subject(:make_request) do
             req = {
@@ -431,6 +451,23 @@ module VCAP::CloudController
           expect(last_response.status).to eq 202
           expect(decoded_response['entity']['guid']).to be
           expect(decoded_response['entity']['status']).to eq 'queued'
+        end
+      end
+
+      context 'when the instance operation is in progress' do
+        let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+        let(:instance) { ManagedServiceInstance.make }
+        let(:service_binding) { ServiceBinding.make(service_instance: instance) }
+        before do
+          instance.service_instance_operation = last_operation
+          instance.save
+        end
+
+        it 'should show an error message for unbind operation' do
+          delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer))
+          expect(last_response).to have_status_code 400
+          expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+          expect(ServiceBinding.find(guid: service_binding.guid)).not_to be_nil
         end
       end
     end
