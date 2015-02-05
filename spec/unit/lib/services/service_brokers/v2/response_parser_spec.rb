@@ -26,6 +26,17 @@ module VCAP::Services
           context 'when the status code is 200' do
             let(:code) { 200 }
 
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' }
+                it 'raises a ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                end
+              end
+            end
+
             context 'and the method is put' do
               let(:method) { :put }
               let(:body) do
@@ -165,6 +176,17 @@ module VCAP::Services
           context 'when the status code is 201' do
             let(:code) { 201 }
 
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' }
+                it 'raises a ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                end
+              end
+            end
+
             context 'and the method is put' do
               let(:method) { :put }
               let(:body) do
@@ -263,6 +285,17 @@ module VCAP::Services
 
           context 'when the status code is 202' do
             let(:code) { 202 }
+
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' }
+                it 'raises a ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                end
+              end
+            end
 
             context 'and the method is put' do
               let(:method) { :put }
@@ -373,6 +406,17 @@ module VCAP::Services
           context 'when the status code is other 2xx' do
             let(:code) { 204 }
 
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' }
+                it 'raises a ServiceBrokerBadResponse error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                end
+              end
+            end
+
             context 'and the method is put' do
               let(:method) { :put }
               it 'raises a ServiceBrokerBadResponse error' do
@@ -405,6 +449,17 @@ module VCAP::Services
           context 'when the status code is 3xx' do
             let(:code) { 302 }
 
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' } # AppDirect likes to return this
+                it 'raises a ServiceBrokerBadResponse error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                end
+              end
+            end
+
             context 'and the method is put' do
               let(:method) { :put }
               it 'raises a ServiceBrokerBadResponse error' do
@@ -436,6 +491,18 @@ module VCAP::Services
 
           context 'when the status code is 401' do
             let(:code) { 401 }
+
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' } # AppDirect likes to return this
+                it 'raises a ServiceBrokerApiAuthenticationFailed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerApiAuthenticationFailed)
+                end
+              end
+            end
+
             context 'and the method is put' do
               let(:method) { :put }
               it 'raises a ServiceBrokerApiAuthenticationFailed error' do
@@ -468,6 +535,17 @@ module VCAP::Services
           context 'when the status code is 409' do
             let(:code) { 409 }
 
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' } # AppDirect likes to return this
+                it 'raises a ServiceBrokerConflict error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerConflict)
+                end
+              end
+            end
+
             context 'and the method is put' do
               let(:method) { :put }
               it 'raises a ServiceBrokerConflict error' do
@@ -499,6 +577,17 @@ module VCAP::Services
 
           context 'when the status code is 410' do
             let(:code) { 410 }
+
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' } # AppDirect likes to return this
+                it 'raises a ServiceBrokerBadResponse error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                end
+              end
+            end
 
             context 'and the method is put' do
               let(:method) { :put }
@@ -533,8 +622,20 @@ module VCAP::Services
           context 'when the status code is 422' do
             let(:code) { 422 }
 
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' } # AppDirect likes to return this
+                it 'raises a ServiceBrokerBadResponse error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                end
+              end
+            end
+
             context 'and the method is put' do
               let(:method) { :put }
+
               it 'raises a ServiceBrokerBadResponse error' do
                 expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
               end
@@ -572,6 +673,17 @@ module VCAP::Services
           context 'when the status code is other 4xx' do
             let(:code) { 404 }
 
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' } # AppDirect likes to return this
+                it 'raises a ServiceBrokerRequestRejected error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerRequestRejected)
+                end
+              end
+            end
+
             context 'and the method is put' do
               let(:method) { :put }
               it 'raises a ServiceBrokerRequestRejected error' do
@@ -603,6 +715,17 @@ module VCAP::Services
 
           context 'when the status code is 5xx' do
             let(:code) { 500 }
+
+            context 'and regardless of the method' do
+              let(:method) { :put }
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' } # AppDirect likes to return this
+                it 'raises a ServiceBrokerBadResponse error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                end
+              end
+            end
 
             context 'and the method is put' do
               let(:method) { :put }
