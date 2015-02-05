@@ -97,6 +97,34 @@ module VCAP::CloudController
             path:      '/v2/domains',
             enumerate: 2
         end
+
+        context 'with a shared private domain' do
+          before do
+            @org_b.add_private_domain(@obj_a)
+          end
+
+          describe 'OrgManager' do
+            let(:member_a) { @org_b_manager }
+            let(:enumeration_expectation_a) { [@obj_a, @obj_b, @shared_domain] }
+
+            include_examples 'permission enumeration', 'OrgManager',
+              permissions_overlap: true,
+              name:      'domain',
+              path:      '/v2/domains',
+              enumerate: 3
+          end
+
+          describe 'SpaceDeveloper' do
+            let(:member_a) { @space_b_developer }
+            let(:enumeration_expectation_a) { [@obj_a, @obj_b, @shared_domain] }
+
+            include_examples 'permission enumeration', 'SpaceDeveloper',
+              permissions_overlap: true,
+              name:      'domain',
+              path:      '/v2/domains',
+              enumerate: 3
+          end
+        end
       end
 
       describe 'System Domain permissions' do

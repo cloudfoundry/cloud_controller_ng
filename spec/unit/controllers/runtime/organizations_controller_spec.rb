@@ -126,14 +126,13 @@ module VCAP::CloudController
           {
             spaces:                  [:get, :put, :delete],
             domains:                 [:get, :delete],
-            private_domains:         :get,
+            private_domains:         [:get, :put, :delete],
             users:                   [:get, :put, :delete],
             managers:                [:get, :put, :delete],
             billing_managers:        [:get, :put, :delete],
             auditors:                [:get, :put, :delete],
             app_events:              [:get, :put, :delete],
             space_quota_definitions: [:get, :put, :delete],
-            shared_private_domains:  [:get, :put, :delete],
           }
         )
       end

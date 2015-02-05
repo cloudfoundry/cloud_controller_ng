@@ -76,7 +76,7 @@ resource 'Private Domains', type: [:api, :legacy_api] do
       before do
         pd = VCAP::CloudController::PrivateDomain[guid: guid]
         org = VCAP::CloudController::Organization.make
-        org.add_shared_private_domain(pd)
+        org.add_private_domain(pd)
       end
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :private_domain, path: :shared_organizations

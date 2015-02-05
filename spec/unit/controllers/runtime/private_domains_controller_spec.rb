@@ -64,7 +64,7 @@ module VCAP::CloudController
         let(:private_domain) { PrivateDomain.make }
 
         before do
-          Organization.make.add_shared_private_domain(private_domain)
+          Organization.make.add_private_domain(private_domain)
         end
 
         it 'returns links for shared organizations' do

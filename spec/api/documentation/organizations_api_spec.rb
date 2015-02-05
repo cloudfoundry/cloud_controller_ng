@@ -82,17 +82,17 @@ resource 'Organizations', type: [:api, :legacy_api] do
 
     describe 'Shared Private Domains' do
       before do
-        organization.add_shared_private_domain(associated_shared_private_domain)
+        organization.add_private_domain(associated_private_domain)
       end
 
-      let!(:associated_shared_private_domain) { VCAP::CloudController::PrivateDomain.make }
-      let(:associated_shared_private_domain_guid) { associated_shared_private_domain.guid }
-      let(:shared_private_domain) { VCAP::CloudController::PrivateDomain.make }
-      let(:shared_private_domain_guid) { shared_private_domain.guid }
+      let!(:associated_private_domain) { VCAP::CloudController::PrivateDomain.make }
+      let(:associated_private_domain_guid) { associated_private_domain.guid }
+      let(:private_domain) { VCAP::CloudController::PrivateDomain.make }
+      let(:private_domain_guid) { private_domain.guid }
 
-      standard_model_list :private_domain, VCAP::CloudController::PrivateDomainsController, outer_model: :organization, path: :shared_private_domains
-      nested_model_associate :shared_private_domain, :organization
-      nested_model_remove :shared_private_domain, :organization
+      standard_model_list :private_domain, VCAP::CloudController::PrivateDomainsController, outer_model: :organization
+      nested_model_associate :private_domain, :organization
+      nested_model_remove :private_domain, :organization
     end
 
     describe 'Users' do

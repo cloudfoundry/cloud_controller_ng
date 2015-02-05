@@ -113,14 +113,19 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      allowed_organizations = Organization.filter(Sequel.or(
+      allowed_organization_ids = Organization.filter(Sequel.or(
                                      managers: [user],
                                      auditors: [user],
-                                     spaces: Space.having_developers(user)))
+                                     spaces: Space.having_developers(user))).select_map(:id)
 
-      Sequel.or(
-        SHARED_DOMAIN_CONDITION.merge(owning_organization: allowed_organizations)
-      )
+      r = Organization.association_reflection(:private_domains)
+      shared_domains = r.associated_dataset.select(r.qualified_right_key).where(r.predicate_key => allowed_organization_ids)
+
+      Sequel.or([
+        SHARED_DOMAIN_CONDITION.flatten,
+        [:owning_organization_id, allowed_organization_ids],
+        [:id, shared_domains]
+      ])
     end
 
     def usable_by_organization?(org)
