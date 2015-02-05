@@ -62,38 +62,13 @@ module VCAP::CloudController
     def create
       json_msg = self.class::CreateMessage.decode(body)
       @request_attrs = json_msg.extract(stringify_keys: true)
-
-      service_plan_guid = request_attrs['service_plan_guid']
-
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
       raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
 
-      # Make sure the service plan exists before checking permissions
-      if ServicePlan.find(guid: service_plan_guid).nil?
-        raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'not a valid service plan')
-      end
-
-      raise Errors::ApiError.new_from_details('NotAuthorized') unless current_user_can_manage_plan(service_plan_guid)
-
-      organization = requested_space.organization
-
-      unless ServicePlan.organization_visible(organization).filter(guid: request_attrs['service_plan_guid']).count > 0
-        raise Errors::ApiError.new_from_details('ServiceInstanceOrganizationNotAuthorized')
-      end
+      validate_create_action(request_attrs, params)
 
       service_instance = ManagedServiceInstance.new(request_attrs)
-      validate_access(:create, service_instance)
-
-      unless service_instance.valid?
-        raise Sequel::ValidationFailed.new(service_instance)
-      end
-
-      attributes_to_update = {}
-      if ['true', 'false', nil].include? params['accepts_incomplete']
-        attributes_to_update = service_instance.client.provision(service_instance, async: params['accepts_incomplete'])
-      else
-        raise Errors::ApiError.new_from_details('InvalidRequest')
-      end
+      attributes_to_update = service_instance.client.provision(service_instance, async: params['accepts_incomplete'])
 
       begin
         service_instance.save_with_operation(attributes_to_update)
@@ -119,23 +94,10 @@ module VCAP::CloudController
       service_instance = find_guid(guid)
       validate_access(:read_for_update, service_instance)
       validate_access(:update, service_instance)
-
-      if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
-        raise Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
-      end
-
-      if service_instance.operation_in_progress?
-        raise Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress')
-      end
+      validate_update_action(service_instance)
 
       if request_attrs['service_plan_guid']
-        old_plan = service_instance.service_plan
-        unless old_plan.service.plan_updateable
-          raise VCAP::Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
-        end
-
         new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
-        raise VCAP::Errors::ApiError.new_from_details('InvalidRelation', 'Plan') unless new_plan
         service_instance.client.update_service_plan(service_instance, new_plan)
       end
 
@@ -238,6 +200,52 @@ module VCAP::CloudController
     define_routes
 
     private
+
+    def validate_create_action(request_attrs, params)
+      service_plan_guid = request_attrs['service_plan_guid']
+      organization = requested_space.organization
+
+      if ServicePlan.find(guid: service_plan_guid).nil?
+        raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'not a valid service plan')
+      end
+
+      raise Errors::ApiError.new_from_details('NotAuthorized') unless current_user_can_manage_plan(service_plan_guid)
+
+      unless ServicePlan.organization_visible(organization).filter(guid: service_plan_guid).count > 0
+        raise Errors::ApiError.new_from_details('ServiceInstanceOrganizationNotAuthorized')
+      end
+
+      service_instance = ManagedServiceInstance.new(request_attrs)
+      validate_access(:create, service_instance)
+
+      unless service_instance.valid?
+        raise Sequel::ValidationFailed.new(service_instance)
+      end
+
+      unless ['true', 'false', nil].include? params['accepts_incomplete']
+        raise Errors::ApiError.new_from_details('InvalidRequest')
+      end
+    end
+
+    def validate_update_action(service_instance)
+      if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
+        raise Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
+      end
+
+      if service_instance.operation_in_progress?
+        raise Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress')
+      end
+
+      if request_attrs['service_plan_guid']
+        old_plan = service_instance.service_plan
+        unless old_plan.service.plan_updateable
+          raise VCAP::Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
+        end
+
+        new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
+        raise VCAP::Errors::ApiError.new_from_details('InvalidRelation', 'Plan') unless new_plan
+      end
+    end
 
     def raise_if_has_associations!(obj)
       associations = obj.class.associations.select do |association|

@@ -446,7 +446,7 @@ module VCAP::CloudController
           end
 
           it 'returns a 404' do
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_status_code(400)
             expect(decoded_response['code']).to eq(60003)
             expect(decoded_response['description']).to include('not a valid service plan')
           end
@@ -697,7 +697,7 @@ module VCAP::CloudController
 
         it 'returns a CF-ServiceBrokerBadResponse' do
           put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(last_response.status).to eq 502
+          expect(last_response).to have_status_code 502
           expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
         end
       end
