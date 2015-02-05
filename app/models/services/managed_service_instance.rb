@@ -51,6 +51,8 @@ module VCAP::CloudController
       end
     end
 
+    IN_PROGRESS_STRING = 'in progress'.freeze
+
     many_to_one :service_plan
 
     export_attributes :name, :credentials, :service_plan_guid,
@@ -177,6 +179,13 @@ module VCAP::CloudController
 
     def terminal_state?
       ['succeeded', 'failed'].include? last_operation.state
+    end
+
+    def operation_in_progress?
+      if last_operation && last_operation.state == IN_PROGRESS_STRING
+        return true
+      end
+      false
     end
 
     def save_with_operation(attributes_to_update)

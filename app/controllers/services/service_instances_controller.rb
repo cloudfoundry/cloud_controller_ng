@@ -124,6 +124,10 @@ module VCAP::CloudController
         raise Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
       end
 
+      if service_instance.operation_in_progress?
+        raise Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress')
+      end
+
       if request_attrs['service_plan_guid']
         old_plan = service_instance.service_plan
         unless old_plan.service.plan_updateable
@@ -201,6 +205,10 @@ module VCAP::CloudController
     def delete(guid)
       service_instance = find_guid_and_validate_access(:delete, guid, ServiceInstance)
       raise_if_has_associations!(service_instance) if v2_api? && !recursive?
+
+      if service_instance.managed_instance? && service_instance.operation_in_progress?
+        raise Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress')
+      end
 
       deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)
       event_method = service_instance.type == 'managed_service_instance' ?  :record_service_instance_event : :record_user_provided_service_instance_event

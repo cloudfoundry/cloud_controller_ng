@@ -505,6 +505,42 @@ module VCAP::CloudController
       end
     end
 
+    describe '#operation_in_progress?' do
+      let(:service_instance) { ManagedServiceInstance.make }
+      before do
+        service_instance.service_instance_operation = last_operation
+        service_instance.save
+      end
+
+      context 'when the last operation is `in progress`' do
+        let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+        it 'returns true' do
+          expect(service_instance.operation_in_progress?).to eq true
+        end
+      end
+
+      context 'when the last operation is succeeded' do
+        let(:last_operation) { ServiceInstanceOperation.make(state: 'succeeded') }
+        it 'returns false' do
+          expect(service_instance.operation_in_progress?).to eq false
+        end
+      end
+
+      context 'when the last operation is failed' do
+        let(:last_operation) { ServiceInstanceOperation.make(state: 'failed') }
+        it 'returns false' do
+          expect(service_instance.operation_in_progress?).to eq false
+        end
+      end
+
+      context 'when the last operation is nil' do
+        let(:last_operation) { nil }
+        it 'returns false' do
+          expect(service_instance.operation_in_progress?).to eq false
+        end
+      end
+    end
+
     describe '#to_hash' do
       let(:opts)            { { attrs: [:credentials] } }
       let(:developer)       { make_developer_for_space(service_instance.space) }

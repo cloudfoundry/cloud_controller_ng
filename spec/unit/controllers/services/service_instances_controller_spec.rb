@@ -549,6 +549,22 @@ module VCAP::CloudController
         )
       end
 
+      context 'when the service instance has an operation in progress' do
+        let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+        let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
+        before do
+          service_instance.service_instance_operation = last_operation
+          service_instance.save
+        end
+
+        it 'should show an error message for update operation' do
+          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+          expect(last_response).to have_status_code 400
+          expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+        end
+
+      end
+
       context 'when the broker declared support for plan upgrades' do
         let(:response_body) { '{}' }
 
@@ -888,7 +904,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the service broker returns a 409' do
+        context 'and the service broker returns a 409' do
           let(:body) { '{"description": "service broker error"}' }
           let(:status) { 409 }
 
@@ -906,6 +922,22 @@ module VCAP::CloudController
             delete '/v2/service_instances/non-existing-instance', {}, admin_headers
             expect(last_response.status).to eq 404
           end
+        end
+
+        context 'and the instance operation is in progress' do
+          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+          let(:service_instance) { ManagedServiceInstance.make }
+          before do
+            service_instance.service_instance_operation = last_operation
+            service_instance.save
+          end
+
+          it 'should show an error message for update operation' do
+            delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+            expect(last_response.status).to eq 400
+            expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+          end
+
         end
       end
 
