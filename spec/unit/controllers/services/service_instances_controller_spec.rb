@@ -203,6 +203,7 @@ module VCAP::CloudController
             },
           )
         end
+        let(:response_code) { 200 }
 
         def stub_delete_and_return(status, body)
           stub_request(:delete, service_broker_url_regex).
@@ -213,7 +214,7 @@ module VCAP::CloudController
         before do
           stub_request(:put, service_broker_url_regex).
             with(headers: { 'Accept' => 'application/json' }).
-            to_return(status: 200, body: response_body, headers: { 'Content-Type' => 'application/json' })
+            to_return(status: response_code, body: response_body, headers: { 'Content-Type' => 'application/json' })
 
           stub_delete_and_return(200, '{}')
         end
@@ -303,6 +304,21 @@ module VCAP::CloudController
               'space_guid' => instance.space_guid,
             }
           })
+        end
+
+        context 'the service broker says there is a conflict' do
+          let(:response_body) do
+            MultiJson.dump(
+              description: 'some-error',
+            )
+          end
+          let(:response_code) { 409 }
+
+          it "should return an error with broker's error message" do
+            create_managed_service_instance(email: 'developer@example.com')
+
+            expect(last_response.body).to include('Service broker error: some-error')
+          end
         end
 
         it 'creates a CREATED service usage event' do

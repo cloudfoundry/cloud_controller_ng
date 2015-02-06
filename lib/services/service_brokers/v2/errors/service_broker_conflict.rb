@@ -7,7 +7,8 @@ module VCAP::Services
             error_message = nil
             parsed_response = parsed_json(response.body)
             if parsed_response.is_a?(Hash) && parsed_response.key?('description')
-              error_message = parsed_json(response.body)['description']
+              error_description = parsed_json(response.body)['description']
+              error_message = "Service broker error: #{error_description}"
             end
 
             super(

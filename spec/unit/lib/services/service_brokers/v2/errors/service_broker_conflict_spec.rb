@@ -5,7 +5,8 @@ module VCAP::Services
     module V2
       module Errors
         describe 'ServiceBrokerConflict' do
-          let(:response_body) { '{"description": "error message"}' }
+          let(:error_message) { 'error message' }
+          let(:response_body) { "{\"description\": \"#{error_message}\"}" }
           let(:response) { double(code: 409, reason: 'Conflict', body: response_body) }
 
           let(:uri) { 'http://uri.example.com' }
@@ -14,7 +15,7 @@ module VCAP::Services
 
           it 'initializes the base class correctly' do
             exception = ServiceBrokerConflict.new(uri, method, response)
-            expect(exception.message).to eq('error message')
+            expect(exception.message).to eq("Service broker error: #{error_message}")
             expect(exception.uri).to eq(uri)
             expect(exception.method).to eq(method)
             expect(exception.source).to eq(MultiJson.load(response.body))
