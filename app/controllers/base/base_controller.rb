@@ -120,12 +120,18 @@ module VCAP::CloudController::RestController
     end
 
     def check_authentication(op)
-      if VCAP::CloudController::SecurityContext.missing_token?
-        return if self.class.allow_unauthenticated_access?(op)
-        raise VCAP::Errors::ApiError.new_from_details('NotAuthenticated')
-      end
+      # The logic here is a bit oddly ordered, but it supports the
+      # legacy calls setting a user, but not providing a token.
+      return if self.class.allow_unauthenticated_access?(op)
+      return if VCAP::CloudController::SecurityContext.current_user
 
-      if VCAP::CloudController::SecurityContext.invalid_token?
+      if VCAP::CloudController::SecurityContext.missing_token?
+        raise VCAP::Errors::ApiError.new_from_details('NotAuthenticated')
+      elsif VCAP::CloudController::SecurityContext.invalid_token?
+        raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
+      else
+        logger.error 'Unexpected condition: valid token with no user/client id ' \
+                       "or admin scope. Token hash: #{VCAP::CloudController::SecurityContext.token}"
         raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
       end
     end

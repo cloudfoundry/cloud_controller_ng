@@ -182,14 +182,6 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq 1000
             expect(last_response.status).to eq 401
           end
-
-          context 'and the endpoint allows unauthenticated access' do
-            it 'still raise InvalidAuthToken' do
-              get '/test_unauthenticated', '', 'HTTP_AUTHORIZATION' => 'BEARER fake_token'
-              expect(decoded_response['code']).to eq 1000
-              expect(last_response.status).to eq 401
-            end
-          end
         end
 
         context 'when the endpoint requires basic auth' do

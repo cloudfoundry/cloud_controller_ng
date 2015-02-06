@@ -18,24 +18,29 @@ module VCAP::CloudController
 
     allow_unauthenticated_access only: :enumerate
     def enumerate
-      return super if SecurityContext.valid_token?
-      single_filter = @opts[:q][0] if @opts[:q]
-      service_guid = single_filter.split(':')[1] if single_filter && single_filter.start_with?('service_guid')
+      if SecurityContext.missing_token?
+        single_filter = @opts[:q][0] if @opts[:q]
+        service_guid = single_filter.split(':')[1] if single_filter && single_filter.start_with?('service_guid')
 
-      plans = ServicePlan.where(active: true, public: true)
-      if service_guid.present?
-        services = Service.where(guid: service_guid)
-        plans = plans.where(service_id: services.select(:id))
+        plans = ServicePlan.where(active: true, public: true)
+        if service_guid.present?
+          services = Service.where(guid: service_guid)
+          plans = plans.where(service_id: services.select(:id))
+        end
+
+        @opts.delete(:inline_relations_depth)
+        collection_renderer.render_json(
+          self.class,
+          plans,
+          self.class.path,
+          @opts,
+          {}
+        )
+      elsif SecurityContext.invalid_token?
+        raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
+      else
+        super
       end
-
-      @opts.delete(:inline_relations_depth)
-      collection_renderer.render_json(
-        self.class,
-        plans,
-        self.class.path,
-        @opts,
-        {}
-      )
     end
 
     def delete(guid)

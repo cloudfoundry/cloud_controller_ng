@@ -46,7 +46,12 @@ module VCAP::CloudController
 
     allow_unauthenticated_access only: :enumerate
     def enumerate
-      @opts.delete(:inline_relations_depth) unless SecurityContext.valid_token?
+      if SecurityContext.missing_token?
+        @opts.delete(:inline_relations_depth)
+      elsif SecurityContext.invalid_token?
+        raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
+      end
+
       super
     end
 
