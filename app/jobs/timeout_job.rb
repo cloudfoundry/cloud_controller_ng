@@ -2,7 +2,8 @@ module VCAP::CloudController
   module Jobs
     class TimeoutJob < WrappingJob
       def perform
-        Timeout.timeout max_run_time(@handler.job_name_in_configuration) do
+        name = @handler.respond_to?(:job_name_in_configuration) ? @handler.job_name_in_configuration : :global
+        Timeout.timeout max_run_time(name) do
           super
         end
       rescue Timeout::Error

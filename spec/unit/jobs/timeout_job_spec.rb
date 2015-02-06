@@ -32,6 +32,18 @@ module VCAP::CloudController::Jobs
       end
     end
 
+    context 'when the job does not have a configuration name' do
+      let(:job) { double(max_attempts: 2) }
+
+      before do
+        allow(job).to receive(:perform).and_return(true)
+      end
+
+      it 'runs the job with the default timeout' do
+        expect { timeout_job.perform }.not_to raise_error
+      end
+    end
+
     describe 'max_timeout' do
       let(:config) do
         {
