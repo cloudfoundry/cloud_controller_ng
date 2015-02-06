@@ -29,10 +29,18 @@ module VCAP::Services
             context 'and regardless of the method' do
               let(:method) { :put }
 
-              context 'the response is not a valid json object' do
+              context 'the response is partial json response' do
                 let(:body) { '""' }
                 it 'raises a ServiceBrokerResponseMalformed error' do
                   expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                end
+              end
+
+              context 'the response is invalid json' do
+                let(:body) { 'dfgh' }
+                it 'raises a ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                  expect(logger).to have_received(:warn)
                 end
               end
             end

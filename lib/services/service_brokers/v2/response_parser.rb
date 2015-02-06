@@ -84,6 +84,10 @@ module VCAP::Services
               body: "\"#{response.body}\""
             )
           end
+
+          def logger
+            @logger ||= Steno.logger('cc.service_broker.v2.client')
+          end
         end
 
         class GetResponse < BaseResponse
@@ -230,10 +234,6 @@ module VCAP::Services
           def handle_410
             logger.warn("Already deleted: #{@uri}")
             nil
-          end
-
-          def logger
-            @logger ||= Steno.logger('cc.service_broker.v2.client')
           end
         end
 
