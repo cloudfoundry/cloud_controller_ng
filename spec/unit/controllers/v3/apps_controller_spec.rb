@@ -54,6 +54,38 @@ module VCAP::CloudController
         expect(response_code).to eq(200)
         expect(response_body).to eq(app_response)
       end
+
+      context 'query params' do
+        context('invalid param format') do
+          let(:names) { 'foo' }
+          let(:params) { { 'names' => names } }
+
+          it 'returns 400' do
+            expect {
+              apps_controller.list
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to match('Invalid type')
+            end
+          end
+        end
+
+        context 'unknow query param' do
+          let(:bad_param) { 'foo' }
+          let(:params) { { 'bad_param' => bad_param } }
+
+          it 'returns 400' do
+            expect {
+              apps_controller.list
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to match('Unknow query param')
+            end
+          end
+        end
+      end
     end
 
     describe '#show' do

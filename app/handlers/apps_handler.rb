@@ -74,6 +74,7 @@ module VCAP::CloudController
     class InvalidApp < StandardError; end
     class IncorrectProcessSpace < StandardError; end
     class IncorrectPackageSpace < StandardError; end
+    class InvalidParam < StandardError; end
 
     def initialize(processes_handler, paginator=SequelPaginator.new, apps_repository=AppsRepository.new)
       @processes_handler = processes_handler

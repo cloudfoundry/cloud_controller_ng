@@ -17,9 +17,12 @@ module VCAP::CloudController
     def list
       pagination_options = PaginationOptions.from_params(params)
       facets = params.slice('guids', 'space_guids', 'organization_guids', 'names')
+      validate_allowed_params(params)
       paginated_result   = @app_handler.list(pagination_options, @access_context, facets)
 
       [HTTP::OK, @app_presenter.present_json_list(paginated_result, facets)]
+    rescue AppsHandler::InvalidParam => e
+      invalid_param!(e.message)
     end
 
     get '/v3/apps/:guid', :show
@@ -73,6 +76,25 @@ module VCAP::CloudController
 
     private
 
+    def validate_allowed_params(params)
+      schema = {
+        ['names', 'guids', 'organization_guids', 'space_guids'] => ->(v) { v.is_a? Array },
+        ['page', 'per_page'] => ->(v) { v.to_i != 0 }
+      }
+      params.each do |k, v|
+        unless schema.keys.flatten.include? k
+          raise AppsHandler::InvalidParam.new("Unknow query param #{k}")
+        end
+        schema.each do |keys, validator|
+          if keys.include?(k)
+            if !validator.call(v)
+              raise AppsHandler::InvalidParam.new("Invalid type for param #{k}")
+            end
+          end
+        end
+      end
+    end
+
     def unable_to_perform!(msg, details)
       raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', msg, details)
     end
@@ -91,6 +113,10 @@ module VCAP::CloudController
 
     def unprocessable!(message)
       raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+    end
+
+    def invalid_param!(message)
+      raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', message)
     end
   end
 end

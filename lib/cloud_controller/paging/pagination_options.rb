@@ -12,5 +12,9 @@ module VCAP::CloudController
       per_page = params['per_page'].to_i
       PaginationOptions.new(page, per_page)
     end
+
+    def keys
+      [:page, :per_page]
+    end
   end
 end
