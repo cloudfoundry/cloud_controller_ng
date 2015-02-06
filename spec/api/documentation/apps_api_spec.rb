@@ -27,7 +27,7 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :stack_guid, 'The guid of the associated stack.', default: 'Uses the default system stack.'
     field :state, 'The current desired state of the app. One of STOPPED or STARTED.', default: 'STOPPED', valid_values: %w(STOPPED STARTED)
     field :detected_start_command, 'The command detected by the buildpack during staging.', read_only: true
-    field :command, "The command to start an app after it is staged (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT')."
+    field :command, "The command to start an app after it is staged, maximum length: 4096 (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT')."
 
     field :buildpack,
       'Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.',
