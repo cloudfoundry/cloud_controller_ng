@@ -67,7 +67,7 @@ module VCAP::Services::ServiceBrokers::V2
       path = "/v2/service_instances/#{instance.guid}"
 
       response = @http_client.get(path)
-      parsed_response = @response_parser.parse(:get, path, response)
+      parsed_response = @response_parser.parse_fetch_state(:get, path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
 
       {

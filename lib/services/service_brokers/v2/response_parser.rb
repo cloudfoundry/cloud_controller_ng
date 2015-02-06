@@ -7,24 +7,33 @@ module VCAP::Services
         end
 
         def parse(method, path, response)
-          code = response.code.to_i
-          uri = uri_for(path)
-
-          raise_for_common_errors(code, uri, method, response)
+          pre_parse(method, path, response)
 
           case method
           when :put
-            return PutResponse.new(uri, response).handle(code)
+            return PutResponse.new(@uri, response).handle(@code)
           when :delete
-            return DeleteResponse.new(uri, response).handle(code)
+            return DeleteResponse.new(@uri, response).handle(@code)
           when :get
-            return GetResponse.new(uri, response).handle(code)
+            return GetResponse.new(@uri, response).handle(@code)
           when :patch
-            return PatchResponse.new(uri, response).handle(code)
+            return PatchResponse.new(@uri, response).handle(@code)
           end
         end
 
+        def parse_fetch_state(method, path, response)
+          pre_parse(method, path, response)
+
+          FetchStateResponse.new(@uri, response).handle(@code)
+        end
+
         private
+
+        def pre_parse(method, path, response)
+          @code = response.code.to_i
+          @uri = uri_for(path)
+          raise_for_common_errors(@code, @uri, method, response)
+        end
 
         class BaseResponse
           def initialize(uri, response)
@@ -32,8 +41,12 @@ module VCAP::Services
             @response = response
           end
 
-          def recogized_operation_state?(state)
+          def recognized_or_nil_operation_state?(state)
             ['succeeded', 'failed', 'in progress', nil].include?(@state)
+          end
+
+          def recognized_operation_state?(state)
+            ['succeeded', 'failed', 'in progress'].include?(@state)
           end
 
           def parse_response(uri, method, response)
@@ -54,9 +67,9 @@ module VCAP::Services
             last_operation['state']
           end
 
-          def raise_if_malformed_response(uri, method, response, parsed_response)
-            unless parsed_response
-              raise Errors::ServiceBrokerResponseMalformed.new(uri, method, sanitize_response(response))
+          def raise_if_malformed_response(method)
+            unless @parsed_response
+              raise Errors::ServiceBrokerResponseMalformed.new(@uri, method, sanitize_response(@response))
             end
           end
 
@@ -84,15 +97,27 @@ module VCAP::Services
             case code
             when 200
               handle_200
+            when 201, 202
+              raise_if_malformed_response(:get)
+              raise Errors::ServiceBrokerBadResponse.new(@uri.to_s, :get, @response)
             else
               handle_other_code(:get)
             end
           end
 
           def handle_200
-            raise_if_malformed_response(@uri, :get, @response, @parsed_response)
-            return @parsed_response if recogized_operation_state?(@state)
+            raise_if_malformed_response(:get)
+            return @parsed_response if recognized_or_nil_operation_state?(@state)
             raise Errors::ServiceBrokerResponseMalformed.new(@uri.to_s, :get, @response)
+          end
+        end
+
+        class FetchStateResponse < GetResponse
+          def handle_200
+            parsed_response = super
+            state = state_from_parsed_response(parsed_response)
+            raise Errors::ServiceBrokerResponseMalformed.new(@uri, :get, sanitize_response(@response)) unless recognized_operation_state?(state)
+            parsed_response
           end
         end
 
@@ -129,17 +154,17 @@ module VCAP::Services
           end
 
           def handle_200
-            raise_if_malformed_response(@uri, :put, @response, @parsed_response)
-            @parsed_response if recogized_operation_state?(@state)
+            raise_if_malformed_response(:put)
+            @parsed_response if recognized_or_nil_operation_state?(@state)
           end
 
           def handle_201
-            raise_if_malformed_response(@uri, :put, @response, @parsed_response)
+            raise_if_malformed_response(:put)
             return @parsed_response if ['succeeded', nil].include?(@state)
           end
 
           def handle_202
-            raise_if_malformed_response(@uri, :put, @response, @parsed_response)
+            raise_if_malformed_response(:put)
             raise Errors::ServiceBrokerBadResponse.new(@uri.to_s, :put, @response) if request_for_bindings?(@uri)
             @parsed_response if @state == 'in progress'
           end
@@ -171,7 +196,7 @@ module VCAP::Services
           end
 
           def handle_200_202
-            raise_if_malformed_response(@uri, :patch, @response, @parsed_response)
+            raise_if_malformed_response(:patch)
             @parsed_response
           end
 
@@ -198,7 +223,7 @@ module VCAP::Services
           end
 
           def handle_200
-            raise_if_malformed_response(@uri, :delete, @response, @parsed_response)
+            raise_if_malformed_response(:delete)
             @parsed_response
           end
 
