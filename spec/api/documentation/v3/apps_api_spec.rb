@@ -22,7 +22,7 @@ resource 'Apps (Experimental)', type: :api do
     parameter :organization_guids, 'Organizations to filter by', valid_values: 'array of strings', example_values: 'organization_guids[]=org_guid1&organization_guids[]=org_guid2'
     parameter :guids, 'App guids to filter by', valid_values: 'array of strings', example_values: 'guid[]=guid1&guid[]=guid2'
     parameter :page, 'Page to display', valid_values: '>= 1'
-    parameter :per_page, "Number of results per page", valid_values: '1 - 5000'
+    parameter :per_page, 'Number of results per page', valid_values: '1 - 5000'
 
     let(:name1) { 'my_app1' }
     let(:name2) { 'my_app2' }
