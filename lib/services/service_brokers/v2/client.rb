@@ -25,7 +25,6 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       response = @http_client.put(path, {
-        instance_name:     instance.name,
         service_id:        instance.service.broker_provided_id,
         plan_id:           instance.service_plan.broker_provided_id,
         organization_guid: instance.organization.guid,

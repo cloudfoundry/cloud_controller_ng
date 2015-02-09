@@ -124,7 +124,6 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(http_client).to have_received(:put).
           with(anything,
-            instance_name:     instance.name,
             service_id:        instance.service.broker_provided_id,
             plan_id:           instance.service_plan.broker_provided_id,
             organization_guid: instance.organization.guid,
