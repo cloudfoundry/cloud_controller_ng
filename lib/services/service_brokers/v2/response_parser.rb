@@ -165,7 +165,7 @@ module VCAP::Services
           end
 
           def raise_if_malformed_response(method)
-            unless @parsed_response
+            unless @parsed_response.is_a?(Hash)
               raise Errors::ServiceBrokerResponseMalformed.new(@uri, method, @response)
             end
           end
@@ -248,6 +248,9 @@ module VCAP::Services
               handle_200_202
             when 422
               handle_422
+            when 201
+              raise_if_malformed_response(:patch)
+              raise Errors::ServiceBrokerBadResponse.new(@uri.to_s, :patch, @response)
             else
               raise Errors::ServiceBrokerBadResponse.new(@uri.to_s, :patch, @response)
             end
@@ -275,6 +278,9 @@ module VCAP::Services
               handle_200
             when 410
               handle_410
+            when 201, 202
+              raise_if_malformed_response(:delete)
+              raise Errors::ServiceBrokerBadResponse.new(@uri.to_s, :delete, @response)
             else
               raise Errors::ServiceBrokerBadResponse.new(@uri.to_s, :delete, @response)
             end
