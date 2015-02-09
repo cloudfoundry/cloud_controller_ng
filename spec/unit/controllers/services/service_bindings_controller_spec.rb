@@ -470,6 +470,16 @@ module VCAP::CloudController
           expect(ServiceBinding.find(guid: service_binding.guid)).not_to be_nil
         end
       end
+
+      context 'when the user does not belong to the space' do
+        let(:other_space) { Space.make }
+        let(:other_developer) { make_developer_for_space(other_space) }
+
+        it 'returns a 403' do
+          delete "/v2/service_bindings/#{service_binding.guid}", '', headers_for(other_developer)
+          expect(last_response).to have_status_code(403)
+        end
+      end
     end
 
     describe 'GET', '/v2/service_bindings?inline-relations-depth=1', regression: true do
