@@ -4,6 +4,8 @@ require 'cloud_controller/paging/pagination_options'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
+    class InvalidParam < StandardError; end
+
     def self.dependencies
       [:apps_handler, :app_presenter]
     end
@@ -15,13 +17,14 @@ module VCAP::CloudController
 
     get '/v3/apps', :list
     def list
+      validate_allowed_params(params)
+
       pagination_options = PaginationOptions.from_params(params)
       facets = params.slice('guids', 'space_guids', 'organization_guids', 'names')
-      validate_allowed_params(params)
       paginated_result   = @app_handler.list(pagination_options, @access_context, facets)
 
       [HTTP::OK, @app_presenter.present_json_list(paginated_result, facets)]
-    rescue AppsHandler::InvalidParam => e
+    rescue InvalidParam => e
       invalid_param!(e.message)
     end
 
@@ -78,20 +81,17 @@ module VCAP::CloudController
 
     def validate_allowed_params(params)
       schema = {
-        ['names', 'guids', 'organization_guids', 'space_guids'] => ->(v) { v.is_a? Array },
-        ['page', 'per_page'] => ->(v) { v.to_i != 0 }
+        'names' => ->(v) { v.is_a? Array },
+        'guids' => ->(v) { v.is_a? Array },
+        'organization_guids' => ->(v) { v.is_a? Array },
+        'space_guids' => ->(v) { v.is_a? Array },
+        'page' => ->(v) { v.to_i > 0 },
+        'per_page' => ->(v) { v.to_i > 0 }
       }
-      params.each do |k, v|
-        unless schema.keys.flatten.include? k
-          raise AppsHandler::InvalidParam.new("Unknow query param #{k}")
-        end
-        schema.each do |keys, validator|
-          if keys.include?(k)
-            if !validator.call(v)
-              raise AppsHandler::InvalidParam.new("Invalid type for param #{k}")
-            end
-          end
-        end
+      params.each do |key, value|
+        validator = schema[key]
+        raise InvalidParam.new("Unknow query param #{key}") if validator.nil?
+        raise InvalidParam.new("Invalid type for param #{key}") if !validator.call(value)
       end
     end
 
