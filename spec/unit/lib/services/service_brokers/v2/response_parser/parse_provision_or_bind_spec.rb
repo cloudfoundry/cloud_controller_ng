@@ -12,7 +12,7 @@ module VCAP::Services
           allow(Steno).to receive(:logger).and_return(logger)
         end
 
-        describe 'parsing the provision response' do
+        describe 'parsing a PUT response' do
           let(:response) { instance_double(VCAP::Services::ServiceBrokers::V2::HttpResponse) }
           let(:path) { '/v2/service_instances' }
           let(:body) { '{}' }
@@ -109,17 +109,6 @@ module VCAP::Services
                 expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
               end
             end
-
-            context 'and the request is for a binding' do
-              let(:path) { '/v2/service_instances/guid/service_bindings/some-other-guid' }
-              let(:state) { 'succeeded' }
-
-              it 'does not propogate a state or description fields if it is present' do
-                expect(parsed_response).to eq({
-                  'dashboard_url' => 'url.com/dashboard',
-                })
-              end
-            end
           end
 
           context 'when the status code is 201' do
@@ -188,17 +177,6 @@ module VCAP::Services
 
               it 'raises a ServiceBrokerResponseMalformed error' do
                 expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
-              end
-            end
-
-            context 'and the request is for bindings' do
-              let(:state) { 'whatever' }
-              let(:path) { '/v2/service_instances/guid/service_bindings/some-other-guid' }
-
-              it 'does not propagade state and description fields' do
-                expect(parsed_response).to eq({
-                  'dashboard_url' => 'url.com/dashboard',
-                })
               end
             end
           end
@@ -358,6 +336,7 @@ module VCAP::Services
 
             context 'the response is not a valid json object' do
               let(:body) { '""' } # AppDirect likes to return this
+
               it 'raises a ServiceBrokerBadResponse error' do
                 expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
               end

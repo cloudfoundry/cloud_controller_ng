@@ -12,7 +12,7 @@ module VCAP::Services
           allow(Steno).to receive(:logger).and_return(logger)
         end
 
-        describe 'parsing deprovision response' do
+        describe 'parsing a DELETE response' do
           let(:response) { instance_double(VCAP::Services::ServiceBrokers::V2::HttpResponse) }
           let(:path) { '/v2/service_instances' }
           let(:body) { {}.to_json }
@@ -79,7 +79,7 @@ module VCAP::Services
             end
           end
 
-          context 'when the status code is other 2xx' do
+          context 'when the status code is other 2xx (excluding 200, 201, 202)' do
             let(:code) { 204 }
 
             context 'the response is not a valid json object' do
