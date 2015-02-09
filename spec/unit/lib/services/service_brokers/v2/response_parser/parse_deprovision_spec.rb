@@ -85,13 +85,13 @@ module VCAP::Services
             context 'the response is not a valid json object' do
               let(:body) { '""' }
 
-              it 'raises a ServiceBrokerBadResponse error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+              it 'returns an empty hash' do
+                expect(parsed_response).to eq({})
               end
             end
 
-            it 'raises a ServiceBrokerBadResponse error' do
-              expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+            it 'returns an empty hash' do
+              expect(parsed_response).to eq({})
             end
           end
 

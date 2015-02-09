@@ -276,6 +276,8 @@ module VCAP::Services
             case code
             when 200
               handle_200
+            when 204
+              {}
             when 410
               handle_410
             when 201, 202
