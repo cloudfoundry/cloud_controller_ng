@@ -65,16 +65,6 @@ module VCAP::CloudController
         raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
       end
 
-      if request_attrs['service_plan_guid']
-        old_plan = service_instance.service_plan
-        unless old_plan.service.plan_updateable
-          raise VCAP::Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
-        end
-
-        new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
-        service_instance.client.update_service_plan(service_instance, new_plan)
-      end
-
       ServiceInstance.db.transaction do
         service_instance.lock!
         service_instance.update_from_hash(request_attrs)
