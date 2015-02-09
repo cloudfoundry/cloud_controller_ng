@@ -125,7 +125,7 @@ module VCAP::CloudController
         stub_get_catalog_request(catalog_status_code, catalog_json)
         post '/v2/service_brokers', body, headers
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_status_code(201)
         expect(a_request(:get, catalog_url)).to have_been_made
       end
 

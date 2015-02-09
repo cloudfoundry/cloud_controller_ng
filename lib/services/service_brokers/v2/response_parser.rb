@@ -15,16 +15,52 @@ module VCAP::Services
           when :delete
             return DeleteResponse.new(@uri, response).handle(@code)
           when :get
-            return GetResponse.new(@uri, response).handle(@code)
+            return parse_catalog(method, path, response)
           when :patch
             return PatchResponse.new(@uri, response).handle(@code)
           end
         end
 
+        def parse_catalog(method, path, response)
+          pre_parse(method, path, response)
+
+          logger ||= Steno.logger('cc.service_broker.v2.client')
+
+          validator =
+          case @code
+          when 200
+            JsonResponseValidator.new(logger, SuccessValidator.new)
+          when 201, 202
+            JsonResponseValidator.new(logger,
+              FailingValidator.new(Errors::ServiceBrokerBadResponse))
+          else
+            FailingValidator.new(Errors::ServiceBrokerBadResponse)
+          end
+
+          _, _, _, response = validator.validate(:get, @uri, @code, response)
+          MultiJson.load(response.body)
+        end
+
         def parse_fetch_state(method, path, response)
           pre_parse(method, path, response)
 
-          FetchStateResponse.new(@uri, response).handle(@code)
+          logger ||= Steno.logger('cc.service_broker.v2.client')
+
+          validator =
+          case @code
+          when 200
+            JsonResponseValidator.new(logger,
+              StateValidator.new(['succeeded', 'failed', 'in progress'],
+                SuccessValidator.new))
+          when 201, 202
+            JsonResponseValidator.new(logger,
+              FailingValidator.new(Errors::ServiceBrokerBadResponse))
+          else
+            FailingValidator.new(Errors::ServiceBrokerBadResponse)
+          end
+
+          _, _, _, response = validator.validate(:get, @uri, @code, response)
+          MultiJson.load(response.body)
         end
 
         private
@@ -33,6 +69,67 @@ module VCAP::Services
           @code = response.code.to_i
           @uri = uri_for(path)
           raise_for_common_errors(@code, @uri, method, response)
+        end
+
+        class SuccessValidator
+          def validate(method, uri, code, response)
+            [method, uri, code, response]
+          end
+        end
+
+        class FailingValidator
+          def initialize(error_class)
+            @error_class = error_class
+          end
+
+          def validate(method, uri, code, response)
+            raise @error_class.new(uri.to_s, method, response)
+          end
+        end
+
+        class JsonResponseValidator
+          def initialize(logger, validator)
+            @logger = logger
+            @validator = validator
+          end
+
+          def validate(method, uri, code, response)
+            begin
+              parsed_response = MultiJson.load(response.body)
+            rescue MultiJson::ParseError
+              @logger.warn("MultiJson parse error `#{response.try(:body).inspect}'")
+            end
+
+            unless parsed_response.is_a?(Hash)
+              raise Errors::ServiceBrokerResponseMalformed.new(uri, @method, response)
+            end
+
+            @validator.validate(method, uri, code, response)
+          end
+        end
+
+        class StateValidator
+          def initialize(valid_states, validator)
+            @valid_states = valid_states
+            @validator = validator
+          end
+
+          def validate(method, uri, code, response)
+            parsed_response = MultiJson.load(response.body)
+            if @valid_states.include?(state_from_parsed_response(parsed_response))
+              @validator.validate(method, uri, code, response)
+            else
+              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, @method, response)
+            end
+          end
+
+          private
+
+          def state_from_parsed_response(parsed_response)
+            parsed_response ||= {}
+            last_operation = parsed_response['last_operation'] || {}
+            last_operation['state']
+          end
         end
 
         class BaseResponse
@@ -69,7 +166,7 @@ module VCAP::Services
 
           def raise_if_malformed_response(method)
             unless @parsed_response
-              raise Errors::ServiceBrokerResponseMalformed.new(@uri, method, sanitize_response(@response))
+              raise Errors::ServiceBrokerResponseMalformed.new(@uri, method, @response)
             end
           end
 
@@ -77,51 +174,8 @@ module VCAP::Services
             raise Errors::ServiceBrokerBadResponse.new(@uri.to_s, method, @response)
           end
 
-          def sanitize_response(response)
-            HttpResponse.new(
-              code: response.code,
-              message: response.message,
-              body: "\"#{response.body}\""
-            )
-          end
-
           def logger
             @logger ||= Steno.logger('cc.service_broker.v2.client')
-          end
-        end
-
-        class GetResponse < BaseResponse
-          def initialize(uri, response)
-            super(uri, response)
-            @parsed_response = parse_response(uri, :get, response)
-            @state = state_from_parsed_response(@parsed_response)
-          end
-
-          def handle(code)
-            case code
-            when 200
-              handle_200
-            when 201, 202
-              raise_if_malformed_response(:get)
-              raise Errors::ServiceBrokerBadResponse.new(@uri.to_s, :get, @response)
-            else
-              handle_other_code(:get)
-            end
-          end
-
-          def handle_200
-            raise_if_malformed_response(:get)
-            return @parsed_response if recognized_or_nil_operation_state?(@state)
-            raise Errors::ServiceBrokerResponseMalformed.new(@uri.to_s, :get, @response)
-          end
-        end
-
-        class FetchStateResponse < GetResponse
-          def handle_200
-            parsed_response = super
-            state = state_from_parsed_response(parsed_response)
-            raise Errors::ServiceBrokerResponseMalformed.new(@uri, :get, sanitize_response(@response)) unless recognized_operation_state?(state)
-            parsed_response
           end
         end
 
@@ -244,7 +298,7 @@ module VCAP::Services
           when 408
             raise Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
           when 409, 410, 422
-            return nil
+            return
           when 400..499
             raise Errors::ServiceBrokerRequestRejected.new(uri.to_s, method, response)
           when 500..599
