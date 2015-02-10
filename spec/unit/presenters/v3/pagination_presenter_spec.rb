@@ -8,7 +8,8 @@ module VCAP::CloudController
       let(:page) { 1 }
       let(:per_page) { 1 }
       let(:total_results) { 2 }
-      let(:paginated_result) { PaginatedResult.new(double(:results), total_results, PaginationOptions.new(page, per_page)) }
+      let(:options) { { page: page, per_page: per_page } }
+      let(:paginated_result) { PaginatedResult.new(double(:results), total_results, PaginationOptions.new(options)) }
       let(:base_url) { '/cloudfoundry/is-great' }
 
       it 'includes total_results' do
@@ -33,7 +34,7 @@ module VCAP::CloudController
       end
 
       it 'sets first and last page to 1 if there is 1 page' do
-        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(page, per_page))
+        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(options))
         result      = presenter.present_pagination_hash(paginated_result, base_url)
 
         last_url  = result[:last][:href]
@@ -44,7 +45,7 @@ module VCAP::CloudController
 
       it 'includes the facets in the result urls' do
         facets = { 'facet1' => 'value1', 'facet2' => ['value2', 'value3'] }
-        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(page, per_page))
+        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(options))
         result      = presenter.present_pagination_hash(paginated_result, base_url, facets)
 
         first_url = result[:first][:href]
@@ -53,7 +54,7 @@ module VCAP::CloudController
 
       it 'includes the facet that is empty array' do
         facets = { 'facet' => [] }
-        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(page, per_page))
+        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(options))
         result      = presenter.present_pagination_hash(paginated_result, base_url, facets)
 
         first_url = result[:first][:href]
@@ -62,7 +63,7 @@ module VCAP::CloudController
 
       it 'includes the facet that is empty hash' do
         facets = { 'facet' => {} }
-        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(page, per_page))
+        paginated_result = PaginatedResult.new([], 0, PaginationOptions.new(options))
         result      = presenter.present_pagination_hash(paginated_result, base_url, facets)
 
         first_url = result[:first][:href]

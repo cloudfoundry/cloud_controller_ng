@@ -13,69 +13,44 @@ module VCAP::CloudController
       let(:page) { 1 }
       let(:per_page) { 1 }
 
-      it 'defaults to the first page if page is nil' do
-        pagination_options = PaginationOptions.new(nil, per_page)
-
-        paginated_result = paginator.get_page(dataset, pagination_options)
-
-        expect(paginated_result.pagination_options.page).to eq(1)
-      end
-
-      it 'defaults to the first page if page is 0' do
-        pagination_options = PaginationOptions.new(0, per_page)
-
-        paginated_result = paginator.get_page(dataset, pagination_options)
-
-        expect(paginated_result.pagination_options.page).to eq(1)
-      end
-
-      it 'defaults to listing 50 records per page if per_page is nil' do
-        pagination_options = PaginationOptions.new(page, nil)
-
-        paginated_result = paginator.get_page(dataset, pagination_options)
-
-        expect(paginated_result.pagination_options.per_page).to eq(50)
-      end
-
-      it 'defaults to listing 50 records per page if per_page is 0' do
-        pagination_options = PaginationOptions.new(page, 0)
-
-        paginated_result = paginator.get_page(dataset, pagination_options)
-
-        expect(paginated_result.pagination_options.per_page).to eq(50)
-      end
-
-      it 'limits the listing to 5000 records per page' do
-        pagination_options = PaginationOptions.new(page, 5001)
-
-        paginated_result = paginator.get_page(dataset, pagination_options)
-
-        expect(paginated_result.pagination_options.per_page).to eq(5000)
-      end
-
       it 'finds all records from the page upto the per_page limit' do
-        per_page           = 1
-        pagination_options = PaginationOptions.new(page, per_page)
-
+        options = { page: page, per_page: per_page }
+        pagination_options = PaginationOptions.new(options)
         paginated_result = paginator.get_page(dataset, pagination_options)
-
         expect(paginated_result.records.length).to eq(1)
       end
 
       it 'pages properly' do
-        pagination_options     = PaginationOptions.new(1, per_page)
+        options = { page: 1, per_page: per_page }
+        pagination_options     = PaginationOptions.new(options)
         first_paginated_result = paginator.get_page(dataset, pagination_options)
 
-        pagination_options      = PaginationOptions.new(2, per_page)
+        options = { page: 2, per_page: per_page }
+        pagination_options      = PaginationOptions.new(options)
         second_paginated_result = paginator.get_page(dataset, pagination_options)
 
         expect(first_paginated_result.records.first.guid).to eq(app_model1.guid)
         expect(second_paginated_result.records.first.guid).to eq(app_model2.guid)
       end
 
+      it 'sorts by the sort option in the corresponding direction' do
+        options = { page: 1, per_page: 2, sort: 'name', direction: 'asc' }
+        app_model2.update(name: 'a')
+        app_model1.update(name: 'b')
+        pagination_options      = PaginationOptions.new(options)
+        paginated_result = paginator.get_page(dataset, pagination_options)
+        expect(paginated_result.records.first.guid).to eq(app_model2.guid)
+
+        app_model2.update(name: 'c')
+        pagination_options      = PaginationOptions.new(options)
+        paginated_result = paginator.get_page(dataset, pagination_options)
+        expect(paginated_result.records.first.guid).to eq(app_model1.guid)
+      end
+
       it 'works with a multi table result set' do
+        options = { page: 2, per_page: per_page }
         new_dataset = dataset.join(:packages, packages__app_guid: :apps_v3__guid)
-        pagination_options = PaginationOptions.new(2, per_page)
+        pagination_options = PaginationOptions.new(options)
 
         expect {
           paginator.get_page(new_dataset, pagination_options)

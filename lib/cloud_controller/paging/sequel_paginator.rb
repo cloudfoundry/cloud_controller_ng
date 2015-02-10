@@ -1,21 +1,17 @@
 module VCAP::CloudController
   class SequelPaginator
-    PAGE_DEFAULT     = 1
-    PER_PAGE_DEFAULT = 50
-    PER_PAGE_MAX     = 5000
-
     def get_page(sequel_dataset, pagination_options)
-      page = pagination_options.page.nil? ? PAGE_DEFAULT : pagination_options.page
-      page = PAGE_DEFAULT if page < 1
-
-      per_page = pagination_options.per_page.nil? ? PER_PAGE_DEFAULT : pagination_options.per_page
-      per_page = PER_PAGE_DEFAULT if per_page < 1
-      per_page = PER_PAGE_MAX if per_page > PER_PAGE_MAX
+      page = pagination_options.page
+      per_page = pagination_options.per_page
+      sort = pagination_options.sort
+      direction = pagination_options.direction
 
       table_name = sequel_dataset.model.table_name
-      query = sequel_dataset.extension(:pagination).paginate(page, per_page).order(:"#{table_name}__id")
+      column_name = "#{table_name}__#{sort}".to_sym
+      sequel_order = direction == 'asc' ? Sequel.asc(column_name) : Sequel.desc(column_name)
+      query = sequel_dataset.extension(:pagination).paginate(page, per_page).order(sequel_order)
 
-      PaginatedResult.new(query.all, query.pagination_record_count, PaginationOptions.new(page, per_page))
+      PaginatedResult.new(query.all, query.pagination_record_count, pagination_options)
     end
   end
 end

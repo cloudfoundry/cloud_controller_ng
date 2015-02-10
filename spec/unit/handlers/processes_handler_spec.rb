@@ -40,7 +40,8 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:page) { 1 }
       let(:per_page) { 1 }
-      let(:pagination_options) { PaginationOptions.new(page, per_page) }
+      let(:options) { { page: page, per_page: per_page } }
+      let(:pagination_options) { PaginationOptions.new(options) }
       let(:paginator) { double(:paginator) }
       let(:handler) { described_class.new(process_repo, process_event_repo, paginator) }
       let(:roles) { double(:roles, admin?: admin_role) }

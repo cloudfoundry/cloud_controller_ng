@@ -86,7 +86,9 @@ module VCAP::CloudController
         'organization_guids' => ->(v) { v.is_a? Array },
         'space_guids' => ->(v) { v.is_a? Array },
         'page' => ->(v) { v.to_i > 0 },
-        'per_page' => ->(v) { v.to_i > 0 }
+        'per_page' => ->(v) { v.to_i > 0 },
+        'sort' => ->(v) { %w(created_at updated_at).include?(v) },
+        'direction' => ->(v) { %w(asc desc).include?(v) }
       }
       params.each do |key, value|
         validator = schema[key]

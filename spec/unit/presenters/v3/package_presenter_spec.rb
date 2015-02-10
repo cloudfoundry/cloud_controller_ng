@@ -53,8 +53,9 @@ module VCAP::CloudController
       let(:presenter) { PackagePresenter.new(pagination_presenter) }
       let(:page) { 1 }
       let(:per_page) { 1 }
+      let(:options) { { page: page, per_page: per_page } }
       let(:total_results) { 2 }
-      let(:paginated_result) { PaginatedResult.new(packages, total_results, PaginationOptions.new(page, per_page)) }
+      let(:paginated_result) { PaginatedResult.new(packages, total_results, PaginationOptions.new(options)) }
       before do
         allow(pagination_presenter).to receive(:present_pagination_hash) do |_, url|
           "pagination-#{url}"

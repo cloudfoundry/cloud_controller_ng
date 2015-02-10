@@ -22,8 +22,9 @@ module VCAP::CloudController
       let(:presenter) { AppPresenter.new(pagination_presenter) }
       let(:page) { 1 }
       let(:per_page) { 1 }
+      let(:options) { { page: page, per_page: per_page } }
       let(:total_results) { 2 }
-      let(:paginated_result) { PaginatedResult.new(apps, total_results, PaginationOptions.new(page, per_page)) }
+      let(:paginated_result) { PaginatedResult.new(apps, total_results, PaginationOptions.new(options)) }
 
       it 'presents the apps as a json array under resources' do
         json_result = presenter.present_json_list(paginated_result)

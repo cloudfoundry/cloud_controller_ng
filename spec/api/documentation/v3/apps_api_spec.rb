@@ -23,17 +23,21 @@ resource 'Apps (Experimental)', type: :api do
     parameter :guids, 'App guids to filter by', valid_values: 'array of strings', example_values: 'guid[]=guid1&guid[]=guid2'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1 - 5000'
+    parameter :sort, 'Value to sort by', valid_values: 'created_at, updated_at, id'
+    parameter :direction, 'Direction to sort by', valid_values: 'asc, desc'
 
     let(:name1) { 'my_app1' }
     let(:name2) { 'my_app2' }
     let(:name3) { 'my_app3' }
-    let!(:app_model1) { VCAP::CloudController::AppModel.make(name: name1, space_guid: space.guid) }
-    let!(:app_model2) { VCAP::CloudController::AppModel.make(name: name2, space_guid: space.guid) }
-    let!(:app_model3) { VCAP::CloudController::AppModel.make(name: name3, space_guid: space.guid) }
+    let!(:app_model1) { VCAP::CloudController::AppModel.make(name: name1, space_guid: space.guid, created_at: Time.at(1)) }
+    let!(:app_model2) { VCAP::CloudController::AppModel.make(name: name2, space_guid: space.guid, created_at: Time.at(2)) }
+    let!(:app_model3) { VCAP::CloudController::AppModel.make(name: name3, space_guid: space.guid, created_at: Time.at(3)) }
     let!(:app_model4) { VCAP::CloudController::AppModel.make(space_guid: VCAP::CloudController::Space.make.guid) }
     let(:space) { VCAP::CloudController::Space.make }
     let(:page) { 1 }
     let(:per_page) { 2 }
+    let(:sort) { 'created_at' }
+    let(:direction) { 'desc' }
 
     before do
       space.organization.add_user user
@@ -51,12 +55,12 @@ resource 'Apps (Experimental)', type: :api do
         },
         'resources'  => [
           {
-            'name'   => name1,
-            'guid'   => app_model1.guid,
+            'name'   => name3,
+            'guid'   => app_model3.guid,
             '_links' => {
-              'self'      => { 'href' => "/v3/apps/#{app_model1.guid}" },
-              'processes' => { 'href' => "/v3/apps/#{app_model1.guid}/processes" },
-              'packages'  => { 'href' => "/v3/apps/#{app_model1.guid}/packages" },
+              'self'      => { 'href' => "/v3/apps/#{app_model3.guid}" },
+              'processes' => { 'href' => "/v3/apps/#{app_model3.guid}/processes" },
+              'packages'  => { 'href' => "/v3/apps/#{app_model3.guid}/packages" },
               'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
             }
           },
