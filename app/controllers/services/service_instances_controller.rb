@@ -96,36 +96,16 @@ module VCAP::CloudController
       validate_access(:update, service_instance)
       validate_update_action(service_instance)
 
-      # TODO: refactor all this when we start sending the name changes to the broker
-      operation_attributes = {}
-
       is_async_request = params['accepts_incomplete'] == 'true'
 
+      attributes_to_update = {}
       if request_attrs['service_plan_guid']
         new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
-        operation_attributes = service_instance.client.update_service_plan(
+        attributes_to_update = service_instance.client.update_service_plan(
           service_instance,
           new_plan,
           async: is_async_request
         )
-      end
-
-      if is_async_request
-        op_attrs = operation_attributes['last_operation'].symbolize_keys
-        attributes_to_update = {
-          last_operation: op_attrs.merge({
-            type: 'update',
-            state: 'in progress',
-            proposed_changes: request_attrs,
-          }),
-        }
-      else
-        attributes_to_update = request_attrs.symbolize_keys.merge({
-          last_operation: {
-            type: 'update',
-            state: 'succeeded',
-          },
-        })
       end
 
       service_instance.save_with_operation(attributes_to_update)

@@ -138,7 +138,26 @@ module VCAP::Services::ServiceBrokers::V2
           }
       })
 
-      @response_parser.parse(:patch, path, response)
+      parsed_response = @response_parser.parse(:patch, path, response)
+      last_operation_hash = parsed_response['last_operation'] || {}
+
+      attributes = {
+        last_operation: {
+          type: 'update',
+          description: last_operation_hash['description'] || '',
+        },
+      }
+
+      state = last_operation_hash['state']
+      if state
+        attributes[:last_operation][:state] = state
+        attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
+      else
+        attributes[:last_operation][:state] = 'succeeded'
+        attributes[:service_plan] = plan
+      end
+
+      attributes
     end
 
     private

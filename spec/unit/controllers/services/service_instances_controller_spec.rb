@@ -574,202 +574,167 @@ module VCAP::CloudController
         )
       end
 
-      context 'when the service instance has an operation in progress' do
-        let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
-        let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
-        before do
-          service_instance.service_instance_operation = last_operation
-          service_instance.save
+      let(:status) { 200 }
+      let(:response_body) { '{}' }
+
+      before do
+        stub_request(:patch, "#{service_broker_url}?accepts_incomplete=true").
+          to_return(status: status, body: response_body)
+      end
+
+      it 'creates a service audit event for updating the service instance' do
+        put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
+
+        event = VCAP::CloudController::Event.first(type: 'audit.service_instance.update')
+        expect(event.type).to eq('audit.service_instance.update')
+        expect(event.actor_type).to eq('user')
+        expect(event.actor).to eq(admin_user.guid)
+        expect(event.actor_name).to eq('admin@example.com')
+        expect(event.timestamp).to be
+        expect(event.actee).to eq(service_instance.guid)
+        expect(event.actee_type).to eq('service_instance')
+        expect(event.actee_name).to eq(service_instance.name)
+        expect(event.space_guid).to eq(service_instance.space.guid)
+        expect(event.space_id).to eq(service_instance.space.id)
+        expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+        expect(event.metadata).to include({
+          'request' => {
+            'service_plan_guid' => new_service_plan.guid,
+          }
+        })
+      end
+
+      context 'when the service instance client returns a last_operation with state `in progress`' do
+        let(:status) { 202 }
+        let(:response_body) do
+          {
+            last_operation: {
+              state: 'in progress',
+              description: ''
+            }
+          }.to_json
         end
 
-        it 'should show an error message for update operation' do
-          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(last_response).to have_status_code 400
-          expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+        it 'does not update the service plan in the database' do
+          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
+
+          expect(service_instance.reload.service_plan).to eq(old_service_plan)
         end
       end
 
-      context 'when the broker declared support for plan upgrades' do
-        let(:response_body) { '{}' }
+      context 'when the service instance client returns a last_operation with state `succeeded`' do
+        it 'updates the service plan in the database' do
+          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
 
-        context 'and the client & broker support asynchronous updating' do
-          let(:response_body) do
+          expect(service_instance.reload.service_plan).to eq(new_service_plan)
+        end
+      end
+
+      describe 'error cases' do
+        context 'when the service instance has an operation in progress' do
+          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+          let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
+          before do
+            service_instance.service_instance_operation = last_operation
+            service_instance.save
+          end
+
+          it 'should show an error message for update operation' do
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+            expect(last_response).to have_status_code 400
+            expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+          end
+        end
+
+        context 'when the broker did not declare support for plan upgrades' do
+          let(:old_service_plan) { ServicePlan.make(:v2) }
+
+          before { service.update(plan_updateable: false) }
+
+          it 'does not update the service plan in the database' do
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+            expect(service_instance.reload.service_plan).to eq(old_service_plan)
+          end
+
+          it 'does not make an api call when the plan does not support upgrades' do
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+            expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
+          end
+
+          it 'returns a useful error to the user' do
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+            expect(last_response.body).to match /The service does not support changing plans/
+          end
+        end
+
+        context 'when the user has read but not write permissions' do
+          let(:auditor) { User.make }
+
+          before do
+            service_instance.space.organization.add_auditor(auditor)
+          end
+
+          it 'does not call out to the service broker' do
+            put "/v2/service_instances/#{service_instance.guid}", body, headers_for(auditor)
+            expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
+          end
+        end
+
+        context 'when the requested plan does not exist' do
+          let(:body) do
             MultiJson.dump(
-              last_operation: {
-                state: 'in progress',
-                description: 'updating all the things (10%)',
-              },
+              service_plan_guid: 'some-non-existing-plan'
             )
           end
 
-          before do
-            stub_request(:patch, "#{service_broker_url}?accepts_incomplete=true").
-              with(headers: { 'Accept' => 'application/json' }).
-              to_return(status: 202, body: response_body, headers: { 'Content-Type' => 'application/json' })
-          end
-
-          it 'shows the last operation state as "update in progress"' do
-            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
-            last_operation = decoded_response['entity']['last_operation']
-            expect(last_operation['type']).to eq('update')
-            expect(last_operation['state']).to eq('in progress')
-            expect(last_operation['description']).to eq('updating all the things (10%)')
-          end
-
-          it 'populates the operation with the proposed changes' do
-            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
-            expect(service_instance.reload.last_operation.proposed_changes).to eq({
-              'service_plan_guid' => new_service_plan.guid,
-            })
-          end
-
-          it 'calls the service broker to update the plan' do
-            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
-            expect(a_request(:patch, "#{service_broker_url}?accepts_incomplete=true")).to have_been_made.times(1)
-          end
-
-          it 'does not update the service plan in the database' do
-            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
+          it 'returns an InvalidRelationError' do
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+            expect(last_response.status).to eq 400
+            expect(last_response.body).to match 'InvalidRelation'
             expect(service_instance.reload.service_plan).to eq(old_service_plan)
           end
         end
 
-        context 'and the client does not support asynchronous updating' do
+        context 'when the broker client raises a ServiceBrokerBadResponse' do
+          let(:response_body) { '{"description": "error message"}' }
+
           before do
             stub_request(:patch, service_broker_url).
               with(headers: { 'Accept' => 'application/json' }).
-              to_return(status: 200, body: response_body, headers: { 'Content-Type' => 'application/json' })
+              to_return(status: 500, body: response_body, headers: { 'Content-Type' => 'application/json' })
           end
 
-          it 'should show last operation state "update succeeded"' do
+          it 'returns a CF-ServiceBrokerBadResponse' do
             put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-            last_operation = decoded_response['entity']['last_operation']
-            expect(last_operation['type']).to eq('update')
-            expect(last_operation['state']).to eq('succeeded')
+            expect(last_response).to have_status_code 502
+            expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
+          end
+        end
+
+        context 'when the broker client raises a ServiceBrokerRequestRejected' do
+          let(:response_body) { '{"description": "error message"}' }
+
+          before do
+            stub_request(:patch, service_broker_url).
+              with(headers: { 'Accept' => 'application/json' }).
+              to_return(status: 422, body: response_body, headers: { 'Content-Type' => 'application/json' })
           end
 
-          it 'calls the service broker to update the plan' do
+          it 'returns a CF-ServiceBrokerRequestRejected' do
             put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-            expect(a_request(:patch, service_broker_url)).to have_been_made.times(1)
-          end
-
-          it 'updates the service plan in the database' do
-            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-            expect(service_instance.reload.service_plan).to eq(new_service_plan)
-          end
-
-          it 'creates a service audit event for updating the service instance' do
-            put "/v2/service_instances/#{service_instance.guid}", body, headers_for(admin_user, email: 'admin@example.com')
-
-            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.update')
-            expect(event.type).to eq('audit.service_instance.update')
-            expect(event.actor_type).to eq('user')
-            expect(event.actor).to eq(admin_user.guid)
-            expect(event.actor_name).to eq('admin@example.com')
-            expect(event.timestamp).to be
-            expect(event.actee).to eq(service_instance.guid)
-            expect(event.actee_type).to eq('service_instance')
-            expect(event.actee_name).to eq(service_instance.name)
-            expect(event.space_guid).to eq(service_instance.space.guid)
-            expect(event.space_id).to eq(service_instance.space.id)
-            expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-            expect(event.metadata).to include({
-              'request' => {
-                'service_plan_guid' => new_service_plan.guid,
-              }
-            })
+            expect(last_response.status).to eq 502
+            expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerRequestRejected'
           end
         end
-      end
 
-      context 'when the broker did not declare support for plan upgrades' do
-        let(:old_service_plan) { ServicePlan.make(:v2) }
+        context 'when accepts_incomplete is not true or false strings' do
+          it 'fails with with InvalidRequest' do
+            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=lol", body, admin_headers
 
-        before { service.update(plan_updateable: false) }
-
-        it 'does not update the service plan in the database' do
-          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(service_instance.reload.service_plan).to eq(old_service_plan)
-        end
-
-        it 'does not make an api call when the plan does not support upgrades' do
-          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
-        end
-
-        it 'returns a useful error to the user' do
-          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(last_response.body).to match /The service does not support changing plans/
-        end
-      end
-
-      context 'when the user has read but not write permissions' do
-        let(:auditor) { User.make }
-
-        before do
-          service_instance.space.organization.add_auditor(auditor)
-        end
-
-        it 'does not call out to the service broker' do
-          put "/v2/service_instances/#{service_instance.guid}", body, headers_for(auditor)
-          expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
-        end
-      end
-
-      context 'when the requested plan does not exist' do
-        let(:body) do
-          MultiJson.dump(
-            service_plan_guid: 'some-non-existing-plan'
-          )
-        end
-
-        it 'returns an InvalidRelationError' do
-          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(last_response.status).to eq 400
-          expect(last_response.body).to match 'InvalidRelation'
-          expect(service_instance.reload.service_plan).to eq(old_service_plan)
-        end
-      end
-
-      context 'when the broker client raises a ServiceBrokerBadResponse' do
-        let(:response_body) { '{"description": "error message"}' }
-
-        before do
-          stub_request(:patch, service_broker_url).
-            with(headers: { 'Accept' => 'application/json' }).
-            to_return(status: 500, body: response_body, headers: { 'Content-Type' => 'application/json' })
-        end
-
-        it 'returns a CF-ServiceBrokerBadResponse' do
-          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(last_response).to have_status_code 502
-          expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
-        end
-      end
-
-      context 'when the broker client raises a ServiceBrokerRequestRejected' do
-        let(:response_body) { '{"description": "error message"}' }
-
-        before do
-          stub_request(:patch, service_broker_url).
-            with(headers: { 'Accept' => 'application/json' }).
-            to_return(status: 422, body: response_body, headers: { 'Content-Type' => 'application/json' })
-        end
-
-        it 'returns a CF-ServiceBrokerRequestRejected' do
-          put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-          expect(last_response.status).to eq 502
-          expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerRequestRejected'
-        end
-      end
-
-      context 'when accepts_incomplete is not true or false strings' do
-        it 'fails with with InvalidRequest' do
-          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=lol", body, admin_headers
-
-          expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
-          expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
-          expect(last_response.status).to eq(400)
+            expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
+            expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
+            expect(last_response.status).to eq(400)
+          end
         end
       end
 
@@ -796,7 +761,7 @@ module VCAP::CloudController
         it 'succeeds when the space_guid does not change' do
           req = MultiJson.dump(space_guid: instance.space.guid)
           put "/v2/service_instances/#{instance.guid}", req, json_headers(headers_for(user))
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_status_code 201
         end
 
         it 'succeeds when the space_guid is not provided' do

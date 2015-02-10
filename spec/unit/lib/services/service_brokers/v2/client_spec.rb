@@ -444,6 +444,46 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:patch).with(path, anything)
       end
 
+      context 'when the broker returns a last_operation' do
+        let(:response_data) do
+          {
+            last_operation: {
+              state: 'in progress',
+              description: 'updating all the things (10%)'
+            }
+          }.to_json
+        end
+
+        it 'forwards the last operation state from the broker' do
+          attributes = client.update_service_plan(instance, new_plan, async: true)
+
+          last_operation = attributes[:last_operation]
+          expect(last_operation[:type]).to eq('update')
+          expect(last_operation[:state]).to eq('in progress')
+          expect(last_operation[:description]).to eq('updating all the things (10%)')
+          expect(last_operation[:proposed_changes]).to eq({ service_plan_guid: new_plan.guid } )
+        end
+      end
+
+      context 'when the broker does not return a last_operation' do
+        let(:response_data) { { bogus_key: 'bogus_value' }.to_json }
+
+        it 'defaults the last operation state to `succeeded`' do
+          attributes = client.update_service_plan(instance, new_plan, async: true)
+
+          last_operation = attributes[:last_operation]
+          expect(last_operation[:type]).to eq('update')
+          expect(last_operation[:state]).to eq('succeeded')
+          expect(last_operation[:description]).to eq('')
+          expect(last_operation[:proposed_changes]).to be_nil
+        end
+
+        it 'returns the new service_plan in a hash' do
+          attributes = client.update_service_plan(instance, new_plan, async: true)
+          expect(attributes[:service_plan]).to eq new_plan
+        end
+      end
+
       describe 'error handling' do
         describe 'non-standard errors' do
           before do
