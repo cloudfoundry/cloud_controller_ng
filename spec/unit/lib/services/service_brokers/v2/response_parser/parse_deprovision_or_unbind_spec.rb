@@ -217,6 +217,14 @@ module VCAP::Services
               end
             end
 
+            context 'when the error field is `AsyncRequired`' do
+              let(:body) { { error: 'AsyncRequired' }.to_json }
+
+              it 'raises an AsyncRequired error' do
+                expect { parsed_response }.to raise_error(Errors::AsyncRequired)
+              end
+            end
+
             it 'raises a ServiceBrokerBadResponse error' do
               expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
             end
