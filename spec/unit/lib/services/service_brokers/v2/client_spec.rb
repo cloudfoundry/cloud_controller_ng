@@ -421,10 +421,11 @@ module VCAP::Services::ServiceBrokers::V2
       let(:path) { "/v2/service_instances/#{instance.guid}/" }
       let(:code) { 200 }
       let(:message) { 'OK' }
-      let(:response_data) { '{}' }
+      let(:response_body) { response_data.to_json }
+      let(:response_data) { {} }
 
       before do
-        response = HttpResponse.new(code: code, body: response_data, message: message)
+        response = HttpResponse.new(code: code, body: response_body, message: message)
         allow(http_client).to receive(:patch).and_return(response)
         instance.service_instance_operation = last_operation
       end
@@ -459,7 +460,7 @@ module VCAP::Services::ServiceBrokers::V2
               state: 'in progress',
               description: 'updating all the things (10%)'
             }
-          }.to_json
+          }
         end
 
         it 'forwards the last operation state from the broker' do
@@ -475,7 +476,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker does not return a last_operation' do
-        let(:response_data) { { bogus_key: 'bogus_value' }.to_json }
+        let(:response_data) { { bogus_key: 'bogus_value' } }
 
         it 'defaults the last operation state to `succeeded`' do
           attributes, err = client.update_service_plan(instance, new_plan, async: true)
@@ -492,6 +493,34 @@ module VCAP::Services::ServiceBrokers::V2
           attributes, err = client.update_service_plan(instance, new_plan, async: true)
           expect(err).to be_nil
           expect(attributes[:service_plan]).to eq new_plan
+        end
+      end
+
+      context 'when the broker returns the state as `in progress`' do
+        let(:code) { 202 }
+        let(:message) { 'Accepted' }
+        let(:response_data) do
+          {
+            last_operation: {
+              state: 'in progress',
+              description: '10% done'
+            },
+          }
+        end
+
+        it 'return immediately with the broker response' do
+          client = Client.new(client_attrs.merge(accepts_incomplete: true))
+          attributes, error = client.update_service_plan(instance, new_plan, async: true)
+
+          expect(attributes[:last_operation][:type]).to eq('update')
+          expect(attributes[:last_operation][:state]).to eq('in progress')
+          expect(attributes[:last_operation][:description]).to eq('10% done')
+          expect(error).to be_nil
+        end
+
+        it 'enqueues a polling job' do
+          client.update_service_plan(instance, new_plan, async: true)
+          expect(state_poller).to have_received(:poll_service_instance_state).with(client_attrs, instance)
         end
       end
 

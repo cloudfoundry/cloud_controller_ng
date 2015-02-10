@@ -152,6 +152,9 @@ module VCAP::Services::ServiceBrokers::V2
       if state
         attributes[:last_operation][:state] = state
         attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
+        if attributes[:last_operation][:state] == 'in progress'
+          @state_poller.poll_service_instance_state(@attrs, instance)
+        end
       else
         attributes[:last_operation][:state] = 'succeeded'
         attributes[:service_plan] = plan

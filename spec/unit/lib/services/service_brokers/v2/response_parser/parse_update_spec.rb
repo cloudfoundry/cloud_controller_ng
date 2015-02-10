@@ -76,21 +76,15 @@ module VCAP::Services
               }.to_json
             end
 
-            context 'the response is not a valid json object' do
+            context 'and the response is not a valid json object' do
               let(:body) { '""' }
               it 'raises a ServiceBrokerResponseMalformed error' do
                 expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
               end
             end
 
-            it 'raises a ServiceBrokerBadResponse error' do
-              expect(parsed_response).to eq({
-                'dashboard_url' => 'url.com/dashboard',
-                'last_operation' => {
-                  'state' => 'in progress',
-                  'description' => 'description',
-                },
-              })
+            it 'returns the response hash' do
+              expect(parsed_response).to eq(JSON.parse(body))
             end
           end
 
