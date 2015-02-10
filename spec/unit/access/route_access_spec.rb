@@ -28,6 +28,16 @@ module VCAP::CloudController
       it_behaves_like :full_access
       it { is_expected.to allow_op_on_object :reserved, nil }
 
+      it 'can create wildcard routes' do
+        object.host = '*'
+        expect(subject.create?(object)).to be_truthy
+      end
+
+      it 'can update wildcard routes' do
+        object.host = '*'
+        expect(subject.update?(object)).to be_truthy
+      end
+
       context 'changing the space' do
         it 'succeeds even if not a space developer in the new space' do
           new_space = Space.make(organization: object.space.organization)
@@ -74,6 +84,16 @@ module VCAP::CloudController
       end
 
       it_behaves_like :full_access
+
+      it 'can create wildcard routes' do
+        object.host = '*'
+        expect(subject.create?(object)).to be_falsey
+      end
+
+      it 'can update wildcard routes' do
+        object.host = '*'
+        expect(subject.update?(object)).to be_falsey
+      end
 
       context 'changing the space' do
         it 'succeeds if a space developer in the new space' do

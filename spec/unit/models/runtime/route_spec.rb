@@ -94,6 +94,16 @@ module VCAP::CloudController
         let(:space) { Space.make }
         let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
 
+        it 'should allow * to be the host name' do
+          route.host = '*'
+          expect(route).to be_valid
+        end
+
+        it 'should not allow * in the host name' do
+          route.host = 'a*'
+          expect(route).not_to be_valid
+        end
+
         it 'should not allow . in the host name' do
           route.host = 'a.b'
           expect(route).not_to be_valid

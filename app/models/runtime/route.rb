@@ -43,7 +43,7 @@ module VCAP::CloudController
 
       errors.add(:host, :presence) if host.nil?
 
-      validates_format /^([\w\-]+)$/, :host if host && !host.empty?
+      validates_format /^([\w\-]+|\*)$/, :host if host && !host.empty?
       validates_unique [:host, :domain_id]
 
       validate_domain
