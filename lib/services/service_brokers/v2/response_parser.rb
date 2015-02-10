@@ -109,7 +109,8 @@ module VCAP::Services
             JsonObjectValidator.new(@logger,
                 SuccessValidator.new)
           when 422
-            FailingValidator.new(Errors::ServiceBrokerRequestRejected)
+            FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
+              FailingValidator.new(Errors::ServiceBrokerRequestRejected))
           when 201
             JsonObjectValidator.new(@logger,
               FailingValidator.new(Errors::ServiceBrokerBadResponse))

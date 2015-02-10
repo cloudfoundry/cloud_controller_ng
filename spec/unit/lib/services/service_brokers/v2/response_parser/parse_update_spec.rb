@@ -185,6 +185,19 @@ module VCAP::Services
             it 'raises a ServiceBrokerRequestRejected error' do
               expect { parsed_response }.to raise_error(Errors::ServiceBrokerRequestRejected)
             end
+
+            context 'the response indicates async update is required' do
+              let(:body) do
+                {
+                  error: 'AsyncRequired',
+                  description: 'Some error message about needing async'
+                }.to_json
+              end
+
+              it 'raises an AsyncRequired error' do
+                expect { parsed_response }.to raise_error(Errors::AsyncRequired)
+              end
+            end
           end
 
           context 'when the status code is other 4xx' do
