@@ -45,7 +45,7 @@ module VCAP::CloudController
         :default_health_check_timeout => Fixnum,
         :maximum_health_check_timeout => Fixnum,
 
-        optional(:container_file_descriptor_limit) => Fixnum,
+        optional(:instance_file_descriptor_limit) => Fixnum,
 
         optional(:allow_debug) => bool,
 
