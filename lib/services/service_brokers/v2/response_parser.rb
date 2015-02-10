@@ -22,35 +22,6 @@ module VCAP::Services
           end
         end
 
-        def parse_deprovision_or_unbind(method, path, response)
-          unvalidated_response = UnvalidatedResponse.new(method, @url, path, response)
-
-          validator =
-          case unvalidated_response.code
-          when 200
-            JsonObjectValidator.new(@logger,
-                SuccessValidator.new)
-          when 201, 202
-            JsonObjectValidator.new(@logger,
-              FailingValidator.new(Errors::ServiceBrokerBadResponse))
-          when 204
-            SuccessValidator.new { |res| {} }
-          when 202
-            JsonObjectValidator.new(@logger,
-              PathNotMatchValidator.new(SERVICE_BINDINGS_REGEX, Errors::ServiceBrokerBadResponse,
-                StateValidator.new(['in progress'],
-                  SuccessValidator.new)))
-          when 410
-            @logger.warn("Already deleted: #{unvalidated_response.uri}")
-            SuccessValidator.new { |res| nil }
-          else
-            FailingValidator.new(Errors::ServiceBrokerBadResponse)
-          end
-
-          validator = CommonErrorValidator.new(validator)
-          validator.validate(unvalidated_response.to_hash)
-        end
-
         def parse_provision_or_bind(method, path, response)
           unvalidated_response = UnvalidatedResponse.new(method, @url, path, response)
 
@@ -66,14 +37,47 @@ module VCAP::Services
                 SuccessValidator.new))
           when 202
             JsonObjectValidator.new(@logger,
-              PathNotMatchValidator.new(SERVICE_BINDINGS_REGEX, Errors::ServiceBrokerBadResponse,
-                StateValidator.new(['in progress'],
-                  SuccessValidator.new)))
+              IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
+                FailingValidator.new(Errors::ServiceBrokerBadResponse),
+                StateValidator.new(['in progress'], SuccessValidator.new)))
           when 409
             FailingValidator.new(Errors::ServiceBrokerConflict)
           when 422
             FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
               FailingValidator.new(Errors::ServiceBrokerBadResponse))
+          else
+            FailingValidator.new(Errors::ServiceBrokerBadResponse)
+          end
+
+          validator = CommonErrorValidator.new(validator)
+          validator.validate(unvalidated_response.to_hash)
+        end
+
+        def parse_deprovision_or_unbind(method, path, response)
+          unvalidated_response = UnvalidatedResponse.new(method, @url, path, response)
+
+          validator =
+          case unvalidated_response.code
+          when 200
+            JsonObjectValidator.new(@logger,
+              IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
+                SuccessValidator.new,
+                StateValidator.new(['succeeded', nil],
+                  SuccessValidator.new)))
+          when 201, 202
+            JsonObjectValidator.new(@logger,
+              FailingValidator.new(Errors::ServiceBrokerBadResponse))
+          when 204
+            SuccessValidator.new { |res| {} }
+          when 202
+            JsonObjectValidator.new(@logger,
+              IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
+                FailingValidator.new(Errors::ServiceBrokerBadResponse),
+                StateValidator.new(['in progress'],
+                  SuccessValidator.new)))
+          when 410
+            @logger.warn("Already deleted: #{unvalidated_response.uri}")
+            SuccessValidator.new { |res| nil }
           else
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
           end
@@ -166,18 +170,19 @@ module VCAP::Services
           end
         end
 
-        class PathNotMatchValidator
-          def initialize(path_regex, error_class, validator)
+        class IfElsePathMatchValidator
+          attr_reader :error_class
+          def initialize(path_regex, if_validator, else_validator)
             @path_regex = path_regex
-            @error_class = error_class
-            @validator = validator
+            @if_validator = if_validator
+            @else_validator = else_validator
           end
 
           def validate(method:, uri:, code:, response:)
             if @path_regex.match(uri.to_s)
-              raise @error_class.new(uri.to_s, method, response)
+              @if_validator.validate(method: method, uri: uri, code: code, response: response)
             else
-              @validator.validate(method: method, uri: uri, code: code, response: response)
+              @else_validator.validate(method: method, uri: uri, code: code, response: response)
             end
           end
         end

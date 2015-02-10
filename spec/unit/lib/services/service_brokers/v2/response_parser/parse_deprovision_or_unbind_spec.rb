@@ -42,8 +42,56 @@ module VCAP::Services
               end
             end
 
-            it 'returns response_hash' do
-              expect(parsed_response).to eq({})
+            context 'the state is "succeeded"' do
+              let(:body) do
+                {
+                  last_operation: {
+                    state: 'succeeded',
+                  }
+                }.to_json
+              end
+
+              it 'returns response_hash' do
+                expect(parsed_response).to eq({
+                  'last_operation' => {
+                    'state' => 'succeeded'
+                  }
+                })
+              end
+            end
+
+            context 'the state is not specified' do
+              it 'returns response_hash' do
+                expect(parsed_response).to eq({})
+              end
+            end
+
+            context 'the state is not "succeeded"' do
+              let(:body) do
+                {
+                  last_operation: {
+                    state: 'blarg',
+                  }
+                }.to_json
+              end
+
+              context 'when the path indicates a unbind request' do
+                let(:path) { '/v2/service_instances/valid-service-instance-guid/service_bindings/binding-guid' }
+
+                it 'returns the response hash' do
+                  expect(parsed_response).to eq({
+                    'last_operation' => {
+                      'state' => 'blarg',
+                    },
+                  })
+                end
+              end
+
+              context 'when the path indicates a deprovision request' do
+                it 'raises a ServiceBrokerResponseMalformed error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                end
+              end
             end
           end
 
