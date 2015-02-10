@@ -695,7 +695,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the broker client raises a ServiceBrokerBadResponse' do
+        context 'when the broker client returns an error as its second return value' do
           let(:response_body) { '{"description": "error message"}' }
 
           before do
@@ -704,26 +704,18 @@ module VCAP::CloudController
               to_return(status: 500, body: response_body, headers: { 'Content-Type' => 'application/json' })
           end
 
-          it 'returns a CF-ServiceBrokerBadResponse' do
+          it 'saves the attributes provided by the first return value' do
             put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+
+            expect(service_instance.last_operation.state).to eq 'failed'
+            expect(service_instance.last_operation.type).to eq 'update'
+            expect(service_instance.last_operation.description).to eq 'Service broker error: error message'
+          end
+
+          it 're-raises the error' do
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+
             expect(last_response).to have_status_code 502
-            expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
-          end
-        end
-
-        context 'when the broker client raises a ServiceBrokerRequestRejected' do
-          let(:response_body) { '{"description": "error message"}' }
-
-          before do
-            stub_request(:patch, service_broker_url).
-              with(headers: { 'Accept' => 'application/json' }).
-              to_return(status: 422, body: response_body, headers: { 'Content-Type' => 'application/json' })
-          end
-
-          it 'returns a CF-ServiceBrokerRequestRejected' do
-            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-            expect(last_response.status).to eq 502
-            expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerRequestRejected'
           end
         end
 

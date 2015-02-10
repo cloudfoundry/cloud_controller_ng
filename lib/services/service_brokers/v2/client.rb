@@ -157,7 +157,21 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:service_plan] = plan
       end
 
-      attributes
+      return attributes, nil
+    rescue Errors::ServiceBrokerBadResponse,
+           Errors::ServiceBrokerApiTimeout,
+           Errors::ServiceBrokerResponseMalformed,
+           Errors::ServiceBrokerRequestRejected,
+           Errors::AsyncRequired => e
+
+      attributes = {
+        last_operation: {
+          state: 'failed',
+          type: 'update',
+          description: e.message
+        }
+      }
+      return attributes, e
     end
 
     private

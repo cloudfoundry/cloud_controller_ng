@@ -101,7 +101,7 @@ module VCAP::CloudController
       attributes_to_update = {}
       if request_attrs['service_plan_guid']
         new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
-        attributes_to_update = service_instance.client.update_service_plan(
+        attributes_to_update, err = service_instance.client.update_service_plan(
           service_instance,
           new_plan,
           async: is_async_request
@@ -109,6 +109,8 @@ module VCAP::CloudController
       end
 
       service_instance.save_with_operation(attributes_to_update)
+
+      raise err if err
 
       @services_event_repository.record_service_instance_event(:update, service_instance, request_attrs)
 
