@@ -1658,6 +1658,17 @@ module VCAP::CloudController
           expect(app.disk_quota).to eq(512)
         end
       end
+
+      describe 'container_file_descriptor_limit' do
+        before do
+          TestConfig.override({ container_file_descriptor_limit: 200 })
+        end
+
+        it 'uses the container_file_descriptor_limit config variable' do
+          app = App.create_from_hash(name: 'awesome app', space_guid: space.guid)
+          expect(app.file_descriptors).to eq(200)
+        end
+      end
     end
 
     describe 'saving' do
