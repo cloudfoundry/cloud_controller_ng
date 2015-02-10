@@ -598,6 +598,11 @@
   http_code: 502
   message: "Service broker dashboard clients could not be modified: %s"
 
+270014:
+  name: ServiceBrokerAsyncRequired
+  http_code: 400
+  message: "This service plan requires client support for asynchronous service operations."
+
 290001:
   name: BuildpackNameTaken
   http_code: 400
