@@ -26,7 +26,7 @@ resource 'Droplets (Experimental)', type: :api do
     end
 
     let(:droplet_model) do
-      VCAP::CloudController::DropletModel.make(package_guid: package_model.guid)
+      VCAP::CloudController::DropletModel.make(package_guid: package_model.guid, failure_reason: 'example failure reason')
     end
 
     before do
@@ -40,6 +40,7 @@ resource 'Droplets (Experimental)', type: :api do
         'state'             => droplet_model.state,
         'hash'              => droplet_model.droplet_hash,
         'buildpack_git_url' => droplet_model.buildpack_git_url,
+        'failure_reason'    => 'example failure reason',
         'created_at'        => droplet_model.created_at.as_json,
         '_links'            => {
           'self'    => { 'href' => "/v3/droplets/#{guid}" },
@@ -126,6 +127,7 @@ resource 'Droplets (Experimental)', type: :api do
               'state'             => VCAP::CloudController::DropletModel::STAGING_STATE,
               'hash'              => nil,
               'buildpack_git_url' => nil,
+              'failure_reason'    => droplet1.failure_reason,
               'created_at'        => droplet1.created_at.as_json,
               '_links'            => {
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
@@ -138,6 +140,7 @@ resource 'Droplets (Experimental)', type: :api do
               'state'             => VCAP::CloudController::DropletModel::STAGED_STATE,
               'hash'              => 'my-hash',
               'buildpack_git_url' => 'https://github.com/cloudfoundry/my-buildpack.git',
+              'failure_reason'    => droplet2.failure_reason,
               'created_at'        => droplet2.created_at.as_json,
               '_links'            => {
                 'self'      => { 'href' => "/v3/droplets/#{droplet2.guid}" },
