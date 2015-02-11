@@ -31,6 +31,8 @@ resource 'Droplets (Experimental)', type: :api do
         detected_start_command: 'run -c all_the_things')
     end
 
+    let(:app_guid) { droplet_model.app_guid }
+
     before do
       space.organization.add_user user
       space.add_developer user
@@ -48,6 +50,7 @@ resource 'Droplets (Experimental)', type: :api do
         '_links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{guid}" },
           'package' => { 'href' => "/v3/packages/#{package_model.guid}" },
+          'app'     => { 'href' => "/v3/apps/#{app_guid}" },
         }
       }
 
@@ -137,6 +140,7 @@ resource 'Droplets (Experimental)', type: :api do
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
                 'package'   => { 'href' => "/v3/packages/#{package.guid}" },
                 'buildpack' => { 'href' => "/v2/buildpacks/#{buildpack.guid}" },
+                'app'       => { 'href' => "/v3/apps/#{droplet1.app_guid}" },
               }
             },
             {
@@ -150,6 +154,7 @@ resource 'Droplets (Experimental)', type: :api do
               '_links'                 => {
                 'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },
                 'package' => { 'href' => "/v3/packages/#{package.guid}" },
+                'app'     => { 'href' => "/v3/apps/#{droplet2.app_guid}" },
               }
             },
           ]

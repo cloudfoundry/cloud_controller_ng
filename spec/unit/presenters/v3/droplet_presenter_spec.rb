@@ -27,6 +27,7 @@ module VCAP::CloudController
         expect(result['_links']).to include('package')
         expect(result['_links']['package']['href']).to eq("/v3/packages/#{droplet.package_guid}")
         expect(result['_links']['buildpack']['href']).to eq("/v2/buildpacks/#{droplet.buildpack_guid}")
+        expect(result['_links']['app']['href']).to eq("/v3/apps/#{droplet.app_guid}")
       end
     end
 

@@ -293,8 +293,11 @@ resource 'Packages (Experimental)', type: :api do
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_guid) { app_model.guid }
     let!(:package_model) do
       VCAP::CloudController::PackageModel.make(
+        app_guid: app_guid,
         space_guid: space_guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
         type: VCAP::CloudController::PackageModel::BITS_TYPE
@@ -348,6 +351,7 @@ resource 'Packages (Experimental)', type: :api do
         '_links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{droplet.guid}" },
           'package' => { 'href' => "/v3/packages/#{guid}" },
+          'app'     => { 'href' => "/v3/apps/#{app_guid}" },
         }
       }
 

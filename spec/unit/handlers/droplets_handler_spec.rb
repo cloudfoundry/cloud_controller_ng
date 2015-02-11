@@ -191,8 +191,10 @@ module VCAP::CloudController
     end
 
     describe '#create' do
+      let(:app_model) { AppModel.make }
+      let(:app_guid) { app_model.guid }
       let(:space) { Space.make }
-      let(:package) { PackageModel.make(space_guid: space.guid, state: PackageModel::READY_STATE, type: PackageModel::BITS_TYPE) }
+      let(:package) { PackageModel.make(app_guid: app_guid, space_guid: space.guid, state: PackageModel::READY_STATE, type: PackageModel::BITS_TYPE) }
       let(:package_guid) { package.guid }
       let(:stack) { 'trusty32' }
       let(:memory_limit) { 12340 }
@@ -218,7 +220,7 @@ module VCAP::CloudController
         allow(stager).to receive(:stage_package)
       end
 
-      context 'when the package does exist' do
+      context 'when the package exists' do
         context 'and the user is a space developer' do
           let(:buildpack) { Buildpack.make }
           let(:buildpack_guid) { buildpack.guid }
@@ -233,6 +235,7 @@ module VCAP::CloudController
             expect(droplet.package_guid).to eq(package_guid)
             expect(droplet.buildpack_git_url).to eq('something')
             expect(droplet.buildpack_guid).to eq(buildpack_guid)
+            expect(droplet.app_guid).to eq(app_guid)
           end
 
           it 'initiates a staging request' do

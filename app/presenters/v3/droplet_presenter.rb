@@ -44,12 +44,9 @@ module VCAP::CloudController
       end
 
       links = {
-        self: {
-          href: "/v3/droplets/#{droplet.guid}"
-        },
-        package: {
-          href: "/v3/packages/#{droplet.package_guid}"
-        },
+        self: { href: "/v3/droplets/#{droplet.guid}" },
+        package: { href: "/v3/packages/#{droplet.package_guid}" },
+        app: { href: "/v3/apps/#{droplet.app_guid}" },
         buildpack: buildpack_link
       }
 

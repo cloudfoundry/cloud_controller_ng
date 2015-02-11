@@ -39,12 +39,13 @@ module VCAP::CloudController
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }
     type     { 'bits' }
-    app_guid { Sham.guid }
+    app_guid { AppModel.make.guid }
   end
 
   DropletModel.blueprint do
-    guid    { Sham.guid }
-    state   { VCAP::CloudController::DropletModel::STAGING_STATE }
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+    app_guid { AppModel.make.guid }
   end
 
   User.blueprint do

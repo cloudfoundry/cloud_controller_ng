@@ -112,8 +112,12 @@ module VCAP::CloudController
       raise SpaceNotFound if space.nil?
 
       droplet = DropletModel.new(
-        state: DropletModel::PENDING_STATE, package_guid: package.guid,
-        buildpack_git_url: message.buildpack_git_url, buildpack_guid: message.buildpack_guid)
+        app_guid: package.app_guid,
+        buildpack_git_url: message.buildpack_git_url,
+        buildpack_guid: message.buildpack_guid,
+        package_guid: package.guid,
+        state: DropletModel::PENDING_STATE,
+      )
       raise Unauthorized if access_context.cannot?(:create, droplet, space)
 
       buildpack_key = nil
