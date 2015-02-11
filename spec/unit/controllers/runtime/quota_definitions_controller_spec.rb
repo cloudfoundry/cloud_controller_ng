@@ -104,5 +104,22 @@ module VCAP::CloudController
         expect(decoded_response['code']).to eq(240004)
       end
     end
+
+    describe 'audit events' do
+      it 'logs audit.quota_definition.delete-request when deleting a quota definition' do
+        quota_definition = QuotaDefinition.make
+        quota_definition_guid = quota_definition.guid
+        delete "/v2/quota_definitions/#{quota_definition_guid}", '', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(204)
+
+        event = Event.find(type: 'audit.quota_definition.delete-request', actee: quota_definition_guid)
+        expect(event).not_to be_nil
+        expect(event.actee).to eq(quota_definition_guid)
+        expect(event.actee_name).to eq(quota_definition.name)
+        expect(event.organization_guid).to eq('')
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
+      end
+    end
   end
 end

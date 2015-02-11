@@ -72,5 +72,23 @@ module VCAP::CloudController
         expect(last_response).to have_warning_message(VCAP::CloudController::ServiceAuthTokensController::DEPRECATION_MESSAGE)
       end
     end
+
+    describe 'audit events' do
+      it 'logs audit.service_auth_token.delete-request when deleting a service auth token' do
+        service_auth_token = ServiceAuthToken.make
+        service_auth_token_guid = service_auth_token.guid
+        delete "/v2/service_auth_tokens/#{service_auth_token_guid}", '', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(204)
+
+        event = Event.find(type: 'audit.service_auth_token.delete-request', actee: service_auth_token_guid)
+        expect(event).not_to be_nil
+        expect(event.actee).to eq(service_auth_token_guid)
+        expect(event.actee_name).to eq(service_auth_token.label)
+        expect(event.organization_guid).to eq('')
+        expect(event.space_guid).to eq('')
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
+      end
+    end
   end
 end

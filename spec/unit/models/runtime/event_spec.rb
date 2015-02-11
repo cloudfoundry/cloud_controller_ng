@@ -86,5 +86,21 @@ module VCAP::CloudController
         end
       end
     end
+
+    context 'when there is no space on the event' do
+      let!(:new_event) { Event.make(space: nil) }
+
+      it 'returns nil' do
+        expect(new_event.space).to be_nil
+      end
+
+      it 'does not have a denormalized space guid' do
+        expect(new_event.space_guid).to eq('')
+      end
+
+      it 'does not have a denormalized organization guid' do
+        expect(new_event.organization_guid).to eq('')
+      end
+    end
   end
 end

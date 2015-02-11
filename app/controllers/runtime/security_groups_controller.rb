@@ -1,5 +1,9 @@
 module VCAP::CloudController
   class SecurityGroupsController < RestController::ModelController
+    def self.dependencies
+      [:security_group_event_repository]
+    end
+
     define_attributes do
       attribute :name, String
       attribute :rules, [Hash], default: []
@@ -12,8 +16,18 @@ module VCAP::CloudController
     define_messages
     define_routes
 
+    def inject_dependencies(dependencies)
+      super
+      @security_group_event_repository = dependencies.fetch(:security_group_event_repository)
+    end
+
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      security_group = find_guid_and_validate_access(:delete, guid)
+      @security_group_event_repository.record_security_group_delete_request(
+        security_group,
+        SecurityContext.current_user,
+        SecurityContext.current_user_email)
+      do_delete(security_group)
     end
 
     def self.translate_validation_exception(e, attributes)

@@ -118,5 +118,21 @@ module VCAP::CloudController
         expect(last_response.status).to eq(403)
       end
     end
+
+    describe 'audit events' do
+      it 'logs audit.user.delete-request when deleting a user' do
+        user = User.make
+        user_guid = user.guid
+        delete "/v2/users/#{user_guid}", '', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(204)
+
+        event = Event.find(type: 'audit.user.delete-request', actee: user_guid)
+        expect(event).not_to be_nil
+        expect(event.actee).to eq(user_guid)
+        expect(event.actee_name).to eq(user_guid)
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
+      end
+    end
   end
 end

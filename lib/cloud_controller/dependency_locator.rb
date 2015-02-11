@@ -1,5 +1,14 @@
 require 'repositories/runtime/app_event_repository'
+require 'repositories/runtime/buildpack_event_repository'
+require 'repositories/runtime/domain_event_repository'
+require 'repositories/runtime/organization_event_repository'
+require 'repositories/runtime/quota_definition_event_repository'
+require 'repositories/runtime/route_event_repository'
+require 'repositories/runtime/security_group_event_repository'
+require 'repositories/runtime/service_auth_token_event_repository'
 require 'repositories/runtime/space_event_repository'
+require 'repositories/runtime/space_quota_definition_event_repository'
+require 'repositories/runtime/user_event_repository'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
 require 'cloud_controller/upload_handler'
@@ -141,8 +150,52 @@ module CloudController
       )
     end
 
+    def app_event_repository
+      @dependencies[:app_event_repository] || raise('app_event_repository not set')
+    end
+
+    def buildpack_event_repository
+      @dependencies[:buildpack_event_repository] || Repositories::Runtime::BuildpackEventRepository.new
+    end
+
+    def domain_event_repository
+      @dependencies[:domain_event_repository] || Repositories::Runtime::DomainEventRepository.new
+    end
+
+    def organization_event_repository
+      @dependencies[:organization_event_repository] || Repositories::Runtime::OrganizationEventRepository.new
+    end
+
+    def quota_definition_event_repository
+      @dependencies[:quota_definition_event_repository] || Repositories::Runtime::QuotaDefinitionEventRepository.new
+    end
+
+    def route_event_repository
+      @dependencies[:route_event_repository] || Repositories::Runtime::RouteEventRepository.new
+    end
+
+    def security_group_event_repository
+      @dependencies[:security_group_event_repository] || Repositories::Runtime::SecurityGroupEventRepository.new
+    end
+
+    def services_event_repository
+      @dependencies[:services_event_repository] || Repositories::Services::EventRepository.new(SecurityContext)
+    end
+
+    def service_auth_token_event_repository
+      @dependencies[:service_auth_token_event_repository] || Repositories::Runtime::ServiceAuthTokenEventRepository.new
+    end
+
     def space_event_repository
       Repositories::Runtime::SpaceEventRepository.new
+    end
+
+    def space_quota_definition_event_repository
+      @dependencies[:space_quota_event_repository] || Repositories::Runtime::SpaceQuotaDefinitionEventRepository.new
+    end
+
+    def user_event_repository
+      @dependencies[:user_event_repository] || Repositories::Runtime::UserEventRepository.new
     end
 
     def services_event_repository

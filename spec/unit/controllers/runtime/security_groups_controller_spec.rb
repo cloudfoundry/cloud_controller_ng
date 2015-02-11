@@ -54,5 +54,23 @@ module VCAP::CloudController
         expect(decoded_response['error_code']).to match(/SecurityGroupNameTaken/)
       end
     end
+
+    describe 'audit events' do
+      it 'logs audit.security_group.delete-request when deleting a security group' do
+        security_group = SecurityGroup.make
+        security_group_guid = security_group.guid
+        delete "/v2/security_groups/#{security_group_guid}", '', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(204)
+
+        event = Event.find(type: 'audit.security_group.delete-request', actee: security_group_guid)
+        expect(event).not_to be_nil
+        expect(event.actee).to eq(security_group_guid)
+        expect(event.actee_name).to eq(security_group.name)
+        expect(event.organization_guid).to eq('')
+        expect(event.space_guid).to eq('')
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
+      end
+    end
   end
 end

@@ -103,5 +103,21 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'audit events' do
+      it 'logs audit.buildpack.delete-request when deleting a buildpack' do
+        buildpack = Buildpack.make(name: 'my-buildpack')
+        buildpack_guid = buildpack.guid
+        delete "/v2/buildpacks/#{buildpack_guid}", '', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(204)
+
+        event = Event.find(type: 'audit.buildpack.delete-request', actee: buildpack_guid)
+        expect(event).not_to be_nil
+        expect(event.actee).to eq(buildpack_guid)
+        expect(event.actee_name).to eq(buildpack.name)
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
+      end
+    end
   end
 end

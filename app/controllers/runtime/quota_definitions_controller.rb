@@ -1,5 +1,9 @@
 module VCAP::CloudController
   class QuotaDefinitionsController < RestController::ModelController
+    def self.dependencies
+      [:quota_definition_event_repository]
+    end
+
     define_attributes do
       attribute :name,                       String
       attribute :non_basic_services_allowed, Message::Boolean
@@ -23,8 +27,18 @@ module VCAP::CloudController
       end
     end
 
+    def inject_dependencies(dependencies)
+      super
+      @quota_definition_event_repository = dependencies.fetch(:quota_definition_event_repository)
+    end
+
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      quota_definition = find_guid_and_validate_access(:delete, guid)
+      @quota_definition_event_repository.record_quota_definition_delete_request(
+        quota_definition,
+        SecurityContext.current_user,
+        SecurityContext.current_user_email)
+      do_delete(quota_definition)
     end
 
     define_messages
