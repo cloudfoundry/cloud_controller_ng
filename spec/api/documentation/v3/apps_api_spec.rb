@@ -189,7 +189,7 @@ resource 'Apps (Experimental)', type: :api do
   patch '/v3/apps/:guid' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
-    let(:droplet) { VCAP::CloudController::DropletModel.make }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid) }
     let(:app_model) { VCAP::CloudController::AppModel.make(name: 'original_name', space_guid: space_guid) }
 
     before do

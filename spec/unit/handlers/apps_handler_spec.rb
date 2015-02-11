@@ -223,7 +223,7 @@ module VCAP::CloudController
 
     describe '#update' do
       let!(:app_model) { AppModel.make(desired_droplet_guid: '123') }
-      let!(:droplet_model) { DropletModel.make }
+      let!(:droplet_model) { DropletModel.make(app_guid: guid) }
       let(:new_name) { 'new-name' }
       let(:guid) { app_model.guid }
       let(:desired_droplet_guid) { droplet_model.guid }
@@ -253,6 +253,20 @@ module VCAP::CloudController
           updated_app = AppModel.find(guid: guid)
           expect(updated_app.name).to eq(new_name)
           expect(updated_app.desired_droplet_guid).to eq(desired_droplet_guid)
+        end
+
+        it 'prevents droplets from other apps to be assigned' do
+          update_message = AppUpdateMessage.new({ 'guid' => guid, 'desired_droplet_guid' => DropletModel.make.guid })
+          expect {
+            apps_handler.update(update_message, access_context)
+          }.to raise_error AppsHandler::DropletNotFound
+        end
+
+        it 'prevents inexistent droplets to be assigned' do
+          update_message = AppUpdateMessage.new({ 'guid' => guid, 'desired_droplet_guid' => 'some-garbage' })
+          expect {
+            apps_handler.update(update_message, access_context)
+          }.to raise_error AppsHandler::DropletNotFound
         end
 
         it 'keeps current, non-updated attributes' do

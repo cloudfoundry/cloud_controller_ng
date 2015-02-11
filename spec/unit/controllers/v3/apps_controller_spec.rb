@@ -278,6 +278,21 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the droplet was not found' do
+        before do
+          allow(apps_handler).to receive(:update).and_raise(AppsHandler::DropletNotFound)
+        end
+
+        it 'returns an NotFound error' do
+          expect {
+            apps_controller.update(app_model.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq(404)
+          end
+        end
+      end
     end
 
     describe '#delete' do

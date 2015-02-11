@@ -72,6 +72,7 @@ module VCAP::CloudController
     class Unauthorized < StandardError; end
     class DeleteWithProcesses < StandardError; end
     class DuplicateProcessType < StandardError; end
+    class DropletNotFound < StandardError; end
     class InvalidApp < StandardError; end
     class IncorrectProcessSpace < StandardError; end
     class IncorrectPackageSpace < StandardError; end
@@ -116,7 +117,12 @@ module VCAP::CloudController
         app.lock!
 
         app.name = message.name unless message.name.nil?
-        app.desired_droplet_guid = message.desired_droplet_guid unless message.desired_droplet_guid.nil?
+        if message.desired_droplet_guid
+          droplet = DropletModel.find(guid: message.desired_droplet_guid)
+          raise DropletNotFound if droplet.nil?
+          raise DropletNotFound if droplet.app_guid != app.guid
+          app.desired_droplet_guid = message.desired_droplet_guid
+        end
 
         raise Unauthorized if access_context.cannot?(:update, app)
 

@@ -59,6 +59,8 @@ module VCAP::CloudController
       app_not_found! if app.nil?
 
       [HTTP::OK, @app_presenter.present_json(app)]
+    rescue AppsHandler::DropletNotFound
+      droplet_not_found!
     rescue AppsHandler::Unauthorized
       unauthorized!
     rescue AppsHandler::InvalidApp => e
@@ -99,6 +101,10 @@ module VCAP::CloudController
 
     def unable_to_perform!(msg, details)
       raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', msg, details)
+    end
+
+    def droplet_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found')
     end
 
     def app_not_found!
