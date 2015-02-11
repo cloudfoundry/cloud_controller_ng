@@ -150,6 +150,11 @@ module VCAP::CloudController
           expect(droplet.refresh.buildpack_guid).to eq(buildpack.guid)
         end
 
+        it 'updates the droplet with the detected start command' do
+          stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
+          expect(droplet.refresh.detected_start_command).to eq(detected_start_command)
+        end
+
         context 'when buildpack is not present' do
           let(:reply_json) do
             {

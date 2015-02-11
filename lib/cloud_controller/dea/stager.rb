@@ -30,8 +30,9 @@ module VCAP::CloudController
           buildpack = Buildpack.find(key: staging_result.buildpack_key)
           droplet.db.transaction do
             droplet.lock!
-            droplet.state = DropletModel::STAGED_STATE
-            droplet.buildpack_guid = buildpack.guid if buildpack
+            droplet.state                  = DropletModel::STAGED_STATE
+            droplet.buildpack_guid         = buildpack.guid if buildpack
+            droplet.detected_start_command = staging_result.detected_start_command
             droplet.save
           end
         end
