@@ -28,14 +28,27 @@ module VCAP::CloudController
       {
         guid:   app.guid,
         name:   app.name,
-
-        _links: {
-          self:      { href: "/v3/apps/#{app.guid}" },
-          processes: { href: "/v3/apps/#{app.guid}/processes" },
-          packages:  { href: "/v3/apps/#{app.guid}/packages" },
-          space:     { href: "/v2/spaces/#{app.space_guid}" },
-        }
+        _links: build_links(app),
       }
+    end
+
+    def build_links(app)
+      desired_droplet_link = nil
+      if app.desired_droplet_guid
+        desired_droplet_link = {
+          href: "/v3/droplets/#{app.desired_droplet_guid}"
+        }
+      end
+
+      links = {
+        self:            { href: "/v3/apps/#{app.guid}" },
+        processes:       { href: "/v3/apps/#{app.guid}/processes" },
+        packages:        { href: "/v3/apps/#{app.guid}/packages" },
+        space:           { href: "/v2/spaces/#{app.space_guid}" },
+        desired_droplet: desired_droplet_link,
+      }
+
+      links.delete_if { |_, v| v.nil? }
     end
   end
 end

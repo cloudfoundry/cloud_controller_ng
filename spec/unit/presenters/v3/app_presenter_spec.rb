@@ -11,6 +11,16 @@ module VCAP::CloudController
         result      = MultiJson.load(json_result)
 
         expect(result['guid']).to eq(app.guid)
+        expect(result['_links']).not_to include('desired_droplet')
+      end
+
+      it 'includes a link to the droplet if present' do
+        app = AppModel.make(desired_droplet_guid: '123')
+
+        json_result = AppPresenter.new.present_json(app)
+        result      = MultiJson.load(json_result)
+
+        expect(result['_links']['desired_droplet']['href']).to eq('/v3/droplets/123')
       end
     end
 

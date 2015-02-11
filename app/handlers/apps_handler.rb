@@ -48,7 +48,7 @@ module VCAP::CloudController
   end
 
   class AppUpdateMessage
-    attr_reader :guid, :name
+    attr_reader :guid, :name, :desired_droplet_guid
     attr_accessor :error
 
     def self.create_from_http_request(guid, body)
@@ -64,6 +64,7 @@ module VCAP::CloudController
     def initialize(opts)
       @guid = opts['guid']
       @name = opts['name']
+      @desired_droplet_guid = opts['desired_droplet_guid']
     end
   end
 
@@ -115,6 +116,7 @@ module VCAP::CloudController
         app.lock!
 
         app.name = message.name unless message.name.nil?
+        app.desired_droplet_guid = message.desired_droplet_guid unless message.desired_droplet_guid.nil?
 
         raise Unauthorized if access_context.cannot?(:update, app)
 

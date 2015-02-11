@@ -222,10 +222,12 @@ module VCAP::CloudController
     end
 
     describe '#update' do
-      let!(:app_model) { AppModel.make }
+      let!(:app_model) { AppModel.make(desired_droplet_guid: '123') }
+      let!(:droplet_model) { DropletModel.make }
       let(:new_name) { 'new-name' }
       let(:guid) { app_model.guid }
-      let(:update_message) { AppUpdateMessage.new({ 'guid' => guid, 'name' => new_name }) }
+      let(:desired_droplet_guid) { droplet_model.guid }
+      let(:update_message) { AppUpdateMessage.new({ 'guid' => guid, 'name' => new_name, 'desired_droplet_guid' => desired_droplet_guid }) }
       let(:empty_update_message) { AppUpdateMessage.new({ 'guid' => guid }) }
 
       context 'when the user cannot update the app' do
@@ -246,18 +248,22 @@ module VCAP::CloudController
           result = apps_handler.update(update_message, access_context)
           expect(result.guid).to eq(guid)
           expect(result.name).to eq(new_name)
+          expect(result.desired_droplet_guid).to eq(desired_droplet_guid)
 
           updated_app = AppModel.find(guid: guid)
           expect(updated_app.name).to eq(new_name)
+          expect(updated_app.desired_droplet_guid).to eq(desired_droplet_guid)
         end
 
         it 'keeps current, non-updated attributes' do
           result = apps_handler.update(empty_update_message, access_context)
           expect(result.guid).to eq(guid)
           expect(result.name).to eq(app_model.name)
+          expect(result.desired_droplet_guid).to eq(app_model.desired_droplet_guid)
 
           updated_app = AppModel.find(guid: guid)
           expect(updated_app.name).to eq(app_model.name)
+          expect(updated_app.desired_droplet_guid).to eq(app_model.desired_droplet_guid)
         end
 
         context 'when the app has a web process' do

@@ -115,7 +115,8 @@ resource 'Apps (Experimental)', type: :api do
   end
 
   get '/v3/apps/:guid' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(name: name) }
+    let(:desired_droplet_guid) { 'a-droplet-guid' }
+    let(:app_model) { VCAP::CloudController::AppModel.make(name: name, desired_droplet_guid: desired_droplet_guid) }
     let(:guid) { app_model.guid }
     let(:space_guid) { app_model.space_guid }
     let(:space) { VCAP::CloudController::Space.find(guid: space_guid) }
@@ -131,10 +132,11 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => name,
         'guid'   => guid,
         '_links' => {
-          'self'      => { 'href' => "/v3/apps/#{guid}" },
-          'processes' => { 'href' => "/v3/apps/#{guid}/processes" },
-          'packages'  => { 'href' => "/v3/apps/#{guid}/packages" },
-          'space'     => { 'href' => "/v2/spaces/#{space_guid}" },
+          'self'            => { 'href' => "/v3/apps/#{guid}" },
+          'processes'       => { 'href' => "/v3/apps/#{guid}/processes" },
+          'packages'        => { 'href' => "/v3/apps/#{guid}/packages" },
+          'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
+          'desired_droplet' => { 'href' => "/v3/droplets/#{desired_droplet_guid}" },
         }
       }
 
@@ -187,6 +189,7 @@ resource 'Apps (Experimental)', type: :api do
   patch '/v3/apps/:guid' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
+    let(:droplet) { VCAP::CloudController::DropletModel.make }
     let(:app_model) { VCAP::CloudController::AppModel.make(name: 'original_name', space_guid: space_guid) }
 
     before do
@@ -195,8 +198,10 @@ resource 'Apps (Experimental)', type: :api do
     end
 
     parameter :name, 'Name of the App'
+    parameter :desired_droplet_guid, 'GUID of the Droplet to be used for the App'
 
     let(:name) { 'new_name' }
+    let(:desired_droplet_guid) { droplet.guid }
     let(:guid) { app_model.guid }
 
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
@@ -208,10 +213,11 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => name,
         'guid'   => app_model.guid,
         '_links' => {
-          'self'      => { 'href' => "/v3/apps/#{app_model.guid}" },
-          'processes' => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
-          'packages'  => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
-          'space'     => { 'href' => "/v2/spaces/#{space_guid}" },
+          'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
+          'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
+          'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
+          'desired_droplet' => { 'href' => "/v3/droplets/#{desired_droplet_guid}" },
         }
       }
 
