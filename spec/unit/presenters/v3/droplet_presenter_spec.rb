@@ -6,10 +6,11 @@ module VCAP::CloudController
     describe '#present_json' do
       it 'presents the droplet as json' do
         droplet = DropletModel.make(
-          state:             DropletModel::STAGED_STATE,
-          buildpack_guid:    'a-buildpack',
-          failure_reason:    'example failure reason',
-          buildpack_git_url: 'http://git.url', droplet_hash: '1234')
+          state:                  DropletModel::STAGED_STATE,
+          buildpack_guid:         'a-buildpack',
+          failure_reason:         'example failure reason',
+          detected_start_command: 'blast off!',
+          buildpack_git_url:      'http://git.url', droplet_hash: '1234')
 
         json_result = DropletPresenter.new.present_json(droplet)
         result      = MultiJson.load(json_result)
@@ -19,6 +20,7 @@ module VCAP::CloudController
         expect(result['hash']).to eq(droplet.droplet_hash)
         expect(result['buildpack_git_url']).to eq(droplet.buildpack_git_url)
         expect(result['failure_reason']).to eq(droplet.failure_reason)
+        expect(result['detected_start_command']).to eq(droplet.detected_start_command)
         expect(result['created_at']).to eq(droplet.created_at.as_json)
         expect(result['_links']).to include('self')
         expect(result['_links']['self']['href']).to eq("/v3/droplets/#{droplet.guid}")

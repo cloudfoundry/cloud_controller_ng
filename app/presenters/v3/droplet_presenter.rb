@@ -24,13 +24,14 @@ module VCAP::CloudController
 
     def droplet_hash(droplet)
       {
-        guid:              droplet.guid,
-        state:             droplet.state,
-        hash:              droplet.droplet_hash,
-        buildpack_git_url: droplet.buildpack_git_url,
-        failure_reason:    droplet.failure_reason,
-        created_at:        droplet.created_at,
-        _links:     build_links(droplet),
+        guid:                   droplet.guid,
+        state:                  droplet.state,
+        hash:                   droplet.droplet_hash,
+        buildpack_git_url:      droplet.buildpack_git_url,
+        failure_reason:         droplet.failure_reason,
+        detected_start_command: droplet.detected_start_command,
+        created_at:             droplet.created_at,
+        _links:                 build_links(droplet),
       }
     end
 
