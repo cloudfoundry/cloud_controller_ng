@@ -38,6 +38,7 @@ module VCAP::CloudController
         expect(res[:health_check_timeout]).to be_nil
         expect(res[:egress_network_rules]).to be_kind_of(Array)
         expect(res[:egress_network_rules]).to eq([])
+        expect(res[:stack]).to eq(app.stack.name)
 
         expect(app.vcap_application).to be
         expect(res[:vcap_application]).to eql(app.vcap_application)
