@@ -338,12 +338,14 @@ resource 'Packages (Experimental)', type: :api do
 
       droplet = VCAP::CloudController::DropletModel.last
       expected_response = {
-        'guid'              => droplet.guid,
-        'state'             => 'PENDING',
-        'hash'              => nil,
-        'buildpack_git_url' => 'http://github.com/myorg/awesome-buildpack',
-        'created_at'        => droplet.created_at.as_json,
-        '_links'            => {
+        'guid'                   => droplet.guid,
+        'state'                  => 'PENDING',
+        'hash'                   => nil,
+        'buildpack_git_url'      => 'http://github.com/myorg/awesome-buildpack',
+        'failure_reason'         => nil,
+        'detected_start_command' => nil,
+        'created_at'             => droplet.created_at.as_json,
+        '_links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{droplet.guid}" },
           'package' => { 'href' => "/v3/packages/#{guid}" },
         }
