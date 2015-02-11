@@ -36,7 +36,7 @@ module VCAP::CloudController
           end
         end
       rescue PackageStagerTask::FailedToStage => e
-        droplet.update(state: DropletModel::FAILED_STATE)
+        droplet.update(state: DropletModel::FAILED_STATE, failure_reason: e.message)
         raise VCAP::Errors::ApiError.new_from_details('StagingError', e.message)
       end
 

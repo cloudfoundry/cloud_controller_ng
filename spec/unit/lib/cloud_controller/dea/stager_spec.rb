@@ -172,9 +172,37 @@ module VCAP::CloudController
         end
 
         context 'when staging fails' do
-          it 'raises an ApiError' do
-            allow(stager_task).to receive(:stage).and_raise(PackageStagerTask::FailedToStage, 'a staging error message')
+          let(:failure_reason) { 'a staging error message' }
 
+          before do
+            allow(stager_task).to receive(:stage).and_raise(PackageStagerTask::FailedToStage, failure_reason)
+          end
+
+          it 'updates the droplet to a FAILED state' do
+            expect(droplet.state).not_to eq(DropletModel::FAILED_STATE)
+
+            begin
+              stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
+            rescue
+            end
+
+            droplet.reload
+
+            expect(droplet.state).to eq(DropletModel::FAILED_STATE)
+          end
+
+          it 'stores the failure reason on the droplet' do
+            begin
+              stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
+            rescue
+            end
+
+            droplet.reload
+
+            expect(droplet.failure_reason).to eq(failure_reason)
+          end
+
+          it 'raises an ApiError' do
             expect { stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url) }.
               to raise_error(VCAP::Errors::ApiError, /a staging error message/)
           end
