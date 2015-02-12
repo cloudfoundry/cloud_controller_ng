@@ -27,6 +27,10 @@ module VCAP::Services
           context 'when the status code is 200' do
             let(:code) { 200 }
 
+            it 'should be ok' do
+              expect(parsed_response).to eq({})
+            end
+
             context 'the response is partial json response' do
               let(:body) { '""' }
               it 'raises a ServiceBrokerResponseMalformed error' do
@@ -113,6 +117,21 @@ module VCAP::Services
 
           context 'when the status code is 202' do
             let(:code) { 202 }
+            let(:body) do
+              {
+                  last_operation: {
+                    state: 'in progress',
+                  }
+              }.to_json
+            end
+
+            it 'returns the parsed response with last_operation' do
+              expect(parsed_response).to eq({
+                  'last_operation' => {
+                    'state' => 'in progress'
+                  }
+                })
+            end
 
             context 'the response is not a valid json object' do
               let(:body) { '""' }
@@ -120,10 +139,6 @@ module VCAP::Services
               it 'raises a ServiceBrokerResponseMalformed error' do
                 expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
               end
-            end
-
-            it 'raises a ServiceBrokerBadResponse error' do
-              expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
             end
           end
 

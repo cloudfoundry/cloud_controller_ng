@@ -64,7 +64,7 @@ module VCAP::Services
                 SuccessValidator.new,
                 StateValidator.new(['succeeded', nil],
                   SuccessValidator.new)))
-          when 201, 202
+          when 201
             JsonObjectValidator.new(@logger,
               FailingValidator.new(Errors::ServiceBrokerBadResponse))
           when 204

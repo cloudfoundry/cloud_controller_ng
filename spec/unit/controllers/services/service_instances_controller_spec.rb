@@ -877,6 +877,33 @@ module VCAP::CloudController
             expect(event.organization_guid).to eq(service_instance.space.organization.guid)
             expect(event.metadata).to eq({ 'request' => {} })
           end
+
+          context 'with ?accepts_incomplete=to_return' do
+            context 'when the broker returns state `in progress`' do
+              let(:status) { 202 }
+              let(:body) do
+                {
+                  last_operation: {
+                    state: 'in progress',
+                    description: 'fake-description'
+                  }
+                }.to_json
+              end
+
+              it 'indicates the service instance is being deleted' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+                expect(ManagedServiceInstance.last.last_operation.type).to eq('delete')
+                expect(ManagedServiceInstance.last.last_operation.state).to eq('in progress')
+                expect(ManagedServiceInstance.last.last_operation.description).to eq('fake-description')
+
+                expect(decoded_response['entity']['last_operation']).to be
+                expect(decoded_response['entity']['last_operation']['type']).to eq('delete')
+                expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
+                expect(decoded_response['entity']['last_operation']['description']).to eq('fake-description')
+              end
+            end
+          end
         end
 
         context 'it is a user provided service instance' do
@@ -898,6 +925,14 @@ module VCAP::CloudController
             expect(event.space_id).to eq(service_instance.space.id)
             expect(event.organization_guid).to eq(service_instance.space.organization.guid)
             expect(event.metadata).to eq({ 'request' => {} })
+          end
+
+          it 'deletes the user provided service instance when the enqueued job completes' do
+            service_instance_guid = service_instance.guid
+
+            delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+            expect(UserProvidedServiceInstance.first(guid: service_instance_guid)).to be_nil
           end
         end
 

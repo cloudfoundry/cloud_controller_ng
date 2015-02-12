@@ -39,9 +39,8 @@ module VCAP::CloudController
         end
 
         def run_job(job)
-          job.perform
-          # Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
-          # expect(Delayed::Worker.new.work_off).to eq [1, 0]
+          Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
+          expect(Delayed::Worker.new.work_off).to eq [1, 0]
         end
 
         describe '#perform' do
