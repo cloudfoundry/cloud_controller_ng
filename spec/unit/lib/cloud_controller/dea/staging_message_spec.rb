@@ -37,7 +37,7 @@ module VCAP::CloudController
       its(:droplet_guid) { should eq('abc123') }
 
       describe '#staging_request' do
-        it 'includes app guid, task id, download/upload uris, buildpack_key' do
+        it 'includes app guid, task id, download/upload uris, buildpack_key, stack' do
           allow(blobstore_url_generator).to receive(:package_download_url).with(package).and_return('http://www.package.uri')
           allow(blobstore_url_generator).to receive(:package_droplet_upload_url).with(droplet_guid).and_return('http://www.droplet.upload.uri')
           allow(blobstore_url_generator).to receive(:package_buildpack_cache_upload_url).with(package).and_return('http://www.bpupload.uri')
@@ -52,6 +52,7 @@ module VCAP::CloudController
           expect(request[:buildpack_cache_upload_uri]).to eq('http://www.bpupload.uri')
           expect(request[:properties][:buildpack_key]).to eq('buildpack_key')
           expect(request[:properties][:buildpack_git_url]).to eq('http://git.url')
+          expect(request[:stack]).to eq('trusty32')
         end
 
         it 'includes egress security group staging information by aggregating all sg with staging_default=true' do
@@ -106,7 +107,7 @@ module VCAP::CloudController
         end
       end
 
-      it 'includes app guid, task id and download/upload uris' do
+      it 'includes app guid, task id, download/upload uris and stack name' do
         allow(blobstore_url_generator).to receive(:app_package_download_url).with(app).and_return('http://www.app.uri')
         allow(blobstore_url_generator).to receive(:droplet_upload_url).with(app).and_return('http://www.droplet.upload.uri')
         allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app).and_return('http://www.buildpack.cache.download.uri')
@@ -119,6 +120,7 @@ module VCAP::CloudController
         expect(request[:upload_uri]).to eq('http://www.droplet.upload.uri')
         expect(request[:buildpack_cache_upload_uri]).to eq('http://www.buildpack.cache.upload.uri')
         expect(request[:buildpack_cache_download_uri]).to eq('http://www.buildpack.cache.download.uri')
+        expect(request[:stack]).to eq(app.stack.name)
       end
 
       it 'includes misc app properties' do

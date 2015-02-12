@@ -140,6 +140,10 @@ module VCAP::CloudController
       self.memory ||= Config.config[:default_app_memory]
       self.disk_quota ||= Config.config[:default_app_disk_in_mb]
 
+      if Config.config[:instance_file_descriptor_limit]
+        self.file_descriptors ||= Config.config[:instance_file_descriptor_limit]
+      end
+
       set_new_version if version_needs_to_be_updated?
 
       AppStopEvent.create_from_app(self) if generate_stop_event?

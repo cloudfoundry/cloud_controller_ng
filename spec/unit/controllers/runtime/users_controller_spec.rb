@@ -2,6 +2,21 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::UsersController do
+    it "doesn't query all users when unauthorized" do
+      user = User.make(active: true)
+      logger = Steno.logger('cc.db')
+      queries = []
+
+      old_debug = logger.method(:debug)
+      allow(logger).to receive(:debug) do |*args|
+        queries << args
+        old_debug.call(*args)
+      end
+      get '/v2/users', '', headers_for(user)
+
+      expect(logger).to have_received(:debug).at_least(:once)
+      expect(queries.flatten.map { |l| l.gsub(/\(.*s\) /, '') }).not_to include("SELECT * FROM \"users\"")
+    end
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:space_guid) }
       it { expect(described_class).to be_queryable_by(:organization_guid) }
