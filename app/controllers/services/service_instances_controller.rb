@@ -180,17 +180,20 @@ module VCAP::CloudController
         attributes_to_update, err = service_instance.client.deprovision(service_instance)
         raise err if err
 
-        service_instance.save_with_operation(
-          last_operation: {
-            type: 'delete',
-            state: attributes_to_update['last_operation']['state'] || 'in progress',
-            description: attributes_to_update['last_operation']['description'] || ''
-          }
-        )
+        delete_response = [HTTP::OK, {}, '{}']
+        if attributes_to_update['last_operation']
+          service_instance.save_with_operation(
+            last_operation: {
+              type: 'delete',
+              state: attributes_to_update['last_operation']['state'] || 'in progress',
+              description: attributes_to_update['last_operation']['description'] || ''
+            }
+          )
+          delete_response = [HTTP::ACCEPTED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
+        end
 
         @services_event_repository.record_service_instance_event(:delete, service_instance, request_attrs)
-
-        [HTTP::ACCEPTED, {}, JSON.generate(entity: service_instance)]
+        delete_response
       else
         deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)
         event_method = service_instance.type == 'managed_service_instance' ?  :record_service_instance_event : :record_user_provided_service_instance_event

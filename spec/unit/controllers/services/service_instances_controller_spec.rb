@@ -905,6 +905,109 @@ module VCAP::CloudController
                 expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
               end
             end
+
+            context 'when the broker returns 200 and state `succeded`' do
+              let(:status) { 200 }
+              let(:body) do
+                {
+                  state: 'succeded',
+                }.to_json
+              end
+
+              it 'indicates the service instance is being deleted' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+                expect(last_response.status).to eq(200)
+
+                expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
+              end
+            end
+
+            context 'when the broker returns state `failed`' do
+              let(:status) { 400 }
+              let(:body) do
+                {
+                  description: 'fake-description'
+                }.to_json
+              end
+
+              it 'fails the initial delete' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+                expect(decoded_response['description']).to eq("Service broker error: #{MultiJson.load(body)['description']}")
+              end
+            end
+
+            context 'when broker returns 5xx with a top-level description' do
+              let(:status) { 500 }
+              let(:body) do
+                {
+                  description: 'fake-description'
+                }.to_json
+              end
+
+              it 'it fails the initial delete with description included in the error message' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+                expect(decoded_response['description']).to eq("Service broker error: #{MultiJson.load(body)['description']}")
+              end
+            end
+
+            context 'when broker returns times out' do
+              let(:status) { 408 }
+              let(:body) do
+                {}.to_json
+              end
+
+              before do
+                stub_request(:delete, service_broker_url_regex).
+                  with(headers: { 'Accept' => 'application/json' }).
+                    to_raise(HTTPClient::TimeoutError)
+              end
+
+              it 'it fails the initial delete with description included in the error message' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+                response_description = "The service broker API timed out: #{service.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}"
+                expect(decoded_response['description']).to eq(response_description)
+              end
+            end
+
+            context 'when broker returns 202 with an unkown state' do
+              let(:status) { 202 }
+              let(:body) do
+                {
+                  last_operation: {
+                    state: 'fake-state',
+                    description: 'fake-description'
+                  }
+                }.to_json
+              end
+
+              it 'fails with CF-ServiceBrokerResponseMalformed' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+                expect(decoded_response['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+              end
+            end
+
+            context 'when broker returns 200 with invalid state' do
+              let(:status) { 200 }
+              let(:body) do
+                {
+                  last_operation: {
+                    state: 'in progress',
+                    description: 'fake-description'
+                  }
+                }.to_json
+              end
+
+              it 'fails with CF-ServiceBrokerResponseMalformed' do
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+                expect(decoded_response['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+              end
+            end
           end
         end
 
