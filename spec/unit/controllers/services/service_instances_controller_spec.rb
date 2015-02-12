@@ -901,6 +901,8 @@ module VCAP::CloudController
                 expect(decoded_response['entity']['last_operation']['type']).to eq('delete')
                 expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
                 expect(decoded_response['entity']['last_operation']['description']).to eq('fake-description')
+
+                expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
               end
             end
           end

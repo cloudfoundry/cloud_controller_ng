@@ -188,6 +188,8 @@ module VCAP::CloudController
           }
         )
 
+        @services_event_repository.record_service_instance_event(:delete, service_instance, request_attrs)
+
         [HTTP::ACCEPTED, {}, JSON.generate(entity: service_instance)]
       else
         deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)
