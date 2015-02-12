@@ -859,185 +859,153 @@ module VCAP::CloudController
           expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
         end
 
-        context 'it is a managed service instance' do
-          it 'creates a service audit event for deleting the service instance' do
-            delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(admin_user, email: 'admin@example.com')
+        it 'creates a service audit event for deleting the service instance' do
+          delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(admin_user, email: 'admin@example.com')
 
-            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
-            expect(event.type).to eq('audit.service_instance.delete')
-            expect(event.actor_type).to eq('user')
-            expect(event.actor).to eq(admin_user.guid)
-            expect(event.actor_name).to eq('admin@example.com')
-            expect(event.timestamp).to be
-            expect(event.actee).to eq(service_instance.guid)
-            expect(event.actee_type).to eq('service_instance')
-            expect(event.actee_name).to eq(service_instance.name)
-            expect(event.space_guid).to eq(service_instance.space.guid)
-            expect(event.space_id).to eq(service_instance.space.id)
-            expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-            expect(event.metadata).to eq({ 'request' => {} })
-          end
-
-          context 'with ?accepts_incomplete=to_return' do
-            context 'when the broker returns state `in progress`' do
-              let(:status) { 202 }
-              let(:body) do
-                {
-                  last_operation: {
-                    state: 'in progress',
-                    description: 'fake-description'
-                  }
-                }.to_json
-              end
-
-              it 'indicates the service instance is being deleted' do
-                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
-
-                expect(ManagedServiceInstance.last.last_operation.type).to eq('delete')
-                expect(ManagedServiceInstance.last.last_operation.state).to eq('in progress')
-                expect(ManagedServiceInstance.last.last_operation.description).to eq('fake-description')
-
-                expect(decoded_response['entity']['last_operation']).to be
-                expect(decoded_response['entity']['last_operation']['type']).to eq('delete')
-                expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
-                expect(decoded_response['entity']['last_operation']['description']).to eq('fake-description')
-
-                expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
-              end
-            end
-
-            context 'when the broker returns 200 and state `succeded`' do
-              let(:status) { 200 }
-              let(:body) do
-                {
-                  state: 'succeded',
-                }.to_json
-              end
-
-              it 'indicates the service instance is being deleted' do
-                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
-
-                expect(last_response.status).to eq(200)
-
-                expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
-              end
-            end
-
-            context 'when the broker returns state `failed`' do
-              let(:status) { 400 }
-              let(:body) do
-                {
-                  description: 'fake-description'
-                }.to_json
-              end
-
-              it 'fails the initial delete' do
-                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
-
-                expect(decoded_response['description']).to eq("Service broker error: #{MultiJson.load(body)['description']}")
-              end
-            end
-
-            context 'when broker returns 5xx with a top-level description' do
-              let(:status) { 500 }
-              let(:body) do
-                {
-                  description: 'fake-description'
-                }.to_json
-              end
-
-              it 'it fails the initial delete with description included in the error message' do
-                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
-
-                expect(decoded_response['description']).to eq("Service broker error: #{MultiJson.load(body)['description']}")
-              end
-            end
-
-            context 'when broker returns times out' do
-              let(:status) { 408 }
-              let(:body) do
-                {}.to_json
-              end
-
-              before do
-                stub_request(:delete, service_broker_url_regex).
-                  with(headers: { 'Accept' => 'application/json' }).
-                    to_raise(HTTPClient::TimeoutError)
-              end
-
-              it 'it fails the initial delete with description included in the error message' do
-                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
-
-                response_description = "The service broker API timed out: #{service.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}"
-                expect(decoded_response['description']).to eq(response_description)
-              end
-            end
-
-            context 'when broker returns 202 with an unkown state' do
-              let(:status) { 202 }
-              let(:body) do
-                {
-                  last_operation: {
-                    state: 'fake-state',
-                    description: 'fake-description'
-                  }
-                }.to_json
-              end
-
-              it 'fails with CF-ServiceBrokerResponseMalformed' do
-                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
-
-                expect(decoded_response['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
-              end
-            end
-
-            context 'when broker returns 200 with invalid state' do
-              let(:status) { 200 }
-              let(:body) do
-                {
-                  last_operation: {
-                    state: 'in progress',
-                    description: 'fake-description'
-                  }
-                }.to_json
-              end
-
-              it 'fails with CF-ServiceBrokerResponseMalformed' do
-                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
-
-                expect(decoded_response['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
-              end
-            end
-          end
+          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
+          expect(event.type).to eq('audit.service_instance.delete')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(admin_user.guid)
+          expect(event.actor_name).to eq('admin@example.com')
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(service_instance.guid)
+          expect(event.actee_type).to eq('service_instance')
+          expect(event.actee_name).to eq(service_instance.name)
+          expect(event.space_guid).to eq(service_instance.space.guid)
+          expect(event.space_id).to eq(service_instance.space.id)
+          expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+          expect(event.metadata).to eq({ 'request' => {} })
         end
 
-        context 'it is a user provided service instance' do
-          let!(:service_instance) { UserProvidedServiceInstance.make }
+        context 'with ?accepts_incomplete=to_return' do
+          context 'when the broker returns state `in progress`' do
+            let(:status) { 202 }
+            let(:body) do
+              {
+                last_operation: {
+                  state: 'in progress',
+                  description: 'fake-description'
+                }
+              }.to_json
+            end
 
-          it 'creates a user_provided_service_instance audit event for deleting the service instance' do
-            delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(admin_user, email: 'admin@example.com')
+            it 'indicates the service instance is being deleted' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
-            event = VCAP::CloudController::Event.first(type: 'audit.user_provided_service_instance.delete')
-            expect(event.type).to eq('audit.user_provided_service_instance.delete')
-            expect(event.actor_type).to eq('user')
-            expect(event.actor).to eq(admin_user.guid)
-            expect(event.actor_name).to eq('admin@example.com')
-            expect(event.timestamp).to be
-            expect(event.actee).to eq(service_instance.guid)
-            expect(event.actee_type).to eq('user_provided_service_instance')
-            expect(event.actee_name).to eq(service_instance.name)
-            expect(event.space_guid).to eq(service_instance.space.guid)
-            expect(event.space_id).to eq(service_instance.space.id)
-            expect(event.organization_guid).to eq(service_instance.space.organization.guid)
-            expect(event.metadata).to eq({ 'request' => {} })
+              expect(ManagedServiceInstance.last.last_operation.type).to eq('delete')
+              expect(ManagedServiceInstance.last.last_operation.state).to eq('in progress')
+              expect(ManagedServiceInstance.last.last_operation.description).to eq('fake-description')
+
+              expect(decoded_response['entity']['last_operation']).to be
+              expect(decoded_response['entity']['last_operation']['type']).to eq('delete')
+              expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
+              expect(decoded_response['entity']['last_operation']['description']).to eq('fake-description')
+
+              expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
+            end
           end
 
-          it 'deletes the user provided service instance when the enqueued job completes' do
-            service_instance_guid = service_instance.guid
+          context 'when the broker returns 200 and state `succeded`' do
+            let(:status) { 200 }
+            let(:body) do
+              {
+                state: 'succeded',
+              }.to_json
+            end
 
-            delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+            it 'indicates the service instance is being deleted' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
-            expect(UserProvidedServiceInstance.first(guid: service_instance_guid)).to be_nil
+              expect(last_response.status).to eq(200)
+
+              expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
+            end
+          end
+
+          context 'when the broker returns state `failed`' do
+            let(:status) { 400 }
+            let(:body) do
+              {
+                description: 'fake-description'
+              }.to_json
+            end
+
+            it 'fails the initial delete' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              expect(decoded_response['description']).to eq("Service broker error: #{MultiJson.load(body)['description']}")
+            end
+          end
+
+          context 'when broker returns 5xx with a top-level description' do
+            let(:status) { 500 }
+            let(:body) do
+              {
+                description: 'fake-description'
+              }.to_json
+            end
+
+            it 'it fails the initial delete with description included in the error message' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              expect(decoded_response['description']).to eq("Service broker error: #{MultiJson.load(body)['description']}")
+            end
+          end
+
+          context 'when broker returns times out' do
+            let(:status) { 408 }
+            let(:body) do
+              {}.to_json
+            end
+
+            before do
+              stub_request(:delete, service_broker_url_regex).
+                with(headers: { 'Accept' => 'application/json' }).
+                  to_raise(HTTPClient::TimeoutError)
+            end
+
+            it 'it fails the initial delete with description included in the error message' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              response_description = "The service broker API timed out: #{service.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}"
+              expect(decoded_response['description']).to eq(response_description)
+            end
+          end
+
+          context 'when broker returns 202 with an unkown state' do
+            let(:status) { 202 }
+            let(:body) do
+              {
+                last_operation: {
+                  state: 'fake-state',
+                  description: 'fake-description'
+                }
+              }.to_json
+            end
+
+            it 'fails with CF-ServiceBrokerResponseMalformed' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              expect(decoded_response['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+            end
+          end
+
+          context 'when broker returns 200 with invalid state' do
+            let(:status) { 200 }
+            let(:body) do
+              {
+                last_operation: {
+                  state: 'in progress',
+                  description: 'fake-description'
+                }
+              }.to_json
+            end
+
+            it 'fails with CF-ServiceBrokerResponseMalformed' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              expect(decoded_response['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+            end
           end
         end
 
@@ -1077,13 +1045,11 @@ module VCAP::CloudController
 
         context 'and the instance operation is in progress' do
           let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
-          let(:service_instance) { ManagedServiceInstance.make }
           before do
             service_instance.service_instance_operation = last_operation
-            service_instance.save
           end
 
-          it 'should show an error message for update operation' do
+          it 'should show an error message for delete operation' do
             delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
             expect(last_response.status).to eq 400
             expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
@@ -1119,6 +1085,24 @@ module VCAP::CloudController
 
       context 'with a user provided service instance' do
         let!(:service_instance) { UserProvidedServiceInstance.make }
+
+        it 'creates a user_provided_service_instance audit event for deleting the service instance' do
+          delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(admin_user, email: 'admin@example.com')
+
+          event = VCAP::CloudController::Event.first(type: 'audit.user_provided_service_instance.delete')
+          expect(event.type).to eq('audit.user_provided_service_instance.delete')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor).to eq(admin_user.guid)
+          expect(event.actor_name).to eq('admin@example.com')
+          expect(event.timestamp).to be
+          expect(event.actee).to eq(service_instance.guid)
+          expect(event.actee_type).to eq('user_provided_service_instance')
+          expect(event.actee_name).to eq(service_instance.name)
+          expect(event.space_guid).to eq(service_instance.space.guid)
+          expect(event.space_id).to eq(service_instance.space.id)
+          expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+          expect(event.metadata).to eq({ 'request' => {} })
+        end
 
         it 'deletes the service instance with the given guid' do
           expect {

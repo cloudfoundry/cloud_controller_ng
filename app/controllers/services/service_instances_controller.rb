@@ -172,34 +172,38 @@ module VCAP::CloudController
       service_instance = find_guid_and_validate_access(:delete, guid, ServiceInstance)
       raise_if_has_associations!(service_instance) if v2_api? && !recursive?
 
-      if service_instance.managed_instance? && service_instance.operation_in_progress?
-        raise Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress')
+      build_and_enqueue_deletion_job = -> do
+        if params['accepts_incomplete'] == 'true' && service_instance.managed_instance?
+          attributes_to_update, err = service_instance.client.deprovision(service_instance)
+          raise err if err
+
+          delete_response = [HTTP::OK, {}, '{}']
+          if attributes_to_update['last_operation']
+            service_instance.save_with_operation(
+              last_operation: {
+                type: 'delete',
+                state: attributes_to_update['last_operation']['state'] || 'in progress',
+                description: attributes_to_update['last_operation']['description'] || ''
+              }
+            )
+            delete_response = [HTTP::ACCEPTED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
+          end
+
+          @services_event_repository.record_service_instance_event(:delete, service_instance, request_attrs)
+          delete_response
+        else
+          deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)
+          event_method = service_instance.type == 'managed_service_instance' ?  :record_service_instance_event : :record_user_provided_service_instance_event
+          delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, event_method, :delete, service_instance, {})
+
+          enqueue_deletion_job(delete_and_audit_job)
+        end
       end
 
-      if params['accepts_incomplete'] == 'true' && service_instance.managed_instance?
-        attributes_to_update, err = service_instance.client.deprovision(service_instance)
-        raise err if err
-
-        delete_response = [HTTP::OK, {}, '{}']
-        if attributes_to_update['last_operation']
-          service_instance.save_with_operation(
-            last_operation: {
-              type: 'delete',
-              state: attributes_to_update['last_operation']['state'] || 'in progress',
-              description: attributes_to_update['last_operation']['description'] || ''
-            }
-          )
-          delete_response = [HTTP::ACCEPTED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
-        end
-
-        @services_event_repository.record_service_instance_event(:delete, service_instance, request_attrs)
-        delete_response
+      if service_instance.managed_instance?
+        service_instance.lock_for_operation('delete', &build_and_enqueue_deletion_job)
       else
-        deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)
-        event_method = service_instance.type == 'managed_service_instance' ?  :record_service_instance_event : :record_user_provided_service_instance_event
-        delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, event_method, :delete, service_instance, {})
-
-        enqueue_deletion_job(delete_and_audit_job)
+        build_and_enqueue_deletion_job.call
       end
     end
 
