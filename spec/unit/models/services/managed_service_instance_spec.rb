@@ -88,6 +88,67 @@ module VCAP::CloudController
       end
     end
 
+    describe '#lock_for_operation' do
+      it 'locks the service instance' do
+        allow(service_instance).to receive(:lock!).and_call_original
+
+        service_instance.lock_for_operation('update') {}
+
+        expect(service_instance).to have_received(:lock!).twice
+      end
+
+      context 'when the instance has a last_operation' do
+        let(:last_operation) { ServiceInstanceOperation.make(state: 'succeeded') }
+        before do
+          allow(service_instance).to receive(:last_operation).and_return(last_operation)
+        end
+
+        it 'locks the last_operation' do
+          allow(last_operation).to receive(:lock!).and_call_original
+
+          service_instance.lock_for_operation('update') {}
+
+          expect(last_operation).to have_received(:lock!)
+        end
+      end
+
+      it 'initially saves the last_operation state as `in progress`' do
+        service_instance.lock_for_operation('update') {}
+
+        service_instance.reload.last_operation.reload
+        expect(service_instance.last_operation.type).to eq 'update'
+        expect(service_instance.last_operation.state).to eq 'in progress'
+      end
+
+      context 'when there is an operation in progress' do
+        before do
+          service_instance.save_with_operation({
+            last_operation: {
+              state: 'in progress'
+            }
+          })
+        end
+
+        it 'raises an error' do
+          expect {
+            service_instance.lock_for_operation('update') {}
+          }.to raise_error(Errors::ApiError)
+        end
+      end
+
+      context 'when the block fails' do
+        it 'updates the last_operation to state `failed`' do
+          expect {
+            service_instance.lock_for_operation('update') { raise 'BOOO' }
+          }.to raise_error(StandardError, /BOOO/)
+
+          service_instance.reload.last_operation.reload
+          expect(service_instance.last_operation.type).to eq 'update'
+          expect(service_instance.last_operation.state).to eq 'failed'
+        end
+      end
+    end
+
     describe '#save_with_operation' do
       context 'when the operation does not exist' do
         it 'also creates a last_operation object and assoicates it with the service instance' do

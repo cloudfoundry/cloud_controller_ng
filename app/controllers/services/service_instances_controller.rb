@@ -86,29 +86,29 @@ module VCAP::CloudController
     end
 
     def update(guid)
-      json_msg = self.class::UpdateMessage.decode(body)
-      @request_attrs = json_msg.extract(stringify_keys: true)
+      @request_attrs = self.class::UpdateMessage.decode(body).extract(stringify_keys: true)
       logger.debug 'cc.update', guid: guid, attributes: request_attrs
       raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
 
       service_instance = find_guid(guid)
       validate_access(:read_for_update, service_instance)
       validate_access(:update, service_instance)
-      validate_update_action(service_instance)
+      validate_update_request(service_instance)
 
-      is_async_request = params['accepts_incomplete'] == 'true'
+      err = nil
+      service_instance.lock_for_operation('update') do
+        attributes_to_update = {}
+        if request_attrs['service_plan_guid']
+          new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
+          attributes_to_update, err = service_instance.client.update_service_plan(
+            service_instance,
+            new_plan,
+            async: (params['accepts_incomplete'] == 'true')
+          )
+        end
 
-      attributes_to_update = {}
-      if request_attrs['service_plan_guid']
-        new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
-        attributes_to_update, err = service_instance.client.update_service_plan(
-          service_instance,
-          new_plan,
-          async: is_async_request
-        )
+        service_instance.save_with_operation(attributes_to_update)
       end
-
-      service_instance.save_with_operation(attributes_to_update)
 
       raise err if err
 
@@ -251,13 +251,9 @@ module VCAP::CloudController
       end
     end
 
-    def validate_update_action(service_instance)
+    def validate_update_request(service_instance)
       if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
         raise Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
-      end
-
-      if service_instance.operation_in_progress?
-        raise Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress')
       end
 
       if request_attrs['service_plan_guid']
