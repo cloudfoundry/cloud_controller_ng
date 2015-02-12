@@ -181,7 +181,7 @@ module VCAP::CloudController
     describe '#delete' do
       context 'when the package does not exist' do
         before do
-          allow(packages_handler).to receive(:delete).and_return(nil)
+          allow(packages_handler).to receive(:delete).and_return([])
         end
 
         it 'returns a 404 Not Found' do
@@ -200,7 +200,7 @@ module VCAP::CloudController
 
         context 'when a user can access a package' do
           before do
-            allow(packages_handler).to receive(:delete).and_return(package)
+            allow(packages_handler).to receive(:delete).and_return([package])
           end
 
           it 'returns a 204 NO CONTENT' do

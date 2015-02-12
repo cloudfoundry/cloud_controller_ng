@@ -122,10 +122,12 @@ module VCAP::CloudController
     let(:config) { TestConfig.config }
     let(:stagers) { double(:stagers) }
     let(:droplets_handler) { described_class.new(config, stagers) }
+    let(:user) { User.make }
     let(:access_context) { double(:access_context) }
 
     before do
       allow(access_context).to receive(:cannot?).and_return(false)
+      allow(access_context).to receive(:user).and_return(user)
     end
 
     describe '#list' do
@@ -361,7 +363,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'delete' do
+    describe '#delete' do
       context 'when the droplet exists' do
         let(:space) { Space.make }
         let(:package) { PackageModel.make(space_guid: space.guid) }
@@ -369,12 +371,28 @@ module VCAP::CloudController
         let(:droplet_guid) { droplet.guid }
 
         context 'and the user has permissions to delete the droplet' do
-          it 'deletes the droplet' do
+          it 'allows filter by guid' do
             expect(access_context).to receive(:cannot?).and_return(false)
             expect {
-              expect(droplets_handler.delete(droplet_guid, access_context)).to eq(droplet)
+              expect(droplets_handler.delete(access_context, filter: { guid: droplet_guid })).to eq([droplet])
             }.to change { DropletModel.count }.by(-1)
             expect(droplets_handler.show(droplet_guid, access_context)).to be_nil
+          end
+
+          it 'allows filter by app_guid' do
+            expect(access_context).to receive(:cannot?).and_return(false)
+            expect {
+              expect(droplets_handler.delete(access_context, filter: { app_guid: droplet.app_guid })).to eq([droplet])
+            }.to change { DropletModel.count }.by(-1)
+            expect(droplets_handler.show(droplet_guid, access_context)).to be_nil
+          end
+
+          it 'prevents filtering on other fields' do
+            expect(access_context).to receive(:cannot?).and_return(false)
+            expect {
+              expect(droplets_handler.delete(access_context, filter: { torpedo: 'speedo' })).to be_empty
+            }.not_to change { DropletModel.count }
+            expect(droplets_handler.show(droplet_guid, access_context)).to eq(droplet)
           end
 
           it 'enqueues a job to delete the corresponding blob from the blobstore' do
@@ -388,7 +406,7 @@ module VCAP::CloudController
               and_call_original
 
             expect {
-              droplets_handler.delete(droplet_guid, access_context)
+              droplets_handler.delete(access_context, filter: { guid: droplet_guid })
             }.to change { Delayed::Job.count }.by(1)
           end
         end
@@ -398,7 +416,7 @@ module VCAP::CloudController
             expect(access_context).to receive(:cannot?).and_return(true)
             expect {
               expect {
-                droplets_handler.delete(droplet_guid, access_context)
+                droplets_handler.delete(access_context, filter: { guid: droplet_guid })
               }.to raise_error(DropletsHandler::Unauthorized)
             }.not_to change { DropletModel.count }
           end
@@ -408,7 +426,7 @@ module VCAP::CloudController
       context 'when the droplet does not exist' do
         it 'returns nil' do
           expect(access_context).to_not receive(:cannot?)
-          expect(droplets_handler.delete('bogus-droplet', access_context)).to be_nil
+          expect(droplets_handler.delete(access_context, filter: { guid: 'bogus-droplet' })).to be_empty
         end
       end
     end

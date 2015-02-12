@@ -73,37 +73,34 @@ module VCAP::CloudController
       end
     end
 
-    def find_for_delete(guid)
+    def find_for_delete(filter: {})
       App.db.transaction do
         # We need to lock the row in the apps table. However we cannot eager
         # load associations while using the for_update method. Therefore we
         # need to fetch the App twice. This allows us to only make 2 queries,
         # rather than 3-4.
-        App.for_update.where(guid: guid).first
-        process_model = App.where(apps__guid: guid).
-          eager_graph(:stack, space: :organization).all.first
+        dataset = App.for_update
+        allowed_filters = %i(app_guid guid)
+        return [] if (filter.keys - allowed_filters).size > 0
 
-        return if process_model.nil? && yield(nil, nil)
-
-        @lock_acquired = true
-        begin
-          yield ProcessMapper.map_model_to_domain(process_model), process_model.space
-        ensure
-          @lock_acquired = false
+        filter.each do |column, value|
+          dataset = dataset.where(:"#{App.table_name}__#{column}" => value)
         end
-      end
-    end
 
-    def find_by_guid_for_update(guid)
-      process_model = App.find(guid: guid)
-      return if process_model.nil? && yield(nil)
+        dataset = App
+        filter.each do |column, value|
+          dataset = dataset.where(:"#{App.table_name}__#{column}" => value)
+        end
 
-      process_model.db.transaction do
-        process_model.lock!
-        process = ProcessMapper.map_model_to_domain(process_model)
+        processes = dataset.eager_graph(:stack, space: :organization).all
+
+        return if processes.empty? && yield(nil, nil)
+
         @lock_acquired = true
         begin
-          yield process
+          processes.each do |process_model|
+            yield ProcessMapper.map_model_to_domain(process_model), process_model.space
+          end
         ensure
           @lock_acquired = false
         end

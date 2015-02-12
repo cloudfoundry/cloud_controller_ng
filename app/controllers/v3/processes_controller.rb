@@ -64,7 +64,7 @@ module VCAP::CloudController
 
     delete '/v3/processes/:guid', :delete
     def delete(guid)
-      deleted = @processes_handler.delete(guid, @access_context)
+      deleted = @processes_handler.delete(@access_context, filter: { guid: guid })
       not_found! unless deleted
       [HTTP::NO_CONTENT]
     end

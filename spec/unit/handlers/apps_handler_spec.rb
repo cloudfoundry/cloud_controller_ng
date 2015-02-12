@@ -50,8 +50,10 @@ module VCAP::CloudController
   end
 
   describe AppsHandler do
+    let(:packages_handler) { double(:packages_handler) }
+    let(:droplets_handler) { double(:droplets_handler) }
     let(:processes_handler) { double(:processes_handler) }
-    let(:apps_handler) { described_class.new(processes_handler) }
+    let(:apps_handler) { described_class.new(packages_handler, droplets_handler, processes_handler) }
     let(:access_context) { double(:access_context, user: User.make, user_email: 'jim@jim.com') }
 
     before do
@@ -68,7 +70,7 @@ module VCAP::CloudController
       let(:options)  { { page: page, per_page: per_page } }
       let(:pagination_options) { PaginationOptions.new(options) }
       let(:paginator) { double(:paginator) }
-      let(:apps_handler) { described_class.new(processes_handler, paginator) }
+      let(:apps_handler) { described_class.new(packages_handler, droplets_handler, processes_handler, paginator) }
       let(:roles) { double(:roles, admin?: admin_role) }
       let(:admin_role) { false }
 
@@ -348,16 +350,13 @@ module VCAP::CloudController
     end
 
     describe '#delete' do
-      context 'when the app does not exist' do
-        let(:guid) { 'ABC123' }
-
-        it 'returns nil' do
-          result = apps_handler.delete(guid, access_context)
-          expect(result).to be_nil
-        end
+      before do
+        allow(packages_handler).to receive(:delete)
+        allow(droplets_handler).to receive(:delete)
+        allow(processes_handler).to receive(:delete)
       end
 
-      context 'when the app does exist' do
+      context 'when the app exists' do
         let(:app_model) { AppModel.make }
         let(:guid) { app_model.guid }
 
@@ -368,7 +367,7 @@ module VCAP::CloudController
 
           it 'raises Unauthorized' do
             expect {
-              apps_handler.delete(guid, access_context)
+              apps_handler.delete(access_context, filter: { guid: guid })
             }.to raise_error(AppsHandler::Unauthorized)
             expect(access_context).to have_received(:cannot?).with(:delete, app_model)
           end
@@ -376,24 +375,45 @@ module VCAP::CloudController
 
         context 'when the user has access to the app' do
           it 'deletes the app' do
-            result = apps_handler.delete(guid, access_context)
-            expect(result).not_to be_nil
+            result = apps_handler.delete(access_context, filter: { guid: guid })
+            expect(result).not_to be_empty
 
             deleted_app = AppModel.find(guid: guid)
             expect(deleted_app).to be_nil
           end
+
+          it 'deletes the droplets associated with it' do
+            result = apps_handler.delete(access_context, filter: { guid: guid })
+            expect(result).not_to be_empty
+
+            expect(droplets_handler).to have_received(:delete).
+              with(access_context, filter: { app_guid: guid })
+          end
+
+          it 'deletes the packages associated with it' do
+            result = apps_handler.delete(access_context, filter: { guid: guid })
+            expect(result).not_to be_empty
+
+            expect(packages_handler).to have_received(:delete).
+              with(access_context, filter: { app_guid: guid })
+          end
+
+          it 'deletes the processes associated with it' do
+            result = apps_handler.delete(access_context, filter: { guid: guid })
+            expect(result).not_to be_empty
+
+            expect(processes_handler).to have_received(:delete).
+              with(access_context, filter: { app_guid: guid })
+          end
         end
+      end
 
-        context 'when the app has child processes' do
-          before do
-            AppFactory.make(app_guid: guid)
-          end
+      context 'when the app does not exist' do
+        let(:guid) { 'ABC123' }
 
-          it 'raises a OliverTwist error' do
-            expect {
-              apps_handler.delete(guid, access_context)
-            }.to raise_error(AppsHandler::DeleteWithProcesses)
-          end
+        it 'returns nil' do
+          result = apps_handler.delete(access_context, filter: { guid: guid })
+          expect(result).to be_empty
         end
       end
     end

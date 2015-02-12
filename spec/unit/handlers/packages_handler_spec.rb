@@ -376,26 +376,43 @@ module VCAP::CloudController
 
         context 'and the package does not exist' do
           it 'returns nil' do
-            expect(packages_handler.delete('non-existant', access_context)).to eq(nil)
+            expect(packages_handler.delete(access_context, filter: { guid: 'non-existant' })).to be_empty
           end
         end
 
         context 'and the package exists' do
-          it 'deletes the package and returns the deleted package' do
+          it 'allows filter by guid' do
             expect {
-              deleted_package = packages_handler.delete(package_guid, access_context)
+              deleted_package = packages_handler.delete(access_context, filter: { guid: package_guid }).first
               expect(deleted_package.guid).to eq(package_guid)
             }.to change { PackageModel.count }.by(-1)
             expect(PackageModel.find(guid: package_guid)).to be_nil
           end
 
+          it 'allows filter by app_guid' do
+            expect(access_context).to receive(:cannot?).and_return(false)
+            expect {
+              expect(packages_handler.delete(access_context, filter: { app_guid: package.app_guid })).to eq([package])
+            }.to change { PackageModel.count }.by(-1)
+            expect(packages_handler.show(package_guid, access_context)).to be_nil
+          end
+
+          it 'prevents filtering on other fields' do
+            expect(access_context).to receive(:cannot?).and_return(false)
+            expect {
+              expect(packages_handler.delete(access_context, filter: { torpedo: 'speedo' })).to be_empty
+            }.not_to change { PackageModel.count }
+            expect(packages_handler.show(package_guid, access_context)).to eq(package)
+          end
+
           it 'enqueues a job to delete the corresponding blob from the blobstore' do
             job_opts = { queue: 'cc-generic' }
-            expect(Jobs::Enqueuer).to receive(:new).with(kind_of(BlobstoreDelete), job_opts).
+            expect(Jobs::Enqueuer).to receive(:new).
+              with(kind_of(BlobstoreDelete), job_opts).
               and_call_original
 
             expect {
-              packages_handler.delete(package_guid, access_context)
+              packages_handler.delete(access_context, filter: { guid: package_guid })
             }.to change { Delayed::Job.count }.by(1)
           end
         end
@@ -408,8 +425,8 @@ module VCAP::CloudController
 
         it 'raises Unauthorized error' do
           expect {
-            deleted_package = packages_handler.delete(package_guid, access_context)
-            expect(deleted_package).to be_nil
+            deleted_package = packages_handler.delete(access_context, filter: { guid: package_guid })
+            expect(deleted_package).to be_empty
           }.to raise_error(PackagesHandler::Unauthorized)
           expect(access_context).to have_received(:cannot?).with(:delete, kind_of(PackageModel), space)
         end

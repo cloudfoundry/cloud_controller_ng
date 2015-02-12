@@ -60,7 +60,7 @@ module VCAP::CloudController
 
     delete '/v3/packages/:guid', :delete
     def delete(package_guid)
-      package = @packages_handler.delete(package_guid, @access_context)
+      package = @packages_handler.delete(@access_context, filter: { guid: package_guid }).first
       package_not_found! unless package
       [HTTP::NO_CONTENT]
     rescue PackagesHandler::Unauthorized

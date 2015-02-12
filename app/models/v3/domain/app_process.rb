@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class AppProcess
-    attr_reader :guid, :space_guid, :stack_guid, :disk_quota,
+    attr_reader :guid, :app_guid, :space_guid, :stack_guid, :disk_quota,
       :memory, :instances, :state, :command, :buildpack, :health_check_timeout,
       :docker_image, :environment_json, :name, :type
 
@@ -15,6 +15,7 @@ module VCAP::CloudController
       @health_check_timeout = opts[:health_check_timeout]
       @instances            = opts[:instances]
       @memory               = opts[:memory]
+      @app_guid             = opts[:app_guid]
       @space_guid           = opts[:space_guid]
       @stack_guid           = opts[:stack_guid]
       @state                = opts[:state]
@@ -33,6 +34,7 @@ module VCAP::CloudController
         health_check_timeout:   self.health_check_timeout,
         instances:              self.instances,
         memory:                 self.memory,
+        app_guid:               self.app_guid,
         space_guid:             self.space_guid,
         stack_guid:             self.stack_guid,
         state:                  self.state,

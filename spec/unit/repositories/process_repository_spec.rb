@@ -102,28 +102,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#find_by_guid_for_update' do
-      it 'find the process object by guid and yield a process' do
-        app                = AppFactory.make(buildpack: 'http://the-buildpack.com')
-        process_repository = ProcessRepository.new
-        process_repository.find_by_guid_for_update(app.guid) do |process|
-          expect(process.guid).to eq(app.guid)
-          expect(process.name).to eq(app.name)
-          expect(process.memory).to eq(app.memory)
-          expect(process.instances).to eq(app.instances)
-          expect(process.disk_quota).to eq(app.disk_quota)
-          expect(process.space_guid).to eq(app.space.guid)
-          expect(process.stack_guid).to eq(app.stack.guid)
-          expect(process.state).to eq(app.state)
-          expect(process.command).to eq(app.command)
-          expect(process.buildpack).to eq('http://the-buildpack.com')
-          expect(process.health_check_timeout).to eq(app.health_check_timeout)
-          expect(process.docker_image).to eq(app.docker_image)
-          expect(process.environment_json).to eq(app.environment_json)
-        end
-      end
-    end
-
     describe '#find_for_update' do
       context 'when the process exists' do
         context 'with an associated app' do
@@ -251,7 +229,7 @@ module VCAP::CloudController
         it 'raises a ProcessNotFound error' do
           process_model      = AppFactory.make
           process_repository = ProcessRepository.new
-          process_repository.find_by_guid_for_update(process_model.guid) do |initial_process|
+          process_repository.find_for_update(process_model.guid) do |initial_process|
             updated_process = initial_process.with_changes({ name: 'my-super-awesome-name' })
             process_model.destroy
             expect {
@@ -267,7 +245,7 @@ module VCAP::CloudController
         it 'updates the existing process data model' do
           original_package_state = app.package_state
           process_repository     = ProcessRepository.new
-          process_repository.find_by_guid_for_update(app.guid) do |initial_process|
+          process_repository.find_for_update(app.guid) do |initial_process|
             updated_process = initial_process.with_changes({ 'name' => 'my-super-awesome-name' })
 
             expect {
@@ -299,7 +277,7 @@ module VCAP::CloudController
             }
             process_repository = ProcessRepository.new
             expect {
-              process_repository.find_by_guid_for_update(app.guid) do |initial_process|
+              process_repository.find_for_update(app.guid) do |initial_process|
                 desired_process = initial_process.with_changes(invalid_opts)
 
                 expect {
@@ -314,7 +292,7 @@ module VCAP::CloudController
           it 'raises a ProcessNotFound error' do
             process_model      = AppFactory.make
             process_repository = ProcessRepository.new
-            process_repository.find_by_guid_for_update(process_model.guid) do |initial_process|
+            process_repository.find_for_update(process_model.guid) do |initial_process|
               updated_process = initial_process.with_changes({ name: 'my-super-awesome-name' })
               process_model.destroy
               expect {
@@ -366,11 +344,22 @@ module VCAP::CloudController
 
     describe '#delete' do
       context 'when the process is persisted' do
-        it 'deletes the persisted process' do
+        it 'deletes by guid' do
           process_repository = ProcessRepository.new
           process = process_repository.create!(process_repository.new_process(valid_opts))
           expect {
-            process_repository.find_by_guid_for_update(process.guid) do |process_to_delete|
+            process_repository.find_for_delete(filter: { guid: process.guid }) do |process_to_delete|
+              process_repository.delete(process_to_delete)
+            end
+          }.to change { App.count }.by(-1)
+          expect(process_repository.find_by_guid(process.guid)).to be_nil
+        end
+
+        it 'deletes by app_guid' do
+          process_repository = ProcessRepository.new
+          process = process_repository.create!(process_repository.new_process(valid_opts))
+          expect {
+            process_repository.find_for_delete(filter: { app_guid: process.app_guid }) do |process_to_delete|
               process_repository.delete(process_to_delete)
             end
           }.to change { App.count }.by(-1)

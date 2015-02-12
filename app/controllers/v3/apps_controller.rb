@@ -69,7 +69,7 @@ module VCAP::CloudController
 
     delete '/v3/apps/:guid', :delete
     def delete(guid)
-      deleted = @app_handler.delete(guid, @access_context)
+      deleted = @app_handler.delete(@access_context, filter: { guid: guid })
       app_not_found! unless deleted
 
       [HTTP::NO_CONTENT]

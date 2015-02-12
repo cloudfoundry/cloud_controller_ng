@@ -23,7 +23,7 @@ module VCAP::CloudController
 
         processes = @processes_handler.raw_list(access_context, filter: { app_guid: app.guid }, exclude: { type: types })
         processes.map(&:guid).each do |process_guid|
-          @processes_handler.delete(process_guid, access_context)
+          @processes_handler.delete(access_context, filter: { guid: process_guid })
         end
       end
     end

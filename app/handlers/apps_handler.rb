@@ -77,7 +77,9 @@ module VCAP::CloudController
     class IncorrectProcessSpace < StandardError; end
     class IncorrectPackageSpace < StandardError; end
 
-    def initialize(processes_handler, paginator=SequelPaginator.new, apps_repository=AppsRepository.new)
+    def initialize(packages_handler, droplets_handler, processes_handler, paginator=SequelPaginator.new, apps_repository=AppsRepository.new)
+      @packages_handler = packages_handler
+      @droplets_handler = droplets_handler
       @processes_handler = processes_handler
       @paginator = paginator
       @apps_repository = apps_repository
@@ -138,19 +140,22 @@ module VCAP::CloudController
       raise InvalidApp.new(e.message)
     end
 
-    def delete(guid, access_context)
-      app = AppModel.find(guid: guid)
-      return nil if app.nil?
+    def delete(access_context, filter: {})
+      app = AppModel.find(guid: filter[:guid])
+      return [] if app.nil?
 
       app.db.transaction do
         app.lock!
 
         raise Unauthorized if access_context.cannot?(:delete, app)
-        raise DeleteWithProcesses if app.processes.any?
+
+        @droplets_handler.delete(access_context, filter: { app_guid: app.guid })
+        @packages_handler.delete(access_context, filter: { app_guid: app.guid })
+        @processes_handler.delete(access_context, filter: { app_guid: app.guid })
 
         app.destroy
       end
-      true
+      [app]
     end
 
     def add_process(app, process, access_context)

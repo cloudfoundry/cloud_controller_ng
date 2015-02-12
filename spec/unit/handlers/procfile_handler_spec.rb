@@ -3,7 +3,7 @@ require 'handlers/procfile_handler'
 
 module VCAP::CloudController
   describe ProcfileHandler do
-    let(:apps_handler) { AppsHandler.new(processes_handler) }
+    let(:apps_handler) { AppsHandler.new(double(:packages_handler), double(:droplets_handler), processes_handler) }
     let(:processes_handler) { ProcessesHandler.new(ProcessRepository.new, Repositories::Runtime::AppEventRepository.new) }
     let(:procfile_handler) { described_class.new(apps_handler, processes_handler) }
     let(:access_context) { double(:access_context, user: User.make, user_email: 'jim@jim.com', roles: double(:roles, admin?: true)) }
@@ -42,6 +42,7 @@ module VCAP::CloudController
         end
 
         it 'deletes the process' do
+          allow(access_context).to receive(:can?).and_return(true)
           process = App.where(app_guid: guid, type: 'bogus').first
           procfile_handler.process_procfile(app_model, procfile, access_context)
           expect {

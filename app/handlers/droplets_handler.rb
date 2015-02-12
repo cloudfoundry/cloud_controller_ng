@@ -152,10 +152,24 @@ module VCAP::CloudController
       @paginator.get_page(dataset, pagination_options)
     end
 
-    def delete(guid, access_context)
-      droplet = DropletModel.find(guid: guid)
-      return nil if droplet.nil?
+    def delete(access_context, filter: {})
+      dataset = DropletModel.dataset
 
+      allowed_filters = %i(app_guid guid)
+      return [] if (filter.keys - allowed_filters).size > 0
+
+      filter.each do |column, value|
+        dataset = dataset.where(:"#{DropletModel.table_name}__#{column}" => value)
+      end
+
+      dataset.map do |droplet|
+        inner_delete(droplet, access_context)
+      end
+    end
+
+    private
+
+    def inner_delete(droplet, access_context)
       package = PackageModel.find(guid: droplet.package_guid)
       space = Space.find(guid: package.space_guid)
 
