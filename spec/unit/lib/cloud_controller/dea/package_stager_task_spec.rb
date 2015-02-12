@@ -164,7 +164,7 @@ module VCAP::CloudController
       context 'when staging setup returned an error response' do
         let(:first_reply_json_error) { 'staging failed' }
 
-        it 'raises a StagingError' do
+        it 'raises a FailedToStage' do
           expect { stage }.to raise_error(Dea::PackageStagerTask::FailedToStage, /failed to stage/)
         end
 
@@ -196,25 +196,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when app staging fails without a reason' do
-        let(:reply_json) { nil }
-        let(:options) { { invalid_json: true } }
-
-        it 'logs StagingError instead of raising to avoid stopping main runloop' do
-          logger = double(:logger).as_null_object
-          expect(logger).to receive(:error).with(/Encountered error on stager with id #{stager_id}/)
-
-          allow(Steno).to receive_messages(logger: logger)
-          stage
-        end
-
-        it 'does not call provided callback (not yet)' do
-          callback_called = false
-          stage { callback_called = true }
-          expect(callback_called).to be false
-        end
-      end
-
       context 'when app staging returned an error response' do
         let(:reply_json_error) { 'staging failed' }
 
@@ -229,10 +210,12 @@ module VCAP::CloudController
           stage
         end
 
-        it 'does not call provided callback (not yet)' do
-          callback_called = false
-          stage { callback_called = true }
-          expect(callback_called).to be false
+        it 'returns an error to the callback' do
+          error_message = nil
+          stage do |_, error|
+            error_message = error.message
+          end
+          expect(error_message).to include('staging failed')
         end
       end
     end

@@ -53,6 +53,7 @@ module VCAP::CloudController
         }
       end
       let(:staging_result) { StagingResponse.new(reply_json) }
+      let(:staging_error) { nil }
 
       it_behaves_like 'a stager' do
         let(:thing_to_stage) { nil }
@@ -118,7 +119,7 @@ module VCAP::CloudController
               config,
               an_instance_of(CloudController::Blobstore::UrlGenerator)).
             and_return(staging_message)
-          allow(stager_task).to receive(:stage).and_yield(staging_result).and_return('fake-stager-response')
+          allow(stager_task).to receive(:stage).and_yield(staging_result, staging_error).and_return('fake-stager-response')
         end
 
         let(:buildpack) { Buildpack.make(name: 'buildpack-name') }
@@ -178,38 +179,55 @@ module VCAP::CloudController
 
         context 'when staging fails' do
           let(:failure_reason) { 'a staging error message' }
+          let(:failure_type) { 'SomeType' }
 
-          before do
-            allow(stager_task).to receive(:stage).and_raise(PackageStagerTask::FailedToStage, failure_reason)
-          end
-
-          it 'updates the droplet to a FAILED state' do
-            expect(droplet.state).not_to eq(DropletModel::FAILED_STATE)
-
-            begin
-              stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
-            rescue
+          context 'because task.stage failed' do
+            before do
+              allow(stager_task).to receive(:stage).and_raise(PackageStagerTask::FailedToStage.new(failure_type, failure_reason))
             end
 
-            droplet.reload
+            it 'updates the droplet to a FAILED state' do
+              expect(droplet.state).not_to eq(DropletModel::FAILED_STATE)
 
-            expect(droplet.state).to eq(DropletModel::FAILED_STATE)
-          end
+              begin
+                stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
+              rescue
+              end
 
-          it 'stores the failure reason on the droplet' do
-            begin
-              stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
-            rescue
+              expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
             end
 
-            droplet.reload
+            it 'stores the failure reason on the droplet' do
+              begin
+                stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
+              rescue
+              end
 
-            expect(droplet.failure_reason).to eq(failure_reason)
+              expect(droplet.reload.failure_reason).to match(/#{failure_type}.*#{failure_reason}/)
+            end
+
+            it 'raises an ApiError' do
+              expect { stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url) }.
+                to raise_error(VCAP::Errors::ApiError, /a staging error message/)
+            end
           end
 
-          it 'raises an ApiError' do
-            expect { stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url) }.
-              to raise_error(VCAP::Errors::ApiError, /a staging error message/)
+          context 'because there was an error passed to the callback' do
+            let(:staging_error) { PackageStagerTask::FailedToStage.new(failure_type, failure_reason) }
+
+            it 'updates the droplet to a FAILED state' do
+              expect(droplet.state).not_to eq(DropletModel::FAILED_STATE)
+
+              stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
+
+              expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+            end
+
+            it 'stores the failure reason on the droplet' do
+              stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
+
+              expect(droplet.reload.failure_reason).to match(/#{failure_type}.*#{failure_reason}/)
+            end
           end
         end
       end
