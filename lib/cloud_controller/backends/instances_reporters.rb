@@ -26,7 +26,7 @@ module VCAP::CloudController
     end
 
     def number_of_starting_and_running_instances_for_apps(apps)
-      diego_apps = diego_running_disabled? ? [] : apps.select(&:run_with_diego?)
+      diego_apps = diego_running_disabled? ? [] : apps.select(&:diego?)
       dea_apps = apps - diego_apps
 
       diego_instances = diego_reporter.number_of_starting_and_running_instances_for_apps(diego_apps)
@@ -43,7 +43,7 @@ module VCAP::CloudController
     def reporter_for_app(app)
       return legacy_reporter if diego_running_disabled?
 
-      app.run_with_diego? ? diego_reporter : legacy_reporter
+      app.diego? ? diego_reporter : legacy_reporter
     end
 
     def diego_reporter

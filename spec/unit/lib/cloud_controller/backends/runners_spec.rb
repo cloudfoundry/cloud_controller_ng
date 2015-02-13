@@ -62,8 +62,8 @@ module VCAP::CloudController
 
     def make_diego_app(options={})
       AppFactory.make(options).tap do |app|
-        app.environment_json = (app.environment_json || {}).merge('DIEGO_RUN_BETA' => 'true')
         app.package_state = 'STAGED'
+        app.diego = true
         app.save
       end
     end
@@ -82,7 +82,7 @@ module VCAP::CloudController
 
       context 'when the app is configured to run on Diego' do
         before do
-          allow(app).to receive(:run_with_diego?).and_return(true)
+          allow(app).to receive(:diego?).and_return(true)
         end
 
         context 'when diego running is enabled' do
@@ -114,7 +114,7 @@ module VCAP::CloudController
 
         context 'when the app is not configured to run on Diego' do
           before do
-            allow(app).to receive(:run_with_diego?).and_return(false)
+            allow(app).to receive(:diego?).and_return(false)
           end
 
           it 'finds a DEA backend' do
@@ -253,9 +253,9 @@ module VCAP::CloudController
         expect(batch).not_to include(deleted_app)
       end
 
-      it 'only includes apps that have DIEGO_RUN_BETA set' do
+      it 'only includes apps that have the diego attribute set' do
         non_diego_app = make_diego_app(id: 6, state: 'STARTED')
-        non_diego_app.environment_json = {}
+        non_diego_app.diego = false
         non_diego_app.save
 
         batch = runners.diego_apps(100, 0)
@@ -333,7 +333,7 @@ module VCAP::CloudController
 
       it 'only includes diego apps' do
         non_diego_app = make_diego_app(state: 'STARTED')
-        non_diego_app.environment_json = {}
+        non_diego_app.diego = false
         non_diego_app.save
 
         batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_app(non_diego_app))
@@ -461,7 +461,7 @@ module VCAP::CloudController
 
       it 'only includes diego apps' do
         non_diego_app = make_diego_app(state: 'STARTED')
-        non_diego_app.environment_json = {}
+        non_diego_app.diego = false
         non_diego_app.save
 
         batch = runners.diego_apps_cache_data(100, 0)

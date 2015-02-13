@@ -417,6 +417,7 @@ module VCAP::CloudController
           :debug,
           :detected_buildpack,
           :detected_start_command,
+          :diego,
           :disk_quota,
           :docker_image,
           :environment_json,
@@ -445,6 +446,7 @@ module VCAP::CloudController
           :console,
           :debug,
           :detected_buildpack,
+          :diego,
           :disk_quota,
           :docker_image,
           :environment_json,
@@ -2094,44 +2096,6 @@ module VCAP::CloudController
     describe 'diego' do
       subject { AppFactory.make }
 
-      context 'when the DIEGO_RUN_BETA environment variable is set and saved' do
-        before do
-          subject.environment_json = { 'DIEGO_RUN_BETA' => 'true' }
-        end
-
-        it 'becomes a diego app' do
-          expect {
-            subject.save
-            subject.refresh
-          }.to change {
-            subject.diego
-          }.from(false).to(true)
-        end
-
-        it 'stages with diego' do
-          expect(subject.stage_with_diego?).to eq(true)
-        end
-      end
-
-      context 'when the DIEGO_STAGE_BETA environment variable is set and saved' do
-        before do
-          subject.environment_json = { 'DIEGO_STAGE_BETA' => 'true' }
-        end
-
-        it 'stages with diego' do
-          expect(subject.stage_with_diego?).to eq(true)
-        end
-
-        it 'remains a dea app' do
-          expect {
-            subject.save
-            subject.refresh
-          }.to_not change {
-            subject.diego
-          }.from(false)
-        end
-      end
-
       context 'when adding and removing routes', isolation: :truncation do
         let(:domain) do
           PrivateDomain.make owning_organization: subject.space.organization
@@ -2140,7 +2104,7 @@ module VCAP::CloudController
         let(:route) { Route.make domain: domain, space: subject.space }
 
         before do
-          subject.environment_json = { 'DIEGO_RUN_BETA' => 'true' }
+          subject.diego = true
         end
 
         it "do not update the app's version" do

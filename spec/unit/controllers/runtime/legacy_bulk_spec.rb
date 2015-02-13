@@ -151,10 +151,7 @@ module VCAP::CloudController
           end
 
           it 'includes diego apps' do
-            environment = {
-              'DIEGO_RUN_BETA' => 'true'
-            }
-            app = AppFactory.make(environment_json: environment)
+            app = AppFactory.make(diego: true)
 
             get '/bulk/apps', {
               'batch_size' => 20,
@@ -177,10 +174,7 @@ module VCAP::CloudController
           end
 
           it 'does not include diego apps' do
-            environment = {
-              'DIEGO_RUN_BETA' => 'true'
-            }
-            app = AppFactory.make(environment_json: environment)
+            app = AppFactory.make(diego: true)
 
             get '/bulk/apps', {
               'batch_size' => 20,

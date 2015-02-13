@@ -37,6 +37,7 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :health_check_type, 'Type of health check to perform.', default: 'port', valid_values: ['port', 'none']
     field :health_check_timeout, 'Timeout for health checking of an staged app when starting up'
 
+    field :diego, 'Use diego to stage and to run when available', default: false, experimental: true, valid_values: [true, false]
     field :docker_image,
       'Name of the Docker image containing the app',
       default: nil,
@@ -84,16 +85,14 @@ resource 'Apps', type: [:api, :legacy_api] do
 
       example 'Creating a Docker App (experimental)' do
         space_guid = VCAP::CloudController::Space.make.guid
-        diego_environment = { 'DIEGO_STAGE_BETA' => 'true', 'DIEGO_RUN_BETA' => 'true' }
 
-        data = required_fields.merge(space_guid: space_guid, name: 'docker_app', docker_image: 'cloudfoundry/hello')
-        data['environment_json'] = diego_environment
+        data = required_fields.merge(space_guid: space_guid, name: 'docker_app', docker_image: 'cloudfoundry/hello', diego: true)
         client.post '/v2/apps', MultiJson.dump(data, pretty: true), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :app
         expect(parsed_response['entity']['docker_image']).to eq('cloudfoundry/hello:latest')
-        expect(parsed_response['entity']['environment_json']).to match(diego_environment)
+        expect(parsed_response['entity']['diego']).to be_truthy
 
         app_guid = parsed_response['metadata']['guid']
         audited_event VCAP::CloudController::Event.find(type: 'audit.app.create', actee: app_guid)

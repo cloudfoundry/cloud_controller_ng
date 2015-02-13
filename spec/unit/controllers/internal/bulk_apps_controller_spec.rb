@@ -5,8 +5,8 @@ module VCAP::CloudController
   describe BulkAppsController do
     def make_diego_app(options={})
       AppFactory.make(options).tap do |app|
-        app.environment_json = (app.environment_json || {}).merge('DIEGO_RUN_BETA' => 'true')
         app.package_state = 'STAGED'
+        app.diego = true
         app.save
       end
     end
@@ -113,7 +113,6 @@ module VCAP::CloudController
                 environment_json: {
                   'env-key-3' => 'env-value-3',
                   'env-key-4' => 'env-value-4',
-                  'DIEGO_RUN_BETA' => 'true',
                 },
                 file_descriptors: 16_384,
                 instances: 4,

@@ -11,10 +11,10 @@ module VCAP::CloudController
 
     def make_diego_app
       AppFactory.make.tap do |app|
-        app.environment_json = (app.environment_json || {}).merge('DIEGO_RUN_BETA' => 'true')
         app.package_state = 'PENDING'
         app.state = 'STARTED'
         app.staging_task_id = 'task-1'
+        app.diego = true
         app.save
       end
     end

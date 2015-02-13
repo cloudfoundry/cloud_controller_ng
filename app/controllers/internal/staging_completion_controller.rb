@@ -32,7 +32,7 @@ module VCAP::CloudController
 
       app = App.find(guid: staging_response['app_id'])
       raise Errors::ApiError.new_from_details('NotFound') unless app
-      raise Errors::ApiError.new_from_details('StagingBackendInvalid') unless app.stage_with_diego?
+      raise Errors::ApiError.new_from_details('StagingBackendInvalid') unless app.diego?
 
       begin
         stagers.stager_for_app(app).staging_complete(staging_response)

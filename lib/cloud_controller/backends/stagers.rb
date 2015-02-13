@@ -41,7 +41,7 @@ module VCAP::CloudController
     def stager_for_app(app)
       return dea_stager(app) if diego_staging_disabled?
 
-      app.stage_with_diego? ? diego_stager(app) : dea_stager(app)
+      app.diego? ? diego_stager(app) : dea_stager(app)
     end
 
     private

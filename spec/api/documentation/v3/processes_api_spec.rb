@@ -235,7 +235,6 @@ resource 'Processes (Experimental)', type: :api do
 
     context 'with a docker image' do
       let(:buildpack) { nil }
-      let(:environment_json) { { 'CF_DIEGO_BETA' => 'true', 'CF_DIEGO_RUN_BETA' => 'true' } }
       let(:docker_image) { 'cloudfoundry/hello' }
       let(:type) { 'worker' }
 

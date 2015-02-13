@@ -44,11 +44,11 @@ module VCAP::CloudController
         droplet_hash: droplet_hash,
         package_hash: 'abcd',
         package_state: package_state,
-        environment_json: environment
+        diego: diego,
       )
     end
 
-    let(:environment) { {} }
+    let(:diego) { false }
 
     let(:app_state) { 'STARTED' }
     let(:droplet_hash) { 'present-hash' }
@@ -89,8 +89,8 @@ module VCAP::CloudController
           context 'if the desired index is within the desired number of instances' do
             let(:start_instance_index) { 1 }
             context 'if app is in STARTED state' do
-              context 'and the DIEGO_RUN_BETA flag is set' do
-                let(:environment) { { 'DIEGO_RUN_BETA' => 'true' } }
+              context 'and the diego flag is set' do
+                let(:diego) { true }
 
                 it 'should not send the start message' do
                   expect(dea_client).not_to receive(:start_instance_at_index)
@@ -98,7 +98,7 @@ module VCAP::CloudController
                 end
               end
 
-              context 'and the DIEGO_RUN_BETA flag is not set' do
+              context 'and the diego flag is not set' do
                 it 'should send the start message' do
                   expect(dea_client).to receive(:start_instance_at_index) do |app_to_start, index_to_start|
                     expect(app_to_start).to eq(app)
@@ -283,8 +283,8 @@ module VCAP::CloudController
               end
             end
 
-            context 'and the DIEGO_RUN_BETA flag is set ' do
-              let(:environment) { { 'DIEGO_RUN_BETA' => 'true' } }
+            context 'and the diego flag is set ' do
+              let(:diego) { true }
 
               context 'and diego is disabled' do
                 before do

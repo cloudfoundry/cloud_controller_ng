@@ -20,7 +20,7 @@ module VCAP::CloudController
       AppFactory.make(
         package_hash: 'abc',
         package_state: 'STAGED',
-        environment_json: { 'DIEGO_RUN_BETA' => 'true' }
+        diego: true
       )
     end
 

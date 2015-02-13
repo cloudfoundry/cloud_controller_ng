@@ -17,11 +17,11 @@ module VCAP::CloudController
     def runner_for_app(app)
       return dea_runner(app) if diego_running_disabled?
 
-      app.run_with_diego? ? diego_runner(app) : dea_runner(app)
+      app.diego? ? diego_runner(app) : dea_runner(app)
     end
 
     def run_with_diego?(app)
-      app.run_with_diego? && !diego_running_disabled?
+      app.diego? && !diego_running_disabled?
     end
 
     def diego_apps(batch_size, last_id)

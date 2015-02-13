@@ -140,7 +140,7 @@ module VCAP::CloudController
 
       context 'when the App is staging to Diego' do
         before do
-          allow(app).to receive(:stage_with_diego?).and_return(true)
+          allow(app).to receive(:diego?).and_return(true)
         end
 
         context 'when diego staging is enabled' do
@@ -175,7 +175,7 @@ module VCAP::CloudController
 
       context 'when the App is staging to the DEA' do
         before do
-          allow(app).to receive(:stage_with_diego?).and_return(false)
+          allow(app).to receive(:diego?).and_return(false)
         end
 
         it 'finds a DEA backend' do

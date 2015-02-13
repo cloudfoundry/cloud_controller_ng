@@ -44,14 +44,14 @@ module VCAP::CloudController
                       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
                       :state, :version, :command, :console, :debug, :staging_task_id,
                       :package_state, :health_check_type, :health_check_timeout,
-                      :staging_failed_reason, :docker_image, :package_updated_at,
+                      :staging_failed_reason, :diego, :docker_image, :package_updated_at,
                       :detected_start_command
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
                       :state, :command, :console, :debug, :staging_task_id,
                       :service_binding_guids, :route_guids, :health_check_type,
-                      :health_check_timeout, :docker_image, :app_guid
+                      :health_check_timeout, :diego, :docker_image, :app_guid
 
     strip_attributes :name
 
@@ -73,6 +73,7 @@ module VCAP::CloudController
     attr_accessor :last_stager_response
 
     alias_method :kill_after_multiple_restarts?, :kill_after_multiple_restarts
+    alias_method :diego?, :diego
 
     def copy_buildpack_errors
       bp = buildpack
@@ -149,19 +150,7 @@ module VCAP::CloudController
       AppStopEvent.create_from_app(self) if generate_stop_event?
       AppStartEvent.create_from_app(self) if generate_start_event?
 
-      # make this conditional for when we remove the diego column later.
-      self.diego = run_with_diego? if self.class.columns.include?(:diego)
-
       super
-    end
-
-    # Call VCAP::CloudController::Runners.run_with_diego? for the true answer
-    def run_with_diego?
-      !!(environment_json && environment_json['DIEGO_RUN_BETA'] == 'true')
-    end
-
-    def stage_with_diego?
-      run_with_diego? || !!(environment_json && environment_json['DIEGO_STAGE_BETA'] == 'true')
     end
 
     def version_needs_to_be_updated?
@@ -559,16 +548,16 @@ module VCAP::CloudController
       routes_already_changed = @routes_changed
       @routes_changed = true
 
-      if !run_with_diego?
-        set_new_version
-        save
-      else
+      if diego?
         unless routes_already_changed
           App.db.after_commit do
             AppObserver.routes_changed(self)
             @routes_changed = false
           end
         end
+      else
+        set_new_version
+        save
       end
     end
 

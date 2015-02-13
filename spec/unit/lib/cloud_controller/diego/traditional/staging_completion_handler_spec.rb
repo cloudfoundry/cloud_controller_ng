@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe Diego::Traditional::StagingCompletionHandler do
-    let(:environment) { {} }
-    let(:staged_app) { App.make(instances: 3, staging_task_id: 'the-staging-task-id', environment_json: environment) }
+    let(:diego) { false }
+    let(:staged_app) { App.make(instances: 3, staging_task_id: 'the-staging-task-id', diego: diego) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
     let(:app_id) { staged_app.guid }
     let(:buildpack) { Buildpack.make }
@@ -77,7 +77,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when running in diego is not enabled' do
+      context 'when the app does not have its diego flag set' do
         it 'starts the app instances' do
           expect(runners).to receive(:runner_for_app) do |received_app|
             expect(received_app.guid).to eq(app_id)
@@ -100,8 +100,8 @@ module VCAP::CloudController
         end
       end
 
-      context 'when running in diego is enabled' do
-        let(:environment) { { 'DIEGO_RUN_BETA' => 'true' } }
+      context 'when the app has its diego flag set' do
+        let(:diego) { true }
 
         it 'desires the app using the diego client' do
           expect(runners).to receive(:runner_for_app) do |received_app|

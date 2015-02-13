@@ -8,6 +8,7 @@ module VCAP::CloudController
       attribute :buildpack,              String,           default: nil
       attribute :command,                String,           default: nil
       attribute :console,                Message::Boolean, default: false
+      attribute :diego,                  Message::Boolean, default: false
       attribute :docker_image,           String,           default: nil
       attribute :debug,                  String,           default: nil
       attribute :disk_quota,             Integer,          default: nil
