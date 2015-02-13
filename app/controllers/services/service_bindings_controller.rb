@@ -30,16 +30,20 @@ module VCAP::CloudController
 
       raise InvalidRequest unless request_attrs
 
-      validate_service_instance(request_attrs['service_instance_guid'])
+      service_instance = ServiceInstance.find(guid: @request_attrs['service_instance_guid'])
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid']) unless service_instance
+      raise VCAP::Errors::ApiError.new_from_details('UnbindableService') unless service_instance.bindable?
       validate_app(request_attrs['app_guid'])
 
       service_binding = ServiceBinding.new(@request_attrs)
       validate_access(:create, service_binding)
+      raise Sequel::ValidationFailed.new(service_binding) if !service_binding.valid?
 
-      if service_binding.valid?
-        service_binding.bind!
-      else
-        raise Sequel::ValidationFailed.new(service_binding)
+      attributes_to_update = service_binding.client.bind(service_binding)
+
+      lock_service_instance_by_blocking(service_instance) do
+        service_binding.set_all(attributes_to_update)
+        service_binding.save
       end
 
       @services_event_repository.record_service_binding_event(:create, service_binding)
@@ -56,27 +60,28 @@ module VCAP::CloudController
       raise_if_has_associations!(service_binding) if v2_api? && !recursive?
 
       service_instance = ServiceInstance.find(guid: service_binding.service_instance_guid)
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress') if service_instance.managed_instance? && service_instance.operation_in_progress?
 
-      deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceBinding, guid)
-      delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :record_service_binding_event, :delete, service_binding)
+      lock_service_instance_by_blocking(service_instance) do
+        deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceBinding, guid)
+        delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :record_service_binding_event, :delete, service_binding)
 
-      enqueue_deletion_job(delete_and_audit_job)
+        enqueue_deletion_job(delete_and_audit_job)
+      end
     end
 
     private
 
+    def lock_service_instance_by_blocking(service_instance, &block)
+      if service_instance.managed_instance?
+        service_instance.lock_by_blocking_other_operations(&block)
+      else
+        block.call
+      end
+    end
+
     def validate_app(app_guid)
       app = App.find(guid: app_guid)
       raise VCAP::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless app
-    end
-
-    def validate_service_instance(instance_guid)
-      service_instance = ServiceInstance.find(guid: instance_guid)
-
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid) unless service_instance
-      raise VCAP::Errors::ApiError.new_from_details('UnbindableService') unless service_instance.bindable?
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress') if service_instance.managed_instance? && service_instance.operation_in_progress?
     end
 
     def self.translate_validation_exception(e, attributes)

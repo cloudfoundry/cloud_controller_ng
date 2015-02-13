@@ -120,7 +120,7 @@ module VCAP::CloudController
   end
 
   Service.blueprint(:v2) do
-    service_broker
+    service_broker { ServiceBroker.make }
     description { Sham.description } # remove hack
     provider    { '' }
     url         { nil }

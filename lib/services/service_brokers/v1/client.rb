@@ -57,14 +57,12 @@ module VCAP::Services
 
       response = @http_client.bind(broker_instance_id, app_instance_id, label, email, binding_options)
 
-      binding.broker_provided_id = response.fetch('service_id')
-      binding.gateway_data = response.fetch('configuration')
-      binding.credentials = response.fetch('credentials')
-      if response['syslog_drain_url'].blank?
-        binding.syslog_drain_url =  instance.syslog_drain_url
-      else
-        binding.syslog_drain_url =  response.fetch('syslog_drain_url')
-      end
+      {
+        broker_provided_id: response.fetch('service_id'),
+        gateway_data: response.fetch('configuration'),
+        credentials: response.fetch('credentials'),
+        syslog_drain_url: (response['syslog_drain_url'].blank? ? instance.syslog_drain_url : response.fetch('syslog_drain_url'))
+      }
     end
 
     def unbind(binding)

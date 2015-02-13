@@ -87,8 +87,14 @@ module VCAP::Services
       let(:current_user_email) { 'john@example.com' }
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
       let(:plan) { instance.service_plan }
-      let(:service) { plan.service }
-      let(:app) { VCAP::CloudController::AppFactory.make }
+      let(:service) do
+        service = plan.service
+        service.requires = ['syslog_drain']
+        service.save
+        service
+      end
+
+      let(:app) { VCAP::CloudController::AppFactory.make(space: instance.space) }
       let(:binding) do
         VCAP::CloudController::ServiceBinding.new(
           service_instance: instance,
@@ -102,7 +108,7 @@ module VCAP::Services
           'service_id' => '123',
           'configuration' => 'config',
           'credentials' => { 'foo' => 'bar' },
-          'syslog_drain_url' => 'drain url'
+          'syslog_drain_url' => 'drain url',
         }
       end
 
@@ -118,7 +124,10 @@ module VCAP::Services
       end
 
       it 'sets relevant attributes of the binding' do
-        client.bind(binding)
+        attributes = client.bind(binding)
+        # Ensure attributes correctly saves to the database.
+        binding.set_all(attributes)
+        binding.save
 
         expect(binding.broker_provided_id).to eq('123')
         expect(binding.credentials).to eq({ 'foo' => 'bar' })

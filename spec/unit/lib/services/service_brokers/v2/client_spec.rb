@@ -638,7 +638,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe '#bind' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:app) { VCAP::CloudController::App.make }
+      let(:app) { VCAP::CloudController::App.make(space: instance.space) }
       let(:binding) do
         VCAP::CloudController::ServiceBinding.new(
           service_instance: instance,
@@ -662,6 +662,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:message) { 'Created' }
 
       before do
+        instance.service_plan.service.update_from_hash(requires: ['syslog_drain'])
         allow(http_client).to receive(:put).and_return(response)
       end
 
@@ -677,16 +678,17 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(http_client).to have_received(:put).
           with(anything,
-               {
-            plan_id:    binding.service_plan.broker_provided_id,
-            service_id: binding.service.broker_provided_id,
-            app_guid:   binding.app_guid
-          }
-              )
+             plan_id:    binding.service_plan.broker_provided_id,
+             service_id: binding.service.broker_provided_id,
+             app_guid:   binding.app_guid
+        )
       end
 
       it 'sets the credentials on the binding' do
-        client.bind(binding)
+        attributes = client.bind(binding)
+        # ensure attributes return match ones for the database
+        binding.set_all(attributes)
+        binding.save
 
         expect(binding.credentials).to eq({
           'username' => 'admin',
@@ -703,7 +705,11 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'sets the syslog_drain_url on the binding' do
-          client.bind(binding)
+          attributes = client.bind(binding)
+          # ensure attributes return match ones for the database
+          binding.set_all(attributes)
+          binding.save
+
           expect(binding.syslog_drain_url).to eq('syslog://example.com:514')
         end
       end

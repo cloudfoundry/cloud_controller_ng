@@ -34,15 +34,33 @@ module VCAP::CloudController
       expect(app.needs_staging?).to eq(false)
     end
 
-    let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
+    let(:guid_pattern) { '[[:alnum:]-]+' }
+    let(:bind_status) { 200 }
+    let(:bind_body) { { credentials: CREDENTIALS } }
+    let(:unbind_status) { 200 }
+    let(:unbind_body) { {} }
 
-    before do
-      allow(broker_client).to receive(:bind) do |binding|
-        binding.broker_provided_id = Sham.guid
-        binding.credentials = CREDENTIALS
-      end
-      allow(broker_client).to receive(:unbind)
-      allow_any_instance_of(Service).to receive(:client).and_return(broker_client)
+    def broker_url(broker)
+      base_broker_uri = URI.parse(broker.broker_url)
+      base_broker_uri.user = broker.auth_username
+      base_broker_uri.password = broker.auth_password
+      base_broker_uri.to_s
+    end
+
+    def stub_requests(broker)
+      stub_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+        to_return(status: bind_status, body: bind_body.to_json)
+      stub_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+        to_return(status: unbind_status, body: unbind_body.to_json)
+    end
+
+    def bind_url_regex(opts={})
+      service_binding = opts[:service_binding]
+      service_binding_guid = service_binding.try(:guid) || guid_pattern
+      service_instance = opts[:service_instance] || service_binding.try(:service_instance)
+      service_instance_guid = service_instance.try(:guid) || guid_pattern
+      broker = opts[:service_broker] || service_instance.service_plan.service.service_broker
+      %r{#{broker_url(broker)}/v2/service_instances/#{service_instance_guid}/service_bindings/#{service_binding_guid}}
     end
 
     describe 'Permissions' do
@@ -165,10 +183,13 @@ module VCAP::CloudController
       context 'for managed instances' do
         let(:instance) { ManagedServiceInstance.make }
         let(:space) { instance.space }
-        let(:plan) { instance.service_plan }
-        let(:service) { plan.service }
+        let(:service) { instance.service }
         let(:developer) { make_developer_for_space(space) }
         let(:app_obj) { AppFactory.make(space: space) }
+
+        before do
+          stub_requests(service.service_broker)
+        end
 
         it 'binds a service instance to an app' do
           req = {
@@ -177,9 +198,7 @@ module VCAP::CloudController
           }.to_json
 
           post '/v2/service_bindings', req, json_headers(headers_for(developer))
-          expect(last_response.status).to eq(201)
-
-          expect(broker_client).to have_received(:bind)
+          expect(last_response).to have_status_code(201)
 
           binding = ServiceBinding.last
           expect(binding.credentials).to eq(CREDENTIALS)
@@ -225,7 +244,7 @@ module VCAP::CloudController
           allow_any_instance_of(ServiceBinding).to receive(:save).and_raise
 
           post '/v2/service_bindings', req, json_headers(headers_for(developer))
-          expect(broker_client).to have_received(:unbind).with(an_instance_of(ServiceBinding))
+          expect(a_request(:delete, bind_url_regex(service_instance: instance)))
           expect(last_response.status).to eq(500)
         end
 
@@ -245,11 +264,11 @@ module VCAP::CloudController
           it 'raises UnbindableService error' do
             hash_body = JSON.parse(last_response.body)
             expect(hash_body['error_code']).to eq('CF-UnbindableService')
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_status_code(400)
           end
 
           it 'does not send a bind request to broker' do
-            expect(broker_client).to_not have_received(:bind)
+            expect(a_request(:put, bind_url_regex(service_instance: instance))).to_not have_been_made
           end
         end
 
@@ -302,17 +321,12 @@ module VCAP::CloudController
               }.to_json
             end
 
-            before do
-              allow(broker_client).to receive(:bind).and_return(true)
-              allow_any_instance_of(ServiceBinding).to receive(:client).and_return(broker_client)
-            end
-
             it 'returns CF-ServiceInstanceNotFound error' do
               post '/v2/service_bindings', req, json_headers(headers_for(developer))
 
+              expect(last_response).to have_status_code(404)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
-              expect(last_response.status).to eq(404)
             end
           end
         end
@@ -359,24 +373,17 @@ module VCAP::CloudController
 
             it 'does not send a bind request to broker' do
               make_request
-              expect(broker_client).not_to have_received(:bind)
+              expect(a_request(:put, bind_url_regex(service_instance: instance))).to_not have_been_made
             end
           end
 
           context 'when the v2 broker returns a 409' do
-            before do
-              service.service_broker = ServiceBroker.make
-              allow(broker_client).to receive(:bind) do
-                uri = 'http://broker.url.com'
-                method = 'PUT'
-                response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 409, body: '{}', message: 'Conflict')
-                raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict.new(uri, method, response)
-              end
-            end
+            let(:bind_status) { 409 }
+            let(:bind_body) { {} }
 
             it 'returns a 409' do
               make_request
-              expect(last_response.status).to eq 409
+              expect(last_response).to have_status_code 409
             end
 
             it 'returns a ServiceBrokerConflict error' do
@@ -386,19 +393,12 @@ module VCAP::CloudController
           end
 
           context 'when the v2 broker returns any other error' do
-            before do
-              service.service_broker = ServiceBroker.make
-              allow(broker_client).to receive(:bind) do
-                uri = 'http://broker.url.com'
-                method = 'PUT'
-                response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 500, body: '{"description": "ERROR MESSAGE HERE"}', message: 'Internal Server Error')
-                raise VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(uri, method, response)
-              end
-            end
+            let(:bind_status) { 500 }
+            let(:bind_body) { { description: 'ERROR MESSAGE HERE' } }
 
             it 'passes through the error message' do
               make_request
-              expect(last_response.status).to eq 502
+              expect(last_response).to have_status_code 502
               expect(decoded_response['description']).to match /ERROR MESSAGE HERE/
             end
           end
@@ -410,16 +410,20 @@ module VCAP::CloudController
       let(:service_binding) { ServiceBinding.make }
       let(:developer) { make_developer_for_space(service_binding.service_instance.space) }
 
+      before do
+        stub_requests(service_binding.service_instance.service.service_broker)
+      end
+
       it 'returns an empty response body' do
         delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer))
-        expect(last_response.status).to eq 204
+        expect(last_response).to have_status_code 204
         expect(last_response.body).to be_empty
       end
 
       it 'unbinds a service instance from an app' do
         delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer))
         expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
-        expect(broker_client).to have_received(:unbind).with(service_binding)
+        expect(a_request(:delete, bind_url_regex(service_binding: service_binding))).to have_been_made
       end
 
       it 'records an audit event after the binding has been deleted' do

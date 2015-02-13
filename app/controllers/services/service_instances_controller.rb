@@ -96,7 +96,7 @@ module VCAP::CloudController
       validate_update_request(service_instance)
 
       err = nil
-      service_instance.lock_for_operation('update') do
+      service_instance.lock_by_failing_other_operations('update') do
         attributes_to_update = {}
         if request_attrs['service_plan_guid']
           new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
@@ -201,7 +201,7 @@ module VCAP::CloudController
       end
 
       if service_instance.managed_instance?
-        service_instance.lock_for_operation('delete', &build_and_enqueue_deletion_job)
+        service_instance.lock_by_failing_other_operations('delete', &build_and_enqueue_deletion_job)
       else
         build_and_enqueue_deletion_job.call
       end

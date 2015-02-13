@@ -5,7 +5,7 @@ module VCAP::Services
     subject(:client) { ServiceBrokers::UserProvided::Client.new }
 
     describe '#provision' do
-      let(:instance) { double(:service_instance) }
+      let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
 
       it 'exists' do
         client.provision(instance)
@@ -15,13 +15,16 @@ module VCAP::Services
     describe '#bind' do
       let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
       let(:binding) do
-        VCAP::CloudController::ServiceBinding.new(
+        VCAP::CloudController::ServiceBinding.make(
           service_instance: instance
         )
       end
 
       it 'sets relevant attributes of the instance' do
-        client.bind(binding)
+        attributes = client.bind(binding)
+        # save to the database to ensure attributes match tables
+        binding.set_all(attributes)
+        binding.save
 
         expect(binding.credentials).to eq(instance.credentials)
         expect(binding.syslog_drain_url).to eq(instance.syslog_drain_url)

@@ -2,6 +2,8 @@ module VCAP::Services::ServiceBrokers::V2
   class Client
     CATALOG_PATH = '/v2/catalog'.freeze
 
+    attr_reader :orphan_mitigator, :attrs
+
     def initialize(attrs)
       http_client_attrs = attrs.select { |key, _| [:url, :auth_username, :auth_password].include?(key) }
       @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(http_client_attrs)
@@ -87,11 +89,14 @@ module VCAP::Services::ServiceBrokers::V2
       })
       parsed_response = @response_parser.parse(:put, path, response)
 
-      binding.credentials = parsed_response['credentials']
+      attributes = {
+        credentials: parsed_response['credentials']
+      }
       if parsed_response.key?('syslog_drain_url')
-        binding.syslog_drain_url = parsed_response['syslog_drain_url']
+        attributes[:syslog_drain_url] = parsed_response['syslog_drain_url']
       end
 
+      attributes
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
       @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
       raise e
