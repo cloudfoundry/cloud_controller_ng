@@ -54,6 +54,22 @@ module VCAP::CloudController
               allow(client).to receive(:fetch_service_instance_state).and_return(response)
             end
 
+            context 'when the last operation type is `delete`' do
+              before do
+                service_instance.save_with_operation(
+                  last_operation: {
+                    type: 'delete',
+                  },
+                )
+              end
+
+              it 'should delete the service instance' do
+                run_job(job)
+
+                expect(ManagedServiceInstance.first(guid: service_instance.guid)).to be_nil
+              end
+            end
+
             it 'fetches and updates the service instance state' do
               run_job(job)
 

@@ -178,6 +178,7 @@ module VCAP::CloudController
           raise err if err
 
           delete_response = [HTTP::OK, {}, '{}']
+          attributes_to_update ||= {}
           if attributes_to_update['last_operation']
             service_instance.save_with_operation(
               last_operation: {

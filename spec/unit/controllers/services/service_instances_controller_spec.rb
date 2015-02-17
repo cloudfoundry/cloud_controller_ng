@@ -877,7 +877,7 @@ module VCAP::CloudController
           expect(event.metadata).to eq({ 'request' => {} })
         end
 
-        context 'with ?accepts_incomplete=to_return' do
+        context 'with ?accepts_incomplete=true' do
           context 'when the broker returns state `in progress`' do
             let(:status) { 202 }
             let(:body) do
@@ -903,6 +903,27 @@ module VCAP::CloudController
 
               expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
             end
+
+            it 'enqueues a polling job to fetch state from the broker' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              broker = service_instance.service_plan.service.service_broker
+              broker_uri = URI.parse(broker.broker_url)
+              broker_uri.user = broker.auth_username
+              broker_uri.password = broker.auth_password
+              stub_request(:get, "#{broker_uri}/v2/service_instances/#{service_instance.guid}").
+                to_return(status: 200, body: {
+                  last_operation: {
+                    state: 'in progress',
+                    description: 'Yep, still working'
+                  }
+                }.to_json)
+
+              expect(last_response).to have_status_code 202
+              Timecop.freeze Time.now + 2.minute do
+                expect(Delayed::Worker.new.work_off).to eq [1, 0]
+              end
+            end
           end
 
           context 'when the broker returns 200 and state `succeded`' do
@@ -916,7 +937,7 @@ module VCAP::CloudController
             it 'indicates the service instance is being deleted' do
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
-              expect(last_response.status).to eq(200)
+              expect(last_response).to have_status_code(200)
 
               expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
             end

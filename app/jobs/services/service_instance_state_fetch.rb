@@ -27,7 +27,12 @@ module VCAP::CloudController
               )
 
               if service_instance.last_operation.state == 'succeeded'
-                service_instance.save_with_operation(service_instance.last_operation.proposed_changes)
+                if service_instance.last_operation.type == 'delete'
+                  service_instance.last_operation.try(:delete)
+                  service_instance.delete
+                else
+                  service_instance.save_with_operation(service_instance.last_operation.proposed_changes)
+                end
               end
             end
 

@@ -121,8 +121,15 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id:    instance.service_plan.broker_provided_id,
       })
 
-      @response_parser.parse(:delete, path, response)
+      parsed_response = @response_parser.parse(:delete, path, response) || {}
 
+      last_operation = parsed_response['last_operation'] || {}
+
+      if last_operation['state'] == 'in progress'
+        @state_poller.poll_service_instance_state(@attrs, instance)
+      end
+
+      parsed_response
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
