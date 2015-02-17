@@ -285,5 +285,48 @@ module VCAP::CloudController
         expect(CGI.unescape(warnings[1])).to eq('!@#$%^&*(),:|{}+=-<>')
       end
     end
+
+    describe '#check_write_permissions!' do
+      subject(:base_controller) do
+        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil)
+      end
+
+      before do
+        allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: false))
+        allow(SecurityContext).to receive(:scopes).and_return([])
+      end
+
+      context 'when the user is an admin' do
+        before do
+          allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: true))
+        end
+
+        it 'does not raise an error' do
+          expect {
+            base_controller.check_write_permissions!
+          }.not_to raise_error
+        end
+      end
+
+      context 'when user has write scope' do
+        before do
+          allow(SecurityContext).to receive(:scopes).and_return(['cloud_controller.write'])
+        end
+
+        it 'does not raise an error' do
+          expect {
+            base_controller.check_write_permissions!
+          }.not_to raise_error
+        end
+      end
+
+      context 'when user does not have write scope' do
+        it 'raises an unauthorized API error' do
+          expect {
+            base_controller.check_write_permissions!
+          }.to raise_error VCAP::Errors::ApiError
+        end
+      end
+    end
   end
 end

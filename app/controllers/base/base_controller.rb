@@ -164,6 +164,16 @@ module VCAP::CloudController::RestController
     def after_update(obj)
     end
 
+    def check_write_permissions!
+      admin       = SecurityContext.roles.admin?
+      write_scope = SecurityContext.scopes.include?('cloud_controller.write')
+      raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') if !admin && !write_scope
+    end
+
+    def current_user
+      SecurityContext.current_user
+    end
+
     attr_reader :config, :logger, :env, :params, :body, :request_attrs
 
     class << self

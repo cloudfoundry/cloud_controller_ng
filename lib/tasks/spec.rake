@@ -30,12 +30,13 @@ namespace :spec do
   namespace :unit do
     fast_suites = %w[
         access
+        actions
+        handlers
         jobs
         models
         presenters
+        queries
         repositories
-        handlers
-        presenters
       ]
 
     fast_suites.each do |layer_name|

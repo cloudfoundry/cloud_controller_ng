@@ -2,6 +2,8 @@ require 'presenters/v3/package_presenter'
 require 'presenters/v3/droplet_presenter'
 require 'handlers/packages_handler'
 require 'handlers/droplets_handler'
+require 'queries/package_delete_fetcher'
+require 'actions/package_delete'
 
 module VCAP::CloudController
   class PackagesController < RestController::BaseController
@@ -10,11 +12,11 @@ module VCAP::CloudController
     end
 
     def inject_dependencies(dependencies)
-      @packages_handler = dependencies[:packages_handler]
+      @packages_handler  = dependencies[:packages_handler]
       @package_presenter = dependencies[:package_presenter]
-      @droplets_handler = dependencies[:droplets_handler]
+      @droplets_handler  = dependencies[:droplets_handler]
       @droplet_presenter = dependencies[:droplet_presenter]
-      @apps_handler = dependencies[:apps_handler]
+      @apps_handler      = dependencies[:apps_handler]
     end
 
     get '/v3/packages', :list
@@ -27,11 +29,11 @@ module VCAP::CloudController
 
     post '/v3/packages/:guid/upload', :upload
     def upload(package_guid)
-      message = PackageUploadMessage.new(package_guid, params)
+      message      = PackageUploadMessage.new(package_guid, params)
       valid, error = message.validate
       unprocessable!(error) if !valid
 
-      package = @packages_handler.upload(message, @access_context)
+      package      = @packages_handler.upload(message, @access_context)
       package_json = @package_presenter.present_json(package)
 
       [HTTP::CREATED, package_json]
@@ -60,17 +62,21 @@ module VCAP::CloudController
 
     delete '/v3/packages/:guid', :delete
     def delete(package_guid)
-      package = @packages_handler.delete(@access_context, filter: { guid: package_guid }).first
-      package_not_found! unless package
+      check_write_permissions!
+
+      package_delete_fetcher = PackageDeleteFetcher.new(current_user)
+      package                = package_delete_fetcher.fetch(package_guid)
+      package_not_found! if package.nil?
+
+      PackageDelete.new.delete(package)
+
       [HTTP::NO_CONTENT]
-    rescue PackagesHandler::Unauthorized
-      unauthorized!
     end
 
     post '/v3/packages/:guid/droplets', :stage
     def stage(package_guid)
       staging_message = StagingMessage.create_from_http_request(package_guid, body)
-      valid, error = staging_message.validate
+      valid, error    = staging_message.validate
       unprocessable!(error) if !valid
 
       droplet = @droplets_handler.create(staging_message, @access_context)
