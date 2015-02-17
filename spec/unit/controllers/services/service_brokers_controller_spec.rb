@@ -159,6 +159,16 @@ module VCAP::CloudController
       end
 
       context 'when the fields for creating the broker is invalid' do
+        context 'when the broker url is malformed' do
+          let(:broker_url) { 'http://url_with_underscore.broker.com' }
+
+          it 'returns a 400 error' do
+            post '/v2/service_brokers', body, headers
+            expect(last_response.status).to eq(400)
+            expect(decoded_response.fetch('code')).to eq(270011)
+          end
+        end
+
         context 'when the broker url is taken' do
           before do
             ServiceBroker.make(broker_url: body_hash[:broker_url])

@@ -52,6 +52,12 @@ describe 'Sequel::Plugins::VcapValidations' do
       expect(@m).not_to be_valid
     end
 
+    it 'should not allow a url with an underscore' do
+      @m.val = 'http://under_score.example.com'
+      expect(@m).not_to be_valid
+      expect(@m.errors.on(:val)).to include :url
+    end
+
     context 'with a given error message' do
       before { @c.define_validations { validates_url(:val, message: 'must be a valid url') } }
 
