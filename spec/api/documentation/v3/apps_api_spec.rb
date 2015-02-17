@@ -23,8 +23,8 @@ resource 'Apps (Experimental)', type: :api do
     parameter :guids, 'App guids to filter by', valid_values: 'array of strings', example_values: 'guid[]=guid1&guid[]=guid2'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1 - 5000'
-    parameter :sort, 'Value to sort by', valid_values: 'created_at, updated_at, id'
-    parameter :direction, 'Direction to sort by', valid_values: 'asc, desc'
+    parameter :order_by, 'Value to sort by', valid_values: 'created_at, updated_at'
+    parameter :order_direction, 'Direction to sort by', valid_values: 'asc, desc'
 
     let(:name1) { 'my_app1' }
     let(:name2) { 'my_app2' }
@@ -36,8 +36,8 @@ resource 'Apps (Experimental)', type: :api do
     let(:space) { VCAP::CloudController::Space.make }
     let(:page) { 1 }
     let(:per_page) { 2 }
-    let(:sort) { 'created_at' }
-    let(:direction) { 'desc' }
+    let(:order_by) { 'created_at' }
+    let(:order_direction) { 'desc' }
 
     before do
       space.organization.add_user user
@@ -48,9 +48,9 @@ resource 'Apps (Experimental)', type: :api do
       expected_response = {
         'pagination' => {
           'total_results' => 3,
-          'first'         => { 'href' => '/v3/apps?page=1&per_page=2' },
-          'last'          => { 'href' => '/v3/apps?page=2&per_page=2' },
-          'next'          => { 'href' => '/v3/apps?page=2&per_page=2' },
+          'first'         => { 'href' => "/v3/apps?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
+          'last'          => { 'href' => "/v3/apps?order_by=#{order_by}&order_direction=#{order_direction}&page=2&per_page=2" },
+          'next'          => { 'href' => "/v3/apps?order_by=#{order_by}&order_direction=#{order_direction}&page=2&per_page=2" },
           'previous'      => nil,
         },
         'resources'  => [
@@ -98,9 +98,9 @@ resource 'Apps (Experimental)', type: :api do
         user.save
         expected_pagination = {
           'total_results' => 3,
-          'first'         => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&page=1&per_page=2" },
-          'last'          => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&page=2&per_page=2" },
-          'next'          => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&page=2&per_page=2" },
+          'first'         => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
+          'last'          => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&order_by=#{order_by}&order_direction=#{order_direction}&page=2&per_page=2" },
+          'next'          => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&order_by=#{order_by}&order_direction=#{order_direction}&page=2&per_page=2" },
           'previous'      => nil,
         }
 
