@@ -48,11 +48,11 @@ end
       Rake::Task["db:migrate"].invoke
     end
 
-    task :rollback do
+    task :rollback, [:number_to_rollback] do |_, args|
       require_relative "../../spec/support/bootstrap/db_config"
 
       config[:db][:database] = DbConfig.connection_string
-      Rake::Task["db:rollback"].invoke
+      Rake::Task["db:rollback"].invoke(args[:number_to_rollback])
     end
   end
 
