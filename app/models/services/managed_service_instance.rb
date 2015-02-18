@@ -251,5 +251,21 @@ module VCAP::CloudController
         end
       end
     end
+
+    def update_from_broker_response(attributes_to_update)
+      return unless attributes_to_update
+      attributes_to_update = attributes_to_update.clone
+      ManagedServiceInstance.db.transaction do
+        lock!
+
+        last_operation_attributes = attributes_to_update.delete(:last_operation)
+
+        update_from_hash(attributes_to_update)
+
+        if last_operation_attributes
+          self.service_instance_operation.update_from_hash(last_operation_attributes)
+        end
+      end
+    end
   end
 end

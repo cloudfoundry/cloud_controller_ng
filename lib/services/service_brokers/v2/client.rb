@@ -129,7 +129,14 @@ module VCAP::Services::ServiceBrokers::V2
         @state_poller.poll_service_instance_state(@attrs, instance)
       end
 
-      parsed_response
+      parsed_response ||= {}
+      last_operation_hash = parsed_response['last_operation'] || {}
+      {
+        last_operation: {
+          state:        last_operation_hash['state'],
+          description:  last_operation_hash['description'],
+        }
+      }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end

@@ -926,18 +926,20 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the broker returns 200 and state `succeded`' do
+          context 'when the broker returns 200 and state `succeeded`' do
             let(:status) { 200 }
             let(:body) do
               {
-                state: 'succeded',
+                last_operation: {
+                  state: 'succeeded',
+                }
               }.to_json
             end
 
             it 'indicates the service instance is being deleted' do
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
-              expect(last_response).to have_status_code(200)
+              expect(last_response).to have_status_code(204)
 
               expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
             end
@@ -1030,10 +1032,10 @@ module VCAP::CloudController
           end
         end
 
-        context 'with ?async=true' do
+        context 'with ?async=true & accepts_incomplete=false' do
           it 'returns a job id' do
             delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
-            expect(last_response.status).to eq 202
+            expect(last_response).to have_status_code 202
             expect(decoded_response['entity']['guid']).to be
             expect(decoded_response['entity']['status']).to eq 'queued'
 
@@ -1041,6 +1043,23 @@ module VCAP::CloudController
             expect(successes).to eq 1
             expect(failures).to eq 0
             expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+          end
+
+          context 'when the service broker returns 500' do
+            let(:status) { 500 }
+
+            it 'does not delete the service instance, but indicates the last operation state as failed' do
+              service_instance_guid = service_instance.guid
+              delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
+
+              successes, failures = Delayed::Worker.new.work_off
+              expect(successes + failures).to eq 1
+
+              service_instance = ServiceInstance.find(guid: service_instance_guid)
+              expect(service_instance).to be
+              expect(service_instance.last_operation.type).to eq 'delete'
+              expect(service_instance.last_operation.state).to eq 'failed'
+            end
           end
         end
 

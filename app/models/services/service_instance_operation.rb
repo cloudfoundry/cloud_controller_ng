@@ -3,7 +3,7 @@ module VCAP::CloudController
     plugin :serialization
 
     export_attributes :type, :state, :description, :updated_at
-    import_attributes :type, :state, :description
+    import_attributes :state, :description
 
     serialize_attributes :json, :proposed_changes
 
