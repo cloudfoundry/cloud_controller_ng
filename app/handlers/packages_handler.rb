@@ -14,20 +14,20 @@ module VCAP::CloudController
   end
 
   class PackageCreateMessage
-    attr_reader :space_guid, :type, :url
+    attr_reader :app_guid, :type, :url
     attr_accessor :error
-    def self.create_from_http_request(space_guid, body)
+    def self.create_from_http_request(app_guid, body)
       opts = body && MultiJson.load(body)
       raise MultiJson::ParseError.new('invalid request body') unless opts.is_a?(Hash)
-      PackageCreateMessage.new(space_guid, opts)
+      PackageCreateMessage.new(app_guid, opts)
     rescue MultiJson::ParseError => e
-      message = PackageCreateMessage.new(space_guid, {})
+      message = PackageCreateMessage.new(app_guid, {})
       message.error = e.message
       message
     end
 
-    def initialize(space_guid, opts)
-      @space_guid = space_guid
+    def initialize(app_guid, opts)
+      @app_guid = app_guid
       @type     = opts['type']
       @url      = opts['url']
     end
@@ -64,6 +64,7 @@ module VCAP::CloudController
     class Unauthorized < StandardError; end
     class InvalidPackageType < StandardError; end
     class InvalidPackage < StandardError; end
+    class AppNotFound < StandardError; end
     class SpaceNotFound < StandardError; end
     class PackageNotFound < StandardError; end
     class BitsAlreadyUploaded < StandardError; end
@@ -87,13 +88,15 @@ module VCAP::CloudController
     end
 
     def create(message, access_context)
-      package            = PackageModel.new
-      package.space_guid = message.space_guid
-      package.type       = message.type
-      package.url        = message.url
-      package.state      = message.type == 'bits' ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
+      package          = PackageModel.new
+      package.app_guid = message.app_guid
+      package.type     = message.type
+      package.url      = message.url
+      package.state    = message.type == 'bits' ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
 
-      space = Space.find(guid: package.space_guid)
+      app_model = AppModel.find(guid: package.app_guid)
+      raise AppNotFound if app_model.nil?
+      space = Space.find(guid: app_model.space_guid)
       raise SpaceNotFound if space.nil?
 
       raise Unauthorized if access_context.cannot?(:create, package, space)
@@ -111,7 +114,9 @@ module VCAP::CloudController
       raise InvalidPackageType.new('Package type must be bits.') if package.type != 'bits'
       raise BitsAlreadyUploaded.new('Bits may be uploaded only once. Create a new package to upload different bits.') if package.state != PackageModel::CREATED_STATE
 
-      space = Space.find(guid: package.space_guid)
+      app_model = AppModel.find(guid: package.app_guid)
+      raise AppNotFound if app_model.nil?
+      space = Space.find(guid: app_model.space_guid)
       raise SpaceNotFound if space.nil?
 
       raise Unauthorized if access_context.cannot?(:create, package, space)
@@ -149,7 +154,8 @@ module VCAP::CloudController
     private
 
     def inner_delete(package, access_context)
-      space = Space.find(guid: package.space_guid)
+      app_model = AppModel.find(guid: package.app_guid)
+      space = Space.find(guid: app_model.space_guid)
 
       package.db.transaction do
         package.lock!

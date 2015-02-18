@@ -39,8 +39,6 @@ module VCAP::CloudController
       [HTTP::CREATED, package_json]
     rescue PackagesHandler::InvalidPackageType => e
       invalid_request!(e.message)
-    rescue PackagesHandler::SpaceNotFound
-      space_not_found!
     rescue PackagesHandler::PackageNotFound
       package_not_found!
     rescue PackagesHandler::Unauthorized
@@ -86,8 +84,6 @@ module VCAP::CloudController
       buildpack_not_found!
     rescue DropletsHandler::PackageNotFound
       package_not_found!
-    rescue DropletsHandler::SpaceNotFound
-      space_not_found!
     rescue DropletsHandler::Unauthorized
       unauthorized!
     rescue DropletsHandler::InvalidRequest => e
@@ -98,10 +94,6 @@ module VCAP::CloudController
 
     def package_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found')
-    end
-
-    def space_not_found!
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
     end
 
     def buildpack_not_found!

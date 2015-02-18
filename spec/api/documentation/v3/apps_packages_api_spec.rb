@@ -21,7 +21,7 @@ resource 'Apps (Experimental)', type: :api do
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
 
     let(:space) { VCAP::CloudController::Space.make }
-    let!(:package) { VCAP::CloudController::PackageModel.make(space_guid: space.guid) }
+    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
 
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { app_model.guid }
@@ -29,7 +29,6 @@ resource 'Apps (Experimental)', type: :api do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      app_model.add_package_by_guid(package.guid)
     end
 
     example 'List associated packages' do
@@ -54,7 +53,6 @@ resource 'Apps (Experimental)', type: :api do
               'self'   => { 'href' => "/v3/packages/#{package.guid}" },
               'upload' => { 'href' => "/v3/packages/#{package.guid}/upload" },
               'app'    => { 'href' => "/v3/apps/#{guid}" },
-              'space'  => { 'href' => "/v2/spaces/#{space.guid}" },
             }
           }
         ]

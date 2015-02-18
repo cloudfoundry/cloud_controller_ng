@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:admin) { false }
     let(:user) { User.make }
     let(:roles) { double(:roles, admin?: admin) }
-    let(:package) { PackageModel.make(space_guid: space.guid) }
+    let(:app_model) { AppModel.make(space_guid: space.guid) }
     let(:droplet) { DropletModel.make }
     let(:space) { Space.make }
     let(:access_context) { double(:access_context, roles: roles, user: user) }
@@ -107,27 +107,27 @@ module VCAP::CloudController
           let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
           it 'allows the user to access the droplet' do
-            allow(Space).to receive(:user_visible).and_return(Space.where(guid: package.space_guid))
+            allow(Space).to receive(:user_visible).and_return(Space.where(guid: app_model.space_guid))
             access_control = DropletModelAccess.new(access_context)
-            expect(access_control.read?(droplet, package)).to be_truthy
+            expect(access_control.read?(droplet, app_model)).to be_truthy
           end
         end
 
         context 'when the user does not have cloud_controller.read scope' do
           it 'does not allow the user to access the droplet' do
-            allow(Space).to receive(:user_visible).and_return(Space.where(guid: package.space_guid))
+            allow(Space).to receive(:user_visible).and_return(Space.where(guid: app_model.space_guid))
             access_control = DropletModelAccess.new(access_context)
-            expect(access_control.read?(droplet, package)).to be_falsey
+            expect(access_control.read?(droplet, app_model)).to be_falsey
           end
         end
 
-        context 'when the user cannot view the associated packages space' do
+        context 'when the user cannot view the associated apps space' do
           let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
           it 'does not allow the user to access the droplet' do
             allow(Space).to receive(:user_visible).and_return(Space.where(guid: nil))
             access_control = DropletModelAccess.new(access_context)
-            expect(access_control.read?(droplet, package)).to be_falsey
+            expect(access_control.read?(droplet, app_model)).to be_falsey
           end
         end
       end

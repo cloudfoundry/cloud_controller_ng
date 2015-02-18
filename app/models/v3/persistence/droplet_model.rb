@@ -13,9 +13,9 @@ module VCAP::CloudController
 
     def self.user_visible(user)
       dataset.
-        join(:packages, packages__guid: :v3_droplets__package_guid).
-        where(PackageModel.user_visibility_filter(user)).
-        select_all(:v3_droplets)
+        join(AppModel.table_name, :"#{AppModel.table_name}__guid" => :"#{DropletModel.table_name}__app_guid").
+        where(AppModel.user_visibility_filter(user)).
+        select_all(DropletModel.table_name)
     end
 
     def blobstore_key

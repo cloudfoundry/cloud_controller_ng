@@ -5,8 +5,9 @@ module VCAP::CloudController
   describe PackageDeleteFetcher do
     describe '#fetch' do
       let(:space) { Space.make }
-      let!(:package) { PackageModel.make(space_guid: space.guid) }
-      let!(:other_package) { PackageModel.make(space_guid: space.guid) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let!(:package) { PackageModel.make(app_guid: app_model.guid) }
+      let!(:other_package) { PackageModel.make(app_guid: app_model.guid) }
       let(:user) { User.make(admin: admin) }
       let(:admin) { false }
 

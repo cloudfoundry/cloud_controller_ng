@@ -92,7 +92,7 @@ module VCAP::CloudController
   class DropletsHandler
     class Unauthorized < StandardError; end
     class PackageNotFound < StandardError; end
-    class SpaceNotFound < StandardError; end
+    class AppNotFound < StandardError; end
     class BuildpackNotFound < StandardError; end
     class InvalidRequest < StandardError; end
 
@@ -108,8 +108,9 @@ module VCAP::CloudController
       raise InvalidRequest.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
       raise InvalidRequest.new('Cannot stage package whose type is not bits.') if package.type != PackageModel::BITS_TYPE
 
-      space = Space.find(guid: package.space_guid)
-      raise SpaceNotFound if space.nil?
+      app_model = AppModel.find(guid: package.app_guid)
+      raise AppNotFound if app_model.nil?
+      space = Space.find(guid: app_model.space_guid)
 
       droplet = DropletModel.new(
         app_guid: package.app_guid,
@@ -136,8 +137,8 @@ module VCAP::CloudController
     def show(guid, access_context)
       droplet = DropletModel.find(guid: guid)
       return nil if droplet.nil?
-      package = PackageModel.find(guid: droplet.package_guid)
-      raise Unauthorized if access_context.cannot?(:read, droplet, package)
+      app_model = AppModel.find(guid: droplet.app_guid)
+      raise Unauthorized if access_context.cannot?(:read, droplet, app_model)
       droplet
     end
 
@@ -170,8 +171,8 @@ module VCAP::CloudController
     private
 
     def inner_delete(droplet, access_context)
-      package = PackageModel.find(guid: droplet.package_guid)
-      space = Space.find(guid: package.space_guid)
+      app_model = AppModel.find(guid: droplet.app_guid)
+      space = Space.find(guid: app_model.space_guid)
 
       droplet.db.transaction do
         droplet.lock!

@@ -19,7 +19,8 @@ module VCAP::CloudController
 
     describe '#read?' do
       let(:space) { Space.make }
-      let(:package) { PackageModel.new(space_guid: space.guid) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let(:package) { PackageModel.make(app_guid: app_model.guid) }
 
       context 'admin user' do
         let(:admin) { true }
@@ -63,7 +64,8 @@ module VCAP::CloudController
 
     describe '#create?, #delete?, #upload?' do
       let(:space) { Space.make }
-      let(:package) { PackageModel.new(space_guid: space.guid) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let(:package) { PackageModel.make(app_guid: app_model.guid) }
 
       context 'admin user' do
         let(:admin) { true }
@@ -141,7 +143,8 @@ module VCAP::CloudController
 
     describe '#upload? when the app_bits_upload feature flag is disabled' do
       let(:space) { Space.make }
-      let(:package) { PackageModel.new(space_guid: space.guid) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let(:package) { PackageModel.make(app_guid: app_model.guid) }
 
       before do
         FeatureFlag.make(name: 'app_bits_upload', enabled: false)

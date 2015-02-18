@@ -21,13 +21,14 @@ resource 'Droplets (Experimental)', type: :api do
     let(:space_guid) { space.guid }
     let(:guid) { droplet_model.guid }
 
-    let(:package_model) do
-      VCAP::CloudController::PackageModel.make(space_guid: space_guid)
-    end
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
 
     let(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
-        package_guid: package_model.guid, failure_reason: 'example failure reason',
+        app_guid: app_model.guid,
+        package_guid: package_model.guid,
+        failure_reason: 'example failure reason',
         detected_start_command: 'run -c all_the_things')
     end
 
@@ -94,13 +95,24 @@ resource 'Droplets (Experimental)', type: :api do
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
     let(:space) { VCAP::CloudController::Space.make }
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:package) do
-      VCAP::CloudController::PackageModel.make(space_guid: space.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+      VCAP::CloudController::PackageModel.make(
+        app_guid: app_model.guid,
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
+      )
     end
 
-    let!(:droplet1) { VCAP::CloudController::DropletModel.make(package_guid: package.guid, buildpack_guid: buildpack.guid) }
+    let!(:droplet1) do
+      VCAP::CloudController::DropletModel.make(
+        app_guid: app_model.guid,
+        package_guid: package.guid,
+        buildpack_guid: buildpack.guid
+      )
+    end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
+        app_guid: app_model.guid,
         package_guid: package.guid,
         droplet_hash: 'my-hash',
         buildpack_git_url: 'https://github.com/cloudfoundry/my-buildpack.git',

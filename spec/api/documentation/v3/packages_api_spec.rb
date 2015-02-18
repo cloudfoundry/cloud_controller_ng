@@ -30,15 +30,16 @@ resource 'Packages (Experimental)', type: :api do
     let(:type1) { 'bits' }
     let(:type2) { 'docker' }
     let(:type3) { 'docker' }
-    let!(:package1) { VCAP::CloudController::PackageModel.make(type: type1, space_guid: space.guid) }
+    let!(:package1) { VCAP::CloudController::PackageModel.make(type: type1, app_guid: app_model.guid) }
     let!(:package2) do
-      VCAP::CloudController::PackageModel.make(type: type2, space_guid: space.guid,
+      VCAP::CloudController::PackageModel.make(type: type2, app_guid: app_model.guid,
                                                state: VCAP::CloudController::PackageModel::READY_STATE,
                                                url: 'http://docker-repo/my-image')
     end
-    let!(:package3) { VCAP::CloudController::PackageModel.make(type: type3, space_guid: space.guid) }
-    let!(:package4) { VCAP::CloudController::PackageModel.make(space_guid: VCAP::CloudController::Space.make.guid) }
+    let!(:package3) { VCAP::CloudController::PackageModel.make(type: type3, app_guid: app_model.guid) }
+    let!(:package4) { VCAP::CloudController::PackageModel.make(app_guid: VCAP::CloudController::AppModel.make.guid) }
     let(:space) { VCAP::CloudController::Space.make }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:page) { 1 }
     let(:per_page) { 2 }
 
@@ -72,7 +73,6 @@ resource 'Packages (Experimental)', type: :api do
                 'self'   => { 'href' => "/v3/packages/#{package1.guid}" },
                 'upload' => { 'href' => "/v3/packages/#{package1.guid}/upload" },
                 'app'    => { 'href' => "/v3/apps/#{package1.app_guid}" },
-                'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
               }
             },
             {
@@ -86,7 +86,6 @@ resource 'Packages (Experimental)', type: :api do
               '_links'     => {
                 'self'  => { 'href' => "/v3/packages/#{package2.guid}" },
                 'app'   => { 'href' => "/v3/apps/#{package2.app_guid}" },
-                'space' => { 'href' => "/v2/spaces/#{space_guid}" },
               }
             }
           ]
@@ -102,8 +101,9 @@ resource 'Packages (Experimental)', type: :api do
 
   get '/v3/packages/:guid' do
     let(:space) { VCAP::CloudController::Space.make }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(space_guid: space_guid)
+      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
     end
 
     let(:guid) { package_model.guid }
@@ -126,8 +126,7 @@ resource 'Packages (Experimental)', type: :api do
         '_links'     => {
           'self'   => { 'href' => "/v3/packages/#{guid}" },
           'upload' => { 'href' => "/v3/packages/#{guid}/upload" },
-          'app'    => { 'href' => "/v3/apps/#{package_model.app_guid}" },
-          'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
+          'app'    => { 'href' => "/v3/apps/#{app_model.guid}" },
         }
       }
 
@@ -181,7 +180,6 @@ resource 'Packages (Experimental)', type: :api do
         '_links'     => {
           'self'  => { 'href' => "/v3/packages/#{package.guid}" },
           'app'   => { 'href' => "/v3/apps/#{guid}" },
-          'space' => { 'href' => "/v2/spaces/#{space_guid}" },
         }
       }
 
@@ -194,10 +192,10 @@ resource 'Packages (Experimental)', type: :api do
   post '/v3/packages/:guid/upload' do
     let(:type) { 'bits' }
     let!(:package_model) do
-      VCAP::CloudController::PackageModel.make(space_guid: space_guid, type: type)
+      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: type)
     end
     let(:space) { VCAP::CloudController::Space.make }
-    let(:space_guid) { space.guid }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { package_model.guid }
 
     before do
@@ -250,8 +248,7 @@ resource 'Packages (Experimental)', type: :api do
         '_links'     => {
           'self'   => { 'href' => "/v3/packages/#{package_model.guid}" },
           'upload' => { 'href' => "/v3/packages/#{package_model.guid}/upload" },
-          'app'    => { 'href' => "/v3/apps/#{package_model.app_guid}" },
-          'space'  => { 'href' => "/v2/spaces/#{space_guid}" },
+          'app'    => { 'href' => "/v3/apps/#{app_model.guid}" },
         }
       }
 
@@ -263,9 +260,9 @@ resource 'Packages (Experimental)', type: :api do
 
   delete '/v3/packages/:guid' do
     let(:space) { VCAP::CloudController::Space.make }
-    let(:space_guid) { space.guid }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let!(:package_model) do
-      VCAP::CloudController::PackageModel.make(space_guid: space_guid)
+      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
     end
 
     let(:guid) { package_model.guid }
@@ -293,12 +290,11 @@ resource 'Packages (Experimental)', type: :api do
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:app_guid) { app_model.guid }
     let!(:package_model) do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_guid,
-        space_guid: space_guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
         type: VCAP::CloudController::PackageModel::BITS_TYPE
       )

@@ -229,7 +229,7 @@ resource 'Apps (Experimental)', type: :api do
 
   delete '/v3/apps/:guid' do
     let!(:app_model) { VCAP::CloudController::AppModel.make }
-    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: guid, space_guid: space.guid) }
+    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: guid) }
     let!(:droplet) { VCAP::CloudController::DropletModel.make(package_guid: package.guid, app_guid: guid) }
     let!(:process) { VCAP::CloudController::AppFactory.make(app_guid: guid, space_guid: space_guid) }
     let(:guid) { app_model.guid }

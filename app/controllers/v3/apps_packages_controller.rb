@@ -31,12 +31,11 @@ module VCAP::CloudController
       app = @app_handler.show(app_guid, @access_context)
       app_not_found! if app.nil?
 
-      message = PackageCreateMessage.create_from_http_request(app.space_guid, body)
+      message = PackageCreateMessage.create_from_http_request(app.guid, body)
       valid, errors = message.validate
       unprocessable!(errors.join(', ')) if !valid
 
       package = @package_handler.create(message, @access_context)
-      package = @app_handler.add_package(app, package, @access_context)
 
       [HTTP::CREATED, @package_presenter.present_json(package)]
     rescue PackagesHandler::Unauthorized

@@ -53,21 +53,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the space does not exist' do
-        before do
-          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::SpaceNotFound)
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          expect {
-            packages_controller.upload(package.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
-
       context 'when the package does not exist' do
         before do
           allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::PackageNotFound)
@@ -181,7 +166,8 @@ module VCAP::CloudController
     describe '#delete' do
       let(:space) { Space.make }
       let(:user) { User.make }
-      let(:package) { PackageModel.make(space_guid: space.guid) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let(:package) { PackageModel.make(app_guid: app_model.guid) }
 
       before do
         # stubbing the BaseController methods for now, this should probably be
@@ -320,21 +306,6 @@ module VCAP::CloudController
                 expect(error.response_code).to eq 422
               end
             end
-          end
-        end
-      end
-
-      context 'when the space does not exist' do
-        before do
-          allow(droplets_handler).to receive(:create).and_raise(DropletsHandler::SpaceNotFound)
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          expect {
-            packages_controller.stage(package.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
           end
         end
       end

@@ -174,17 +174,6 @@ module VCAP::CloudController
       end
     end
 
-    def add_package(app, package, access_context)
-      raise Unauthorized if access_context.cannot?(:update, app)
-      raise IncorrectPackageSpace if app.space_guid != package.space_guid
-
-      app.db.transaction do
-        app.lock!
-        app.add_package_by_guid(package.guid)
-      end
-      package.reload
-    end
-
     def update_web_process_name(process, name, access_context)
       opts = { 'name' => name }
       msg = ProcessUpdateMessage.new(process.guid, opts)

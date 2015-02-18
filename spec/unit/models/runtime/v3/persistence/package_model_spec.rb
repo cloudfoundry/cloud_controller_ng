@@ -7,7 +7,8 @@ module VCAP::CloudController
   end
 
   describe '.user_visible' do
-    let(:package_model) { PackageModel.make(space_guid: space.guid) }
+    let(:app_model) { AppModel.make(space_guid: space.guid) }
+    let(:package_model) { PackageModel.make(app_guid: app_model.guid) }
     let(:space) { Space.make }
 
     it 'shows the developer packages' do

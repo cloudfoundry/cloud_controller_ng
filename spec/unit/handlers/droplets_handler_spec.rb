@@ -132,9 +132,9 @@ module VCAP::CloudController
 
     describe '#list' do
       let(:space) { Space.make }
-      let(:package) { PackageModel.make(space_guid: space.guid) }
-      let!(:droplet1) { DropletModel.make(package_guid: package.guid) }
-      let!(:droplet2) { DropletModel.make(package_guid: package.guid) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let!(:droplet1) { DropletModel.make(app_guid: app_model.guid) }
+      let!(:droplet2) { DropletModel.make(app_guid: app_model.guid) }
       let(:user) { User.make }
       let(:page) { 1 }
       let(:per_page) { 1 }
@@ -193,10 +193,10 @@ module VCAP::CloudController
     end
 
     describe '#create' do
-      let(:app_model) { AppModel.make }
-      let(:app_guid) { app_model.guid }
       let(:space) { Space.make }
-      let(:package) { PackageModel.make(app_guid: app_guid, space_guid: space.guid, state: PackageModel::READY_STATE, type: PackageModel::BITS_TYPE) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let(:app_guid) { app_model.guid }
+      let(:package) { PackageModel.make(app_guid: app_guid, state: PackageModel::READY_STATE, type: PackageModel::BITS_TYPE) }
       let(:package_guid) { package.guid }
       let(:stack) { 'trusty32' }
       let(:memory_limit) { 12340 }
@@ -301,10 +301,10 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it 'fails with SpaceNotFound' do
+        it 'fails with AppNotFound' do
           expect {
             droplets_handler.create(staging_message, access_context)
-          }.to raise_error(DropletsHandler::SpaceNotFound)
+          }.to raise_error(DropletsHandler::AppNotFound)
         end
       end
 
@@ -366,8 +366,8 @@ module VCAP::CloudController
     describe '#delete' do
       context 'when the droplet exists' do
         let(:space) { Space.make }
-        let(:package) { PackageModel.make(space_guid: space.guid) }
-        let!(:droplet) { DropletModel.make(package_guid: package.guid, droplet_hash: 'jim') }
+        let(:app_model) { AppModel.make(space_guid: space.guid) }
+        let!(:droplet) { DropletModel.make(app_guid: app_model.guid, droplet_hash: 'jim') }
         let(:droplet_guid) { droplet.guid }
 
         context 'and the user has permissions to delete the droplet' do

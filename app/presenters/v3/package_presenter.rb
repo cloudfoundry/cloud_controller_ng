@@ -51,9 +51,6 @@ module VCAP::CloudController
         app:  {
           href: "/v3/apps/#{package.app_guid}",
         },
-        space:  {
-          href: "/v2/spaces/#{package.space_guid}",
-        }
       }
 
       links.delete_if { |_, v| v.nil? }
