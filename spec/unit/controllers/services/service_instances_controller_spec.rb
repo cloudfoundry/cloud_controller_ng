@@ -561,7 +561,7 @@ module VCAP::CloudController
     end
 
     describe 'PUT', '/v2/service_instances/:service_instance_guid' do
-      let(:service_broker_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{service_instance.guid}/" }
+      let(:service_broker_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{service_instance.guid}" }
       let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
       let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
       let(:old_service_plan)  { ServicePlan.make(:v2, service: service) }
