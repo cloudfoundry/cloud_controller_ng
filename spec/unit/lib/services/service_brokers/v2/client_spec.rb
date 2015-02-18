@@ -379,6 +379,9 @@ module VCAP::Services::ServiceBrokers::V2
       let(:message) { 'OK' }
 
       before do
+        instance.save_with_operation(
+          last_operation: { type: 'create' }
+        )
         allow(http_client).to receive(:get).and_return(response)
       end
 
@@ -394,6 +397,40 @@ module VCAP::Services::ServiceBrokers::V2
         expected_attrs = response_data.symbolize_keys
         expected_attrs[:last_operation] = response_data['last_operation'].symbolize_keys
         expect(attrs).to eq(expected_attrs)
+      end
+
+      context 'when the broker returns 410' do
+        let(:code) { '410' }
+        let(:message) { 'GONE' }
+        let(:response_data) do
+          {}
+        end
+
+        context 'and the operation type is delete' do
+          before do
+            instance.save_with_operation(
+              last_operation: {
+                type: 'delete'
+              }
+            )
+          end
+
+          it 'returns attributes to indicate the service instance was deleted' do
+            attrs = client.fetch_service_instance_state(instance)
+            expect(attrs[:last_operation]).to include({
+              state: 'succeeded',
+              description: ''
+            })
+          end
+        end
+
+        context 'and the operation type is not delete' do
+          it 'raises Error::ServiceBrokerBadResponse' do
+            expect {
+              client.fetch_service_instance_state(instance)
+            }.to raise_error(Errors::ServiceBrokerBadResponse)
+          end
+        end
       end
     end
 

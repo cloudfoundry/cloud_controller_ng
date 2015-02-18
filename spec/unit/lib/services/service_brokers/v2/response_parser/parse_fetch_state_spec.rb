@@ -5,7 +5,6 @@ module VCAP::Services
     module V2
       describe ResponseParser do
         let(:url) { 'my.service-broker.com' }
-        subject(:parsed_response) { ResponseParser.new(url).parse(method, path, response) }
 
         let(:logger) { instance_double(Steno::Logger, warn: nil) }
         before do
@@ -13,10 +12,11 @@ module VCAP::Services
         end
 
         describe 'parsing the state fetch response' do
-          subject(:parsed_response) { ResponseParser.new(url).parse_fetch_state(method, path, response) }
+          subject(:parsed_response) { ResponseParser.new(url).parse_fetch_state(method, path, response, operation_type) }
           let(:response) { instance_double(VCAP::Services::ServiceBrokers::V2::HttpResponse) }
           let(:path) { '/v2/service_instances' }
           let(:body) { '{}' }
+          let(:operation_type) { 'create' }
 
           before do
             allow(response).to receive(:code).and_return(code)
@@ -173,14 +173,33 @@ module VCAP::Services
             let(:code) { 410 }
             let(:method) { :get }
 
-            it 'raises a ServiceBrokerBadResponse error' do
-              expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+            context 'and the operation type is not deleted' do
+              it 'raises ServiceBrokerBadResponse error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+              end
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' } # AppDirect likes to return this
+
+                it 'raises ServiceBrokerBadResponse error' do
+                  expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+                end
+              end
             end
 
-            context 'the response is not a valid json object' do
-              let(:body) { '""' } # AppDirect likes to return this
-              it 'raises a ServiceBrokerBadResponse error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse)
+            context 'and the operation type is delete' do
+              let(:operation_type) { 'delete' }
+
+              it 'returns empty hash' do
+                expect(parsed_response).to eq({})
+              end
+
+              context 'the response is not a valid json object' do
+                let(:body) { '""' } # AppDirect likes to return this
+
+                it 'returns empty hash' do
+                  expect(parsed_response).to eq({})
+                end
               end
             end
           end
