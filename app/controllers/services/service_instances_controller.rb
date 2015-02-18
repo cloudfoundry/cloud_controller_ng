@@ -224,6 +224,11 @@ module VCAP::CloudController
 
       service_instance.update_from_broker_response(attributes_to_update)
       @services_event_repository.record_service_instance_event(:delete, service_instance, request_attrs)
+      if service_instance.last_operation.state == 'succeeded'
+        service_instance.last_operation.try(:destroy)
+        # do not destroy, we already deprovisioned from the broker
+        service_instance.delete
+      end
 
       attributes_to_update ||= {}
       last_operation_hash = attributes_to_update[:last_operation] || {}

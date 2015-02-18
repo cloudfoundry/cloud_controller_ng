@@ -15,7 +15,12 @@ module VCAP::CloudController
 
           return if service_instance.nil?
           begin
-            service_instance.destroy
+            ManagedServiceInstance.db.transaction do
+              if service_instance.managed_instance?
+                service_instance.last_operation.try(:destroy)
+              end
+              service_instance.destroy
+            end
           rescue
             service_instance.save_with_operation(
               last_operation: {

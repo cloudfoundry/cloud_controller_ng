@@ -862,6 +862,8 @@ module VCAP::CloudController
         it 'creates a service audit event for deleting the service instance' do
           delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(admin_user, email: 'admin@example.com')
 
+          expect(last_response).to have_status_code 204
+
           event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
           expect(event.type).to eq('audit.service_instance.delete')
           expect(event.actor_type).to eq('user')
@@ -936,10 +938,12 @@ module VCAP::CloudController
               }.to_json
             end
 
-            it 'indicates the service instance is being deleted' do
+            it 'remove the service instance' do
+              service_instance_guid = service_instance.guid
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
               expect(last_response).to have_status_code(204)
+              expect(ManagedServiceInstance.find(guid: service_instance_guid)).to be_nil
 
               expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
             end
