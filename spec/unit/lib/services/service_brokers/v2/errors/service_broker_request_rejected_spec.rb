@@ -50,7 +50,7 @@ module VCAP::Services
               exception.set_backtrace(['/foo:1', '/bar:2'])
 
               expect(exception.to_h).to eq({
-                'description' => 'The service broker API returned an error from http://www.example.com/: 400 Generic bad request error',
+                'description' => 'The service broker returned an error for the request to http://www.example.com/: 400 Generic bad request error',
                 'backtrace' => ['/foo:1', '/bar:2'],
                 'http' => {
                   'status' => 400,

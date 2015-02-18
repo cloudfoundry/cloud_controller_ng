@@ -5,7 +5,7 @@ module VCAP::Services
         class ServiceBrokerApiAuthenticationFailed < HttpResponseError
           def initialize(uri, method, response)
             super(
-              "Authentication failed for the service broker API. Double-check that the username and password are correct: #{uri}",
+              "Authentication with the service broker failed. Double-check that the username and password are correct: #{uri}",
               uri,
               method,
               response

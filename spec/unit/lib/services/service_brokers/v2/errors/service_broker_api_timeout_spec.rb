@@ -11,7 +11,7 @@ module VCAP::Services
 
           it 'initializes the base class correctly' do
             exception = ServiceBrokerApiTimeout.new(uri, method, error)
-            expect(exception.message).to eq("The service broker API timed out: #{uri}")
+            expect(exception.message).to eq("The request to the service broker timed out: #{uri}")
             expect(exception.uri).to eq(uri)
             expect(exception.method).to eq(method)
             expect(exception.source).to be(error)

@@ -17,7 +17,7 @@ module VCAP::Services
             exception.set_backtrace(['/generatedexception:3', '/backtrace:4'])
 
             expect(exception.to_h).to eq({
-              'description' => 'The service broker API could not be reached: http://www.example.com/',
+              'description' => "The service broker could not be reached: #{uri}",
               'backtrace' => ['/generatedexception:3', '/backtrace:4'],
               'http' => {
                 'uri' => uri,

@@ -12,7 +12,7 @@ module VCAP::Services
             if hash.is_a?(Hash) && hash.key?('description')
               message = "Service broker error: #{hash['description']}"
             else
-              message = "The service broker API returned an error from #{uri}: #{response.code} #{response.message}"
+              message = "The service broker returned an error for the request to #{uri}: #{response.code} #{response.message}"
             end
 
             super(message, uri, method, response)

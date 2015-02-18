@@ -7,7 +7,7 @@ module VCAP::Services
         class ServiceBrokerApiUnreachable < HttpRequestError
           def initialize(uri, method, source)
             super(
-              "The service broker API could not be reached: #{uri}",
+              "The service broker could not be reached: #{uri}",
               uri,
               method,
               source

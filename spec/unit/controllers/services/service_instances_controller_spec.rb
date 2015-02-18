@@ -990,7 +990,7 @@ module VCAP::CloudController
             it 'it fails the initial delete with description included in the error message' do
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
-              response_description = "The service broker API timed out: #{service.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}"
+              response_description = "The request to the service broker timed out: #{service.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}"
               expect(decoded_response['description']).to eq(response_description)
             end
           end
