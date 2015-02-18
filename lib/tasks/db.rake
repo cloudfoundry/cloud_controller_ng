@@ -27,11 +27,12 @@ end
     DBMigrator.from_config(config, db_logger).apply_migrations
   end
 
-  desc "Rollback a single migration to the database"
-  task :rollback do
+  desc "Rollback migrations to the database (one migration by default)"
+  task :rollback, [:number_to_rollback] do |_, args|
+    number_to_rollback = (args[:number_to_rollback] || 1).to_i
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger("cc.db.migrations")
-    DBMigrator.from_config(config, db_logger).rollback(1)
+    DBMigrator.from_config(config, db_logger).rollback(number_to_rollback)
   end
 
   namespace :migrate do
