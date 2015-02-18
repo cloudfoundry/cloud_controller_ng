@@ -185,7 +185,7 @@ module VCAP::CloudController
 
       before do
         # stubbing the BaseController methods for now, this should probably be
-        # injected into the pacakges controller
+        # injected into the packages controller
         allow(packages_controller).to receive(:current_user).and_return(user)
         allow(packages_controller).to receive(:check_write_permissions!)
 

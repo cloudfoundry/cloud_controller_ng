@@ -81,9 +81,54 @@ module VCAP::CloudController
     end
 
     describe '#delete' do
+      let(:space) { Space.make }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let(:user) { User.make }
+      let(:droplet) { DropletModel.make(app_guid: app_model.guid) }
+
+      before do
+        # stubbing the BaseController methods for now, this should probably be
+        # injected into the droplets controller
+        allow(droplets_controller).to receive(:current_user).and_return(user)
+        allow(droplets_controller).to receive(:check_write_permissions!)
+
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      it 'checks for write permissions' do
+        droplets_controller.delete(droplet.guid)
+        expect(droplets_controller).to have_received(:check_write_permissions!)
+      end
+
+      context 'when the droplet exists' do
+        context 'when a user can access a droplet' do
+          it 'returns a 204 NO CONTENT' do
+            response_code, response = droplets_controller.delete(droplet.guid)
+            expect(response_code).to eq 204
+            expect(response).to be_nil
+          end
+        end
+
+        context 'when the user cannot access the droplet' do
+          before do
+            allow(droplets_controller).to receive(:current_user).and_return(User.make)
+          end
+
+          it 'returns a 404 NotFound error' do
+            expect {
+              droplets_controller.delete(droplet.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'ResourceNotFound'
+              expect(error.response_code).to eq 404
+            end
+          end
+        end
+      end
+
       context 'when the droplet does not exist' do
         before do
-          allow(droplets_handler).to receive(:delete).and_return(nil)
+          allow(droplets_handler).to receive(:delete).and_return([])
         end
 
         it 'returns a 404 Not Found' do
@@ -92,38 +137,6 @@ module VCAP::CloudController
           }.to raise_error do |error|
             expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the droplet exists' do
-        let(:droplet) { DropletModel.make }
-        let(:droplet_guid) { droplet.guid }
-
-        context 'when a user can access a droplet' do
-          before do
-            allow(droplets_handler).to receive(:delete).and_return(droplet)
-          end
-
-          it 'returns a 204 NO CONTENT' do
-            response_code, response = droplets_controller.delete(droplet_guid)
-            expect(response_code).to eq 204
-            expect(response).to eq(nil)
-          end
-        end
-
-        context 'when the user cannot access the droplet' do
-          before do
-            allow(droplets_handler).to receive(:delete).and_raise(DropletsHandler::Unauthorized)
-          end
-
-          it 'returns a 403 NotAuthorized error' do
-            expect {
-              droplets_controller.delete(droplet_guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'NotAuthorized'
-              expect(error.response_code).to eq 403
-            end
           end
         end
       end

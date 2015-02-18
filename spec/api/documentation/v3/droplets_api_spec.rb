@@ -67,12 +67,12 @@ resource 'Droplets (Experimental)', type: :api do
     let(:space_guid) { space.guid }
     let(:guid) { droplet_model.guid }
 
-    let(:package_model) do
-      VCAP::CloudController::PackageModel.make(space_guid: space_guid)
+    let(:app_model) do
+      VCAP::CloudController::AppModel.make(space_guid: space_guid)
     end
 
     let!(:droplet_model) do
-      VCAP::CloudController::DropletModel.make(package_guid: package_model.guid)
+      VCAP::CloudController::DropletModel.make(app_guid: app_model.guid)
     end
 
     before do

@@ -50,8 +50,8 @@ module VCAP::CloudController
     end
 
     get '/v3/packages/:guid', :show
-    def show(package_guid)
-      package = @packages_handler.show(package_guid, @access_context)
+    def show(guid)
+      package = @packages_handler.show(guid, @access_context)
       package_not_found! if package.nil?
 
       package_json = @package_presenter.present_json(package)
@@ -61,11 +61,11 @@ module VCAP::CloudController
     end
 
     delete '/v3/packages/:guid', :delete
-    def delete(package_guid)
+    def delete(guid)
       check_write_permissions!
 
       package_delete_fetcher = PackageDeleteFetcher.new(current_user)
-      package                = package_delete_fetcher.fetch(package_guid)
+      package                = package_delete_fetcher.fetch(guid)
       package_not_found! if package.nil?
 
       PackageDelete.new.delete(package)
