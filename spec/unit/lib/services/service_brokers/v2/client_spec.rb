@@ -418,7 +418,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       let(:service_plan_guid) { new_plan.guid }
 
-      let(:path) { "/v2/service_instances/#{instance.guid}/" }
+      let(:path) { "/v2/service_instances/#{instance.guid}" }
       let(:code) { 200 }
       let(:message) { 'OK' }
       let(:response_body) { response_data.to_json }

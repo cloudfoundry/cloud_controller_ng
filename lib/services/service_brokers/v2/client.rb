@@ -142,7 +142,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def update_service_plan(instance, plan, opts={})
-      path = "/v2/service_instances/#{instance.guid}/"
+      path = "/v2/service_instances/#{instance.guid}"
       if opts.fetch(:async, false)
         path += '?accepts_incomplete=true'
       end
