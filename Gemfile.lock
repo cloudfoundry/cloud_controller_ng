@@ -59,7 +59,7 @@ GEM
     awesome_print (1.2.0)
     backports (3.6.4)
     bcrypt (3.1.9)
-    beefcake (0.3.7)
+    beefcake (1.0.0)
     builder (3.2.2)
     cf-message-bus (0.3.3)
       eventmachine (~> 1.0.0)
@@ -180,8 +180,8 @@ GEM
     ipaddress (0.8.0)
     json (1.8.2)
     json_pure (1.8.1)
-    loggregator_emitter (3.0.0)
-      beefcake (~> 0.3.7)
+    loggregator_emitter (4.0.0)
+      beefcake (~> 1.0.0)
     machinist (1.0.6)
     membrane (1.1.0)
     method_source (0.8.2)
@@ -338,7 +338,7 @@ DEPENDENCIES
   fog
   httpclient
   i18n
-  loggregator_emitter (~> 3.0)
+  loggregator_emitter (~> 4.0)
   machinist (~> 1.0.6)
   membrane (~> 1.0)
   multi_json
