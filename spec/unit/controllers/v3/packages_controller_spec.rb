@@ -210,10 +210,6 @@ module VCAP::CloudController
       end
 
       context 'when the package does not exist' do
-        before do
-          allow(packages_handler).to receive(:delete).and_return([])
-        end
-
         it 'returns a 404 Not Found' do
           expect {
             packages_controller.delete('non-existant')

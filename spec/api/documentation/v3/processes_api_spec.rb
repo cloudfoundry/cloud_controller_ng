@@ -93,7 +93,8 @@ resource 'Processes (Experimental)', type: :api do
   end
 
   delete '/v3/processes/:guid' do
-    let!(:process) { VCAP::CloudController::AppFactory.make }
+    let!(:app_model) { VCAP::CloudController::AppModel.make }
+    let!(:process) { VCAP::CloudController::AppFactory.make(app_guid: app_model.guid, space_guid: app_model.space_guid) }
     let(:guid) { process.guid }
 
     before do

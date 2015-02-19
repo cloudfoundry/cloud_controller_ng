@@ -1,6 +1,8 @@
 require 'presenters/v3/process_presenter'
 require 'handlers/processes_handler'
 require 'cloud_controller/paging/pagination_options'
+require 'queries/process_delete_fetcher'
+require 'actions/process_delete'
 
 module VCAP::CloudController
   # TODO: would be nice not needing to use this BaseController
@@ -64,8 +66,14 @@ module VCAP::CloudController
 
     delete '/v3/processes/:guid', :delete
     def delete(guid)
-      deleted = @processes_handler.delete(@access_context, filter: { guid: guid })
-      not_found! unless deleted
+      check_write_permissions!
+
+      process_delete_fetcher = ProcessDeleteFetcher.new(current_user)
+      process                = process_delete_fetcher.fetch(guid)
+      not_found! if process.nil?
+
+      ProcessDelete.new.delete(process, current_user, current_user_email)
+
       [HTTP::NO_CONTENT]
     end
 
