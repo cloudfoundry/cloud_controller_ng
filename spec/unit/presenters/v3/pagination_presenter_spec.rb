@@ -115,6 +115,57 @@ module VCAP::CloudController
           expect(next_url).to eq("/cloudfoundry/is-great?page=2&per_page=#{per_page}")
         end
       end
+
+      context 'pagination options' do
+        let(:page) { 2 }
+        let(:total_results) { 3 }
+        let(:order_by) { 'id' }
+        let(:order_direction) { 'asc' }
+        let(:options) { { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction } }
+
+        it 'does not set order information if both order options are default' do
+          result = presenter.present_pagination_hash(paginated_result, base_url)
+
+          first_url = result[:first][:href]
+          expect(first_url).to eq("/cloudfoundry/is-great?page=1&per_page=#{per_page}")
+        end
+
+        context 'when only order_direction has been queried' do
+          let(:order_direction) { 'desc' }
+
+          it 'sets the order_direction if the query is desc' do
+            result = presenter.present_pagination_hash(paginated_result, base_url)
+
+            first_page    = result[:first][:href]
+            last_page     = result[:last][:href]
+            next_page     = result[:next][:href]
+            previous_page = result[:previous][:href]
+
+            expect(first_page).to eq("/cloudfoundry/is-great?order_direction=#{order_direction}&page=1&per_page=#{per_page}")
+            expect(last_page).to eq("/cloudfoundry/is-great?order_direction=#{order_direction}&page=3&per_page=#{per_page}")
+            expect(next_page).to eq("/cloudfoundry/is-great?order_direction=#{order_direction}&page=3&per_page=#{per_page}")
+            expect(previous_page).to eq("/cloudfoundry/is-great?order_direction=#{order_direction}&page=1&per_page=#{per_page}")
+          end
+        end
+
+        context 'when order_by has been queried, it includes order_direction' do
+          let(:order_by) { 'created_at' }
+
+          it 'sets the pagination options' do
+            result = presenter.present_pagination_hash(paginated_result, base_url)
+
+            first_page    = result[:first][:href]
+            last_page     = result[:last][:href]
+            next_page     = result[:next][:href]
+            previous_page = result[:previous][:href]
+
+            expect(first_page).to eq("/cloudfoundry/is-great?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=#{per_page}")
+            expect(last_page).to eq("/cloudfoundry/is-great?order_by=#{order_by}&order_direction=#{order_direction}&page=3&per_page=#{per_page}")
+            expect(next_page).to eq("/cloudfoundry/is-great?order_by=#{order_by}&order_direction=#{order_direction}&page=3&per_page=#{per_page}")
+            expect(previous_page).to eq("/cloudfoundry/is-great?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=#{per_page}")
+          end
+        end
+      end
     end
   end
 end

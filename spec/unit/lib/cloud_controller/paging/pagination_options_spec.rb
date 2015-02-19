@@ -6,11 +6,11 @@ module VCAP::CloudController
     describe '.from_params'
     context 'default values' do
       let(:pagination_options) { PaginationOptions.new(options) }
-      let(:options) { { page: page, per_page: per_page, sort: sort, direction: direction } }
+      let(:options) { { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction } }
       let(:page) { 2 }
       let(:per_page) { 5 }
-      let(:sort) { 'anything' }
-      let(:direction) { 'desc' }
+      let(:order_by) { 'anything' }
+      let(:order_direction) { 'desc' }
 
       context 'page' do
         context 'when page is nil' do
@@ -58,28 +58,28 @@ module VCAP::CloudController
 
       context 'sort' do
         context 'when the sort is nil' do
-          let(:sort) { nil }
+          let(:order_by) { nil }
 
           it 'defaults to id' do
-            expect(pagination_options.sort).to eq('id')
+            expect(pagination_options.order_by).to eq('id')
           end
         end
       end
 
       context 'direction' do
         context 'when the direction is nil' do
-          let(:direction) { nil }
+          let(:order_direction) { nil }
 
           it 'defaults to asc' do
-            expect(pagination_options.direction).to eq('asc')
+            expect(pagination_options.order_direction).to eq('asc')
           end
         end
 
         context 'when the direction is invalid' do
-          let(:direction) { 'foobar' }
+          let(:order_direction) { 'foobar' }
 
           it 'defaults to asc' do
-            expect(pagination_options.direction).to eq('asc')
+            expect(pagination_options.order_direction).to eq('asc')
           end
         end
       end
@@ -87,8 +87,8 @@ module VCAP::CloudController
       it 'does not add default values when valid options are specified' do
         expect(pagination_options.page).to eq(page)
         expect(pagination_options.per_page).to eq(per_page)
-        expect(pagination_options.sort).to eq(sort)
-        expect(pagination_options.direction).to eq(direction)
+        expect(pagination_options.order_by).to eq(order_by)
+        expect(pagination_options.order_direction).to eq(order_direction)
       end
     end
   end

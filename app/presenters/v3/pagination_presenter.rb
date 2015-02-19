@@ -43,16 +43,40 @@ module VCAP::CloudController
       last_page     = 1 if last_page < 1
       previous_page = page - 1
       next_page     = page + 1
+
+      order = paginated_order(paginated_result.pagination_options)
+
       serialized_facets = DataToQueryParamsSerializer.new.serialize(facets)
       serialized_facets += '&' if !serialized_facets.empty?
 
       {
         total_results: total_results,
-        first:         { href: "#{base_url}?#{serialized_facets}page=1&per_page=#{per_page}" },
-        last:          { href: "#{base_url}?#{serialized_facets}page=#{last_page}&per_page=#{per_page}" },
-        next:          next_page <= last_page ? { href: "#{base_url}?#{serialized_facets}page=#{next_page}&per_page=#{per_page}" } : nil,
-        previous:      previous_page > 0 ? { href: "#{base_url}?#{serialized_facets}page=#{previous_page}&per_page=#{per_page}" } : nil,
+        first:         { href: "#{base_url}?#{serialized_facets}#{order}page=1&per_page=#{per_page}" },
+        last:          { href: "#{base_url}?#{serialized_facets}#{order}page=#{last_page}&per_page=#{per_page}" },
+        next:          next_page <= last_page ? { href: "#{base_url}?#{serialized_facets}#{order}page=#{next_page}&per_page=#{per_page}" } : nil,
+        previous:      previous_page > 0 ? { href: "#{base_url}?#{serialized_facets}#{order}page=#{previous_page}&per_page=#{per_page}" } : nil,
       }
+    end
+
+    private
+
+    def paginated_order(pagination_options)
+      order_by        = pagination_options.order_by
+      order_direction = pagination_options.order_direction
+
+      order = ''
+
+      if order_by != 'id'
+        order += "order_by=#{order_by}&"
+      end
+
+      if order_by != 'id'
+        order += "order_direction=#{order_direction}&"
+      elsif order_direction != 'asc'
+        order += "order_direction=#{order_direction}&"
+      end
+
+      order
     end
   end
 end
