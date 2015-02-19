@@ -10,7 +10,12 @@ module VCAP::Services::ServiceBrokers
     let(:service_id) { Sham.guid }
     let(:service_name) { Sham.name }
     let(:service_description) { Sham.description }
-    let(:service_event_repository) { VCAP::CloudController::Repositories::Services::EventRepository.new(VCAP::CloudController::SecurityContext) }
+    let(:service_event_repository) do
+      VCAP::CloudController::Repositories::Services::EventRepository.new(
+        user: VCAP::CloudController::SecurityContext.current_user,
+        user_email: VCAP::CloudController::SecurityContext.current_user_email,
+      )
+    end
 
     let(:plan_id) { Sham.guid }
     let(:plan_name) { Sham.name }

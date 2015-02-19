@@ -104,6 +104,12 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_body) { response_data.to_json }
       let(:code) { '201' }
       let(:message) { 'Created' }
+      let(:options) do
+        {
+          event_repository_opts: nil,
+          request_attrs: {}
+        }
+      end
 
       before do
         allow(http_client).to receive(:put).and_return(response)
@@ -113,14 +119,14 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a put request with correct path' do
-        client.provision(instance)
+        client.provision(instance, options)
 
         expect(http_client).to have_received(:put).
           with(path, anything)
       end
 
       it 'makes a put request with correct message' do
-        client.provision(instance)
+        client.provision(instance, options)
 
         expect(http_client).to have_received(:put).
           with(anything,
@@ -132,7 +138,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'returns the attributes to update on a service instance' do
-        attributes, error = client.provision(instance)
+        attributes, error = client.provision(instance, options)
         # ensure updating attributes and saving to service instance works
         instance.save_with_operation(attributes)
 
@@ -141,21 +147,21 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'defaults the state to "succeeded"' do
-        attributes, error = client.provision(instance)
+        attributes, error = client.provision(instance, options)
 
         expect(attributes[:last_operation][:state]).to eq('succeeded')
         expect(error).to be_nil
       end
 
       it 'leaves the description blank' do
-        attributes, error = client.provision(instance)
+        attributes, error = client.provision(instance, options)
 
         expect(attributes[:last_operation][:description]).to eq('')
         expect(error).to be_nil
       end
 
       it 'DEPRECATED, maintain for database not null contraint: sets the credentials on the instance' do
-        attributes, error = client.provision(instance)
+        attributes, error = client.provision(instance, options)
 
         expect(attributes[:credentials]).to eq({})
         expect(error).to be_nil
@@ -167,7 +173,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'throws ServiceBrokerBadResponse and initiates orphan mitigation' do
           expect {
-            client.provision(instance)
+            client.provision(instance, options)
           }.to raise_error(Errors::ServiceBrokerBadResponse)
 
           expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
@@ -183,7 +189,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'return immediately with the broker response' do
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          attributes, error = client.provision(instance)
+          attributes, error = client.provision(instance, options)
 
           expect(attributes[:last_operation][:type]).to eq('create')
           expect(attributes[:last_operation][:state]).to eq('succeeded')
@@ -192,7 +198,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'does not enqueue a polling job' do
-          client.provision(instance)
+          client.provision(instance, options)
           expect(state_poller).to_not have_received(:poll_service_instance_state)
         end
       end
@@ -206,7 +212,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'return immediately with the broker response' do
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          attributes, error = client.provision(instance)
+          attributes, error = client.provision(instance, options)
 
           expect(attributes[:last_operation][:type]).to eq('create')
           expect(attributes[:last_operation][:state]).to eq('succeeded')
@@ -215,7 +221,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'does not enqueue a polling job' do
-          client.provision(instance)
+          client.provision(instance, options)
           expect(state_poller).to_not have_received(:poll_service_instance_state)
         end
       end
@@ -234,7 +240,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'return immediately with the broker response' do
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          attributes, error = client.provision(instance)
+          attributes, error = client.provision(instance, options)
 
           expect(attributes[:last_operation][:type]).to eq('create')
           expect(attributes[:last_operation][:state]).to eq('in progress')
@@ -243,8 +249,8 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'enqueues a polling job' do
-          client.provision(instance)
-          expect(state_poller).to have_received(:poll_service_instance_state).with(client_attrs, instance)
+          client.provision(instance, options)
+          expect(state_poller).to have_received(:poll_service_instance_state).with(client_attrs, instance, options[:event_repository_opts], options[:request_attrs])
         end
       end
 
@@ -259,11 +265,11 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'raises an error' do
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          expect { client.provision(instance) }.to raise_error(Errors::ServiceBrokerRequestRejected)
+          expect { client.provision(instance, options) }.to raise_error(Errors::ServiceBrokerRequestRejected)
         end
 
         it 'does not enqueue a polling job' do
-          client.provision(instance) rescue nil
+          client.provision(instance, options) rescue nil
           expect(state_poller).to_not have_received(:poll_service_instance_state)
         end
       end
@@ -284,7 +290,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.provision(instance)
+                client.provision(instance, options)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
@@ -305,7 +311,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.provision(instance)
+                client.provision(instance, options)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_provision).
@@ -318,7 +324,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.provision(instance)
+                client.provision(instance, options)
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
@@ -330,7 +336,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.provision(instance)
+                client.provision(instance, options)
               }.to raise_error(Errors::ServiceBrokerResponseMalformed)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
@@ -341,7 +347,7 @@ module VCAP::Services::ServiceBrokers::V2
 
               it 'does not initiate orphan mitigation' do
                 expect {
-                  client.provision(instance)
+                  client.provision(instance, options)
                 }.to raise_error(Errors::ServiceBrokerResponseMalformed)
 
                 expect(orphan_mitigator).not_to have_received(:cleanup_failed_provision).with(client_attrs, instance)

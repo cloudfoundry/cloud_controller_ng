@@ -115,8 +115,7 @@ resource 'Events', type: [:api, :legacy_api] do
     end
 
     let(:service_event_repository) do
-      security_context = double(:security_context, current_user: test_user, current_user_email: test_user_email)
-      VCAP::CloudController::Repositories::Services::EventRepository.new(security_context)
+      VCAP::CloudController::Repositories::Services::EventRepository.new(user: test_user, user_email: test_user_email)
     end
 
     example 'List App Create Events' do

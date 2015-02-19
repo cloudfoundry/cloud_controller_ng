@@ -234,6 +234,38 @@ module VCAP::CloudController
         end
 
         context 'when the client does not support asynchronous provisioning (no accepts_incomplete parameter)' do
+          let(:response_body) do
+            {
+              last_operation: {
+                state: 'succeeded',
+              }
+            }.to_json
+          end
+
+          it 'creates a service audit event for creating the service instance' do
+            instance = create_managed_service_instance(email: 'developer@example.com', async: false)
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+            expect(event.type).to eq('audit.service_instance.create')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor).to eq(developer.guid)
+            expect(event.actor_name).to eq('developer@example.com')
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(instance.guid)
+            expect(event.actee_type).to eq('service_instance')
+            expect(event.actee_name).to eq(instance.name)
+            expect(event.space_guid).to eq(instance.space.guid)
+            expect(event.space_id).to eq(instance.space.id)
+            expect(event.organization_guid).to eq(instance.space.organization.guid)
+            expect(event.metadata).to include({
+              'request' => {
+                'name' => instance.name,
+                'service_plan_guid' => instance.service_plan_guid,
+                'space_guid' => instance.space_guid,
+              }
+            })
+          end
+
           it 'tells the service broker to provision a new service instance synchronously' do
             create_managed_service_instance(async: false)
 
@@ -261,6 +293,12 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(400)
               expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
             end
+
+            it 'does not create an audit event' do
+              create_managed_service_instance
+              event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+              expect(event).to be_nil
+            end
           end
         end
 
@@ -271,6 +309,53 @@ module VCAP::CloudController
             expect(a_request(:put, service_broker_url_with_async)).to have_been_made.times(1)
             expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
           end
+
+          it 'does not create an audit event' do
+            create_managed_service_instance
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+            expect(event).to be_nil
+          end
+
+          context 'and the worker processes the request successfully' do
+            before do
+              stub_request(:get, service_broker_url_regex).
+                with(headers: { 'Accept' => 'application/json' }).
+                to_return(status: 200, body: {
+                  last_operation: {
+                    state: 'succeeded'
+                  }
+                }.to_json)
+            end
+
+            it 'creates an audit event' do
+              instance = create_managed_service_instance(email: 'developer@example.com')
+
+              Delayed::Job.last.invoke_job
+              # succeeded, failed = Delayed::Worker.new.work_off
+              # expect([succeeded, failed]).to eq([1, 0])
+
+              event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+              expect(event.type).to eq('audit.service_instance.create')
+              expect(event.actor_type).to eq('user')
+              expect(event.actor).to eq(developer.guid)
+              expect(event.actor_name).to eq('developer@example.com')
+              expect(event.timestamp).to be
+              expect(event.actee).to eq(instance.guid)
+              expect(event.actee_type).to eq('service_instance')
+              expect(event.actee_name).to eq(instance.name)
+              expect(event.space_guid).to eq(instance.space.guid)
+              expect(event.space_id).to eq(instance.space.id)
+              expect(event.organization_guid).to eq(instance.space.organization.guid)
+              expect(event.metadata).to include({
+                'request' => {
+                  'name' => instance.name,
+                  'service_plan_guid' => instance.service_plan_guid,
+                  'space_guid' => instance.space_guid,
+                }
+              })
+            end
+          end
         end
 
         context 'when the client explicitly does not request asynchronous provisioning (accepts_incomplete=false)' do
@@ -280,30 +365,30 @@ module VCAP::CloudController
             expect(a_request(:put, service_broker_url)).to have_been_made.times(1)
             expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
           end
-        end
 
-        it 'creates a service audit event for creating the service instance' do
-          instance = create_managed_service_instance(email: 'developer@example.com')
+          it 'creates a service audit event for creating the service instance' do
+            instance = create_managed_service_instance(email: 'developer@example.com', async: 'false')
 
-          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
-          expect(event.type).to eq('audit.service_instance.create')
-          expect(event.actor_type).to eq('user')
-          expect(event.actor).to eq(developer.guid)
-          expect(event.actor_name).to eq('developer@example.com')
-          expect(event.timestamp).to be
-          expect(event.actee).to eq(instance.guid)
-          expect(event.actee_type).to eq('service_instance')
-          expect(event.actee_name).to eq(instance.name)
-          expect(event.space_guid).to eq(instance.space.guid)
-          expect(event.space_id).to eq(instance.space.id)
-          expect(event.organization_guid).to eq(instance.space.organization.guid)
-          expect(event.metadata).to include({
-            'request' => {
-              'name' => instance.name,
-              'service_plan_guid' => instance.service_plan_guid,
-              'space_guid' => instance.space_guid,
-            }
-          })
+            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
+            expect(event.type).to eq('audit.service_instance.create')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor).to eq(developer.guid)
+            expect(event.actor_name).to eq('developer@example.com')
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(instance.guid)
+            expect(event.actee_type).to eq('service_instance')
+            expect(event.actee_name).to eq(instance.name)
+            expect(event.space_guid).to eq(instance.space.guid)
+            expect(event.space_id).to eq(instance.space.id)
+            expect(event.organization_guid).to eq(instance.space.organization.guid)
+            expect(event.metadata).to include({
+              'request' => {
+                'name' => instance.name,
+                'service_plan_guid' => instance.service_plan_guid,
+                'space_guid' => instance.space_guid,
+              }
+            })
+          end
         end
 
         context 'the service broker says there is a conflict' do
@@ -893,6 +978,8 @@ module VCAP::CloudController
 
             it 'indicates the service instance is being deleted' do
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              expect(last_response).to have_status_code 202
 
               expect(ManagedServiceInstance.last.last_operation.type).to eq('delete')
               expect(ManagedServiceInstance.last.last_operation.state).to eq('in progress')

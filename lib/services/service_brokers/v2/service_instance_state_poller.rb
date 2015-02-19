@@ -4,11 +4,13 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       class ServiceInstanceStatePoller
-        def poll_service_instance_state(client_attrs, service_instance)
+        def poll_service_instance_state(client_attrs, service_instance, event_repository_opts=nil, request_attrs={})
           job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
             'service-instance-state-fetch',
             client_attrs,
             service_instance.guid,
+            event_repository_opts,
+            request_attrs,
           )
 
           poll_interval = 1.minute

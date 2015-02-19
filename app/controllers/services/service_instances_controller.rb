@@ -1,6 +1,7 @@
 require 'services/api'
 require 'jobs/audit_event_job'
 require 'jobs/services/service_instance_deletion'
+require 'controllers/services/lifecycle/service_instance_provisioner'
 
 module VCAP::CloudController
   class ServiceInstancesController < RestController::ModelController
@@ -66,19 +67,12 @@ module VCAP::CloudController
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
       raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
 
-      validate_create_action(request_attrs, params)
-
-      service_instance = ManagedServiceInstance.new(request_attrs)
-      attributes_to_update = service_instance.client.provision(service_instance, async: accepts_incomplete?)
-
-      begin
-        service_instance.save_with_operation(attributes_to_update)
-      rescue => e
-        safe_deprovision_instance(service_instance)
-        raise e
-      end
-
-      @services_event_repository.record_service_instance_event(:create, service_instance, request_attrs)
+      provisioner = VCAP::CloudController::ServiceInstanceProvisioner.new(
+        @services_event_repository,
+        self,
+        logger
+      )
+      service_instance = provisioner.create_service_instance(@request_attrs, params)
 
       [HTTP::CREATED,
        { 'Location' => "#{self.class.path}/#{service_instance.guid}" },

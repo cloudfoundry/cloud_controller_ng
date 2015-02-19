@@ -5,9 +5,8 @@ module VCAP::CloudController
     describe EventRepository do
       let(:user) { VCAP::CloudController::User.make }
       let(:email) { 'email@example.com' }
-      let(:security_context) { double(:security_context, current_user: user, current_user_email: email) }
       let(:logger) { double(:logger, error: nil) }
-      let(:repository) { EventRepository.new(security_context) }
+      let(:repository) { EventRepository.new(user: user, user_email: email) }
       before do
         allow(repository).to receive(:logger).and_return(logger)
       end

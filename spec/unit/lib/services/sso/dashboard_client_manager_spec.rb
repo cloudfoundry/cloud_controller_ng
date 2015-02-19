@@ -8,7 +8,7 @@ module VCAP::Services::SSO
 
     let(:user) { VCAP::CloudController::User.make }
     let(:email) { 'email@example.com' }
-    let(:services_event_repository) { VCAP::CloudController::Repositories::Services::EventRepository.new(security_context) }
+    let(:services_event_repository) { VCAP::CloudController::Repositories::Services::EventRepository.new(user: user, user_email: email) }
     let(:security_context) { double(:security_context, current_user: user, current_user_email: email) }
 
     describe '#initialize' do

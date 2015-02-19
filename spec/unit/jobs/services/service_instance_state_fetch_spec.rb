@@ -21,6 +21,13 @@ module VCAP::CloudController
 
         let(:name) { 'fake-name' }
 
+        let(:service_event_repository_opts) do
+          {
+            user_email: 'fake@mail.foo',
+            user: User.make,
+          }
+        end
+
         let(:response) do
           {
             dashboard_url: 'url.com/dashboard',
@@ -34,7 +41,9 @@ module VCAP::CloudController
 
         subject(:job) do
           VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-            name, {}, service_instance.guid
+            name, {}, service_instance.guid, service_event_repository_opts, {
+              dummy_data: 'dummy_data'
+            }
           )
         end
 
@@ -98,6 +107,27 @@ module VCAP::CloudController
 
               expect(Delayed::Job.count).to eq 0
             end
+
+            context 'when no user information is provided' do
+              let(:service_event_repository_opts) { nil }
+
+              it 'should not create an audit event' do
+                run_job(job)
+
+                expect(Event.find(type: 'audit.service_instance.create')).to be_nil
+              end
+            end
+
+            context 'when user information is provided' do
+              it 'should create audit event' do
+                run_job(job)
+
+                event = Event.find(type: 'audit.service_instance.create')
+                expect(event).to be
+                expect(event.actee).to eq(service_instance.guid)
+                expect(event.metadata['request']).to eq({ 'dummy_data' => 'dummy_data' })
+              end
+            end
           end
 
           context 'when the state is `failed`' do
@@ -126,6 +156,12 @@ module VCAP::CloudController
 
               expect(Delayed::Job.count).to eq 0
             end
+
+            it 'should not create an audit event' do
+              run_job(job)
+
+              expect(Event.find(type: 'audit.service_instance.create')).to be_nil
+            end
           end
 
           context 'when all operations succeed, but the state is `in progress`' do
@@ -146,6 +182,12 @@ module VCAP::CloudController
 
               expect(Delayed::Job.count).to eq 1
               expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
+            end
+
+            it 'should not create an audit event' do
+              run_job(job)
+
+              expect(Event.find(type: 'audit.service_instance.create')).to be_nil
             end
           end
 

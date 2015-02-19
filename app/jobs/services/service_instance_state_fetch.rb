@@ -2,18 +2,24 @@ module VCAP::CloudController
   module Jobs
     module Services
       class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :name, :client_attrs, :service_instance_guid
+        attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository_opts, :request_attrs
 
-        def initialize(name, client_attrs, service_instance_guid)
+        def initialize(name, client_attrs, service_instance_guid, services_event_repository_opts, request_attrs)
           @name = name
           @client_attrs = client_attrs
           @service_instance_guid = service_instance_guid
+          @services_event_repository_opts = services_event_repository_opts
+          @request_attrs = request_attrs
         end
 
         def perform
           logger = Steno.logger('cc-background')
           client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
           service_instance = ManagedServiceInstance.first(guid: service_instance_guid)
+          services_event_repository = nil
+          if @services_event_repository_opts
+            services_event_repository = Repositories::Services::EventRepository.new(@services_event_repository_opts)
+          end
 
           poller = VCAP::Services::ServiceBrokers::V2::ServiceInstanceStatePoller.new
           begin
@@ -33,10 +39,14 @@ module VCAP::CloudController
                 else
                   service_instance.save_with_operation(service_instance.last_operation.proposed_changes)
                 end
+
+                if services_event_repository
+                  services_event_repository.record_service_instance_event(:create, service_instance, @request_attrs)
+                end
               end
             end
 
-            if !service_instance.terminal_state?
+            unless service_instance.terminal_state?
               poller.poll_service_instance_state(client_attrs, service_instance)
             end
 

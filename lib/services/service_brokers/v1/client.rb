@@ -75,7 +75,7 @@ module VCAP::Services
       @http_client.unbind(broker_instance_id, broker_binding_id, binding_options)
     end
 
-    def deprovision(instance)
+    def deprovision(instance, opts={})
       broker_instance_id = instance.broker_provided_id
 
       @http_client.deprovision(broker_instance_id)

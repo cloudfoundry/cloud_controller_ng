@@ -2,9 +2,9 @@ module VCAP::CloudController
   module Repositories
     module Services
       class EventRepository
-        def initialize(security_context)
-          @user = security_context.current_user
-          @current_user_email = security_context.current_user_email
+        def initialize(user:, user_email:)
+          @user = user
+          @current_user_email = user_email
         end
 
         def logger

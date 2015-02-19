@@ -21,6 +21,9 @@ module VCAP::Services::ServiceBrokers::V2
     # The broker is expected to guarantee uniqueness of instance_id.
     # raises ServiceBrokerConflict if the id is already in use
     def provision(instance, opts={})
+      event_repository_opts = opts.fetch(:event_repository_opts)
+      request_attrs = opts.fetch(:request_attrs)
+
       path = "/v2/service_instances/#{instance.guid}"
       if opts.fetch(:async, false)
         path += '?accepts_incomplete=true'
@@ -49,7 +52,7 @@ module VCAP::Services::ServiceBrokers::V2
       if state
         attributes[:last_operation][:state] = state
         if attributes[:last_operation][:state] == 'in progress'
-          @state_poller.poll_service_instance_state(@attrs, instance)
+          @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs)
         end
       else
         attributes[:last_operation][:state] = 'succeeded'

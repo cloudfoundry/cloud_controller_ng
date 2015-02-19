@@ -146,7 +146,10 @@ module CloudController
     end
 
     def services_event_repository
-      @dependencies[:services_event_repository] || Repositories::Services::EventRepository.new(SecurityContext)
+      Repositories::Services::EventRepository.new(
+        user: SecurityContext.current_user,
+        user_email: SecurityContext.current_user_email
+      )
     end
 
     def service_manager
