@@ -1,6 +1,8 @@
 require 'presenters/v3/app_presenter'
 require 'handlers/apps_handler'
 require 'cloud_controller/paging/pagination_options'
+require 'queries/app_delete_fetcher'
+require 'actions/app_delete'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
@@ -69,14 +71,15 @@ module VCAP::CloudController
 
     delete '/v3/apps/:guid', :delete
     def delete(guid)
-      deleted = @app_handler.delete(@access_context, filter: { guid: guid })
-      app_not_found! unless deleted
+      check_write_permissions!
+
+      app_delete_fetcher = AppDeleteFetcher.new(current_user)
+      app_dataset        = app_delete_fetcher.fetch(guid)
+      app_not_found! if app_dataset.empty?
+
+      AppDelete.new.delete(app_dataset, current_user, current_user_email)
 
       [HTTP::NO_CONTENT]
-    rescue AppsHandler::DeleteWithProcesses
-      unable_to_perform!('App deletion', 'Has child processes')
-    rescue AppsHandler::Unauthorized
-      app_not_found!
     end
 
     private

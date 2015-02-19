@@ -37,10 +37,10 @@ module VCAP::CloudController
       check_write_permissions!
 
       droplet_delete_fetcher = DropletDeleteFetcher.new(current_user)
-      droplet                = droplet_delete_fetcher.fetch(guid)
-      droplet_not_found! if droplet.nil?
+      droplet_dataset        = droplet_delete_fetcher.fetch(guid)
+      droplet_not_found! if droplet_dataset.empty?
 
-      DropletDelete.new.delete(droplet)
+      DropletDelete.new.delete(droplet_dataset)
 
       [HTTP::NO_CONTENT]
     end

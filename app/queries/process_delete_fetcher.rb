@@ -5,7 +5,15 @@ module VCAP::CloudController
     end
 
     def fetch(process_guid)
-      dataset.where(:"#{App.table_name}__guid" => process_guid).first
+      process_dataset = dataset.where(:"#{App.table_name}__guid" => process_guid)
+      return nil if process_dataset.empty?
+
+      space = Space.select_all(Space.table_name).unordered.
+        join(AppModel.table_name, space_guid: :"#{Space.table_name}__guid").
+        join(App.table_name, app_guid: :"#{AppModel.table_name}__guid").
+        where(:"#{App.table_name}__guid" => process_guid).first
+
+      [process_dataset, space]
     end
 
     private

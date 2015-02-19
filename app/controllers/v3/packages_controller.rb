@@ -63,10 +63,10 @@ module VCAP::CloudController
       check_write_permissions!
 
       package_delete_fetcher = PackageDeleteFetcher.new(current_user)
-      package                = package_delete_fetcher.fetch(guid)
-      package_not_found! if package.nil?
+      package_dataset        = package_delete_fetcher.fetch(guid)
+      package_not_found! if package_dataset.empty?
 
-      PackageDelete.new.delete(package)
+      PackageDelete.new.delete(package_dataset)
 
       [HTTP::NO_CONTENT]
     end

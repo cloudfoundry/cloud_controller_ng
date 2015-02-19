@@ -296,18 +296,31 @@ module VCAP::CloudController
     end
 
     describe '#delete' do
+      let(:space) { Space.make }
+      let(:user) { User.make }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+
       before do
-        allow(apps_handler).to receive(:delete).and_return(true)
+        # stubbing the BaseController methods for now, this should probably be
+        # injected into the packages controller
+        allow(apps_controller).to receive(:current_user).and_return(user)
+        allow(apps_controller).to receive(:check_write_permissions!)
+
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      context 'when the app exists' do
+        it 'returns a 204' do
+          response_code, _ = apps_controller.delete(app_model.guid)
+          expect(response_code).to eq 204
+        end
       end
 
       context 'when the user cannot update the app' do
-        before do
-          allow(apps_handler).to receive(:delete).and_raise(AppsHandler::Unauthorized)
-        end
-
         it 'raises an ApiError with a 404 code' do
           expect {
-            apps_controller.delete('guid')
+            apps_controller.delete(AppModel.make.guid)
           }.to raise_error do |error|
             expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
@@ -316,38 +329,12 @@ module VCAP::CloudController
       end
 
       context 'when the app does not exist' do
-        before do
-          allow(apps_handler).to receive(:delete).and_return(nil)
-        end
-
         it 'raises an ApiError with a 404 code' do
           expect {
-            apps_controller.delete('guid')
+            apps_controller.delete('bogus')
           }.to raise_error do |error|
             expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the app does exist' do
-        it 'returns a 204' do
-          response_code, _ = apps_controller.delete('guid')
-          expect(response_code).to eq 204
-        end
-
-        context 'when the app has child processes' do
-          before do
-            allow(apps_handler). to receive(:delete).and_raise(AppsHandler::DeleteWithProcesses)
-          end
-
-          it 'raises a 400' do
-            expect {
-              _, _ = apps_controller.delete('guid')
-            }.to raise_error do |error|
-              expect(error.name).to eq 'UnableToPerform'
-              expect(error.response_code).to eq 400
-            end
           end
         end
       end

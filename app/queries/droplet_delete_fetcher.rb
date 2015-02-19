@@ -5,7 +5,7 @@ module VCAP::CloudController
     end
 
     def fetch(droplet_guid)
-      dataset.where(:"#{DropletModel.table_name}__guid" => droplet_guid).first
+      dataset.where(:"#{DropletModel.table_name}__guid" => droplet_guid)
     end
 
     private

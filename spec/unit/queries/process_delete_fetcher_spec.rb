@@ -1,23 +1,24 @@
 require 'spec_helper'
-require 'queries/droplet_delete_fetcher'
+require 'queries/process_delete_fetcher'
 
 module VCAP::CloudController
-  describe DropletDeleteFetcher do
+  describe ProcessDeleteFetcher do
     describe '#fetch' do
       let(:space) { Space.make }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
-      let!(:droplet) { DropletModel.make(app_guid: app_model.guid) }
-      let!(:other_droplet) { DropletModel.make(app_guid: app_model.guid) }
+      let!(:process) { AppFactory.make(app_guid: app_model.guid) }
       let(:user) { User.make(admin: admin) }
       let(:admin) { false }
 
-      subject(:droplet_delete_fetcher) { DropletDeleteFetcher.new(user) }
+      subject(:process_delete_fetcher) { ProcessDeleteFetcher.new(user) }
 
       context 'when the user is an admin' do
         let(:admin) { true }
 
-        it 'returns the droplet, nothing else' do
-          expect(droplet_delete_fetcher.fetch(droplet.guid)).to include(droplet)
+        it 'returns the process and the space' do
+          process_dataset, actual_space = process_delete_fetcher.fetch(process.guid)
+          expect(process_dataset).to include(process)
+          expect(actual_space).to eq(space)
         end
       end
 
@@ -30,7 +31,7 @@ module VCAP::CloudController
         end
 
         it 'returns nil' do
-          expect(droplet_delete_fetcher.fetch(droplet.guid)).to be_empty
+          expect(process_delete_fetcher.fetch(process.guid)).to be_nil
         end
       end
 
@@ -40,14 +41,16 @@ module VCAP::CloudController
           space.add_developer(user)
         end
 
-        it 'returns the droplet, nothing else' do
-          expect(droplet_delete_fetcher.fetch(droplet.guid)).to include(droplet)
+        it 'returns the process, nothing else' do
+          process_dataset, actual_space = process_delete_fetcher.fetch(process.guid)
+          expect(process_dataset).to include(process)
+          expect(actual_space).to eq(space)
         end
       end
 
-      context 'when the user does not have access to deleting droplets' do
+      context 'when the user does not have access to deleting processes' do
         it 'returns nothing' do
-          expect(droplet_delete_fetcher.fetch(droplet.guid)).to be_empty
+          expect(process_delete_fetcher.fetch(process.guid)).to be_nil
         end
       end
     end

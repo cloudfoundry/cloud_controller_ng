@@ -17,7 +17,7 @@ module VCAP::CloudController
         let(:admin) { true }
 
         it 'returns the package, nothing else' do
-          expect(package_delete_fetcher.fetch(package.guid)).to eq(package)
+          expect(package_delete_fetcher.fetch(package.guid)).to include(package)
         end
       end
 
@@ -30,7 +30,7 @@ module VCAP::CloudController
         end
 
         it 'returns nil' do
-          expect(package_delete_fetcher.fetch(package.guid)).to be_nil
+          expect(package_delete_fetcher.fetch(package.guid)).to be_empty
         end
       end
 
@@ -41,13 +41,13 @@ module VCAP::CloudController
         end
 
         it 'returns the package, nothing else' do
-          expect(package_delete_fetcher.fetch(package.guid)).to eq(package)
+          expect(package_delete_fetcher.fetch(package.guid)).to include(package)
         end
       end
 
       context 'when the user does not have access to deleting packages' do
         it 'returns nothing' do
-          expect(package_delete_fetcher.fetch(package.guid)).to be_nil
+          expect(package_delete_fetcher.fetch(package.guid)).to be_empty
         end
       end
     end
