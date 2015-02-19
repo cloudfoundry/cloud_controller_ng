@@ -56,8 +56,8 @@ module VCAP::CloudController
         end
       end
 
-      context 'sort' do
-        context 'when the sort is nil' do
+      context 'order_by' do
+        context 'when the order_by is nil' do
           let(:order_by) { nil }
 
           it 'defaults to id' do
@@ -66,8 +66,8 @@ module VCAP::CloudController
         end
       end
 
-      context 'direction' do
-        context 'when the direction is nil' do
+      context 'order_direction' do
+        context 'when the order_direction is nil' do
           let(:order_direction) { nil }
 
           it 'defaults to asc' do
@@ -75,7 +75,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the direction is invalid' do
+        context 'when the order_direction is invalid' do
           let(:order_direction) { 'foobar' }
 
           it 'defaults to asc' do
