@@ -119,13 +119,29 @@ module VCAP::CloudController
             end
 
             context 'when user information is provided' do
-              it 'should create audit event' do
-                run_job(job)
+              context 'and the last operation type is create' do
+                it 'should create audit event' do
+                  run_job(job)
 
-                event = Event.find(type: 'audit.service_instance.create')
-                expect(event).to be
-                expect(event.actee).to eq(service_instance.guid)
-                expect(event.metadata['request']).to eq({ 'dummy_data' => 'dummy_data' })
+                  event = Event.find(type: 'audit.service_instance.create')
+                  expect(event).to be
+                  expect(event.actee).to eq(service_instance.guid)
+                  expect(event.metadata['request']).to eq({ 'dummy_data' => 'dummy_data' })
+                end
+              end
+
+              context 'and the last operation type is update' do
+                before do
+                  service_instance.last_operation.type = 'update'
+                  service_instance.last_operation.save
+                end
+
+                it 'should create an update event' do
+                  run_job(job)
+
+                  event = Event.find(type: 'audit.service_instance.update')
+                  expect(event).to be
+                end
               end
             end
           end

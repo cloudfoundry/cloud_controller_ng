@@ -705,6 +705,51 @@ module VCAP::CloudController
 
           expect(service_instance.reload.service_plan).to eq(old_service_plan)
         end
+
+        it 'does not create an audit event' do
+          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
+
+          event = VCAP::CloudController::Event.first(type: 'audit.service_instance.update')
+          expect(event).to be_nil
+        end
+
+        context 'when the job finishes finishes polling' do
+          before do
+            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
+
+            stub_request(:get, service_broker_url).
+              to_return(status: 200, body: {
+                last_operation: {
+                  state: 'succeeded',
+                  description: 'Phew, all done'
+                }
+              }.to_json)
+          end
+
+          it 'creates a service audit event for updating the service instance' do
+            Timecop.freeze(Time.now + 5.minutes) do
+              expect(Delayed::Worker.new.work_off).to eq([1, 0])
+            end
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.update')
+            expect(event.type).to eq('audit.service_instance.update')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor).to eq(admin_user.guid)
+            expect(event.actor_name).to eq('admin@example.com')
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(service_instance.guid)
+            expect(event.actee_type).to eq('service_instance')
+            expect(event.actee_name).to eq(service_instance.name)
+            expect(event.space_guid).to eq(service_instance.space.guid)
+            expect(event.space_id).to eq(service_instance.space.id)
+            expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+            expect(event.metadata).to include({
+              'request' => {
+                'service_plan_guid' => new_service_plan.guid,
+              }
+            })
+          end
+        end
       end
 
       context 'when the service instance client returns a last_operation with state `succeeded`' do
@@ -810,7 +855,7 @@ module VCAP::CloudController
 
             expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
             expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_status_code(400)
           end
         end
       end

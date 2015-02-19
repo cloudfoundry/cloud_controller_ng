@@ -41,7 +41,8 @@ module VCAP::CloudController
                 end
 
                 if services_event_repository
-                  services_event_repository.record_service_instance_event(:create, service_instance, @request_attrs)
+                  type = service_instance.last_operation.type.to_sym
+                  services_event_repository.record_service_instance_event(type, service_instance, @request_attrs)
                 end
               end
             end
@@ -49,7 +50,6 @@ module VCAP::CloudController
             unless service_instance.terminal_state?
               poller.poll_service_instance_state(client_attrs, service_instance)
             end
-
           rescue HttpRequestError, HttpResponseError, Sequel::Error => e
             logger.error("There was an error while fetching the service instance operation state: #{e}")
             poller.poll_service_instance_state(client_attrs, service_instance)

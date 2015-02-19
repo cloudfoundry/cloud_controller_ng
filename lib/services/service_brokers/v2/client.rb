@@ -145,6 +145,9 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def update_service_plan(instance, plan, opts={})
+      event_repository_opts = opts.fetch(:event_repository_opts)
+      request_attrs = opts.fetch(:request_attrs)
+
       path = "/v2/service_instances/#{instance.guid}"
       if opts.fetch(:async, false)
         path += '?accepts_incomplete=true'
@@ -175,7 +178,7 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:last_operation][:state] = state
         attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
         if attributes[:last_operation][:state] == 'in progress'
-          @state_poller.poll_service_instance_state(@attrs, instance)
+          @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs)
         end
       else
         attributes[:last_operation][:state] = 'succeeded'
