@@ -26,6 +26,13 @@ module VCAP::CloudController
             },
             request_attrs: request_attrs,
           )
+        elsif request_attrs['name']
+          attributes_to_update = {
+            name: request_attrs['name'],
+            last_operation: {
+              state: 'succeeded'
+            }
+          }
         end
 
         service_instance.save_with_operation(attributes_to_update)

@@ -778,6 +778,50 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the request is a service instance rename' do
+        let(:status) { 200 }
+        let(:body) do
+          MultiJson.dump(
+            name: 'new-name'
+          )
+        end
+        let(:last_operation) { ServiceInstanceOperation.make(state: 'succeeded') }
+        let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
+
+        before do
+          service_instance.service_instance_operation = last_operation
+          service_instance.save
+        end
+
+        context 'when request is made synchronously' do
+          it 'updates service instance name in the database' do
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+
+            expect(service_instance.reload.name).to eq('new-name')
+          end
+
+          it 'updates operation status to succeeded in the database' do
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
+
+            expect(service_instance.reload.last_operation.state).to eq('succeeded')
+          end
+        end
+
+        context 'when request is made asynchronously' do
+          it 'updates service instance name in the database' do
+            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
+
+            expect(service_instance.reload.name).to eq('new-name')
+          end
+
+          it 'updates operation status to succeeded in the database' do
+            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
+
+            expect(service_instance.reload.last_operation.state).to eq('succeeded')
+          end
+        end
+      end
+
       describe 'error cases' do
         context 'when the service instance has an operation in progress' do
           let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
