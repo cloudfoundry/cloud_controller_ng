@@ -3,6 +3,7 @@ require 'jobs/audit_event_job'
 require 'jobs/services/service_instance_deletion'
 require 'controllers/services/lifecycle/service_instance_provisioner'
 require 'controllers/services/lifecycle/service_instance_updater'
+require 'controllers/services/lifecycle/service_instance_deprovisioner'
 
 module VCAP::CloudController
   class ServiceInstancesController < RestController::ModelController
@@ -145,17 +146,18 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      service_instance = find_guid_and_validate_access(:delete, guid, ServiceInstance)
+      service_instance = find_guid(guid, ServiceInstance)
       raise_if_has_associations!(service_instance) if v2_api? && !recursive?
 
-      return perform_delete(service_instance) unless service_instance.managed_instance?
+      deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
+      service_instance, delete_job = deprovisioner.deprovision_service_instance(service_instance, params)
 
-      service_instance.lock_by_failing_other_operations('delete') do
-        if accepts_incomplete? && service_instance.managed_instance?
-          perform_accepts_incomplete_delete(service_instance)
-        else
-          perform_delete(service_instance)
-        end
+      if service_instance
+        [HTTP::ACCEPTED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
+      elsif delete_job
+        [HTTP::ACCEPTED, JobPresenter.new(delete_job).to_json]
+      else
+        [HTTP::NO_CONTENT, nil]
       end
     end
 
@@ -180,39 +182,6 @@ module VCAP::CloudController
     define_routes
 
     private
-
-    def accepts_incomplete?
-      params['accepts_incomplete'] == 'true'
-    end
-
-    def perform_delete(service_instance)
-      deletion_job = Jobs::Services::ServiceInstanceDeletion.new(service_instance.guid)
-      event_method = service_instance.type == 'managed_service_instance' ?  :record_service_instance_event : :record_user_provided_service_instance_event
-      delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, event_method, :delete, service_instance, {})
-
-      enqueue_deletion_job(delete_and_audit_job)
-    end
-
-    def perform_accepts_incomplete_delete(service_instance)
-      attributes_to_update, err = service_instance.client.deprovision(service_instance)
-      raise err if err
-
-      service_instance.update_from_broker_response(attributes_to_update)
-      @services_event_repository.record_service_instance_event(:delete, service_instance, request_attrs)
-      if service_instance.last_operation.state == 'succeeded'
-        service_instance.last_operation.try(:destroy)
-        # do not destroy, we already deprovisioned from the broker
-        service_instance.delete
-      end
-
-      attributes_to_update ||= {}
-      last_operation_hash = attributes_to_update[:last_operation] || {}
-      if last_operation_hash[:state] == 'in progress'
-        [HTTP::ACCEPTED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
-      else
-        [HTTP::NO_CONTENT, nil]
-      end
-    end
 
     def raise_if_has_associations!(obj)
       associations = obj.class.associations.select do |association|

@@ -1021,6 +1021,33 @@ module VCAP::CloudController
               }.to_json
             end
 
+            it 'should not create a delete event' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              expect(Event.find(type: 'audit.service_instance.delete')).to be_nil
+            end
+
+            it 'should create a delete event after the polling finishes' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              broker = service_instance.service_plan.service.service_broker
+              broker_uri = URI.parse(broker.broker_url)
+              broker_uri.user = broker.auth_username
+              broker_uri.password = broker.auth_password
+              stub_request(:get, "#{broker_uri}/v2/service_instances/#{service_instance.guid}").
+                to_return(status: 200, body: {
+                  last_operation: {
+                    state: 'succeeded',
+                    description: 'Done!'
+                  }
+                }.to_json)
+
+              Timecop.freeze Time.now + 2.minute do
+                expect(Delayed::Worker.new.work_off).to eq [1, 0]
+                expect(Event.find(type: 'audit.service_instance.delete')).to be
+              end
+            end
+
             it 'indicates the service instance is being deleted' do
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
@@ -1034,8 +1061,6 @@ module VCAP::CloudController
               expect(decoded_response['entity']['last_operation']['type']).to eq('delete')
               expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
               expect(decoded_response['entity']['last_operation']['description']).to eq('fake-description')
-
-              expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
             end
 
             it 'enqueues a polling job to fetch state from the broker' do
@@ -1076,8 +1101,6 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code(204)
               expect(ManagedServiceInstance.find(guid: service_instance_guid)).to be_nil
-
-              expect(VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')).to be
             end
           end
 

@@ -77,6 +77,27 @@ module VCAP::CloudController
 
                 expect(ManagedServiceInstance.first(guid: service_instance.guid)).to be_nil
               end
+
+              it 'should create a delete event' do
+                run_job(job)
+
+                event = Event.find(type: 'audit.service_instance.delete')
+                expect(event).to be
+              end
+            end
+
+            context 'when the last operation type is `update`' do
+              before do
+                service_instance.last_operation.type = 'update'
+                service_instance.last_operation.save
+              end
+
+              it 'should create an update event' do
+                run_job(job)
+
+                event = Event.find(type: 'audit.service_instance.update')
+                expect(event).to be
+              end
             end
 
             it 'fetches and updates the service instance state' do
@@ -127,20 +148,6 @@ module VCAP::CloudController
                   expect(event).to be
                   expect(event.actee).to eq(service_instance.guid)
                   expect(event.metadata['request']).to eq({ 'dummy_data' => 'dummy_data' })
-                end
-              end
-
-              context 'and the last operation type is update' do
-                before do
-                  service_instance.last_operation.type = 'update'
-                  service_instance.last_operation.save
-                end
-
-                it 'should create an update event' do
-                  run_job(job)
-
-                  event = Event.find(type: 'audit.service_instance.update')
-                  expect(event).to be
                 end
               end
             end

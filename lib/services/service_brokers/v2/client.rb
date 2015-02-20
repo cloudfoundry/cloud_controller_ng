@@ -116,7 +116,10 @@ module VCAP::Services::ServiceBrokers::V2
       @response_parser.parse(:delete, path, response)
     end
 
-    def deprovision(instance)
+    def deprovision(instance, opts={})
+      event_repository_opts = opts[:event_repository_opts]
+      request_attrs = opts[:request_attrs]
+
       path = "/v2/service_instances/#{instance.guid}"
 
       response = @http_client.delete(path, {
@@ -129,7 +132,7 @@ module VCAP::Services::ServiceBrokers::V2
       last_operation = parsed_response['last_operation'] || {}
 
       if last_operation['state'] == 'in progress'
-        @state_poller.poll_service_instance_state(@attrs, instance)
+        @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs)
       end
 
       parsed_response ||= {}
