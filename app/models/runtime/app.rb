@@ -72,7 +72,6 @@ module VCAP::CloudController
     # Last staging response which will contain streaming log url
     attr_accessor :last_stager_response
 
-    alias_method :kill_after_multiple_restarts?, :kill_after_multiple_restarts
     alias_method :diego?, :diego
 
     def copy_buildpack_errors

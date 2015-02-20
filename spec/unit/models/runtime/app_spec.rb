@@ -1342,19 +1342,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'kill_after_multiple_restarts?' do
-      let(:app) { AppFactory.make }
-
-      it 'defaults to false' do
-        expect(app.kill_after_multiple_restarts?).to eq false
-      end
-
-      it 'can be set to true' do
-        app.kill_after_multiple_restarts = true
-        expect(app.kill_after_multiple_restarts?).to eq true
-      end
-    end
-
     describe 'version' do
       let(:app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
 
