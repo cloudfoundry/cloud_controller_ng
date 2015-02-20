@@ -1,3 +1,5 @@
+require 'controllers/services/lifecycle/service_instance_state_updater'
+
 module VCAP::CloudController
   module Jobs
     module Services
@@ -13,47 +15,21 @@ module VCAP::CloudController
         end
 
         def perform
-          logger = Steno.logger('cc-background')
           client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
           service_instance = ManagedServiceInstance.first(guid: service_instance_guid)
-          services_event_repository = nil
-          if @services_event_repository_opts
-            services_event_repository = Repositories::Services::EventRepository.new(@services_event_repository_opts)
-          end
+          services_event_repository = Repositories::Services::EventRepository.new(@services_event_repository_opts) if @services_event_repository_opts
 
+          updater = ServiceInstanceStateUpdater.new(client, services_event_repository, self)
+          updater.update_instance_state(service_instance, @request_attrs)
+        rescue HttpRequestError, HttpResponseError, Sequel::Error => e
+          logger = Steno.logger('cc-background')
+          logger.error("There was an error while fetching the service instance operation state: #{e}")
+          retry_state_updater(@client_attrs, service_instance)
+        end
+
+        def retry_state_updater(client_attrs, service_instance)
           poller = VCAP::Services::ServiceBrokers::V2::ServiceInstanceStatePoller.new
-          begin
-            attrs = client.fetch_service_instance_state(service_instance)
-
-            ServiceInstance.db.transaction do
-              service_instance.lock!
-              service_instance.save_with_operation(
-                last_operation: attrs[:last_operation].slice(:state, :description),
-                dashboard_url: attrs[:dashboard_url],
-              )
-
-              if service_instance.last_operation.state == 'succeeded'
-                if service_instance.last_operation.type == 'delete'
-                  service_instance.last_operation.try(:destroy)
-                  service_instance.delete
-                else
-                  service_instance.save_with_operation(service_instance.last_operation.proposed_changes)
-                end
-
-                if services_event_repository
-                  type = service_instance.last_operation.type.to_sym
-                  services_event_repository.record_service_instance_event(type, service_instance, @request_attrs)
-                end
-              end
-            end
-
-            unless service_instance.terminal_state?
-              poller.poll_service_instance_state(client_attrs, service_instance)
-            end
-          rescue HttpRequestError, HttpResponseError, Sequel::Error => e
-            logger.error("There was an error while fetching the service instance operation state: #{e}")
-            poller.poll_service_instance_state(client_attrs, service_instance)
-          end
+          poller.poll_service_instance_state(client_attrs, service_instance)
         end
 
         def job_name_in_configuration

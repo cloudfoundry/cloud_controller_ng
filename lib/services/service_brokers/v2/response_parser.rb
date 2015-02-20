@@ -129,7 +129,7 @@ module VCAP::Services
           validator.validate(unvalidated_response.to_hash)
         end
 
-        def parse_fetch_state(method, path, response, operation_type)
+        def parse_fetch_state(method, path, response)
           unvalidated_response = UnvalidatedResponse.new(method, @url, path, response)
 
           validator =
@@ -142,11 +142,7 @@ module VCAP::Services
             JsonObjectValidator.new(@logger,
               FailingValidator.new(Errors::ServiceBrokerBadResponse))
           when 410
-            if operation_type == 'delete'
-              SuccessValidator.new { |res| {} }
-            else
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
-            end
+            SuccessValidator.new { |res| {} }
           else
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
           end

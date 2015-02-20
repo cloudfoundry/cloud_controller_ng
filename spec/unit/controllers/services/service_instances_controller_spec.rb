@@ -713,7 +713,25 @@ module VCAP::CloudController
           expect(event).to be_nil
         end
 
-        context 'when the job finishes finishes polling' do
+        context 'when the broker returns 410 for a service instance fetch request' do
+          before do
+            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
+
+            stub_request(:get, service_broker_url).
+              to_return(status: 410, body: {}.to_json)
+          end
+
+          it 'updates the service instance operation to indicate it has failed' do
+            Timecop.freeze(Time.now + 5.minutes) do
+              expect(Delayed::Worker.new.work_off).to eq([1, 0])
+            end
+
+            service_instance.reload
+            expect(service_instance.last_operation.state).to eq('failed')
+          end
+        end
+
+        context 'when the broker successfully updates the service instance for a service instance fetch request' do
           before do
             put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
 

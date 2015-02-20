@@ -71,16 +71,26 @@ module VCAP::Services::ServiceBrokers::V2
       path = "/v2/service_instances/#{instance.guid}"
 
       response = @http_client.get(path)
-      parsed_response = @response_parser.parse_fetch_state(:get, path, response, instance.last_operation.type)
+      parsed_response = @response_parser.parse_fetch_state(:get, path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
 
-      {
-        dashboard_url:  parsed_response['dashboard_url'],
-        last_operation: {
-          state:        last_operation_hash['state'] || 'succeeded',
-          description:  last_operation_hash['description'] || '',
+      if parsed_response.empty?
+        state = (instance.last_operation.type == 'delete' ? 'succeeded' : 'failed')
+        {
+          last_operation: {
+            state: state,
+            description: ''
+          }
         }
-      }
+      else
+        {
+            dashboard_url:  parsed_response['dashboard_url'],
+            last_operation: {
+                state:        last_operation_hash['state'],
+                description:  last_operation_hash['description'],
+            }
+        }
+      end
     end
 
     def bind(binding)

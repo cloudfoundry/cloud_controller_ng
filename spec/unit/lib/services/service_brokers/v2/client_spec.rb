@@ -412,29 +412,43 @@ module VCAP::Services::ServiceBrokers::V2
           {}
         end
 
-        context 'and the operation type is delete' do
+        context 'when the last operation type is `delete`' do
           before do
             instance.save_with_operation(
               last_operation: {
-                type: 'delete'
+                type: 'delete',
               }
             )
           end
 
           it 'returns attributes to indicate the service instance was deleted' do
             attrs = client.fetch_service_instance_state(instance)
-            expect(attrs[:last_operation]).to include({
-              state: 'succeeded',
-              description: ''
-            })
+            expect(attrs).to include(
+              last_operation: {
+                state: 'succeeded',
+                description: ''
+              }
+            )
           end
         end
 
-        context 'and the operation type is not delete' do
-          it 'raises Error::ServiceBrokerBadResponse' do
-            expect {
-              client.fetch_service_instance_state(instance)
-            }.to raise_error(Errors::ServiceBrokerBadResponse)
+        context 'with any other operation type' do
+          before do
+            instance.save_with_operation(
+              last_operation: {
+                type: 'update'
+              }
+            )
+          end
+
+          it 'returns attributes to indicate the service instance operation failed' do
+            attrs = client.fetch_service_instance_state(instance)
+            expect(attrs).to include(
+              last_operation: {
+                state: 'failed',
+                description: ''
+              }
+            )
           end
         end
       end
