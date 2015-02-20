@@ -22,10 +22,10 @@ module VCAP::CloudController
       ds = App.dataset
       return ds if @user.admin?
 
-      ds.select_all(App.table_name).
-        join(AppModel.table_name, guid: :app_guid).
-        join(Space.table_name, guid: :space_guid).where(space_guid: @user.spaces_dataset.select(:guid)).
-        join(Organization.table_name, id: :organization_id).where(status: 'active')
+      ds.association_join(:space).
+        where(space__guid: @user.spaces_dataset.association_join(:organization).
+              where(organization__status: 'active').select(:space__guid)).
+        select_all(App.table_name)
     end
   end
 end

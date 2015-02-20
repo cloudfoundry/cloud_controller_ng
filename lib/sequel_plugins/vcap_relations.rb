@@ -42,9 +42,7 @@ module Sequel::Plugins::VcapRelations
         define_guid_accessors(name)
       end
 
-      opts[:reciprocal] ||=
-        self.name.split('::').last.underscore.pluralize.to_sym
-
+      opts[:reciprocal] ||= self.name.split('::').last.underscore.pluralize.to_sym
       super
     end
 
