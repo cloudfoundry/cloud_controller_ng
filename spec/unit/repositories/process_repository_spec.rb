@@ -164,43 +164,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#find_for_delete' do
-      context 'when the process exists' do
-        context 'with an associated app' do
-          it 'find the process object by guid and yields a process, space' do
-            space = Space.make
-
-            process = AppFactory.make(buildpack: 'http://the-buildpack.com', space: space)
-
-            app = AppModel.make
-            app.add_process_by_guid(process.guid)
-
-            yielded = false
-            expect(ProcessMapper).to receive(:map_model_to_domain).with(process).ordered.and_call_original
-            repo.find_for_update(process.guid) do |p, s|
-              yielded = true
-              expect(p.guid).to eq(process.guid)
-              expect(s).to eq(space)
-            end
-
-            expect(yielded).to be_truthy
-          end
-        end
-      end
-
-      context 'when the process does not exist' do
-        it 'yields nil for both the space and process' do
-          yielded = false
-          repo.find_for_update('bogus') do |p, s|
-            yielded = true
-            expect(p).to be_nil
-            expect(s).to be_nil
-          end
-          expect(yielded).to be_truthy
-        end
-      end
-    end
-
     describe '#new_process' do
       it 'returns a process domain object that has not been persisted' do
         process_repository = ProcessRepository.new
@@ -338,43 +301,6 @@ module VCAP::CloudController
               process_repository.create!(desired_process)
             }.to_not change { App.count }
           }.to raise_error(ProcessRepository::InvalidProcess)
-        end
-      end
-    end
-
-    describe '#delete' do
-      context 'when the process is persisted' do
-        it 'deletes by guid' do
-          process_repository = ProcessRepository.new
-          process = process_repository.create!(process_repository.new_process(valid_opts))
-          expect {
-            process_repository.find_for_delete(filter: { guid: process.guid }) do |process_to_delete|
-              process_repository.delete(process_to_delete)
-            end
-          }.to change { App.count }.by(-1)
-          expect(process_repository.find_by_guid(process.guid)).to be_nil
-        end
-
-        it 'deletes by app_guid' do
-          process_repository = ProcessRepository.new
-          process = process_repository.create!(process_repository.new_process(valid_opts))
-          expect {
-            process_repository.find_for_delete(filter: { app_guid: process.app_guid }) do |process_to_delete|
-              process_repository.delete(process_to_delete)
-            end
-          }.to change { App.count }.by(-1)
-          expect(process_repository.find_by_guid(process.guid)).to be_nil
-        end
-      end
-
-      context 'when the process is not persisted' do
-        it 'does nothing' do
-          process_repository = ProcessRepository.new
-          process = process_repository.new_process(valid_opts)
-          expect {
-            process_repository.delete(process)
-          }.to_not change { App.count }
-          expect(process_repository.find_by_guid(process.guid)).to be_nil
         end
       end
     end

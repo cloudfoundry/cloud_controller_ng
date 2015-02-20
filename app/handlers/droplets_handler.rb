@@ -152,39 +152,5 @@ module VCAP::CloudController
 
       @paginator.get_page(dataset, pagination_options)
     end
-
-    def delete(access_context, filter: {})
-      dataset = DropletModel.dataset
-
-      allowed_filters = %i(app_guid guid)
-      return [] if (filter.keys - allowed_filters).size > 0
-
-      filter.each do |column, value|
-        dataset = dataset.where(:"#{DropletModel.table_name}__#{column}" => value)
-      end
-
-      dataset.map do |droplet|
-        inner_delete(droplet, access_context)
-      end
-    end
-
-    private
-
-    def inner_delete(droplet, access_context)
-      app_model = AppModel.find(guid: droplet.app_guid)
-      space = Space.find(guid: app_model.space_guid)
-
-      droplet.db.transaction do
-        droplet.lock!
-        raise Unauthorized if access_context.cannot?(:delete, droplet, space)
-        droplet.destroy
-      end
-
-      key = droplet.blobstore_key
-      blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(key, :droplet_blobstore, nil)
-      Jobs::Enqueuer.new(blobstore_delete, queue: 'cc-generic').enqueue
-
-      droplet
-    end
   end
 end

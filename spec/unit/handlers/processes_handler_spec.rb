@@ -273,42 +273,5 @@ module VCAP::CloudController
         expect(result).to eq(process)
       end
     end
-
-    describe '#delete' do
-      let(:user) { User.make }
-
-      before do
-        allow(access_context).to receive(:can?).and_return(true)
-        allow(access_context).to receive(:user).and_return(user)
-        allow(access_context).to receive(:user_email).and_return('jim@jim.com')
-      end
-
-      context 'when the process exists' do
-        let(:space) { Space.make }
-        let!(:process) do
-          process_model = AppFactory.make(space: space)
-          ProcessMapper.map_model_to_domain(process_model)
-        end
-        let(:process_guid) { process.guid }
-
-        it 'saves an event when deleting a process' do
-          allow(process_repo).to receive(:find_for_delete).and_yield(process, space)
-          allow(process_repo).to receive(:delete).and_return(process)
-
-          expect(process_event_repo).to receive(:record_app_delete_request).
-            with(process, space, user, 'jim@jim.com', true)
-
-          expect(processes_handler.delete(access_context, filter: { guid: process.guid })).to eq([process])
-        end
-      end
-
-      context 'when the process does not exist' do
-        it 'returns nil' do
-          allow(process_repo).to receive(:find_for_delete).and_yield(nil, nil)
-          expect(access_context).to_not receive(:can?)
-          expect(processes_handler.delete(access_context, filter: { guid: 'bogus-process' })).to be_empty
-        end
-      end
-    end
   end
 end

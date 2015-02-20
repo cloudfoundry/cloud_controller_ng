@@ -129,43 +129,10 @@ module VCAP::CloudController
       package
     end
 
-    def delete(access_context, filter: {})
-      dataset = PackageModel.dataset
-
-      allowed_filters = %i(app_guid guid)
-      return [] if (filter.keys - allowed_filters).size > 0
-
-      filter.each do |column, value|
-        dataset = dataset.where(:"#{PackageModel.table_name}__#{column}" => value)
-      end
-
-      dataset.map do |package|
-        inner_delete(package, access_context)
-      end
-    end
-
     def show(guid, access_context)
       package = PackageModel.find(guid: guid)
       return nil if package.nil?
       raise Unauthorized if access_context.cannot?(:read, package)
-      package
-    end
-
-    private
-
-    def inner_delete(package, access_context)
-      app_model = AppModel.find(guid: package.app_guid)
-      space = Space.find(guid: app_model.space_guid)
-
-      package.db.transaction do
-        package.lock!
-        raise Unauthorized if access_context.cannot?(:delete, package, space)
-        package.destroy
-      end
-
-      blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore, nil)
-      Jobs::Enqueuer.new(blobstore_delete, queue: 'cc-generic').enqueue
-
       package
     end
   end

@@ -140,24 +140,6 @@ module VCAP::CloudController
       raise InvalidApp.new(e.message)
     end
 
-    def delete(access_context, filter: {})
-      app = AppModel.find(guid: filter[:guid])
-      return [] if app.nil?
-
-      app.db.transaction do
-        app.lock!
-
-        raise Unauthorized if access_context.cannot?(:delete, app)
-
-        @droplets_handler.delete(access_context, filter: { app_guid: app.guid })
-        @packages_handler.delete(access_context, filter: { app_guid: app.guid })
-        @processes_handler.delete(access_context, filter: { app_guid: app.guid })
-
-        app.destroy
-      end
-      [app]
-    end
-
     def add_process(app, process, access_context)
       raise Unauthorized if access_context.cannot?(:update, app)
       raise IncorrectProcessSpace if app.space_guid != process.space_guid
