@@ -332,20 +332,34 @@ module VCAP::CloudController
         end
 
         context 'when the instance operation is in progress' do
-          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
-          let(:instance) { ManagedServiceInstance.make }
+          let(:request_body) do
+            {
+              app_guid: app_obj.guid,
+              service_instance_guid: instance.guid
+            }.to_json
+          end
+
           before do
-            instance.service_instance_operation = last_operation
-            instance.save
+            instance.save_with_operation(
+              last_operation: {
+                type: 'delete',
+                state: 'in progress',
+              }
+            )
+          end
+
+          it 'does not tell the service broker to bind the service' do
+            broker = service.service_broker
+            post '/v2/service_bindings', request_body, json_headers(headers_for(developer))
+
+            expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
+              to_not have_been_made
+            expect(a_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
+              to_not have_been_made
           end
 
           it 'should show an error message for create bind operation' do
-            req = {
-                app_guid: app_obj.guid,
-                service_instance_guid: instance.guid
-            }.to_json
-
-            post '/v2/service_bindings', req, json_headers(headers_for(developer))
+            post '/v2/service_bindings', request_body, json_headers(headers_for(developer))
             expect(last_response).to have_status_code 400
             expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
           end
