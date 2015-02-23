@@ -4,7 +4,15 @@ module VCAP::CloudController
   module Jobs
     module Services
       describe ServiceInstanceStateFetch do
-        let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
+        let(:broker) { ServiceBroker.make }
+        let(:client_attrs) do
+          {
+            url: broker.broker_url,
+            auth_username: broker.auth_username,
+            auth_password: broker.auth_password,
+          }
+        end
+
         let(:proposed_service_plan) { ServicePlan.make }
         let(:service_instance) do
           operation = ServiceInstanceOperation.make(proposed_changes: {
@@ -28,6 +36,7 @@ module VCAP::CloudController
           }
         end
 
+        let(:status) { 200 }
         let(:response) do
           {
             dashboard_url: 'url.com/dashboard',
@@ -41,7 +50,7 @@ module VCAP::CloudController
 
         subject(:job) do
           VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-            name, {}, service_instance.guid, service_event_repository_opts, {
+            name, client_attrs, service_instance.guid, service_event_repository_opts, {
               dummy_data: 'dummy_data'
             }
           )
@@ -54,14 +63,17 @@ module VCAP::CloudController
 
         describe '#perform' do
           before do
-            allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
+            uri = URI(broker.broker_url)
+            uri.user = broker.auth_username
+            uri.password = broker.auth_password
+            stub_request(:get, "#{uri}/v2/service_instances/#{service_instance.guid}").to_return(
+              status: status,
+              body: response.to_json
+            )
           end
 
           context 'when all operations succeed and the state is `succeeded`' do
             let(:state) { 'succeeded' }
-            before do
-              allow(client).to receive(:fetch_service_instance_state).and_return(response)
-            end
 
             context 'when the last operation type is `delete`' do
               before do
@@ -155,9 +167,6 @@ module VCAP::CloudController
 
           context 'when the state is `failed`' do
             let(:state) { 'failed' }
-            before do
-              allow(client).to receive(:fetch_service_instance_state).and_return(response)
-            end
 
             it 'does not apply the instance attributes that were proposed in the operation' do
               run_job(job)
@@ -189,9 +198,6 @@ module VCAP::CloudController
 
           context 'when all operations succeed, but the state is `in progress`' do
             let(:state) { 'in progress' }
-            before do
-              allow(client).to receive(:fetch_service_instance_state).and_return(response)
-            end
 
             it 'fetches and updates the service instance state' do
               run_job(job)
@@ -205,6 +211,10 @@ module VCAP::CloudController
 
               expect(Delayed::Job.count).to eq 1
               expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
+
+              Timecop.freeze(Time.now + 1.hour) do
+                expect(Delayed::Worker.new.work_off).to eq([1, 0])
+              end
             end
 
             it 'should not create an audit event' do
@@ -217,7 +227,6 @@ module VCAP::CloudController
           context 'when saving to the database fails' do
             let(:state) { 'in progress' }
             before do
-              allow(client).to receive(:fetch_service_instance_state).and_return(response)
               allow(service_instance).to receive(:save) do |instance|
                 raise Sequel::Error.new(instance)
               end
@@ -232,9 +241,8 @@ module VCAP::CloudController
           end
 
           context 'when fetching the service instance from the broker fails' do
-            before do
-              allow(client).to receive(:fetch_service_instance_state).and_raise(error)
-            end
+            let(:status) { 500 }
+            let(:response) { {} }
 
             context 'due to an HttpRequestError' do
               let(:error) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new('some-uri.com', :get, nil) }

@@ -50,7 +50,7 @@ module VCAP::CloudController
     end
 
     def retry_state_updater(service_instance)
-      @delegate.retry_state_updater(@client_attrs, service_instance)
+      @delegate.retry_state_updater(@client.attrs, service_instance)
     end
   end
 end

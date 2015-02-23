@@ -5,7 +5,7 @@ module VCAP::Services::ServiceBrokers::V2
     attr_reader :orphan_mitigator, :attrs
 
     def initialize(attrs)
-      http_client_attrs = attrs.select { |key, _| [:url, :auth_username, :auth_password].include?(key) }
+      http_client_attrs = attrs.slice(:url, :auth_username, :auth_password)
       @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(http_client_attrs)
       @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
       @attrs = attrs
@@ -84,11 +84,11 @@ module VCAP::Services::ServiceBrokers::V2
         }
       else
         {
-            dashboard_url:  parsed_response['dashboard_url'],
-            last_operation: {
-                state:        last_operation_hash['state'],
-                description:  last_operation_hash['description'],
-            }
+          dashboard_url:  parsed_response['dashboard_url'],
+          last_operation: {
+            state:        last_operation_hash['state'],
+            description:  last_operation_hash['description'],
+          }
         }
       end
     end
