@@ -287,14 +287,14 @@ module VCAP::CloudController
         ])
       end
 
-      describe 'evironment variables' do
+      describe 'environment variables' do
         before do
           app.environment_json   = { 'KEY' => 'value' }
         end
 
         it 'includes app environment variables' do
           request = staging_message.staging_request(app, task_id)
-          expect(request[:properties][:environment]).to eq(['KEY=value'])
+          expect(request[:properties][:environment]).to include('KEY=value')
         end
 
         it 'includes environment variables from staging environment variable group' do
@@ -303,7 +303,14 @@ module VCAP::CloudController
           group.save
 
           request = staging_message.staging_request(app, task_id)
-          expect(request[:properties][:environment]).to match_array(['KEY=value', 'STAGINGKEY=staging_value'])
+          expect(request[:properties][:environment]).to include('KEY=value', 'STAGINGKEY=staging_value')
+        end
+
+        it 'includes CF_STACK' do
+          app.environment_json = { 'CF_STACK' => 'not-this' }
+
+          request = staging_message.staging_request(app, task_id)
+          expect(request[:properties][:environment]).to include("CF_STACK=#{app.stack.name}")
         end
 
         it 'prefers app environment variables when they conflict with staging group variables' do
@@ -312,7 +319,7 @@ module VCAP::CloudController
           group.save
 
           request = staging_message.staging_request(app, task_id)
-          expect(request[:properties][:environment]).to match_array(['KEY=value'])
+          expect(request[:properties][:environment]).to include('KEY=value')
         end
       end
     end

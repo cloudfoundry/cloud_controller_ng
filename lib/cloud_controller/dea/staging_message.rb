@@ -32,7 +32,8 @@ module VCAP::CloudController
       def staging_task_base_properties(app)
         staging_env = EnvironmentVariableGroup.staging.environment_json
         app_env     = app.environment_json || {}
-        env         = staging_env.merge(app_env).map { |k, v| "#{k}=#{v}" }
+        stack_env   = { 'CF_STACK' => app.stack.name }
+        env         = staging_env.merge(app_env).merge(stack_env).map { |k, v| "#{k}=#{v}" }
 
         {
           services: app.service_bindings.map { |sb| service_binding_to_staging_request(sb) },
