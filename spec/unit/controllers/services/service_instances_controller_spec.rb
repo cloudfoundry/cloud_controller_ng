@@ -1032,7 +1032,7 @@ module VCAP::CloudController
         let(:body) { '{}' }
         let(:status) { 200 }
 
-        before do
+        let(:uri) do
           guid = service_instance.guid
           plan_id = service_plan.unique_id
           service_id = service.unique_id
@@ -1040,6 +1040,10 @@ module VCAP::CloudController
           uri = URI(service.service_broker.broker_url + path)
           uri.user = service.service_broker.auth_username
           uri.password = service.service_broker.auth_password
+          uri
+        end
+
+        before do
           stub_request(:delete, uri.to_s).to_return(body: body, status: status)
         end
 
@@ -1072,6 +1076,17 @@ module VCAP::CloudController
         end
 
         context 'with ?accepts_incomplete=true' do
+          let(:uri) do
+            guid = service_instance.guid
+            plan_id = service_plan.unique_id
+            service_id = service.unique_id
+            path = "/v2/service_instances/#{guid}?plan_id=#{plan_id}&service_id=#{service_id}&accepts_incomplete=true"
+            uri = URI(service.service_broker.broker_url + path)
+            uri.user = service.service_broker.auth_username
+            uri.password = service.service_broker.auth_password
+            uri
+          end
+
           context 'when the broker returns state `in progress`' do
             let(:status) { 202 }
             let(:body) do

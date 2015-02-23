@@ -12,7 +12,7 @@ module VCAP::CloudController
       service_instance = ManagedServiceInstance.new(request_attrs)
       attributes_to_update = service_instance.client.provision(
         service_instance,
-        async: accepts_incomplete?(params),
+        accepts_incomplete: accepts_incomplete?(params),
         event_repository_opts: {
           user: SecurityContext.current_user,
           user_email: SecurityContext.current_user_email

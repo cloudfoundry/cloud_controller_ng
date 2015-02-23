@@ -125,6 +125,17 @@ module VCAP::Services::ServiceBrokers::V2
           with(path, anything)
       end
 
+      context 'when the caller passes the accepts_incomplete flag' do
+        let(:path) { "/v2/service_instances/#{instance.guid}?accepts_incomplete=true" }
+
+        it 'adds the flag to the path of the service broker request' do
+          client.provision(instance, options.merge(accepts_incomplete: true))
+
+          expect(http_client).to have_received(:put).
+            with(path, anything)
+        end
+      end
+
       it 'makes a put request with correct message' do
         client.provision(instance, options)
 
@@ -510,6 +521,17 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:patch).with(path, anything)
       end
 
+      context 'when the caller passes the accepts_incomplete flag' do
+        let(:path) { "/v2/service_instances/#{instance.guid}?accepts_incomplete=true" }
+
+        it 'adds the flag to the path of the service broker request' do
+          client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+
+          expect(http_client).to have_received(:patch).
+            with(path, anything)
+        end
+      end
+
       context 'when the broker returns a last_operation' do
         let(:response_data) do
           {
@@ -521,7 +543,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'forwards the last operation state from the broker' do
-          attributes, err = client.update_service_plan(instance, new_plan, options.merge(async: true))
+          attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
 
           last_operation = attributes[:last_operation]
           expect(err).to be_nil
@@ -536,7 +558,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:response_data) { { bogus_key: 'bogus_value' } }
 
         it 'defaults the last operation state to `succeeded`' do
-          attributes, err = client.update_service_plan(instance, new_plan, options.merge(async: true))
+          attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
 
           last_operation = attributes[:last_operation]
           expect(err).to be_nil
@@ -547,7 +569,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'returns the new service_plan in a hash' do
-          attributes, err = client.update_service_plan(instance, new_plan, options.merge(async: true))
+          attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
           expect(err).to be_nil
           expect(attributes[:service_plan]).to eq new_plan
         end
@@ -567,7 +589,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'return immediately with the broker response' do
           client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          attributes, error = client.update_service_plan(instance, new_plan, options.merge(async: true))
+          attributes, error = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
 
           expect(attributes[:last_operation][:type]).to eq('update')
           expect(attributes[:last_operation][:state]).to eq('in progress')
@@ -576,7 +598,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'enqueues a polling job' do
-          client.update_service_plan(instance, new_plan, options.merge(async: true))
+          client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
           expect(state_poller).to have_received(:poll_service_instance_state).
             with(client_attrs, instance, options[:event_repository_opts], options[:request_attrs])
         end
@@ -595,7 +617,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'returns an array containing the update attributes and the error' do
-            attrs, err = client.update_service_plan(instance, new_plan, options.merge(async: 'true'))
+            attrs, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: 'true'))
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -616,7 +638,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'returns an array containing the update attributes and the error' do
-            attrs, err = client.update_service_plan(instance, new_plan, options.merge(async: 'true'))
+            attrs, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: 'true'))
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -637,7 +659,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'returns an array containing the update attributes and the error' do
-            attrs, err = client.update_service_plan(instance, new_plan, options.merge(async: 'true'))
+            attrs, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: 'true'))
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -658,7 +680,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'returns an array containing the update attributes and the error' do
-            attrs, err = client.update_service_plan(instance, new_plan, options.merge(async: 'true'))
+            attrs, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: 'true'))
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -679,7 +701,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'returns an array containing the update attributes and the error' do
-            attrs, err = client.update_service_plan(instance, new_plan, options.merge(async: 'true'))
+            attrs, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: 'true'))
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -909,6 +931,15 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(http_client).to have_received(:delete).
           with("/v2/service_instances/#{instance.guid}", anything)
+      end
+
+      context 'when the caller passes the accepts_incomplete flag' do
+        it 'adds the flag to the path of the service broker request' do
+          client.deprovision(instance, accepts_incomplete: true)
+
+          expect(http_client).to have_received(:delete).
+            with(path, hash_including(accepts_incomplete: true))
+        end
       end
 
       it 'makes a delete request with correct message' do

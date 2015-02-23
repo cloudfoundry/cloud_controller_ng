@@ -19,7 +19,7 @@ module VCAP::CloudController
           attributes_to_update, err = service_instance.client.update_service_plan(
             service_instance,
             new_plan,
-            async: accepts_incomplete?(params),
+            accepts_incomplete: accepts_incomplete?(params),
             event_repository_opts: {
               user: SecurityContext.current_user,
               user_email: SecurityContext.current_user_email

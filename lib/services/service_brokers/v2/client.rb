@@ -25,7 +25,7 @@ module VCAP::Services::ServiceBrokers::V2
       request_attrs = opts.fetch(:request_attrs)
 
       path = "/v2/service_instances/#{instance.guid}"
-      if opts.fetch(:async, false)
+      if opts[:accepts_incomplete]
         path += '?accepts_incomplete=true'
       end
 
@@ -132,10 +132,12 @@ module VCAP::Services::ServiceBrokers::V2
 
       path = "/v2/service_instances/#{instance.guid}"
 
-      response = @http_client.delete(path, {
+      request_params = {
         service_id: instance.service.broker_provided_id,
         plan_id:    instance.service_plan.broker_provided_id,
-      })
+      }
+      request_params.merge!(accepts_incomplete: true) if opts[:accepts_incomplete] == true
+      response = @http_client.delete(path, request_params)
 
       parsed_response = @response_parser.parse(:delete, path, response) || {}
 
@@ -162,7 +164,7 @@ module VCAP::Services::ServiceBrokers::V2
       request_attrs = opts.fetch(:request_attrs)
 
       path = "/v2/service_instances/#{instance.guid}"
-      if opts.fetch(:async, false)
+      if opts[:accepts_incomplete]
         path += '?accepts_incomplete=true'
       end
 
