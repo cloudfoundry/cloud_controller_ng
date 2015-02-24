@@ -324,6 +324,44 @@ module CloudController
               end
             end
 
+            context 'and the error is a Excon::Errors::BadRequest' do
+              it 'succeeds when the underlying call eventually succeds' do
+                called = 0
+                expect(client.files).to receive(:create).exactly(3).times do |_|
+                  called += 1
+                  raise Excon::Errors::BadRequest.new('a bad request') if called <= 2
+                end
+
+                path = File.join(local_dir, 'some_file')
+                FileUtils.touch(path)
+                key = 'gonnafailnotgonnafail'
+
+                expect { client.cp_to_blobstore(path, key, 2) }.not_to raise_error
+              end
+
+              it 'fails when the max number of retries is hit' do
+                expect(client.files).to receive(:create).exactly(3).times.and_raise(Excon::Errors::BadRequest.new('a bad request'))
+
+                path = File.join(local_dir, 'some_file')
+                FileUtils.touch(path)
+                key = 'gonnafailnotgonnafail2'
+
+                expect { client.cp_to_blobstore(path, key, 2) }.to raise_error Excon::Errors::BadRequest
+              end
+            end
+
+            context 'when retries is 0' do
+              it 'fails if the underlying operation fails' do
+                expect(client.files).to receive(:create).once.and_raise(SystemCallError.new('o no'))
+
+                path = File.join(local_dir, 'some_file')
+                FileUtils.touch(path)
+                key = 'gonnafail'
+
+                expect { client.cp_to_blobstore(path, key, 0) }.to raise_error SystemCallError, /o no/
+              end
+            end
+
             context 'when retries is greater than zero' do
               context 'and the underlying blobstore eventually succeeds' do
                 it 'succeeds' do

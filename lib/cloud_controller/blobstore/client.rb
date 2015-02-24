@@ -66,7 +66,7 @@ module CloudController
             )
           # work around https://github.com/fog/fog/issues/3137
           # and Fog raising an EOFError SocketError intermittently
-          rescue SystemCallError, Excon::Errors::SocketError => e
+          rescue SystemCallError, Excon::Errors::SocketError, Excon::Errors::BadRequest => e
             logger.debug('blobstore.cp-retry',
                          error: e,
                          destination_key: destination_key,
