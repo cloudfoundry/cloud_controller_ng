@@ -1,4 +1,5 @@
 require 'services/api'
+require 'controllers/services/lifecycle/service_instance_binding_manager'
 
 module VCAP::CloudController
   class ServiceBindingsController < RestController::ModelController
@@ -25,33 +26,11 @@ module VCAP::CloudController
     post path, :create
     def create
       @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
-
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
-
       raise InvalidRequest unless request_attrs
 
-      service_instance = ServiceInstance.find(guid: @request_attrs['service_instance_guid'])
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid']) unless service_instance
-      raise VCAP::Errors::ApiError.new_from_details('UnbindableService') unless service_instance.bindable?
-      validate_app(request_attrs['app_guid'])
-
-      service_binding = ServiceBinding.new(@request_attrs)
-      validate_access(:create, service_binding)
-      raise Sequel::ValidationFailed.new(service_binding) if !service_binding.valid?
-
-      begin
-        lock_service_instance_by_blocking(service_instance) do
-          attributes_to_update = service_binding.client.bind(service_binding)
-          service_binding.set_all(attributes_to_update)
-          service_binding.save
-        end
-      rescue
-        service_binding.client.orphan_mitigator.cleanup_failed_bind(
-          service_binding.client.attrs,
-          service_binding
-        )
-        raise
-      end
+      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self)
+      service_binding = binding_manager.create_service_instance_binding(@request_attrs)
 
       @services_event_repository.record_service_binding_event(:create, service_binding)
 
@@ -66,30 +45,17 @@ module VCAP::CloudController
       service_binding = find_guid_and_validate_access(:delete, guid, ServiceBinding)
       raise_if_has_associations!(service_binding) if v2_api? && !recursive?
 
-      service_instance = ServiceInstance.find(guid: service_binding.service_instance_guid)
+      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self)
+      delete_job = binding_manager.delete_service_instance_binding(service_binding, params)
 
-      lock_service_instance_by_blocking(service_instance) do
-        deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceBinding, guid)
-        delete_and_audit_job = Jobs::AuditEventJob.new(deletion_job, @services_event_repository, :record_service_binding_event, :delete, service_binding)
-
-        enqueue_deletion_job(delete_and_audit_job)
+      if delete_job
+        [HTTP::ACCEPTED, JobPresenter.new(delete_job).to_json]
+      else
+        [HTTP::NO_CONTENT, nil]
       end
     end
 
     private
-
-    def lock_service_instance_by_blocking(service_instance, &block)
-      if service_instance.managed_instance?
-        service_instance.lock_by_blocking_other_operations(&block)
-      else
-        block.call
-      end
-    end
-
-    def validate_app(app_guid)
-      app = App.find(guid: app_guid)
-      raise VCAP::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless app
-    end
 
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:app_id, :service_instance_id])
