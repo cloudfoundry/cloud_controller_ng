@@ -124,14 +124,7 @@ module VCAP::CloudController
 
         it 'includes app environment variables' do
           request = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          expect(request[:env]).to include('KEY=value')
-        end
-
-        it 'includes CF_STACK' do
-          app.environment_json = { 'CF_STACK' => 'not-this' }
-
-          request = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          expect(request[:env]).to include("CF_STACK=#{app.stack.name}")
+          expect(request[:env]).to eq(['KEY=value'])
         end
 
         it 'includes environment variables from running environment variable group' do
@@ -140,7 +133,7 @@ module VCAP::CloudController
           group.save
 
           request = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          expect(request[:env]).to include('KEY=value', 'RUNNINGKEY=running_value')
+          expect(request[:env]).to match_array(['KEY=value', 'RUNNINGKEY=running_value'])
         end
 
         it 'prefers app environment variables when they conflict with running group variables' do
@@ -149,7 +142,7 @@ module VCAP::CloudController
           group.save
 
           request = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          expect(request[:env]).to include('KEY=value')
+          expect(request[:env]).to match_array(['KEY=value'])
         end
       end
     end
