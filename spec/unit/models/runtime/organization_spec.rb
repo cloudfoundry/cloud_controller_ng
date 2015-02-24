@@ -94,7 +94,7 @@ module VCAP::CloudController
           }.not_to raise_error
         end
 
-        it 'disallows removing all the managersjim' do
+        it 'disallows removing all the managers' do
           u1, u2 = [User.make, User.make]
           org.manager_guids = [u1.guid]
           org.save

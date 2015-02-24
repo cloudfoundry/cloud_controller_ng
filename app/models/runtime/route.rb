@@ -101,6 +101,10 @@ module VCAP::CloudController
 
       loaded_apps.each do |app|
         handle_remove_app(app)
+
+        if app.dea_update_pending?
+          Dea::Client.update_uris(app)
+        end
       end
     end
 
