@@ -59,15 +59,6 @@ module VCAP::Services
             client.provision(unique_id, name)
           end
         end
-
-        context 'when the broker timeout is not set' do
-          let(:config) { { missing_broker_client_timeout: nil } }
-
-          it 'sets HTTP timeouts on provisions' do
-            expect_timeout_to_be 60
-            client.provision(unique_id, name)
-          end
-        end
       end
 
       context 'when an https URL is used' do

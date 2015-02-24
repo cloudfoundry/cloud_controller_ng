@@ -187,15 +187,6 @@ module VCAP::Services::ServiceBrokers::V2
           expect_timeout_to_be 100
         end
       end
-
-      context 'when the broker client timeout is not set' do
-        let(:config) { { missing_broker_client_timeout: nil } }
-
-        it 'defaults to a 60 second timeout' do
-          request
-          expect_timeout_to_be 60
-        end
-      end
     end
 
     describe '#get' do
