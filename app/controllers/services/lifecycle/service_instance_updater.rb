@@ -16,6 +16,8 @@ module VCAP::CloudController
         attributes_to_update = {}
         if request_attrs['service_plan_guid']
           new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
+          return if new_plan == service_instance.service_plan
+
           attributes_to_update, err = service_instance.client.update_service_plan(
             service_instance,
             new_plan,

@@ -822,6 +822,20 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the request is to update the instance to the plan it already has' do
+        let(:body) do
+          MultiJson.dump(
+            service_plan_guid: old_service_plan.guid
+          )
+        end
+
+        it 'does not make a request to the broker' do
+          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
+
+          expect(a_request(:patch, /#{service_broker_url}/)).not_to have_been_made
+        end
+      end
+
       describe 'error cases' do
         context 'when the service instance has an operation in progress' do
           let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
