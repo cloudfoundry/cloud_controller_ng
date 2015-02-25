@@ -4,14 +4,15 @@ module VCAP::CloudController
   module Jobs
     module Services
       class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository_opts, :request_attrs
+        attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository_opts, :request_attrs, :poll_interval
 
-        def initialize(name, client_attrs, service_instance_guid, services_event_repository_opts, request_attrs)
+        def initialize(name, client_attrs, service_instance_guid, services_event_repository_opts, request_attrs, poll_interval)
           @name = name
           @client_attrs = client_attrs
           @service_instance_guid = service_instance_guid
           @services_event_repository_opts = services_event_repository_opts
           @request_attrs = request_attrs
+          @poll_interval = poll_interval
         end
 
         def perform
@@ -29,7 +30,7 @@ module VCAP::CloudController
 
         def retry_state_updater(client_attrs, service_instance)
           poller = VCAP::Services::ServiceBrokers::V2::ServiceInstanceStatePoller.new
-          poller.poll_service_instance_state(client_attrs, service_instance)
+          poller.poll_service_instance_state(client_attrs, service_instance, @services_event_repository_opts, @request_attrs, @poll_interval)
         end
 
         def job_name_in_configuration

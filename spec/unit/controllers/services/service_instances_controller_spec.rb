@@ -195,13 +195,13 @@ module VCAP::CloudController
         let(:plan) { ServicePlan.make(:v2, service: service) }
         let(:developer) { make_developer_for_space(space) }
         let(:response_body) do
-          MultiJson.dump(
+          {
             dashboard_url: 'the dashboard_url',
             last_operation: {
               state: 'in progress',
               description: '',
             },
-          )
+          }.to_json
         end
         let(:response_code) { 200 }
 
@@ -315,6 +315,73 @@ module VCAP::CloudController
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
             expect(event).to be_nil
+          end
+
+          context 'and the broker specifies a custom polling interval' do
+            let(:response_body) do
+              {
+                dashboard_url: 'the dashboard_url',
+                last_operation: {
+                  state: 'in progress',
+                  description: '',
+                  async_poll_interval_seconds: polling_interval
+                }
+              }.to_json
+            end
+
+            before do
+              stub_request(:get, service_broker_url_regex).
+                with(headers: { 'Accept' => 'application/json' }).
+                to_return(status: 200, body: {
+                   last_operation: {
+                     state: 'succeeded'
+                   }
+                }.to_json)
+            end
+
+            context 'and the polling interval is within the default value and 24 hours' do
+              let(:polling_interval) { 300 }
+
+              it 'enqueues a fetch job to run at the custom polling interval' do
+                create_managed_service_instance
+
+                Timecop.freeze(Time.now + 290.seconds) do
+                  expect(Delayed::Worker.new.work_off).to eq([0, 0])
+                end
+
+                Timecop.freeze(Time.now + 301.seconds) do
+                  expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                end
+              end
+            end
+
+            context 'and the polling interval is less than the default value' do
+              let(:polling_interval) { 0 }
+
+              it 'enqueues a fetch job to run at the default interval' do
+                create_managed_service_instance
+
+                expect(Delayed::Worker.new.work_off).to eq([0, 0])
+
+                Timecop.freeze(Time.now + 300.seconds) do
+                  expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                end
+              end
+            end
+
+            context 'and the polling interval is greater than 24 hours' do
+              let(:polling_interval) { 5.days }
+
+              it 'enqueues a fetch job to run at the maximum interval (24 hours)' do
+                create_managed_service_instance
+
+                expect(Delayed::Worker.new.work_off).to eq([0, 0])
+
+                Timecop.freeze(Time.now + 24.hours + 1.second) do
+                  expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                end
+              end
+            end
           end
 
           context 'and the worker processes the request successfully' do

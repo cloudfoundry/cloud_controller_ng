@@ -38,6 +38,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       parsed_response = @response_parser.parse(:put, path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
+      poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i)
       attributes = {
         # DEPRECATED, but needed because of not null constraint
         credentials: {},
@@ -52,7 +53,7 @@ module VCAP::Services::ServiceBrokers::V2
       if state
         attributes[:last_operation][:state] = state
         if attributes[:last_operation][:state] == 'in progress'
-          @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs)
+          @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs, poll_interval_seconds)
         end
       else
         attributes[:last_operation][:state] = 'succeeded'
@@ -142,9 +143,10 @@ module VCAP::Services::ServiceBrokers::V2
       parsed_response = @response_parser.parse(:delete, path, response) || {}
 
       last_operation = parsed_response['last_operation'] || {}
+      poll_interval = last_operation['async_poll_interval_seconds'].try(:to_i)
 
       if last_operation['state'] == 'in progress'
-        @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs)
+        @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs, poll_interval)
       end
 
       parsed_response ||= {}
@@ -180,6 +182,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       parsed_response = @response_parser.parse(:patch, path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
+      poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i)
 
       attributes = {
         last_operation: {
@@ -193,7 +196,7 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:last_operation][:state] = state
         attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
         if attributes[:last_operation][:state] == 'in progress'
-          @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs)
+          @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs, poll_interval_seconds)
         end
       else
         attributes[:last_operation][:state] = 'succeeded'

@@ -139,13 +139,13 @@ module VCAP::Services::ServiceBrokers::V2
       it 'makes a put request with correct message' do
         client.provision(instance, options)
 
-        expect(http_client).to have_received(:put).
-          with(anything,
-            service_id:        instance.service.broker_provided_id,
-            plan_id:           instance.service_plan.broker_provided_id,
-            organization_guid: instance.organization.guid,
-            space_guid:        instance.space.guid
-          )
+        expect(http_client).to have_received(:put).with(
+          anything,
+          service_id:        instance.service.broker_provided_id,
+          plan_id:           instance.service_plan.broker_provided_id,
+          organization_guid: instance.organization.guid,
+          space_guid:        instance.space.guid
+        )
       end
 
       it 'returns the attributes to update on a service instance' do
@@ -171,7 +171,7 @@ module VCAP::Services::ServiceBrokers::V2
         expect(error).to be_nil
       end
 
-      it 'DEPRECATED, maintain for database not null contraint: sets the credentials on the instance' do
+      it 'DEPRECATED, maintain for database not null constraint: sets the credentials on the instance' do
         attributes, error = client.provision(instance, options)
 
         expect(attributes[:credentials]).to eq({})
@@ -261,7 +261,37 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'enqueues a polling job' do
           client.provision(instance, options)
-          expect(state_poller).to have_received(:poll_service_instance_state).with(client_attrs, instance, options[:event_repository_opts], options[:request_attrs])
+          expect(state_poller).to have_received(:poll_service_instance_state).with(
+            client_attrs,
+            instance,
+            options[:event_repository_opts],
+            options[:request_attrs],
+            nil
+          )
+        end
+
+        context 'and async_poll_interval_seconds is set by the broker' do
+          let(:poll_interval) { '120' }
+          let(:response_data) do
+            {
+              last_operation: {
+                state: 'in progress',
+                description: '10% done',
+                async_poll_interval_seconds: poll_interval
+              },
+            }
+          end
+
+          it 'parses the value as an integer and passes it to the state poller' do
+            client.provision(instance, options)
+            expect(state_poller).to have_received(:poll_service_instance_state).with(
+              client_attrs,
+              instance,
+              options[:event_repository_opts],
+              options[:request_attrs],
+              poll_interval.to_i
+            )
+          end
         end
       end
 
@@ -599,8 +629,37 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'enqueues a polling job' do
           client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
-          expect(state_poller).to have_received(:poll_service_instance_state).
-            with(client_attrs, instance, options[:event_repository_opts], options[:request_attrs])
+          expect(state_poller).to have_received(:poll_service_instance_state).with(
+            client_attrs,
+            instance,
+            options[:event_repository_opts],
+            options[:request_attrs],
+            nil
+          )
+        end
+
+        context 'and async_poll_interval_seconds is set by the broker' do
+          let(:poll_interval) { '120' }
+          let(:response_data) do
+            {
+              last_operation: {
+                state: 'in progress',
+                description: '10% done',
+                async_poll_interval_seconds: poll_interval
+              },
+            }
+          end
+
+          it 'parses the value as an integer and passes it to the state poller' do
+            client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+            expect(state_poller).to have_received(:poll_service_instance_state).with(
+                client_attrs,
+                instance,
+                options[:event_repository_opts],
+                options[:request_attrs],
+                poll_interval.to_i
+              )
+          end
         end
       end
 
@@ -926,6 +985,16 @@ module VCAP::Services::ServiceBrokers::V2
         allow(http_client).to receive(:delete).and_return(response)
       end
 
+      it 'returns an empty last operation' do
+        attrs = client.deprovision(instance)
+        expect(attrs).to eq({
+          last_operation: {
+            state: nil,
+            description: nil
+          }
+        })
+      end
+
       it 'makes a delete request with the correct path' do
         client.deprovision(instance)
 
@@ -940,18 +1009,71 @@ module VCAP::Services::ServiceBrokers::V2
           expect(http_client).to have_received(:delete).
             with(path, hash_including(accepts_incomplete: true))
         end
+
+        context 'when the last_operation state is `in progress`' do
+          let(:code) { 202 }
+          let(:response_data) do
+            {
+              last_operation: {
+                state: 'in progress',
+                description: 'working on it'
+              }
+            }
+          end
+
+          it 'returns the last_operation hash' do
+            attrs = client.deprovision(instance, options.merge(accepts_incomplete: true))
+            expect(attrs).to eq(response_data)
+          end
+
+          it 'enqueues a job to fetch the state of the instance' do
+            client.deprovision(instance, options.merge(accepts_incomplete: true))
+
+            expect(state_poller).to have_received(:poll_service_instance_state).with(
+              client_attrs,
+              instance,
+              options[:event_repository_opts],
+              options[:request_attrs],
+              nil
+            )
+          end
+
+          context 'and async_poll_interval_seconds is set by the broker' do
+            let(:poll_interval) { '500' }
+            let(:response_data) do
+              {
+                last_operation: {
+                  state: 'in progress',
+                  description: '10% done',
+                  async_poll_interval_seconds: poll_interval
+                },
+              }
+            end
+
+            it 'parses the value as an integer and passes it to the state poller' do
+              client.deprovision(instance, options.merge(accepts_incomplete: true))
+              expect(state_poller).to have_received(:poll_service_instance_state).with(
+                  client_attrs,
+                  instance,
+                  options[:event_repository_opts],
+                  options[:request_attrs],
+                  poll_interval.to_i
+                )
+            end
+          end
+        end
       end
 
       it 'makes a delete request with correct message' do
         client.deprovision(instance)
 
-        expect(http_client).to have_received(:delete).
-          with(anything,
-               {
+        expect(http_client).to have_received(:delete).with(
+          anything,
+          {
             service_id: instance.service.broker_provided_id,
             plan_id:    instance.service_plan.broker_provided_id
           }
-              )
+        )
       end
     end
   end

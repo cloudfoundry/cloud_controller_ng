@@ -47,12 +47,16 @@ module VCAP::CloudController
             },
           }
         end
+        let(:poll_interval) { 60.second }
+        let(:request_attrs) do
+          {
+            dummy_data: 'dummy_data'
+          }
+        end
 
         subject(:job) do
           VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-            name, client_attrs, service_instance.guid, service_event_repository_opts, {
-              dummy_data: 'dummy_data'
-            }
+            name, client_attrs, service_instance.guid, service_event_repository_opts, request_attrs, poll_interval
           )
         end
 
@@ -213,6 +217,7 @@ module VCAP::CloudController
               expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
 
               Timecop.freeze(Time.now + 1.hour) do
+                Delayed::Job.last.invoke_job
                 expect(Delayed::Worker.new.work_off).to eq([1, 0])
               end
             end
