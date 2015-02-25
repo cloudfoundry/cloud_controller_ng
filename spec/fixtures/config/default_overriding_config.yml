@@ -145,3 +145,6 @@ diego:
   running: optional
 
 diego_docker: true
+
+broker_client_timeout_seconds: 120
+broker_client_default_async_poll_interval_seconds: 120
