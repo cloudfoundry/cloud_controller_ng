@@ -22,10 +22,6 @@ module VCAP::CloudController
 
           updater = ServiceInstanceStateUpdater.new(client, services_event_repository, self)
           updater.update_instance_state(service_instance, @request_attrs)
-        rescue HttpRequestError, HttpResponseError, Sequel::Error => e
-          logger = Steno.logger('cc-background')
-          logger.error("There was an error while fetching the service instance operation state: #{e}")
-          retry_state_updater(@client_attrs, service_instance)
         end
 
         def retry_state_updater(client_attrs, service_instance)
