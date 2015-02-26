@@ -161,6 +161,20 @@ module VCAP::CloudController
 
           expect(org.private_domains).to match_array([owned_domain, domain])
         end
+
+        it 'removes all associated routes when deleted' do
+          private_domain = PrivateDomain.make
+          space = Space.make
+          org = space.organization
+          org.add_private_domain(private_domain)
+          route = Route.make(space: space, domain: private_domain)
+
+          expect {
+            org.remove_private_domain(private_domain)
+          }.to change {
+            Route[route.id]
+          }.from(route).to(nil)
+        end
       end
 
       describe 'status' do

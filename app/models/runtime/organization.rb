@@ -26,6 +26,9 @@ module VCAP::CloudController
           or(id: db[r.join_table_source].select(r.qualified_right_key).where(r.predicate_key => self.id))
       },
       before_add: proc { |org, private_domain| private_domain.addable_to_organization?(org) },
+      after_remove: proc { |org, private_domain|
+        private_domain.routes_dataset.filter(space: org.spaces_dataset).destroy
+      }
     )
 
     one_to_many(
