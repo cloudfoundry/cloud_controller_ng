@@ -6,7 +6,7 @@ module VCAP::Services
       module Errors
         describe ServiceBrokerRequestRejected do
           let(:uri) { 'http://www.example.com/' }
-          let(:response) { double(code: 400, message: 'Generic bad request error', body: response_body) }
+          let(:response) { double(code: 400, message: 'status message', body: response_body) }
           let(:method) { 'PUT' }
 
           context 'with a description in the body' do
@@ -50,7 +50,7 @@ module VCAP::Services
               exception.set_backtrace(['/foo:1', '/bar:2'])
 
               expect(exception.to_h).to eq({
-                'description' => 'The service broker returned an error for the request to http://www.example.com/: 400 Generic bad request error',
+                'description' => "The service broker rejected the request to http://www.example.com/. Status Code: 400 status message, Body: #{response_body}",
                 'backtrace' => ['/foo:1', '/bar:2'],
                 'http' => {
                   'status' => 400,
