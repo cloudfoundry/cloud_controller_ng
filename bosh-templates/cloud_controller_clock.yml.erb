@@ -240,9 +240,6 @@ uaa_client_secret: <%= p("uaa.clients.cc-service-dashboards.secret") %>
 uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 <% end %>
 
-diego:
-  staging: <%= p("cc.diego.staging") %>
-  running: <%= p("cc.diego.running") %>
 diego_docker: <%= p("cc.diego_docker") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>

@@ -140,50 +140,16 @@ module VCAP::CloudController
           expect(decoded_response['results'].size).to eq(0)
         end
 
-        context 'when diego_running is set to disabled' do
-          before do
-            allow(Config.config).to receive(:[]).with(anything).and_call_original
-            allow(Config.config).to receive(:[]).with(:diego).and_return(
-              staging: 'optional',
-              running: 'disabled',
-            )
-            LegacyBulk.configure(Config.config, mbus)
-          end
+        it 'does not include diego apps' do
+          app = AppFactory.make(diego: true)
 
-          it 'includes diego apps' do
-            app = AppFactory.make(diego: true)
-
-            get '/bulk/apps', {
-              'batch_size' => 20,
-              'bulk_token' => '{}',
-            }
-            expect(last_response.status).to eq(200)
-            expect(decoded_response['results'].size).to eq(6)
-            expect(decoded_response['results']).to include(app.guid)
-          end
-        end
-
-        context 'when diego_running is set to optional' do
-          before do
-            allow(Config.config).to receive(:[]).with(anything).and_call_original
-            allow(Config.config).to receive(:[]).with(:diego).and_return(
-              staging: 'optional',
-              running: 'optional',
-            )
-            LegacyBulk.configure(Config.config, mbus)
-          end
-
-          it 'does not include diego apps' do
-            app = AppFactory.make(diego: true)
-
-            get '/bulk/apps', {
-              'batch_size' => 20,
-              'bulk_token' => '{}',
-            }
-            expect(last_response.status).to eq(200)
-            expect(decoded_response['results']).to_not include(app.guid)
-            expect(decoded_response['results'].size).to eq(5)
-          end
+          get '/bulk/apps', {
+                              'batch_size' => 20,
+                              'bulk_token' => '{}',
+                          }
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['results']).to_not include(app.guid)
+          expect(decoded_response['results'].size).to eq(5)
         end
       end
     end

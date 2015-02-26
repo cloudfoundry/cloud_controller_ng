@@ -5,14 +5,10 @@ module VCAP::CloudController
   describe Runners do
     let(:config) do
       {
-        diego: {
-          running: 'optional',
-          running: 'optional',
-        },
-        diego_docker: true,
-        staging: {
-          timeout_in_seconds: 90
-        }
+          diego_docker: true,
+          staging: {
+              timeout_in_seconds: 90
+          }
       }
     end
 
@@ -85,30 +81,17 @@ module VCAP::CloudController
           allow(app).to receive(:diego?).and_return(true)
         end
 
-        context 'when diego running is enabled' do
+        it 'finds a diego backend' do
+          expect(runners).to receive(:diego_runner).with(app).and_call_original
+          expect(runner).to be_a(Diego::Runner)
+        end
+
+        context 'when the app has a docker image' do
+          let(:docker_image) { 'foobar' }
+
           it 'finds a diego backend' do
             expect(runners).to receive(:diego_runner).with(app).and_call_original
             expect(runner).to be_a(Diego::Runner)
-          end
-
-          context 'when the app has a docker image' do
-            let(:docker_image) { 'foobar' }
-
-            it 'finds a diego backend' do
-              expect(runners).to receive(:diego_runner).with(app).and_call_original
-              expect(runner).to be_a(Diego::Runner)
-            end
-          end
-
-          context 'when diego is disabled' do
-            before do
-              config[:diego][:running] = 'disabled'
-            end
-
-            it 'finds a dea backend' do
-              expect(runners).to receive(:dea_runner).with(app).and_call_original
-              expect(runner).to be_a(Dea::Runner)
-            end
           end
         end
 
@@ -129,35 +112,17 @@ module VCAP::CloudController
       let(:diego_app) { make_diego_app }
       let(:dea_app) { make_dea_app }
 
-      context 'when diego is enabled' do
-        it 'returns true for a diego app' do
-          expect(runners.run_with_diego?(diego_app)).to be_truthy
-        end
-
-        it 'returns false for a dea app' do
-          expect(runners.run_with_diego?(dea_app)).to be_falsey
-        end
+      it 'returns true for a diego app' do
+        expect(runners.run_with_diego?(diego_app)).to be_truthy
       end
 
-      context 'when diego is disabled' do
-        before do
-          config[:diego][:running] = 'disabled'
-        end
-
-        it 'returns false for a diego app' do
-          expect(runners.run_with_diego?(diego_app)).to be_falsey
-        end
-
-        it 'returns false for a dea app' do
-          expect(runners.run_with_diego?(dea_app)).to be_falsey
-        end
+      it 'returns false for a dea app' do
+        expect(runners.run_with_diego?(dea_app)).to be_falsey
       end
     end
 
     describe '#diego_apps' do
       before do
-        allow(runners).to receive(:diego_running_disabled?).and_return(false)
-
         5.times do |i|
           app = make_diego_app(id: i + 1, state: 'STARTED')
           app.add_route(Route.make(space: app.space))
@@ -283,16 +248,6 @@ module VCAP::CloudController
           :domain
         ].length)
       end
-
-      context 'when diego running is disabled' do
-        before do
-          allow(runners).to receive(:diego_running_disabled?).and_return(true)
-        end
-
-        it 'returns no apps' do
-          expect(runners.diego_apps(100, 0)).to be_empty
-        end
-      end
     end
 
     describe '#diego_apps_from_process_guids' do
@@ -393,18 +348,6 @@ module VCAP::CloudController
           }.from([app]).to([])
         end
       end
-
-      context 'when diego running is disabled' do
-        before do
-          allow(runners).to receive(:diego_running_disabled?).and_return(true)
-        end
-
-        it 'returns no apps' do
-          all_process_guids = App.all.map { |app| Diego::ProcessGuid.from_app(app) }
-
-          expect(runners.diego_apps_from_process_guids(all_process_guids)).to be_empty
-        end
-      end
     end
 
     describe '#diego_apps_cache_data' do
@@ -468,16 +411,6 @@ module VCAP::CloudController
         app_ids = batch.map { |data| data[0] }
 
         expect(app_ids).not_to include(non_diego_app.id)
-      end
-
-      context 'when diego running is disabled' do
-        before do
-          allow(runners).to receive(:diego_running_disabled?).and_return(true)
-        end
-
-        it 'returns no apps' do
-          expect(runners.diego_apps_cache_data(100, 0)).to be_empty
-        end
       end
 
       it 'acquires the data in one select' do
@@ -566,18 +499,6 @@ module VCAP::CloudController
         batch = runners.dea_apps(100, 0)
 
         expect(batch).not_to include(deleted_app)
-      end
-
-      context 'when diego running is disabled' do
-        before do
-          config[:diego][:running] = 'disabled'
-        end
-
-        it 'returns all the apps' do
-          apps = runners.dea_apps(100, 0)
-          expect(apps.count).to eq(6)
-          expect(apps).to include(diego_app)
-        end
       end
     end
   end

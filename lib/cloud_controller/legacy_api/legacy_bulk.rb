@@ -33,11 +33,10 @@ module VCAP::CloudController
     allow_unauthenticated_access
 
     class << self
-      attr_reader :config, :message_bus, :diego_enabled
+      attr_reader :config, :message_bus
 
       def configure(config, message_bus)
         @config = config[:bulk_api].merge(cc_partition: config.fetch(:cc_partition))
-        @diego_enabled = config[:diego][:running] != 'disabled'
         @message_bus = message_bus
       end
 

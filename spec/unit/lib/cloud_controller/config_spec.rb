@@ -10,12 +10,6 @@ module VCAP::CloudController
           Config.from_file('nonexistent.yml')
         }.to raise_error(Errno::ENOENT, /No such file or directory @ rb_sysopen - nonexistent.yml/)
       end
-
-      it 'raises if the config is invalid' do
-        expect {
-          Config.from_file(File.join(Paths::FIXTURES, 'config/invalid_diego.yml'))
-        }.to raise_error /required doesn't validate/
-      end
     end
 
     describe '.merge_defaults' do
@@ -57,9 +51,7 @@ module VCAP::CloudController
           expect(config[:allowed_cors_domains]).to eq([])
         end
 
-        it 'disables diego' do
-          expect(config[:diego][:staging]).to eq('disabled')
-          expect(config[:diego][:running]).to eq('disabled')
+        it 'disables docker images on diego' do
           expect(config[:diego_docker]).to eq(false)
         end
 
@@ -144,8 +136,6 @@ module VCAP::CloudController
           end
 
           it 'preserves the diego configuration from the file' do
-            expect(config[:diego][:staging]).to eq('optional')
-            expect(config[:diego][:running]).to eq('optional')
             expect(config[:diego_docker]).to eq(true)
           end
 
@@ -247,10 +237,6 @@ module VCAP::CloudController
               user: 'user',
               password: 'password',
             },
-          },
-          diego: {
-            staging: 'optional',
-            running: 'optional',
           },
         }
       end
@@ -384,42 +370,6 @@ module VCAP::CloudController
         it 'enables GC profiling' do
           Config.configure_components(config)
           expect(GC::Profiler.enabled?).to eq(true)
-        end
-      end
-    end
-
-    describe 'diego config validation' do
-      base_config = { staging: { auth: { user: 'user', password: 'password' } } }
-
-      context 'valid configurations' do
-        let(:valid_configs) do
-          [
-            { diego: { staging: 'optional', running: 'optional' } },
-            { diego: { staging: 'optional', running: 'disabled' } },
-            { diego: { staging: 'disabled', running: 'disabled' } },
-          ]
-        end
-
-        it 'allows valid configurations' do
-          valid_configs.each do |config|
-            config.merge!(base_config)
-            expect {
-              Config.validate!(Config.merge_defaults(config))
-            }.to_not raise_error
-          end
-        end
-      end
-
-      context 'invalid configurations' do
-        let(:invalid_config) do
-          { diego: { staging: 'disabled', running: 'optional' } }
-        end
-
-        it 'raises a validation exception' do
-          invalid_config.merge!(base_config)
-          expect {
-            Config.validate!(Config.merge_defaults(invalid_config))
-          }.to raise_error /Invalid.*diego/
         end
       end
     end

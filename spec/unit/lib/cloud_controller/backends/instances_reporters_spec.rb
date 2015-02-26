@@ -2,101 +2,109 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe InstancesReporters do
-    let(:config) do
-      {
-        diego: {
-          staging: 'optional',
-          running: 'optional',
-        },
-        diego_docker: true
-      }
-    end
-
     let(:diego_client) { instance_double(Diego::Client) }
     let(:hm_client) { instance_double(Dea::HM9000::Client) }
 
     let(:dea_app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
     let(:diego_app) do
       AppFactory.make(
-        package_hash: 'abc',
-        package_state: 'STAGED',
-        diego: true
+          package_hash: 'abc',
+          package_state: 'STAGED',
+          diego: true
       )
     end
 
-    let(:reporter) { double(:Reporter) }
-    let(:reporter2) { double(:Reporter) }
-    let(:instances_reporters) { InstancesReporters.new(config, diego_client, hm_client) }
+    let(:dea_reporter) { instance_double(Dea::InstancesReporter) }
+    let(:diego_reporter) { instance_double(Diego::InstancesReporter) }
+    let(:instances_reporters) { InstancesReporters.new(diego_client, hm_client) }
+
+    before do
+      allow(Dea::InstancesReporter).to receive(:new).with(hm_client).and_return(dea_reporter)
+      allow(Diego::InstancesReporter).to receive(:new).with(diego_client).and_return(diego_reporter)
+    end
 
     describe '#number_of_starting_and_running_instances_for_app' do
-      it 'delegates to the reporter' do
-        allow(Dea::InstancesReporter).to receive(:new).with(hm_client).and_return(reporter)
-        allow(reporter).to receive(:number_of_starting_and_running_instances_for_app).with(dea_app).and_return(1)
+      context 'when the app is a DEA app' do
+        it 'delegates to the DEA reporter' do
+          allow(dea_reporter).to receive(:number_of_starting_and_running_instances_for_app).with(dea_app).and_return(1)
 
-        expect(instances_reporters.number_of_starting_and_running_instances_for_app(dea_app)).to eq(1)
+          expect(instances_reporters.number_of_starting_and_running_instances_for_app(dea_app)).to eq(1)
+        end
+      end
+
+      context 'when the app is a Diego app' do
+        it 'delegates to the Diego reporter' do
+          allow(diego_reporter).to receive(:number_of_starting_and_running_instances_for_app).with(diego_app).and_return(2)
+
+          expect(instances_reporters.number_of_starting_and_running_instances_for_app(diego_app)).to eq(2)
+        end
       end
     end
 
     describe '#all_instances_for_app' do
-      it 'delegates to the reporter' do
-        allow(Diego::InstancesReporter).to receive(:new).with(diego_client).and_return(reporter)
-        expect(reporter).to receive(:all_instances_for_app).with(diego_app).and_return(2)
+      context 'when the app is a DEA app' do
+        it 'delegates to the reporter' do
+          expect(dea_reporter).to receive(:all_instances_for_app).with(dea_app).and_return(3)
 
-        expect(instances_reporters.all_instances_for_app(diego_app)).to eq(2)
+          expect(instances_reporters.all_instances_for_app(dea_app)).to eq(3)
+        end
+      end
+
+      context 'when the app is a Diego app' do
+        it 'delegates to the reporter' do
+          expect(diego_reporter).to receive(:all_instances_for_app).with(diego_app).and_return(4)
+
+          expect(instances_reporters.all_instances_for_app(diego_app)).to eq(4)
+        end
       end
     end
 
     describe '#crashed_instances_for_app' do
-      it 'delegates to the reporter' do
-        allow(instances_reporters).to receive(:diego_running_disabled?).and_return(true)
-        allow(Dea::InstancesReporter).to receive(:new).with(hm_client).and_return(reporter)
-        expect(reporter).to receive(:crashed_instances_for_app).with(diego_app).and_return(3)
+      context 'when the app is a DEA app' do
+        it 'delegates to the reporter' do
+          expect(dea_reporter).to receive(:crashed_instances_for_app).with(dea_app).and_return(5)
 
-        expect(instances_reporters.crashed_instances_for_app(diego_app)).to eq(3)
+          expect(instances_reporters.crashed_instances_for_app(dea_app)).to eq(5)
+        end
+      end
+
+      context 'when the app is a Diego app' do
+        it 'delegates to the reporter' do
+          expect(diego_reporter).to receive(:crashed_instances_for_app).with(diego_app).and_return(6)
+
+          expect(instances_reporters.crashed_instances_for_app(diego_app)).to eq(6)
+        end
       end
     end
 
     describe '#stats_for_app' do
-      it 'delegates to the reporter' do
-        allow(Dea::InstancesReporter).to receive(:new).with(hm_client).and_return(reporter)
-        expect(reporter).to receive(:stats_for_app).with(dea_app).and_return(1 => {})
+      context 'when the app is a DEA app' do
+        it 'delegates to the reporter' do
+          expect(dea_reporter).to receive(:stats_for_app).with(dea_app).and_return(1 => {})
 
-        expect(instances_reporters.stats_for_app(dea_app)).to eq(1 => {})
+          expect(instances_reporters.stats_for_app(dea_app)).to eq(1 => {})
+        end
+      end
+
+      context 'when the app is a Diego app' do
+        it 'delegates to the reporter' do
+          expect(diego_reporter).to receive(:stats_for_app).with(diego_app).and_return(2 => {})
+
+          expect(instances_reporters.stats_for_app(diego_app)).to eq(2 => {})
+        end
       end
     end
 
     describe '#number_of_starting_and_running_instances_for_apps' do
       let(:apps) { [dea_app, diego_app] }
 
-      before do
-        allow(Dea::InstancesReporter).to receive(:new).with(hm_client).and_return(reporter)
-        allow(Diego::InstancesReporter).to receive(:new).with(diego_client).and_return(reporter2)
-      end
-
-      context 'when diego running is enabled' do
-        it 'delegates to the proper reporter' do
-          expect(reporter).to receive(:number_of_starting_and_running_instances_for_apps).
-            with([dea_app]).and_return({ 1 => {} })
-          expect(reporter2).to receive(:number_of_starting_and_running_instances_for_apps).
-            with([diego_app]).and_return({ 2 => {} })
-          expect(instances_reporters.number_of_starting_and_running_instances_for_apps(apps)).
+      it 'delegates to the proper reporter' do
+        expect(dea_reporter).to receive(:number_of_starting_and_running_instances_for_apps).
+                                    with([dea_app]).and_return({ 1 => {} })
+        expect(diego_reporter).to receive(:number_of_starting_and_running_instances_for_apps).
+                                      with([diego_app]).and_return({ 2 => {} })
+        expect(instances_reporters.number_of_starting_and_running_instances_for_apps(apps)).
             to eq({ 1 => {}, 2 => {} })
-        end
-      end
-
-      context 'when diego running is disabled' do
-        before do
-          config[:diego][:running] = 'disabled'
-        end
-
-        it 'delegates to the proper reporter' do
-          expect(reporter).to receive(:number_of_starting_and_running_instances_for_apps).
-            with([dea_app, diego_app]).and_return({ 1 => {}, 3 => {} })
-          expect(reporter2).to receive(:number_of_starting_and_running_instances_for_apps).
-            with([]).and_return({})
-          expect(instances_reporters.number_of_starting_and_running_instances_for_apps(apps)).
-            to eq({ 1 => {}, 3 => {} })
-        end
       end
     end
   end

@@ -6,7 +6,7 @@ module VCAP::CloudController
     module Docker
       describe Protocol do
         before do
-          TestConfig.override(diego: { staging: 'optional', running: 'optional' }, diego_docker: true)
+          TestConfig.override(diego_docker: true)
         end
 
         let(:default_health_check_timeout) { 9999 }

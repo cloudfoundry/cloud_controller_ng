@@ -217,17 +217,6 @@ module VCAP::CloudController
         optional(:default_locale) => String,
         optional(:allowed_cors_domains) => [String],
 
-        optional(:diego) => {
-          optional(:staging) => enum(
-            'disabled',
-            'optional',
-          ),
-          optional(:running) => enum(
-            'disabled',
-            'optional',
-          )
-        },
-
         optional(:dea_advertisement_timeout_in_seconds) => Integer,
       }
     end
@@ -235,9 +224,7 @@ module VCAP::CloudController
     class << self
       def from_file(file_name)
         config = super(file_name)
-        merge_defaults(config).tap do |c|
-          validate!(c)
-        end
+        merge_defaults(config)
       end
 
       attr_reader :config, :message_bus
@@ -275,7 +262,7 @@ module VCAP::CloudController
 
         dependency_locator.register(:stagers, stagers)
         dependency_locator.register(:runners, runners)
-        dependency_locator.register(:instances_reporters, InstancesReporters.new(@config, diego_client, hm_client))
+        dependency_locator.register(:instances_reporters, InstancesReporters.new(diego_client, hm_client))
         dependency_locator.register(:index_stopper, IndexStopper.new(runners))
 
         diego_client.connect!
@@ -323,9 +310,6 @@ module VCAP::CloudController
         config[:db][:database] ||= ENV['DB_CONNECTION_STRING']
         config[:default_locale] ||= 'en_US'
         config[:allowed_cors_domains] ||= []
-        config[:diego] ||= {}
-        config[:diego][:staging] ||= 'disabled'
-        config[:diego][:running] ||= 'disabled'
         config[:diego_docker] ||= false
         config[:dea_advertisement_timeout_in_seconds] ||= 10
         config[:staging][:minimum_staging_memory_mb] ||= 1024
@@ -334,12 +318,6 @@ module VCAP::CloudController
         config[:broker_client_timeout_seconds] ||= 60
         config[:broker_client_default_async_poll_interval_seconds] ||= 60
         sanitize(config)
-      end
-
-      def validate!(config)
-        if config[:diego][:staging] == 'disabled' && config[:diego][:running] != 'disabled'
-          raise 'Invalid diego configuration'
-        end
       end
 
       private

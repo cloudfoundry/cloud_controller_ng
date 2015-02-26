@@ -3,8 +3,7 @@ require 'cloud_controller/diego/instances_reporter'
 
 module VCAP::CloudController
   class InstancesReporters
-    def initialize(config, diego_client, health_manager_client)
-      @config = config
+    def initialize(diego_client, health_manager_client)
       @diego_client = diego_client
       @health_manager_client = health_manager_client
     end
@@ -26,7 +25,7 @@ module VCAP::CloudController
     end
 
     def number_of_starting_and_running_instances_for_apps(apps)
-      diego_apps = diego_running_disabled? ? [] : apps.select(&:diego?)
+      diego_apps = apps.select(&:diego?)
       dea_apps = apps - diego_apps
 
       diego_instances = diego_reporter.number_of_starting_and_running_instances_for_apps(diego_apps)
@@ -36,13 +35,7 @@ module VCAP::CloudController
 
     private
 
-    def diego_running_disabled?
-      @diego_running_disabled ||= @config[:diego][:running] == 'disabled'
-    end
-
     def reporter_for_app(app)
-      return legacy_reporter if diego_running_disabled?
-
       app.diego? ? diego_reporter : legacy_reporter
     end
 

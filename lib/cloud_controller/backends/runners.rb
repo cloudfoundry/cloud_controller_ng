@@ -15,18 +15,14 @@ module VCAP::CloudController
     end
 
     def runner_for_app(app)
-      return dea_runner(app) if diego_running_disabled?
-
       app.diego? ? diego_runner(app) : dea_runner(app)
     end
 
     def run_with_diego?(app)
-      app.diego? && !diego_running_disabled?
+      app.diego?
     end
 
     def diego_apps(batch_size, last_id)
-      return [] if diego_running_disabled?
-
       App.
         eager(:current_saved_droplet, :space, :stack, :service_bindings, { routes: :domain }).
         where('apps.id > ?', last_id).
@@ -40,8 +36,6 @@ module VCAP::CloudController
     end
 
     def diego_apps_from_process_guids(process_guids)
-      return [] if diego_running_disabled?
-
       process_guids = Array(process_guids).to_set
       App.
         eager(:current_saved_droplet, :space, :stack, :service_bindings, { routes: :domain }).
@@ -56,8 +50,6 @@ module VCAP::CloudController
     end
 
     def diego_apps_cache_data(batch_size, last_id)
-      return [] if diego_running_disabled?
-
       App.select(:id, :guid, :version, :updated_at).
         where('id > ?', last_id).
         where(state: 'STARTED').
@@ -74,18 +66,13 @@ module VCAP::CloudController
         where('id > ?', last_id).
         where('deleted_at IS NULL').
         order(:id).
+        where(diego: false).
         limit(batch_size)
-
-      query = query.where(diego: false) unless diego_running_disabled?
 
       query.all
     end
 
     private
-
-    def diego_running_disabled?
-      @diego_running_disabled ||= @config[:diego][:running] == 'disabled'
-    end
 
     def diego_runner(app)
       app.docker_image.present? ? diego_docker_runner(app) : diego_traditional_runner(app)

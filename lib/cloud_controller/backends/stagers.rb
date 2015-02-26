@@ -39,16 +39,10 @@ module VCAP::CloudController
     end
 
     def stager_for_app(app)
-      return dea_stager(app) if diego_staging_disabled?
-
       app.diego? ? diego_stager(app) : dea_stager(app)
     end
 
     private
-
-    def diego_staging_disabled?
-      @diego_disabled ||= @config[:diego][:staging] == 'disabled'
-    end
 
     def docker_disabled?
       !@config[:diego_docker]

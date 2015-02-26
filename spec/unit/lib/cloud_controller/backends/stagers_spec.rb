@@ -2,16 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe Stagers do
-    let(:config) do
-      TestConfig.override(
-        diego: {
-          staging: 'optional',
-          running: 'optional',
-        },
-        diego_docker: true,
-      )
-      TestConfig.config
-    end
+    let(:config) { TestConfig.config }
 
     let(:message_bus)  { instance_double(CfMessageBus::MessageBus) }
     let(:dea_pool)     { instance_double(Dea::Pool) }
@@ -143,12 +134,10 @@ module VCAP::CloudController
           allow(app).to receive(:diego?).and_return(true)
         end
 
-        context 'when diego staging is enabled' do
-          it 'finds a diego stager' do
-            expect(stagers).to receive(:diego_stager).with(app).and_call_original
+        it 'finds a diego stager' do
+          expect(stagers).to receive(:diego_stager).with(app).and_call_original
 
-            expect(stager).to be_a(Diego::Stager)
-          end
+          expect(stager).to be_a(Diego::Stager)
         end
 
         context 'when the app has a docker image' do
@@ -158,17 +147,6 @@ module VCAP::CloudController
             expect(stagers).to receive(:diego_stager).with(app).and_call_original
 
             expect(stager).to be_a(Diego::Stager)
-          end
-        end
-
-        context 'when diego staging is disabled' do
-          before do
-            config[:diego][:staging] = 'disabled'
-          end
-
-          it 'finds a dea stager' do
-            expect(stagers).to receive(:dea_stager).with(app).and_call_original
-            expect(stager).to be_a(Dea::Stager)
           end
         end
       end
