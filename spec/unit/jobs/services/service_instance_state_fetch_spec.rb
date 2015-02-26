@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'jobs/services/service_instance_state_fetch'
 
 module VCAP::CloudController
   module Jobs
@@ -63,6 +64,51 @@ module VCAP::CloudController
         def run_job(job)
           Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
           expect(Delayed::Worker.new.work_off).to eq [1, 0]
+        end
+
+        describe '#initialize' do
+          context 'when the caller provides a polling interval' do
+            let(:default_polling_interval) { 120 }
+
+            before do
+              mock_enqueuer = double(:enqueuer, enqueue: nil)
+              allow(VCAP::CloudController::Jobs::Enqueuer).to receive(:new).and_return(mock_enqueuer)
+              allow(VCAP::CloudController::Config).to receive(:config).and_return({ broker_client_default_async_poll_interval_seconds: default_polling_interval })
+            end
+
+            context 'and the value is less than the default value' do
+              let(:poll_interval) { 60 }
+
+              it 'sets polling_interval to default polling interval' do
+                expect(job.poll_interval).to eq default_polling_interval
+              end
+            end
+
+            context 'and the value is greater than the max value (24 hours)' do
+              let(:poll_interval) { 24.hours + 1.minute }
+
+              it 'enqueues the job using the maximum polling interval' do
+                expect(job.poll_interval).to eq 24.hours
+              end
+            end
+
+            context 'and the value is between the default value and max value (24 hours)' do
+              let(:poll_interval) { 200 }
+
+              it 'enqueues the job using the broker provided polling interval' do
+                expect(job.poll_interval).to eq poll_interval
+              end
+            end
+
+            context 'when the default is greater than the max value (24 hours)' do
+              let(:default_polling_interval) { 24.hours + 1.minute }
+              let(:poll_interval) { 120 }
+
+              it 'enqueues the job using the maximum polling interval' do
+                expect(job.poll_interval).to eq 24.hours
+              end
+            end
+          end
         end
 
         describe '#perform' do

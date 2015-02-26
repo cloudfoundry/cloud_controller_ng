@@ -22,11 +22,11 @@ module VCAP::CloudController
         end
       end
 
-      retry_state_updater(service_instance) unless service_instance.terminal_state?
+      @delegate.retry_state_updater unless service_instance.terminal_state?
     rescue HttpRequestError, HttpResponseError, Sequel::Error => e
       logger = Steno.logger('cc-background')
       logger.error("There was an error while fetching the service instance operation state: #{e}")
-      retry_state_updater(service_instance)
+      @delegate.retry_state_updater
     end
 
     private
@@ -47,10 +47,6 @@ module VCAP::CloudController
     def record_event(service_instance, request_attrs)
       type = service_instance.last_operation.type.to_sym
       @services_event_repository.record_service_instance_event(type, service_instance, request_attrs)
-    end
-
-    def retry_state_updater(service_instance)
-      @delegate.retry_state_updater(@client.attrs, service_instance)
     end
   end
 end

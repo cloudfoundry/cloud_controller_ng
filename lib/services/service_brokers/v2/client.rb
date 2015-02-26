@@ -1,3 +1,5 @@
+require 'jobs/services/service_instance_state_fetch'
+
 module VCAP::Services::ServiceBrokers::V2
   class Client
     CATALOG_PATH = '/v2/catalog'.freeze
@@ -10,7 +12,6 @@ module VCAP::Services::ServiceBrokers::V2
       @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
       @attrs = attrs
       @orphan_mitigator = VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new
-      @state_poller = VCAP::Services::ServiceBrokers::V2::ServiceInstanceStatePoller.new
     end
 
     def catalog
@@ -53,7 +54,7 @@ module VCAP::Services::ServiceBrokers::V2
       if state
         attributes[:last_operation][:state] = state
         if attributes[:last_operation][:state] == 'in progress'
-          @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs, poll_interval_seconds)
+          enqueue_state_fetch_job(instance.guid, event_repository_opts, request_attrs, poll_interval_seconds)
         end
       else
         attributes[:last_operation][:state] = 'succeeded'
@@ -143,10 +144,10 @@ module VCAP::Services::ServiceBrokers::V2
       parsed_response = @response_parser.parse(:delete, path, response) || {}
 
       last_operation = parsed_response['last_operation'] || {}
-      poll_interval = last_operation['async_poll_interval_seconds'].try(:to_i)
+      poll_interval_seconds = last_operation['async_poll_interval_seconds'].try(:to_i)
 
       if last_operation['state'] == 'in progress'
-        @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs, poll_interval)
+        enqueue_state_fetch_job(instance.guid, event_repository_opts, request_attrs, poll_interval_seconds)
       end
 
       parsed_response ||= {}
@@ -196,7 +197,7 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:last_operation][:state] = state
         attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
         if attributes[:last_operation][:state] == 'in progress'
-          @state_poller.poll_service_instance_state(@attrs, instance, event_repository_opts, request_attrs, poll_interval_seconds)
+          enqueue_state_fetch_job(instance.guid, event_repository_opts, request_attrs, poll_interval_seconds)
         end
       else
         attributes[:last_operation][:state] = 'succeeded'
@@ -221,6 +222,18 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
+
+    def enqueue_state_fetch_job(service_instance_guid, event_repository_opts, request_attrs, poll_interval_seconds)
+      job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
+        'service-instance-state-fetch',
+        @attrs,
+        service_instance_guid,
+        event_repository_opts,
+        request_attrs,
+        poll_interval_seconds
+      )
+      job.enqueue
+    end
 
     def logger
       @logger ||= Steno.logger('cc.service_broker.v2.client')

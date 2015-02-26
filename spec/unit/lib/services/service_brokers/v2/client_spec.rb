@@ -16,7 +16,6 @@ module VCAP::Services::ServiceBrokers::V2
 
     let(:http_client) { instance_double(HttpClient) }
     let(:orphan_mitigator) { instance_double(OrphanMitigator, cleanup_failed_provision: nil, cleanup_failed_bind: nil) }
-    let(:state_poller) { instance_double(ServiceInstanceStatePoller, poll_service_instance_state: nil) }
     let(:options) do
       {
         event_repository_opts: nil,
@@ -31,9 +30,6 @@ module VCAP::Services::ServiceBrokers::V2
 
       allow(VCAP::Services::ServiceBrokers::V2::OrphanMitigator).to receive(:new).
         and_return(orphan_mitigator)
-
-      allow(VCAP::Services::ServiceBrokers::V2::ServiceInstanceStatePoller).to receive(:new).
-        and_return(state_poller)
 
       allow(http_client).to receive(:url).and_return(service_broker.broker_url)
     end
@@ -210,7 +206,9 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'does not enqueue a polling job' do
           client.provision(instance, options)
-          expect(state_poller).to_not have_received(:poll_service_instance_state)
+          Timecop.freeze(Time.now + 1.hour) do
+            expect(Delayed::Worker.new.work_off).to eq([0, 0])
+          end
         end
       end
 
@@ -233,7 +231,9 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'does not enqueue a polling job' do
           client.provision(instance, options)
-          expect(state_poller).to_not have_received(:poll_service_instance_state)
+          Timecop.freeze(Time.now + 1.hour) do
+            expect(Delayed::Worker.new.work_off).to eq([0, 0])
+          end
         end
       end
 
@@ -260,14 +260,19 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'enqueues a polling job' do
-          client.provision(instance, options)
-          expect(state_poller).to have_received(:poll_service_instance_state).with(
-            client_attrs,
-            instance,
-            options[:event_repository_opts],
-            options[:request_attrs],
-            nil
-          )
+          expect {
+            client.provision(instance, options)
+          }.to change {
+            Delayed::Job.count
+          }.by(1)
+
+          expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
+          inner_job = unwrap_delayed_job(Delayed::Job.last)
+          expect(inner_job.name).to eq 'service-instance-state-fetch'
+          expect(inner_job.client_attrs).to eq client.attrs
+          expect(inner_job.service_instance_guid).to eq instance.guid
+          expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
+          expect(inner_job.request_attrs).to eq options[:request_attrs]
         end
 
         context 'and async_poll_interval_seconds is set by the broker' do
@@ -283,14 +288,20 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'parses the value as an integer and passes it to the state poller' do
-            client.provision(instance, options)
-            expect(state_poller).to have_received(:poll_service_instance_state).with(
-              client_attrs,
-              instance,
-              options[:event_repository_opts],
-              options[:request_attrs],
-              poll_interval.to_i
-            )
+            expect {
+              client.provision(instance, options)
+            }.to change {
+              Delayed::Job.count
+            }.by(1)
+
+            expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
+            inner_job = unwrap_delayed_job(Delayed::Job.last)
+            expect(inner_job.name).to eq 'service-instance-state-fetch'
+            expect(inner_job.client_attrs).to eq client.attrs
+            expect(inner_job.service_instance_guid).to eq instance.guid
+            expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
+            expect(inner_job.request_attrs).to eq options[:request_attrs]
+            expect(inner_job.poll_interval).to eq poll_interval.to_i
           end
         end
       end
@@ -311,7 +322,9 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'does not enqueue a polling job' do
           client.provision(instance, options) rescue nil
-          expect(state_poller).to_not have_received(:poll_service_instance_state)
+          Timecop.freeze(Time.now + 1.hour) do
+            expect(Delayed::Worker.new.work_off).to eq([0, 0])
+          end
         end
       end
 
@@ -628,14 +641,19 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'enqueues a polling job' do
-          client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
-          expect(state_poller).to have_received(:poll_service_instance_state).with(
-            client_attrs,
-            instance,
-            options[:event_repository_opts],
-            options[:request_attrs],
-            nil
-          )
+          expect {
+            client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+          }.to change {
+            Delayed::Job.count
+          }.by(1)
+
+          expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
+          inner_job = unwrap_delayed_job(Delayed::Job.last)
+          expect(inner_job.name).to eq 'service-instance-state-fetch'
+          expect(inner_job.client_attrs).to eq client.attrs
+          expect(inner_job.service_instance_guid).to eq instance.guid
+          expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
+          expect(inner_job.request_attrs).to eq options[:request_attrs]
         end
 
         context 'and async_poll_interval_seconds is set by the broker' do
@@ -651,14 +669,20 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'parses the value as an integer and passes it to the state poller' do
-            client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
-            expect(state_poller).to have_received(:poll_service_instance_state).with(
-                client_attrs,
-                instance,
-                options[:event_repository_opts],
-                options[:request_attrs],
-                poll_interval.to_i
-              )
+            expect {
+              client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+            }.to change {
+              Delayed::Job.count
+            }.by(1)
+
+            expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
+            inner_job = unwrap_delayed_job(Delayed::Job.last)
+            expect(inner_job.name).to eq 'service-instance-state-fetch'
+            expect(inner_job.client_attrs).to eq client.attrs
+            expect(inner_job.service_instance_guid).to eq instance.guid
+            expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
+            expect(inner_job.request_attrs).to eq options[:request_attrs]
+            expect(inner_job.poll_interval).to eq poll_interval.to_i
           end
         end
       end
@@ -1027,15 +1051,19 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'enqueues a job to fetch the state of the instance' do
-            client.deprovision(instance, options.merge(accepts_incomplete: true))
+            expect {
+              client.deprovision(instance, options)
+            }.to change {
+              Delayed::Job.count
+            }.by(1)
 
-            expect(state_poller).to have_received(:poll_service_instance_state).with(
-              client_attrs,
-              instance,
-              options[:event_repository_opts],
-              options[:request_attrs],
-              nil
-            )
+            expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
+            inner_job = unwrap_delayed_job(Delayed::Job.last)
+            expect(inner_job.name).to eq 'service-instance-state-fetch'
+            expect(inner_job.client_attrs).to eq client.attrs
+            expect(inner_job.service_instance_guid).to eq instance.guid
+            expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
+            expect(inner_job.request_attrs).to eq options[:request_attrs]
           end
 
           context 'and async_poll_interval_seconds is set by the broker' do
@@ -1051,14 +1079,20 @@ module VCAP::Services::ServiceBrokers::V2
             end
 
             it 'parses the value as an integer and passes it to the state poller' do
-              client.deprovision(instance, options.merge(accepts_incomplete: true))
-              expect(state_poller).to have_received(:poll_service_instance_state).with(
-                  client_attrs,
-                  instance,
-                  options[:event_repository_opts],
-                  options[:request_attrs],
-                  poll_interval.to_i
-                )
+              expect {
+                client.deprovision(instance, options)
+              }.to change {
+                Delayed::Job.count
+              }.by(1)
+
+              expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
+              inner_job = unwrap_delayed_job(Delayed::Job.last)
+              expect(inner_job.name).to eq 'service-instance-state-fetch'
+              expect(inner_job.client_attrs).to eq client.attrs
+              expect(inner_job.service_instance_guid).to eq instance.guid
+              expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
+              expect(inner_job.request_attrs).to eq options[:request_attrs]
+              expect(inner_job.poll_interval).to eq poll_interval.to_i
             end
           end
         end
@@ -1075,6 +1109,10 @@ module VCAP::Services::ServiceBrokers::V2
           }
         )
       end
+    end
+
+    def unwrap_delayed_job(job)
+      job.payload_object.handler.handler.handler
     end
   end
 end
