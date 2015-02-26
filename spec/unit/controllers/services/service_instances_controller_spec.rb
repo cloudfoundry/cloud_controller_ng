@@ -1237,7 +1237,7 @@ module VCAP::CloudController
                 }.to_json)
 
               expect(last_response).to have_status_code 202
-              Timecop.freeze Time.now + 2.minute do
+              Timecop.freeze Time.now + 30.minutes do
                 expect(Delayed::Worker.new.work_off).to eq [1, 0]
               end
             end

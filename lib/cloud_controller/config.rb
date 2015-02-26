@@ -181,6 +181,7 @@ module VCAP::CloudController
         optional(:disable_custom_buildpacks) => bool,
         optional(:broker_client_timeout_seconds) => Integer,
         optional(:broker_client_default_async_poll_interval_seconds) => Integer,
+        optional(:broker_client_max_async_poll_attempts) => Integer,
         optional(:uaa_client_name) => String,
         optional(:uaa_client_secret) => String,
         optional(:uaa_client_scope) => String,

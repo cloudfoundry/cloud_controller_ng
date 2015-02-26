@@ -33,6 +33,9 @@ default_app_memory: 1024 #mb
 default_health_check_timeout: 30 #seconds
 maximum_health_check_timeout: 90 #seconds
 
+broker_client_default_async_poll_interval_seconds: 60
+broker_client_max_async_poll_attempts: 25
+
 hm9000:
   url: "http://localhost:5155"
 

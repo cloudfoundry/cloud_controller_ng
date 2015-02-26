@@ -230,7 +230,7 @@ module VCAP::Services::ServiceBrokers::V2
         service_instance_guid,
         event_repository_opts,
         request_attrs,
-        poll_interval_seconds
+        poll_interval_seconds,
       )
       job.enqueue
     end

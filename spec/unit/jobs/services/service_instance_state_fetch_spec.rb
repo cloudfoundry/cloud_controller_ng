@@ -49,6 +49,7 @@ module VCAP::CloudController
           }
         end
         let(:poll_interval) { 60.second }
+        let(:max_attempts) { 25 }
         let(:request_attrs) do
           {
             dummy_data: 'dummy_data'
@@ -57,7 +58,13 @@ module VCAP::CloudController
 
         subject(:job) do
           VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-            name, client_attrs, service_instance.guid, service_event_repository_opts, request_attrs, poll_interval
+            name,
+            client_attrs,
+            service_instance.guid,
+            service_event_repository_opts,
+            request_attrs,
+            poll_interval,
+            max_attempts,
           )
         end
 
@@ -67,15 +74,31 @@ module VCAP::CloudController
         end
 
         describe '#initialize' do
-          context 'when the caller provides a polling interval' do
-            let(:default_polling_interval) { 120 }
+          let(:default_polling_interval) { 120 }
+          let(:default_max_poll_attempts) { 25 }
 
-            before do
-              mock_enqueuer = double(:enqueuer, enqueue: nil)
-              allow(VCAP::CloudController::Jobs::Enqueuer).to receive(:new).and_return(mock_enqueuer)
-              allow(VCAP::CloudController::Config).to receive(:config).and_return({ broker_client_default_async_poll_interval_seconds: default_polling_interval })
+          before do
+            allow(VCAP::CloudController::Config).to receive(:config).and_return({
+              broker_client_default_async_poll_interval_seconds: default_polling_interval,
+              broker_client_max_async_poll_attempts: default_max_poll_attempts,
+            })
+          end
+
+          context 'when the caller provides a maximum number of attempts' do
+            let(:max_attempts) { 100 }
+
+            it 'should use that number of attempts' do
+              expect(job.attempts_remaining).to eq(100)
             end
+          end
 
+          context 'when the caller does not provide the maximum number of attempts' do
+            it 'should the default configuration value' do
+              expect(job.attempts_remaining).to eq(default_max_poll_attempts)
+            end
+          end
+
+          context 'when the caller provides a polling interval' do
             context 'and the value is less than the default value' do
               let(:poll_interval) { 60 }
 
@@ -321,6 +344,32 @@ module VCAP::CloudController
                 expect(Delayed::Job.count).to eq 1
                 expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
               end
+            end
+          end
+
+          context 'when the job has fetched for more than the max attempts' do
+            let(:state) { 'in progress' }
+
+            before do
+              run_job(job)
+              24.times do |i|
+                Timecop.freeze(Time.now + 1.hour * (i + 1)) do
+                  expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                end
+              end
+            end
+
+            it 'should not enqueue another fetch job' do
+              Timecop.freeze(Time.now + 26.hour) do
+                expect(Delayed::Worker.new.work_off).to eq([0, 0])
+              end
+            end
+
+            it 'should mark the service instance operation as failed' do
+              service_instance.reload
+
+              expect(service_instance.last_operation.state).to eq('failed')
+              expect(service_instance.last_operation.description).to eq('Service Broker failed to provision within the required time.')
             end
           end
         end
