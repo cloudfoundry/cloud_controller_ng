@@ -28,13 +28,13 @@ module VCAP::CloudController
 
     def get_attributes_to_update(params, request_attrs, service_instance)
       new_name = request_attrs['name']
-      return {name: new_name}.merge(successful_sync_operation), nil if new_name
+      return { name: new_name }.merge(successful_sync_operation), nil if new_name
 
       new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
       return {}, nil unless new_plan
       return successful_sync_operation, nil if new_plan == service_instance.service_plan
 
-      return service_instance.client.update_service_plan(
+      service_instance.client.update_service_plan(
         service_instance,
         new_plan,
         accepts_incomplete: accepts_incomplete?(params),
