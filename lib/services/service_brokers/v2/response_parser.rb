@@ -29,7 +29,7 @@ module VCAP::Services
           case unvalidated_response.code
           when 200
             JsonObjectValidator.new(@logger,
-              StateValidator.new(['succeeded', 'failed', 'in progress', nil],
+              OldNonDescriptiveStateValidator.new(['succeeded', 'failed', 'in progress', nil],
                 SuccessValidator.new))
           when 201
             JsonObjectValidator.new(@logger,
@@ -62,7 +62,7 @@ module VCAP::Services
             JsonObjectValidator.new(@logger,
               IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
                 SuccessValidator.new,
-                StateValidator.new(['succeeded', nil],
+                OldNonDescriptiveStateValidator.new(['succeeded', nil],
                   SuccessValidator.new)))
           when 201
             JsonObjectValidator.new(@logger,
@@ -136,7 +136,7 @@ module VCAP::Services
           case unvalidated_response.code
           when 200
             JsonObjectValidator.new(@logger,
-              StateValidator.new(['succeeded', 'failed', 'in progress'],
+              OldNonDescriptiveStateValidator.new(['succeeded', 'failed', 'in progress'],
                 SuccessValidator.new))
           when 201, 202
             JsonObjectValidator.new(@logger,
@@ -177,6 +177,7 @@ module VCAP::Services
 
         class IfElsePathMatchValidator
           attr_reader :error_class
+
           def initialize(path_regex, if_validator, else_validator)
             @path_regex = path_regex
             @if_validator = if_validator
@@ -261,7 +262,10 @@ module VCAP::Services
           end
         end
 
-        class StateValidator
+        # This exists because of discussions on story #87686056
+        # Once an error description for the state description is finalized and made more
+        # consistent, remove this class and use StateValidator instead.
+        class OldNonDescriptiveStateValidator
           def initialize(valid_states, validator)
             @valid_states = valid_states
             @validator = validator
@@ -282,6 +286,41 @@ module VCAP::Services
             parsed_response ||= {}
             last_operation = parsed_response['last_operation'] || {}
             last_operation['state']
+          end
+        end
+
+        class StateValidator
+          def initialize(valid_states, validator)
+            @valid_states = valid_states
+            @validator = validator
+          end
+
+          def validate(method:, uri:, code:, response:)
+            parsed_response = MultiJson.load(response.body)
+            parsed_state = state_from_parsed_response(parsed_response)
+            if @valid_states.include?(parsed_state)
+              @validator.validate(method: method, uri: uri, code: code, response: response)
+            else
+              raise Errors::ServiceBrokerResponseMalformed.new(
+                uri.to_s,
+                @method,
+                response,
+                description_from_states(parsed_state, @valid_states)
+              )
+            end
+          end
+
+          private
+
+          def state_from_parsed_response(parsed_response)
+            parsed_response ||= {}
+            last_operation = parsed_response['last_operation'] || {}
+            last_operation['state']
+          end
+
+          def description_from_states(actual_state, expected_states)
+            actual = actual_state ? "'#{actual_state}'" : 'null'
+            "The service broker response was not understood: expected state was '#{expected_states.first}', broker returned #{actual}."
           end
         end
 

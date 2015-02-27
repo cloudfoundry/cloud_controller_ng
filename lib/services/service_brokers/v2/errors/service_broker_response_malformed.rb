@@ -3,9 +3,9 @@ module VCAP::Services
     module V2
       module Errors
         class ServiceBrokerResponseMalformed < HttpResponseError
-          def initialize(uri, method, response)
+          def initialize(uri, method, response, description=nil)
             super(
-              description_from_response(response),
+              description || description_from_response(response),
               uri,
               method,
               response

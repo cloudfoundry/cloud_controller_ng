@@ -160,7 +160,9 @@ module VCAP::Services
               let(:state) { 'failed' }
 
               it 'raises a ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'succeeded', broker returned 'failed'.")
+                end
               end
             end
 
@@ -168,7 +170,9 @@ module VCAP::Services
               let(:state) { 'in progress' }
 
               it 'raises a ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'succeeded', broker returned 'in progress'.")
+                end
               end
             end
 
@@ -176,7 +180,9 @@ module VCAP::Services
               let(:state) { 'fake-state' }
 
               it 'raises a ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'succeeded', broker returned 'fake-state'.")
+                end
               end
             end
           end
@@ -204,7 +210,9 @@ module VCAP::Services
               let(:state) { 'succeeded' }
 
               it 'should raise ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'in progress', broker returned 'succeeded'.")
+                end
               end
             end
 
@@ -212,7 +220,9 @@ module VCAP::Services
               let(:state) { 'failed' }
 
               it 'should raise ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'in progress', broker returned 'failed'.")
+                end
               end
             end
 
@@ -234,7 +244,9 @@ module VCAP::Services
               let(:state) { nil }
 
               it 'should raise ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'in progress', broker returned null.")
+                end
               end
             end
 
@@ -242,7 +254,9 @@ module VCAP::Services
               let(:state) { :unrecognized }
 
               it 'should raise ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'in progress', broker returned 'unrecognized'.")
+                end
               end
             end
 
