@@ -4,7 +4,14 @@ require 'uri'
 
 resource 'Service Instances', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+  let!(:service_instance) do
+    service_instance = VCAP::CloudController::ManagedServiceInstance.make
+    service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(
+      state: 'succeeded',
+      description: 'service broker-provided description'
+    )
+    service_instance
+  end
   let(:guid) { service_instance.guid }
 
   authenticated_request
@@ -21,37 +28,33 @@ resource 'Service Instances', type: [:api, :legacy_api] do
         to_return(status: 200, body: '{}')
     end
 
+    response_field 'name', 'The human-readable name of the service instance.'
+    response_field 'credentials', 'The service broker-provided credentials to use this service.'
+    response_field 'service_plan_guid', 'The service plan GUID that this service instance is utilizing.'
+    response_field 'space_guid', 'The space GUID that this service instance belongs to.'
+    response_field 'gateway_data', '',
+      deprecated: true
+    response_field 'dashboard_url', 'The service broker-provided URL to access administrative features of the service instance. May be null.'
+    response_field 'type', 'The type of service instance.',
+      valid_values: ['managed_service_instance', 'user_provided_service_instance']
+    response_field 'last_operation', 'The status of the last operation requested on the service instance. May be null.',
+      experimental: true
+    response_field 'last_operation.type', 'The type of operation that was last performed or currently being performed on the service instance',
+      experimental: true,
+      valid_values: ['create', 'update', 'delete']
+    response_field 'last_operation.state', 'The status of the last operation or current operation being performed on the service instance.',
+      experimental: true,
+      valid_values: ['in progress', 'succeeded', 'failed']
+    response_field 'last_operation.description', 'The service broker-provided description of the operation. May be null.', experimental: true
+    response_field 'last_operation.updated_at', 'The timestamp that the Cloud Controller last checked the service instance state from the broker.',
+      experimental: true
+    response_field 'space_url', 'The relative path to the space resource that this service instance belongs to.'
+    response_field 'service_plan_url', 'The relative path to the service plan resource that this service instance belongs to.'
+    response_field 'service_binding_url', 'The relative path to the service bindings that this service instance is bound to.'
+
     standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
     standard_model_get :managed_service_instance, path: :service_instance, nested_attributes: [:space, :service_plan]
     standard_model_delete_without_async :service_instance
-
-    response_field 'metadata.guid', 'The GUID of the service instance created. Subsequent requests that refer to the same service instance should use this as reference.'
-    response_field 'metadata.url', 'The relative URL path to this resource.'
-    response_field 'metadata.created_at', 'The timestamp that this service instance was created.'
-    response_field 'metadata.updated_at', 'The timestamp that this service was last updated. Can be null if it has only been created and not updated.'
-    response_field 'entity.name', 'The human-readable name of the service instance.'
-    response_field 'entity.credentials', 'The service broker-provided credentials to use this service.'
-    response_field 'entity.service_plan_guid', 'The service plan GUID that this service instance is utilizing.'
-    response_field 'entity.space_guid', 'The space GUID that this service instance belongs to.'
-    response_field 'entity.gateway_data', '',
-      deprecated: true
-    response_field 'entity.dashboard_url', 'The service broker-provided URL to access administrative features of the service instance. May be null.'
-    response_field 'entity.type', 'The type of service instance.',
-      valid_values: ['managed_service_instance', 'user_provided_service_instance']
-    response_field 'entity.last_operation', 'The status of the last operation requested on the service instance. May be null.',
-      experimental: true
-    response_field 'entity.last_operation.type', 'The type of operation that was last performed or currently being performed on the service instance',
-      experimental: true,
-      valid_values: ['create', 'update', 'delete']
-    response_field 'entity.last_operation.state', 'The status of the last operation or current operation being performed on the service instance.',
-      experimental: true,
-      valid_values: ['in progress', 'succeeded', 'failed']
-    response_field 'entity.last_operation.description', 'The service broker-provided description of the operation. May be null.', experimental: true
-    response_field 'entity.last_operation.updated_at', 'The timestamp that the Cloud Controller last checked the service instance state from the broker.',
-      experimental: true
-    response_field 'entity.space_url', 'The relative path to the space resource that this service instance belongs to.'
-    response_field 'entity.service_plan_url', 'The relative path to the service plan resource that this service instance belongs to.'
-    response_field 'entity.service_binding_url', 'The relative path to the service bindings that this service instance is bound to.'
 
     post '/v2/service_instances/' do
       field :name, 'A name for the service instance', required: true, example_values: ['my-service-instance']
