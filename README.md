@@ -139,7 +139,7 @@ Some of the keys that are read from this configuration file are:
 * `bulk_api` - basic auth credentials for the application state bulk API. In Cloud Foundry,
 this endpoint is used by the health manager to retrieve the expected state of every user
 application.
-* `uaa` - URL and credentials for connecting to the [UAA](github.com/cloudfoundry/uaa),
+* `uaa` - URL and credentials for connecting to the [UAA](http://github.com/cloudfoundry/uaa),
 Cloud Foundry's OAuth 2.0 server.
 
 ## Contributing
