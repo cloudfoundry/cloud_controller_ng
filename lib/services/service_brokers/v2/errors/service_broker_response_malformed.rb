@@ -19,7 +19,7 @@ module VCAP::Services
           private
 
           def description_from_response(response)
-            "The service broker response was not understood: #{response.body}"
+            "The service broker response was not understood: expected valid JSON object in body, broker returned '#{response.body}'"
           end
         end
       end
