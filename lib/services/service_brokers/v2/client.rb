@@ -142,20 +142,19 @@ module VCAP::Services::ServiceBrokers::V2
       response = @http_client.delete(path, request_params)
 
       parsed_response = @response_parser.parse(:delete, path, response) || {}
+      last_operation_hash = parsed_response['last_operation'] || {}
+      poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i)
+      state = last_operation_hash['state']
 
-      last_operation = parsed_response['last_operation'] || {}
-      poll_interval_seconds = last_operation['async_poll_interval_seconds'].try(:to_i)
-
-      if last_operation['state'] == 'in progress'
+      if state == 'in progress'
         enqueue_state_fetch_job(instance.guid, event_repository_opts, request_attrs, poll_interval_seconds)
       end
 
-      parsed_response ||= {}
-      last_operation_hash = parsed_response['last_operation'] || {}
       {
         last_operation: {
-          state:        last_operation_hash['state'],
-          description:  last_operation_hash['description'],
+          type: 'delete',
+          description: last_operation_hash['description'] || '',
+          state: state || 'succeeded'
         }
       }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e

@@ -1267,6 +1267,16 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(204)
               expect(ManagedServiceInstance.find(guid: service_instance_guid)).to be_nil
             end
+
+            context 'and with ?async=true' do
+              it 'gives accepts_incomplete precedence and deletes the instance synchronously', isolation: :truncation do
+                service_instance_guid = service_instance.guid
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true&async=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+                expect(last_response).to have_status_code(204)
+                expect(ManagedServiceInstance.find(guid: service_instance_guid)).to be_nil
+              end
+            end
           end
 
           context 'when the broker returns state `failed`' do
@@ -1352,6 +1362,21 @@ module VCAP::CloudController
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
               expect(decoded_response['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+            end
+          end
+
+          context 'when the broker returns a 200 with empty json' do
+            let(:status) { 200 }
+            let(:body) do
+              {}.to_json
+            end
+
+            it 'remove the service instance' do
+              service_instance_guid = service_instance.guid
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              expect(last_response).to have_status_code(204)
+              expect(ManagedServiceInstance.find(guid: service_instance_guid)).to be_nil
             end
           end
         end

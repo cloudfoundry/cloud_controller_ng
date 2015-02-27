@@ -1009,16 +1009,6 @@ module VCAP::Services::ServiceBrokers::V2
         allow(http_client).to receive(:delete).and_return(response)
       end
 
-      it 'returns an empty last operation' do
-        attrs = client.deprovision(instance)
-        expect(attrs).to eq({
-          last_operation: {
-            state: nil,
-            description: nil
-          }
-        })
-      end
-
       it 'makes a delete request with the correct path' do
         client.deprovision(instance)
 
@@ -1026,7 +1016,50 @@ module VCAP::Services::ServiceBrokers::V2
           with("/v2/service_instances/#{instance.guid}", anything)
       end
 
+      it 'makes a delete request with correct message' do
+        client.deprovision(instance)
+
+        expect(http_client).to have_received(:delete).with(
+            anything,
+            {
+              service_id: instance.service.broker_provided_id,
+              plan_id:    instance.service_plan.broker_provided_id
+            }
+          )
+      end
+
+      context 'when the caller does not pass the accepts_incomplete flag' do
+        it 'returns a last_operation hash with a state defaulted to `succeeded`' do
+          attrs = client.deprovision(instance)
+          expect(attrs).to eq({
+            last_operation: {
+              type: 'delete',
+              state: 'succeeded',
+              description: ''
+            }
+          })
+        end
+
+        it 'does not enqueue a job to fetch the state of the instance' do
+          expect {
+            client.deprovision(instance, options)
+          }.not_to change {
+            Delayed::Job.count
+          }
+        end
+      end
+
       context 'when the caller passes the accepts_incomplete flag' do
+        let(:state) { 'succeeded' }
+        let(:response_data) do
+          {
+            last_operation: {
+              state: state,
+              description: 'working on it'
+            }
+          }
+        end
+
         it 'adds the flag to the path of the service broker request' do
           client.deprovision(instance, accepts_incomplete: true)
 
@@ -1036,18 +1069,17 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'when the last_operation state is `in progress`' do
           let(:code) { 202 }
-          let(:response_data) do
-            {
-              last_operation: {
-                state: 'in progress',
-                description: 'working on it'
-              }
-            }
-          end
+          let(:state) { 'in progress' }
 
           it 'returns the last_operation hash' do
             attrs = client.deprovision(instance, options.merge(accepts_incomplete: true))
-            expect(attrs).to eq(response_data)
+            expect(attrs).to eq({
+              last_operation: {
+                type: 'delete',
+                state: state,
+                description: 'working on it'
+              }
+            })
           end
 
           it 'enqueues a job to fetch the state of the instance' do
@@ -1096,18 +1128,54 @@ module VCAP::Services::ServiceBrokers::V2
             end
           end
         end
-      end
 
-      it 'makes a delete request with correct message' do
-        client.deprovision(instance)
+        context 'when the last_operation state is `succeeded`' do
+          let(:code) { 200 }
+          let(:state) { 'succeeded' }
 
-        expect(http_client).to have_received(:delete).with(
-          anything,
-          {
-            service_id: instance.service.broker_provided_id,
-            plan_id:    instance.service_plan.broker_provided_id
-          }
-        )
+          it 'returns the last_operation hash' do
+            attrs = client.deprovision(instance, options.merge(accepts_incomplete: true))
+            expect(attrs).to eq({
+              last_operation: {
+                type: 'delete',
+                state: 'succeeded',
+                description: 'working on it'
+              }
+            })
+          end
+
+          it 'does not enqueue a job to fetch the state of the instance' do
+            expect {
+              client.deprovision(instance, options)
+            }.not_to change {
+              Delayed::Job.count
+            }
+          end
+        end
+
+        context 'when the last_operation is not included' do
+          let(:code) { 200 }
+          let(:response_data) { {} }
+
+          it 'returns a last_operation hash that has state defaulted to `succeeded`' do
+            attrs = client.deprovision(instance, options.merge(accepts_incomplete: true))
+            expect(attrs).to eq({
+              last_operation: {
+                type: 'delete',
+                state: 'succeeded',
+                description: ''
+              }
+            })
+          end
+
+          it 'does not enqueue a job to fetch the state of the instance' do
+            expect {
+              client.deprovision(instance, options)
+            }.not_to change {
+              Delayed::Job.count
+            }
+          end
+        end
       end
     end
 
