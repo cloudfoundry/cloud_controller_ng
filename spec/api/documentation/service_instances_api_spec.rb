@@ -33,14 +33,22 @@ resource 'Service Instances', type: [:api, :legacy_api] do
     response_field 'entity.credentials', 'The service broker-provided credentials to use this service.'
     response_field 'entity.service_plan_guid', 'The service plan GUID that this service instance is utilizing.'
     response_field 'entity.space_guid', 'The space GUID that this service instance belongs to.'
-    response_field 'entity.gateway_data', '', deprecated: true
+    response_field 'entity.gateway_data', '',
+      deprecated: true
     response_field 'entity.dashboard_url', 'The service broker-provided URL to access administrative features of the service instance. May be null.'
-    response_field 'entity.type', 'The type of service instance.', valid_values: ['managed_service_instance', 'user_provided_service_instance']
-    response_field 'entity.last_operation', 'The status of the last operation requested on the service instance. May be null.', experimental: true
-    response_field 'entity.last_operation.type', 'The type of operation that was last performed or currently being performed on the service instance', experimental: true, valid_values: ['create', 'update', 'delete']
-    response_field 'entity.last_operation.state', 'The status of the last operation or current operation being performed on the service instance.', experimental: true, valid_values: ['in progress', 'succeeded', 'failed']
+    response_field 'entity.type', 'The type of service instance.',
+      valid_values: ['managed_service_instance', 'user_provided_service_instance']
+    response_field 'entity.last_operation', 'The status of the last operation requested on the service instance. May be null.',
+      experimental: true
+    response_field 'entity.last_operation.type', 'The type of operation that was last performed or currently being performed on the service instance',
+      experimental: true,
+      valid_values: ['create', 'update', 'delete']
+    response_field 'entity.last_operation.state', 'The status of the last operation or current operation being performed on the service instance.',
+      experimental: true,
+      valid_values: ['in progress', 'succeeded', 'failed']
     response_field 'entity.last_operation.description', 'The service broker-provided description of the operation. May be null.', experimental: true
-    response_field 'entity.last_operation.updated_at', 'The timestamp that the Cloud Controller last checked the service instance state from the broker.', experimental: true
+    response_field 'entity.last_operation.updated_at', 'The timestamp that the Cloud Controller last checked the service instance state from the broker.',
+      experimental: true
     response_field 'entity.space_url', 'The relative path to the space resource that this service instance belongs to.'
     response_field 'entity.service_plan_url', 'The relative path to the service plan resource that this service instance belongs to.'
     response_field 'entity.service_binding_url', 'The relative path to the service bindings that this service instance is bound to.'
