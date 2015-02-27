@@ -54,7 +54,6 @@ resource 'Service Instances', type: [:api, :legacy_api] do
 
     standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
     standard_model_get :managed_service_instance, path: :service_instance, nested_attributes: [:space, :service_plan]
-    standard_model_delete_without_async :service_instance
 
     post '/v2/service_instances/' do
       field :name, 'A name for the service instance', required: true, example_values: ['my-service-instance']
@@ -107,6 +106,18 @@ EOF
 
         expect(status).to eq 201
         expect(service_instance.reload.service_plan.guid).to eq new_plan.guid
+      end
+    end
+
+    delete '/v2/service_instances/:guid' do
+      param_description = <<EOF
+Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
+EOF
+      parameter :accepts_incomplete, param_description, valid_values: [true, false], experimental: true
+
+      example_request 'Deleting a service instance' do
+        expect(status).to eq 204
+        after_standard_model_delete(guid) if respond_to?(:after_standard_model_delete)
       end
     end
   end
