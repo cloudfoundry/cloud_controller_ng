@@ -49,7 +49,7 @@ module VCAP::CloudController
     end
 
     def perform_accepts_incomplete_delete(service_instance)
-      attributes_to_update, err = service_instance.client.deprovision(
+      attributes_to_update = service_instance.client.deprovision(
         service_instance,
         event_repository_opts: {
           user: SecurityContext.current_user,
@@ -58,7 +58,6 @@ module VCAP::CloudController
         request_attrs: {},
         accepts_incomplete: true
       )
-      raise err if err
 
       service_instance.update_from_broker_response(attributes_to_update)
       if service_instance.last_operation.state == 'succeeded'
