@@ -25,6 +25,26 @@ resource 'Service Instances', type: [:api, :legacy_api] do
     standard_model_get :managed_service_instance, path: :service_instance, nested_attributes: [:space, :service_plan]
     standard_model_delete_without_async :service_instance
 
+    response_field 'metadata.guid', 'The GUID of the service instance created. Subsequent requests that refer to the same service instance should use this as reference.'
+    response_field 'metadata.url', 'The relative URL path to this resource.'
+    response_field 'metadata.created_at', 'The timestamp that this service instance was created.'
+    response_field 'metadata.updated_at', 'The timestamp that this service was last updated. Can be null if it has only been created and not updated.'
+    response_field 'entity.name', 'The human-readable name of the service instance.'
+    response_field 'entity.credentials', 'The service broker-provided credentials to use this service.'
+    response_field 'entity.service_plan_guid', 'The service plan GUID that this service instance is utilizing.'
+    response_field 'entity.space_guid', 'The space GUID that this service instance belongs to.'
+    response_field 'entity.gateway_data', '', deprecated: true
+    response_field 'entity.dashboard_url', 'The service broker-provided URL to access administrative features of the service instance. May be null.'
+    response_field 'entity.type', 'The type of service instance.', valid_values: ['managed_service_instance', 'user_provided_service_instance']
+    response_field 'entity.last_operation', 'The status of the last operation requested on the service instance. May be null.', experimental: true
+    response_field 'entity.last_operation.type', 'The type of operation that was last performed or currently being performed on the service instance', experimental: true, valid_values: ['create', 'update', 'delete']
+    response_field 'entity.last_operation.state', 'The status of the last operation or current operation being performed on the service instance.', experimental: true, valid_values: ['in progress', 'succeeded', 'failed']
+    response_field 'entity.last_operation.description', 'The service broker-provided description of the operation. May be null.', experimental: true
+    response_field 'entity.last_operation.updated_at', 'The timestamp that the Cloud Controller last checked the service instance state from the broker.', experimental: true
+    response_field 'entity.space_url', 'The relative path to the space resource that this service instance belongs to.'
+    response_field 'entity.service_plan_url', 'The relative path to the service plan resource that this service instance belongs to.'
+    response_field 'entity.service_binding_url', 'The relative path to the service bindings that this service instance is bound to.'
+
     post '/v2/service_instances/' do
       field :name, 'A name for the service instance', required: true, example_values: ['my-service-instance']
       field :service_plan_guid, 'The guid of the service plan to associate with the instance', required: true
@@ -32,20 +52,11 @@ resource 'Service Instances', type: [:api, :legacy_api] do
       field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
 
       param_description = <<EOF
-Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
+Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use. (Experimental)
 EOF
-      parameter :accepts_incomplete, param_description, valid_values: [true, false]
+      parameter :accepts_incomplete, param_description, valid_values: [true, false], experimental: true
 
       example 'Creating a Service Instance' do
-        space_guid = VCAP::CloudController::Space.make.guid
-        service_plan_guid = VCAP::CloudController::ServicePlan.make(public: true).guid
-        request_hash = { space_guid: space_guid, name: 'my-service-instance', service_plan_guid: service_plan_guid }
-
-        client.post '/v2/service_instances', MultiJson.dump(request_hash, pretty: true), headers
-        expect(status).to eq(201)
-      end
-
-      example 'Creating a Service Instance asynchronously' do
         space_guid = VCAP::CloudController::Space.make.guid
         service_plan_guid = VCAP::CloudController::ServicePlan.make(public: true).guid
         request_hash = { space_guid: space_guid, name: 'my-service-instance', service_plan_guid: service_plan_guid }
