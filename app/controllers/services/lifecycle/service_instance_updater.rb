@@ -13,30 +13,7 @@ module VCAP::CloudController
 
       err = nil
       service_instance.lock_by_failing_other_operations('update') do
-        attributes_to_update = {}
-        if request_attrs['service_plan_guid']
-          new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
-          return if new_plan == service_instance.service_plan
-
-          attributes_to_update, err = service_instance.client.update_service_plan(
-            service_instance,
-            new_plan,
-            accepts_incomplete: accepts_incomplete?(params),
-            event_repository_opts: {
-              user: SecurityContext.current_user,
-              user_email: SecurityContext.current_user_email
-            },
-            request_attrs: request_attrs,
-          )
-        elsif request_attrs['name']
-          attributes_to_update = {
-            name: request_attrs['name'],
-            last_operation: {
-              state: 'succeeded'
-            }
-          }
-        end
-
+        attributes_to_update, err = get_attributes_to_update(params, request_attrs, service_instance)
         service_instance.save_with_operation(attributes_to_update)
       end
 
@@ -48,6 +25,39 @@ module VCAP::CloudController
     end
 
     private
+
+    def get_attributes_to_update(params, request_attrs, service_instance)
+      new_name = request_attrs['name']
+      return {name: new_name}.merge(successful_sync_operation), nil if new_name
+
+      new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
+      return {}, nil unless new_plan
+      return successful_sync_operation, nil if new_plan == service_instance.service_plan
+
+      return service_instance.client.update_service_plan(
+        service_instance,
+        new_plan,
+        accepts_incomplete: accepts_incomplete?(params),
+        event_repository_opts: event_repository_opts,
+        request_attrs: request_attrs,
+      )
+    end
+
+    def event_repository_opts
+      {
+        user: SecurityContext.current_user,
+        user_email: SecurityContext.current_user_email
+      }
+    end
+
+    def successful_sync_operation
+      {
+        last_operation: {
+          state: 'succeeded',
+          description: nil
+        }
+      }
+    end
 
     def validate_update_request(service_instance, request_attrs, params)
       if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid

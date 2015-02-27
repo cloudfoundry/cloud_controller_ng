@@ -901,6 +901,13 @@ module VCAP::CloudController
 
           expect(a_request(:patch, /#{service_broker_url}/)).not_to have_been_made
         end
+
+        it 'marks last_operation state as `succeeded`' do
+          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
+
+          expect(service_instance.last_operation.reload.state).to eq 'succeeded'
+          expect(service_instance.last_operation.reload.description).to be_nil
+        end
       end
 
       describe 'error cases' do
