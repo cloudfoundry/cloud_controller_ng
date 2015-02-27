@@ -63,7 +63,7 @@ resource 'Service Instances', type: [:api, :legacy_api] do
       field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
 
       param_description = <<EOF
-Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use. (Experimental)
+Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
 EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false], experimental: true
 
@@ -87,17 +87,23 @@ EOF
       field :name, 'The new name for the service instance', required: false, example_values: ['my-new-service-instance']
       field :service_plan_guid, 'The new plan guid for the service instance', required: false, example_values: ['6c4bd80f-4593-41d1-a2c9-b20cb65ec76e']
 
+      param_description = <<EOF
+Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
+EOF
+      parameter :accepts_incomplete, param_description, valid_values: [true, false], experimental: true
+
       before do
         uri = URI(service_broker.broker_url)
         uri.user = service_broker.auth_username
         uri.password = service_broker.auth_password
         uri.path += "/v2/service_instances/#{service_instance.guid}"
+        uri.query = 'accepts_incomplete=true'
         stub_request(:patch, uri.to_s).to_return(status: 200, body: '{}', headers: {})
       end
 
       example 'Updating a service instance' do
         request_json = { service_plan_guid: new_plan.guid }.to_json
-        client.put "/v2/service_instances/#{service_instance.guid}", request_json, headers
+        client.put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", request_json, headers
 
         expect(status).to eq 201
         expect(service_instance.reload.service_plan.guid).to eq new_plan.guid
