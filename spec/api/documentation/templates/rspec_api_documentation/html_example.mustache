@@ -27,21 +27,23 @@
       color: #F08080;
     }
 
-    td.experimental .name:after {
+    td.experimental:after {
       float: right;
       content: " experimental";
       font-weight: normal;
       color: #FFA500;
+      padding: 2px;
     }
 
-    tr.deprecated .name:before {
+    tr.deprecated td:first-child:before {
       content: "deprecated: ";
       font-weight: bold;
+      color: gray;
     }
 
     tr.deprecated span, tr.deprecated ul {
       text-decoration: line-through;
-      color: grey;
+      color: gray;
     }
 
     tr.readonly .name:after {
