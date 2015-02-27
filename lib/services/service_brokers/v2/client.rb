@@ -21,14 +21,8 @@ module VCAP::Services::ServiceBrokers::V2
 
     # The broker is expected to guarantee uniqueness of instance_id.
     # raises ServiceBrokerConflict if the id is already in use
-    def provision(instance, opts={})
-      event_repository_opts = opts.fetch(:event_repository_opts)
-      request_attrs = opts.fetch(:request_attrs)
-
-      path = "/v2/service_instances/#{instance.guid}"
-      if opts[:accepts_incomplete]
-        path += '?accepts_incomplete=true'
-      end
+    def provision(instance, event_repository_opts:, request_attrs:, accepts_incomplete: false)
+      path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       response = @http_client.put(path, {
         service_id:        instance.service.broker_provided_id,
@@ -70,8 +64,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def fetch_service_instance_state(instance)
-      path = "/v2/service_instances/#{instance.guid}"
-
+      path = service_instance_resource_path(instance)
       response = @http_client.get(path)
       parsed_response = @response_parser.parse_fetch_state(:get, path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
@@ -96,7 +89,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def bind(binding)
-      path = "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}"
+      path = service_binding_resource_path(binding)
       response = @http_client.put(path, {
         service_id:  binding.service.broker_provided_id,
         plan_id:     binding.service_plan.broker_provided_id,
@@ -118,7 +111,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def unbind(binding)
-      path = "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}"
+      path = service_binding_resource_path(binding)
 
       response = @http_client.delete(path, {
         service_id: binding.service.broker_provided_id,
@@ -128,17 +121,14 @@ module VCAP::Services::ServiceBrokers::V2
       @response_parser.parse(:delete, path, response)
     end
 
-    def deprovision(instance, opts={})
-      event_repository_opts = opts[:event_repository_opts]
-      request_attrs = opts[:request_attrs]
-
-      path = "/v2/service_instances/#{instance.guid}"
+    def deprovision(instance, event_repository_opts: nil, request_attrs: nil, accepts_incomplete: false)
+      path = service_instance_resource_path(instance)
 
       request_params = {
         service_id: instance.service.broker_provided_id,
         plan_id:    instance.service_plan.broker_provided_id,
       }
-      request_params.merge!(accepts_incomplete: true) if opts[:accepts_incomplete] == true
+      request_params.merge!(accepts_incomplete: true) if accepts_incomplete
       response = @http_client.delete(path, request_params)
 
       parsed_response = @response_parser.parse(:delete, path, response) || {}
@@ -161,14 +151,8 @@ module VCAP::Services::ServiceBrokers::V2
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
 
-    def update_service_plan(instance, plan, opts={})
-      event_repository_opts = opts.fetch(:event_repository_opts)
-      request_attrs = opts.fetch(:request_attrs)
-
-      path = "/v2/service_instances/#{instance.guid}"
-      if opts[:accepts_incomplete]
-        path += '?accepts_incomplete=true'
-      end
+    def update_service_plan(instance, plan, event_repository_opts:, request_attrs:, accepts_incomplete: false)
+      path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       response = @http_client.patch(path, {
           plan_id:	plan.broker_provided_id,
@@ -222,6 +206,18 @@ module VCAP::Services::ServiceBrokers::V2
 
     private
 
+    def service_binding_resource_path(binding)
+      "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}"
+    end
+
+    def service_instance_resource_path(instance, opts={})
+      path = "/v2/service_instances/#{instance.guid}"
+      if opts[:accepts_incomplete]
+        path += '?accepts_incomplete=true'
+      end
+      path
+    end
+
     def enqueue_state_fetch_job(service_instance_guid, event_repository_opts, request_attrs, poll_interval_seconds)
       job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
         'service-instance-state-fetch',
@@ -232,10 +228,6 @@ module VCAP::Services::ServiceBrokers::V2
         poll_interval_seconds,
       )
       job.enqueue
-    end
-
-    def logger
-      @logger ||= Steno.logger('cc.service_broker.v2.client')
     end
   end
 end
