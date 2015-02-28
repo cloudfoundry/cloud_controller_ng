@@ -68,10 +68,6 @@ module VCAP::CloudController
 
     private
 
-    def owned_by?(org)
-      owning_organization_id == org.id
-    end
-
     def shared_by?(org)
       shared_organization_ids.include?(org.id)
     end

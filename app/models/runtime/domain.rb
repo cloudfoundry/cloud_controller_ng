@@ -136,6 +136,10 @@ module VCAP::CloudController
       owning_organization_id.nil?
     end
 
+    def owned_by?(org)
+      owning_organization_id == org.id
+    end
+
     def in_suspended_org?
       return owning_organization.suspended? if owning_organization
       false

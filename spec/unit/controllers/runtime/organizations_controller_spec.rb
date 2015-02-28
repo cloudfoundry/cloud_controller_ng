@@ -475,16 +475,31 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/organizations/:guid/private_domains/:domain_guid' do
-      it 'removes associated routes' do
-        private_domain = PrivateDomain.make
-        space = Space.make
-        space.organization.add_private_domain(private_domain)
-        Route.make(space: space, domain: private_domain)
+      context 'when PrivateDomain is owned by the organization' do
+        let(:organization) { Organization.make }
+        let(:private_domain) { PrivateDomain.make(owning_organization: organization) }
 
-        delete "/v2/organizations/#{space.organization.guid}/private_domains/#{private_domain.guid}", {}, admin_headers
-        expect(last_response.status).to eq(201)
+        it 'fails' do
+          delete "/v2/organizations/#{organization.guid}/private_domains/#{private_domain.guid}", {}, admin_headers
+          expect(last_response.status).to eq(400)
+        end
+      end
 
-        expect(private_domain.routes.count).to eq(0)
+      context 'when PrivateDomain is shared' do
+        let(:space) { Space.make }
+        let(:private_domain) { PrivateDomain.make }
+
+        it 'removes associated routes' do
+          private_domain = PrivateDomain.make
+
+          space.organization.add_private_domain(private_domain)
+          Route.make(space: space, domain: private_domain)
+
+          delete "/v2/organizations/#{space.organization.guid}/private_domains/#{private_domain.guid}", {}, admin_headers
+          expect(last_response.status).to eq(201)
+
+          expect(private_domain.routes.count).to eq(0)
+        end
       end
     end
   end
