@@ -13,6 +13,7 @@ module VCAP::CloudController
     end
 
     def update_service_instance(service_instance, request_attrs, params)
+      raise InvalidRequest unless request_attrs
       @access_validator.validate_access(:read_for_update, service_instance)
       @access_validator.validate_access(:update, service_instance)
       validate_update_request(service_instance, request_attrs, params)

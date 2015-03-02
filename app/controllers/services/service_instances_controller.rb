@@ -95,7 +95,6 @@ module VCAP::CloudController
     def update(guid)
       @request_attrs = self.class::UpdateMessage.decode(body).extract(stringify_keys: true)
       logger.debug 'cc.update', guid: guid, attributes: request_attrs
-      raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
 
       service_instance = find_guid(guid)
       updater = ServiceInstanceUpdater.new(@services_event_repository, self, logger, @access_context)
