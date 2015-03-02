@@ -295,5 +295,27 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'audit events' do
+      let(:domain) { SharedDomain.make(name: 'example.com') }
+
+      context 'when the hostname is not empty' do
+        it 'logs audit.route.delete-request when deleting a route' do
+          route = Route.make(domain: domain, host: 'foo')
+          route_guid = route.guid
+          delete "/v2/routes/#{route_guid}", '', json_headers(admin_headers)
+
+          expect(last_response.status).to eq(204)
+
+          event = Event.find(type: 'audit.route.delete-request', actee: route_guid)
+          expect(event).not_to be_nil
+          expect(event.actee).to eq(route_guid)
+          expect(event.actee_name).to eq('foo.example.com')
+          expect(event.organization_guid).to eq(route.space.organization.guid)
+          expect(event.space_guid).to eq(route.space.guid)
+          expect(event.actor_name).to eq(SecurityContext.current_user_email)
+        end
+      end
+    end
   end
 end

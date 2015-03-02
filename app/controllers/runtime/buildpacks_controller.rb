@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class BuildpacksController < RestController::ModelController
     def self.dependencies
-      [:buildpack_blobstore, :upload_handler]
+      [:buildpack_blobstore, :buildpack_event_repository, :upload_handler]
     end
 
     define_attributes do
@@ -29,6 +29,7 @@ module VCAP::CloudController
 
     def delete(guid)
       buildpack = find_guid_and_validate_access(:delete, guid)
+      @buildpack_event_repository.record_buildpack_delete_request(buildpack, SecurityContext.current_user, SecurityContext.current_user_email)
       response = do_delete(buildpack)
 
       BuildpackBitsDelete.delete_when_safe(buildpack.key, @config[:staging][:timeout_in_seconds])
@@ -42,6 +43,7 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @buildpack_blobstore = dependencies[:buildpack_blobstore]
+      @buildpack_event_repository = dependencies.fetch(:buildpack_event_repository)
     end
 
     def self.not_found_exception_name

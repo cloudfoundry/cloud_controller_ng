@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class UsersController < RestController::ModelController
     def self.dependencies
-      [:username_populating_collection_renderer]
+      [:user_event_repository, :username_populating_collection_renderer]
     end
 
     define_attributes do
@@ -33,13 +33,16 @@ module VCAP::CloudController
       end
     end
 
-    def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
-    end
-
     def inject_dependencies(dependencies)
       super
       @collection_renderer = dependencies[:username_populating_collection_renderer]
+      @user_event_repository = dependencies.fetch(:user_event_repository)
+    end
+
+    def delete(guid)
+      user = find_guid_and_validate_access(:delete, guid)
+      @user_event_repository.record_user_delete_request(user, SecurityContext.current_user, SecurityContext.current_user_email)
+      do_delete(user)
     end
 
     define_messages

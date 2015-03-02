@@ -327,6 +327,21 @@ module VCAP::CloudController
       end
     end
 
+    describe 'audit events' do
+      it 'logs audit.organization.delete-request when deleting an organization' do
+        organization = Organization.make
+        organization_guid = organization.guid
+        delete "/v2/organizations/#{organization_guid}", '', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(204)
+
+        event = Event.find(type: 'audit.organization.delete-request', actee: organization_guid)
+        expect(event).not_to be_nil
+        expect(event.organization_guid).to eq(organization_guid)
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
+      end
+    end
+
     describe 'Deprecated endpoints' do
       describe 'GET /v2/organizations/:guid/domains' do
         it 'should be deprecated' do

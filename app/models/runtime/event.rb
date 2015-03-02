@@ -31,6 +31,7 @@ module VCAP::CloudController
 
     def denormalize_space_and_org_guids
       return if space_guid && organization_guid
+      return if space.nil?
       self.space_guid = space.guid
       self.organization_guid = space.organization.guid
     end

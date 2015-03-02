@@ -5,36 +5,46 @@ require 'cgi'
 resource 'Events', type: [:api, :legacy_api] do
   DOCUMENTED_EVENT_TYPES = %w(
     app.crash
-    audit.app.update
     audit.app.create
     audit.app.delete-request
-    audit.space.create
-    audit.space.update
-    audit.space.delete-request
-    audit.service_broker.create
-    audit.service_broker.update
-    audit.service_broker.delete
+    audit.app.update
+    audit.buildpack.delete-request
+    audit.domain.delete-request
+    audit.organization.delete-request
+    audit.quota_definition.delete-request
+    audit.route.delete-request
+    audit.security_group.delete-request
+    audit.service_auth_token.delete-request
     audit.service.create
-    audit.service.update
     audit.service.delete
-    audit.service_plan.create
-    audit.service_plan.update
-    audit.service_plan.delete
-    audit.service_plan_visibility.create
-    audit.service_plan_visibility.update
-    audit.service_plan_visibility.delete
+    audit.service.update
+    audit.service_binding.create
+    audit.service_binding.delete
+    audit.service_broker.create
+    audit.service_broker.delete
+    audit.service_broker.update
     audit.service_dashboard_client.create
     audit.service_dashboard_client.delete
     audit.service_instance.create
-    audit.service_instance.update
     audit.service_instance.delete
+    audit.service_instance.update
+    audit.service_plan.create
+    audit.service_plan.delete
+    audit.service_plan.update
+    audit.service_plan_visibility.create
+    audit.service_plan_visibility.delete
+    audit.service_plan_visibility.update
+    audit.space_quota_definition.delete-request
+    audit.space.create
+    audit.space.delete-request
+    audit.space.update
+    audit.user.delete-request
     audit.user_provided_service_instance.create
-    audit.user_provided_service_instance.update
     audit.user_provided_service_instance.delete
-    audit.service_binding.create
-    audit.service_binding.delete
+    audit.user_provided_service_instance.update
   )
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
+
   authenticated_request
 
   before do
@@ -65,6 +75,16 @@ resource 'Events', type: [:api, :legacy_api] do
     standard_list_parameters VCAP::CloudController::EventsController
 
     let(:test_app) { VCAP::CloudController::App.make }
+    let(:test_buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:test_quota_definition) { VCAP::CloudController::QuotaDefinition.make }
+    let(:test_private_domain) { VCAP::CloudController::PrivateDomain.make(
+      owning_organization: test_organization)
+    }
+    let(:test_route) { VCAP::CloudController::Route.make }
+    let(:test_security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:test_service_auth_token) { VCAP::CloudController::ServiceAuthToken.make }
+    let(:test_shared_domain) { VCAP::CloudController::SharedDomain.make }
+    let(:test_space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make }
     let(:test_user) { VCAP::CloudController::User.make }
     let(:test_user_email) { 'user@email.com' }
     let(:test_space) { VCAP::CloudController::Space.make }
@@ -77,6 +97,7 @@ resource 'Events', type: [:api, :legacy_api] do
       VCAP::CloudController::ServicePlanVisibility.make(organization_guid: test_organization.guid, service_plan_guid: test_plan.guid)
     end
 
+    let(:user_to_delete) { VCAP::CloudController::User.make }
     let(:app_request) do
       {
         'name' => 'new',
@@ -110,12 +131,48 @@ resource 'Events', type: [:api, :legacy_api] do
       VCAP::CloudController::Repositories::Runtime::AppEventRepository.new
     end
 
+    let(:buildpack_event_repository) do
+      VCAP::CloudController::Repositories::Runtime::BuildpackEventRepository.new
+    end
+
+    let(:domain_event_repository) do
+      VCAP::CloudController::Repositories::Runtime::DomainEventRepository.new
+    end
+
+    let(:quota_definition_event_repository) do
+      VCAP::CloudController::Repositories::Runtime::QuotaDefinitionEventRepository.new
+    end
+
+    let(:route_event_repository) do
+      VCAP::CloudController::Repositories::Runtime::RouteEventRepository.new
+    end
+
+    let(:security_group_event_repository) do
+      VCAP::CloudController::Repositories::Runtime::SecurityGroupEventRepository.new
+    end
+
+    let(:service_auth_token_event_repository) do
+      VCAP::CloudController::Repositories::Runtime::ServiceAuthTokenEventRepository.new
+    end
+
     let(:space_event_repository) do
       VCAP::CloudController::Repositories::Runtime::SpaceEventRepository.new
     end
 
     let(:service_event_repository) do
       VCAP::CloudController::Repositories::Services::EventRepository.new(user: test_user, user_email: test_user_email)
+    end
+
+    let(:space_quota_definition_event_repository) do
+      VCAP::CloudController::Repositories::Runtime::SpaceQuotaDefinitionEventRepository.new
+    end
+
+    let(:organization_event_repository) do
+      VCAP::CloudController::Repositories::Runtime::OrganizationEventRepository.new
+    end
+
+    let(:user_event_repository) do
+      VCAP::CloudController::Repositories::Runtime::UserEventRepository.new
     end
 
     example 'List App Create Events' do
@@ -200,6 +257,159 @@ resource 'Events', type: [:api, :legacy_api] do
                                actee_name: test_app.name,
                                space_guid: test_app.space.guid,
                                metadata: { 'request' => expected_app_request }
+    end
+
+    example 'List Buildpack Delete Events' do
+      buildpack_event_repository.record_buildpack_delete_request(test_buildpack, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.buildpack.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'buildpack',
+                               actee: test_buildpack.guid,
+                               actee_name: test_buildpack.name
+    end
+
+    example 'List Domain Delete Events' do
+      domain_event_repository.record_domain_delete_request(test_private_domain, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.domain.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'domain',
+                               actee: test_private_domain.guid,
+                               actee_name: test_private_domain.name,
+                               organzation_guid: test_private_domain.owning_organization.guid
+    end
+
+    example 'List Organization Delete Events' do
+      organization_event_repository.record_organization_delete_request(test_organization, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.organization.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'organization',
+                               actee: test_organization.guid,
+                               actee_name: test_organization.name,
+                               organization_guid: test_organization.guid
+    end
+
+    example 'List Space Quota Definition Delete Events' do
+      space_quota_definition_event_repository.record_space_quota_definition_delete_request(
+        test_space_quota_definition, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.space_quota_definition.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'space_quota_definition',
+                               actee: test_space_quota_definition.guid,
+                               actee_name: test_space_quota_definition.name,
+                               organzation_guid: test_space_quota_definition.organization.guid
+    end
+
+    example 'List User Delete Events' do
+      user_event_repository.record_user_delete_request(user_to_delete, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.user.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'user',
+                               actee: user_to_delete.guid,
+                               actee_name: user_to_delete.guid
+    end
+
+    example 'List Quota Definition Delete Events' do
+      quota_definition_event_repository.record_quota_definition_delete_request(
+        test_quota_definition, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.quota_definition.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'quota_definition',
+                               actee: test_quota_definition.guid,
+                               actee_name: test_quota_definition.name,
+                               organzation_guid: ''
+    end
+
+    example 'List Route Delete Events' do
+      route_event_repository.record_route_delete_request(test_route, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.route.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'route',
+                               actee: test_route.guid,
+                               actee_name: test_route.fqdn,
+                               organization_guid: test_route.space.organization.guid,
+                               space_guid: test_route.space.guid
+    end
+
+    example 'List Security Group Delete Events' do
+      security_group_event_repository.record_security_group_delete_request(test_security_group, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.security_group.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'security_group',
+                               actee: test_security_group.guid,
+                               actee_name: test_security_group.name,
+                               organization_guid: '',
+                               space_guid: ''
+    end
+
+    example 'List Service Auth Token Delete Events' do
+      service_auth_token_event_repository.record_service_auth_token_delete_request(test_service_auth_token, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.service_auth_token.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'service_auth_token',
+                               actee: test_service_auth_token.guid,
+                               actee_name: test_service_auth_token.label,
+                               organization_guid: '',
+                               space_guid: ''
+    end
+
+    example 'List Shared Domain Delete Events' do
+      domain_event_repository.record_domain_delete_request(test_shared_domain, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.domain.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'domain',
+                               actee: test_shared_domain.guid,
+                               actee_name: test_shared_domain.name,
+                               organization_guid: ''
     end
 
     example 'List Space Create Events' do
@@ -775,6 +985,51 @@ resource 'Events', type: [:api, :legacy_api] do
                                metadata: {
                                  'request' => {}
                                }
+    end
+
+    example 'List Organization Delete Events' do
+      organization_event_repository.record_organization_delete_request(test_organization, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.organization.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'organization',
+                               actee: test_organization.guid,
+                               actee_name: test_organization.name,
+                               organization_guid: test_organization.guid
+    end
+
+    example 'List Space Quota Definition Delete Events' do
+      space_quota_definition_event_repository.record_space_quota_definition_delete_request(
+        test_space_quota_definition, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.space_quota_definition.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'space_quota_definition',
+                               actee: test_space_quota_definition.guid,
+                               actee_name: test_space_quota_definition.name,
+                               organzation_guid: test_space_quota_definition.organization.guid
+    end
+
+    example 'List User Delete Events' do
+      user_event_repository.record_user_delete_request(user_to_delete, test_user, test_user_email)
+
+      client.get '/v2/events?q=type:audit.user.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'user',
+                               actee: user_to_delete.guid,
+                               actee_name: user_to_delete.guid
     end
   end
 end

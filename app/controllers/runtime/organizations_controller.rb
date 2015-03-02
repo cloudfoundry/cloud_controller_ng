@@ -1,5 +1,9 @@
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
+    def self.dependencies
+      [:organization_event_repository]
+    end
+
     define_attributes do
       attribute :name,            String
       attribute :billing_enabled, Message::Boolean, default: false
@@ -36,6 +40,12 @@ module VCAP::CloudController
     end
 
     get '/v2/organizations/:guid/services', :enumerate_services
+
+    def inject_dependencies(dependencies)
+      super
+      @organization_event_repository = dependencies.fetch(:organization_event_repository)
+    end
+
     def enumerate_services(guid)
       logger.debug 'cc.enumerate.related', guid: guid, association: 'services'
 
@@ -74,7 +84,9 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      organization = find_guid_and_validate_access(:delete, guid)
+      @organization_event_repository.record_organization_delete_request(organization, SecurityContext.current_user, SecurityContext.current_user_email)
+      do_delete(organization)
     end
 
     def remove_related(guid, name, other_guid)

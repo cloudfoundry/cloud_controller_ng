@@ -1,13 +1,24 @@
 module VCAP::CloudController
   class SharedDomainsController < RestController::ModelController
+    def self.dependencies
+      [:domain_event_repository]
+    end
+
     define_attributes do
       attribute :name, String
     end
 
     query_parameters :name
 
+    def inject_dependencies(dependencies)
+      super
+      @domain_event_repository = dependencies.fetch(:domain_event_repository)
+    end
+
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      domain = find_guid_and_validate_access(:delete, guid)
+      @domain_event_repository.record_domain_delete_request(domain, SecurityContext.current_user, SecurityContext.current_user_email)
+      do_delete(domain)
     end
 
     define_messages

@@ -1,5 +1,9 @@
 module VCAP::CloudController
   class RoutesController < RestController::ModelController
+    def self.dependencies
+      [:route_event_repository]
+    end
+
     define_attributes do
       attribute :host, String, default: ''
       to_one :domain
@@ -28,8 +32,15 @@ module VCAP::CloudController
       Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
     end
 
+    def inject_dependencies(dependencies)
+      super
+      @route_event_repository = dependencies.fetch(:route_event_repository)
+    end
+
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      route = find_guid_and_validate_access(:delete, guid)
+      @route_event_repository.record_route_delete_request(route, SecurityContext.current_user, SecurityContext.current_user_email)
+      do_delete(route)
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)

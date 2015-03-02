@@ -220,6 +220,48 @@ describe CloudController::DependencyLocator do
     end
   end
 
+  describe '#buildpack_event_repository' do
+    subject { locator.buildpack_event_repository }
+
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::BuildpackEventRepository) }
+  end
+
+  describe '#domain_event_repository' do
+    subject { locator.domain_event_repository }
+
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::DomainEventRepository) }
+  end
+
+  describe '#organization_event_repository' do
+    subject { locator.organization_event_repository }
+
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::OrganizationEventRepository) }
+  end
+
+  describe '#quota_definition_event_repository' do
+    subject { locator.quota_definition_event_repository }
+
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::QuotaDefinitionEventRepository) }
+  end
+
+  describe '#route_event_repository' do
+    subject { locator.route_event_repository }
+
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::RouteEventRepository) }
+  end
+
+  describe '#security_group_event_repository' do
+    subject { locator.security_group_event_repository }
+
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::SecurityGroupEventRepository) }
+  end
+
+  describe '#service_auth_token_event_repository' do
+    subject { locator.service_auth_token_event_repository }
+
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::ServiceAuthTokenEventRepository) }
+  end
+
   describe '#space_event_repository' do
     subject { locator.space_event_repository }
 
@@ -230,6 +272,18 @@ describe CloudController::DependencyLocator do
     subject { locator.process_repository }
 
     it { is_expected.to be_a(VCAP::CloudController::ProcessRepository) }
+  end
+
+  describe '#space_quota_definition_event_repository' do
+    subject { locator.space_quota_definition_event_repository }
+
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::SpaceQuotaDefinitionEventRepository) }
+  end
+
+  describe '#user_event_repository' do
+    subject { locator.user_event_repository }
+
+    it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::UserEventRepository) }
   end
 
   describe '#object_renderer' do

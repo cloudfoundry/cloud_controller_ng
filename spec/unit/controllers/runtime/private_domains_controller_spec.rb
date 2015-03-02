@@ -51,5 +51,20 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'audit events' do
+      it 'logs audit.domain.delete-request when deleting a domain' do
+        domain = PrivateDomain.make
+        domain_guid = domain.guid
+        delete "/v2/private_domains/#{domain_guid}", '', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(204)
+
+        event = Event.find(type: 'audit.domain.delete-request', actee: domain_guid)
+        expect(event).not_to be_nil
+        expect(event.organization_guid).to eq(domain.owning_organization_guid)
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
+      end
+    end
   end
 end

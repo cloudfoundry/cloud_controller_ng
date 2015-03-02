@@ -168,5 +168,22 @@ module VCAP::CloudController
         expect(last_response.status).to eq(204)
       end
     end
+
+    describe 'audit events' do
+      it 'logs audit.space_quota_definition.delete-request when deleting a space quota definition' do
+        space_quota_definition = SpaceQuotaDefinition.make
+        space_quota_definition_guid = space_quota_definition.guid
+        delete "/v2/space_quota_definitions/#{space_quota_definition_guid}", '', json_headers(admin_headers)
+
+        expect(last_response.status).to eq(204)
+
+        event = Event.find(type: 'audit.space_quota_definition.delete-request', actee: space_quota_definition_guid)
+        expect(event).not_to be_nil
+        expect(event.actee).to eq(space_quota_definition_guid)
+        expect(event.actee_name).to eq(space_quota_definition.name)
+        expect(event.organization_guid).to eq(space_quota_definition.organization.guid)
+        expect(event.actor_name).to eq(SecurityContext.current_user_email)
+      end
+    end
   end
 end
