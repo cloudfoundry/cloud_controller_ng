@@ -9,7 +9,8 @@ module VCAP::CloudController
   class ServiceInstancesController < RestController::ModelController
     model_class_name :ManagedServiceInstance # Must do this to be backwards compatible with actions other than enumerate
     define_attributes do
-      attribute :name,  String
+      attribute :name, String
+      attribute :parameters, Hash, default: nil
       to_one :space
       to_one :service_plan
       to_many :service_bindings

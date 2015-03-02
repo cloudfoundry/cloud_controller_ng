@@ -19,7 +19,8 @@ module VCAP::CloudController
           name: { type: 'string', required: true },
           space_guid: { type: 'string', required: true },
           service_plan_guid: { type: 'string', required: true },
-          service_binding_guids: { type: '[string]' }
+          service_binding_guids: { type: '[string]' },
+          parameters: { type: 'hash', default: nil },
         })
       end
 
@@ -28,7 +29,8 @@ module VCAP::CloudController
           name: { type: 'string' },
           space_guid: { type: 'string' },
           service_plan_guid: { type: 'string' },
-          service_binding_guids: { type: '[string]' }
+          service_binding_guids: { type: '[string]' },
+          parameters: { type: 'hash' },
         })
       end
     end
@@ -231,6 +233,40 @@ module VCAP::CloudController
           expect(last_operation['description']).to eq ''
           expect(last_operation['type']).to eq 'create'
           expect(last_operation['updated_at']).not_to be_nil
+        end
+
+        context 'when the client provides arbitrary parameters' do
+          before do
+            create_managed_service_instance(
+              email: 'developer@example.com',
+              async: false,
+              parameters: parameters
+            )
+          end
+
+          context 'and the parameter is a JSON object' do
+            let(:parameters) do
+              { foo: 'bar', bar: 'baz' }
+            end
+
+            it 'should pass along the parameters to the service broker' do
+              expect(last_response).to have_status_code(201)
+              expect(a_request(:put, service_broker_url_regex).
+                  with(body: hash_including(parameters: parameters))).
+                to have_been_made.times(1)
+            end
+          end
+
+          context 'and the parameter is not a JSON object' do
+            let(:parameters) { 'foo' }
+
+            it 'should reject the request' do
+              expect(last_response).to have_status_code(400)
+              expect(a_request(:put, service_broker_url_regex).
+                  with(body: hash_including(parameters: parameters))).
+                to have_been_made.times(0)
+            end
+          end
         end
 
         context 'when the client does not support asynchronous provisioning (no accepts_incomplete parameter)' do
@@ -1692,14 +1728,17 @@ module VCAP::CloudController
     end
 
     def create_managed_service_instance(user_opts={})
-      req = MultiJson.dump(
-        name: 'foo',
-        space_guid: space.guid,
-        service_plan_guid: plan.guid
-      )
-
+      arbitrary_params = user_opts.delete(:parameters)
       use_async = user_opts.delete(:async) { |_| 'true' }
       headers = json_headers(headers_for(developer, user_opts))
+
+      body = {
+        name: 'foo',
+        space_guid: space.guid,
+        service_plan_guid: plan.guid,
+      }
+      body[:parameters] = arbitrary_params if arbitrary_params
+      req = MultiJson.dump(body)
 
       if use_async
         post "/v2/service_instances?accepts_incomplete=#{use_async}", req, headers

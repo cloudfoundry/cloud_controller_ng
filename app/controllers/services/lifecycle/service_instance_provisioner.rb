@@ -18,7 +18,7 @@ module VCAP::CloudController
 
       validate_create_action(request_attrs, params)
 
-      service_instance = ManagedServiceInstance.new(request_attrs)
+      service_instance = ManagedServiceInstance.new(request_attrs.except('parameters'))
       attributes_to_update = service_instance.client.provision(
         service_instance,
         accepts_incomplete: accepts_incomplete?(params),
@@ -77,7 +77,7 @@ module VCAP::CloudController
         raise ServiceInstanceCannotAccessServicePlan
       end
 
-      service_instance = ManagedServiceInstance.new(request_attrs)
+      service_instance = ManagedServiceInstance.new(request_attrs.except('parameters'))
       @access_validator.validate_access(:create, service_instance)
 
       raise Sequel::ValidationFailed.new(service_instance) unless service_instance.valid?

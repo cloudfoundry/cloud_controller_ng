@@ -24,12 +24,14 @@ module VCAP::Services::ServiceBrokers::V2
     def provision(instance, event_repository_opts:, request_attrs:, accepts_incomplete: false)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
-      response = @http_client.put(path, {
-        service_id:        instance.service.broker_provided_id,
-        plan_id:           instance.service_plan.broker_provided_id,
+      body_parameters = {
+        service_id: instance.service.broker_provided_id,
+        plan_id: instance.service_plan.broker_provided_id,
         organization_guid: instance.organization.guid,
-        space_guid:        instance.space.guid,
-      })
+        space_guid: instance.space.guid,
+      }
+      body_parameters[:parameters] = request_attrs['parameters'] if request_attrs['parameters']
+      response = @http_client.put(path, body_parameters)
 
       parsed_response = @response_parser.parse(:put, path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
