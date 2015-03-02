@@ -59,6 +59,7 @@ resource 'Service Instances', type: [:api, :legacy_api] do
       field :name, 'A name for the service instance', required: true, example_values: ['my-service-instance']
       field :service_plan_guid, 'The guid of the service plan to associate with the instance', required: true
       field :space_guid, 'The guid of the space in which the instance will be created', required: true
+      field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
       field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
 
       param_description = <<EOF
@@ -69,7 +70,14 @@ EOF
       example 'Creating a Service Instance' do
         space_guid = VCAP::CloudController::Space.make.guid
         service_plan_guid = VCAP::CloudController::ServicePlan.make(public: true).guid
-        request_hash = { space_guid: space_guid, name: 'my-service-instance', service_plan_guid: service_plan_guid }
+        request_hash = {
+          space_guid: space_guid,
+          name: 'my-service-instance',
+          service_plan_guid: service_plan_guid,
+          parameters: {
+            the_service_broker: 'wants this object'
+          }
+        }
 
         client.post '/v2/service_instances?accepts_incomplete=true', MultiJson.dump(request_hash, pretty: true), headers
         expect(status).to eq(201)
