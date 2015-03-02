@@ -112,6 +112,52 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the diego flag on the app has changed' do
+        let(:previous_changes) { { diego: 'diego-change' } }
+
+        context 'if the app has not been started' do
+          let(:app_started) { false }
+
+          it 'stops the app' do
+            expect(runner).to receive(:stop)
+            subject
+          end
+
+          it 'does not start the app' do
+            expect(runner).to_not receive(:start)
+            subject
+          end
+        end
+
+        context 'if the app has been started' do
+          let(:app_started) { true }
+
+          it 'does not stop the app' do
+            expect(runner).to_not receive(:stop)
+            subject
+          end
+
+          context 'when the app needs staging' do
+            let(:app_needs_staging) { true }
+
+            it 'validates and stages the app' do
+              expect(stagers).to receive(:validate_app).with(app)
+              expect(stager).to receive(:stage_app)
+              subject
+            end
+          end
+
+          context 'when the app does not need staging' do
+            let(:app_needs_staging) { false }
+
+            it 'starts the app' do
+              expect(runner).to receive(:start)
+              subject
+            end
+          end
+        end
+      end
+
       context 'when the app instances have changed' do
         let(:previous_changes) { { instances: 'something' } }
 

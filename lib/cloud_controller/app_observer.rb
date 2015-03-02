@@ -23,7 +23,7 @@ module VCAP::CloudController
         changes = app.previous_changes
         return unless changes
 
-        if changes.key?(:state)
+        if changes.key?(:state) || changes.key?(:diego)
           react_to_state_change(app)
         elsif changes.key?(:instances)
           react_to_instances_change(app)
