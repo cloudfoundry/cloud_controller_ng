@@ -38,6 +38,12 @@ module VCAP::CloudController
        { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
        object_renderer.render_json(self.class, service_binding, @opts)
       ]
+    rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid'])
+    rescue ServiceInstanceBindingManager::ServiceInstanceNotBindable
+      raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
+    rescue ServiceInstanceBindingManager::AppNotFound
+      raise VCAP::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid'])
     end
 
     delete path_guid, :delete

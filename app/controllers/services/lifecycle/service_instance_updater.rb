@@ -1,9 +1,15 @@
 module VCAP::CloudController
   class ServiceInstanceUpdater
-    def initialize(services_event_repository, access_validator, logger)
+    class InvalidRequest < StandardError; end
+    class ServicePlanNotUpdatable < StandardError; end
+    class InvalidServicePlan < StandardError; end
+    class ServiceInstanceSpaceChangeNotAllowed < StandardError; end
+
+    def initialize(services_event_repository, access_validator, logger, access_context)
       @services_event_repository = services_event_repository
       @access_validator = access_validator
       @logger = logger
+      @access_context = access_context
     end
 
     def update_service_instance(service_instance, request_attrs, params)
@@ -45,8 +51,8 @@ module VCAP::CloudController
 
     def event_repository_opts
       {
-        user: SecurityContext.current_user,
-        user_email: SecurityContext.current_user_email
+        user: @access_context.user,
+        user_email: @access_context.user_email
       }
     end
 
@@ -61,21 +67,19 @@ module VCAP::CloudController
 
     def validate_update_request(service_instance, request_attrs, params)
       if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
-        raise Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
+        raise ServiceInstanceSpaceChangeNotAllowed
       end
 
       if request_attrs['service_plan_guid']
         old_plan = service_instance.service_plan
-        unless old_plan.service.plan_updateable
-          raise VCAP::Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
-        end
+        raise ServicePlanNotUpdatable unless old_plan.service.plan_updateable
 
         new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
-        raise VCAP::Errors::ApiError.new_from_details('InvalidRelation', 'Plan') unless new_plan
+        raise InvalidServicePlan unless new_plan
       end
 
       unless ['true', 'false', nil].include? params['accepts_incomplete']
-        raise Errors::ApiError.new_from_details('InvalidRequest')
+        raise InvalidRequest
       end
     end
 

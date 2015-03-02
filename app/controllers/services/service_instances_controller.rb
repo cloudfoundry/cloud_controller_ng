@@ -67,12 +67,12 @@ module VCAP::CloudController
       json_msg = self.class::CreateMessage.decode(body)
       @request_attrs = json_msg.extract(stringify_keys: true)
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
-      raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
 
       provisioner = ServiceInstanceProvisioner.new(
         @services_event_repository,
         self,
-        logger
+        logger,
+        @access_context
       )
       service_instance = provisioner.create_service_instance(@request_attrs, params)
 
@@ -80,6 +80,16 @@ module VCAP::CloudController
        { 'Location' => "#{self.class.path}/#{service_instance.guid}" },
        object_renderer.render_json(self.class, service_instance, @opts)
       ]
+    rescue ServiceInstanceProvisioner::Unauthorized
+      raise Errors::ApiError.new_from_details('NotAuthorized')
+    rescue ServiceInstanceProvisioner::ServiceInstanceCannotAccessServicePlan
+      raise Errors::ApiError.new_from_details('ServiceInstanceOrganizationNotAuthorized')
+    rescue ServiceInstanceProvisioner::InvalidRequest
+      raise Errors::ApiError.new_from_details('InvalidRequest')
+    rescue ServiceInstanceProvisioner::InvalidServicePlan
+      raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'not a valid service plan')
+    rescue ServiceInstanceProvisioner::InvalidSpace
+      raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'not a valid space')
     end
 
     def update(guid)
@@ -88,10 +98,18 @@ module VCAP::CloudController
       raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
 
       service_instance = find_guid(guid)
-      updater = ServiceInstanceUpdater.new(@services_event_repository, self, logger)
+      updater = ServiceInstanceUpdater.new(@services_event_repository, self, logger, @access_context)
       updater.update_service_instance(service_instance, @request_attrs, params)
 
       [HTTP::CREATED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
+    rescue ServiceInstanceUpdater::InvalidRequest
+      raise Errors::ApiError.new_from_details('InvalidRequest')
+    rescue ServiceInstanceUpdater::ServicePlanNotUpdatable
+      raise Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
+    rescue ServiceInstanceUpdater::InvalidServicePlan
+      raise Errors::ApiError.new_from_details('InvalidRelation', 'Plan')
+    rescue ServiceInstanceUpdater::ServiceInstanceSpaceChangeNotAllowed
+      raise Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
     end
 
     class BulkUpdateMessage < VCAP::RestAPI::Message

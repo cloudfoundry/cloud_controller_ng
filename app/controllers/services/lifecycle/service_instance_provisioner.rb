@@ -1,12 +1,21 @@
 module VCAP::CloudController
   class ServiceInstanceProvisioner
-    def initialize(services_event_repository, access_validator, logger)
+    class Unauthorized < StandardError; end
+    class ServiceInstanceCannotAccessServicePlan < StandardError; end
+    class InvalidRequest < StandardError; end
+    class InvalidServicePlan < StandardError; end
+    class InvalidSpace < StandardError; end
+
+    def initialize(services_event_repository, access_validator, logger, access_context)
       @services_event_repository = services_event_repository
       @access_validator = access_validator
       @logger = logger
+      @access_context = access_context
     end
 
     def create_service_instance(request_attrs, params)
+      raise InvalidRequest unless request_attrs
+
       validate_create_action(request_attrs, params)
 
       service_instance = ManagedServiceInstance.new(request_attrs)
@@ -14,8 +23,8 @@ module VCAP::CloudController
         service_instance,
         accepts_incomplete: accepts_incomplete?(params),
         event_repository_opts: {
-          user: SecurityContext.current_user,
-          user_email: SecurityContext.current_user_email
+          user: @access_context.user,
+          user_email: @access_context.user_email
         },
         request_attrs: request_attrs,
       )
@@ -27,7 +36,7 @@ module VCAP::CloudController
         raise e
       end
 
-      if !accepts_incomplete?(params) || service_instance.last_operation.state != 'in progress'
+      if (!accepts_incomplete?(params)) || service_instance.last_operation.state != 'in progress'
         @services_event_repository.record_service_instance_event(:create, service_instance, request_attrs)
       end
 
@@ -48,12 +57,12 @@ module VCAP::CloudController
     end
 
     def current_user_can_manage_plan(plan_guid)
-      ServicePlan.user_visible(SecurityContext.current_user, SecurityContext.admin?).filter(guid: plan_guid).count > 0
+      ServicePlan.user_visible(@access_context.user, @access_context.roles.admin?).filter(guid: plan_guid).count > 0
     end
 
     def requested_space(request_attrs)
       space = Space.filter(guid: request_attrs['space_guid']).first
-      raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'not a valid space') unless space
+      raise InvalidSpace unless space
       space
     end
 
@@ -61,26 +70,19 @@ module VCAP::CloudController
       service_plan_guid = request_attrs['service_plan_guid']
       organization = requested_space(request_attrs).organization
 
-      if ServicePlan.find(guid: service_plan_guid).nil?
-        raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'not a valid service plan')
-      end
-
-      raise Errors::ApiError.new_from_details('NotAuthorized') unless current_user_can_manage_plan(service_plan_guid)
+      raise InvalidServicePlan if ServicePlan.find(guid: service_plan_guid).nil?
+      raise Unauthorized unless current_user_can_manage_plan(service_plan_guid)
 
       unless ServicePlan.organization_visible(organization).filter(guid: service_plan_guid).count > 0
-        raise Errors::ApiError.new_from_details('ServiceInstanceOrganizationNotAuthorized')
+        raise ServiceInstanceCannotAccessServicePlan
       end
 
       service_instance = ManagedServiceInstance.new(request_attrs)
       @access_validator.validate_access(:create, service_instance)
 
-      unless service_instance.valid?
-        raise Sequel::ValidationFailed.new(service_instance)
-      end
+      raise Sequel::ValidationFailed.new(service_instance) unless service_instance.valid?
 
-      unless ['true', 'false', nil].include? params['accepts_incomplete']
-        raise Errors::ApiError.new_from_details('InvalidRequest')
-      end
+      raise InvalidRequest unless ['true', 'false', nil].include? params['accepts_incomplete']
     end
   end
 end

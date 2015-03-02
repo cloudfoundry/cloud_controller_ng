@@ -1,5 +1,9 @@
 module VCAP::CloudController
   class ServiceInstanceBindingManager
+    class ServiceInstanceNotFound < StandardError; end
+    class ServiceInstanceNotBindable < StandardError; end
+    class AppNotFound < StandardError; end
+
     def initialize(services_event_repository, access_validator)
       @services_event_repository = services_event_repository
       @access_validator = access_validator
@@ -7,8 +11,8 @@ module VCAP::CloudController
 
     def create_service_instance_binding(request_attrs)
       service_instance = ServiceInstance.find(guid: request_attrs['service_instance_guid'])
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', request_attrs['service_instance_guid']) unless service_instance
-      raise VCAP::Errors::ApiError.new_from_details('UnbindableService') unless service_instance.bindable?
+      raise ServiceInstanceNotFound unless service_instance
+      raise ServiceInstanceNotBindable unless service_instance.bindable?
       validate_app(request_attrs['app_guid'])
 
       service_binding = ServiceBinding.new(request_attrs)
@@ -48,8 +52,7 @@ module VCAP::CloudController
     end
 
     def validate_app(app_guid)
-      app = App.find(guid: app_guid)
-      raise VCAP::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless app
+      raise AppNotFound unless App.find(guid: app_guid)
     end
 
     def enqueue_deletion_job(deletion_job, params)
