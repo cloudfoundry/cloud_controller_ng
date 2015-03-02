@@ -573,107 +573,84 @@ module VCAP::Services::ServiceBrokers::V2
           expect(http_client).to have_received(:patch).
             with(path, anything)
         end
-      end
 
-      context 'when the broker returns a last_operation' do
-        let(:response_data) do
-          {
-            last_operation: {
-              state: 'in progress',
-              description: 'updating all the things (10%)'
+        context 'and the broker returns last_operation state `succeeded`' do
+          let(:response_data) do
+            {
+              last_operation: {
+                state: 'succeeded',
+                description: 'finished updating'
+              }
             }
-          }
+          end
+
+          it 'forwards the last operation state from the broker' do
+            attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+
+            last_operation = attributes[:last_operation]
+            expect(err).to be_nil
+            expect(last_operation[:type]).to eq('update')
+            expect(last_operation[:state]).to eq('succeeded')
+            expect(last_operation[:description]).to eq('finished updating')
+            expect(last_operation[:proposed_changes]).to be_nil
+          end
+
+          it 'returns the new service_plan in a hash' do
+            attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+            expect(err).to be_nil
+            expect(attributes[:service_plan]).to eq new_plan
+          end
         end
 
-        it 'forwards the last operation state from the broker' do
-          attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+        context 'when the broker does not return a last_operation' do
+          let(:response_data) { { bogus_key: 'bogus_value' } }
 
-          last_operation = attributes[:last_operation]
-          expect(err).to be_nil
-          expect(last_operation[:type]).to eq('update')
-          expect(last_operation[:state]).to eq('in progress')
-          expect(last_operation[:description]).to eq('updating all the things (10%)')
-          expect(last_operation[:proposed_changes]).to eq({ service_plan_guid: new_plan.guid })
-        end
-      end
+          it 'defaults the last operation state to `succeeded`' do
+            attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
 
-      context 'when the broker does not return a last_operation' do
-        let(:response_data) { { bogus_key: 'bogus_value' } }
+            last_operation = attributes[:last_operation]
+            expect(err).to be_nil
+            expect(last_operation[:type]).to eq('update')
+            expect(last_operation[:state]).to eq('succeeded')
+            expect(last_operation[:description]).to eq('')
+            expect(last_operation[:proposed_changes]).to be_nil
+          end
 
-        it 'defaults the last operation state to `succeeded`' do
-          attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
-
-          last_operation = attributes[:last_operation]
-          expect(err).to be_nil
-          expect(last_operation[:type]).to eq('update')
-          expect(last_operation[:state]).to eq('succeeded')
-          expect(last_operation[:description]).to eq('')
-          expect(last_operation[:proposed_changes]).to be_nil
+          it 'returns the new service_plan in a hash' do
+            attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+            expect(err).to be_nil
+            expect(attributes[:service_plan]).to eq new_plan
+          end
         end
 
-        it 'returns the new service_plan in a hash' do
-          attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
-          expect(err).to be_nil
-          expect(attributes[:service_plan]).to eq new_plan
-        end
-      end
-
-      context 'when the broker returns the state as `in progress`' do
-        let(:code) { 202 }
-        let(:message) { 'Accepted' }
-        let(:response_data) do
-          {
-            last_operation: {
-              state: 'in progress',
-              description: '10% done'
-            },
-          }
-        end
-
-        it 'return immediately with the broker response' do
-          client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          attributes, error = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
-
-          expect(attributes[:last_operation][:type]).to eq('update')
-          expect(attributes[:last_operation][:state]).to eq('in progress')
-          expect(attributes[:last_operation][:description]).to eq('10% done')
-          expect(error).to be_nil
-        end
-
-        it 'enqueues a polling job' do
-          expect {
-            client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
-          }.to change {
-            Delayed::Job.count
-          }.by(1)
-
-          expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
-          inner_job = unwrap_delayed_job(Delayed::Job.last)
-          expect(inner_job.name).to eq 'service-instance-state-fetch'
-          expect(inner_job.client_attrs).to eq client.attrs
-          expect(inner_job.service_instance_guid).to eq instance.guid
-          expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
-          expect(inner_job.request_attrs).to eq options[:request_attrs]
-        end
-
-        context 'and async_poll_interval_seconds is set by the broker' do
-          let(:poll_interval) { '120' }
+        context 'when the broker returns the state as `in progress`' do
+          let(:code) { 202 }
+          let(:message) { 'Accepted' }
           let(:response_data) do
             {
               last_operation: {
                 state: 'in progress',
-                description: '10% done',
-                async_poll_interval_seconds: poll_interval
+                description: '10% done'
               },
             }
           end
 
-          it 'parses the value as an integer and passes it to the state poller' do
+          it 'return immediately with the broker response' do
+            client = Client.new(client_attrs.merge(accepts_incomplete: true))
+            attributes, error = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+
+            expect(attributes[:last_operation][:type]).to eq('update')
+            expect(attributes[:last_operation][:state]).to eq('in progress')
+            expect(attributes[:last_operation][:description]).to eq('10% done')
+            expect(error).to be_nil
+          end
+
+          it 'enqueues a polling job' do
             expect {
               client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
             }.to change {
-              Delayed::Job.count
-            }.by(1)
+                Delayed::Job.count
+              }.by(1)
 
             expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
             inner_job = unwrap_delayed_job(Delayed::Job.last)
@@ -682,7 +659,36 @@ module VCAP::Services::ServiceBrokers::V2
             expect(inner_job.service_instance_guid).to eq instance.guid
             expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
             expect(inner_job.request_attrs).to eq options[:request_attrs]
-            expect(inner_job.poll_interval).to eq poll_interval.to_i
+          end
+
+          context 'and async_poll_interval_seconds is set by the broker' do
+            let(:poll_interval) { '120' }
+            let(:response_data) do
+              {
+                last_operation: {
+                  state: 'in progress',
+                  description: '10% done',
+                  async_poll_interval_seconds: poll_interval
+                },
+              }
+            end
+
+            it 'parses the value as an integer and passes it to the state poller' do
+              expect {
+                client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+              }.to change {
+                  Delayed::Job.count
+                }.by(1)
+
+              expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
+              inner_job = unwrap_delayed_job(Delayed::Job.last)
+              expect(inner_job.name).to eq 'service-instance-state-fetch'
+              expect(inner_job.client_attrs).to eq client.attrs
+              expect(inner_job.service_instance_guid).to eq instance.guid
+              expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
+              expect(inner_job.request_attrs).to eq options[:request_attrs]
+              expect(inner_job.poll_interval).to eq poll_interval.to_i
+            end
           end
         end
       end

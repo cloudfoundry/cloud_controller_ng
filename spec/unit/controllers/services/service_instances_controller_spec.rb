@@ -838,6 +838,15 @@ module VCAP::CloudController
       end
 
       context 'when the service instance client returns a last_operation with state `succeeded`' do
+        let(:response_body) do
+          {
+            last_operation: {
+              state: 'succeeded',
+              description: 'some description'
+            }
+          }.to_json
+        end
+
         it 'updates the service plan in the database' do
           put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
 
