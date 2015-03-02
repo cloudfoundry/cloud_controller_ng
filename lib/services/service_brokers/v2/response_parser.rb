@@ -67,20 +67,20 @@ module VCAP::Services
           when 201
             JsonObjectValidator.new(@logger,
               FailingValidator.new(Errors::ServiceBrokerBadResponse))
-          when 204
-            SuccessValidator.new { |res| {} }
           when 202
             JsonObjectValidator.new(@logger,
               IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
                 FailingValidator.new(Errors::ServiceBrokerBadResponse),
                 StateValidator.new(['in progress'],
                   SuccessValidator.new)))
-          when 422
-            FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
-              FailingValidator.new(Errors::ServiceBrokerBadResponse))
+          when 204
+            SuccessValidator.new { |res| {} }
           when 410
             @logger.warn("Already deleted: #{unvalidated_response.uri}")
             SuccessValidator.new { |res| nil }
+          when 422
+            FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
+              FailingValidator.new(Errors::ServiceBrokerBadResponse))
           else
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
           end
@@ -115,12 +115,12 @@ module VCAP::Services
           when 200, 202
             JsonObjectValidator.new(@logger,
                 SuccessValidator.new)
-          when 422
-            FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
-              FailingValidator.new(Errors::ServiceBrokerRequestRejected))
           when 201
             JsonObjectValidator.new(@logger,
               FailingValidator.new(Errors::ServiceBrokerBadResponse))
+          when 422
+            FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
+              FailingValidator.new(Errors::ServiceBrokerRequestRejected))
           else
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
           end

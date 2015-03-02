@@ -10,14 +10,14 @@ module VCAP::CloudController
     end
 
     def create_service_instance_binding(request_attrs)
-      service_instance = ServiceInstance.find(guid: request_attrs['service_instance_guid'])
+      service_instance = ServiceInstance.first(guid: request_attrs['service_instance_guid'])
       raise ServiceInstanceNotFound unless service_instance
       raise ServiceInstanceNotBindable unless service_instance.bindable?
-      validate_app(request_attrs['app_guid'])
+      raise AppNotFound unless App.first(guid: request_attrs['app_guid'])
 
       service_binding = ServiceBinding.new(request_attrs)
       @access_validator.validate_access(:create, service_binding)
-      raise Sequel::ValidationFailed.new(service_binding) if !service_binding.valid?
+      raise Sequel::ValidationFailed.new(service_binding) unless service_binding.valid?
 
       begin
         lock_service_instance_by_blocking(service_instance) do
@@ -35,7 +35,7 @@ module VCAP::CloudController
     end
 
     def delete_service_instance_binding(service_binding, params)
-      service_instance = ServiceInstance.find(guid: service_binding.service_instance_guid)
+      service_instance = ServiceInstance.first(guid: service_binding.service_instance_guid)
 
       lock_service_instance_by_blocking(service_instance) do
         deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceBinding, service_binding.guid)
@@ -49,10 +49,6 @@ module VCAP::CloudController
 
     def async?(params)
       params['async'] == 'true'
-    end
-
-    def validate_app(app_guid)
-      raise AppNotFound unless App.find(guid: app_guid)
     end
 
     def enqueue_deletion_job(deletion_job, params)

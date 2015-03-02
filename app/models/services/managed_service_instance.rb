@@ -201,6 +201,7 @@ module VCAP::CloudController
       end
     end
 
+    # It is the caller's responsibility to save the operation state as 'succeeded' or 'failed'
     def lock_by_failing_other_operations(type, &block)
       ManagedServiceInstance.db.transaction do
         lock!
