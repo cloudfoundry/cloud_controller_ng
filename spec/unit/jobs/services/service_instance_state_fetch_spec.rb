@@ -319,7 +319,13 @@ module VCAP::CloudController
             let(:response) { {} }
 
             context 'due to an HttpRequestError' do
-              let(:error) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new('some-uri.com', :get, nil) }
+              before do
+                uri = URI(broker.broker_url)
+                uri.user = broker.auth_username
+                uri.password = broker.auth_password
+                stub_request(:get, "#{uri}/v2/service_instances/#{service_instance.guid}").to_raise(HTTPClient::TimeoutError.new)
+              end
+
               it 'should enqueue another fetch job' do
                 run_job(job)
 
@@ -329,17 +335,8 @@ module VCAP::CloudController
             end
 
             context 'due to an HttpResponseError' do
-              let(:response) do
-                instance_double(VCAP::Services::ServiceBrokers::V2::HttpResponse,
-                  body: '{}',
-                  code: 500,
-                  message: 'Internal Server Error'
-                )
-              end
-              let(:error) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new('some-uri.com', :get, response) }
-
               it 'should enqueue another fetch job' do
-                job.perform
+                run_job(job)
 
                 expect(Delayed::Job.count).to eq 1
                 expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
