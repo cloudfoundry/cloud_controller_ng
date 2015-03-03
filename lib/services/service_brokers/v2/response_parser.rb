@@ -120,8 +120,9 @@ module VCAP::Services
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
           when 202
             JsonObjectValidator.new(@logger,
-              StateValidator.new(['in progress'],
-                SuccessValidator.new))
+              LastOperationFormatValidator.new(
+                StateValidator.new(['in progress'],
+                  SuccessValidator.new)))
           when 422
             FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
               FailingValidator.new(Errors::ServiceBrokerRequestRejected))
@@ -325,6 +326,38 @@ module VCAP::Services
           def description_from_states(actual_state, expected_states)
             actual = actual_state ? "'#{actual_state}'" : 'null'
             "The service broker response was not understood: expected state was '#{expected_states.first}', broker returned #{actual}."
+          end
+        end
+
+        class LastOperationFormatValidator
+          def initialize(validator)
+            @validator = validator
+          end
+
+          def validate(method:, uri:, code:, response:)
+            parsed_response = MultiJson.load(response.body)
+            last_operation = parsed_response['last_operation']
+
+            unless last_operation
+              raise Errors::ServiceBrokerResponseMalformed.new(
+                  uri.to_s,
+                  @method,
+                  response,
+                  "The service broker response was not understood: #{response.body}"
+                )
+            end
+
+            state = last_operation['state']
+            unless state
+              raise Errors::ServiceBrokerResponseMalformed.new(
+                  uri.to_s,
+                  @method,
+                  response,
+                  "The service broker response was not understood: #{response.body}"
+                )
+            end
+
+            @validator.validate(method: method, uri: uri, code: code, response: response)
           end
         end
 
