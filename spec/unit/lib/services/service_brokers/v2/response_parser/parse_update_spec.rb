@@ -43,6 +43,86 @@ module VCAP::Services
               end
             end
 
+            context 'and the response is an empty JSON object' do
+              let(:body) do
+                {}.to_json
+              end
+
+              it 'returns the response hash' do
+                expect(parsed_response).to eq(JSON.parse(body))
+              end
+            end
+
+            context 'and the response has an invalid key' do
+              let(:body) do
+                { foo: 'bar' }.to_json
+              end
+
+              it 'returns the response hash' do
+                expect(parsed_response).to eq(JSON.parse(body))
+              end
+            end
+
+            context 'and the response has an empty value for last_operation' do
+              let(:body) do
+                { last_operation: {} }.to_json
+              end
+
+              it 'returns the response hash' do
+                expect(parsed_response).to eq(JSON.parse(body))
+              end
+            end
+
+            context 'and the response has an invalid value for last_operation' do
+              let(:body) do
+                { last_operation: { foo: 'bar' } }.to_json
+              end
+
+              it 'returns the response hash' do
+                expect(parsed_response).to eq(JSON.parse(body))
+              end
+            end
+
+            context 'and the response has an invalid state' do
+              let(:body) do
+                { last_operation: { state: 'foo' } }.to_json
+              end
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response has state `in progress`' do
+              let(:body) do
+                { last_operation: { state: 'in progress' } }.to_json
+              end
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response has state `failed`' do
+              let(:body) do
+                { last_operation: { state: 'failed' } }.to_json
+              end
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response has state `succeeded`' do
+              let(:body) do
+                { last_operation: { state: 'succeeded' } }.to_json
+              end
+
+              it 'returns the response hash' do
+                expect(parsed_response).to eq(JSON.parse(body))
+              end
+            end
+
             it 'returns response_hash' do
               expect(parsed_response).to eq({})
             end
@@ -80,6 +160,86 @@ module VCAP::Services
               let(:body) { '""' }
               it 'raises a ServiceBrokerResponseMalformed error' do
                 expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response is an empty JSON object' do
+              let(:body) do
+                {}.to_json
+              end
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response has an invalid key' do
+              let(:body) do
+                { foo: 'bar' }.to_json
+              end
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response has an empty value for last_operation' do
+              let(:body) do
+                { last_operation: {} }.to_json
+              end
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response has an invalid value for last_operation' do
+              let(:body) do
+                { last_operation: { foo: 'bar' } }.to_json
+              end
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response has an invalid state' do
+              let(:body) do
+                { last_operation: { state: 'foo' } }.to_json
+              end
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response has state `succeeded`' do
+              let(:body) do
+                { last_operation: { state: 'succeeded' } }.to_json
+              end
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response has state `failed`' do
+              let(:body) do
+                { last_operation: { state: 'failed' } }.to_json
+              end
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+              end
+            end
+
+            context 'and the response has state `in progress`' do
+              let(:body) do
+                { last_operation: { state: 'in progress' } }.to_json
+              end
+
+              it 'returns the response hash' do
+                expect(parsed_response).to eq(JSON.parse(body))
               end
             end
 

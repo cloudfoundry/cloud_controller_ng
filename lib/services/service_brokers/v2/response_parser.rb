@@ -112,12 +112,17 @@ module VCAP::Services
 
           validator =
           case unvalidated_response.code
-          when 200, 202
+          when 200
             JsonObjectValidator.new(@logger,
-                SuccessValidator.new)
+              StateValidator.new(['succeeded', nil],
+                SuccessValidator.new))
           when 201
             JsonObjectValidator.new(@logger,
               FailingValidator.new(Errors::ServiceBrokerBadResponse))
+          when 202
+            JsonObjectValidator.new(@logger,
+              StateValidator.new(['in progress'],
+                SuccessValidator.new))
           when 422
             FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
               FailingValidator.new(Errors::ServiceBrokerRequestRejected))

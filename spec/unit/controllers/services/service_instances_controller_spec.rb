@@ -993,6 +993,18 @@ module VCAP::CloudController
               })
         end
 
+        context 'when the service instance client returns a 202 with an empty body' do
+          let(:status) { 202 }
+          let(:response_body) { '{}' }
+
+          it 'tells the user that the broker provided a bad response' do
+            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user)
+
+            expect(last_response).to have_status_code 502
+            expect(last_response.body).to match /ResponseMalformed/
+          end
+        end
+
         context 'when the service instance client returns a last_operation with state `in progress`' do
           let(:status) { 202 }
           let(:response_body) do
