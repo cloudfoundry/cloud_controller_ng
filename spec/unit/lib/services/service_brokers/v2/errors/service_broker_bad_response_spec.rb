@@ -50,7 +50,7 @@ module VCAP::Services
               exception.set_backtrace(['/foo:1', '/bar:2'])
 
               expect(exception.to_h).to eq({
-                'description' => 'The service broker returned an error for the request to http://www.example.com/: 500 Internal Server Error',
+                'description' => "The service broker returned an error for the request to http://www.example.com/. Status Code: 500 Internal Server Error, Body: #{response_body}",
                 'backtrace' => ['/foo:1', '/bar:2'],
                 'http' => {
                   'status' => 500,
