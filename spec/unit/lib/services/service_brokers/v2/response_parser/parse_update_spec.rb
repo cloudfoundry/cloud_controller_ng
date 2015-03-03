@@ -208,7 +208,9 @@ module VCAP::Services
               end
 
               it 'raises a ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'in progress', broker returned 'foo'.")
+                end
               end
             end
 
@@ -218,7 +220,9 @@ module VCAP::Services
               end
 
               it 'raises a ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'in progress', broker returned 'succeeded'.")
+                end
               end
             end
 
@@ -228,7 +232,9 @@ module VCAP::Services
               end
 
               it 'raises a ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'in progress', broker returned 'failed'.")
+                end
               end
             end
 
