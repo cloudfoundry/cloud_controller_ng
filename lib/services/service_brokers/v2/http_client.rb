@@ -31,6 +31,7 @@ module VCAP::Services
         406 => 'Not Acceptable',
         407 => 'Proxy Authentication Required',
         408 => 'Request Timeout',
+        409 => 'Conflict',
         410 => 'Gone',
         411 => 'Length Required',
         412 => 'Precondition Failed',
@@ -59,7 +60,7 @@ module VCAP::Services
 
       def initialize(attrs={})
         @code = attrs.fetch(:code)
-        @message = attrs.fetch(:message)
+        @message = attrs[:message] || STATUS_CODE_MESSAGES[@code]
         @body = attrs.fetch(:body)
       end
 

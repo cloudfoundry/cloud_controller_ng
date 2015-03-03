@@ -117,8 +117,7 @@ module VCAP::Services
               StateValidator.new(['succeeded', nil],
                 SuccessValidator.new))
           when 201
-            JsonObjectValidator.new(@logger,
-              FailingValidator.new(Errors::ServiceBrokerBadResponse))
+            FailingValidator.new(Errors::ServiceBrokerBadResponse)
           when 202
             JsonObjectValidator.new(@logger,
               StateValidator.new(['in progress'],
