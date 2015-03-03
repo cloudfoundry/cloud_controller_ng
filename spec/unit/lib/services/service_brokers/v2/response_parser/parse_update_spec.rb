@@ -26,7 +26,6 @@ module VCAP::Services
 
           context 'when the status code is 200' do
             let(:code) { 200 }
-            let(:body) { {}.to_json }
 
             context 'the response is partial json response' do
               let(:body) { '""' }
@@ -99,7 +98,9 @@ module VCAP::Services
               end
 
               it 'raises a ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'succeeded', broker returned 'in progress'.")
+                end
               end
             end
 
@@ -109,7 +110,9 @@ module VCAP::Services
               end
 
               it 'raises a ServiceBrokerResponseMalformed error' do
-                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |error|
+                  expect(error.to_h['description']).to eq("The service broker response was not understood: expected state was 'succeeded', broker returned 'failed'.")
+                end
               end
             end
 
