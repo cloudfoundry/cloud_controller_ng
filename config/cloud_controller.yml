@@ -149,6 +149,7 @@ uaa_client_scope: openid,cloud_controller_service_permissions.read
 cloud_controller_username_lookup_client_name: 'username_lookup_client_name'
 cloud_controller_username_lookup_client_secret: 'username_lookup_secret'
 
+users_can_select_backend: true
 diego_docker: false
 
 renderer:

@@ -143,6 +143,7 @@ allowed_cors_domains:
 - http://jim.corr
 - http://sharon.corr
 
+users_can_select_backend: false
 diego_docker: true
 
 broker_client_timeout_seconds: 120

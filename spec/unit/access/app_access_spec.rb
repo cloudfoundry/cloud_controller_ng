@@ -48,6 +48,10 @@ module VCAP::CloudController
         expect(subject).to allow_op_on_object(:read_env, object)
       end
 
+      it 'allows user change the diego flag' do
+        expect { subject.read_for_update?(object, { 'diego' => true }) }.not_to raise_error
+      end
+
       context 'app_bits_upload FeatureFlag' do
         it 'disallows when enabled' do
           FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
@@ -73,7 +77,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app_scaling featureflag is disabled' do
+      context 'when the app_scaling feature flag is disabled' do
         before { FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
 
         it 'cannot scale' do
@@ -88,6 +92,14 @@ module VCAP::CloudController
 
         it 'allows changing other fields' do
           expect(subject.read_for_update?(object, { 'buildpack' => 'http://foo.git' })).to be_truthy
+        end
+      end
+
+      context 'when the users_can_select_backend config value is disabled' do
+        before { TestConfig.override(users_can_select_backend: false) }
+
+        it 'does not allow user to change the diego flag' do
+          expect { subject.read_for_update?(object, { 'diego' => true }) }.to raise_error(VCAP::Errors::ApiError, /backend/)
         end
       end
     end

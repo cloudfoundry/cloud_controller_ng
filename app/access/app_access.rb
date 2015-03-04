@@ -10,9 +10,15 @@ module VCAP::CloudController
       return true if admin_user?
       return false unless create?(app, params)
       return true if params.nil?
+
       if %w(instances memory disk_quota).any? { |k| params.key?(k) && params[k] != app.send(k.to_sym) }
         FeatureFlag.raise_unless_enabled!('app_scaling')
       end
+
+      if !Config.config[:users_can_select_backend] && params.key?('diego') && params['diego'] != app.diego
+        raise VCAP::Errors::ApiError.new_from_details('BackendSelectionNotAuthorized')
+      end
+
       true
     end
 
