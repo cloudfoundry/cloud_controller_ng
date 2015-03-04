@@ -713,6 +713,11 @@
   http_code: 403
   message: "The request staging completion endpoint only handles apps desired to stage on the Diego backend."
 
+320005:
+  name: BackendSelectionNotAuthorized
+  http_code: 403
+  message: "You cannot select the backend on which to run this application"
+
 330000:
   name: FeatureFlagNotFound
   http_code: 404
