@@ -13,10 +13,32 @@ module VCAP::Services
 
           it 'initializes the base class correctly' do
             exception = ServiceBrokerResponseMalformed.new(uri, method, response)
-            expect(exception.message).to eq("The service broker response was not understood: expected valid JSON object in body, broker returned 'foo'")
+            expect(exception.message).to eq("The service broker response was not understood: expected state was 'succeeded', broker returned 'foo'")
             expect(exception.uri).to eq(uri)
             expect(exception.method).to eq(method)
             expect(exception.source).to be(response.body)
+          end
+
+          context 'with an invalid JSON body' do
+            it 'parses an invalid last operation state correctly' do
+              exception = ServiceBrokerResponseMalformed.new(uri, method, response)
+              expect(exception.message).to eq(("The service broker response was not understood: expected state was 'succeeded', broker returned 'foo'"))
+            end
+          end
+
+          context 'with a valid JSON body' do
+            let(:response_body) do
+              {
+                'last_operation' => {
+                  'state' => 'foo'
+                }
+              }.to_json
+            end
+
+            it 'parses an invalid last operation state correctly' do
+              exception = ServiceBrokerResponseMalformed.new(uri, method, response)
+              expect(exception.message).to eq(("The service broker response was not understood: expected state was 'succeeded', broker returned 'foo'"))
+            end
           end
 
           it 'renders a 502 to the user' do
