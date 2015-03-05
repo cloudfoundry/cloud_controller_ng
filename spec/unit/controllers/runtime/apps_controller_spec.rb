@@ -9,6 +9,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:name) }
       it { expect(described_class).to be_queryable_by(:space_guid) }
       it { expect(described_class).to be_queryable_by(:organization_guid) }
+      it { expect(described_class).to be_queryable_by(:diego) }
     end
 
     describe 'query by org_guid' do
