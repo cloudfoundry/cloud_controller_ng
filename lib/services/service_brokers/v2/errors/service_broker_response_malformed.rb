@@ -27,7 +27,7 @@ module VCAP::Services
             if hash.is_a?(Hash) && hash.key?('last_operation')
               "The service broker response was not understood: expected state was 'succeeded', broker returned '#{hash['last_operation']['state']}'"
             else
-              "The service broker response was not understood: expected state was 'succeeded', broker returned '#{response.body}'"
+              "The service broker response was not understood: expected valid JSON object in body, broker returned '#{response.body}'"
             end
           end
         end
