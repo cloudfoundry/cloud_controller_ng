@@ -116,7 +116,7 @@ module VCAP::CloudController
       allowed_organization_ids = Organization.filter(Sequel.or(
                                      managers: [user],
                                      auditors: [user],
-                                     spaces: Space.having_developers(user))).select_map(:id)
+                                     spaces: Space.having_developers(user))).select(:id)
 
       r = Organization.association_reflection(:private_domains)
       shared_domains = r.associated_dataset.select(r.qualified_right_key).where(r.predicate_key => allowed_organization_ids)
