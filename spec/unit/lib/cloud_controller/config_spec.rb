@@ -59,6 +59,10 @@ module VCAP::CloudController
           expect(config[:users_can_select_backend]).to eq(true)
         end
 
+        it 'runs apps on the dea' do
+          expect(config[:default_to_diego_backend]).to eq(false)
+        end
+
         it 'sets a default value for min staging memory' do
           expect(config[:staging][:minimum_staging_memory_mb]).to eq(1024)
         end
@@ -145,6 +149,10 @@ module VCAP::CloudController
 
           it 'preserves the diego configuration from the file' do
             expect(config[:diego_docker]).to eq(true)
+          end
+
+          it 'runs apps on diego' do
+            expect(config[:default_to_diego_backend]).to eq(true)
           end
 
           it 'preserves the default_health_check_timeout value from the file' do

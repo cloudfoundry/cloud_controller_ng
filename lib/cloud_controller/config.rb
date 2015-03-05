@@ -222,6 +222,7 @@ module VCAP::CloudController
 
         optional(:diego_docker) => bool,
         optional(:users_can_select_backend) => bool,
+        optional(:default_to_diego_backend) => bool,
       }
     end
 
@@ -315,6 +316,7 @@ module VCAP::CloudController
         config[:default_locale] ||= 'en_US'
         config[:allowed_cors_domains] ||= []
         config[:diego_docker] ||= false
+        config[:default_to_diego_backend] ||= false
         config[:dea_advertisement_timeout_in_seconds] ||= 10
         config[:staging][:minimum_staging_memory_mb] ||= 1024
         config[:staging][:minimum_staging_disk_mb] ||= 4096

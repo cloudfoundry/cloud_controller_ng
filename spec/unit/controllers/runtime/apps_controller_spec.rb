@@ -41,7 +41,7 @@ module VCAP::CloudController
             route_guids:          { type: '[string]' },
             space_guid:           { type: 'string', required: true },
             stack_guid:           { type: 'string' },
-            diego:                { type: 'bool', default: false },
+            diego:                { type: 'bool' },
             docker_image:         { type: 'string', required: false },
           })
       end

@@ -2083,6 +2083,24 @@ module VCAP::CloudController
     describe 'diego' do
       subject { AppFactory.make }
 
+      context 'default values' do
+        context 'when the config specifies dea as the default backend' do
+          before { TestConfig.override(default_to_diego_backend: false) }
+
+          it 'does not run on diego' do
+            expect(subject.diego).to be_falsey
+          end
+        end
+
+        context 'when the config specifies diego as the default backend' do
+          before { TestConfig.override(default_to_diego_backend: true) }
+
+          it 'runs on diego' do
+            expect(subject.diego).to be_truthy
+          end
+        end
+      end
+
       context 'when adding and removing routes', isolation: :truncation do
         let(:domain) do
           PrivateDomain.make owning_organization: subject.space.organization

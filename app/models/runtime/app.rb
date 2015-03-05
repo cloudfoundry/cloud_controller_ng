@@ -149,6 +149,10 @@ module VCAP::CloudController
       AppStopEvent.create_from_app(self) if generate_stop_event?
       AppStartEvent.create_from_app(self) if generate_start_event?
 
+      if diego.nil?
+        self.diego = Config.config[:default_to_diego_backend]
+      end
+
       super
     end
 
