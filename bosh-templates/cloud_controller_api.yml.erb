@@ -101,6 +101,8 @@ info:
   version: <%= p("version") %>
   support_address: <%= p("support_address") %>
   description: <%= p("description") %>
+  min_cli_version: <%= p("cc.min_cli_version") %>
+  min_recommended_cli_version: <%= p("cc.min_recommended_cli_version") %>
 <% if_p("cc.info.custom") do |custom| %>
   custom:
   <% custom.each do |key, value| %>
