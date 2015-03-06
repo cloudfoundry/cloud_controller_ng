@@ -17,13 +17,13 @@ module VCAP::Services
           VCAP::CloudController::Jobs::Enqueuer.new(deprovision_job, opts).enqueue
         end
 
-        def cleanup_failed_bind(client_attrs, binding)
+        def cleanup_failed_bind(client_attrs, service_binding)
           unbind_job = VCAP::CloudController::Jobs::Services::ServiceInstanceUnbind.new(
             'service-instance-unbind',
             client_attrs,
-            binding.guid,
-            binding.service_instance.guid,
-            binding.app.guid
+            service_binding.guid,
+            service_binding.service_instance.guid,
+            service_binding.app.guid
           )
 
           opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }
