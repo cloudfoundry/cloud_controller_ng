@@ -4,8 +4,6 @@ module VCAP::CloudController
   describe SecurityGroupsController do
     let(:group) { SecurityGroup.make }
 
-    it_behaves_like 'an admin only endpoint', path: '/v2/security_groups'
-
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
     end

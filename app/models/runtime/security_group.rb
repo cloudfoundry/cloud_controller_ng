@@ -28,7 +28,10 @@ module VCAP::CloudController
         [:spaces, user.managed_spaces_dataset],
         [:spaces, user.audited_spaces_dataset],
         [:running_default, true],
-        [:security_groups_spaces__space_id, user.managed_organizations_dataset.join(:spaces, spaces__organization_id: :organizations__id).select(:spaces__id)]
+        [:spaces, Space.where(space_id:
+                              user.managed_organizations_dataset.
+                              join(:spaces, spaces__organization_id: :organizations__id).
+                              select(:spaces__id))]
       ])
     end
 
