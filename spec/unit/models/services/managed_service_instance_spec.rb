@@ -299,12 +299,10 @@ module VCAP::CloudController
       subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
 
       it 'returns detailed summary' do
-        updated_at_time = Time.now.utc
         last_operation = ServiceInstanceOperation.make(
           state: 'in progress',
           description: '50% all the time',
           type: 'create',
-          updated_at: updated_at_time
         )
         service_instance.service_instance_operation = last_operation
 
@@ -334,8 +332,6 @@ module VCAP::CloudController
             'type' => 'create',
           }
         )
-
-        expect(service_instance.as_summary_json['last_operation']['updated_at']).to be_within(1.second).of updated_at_time
       end
 
       context 'when the last_operation does not exist' do
