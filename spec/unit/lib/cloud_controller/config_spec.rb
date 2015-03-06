@@ -92,6 +92,13 @@ module VCAP::CloudController
         context 'and the values are valid' do
           let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/default_overriding_config.yml')) }
 
+          it 'preserves cli info from the file' do
+            require 'awesome_print'
+            ap config[:info]
+            expect(config[:info][:min_cli_version]).to eq('6.0.0')
+            expect(config[:info][:min_recommended_cli_version]).to eq('6.9.0')
+          end
+
           it 'preserves the stacks_file value from the file' do
             expect(config[:stacks_file]).to eq('/tmp/foo')
           end

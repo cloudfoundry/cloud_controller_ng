@@ -12,6 +12,8 @@ module VCAP::CloudController
         description: @config[:info][:description],
         authorization_endpoint: @config[:login] ? @config[:login][:url] : @config[:uaa][:url],
         token_endpoint: config[:uaa][:url],
+        min_cli_version: @config[:info][:min_cli_version],
+        min_recommended_cli_version: @config[:info][:min_recommended_cli_version],
         api_version: VCAP::CloudController::Constants::API_VERSION
       }
 

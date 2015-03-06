@@ -7,6 +7,8 @@ info:
   version: 2
   support_address: "http://support.cloudfoundry.com"
   description: "Cloud Foundry sponsored by Pivotal"
+  min_cli_version: "6.0.0"
+  min_recommended_cli_version: "6.9.0"
 
 external_protocol: http
 

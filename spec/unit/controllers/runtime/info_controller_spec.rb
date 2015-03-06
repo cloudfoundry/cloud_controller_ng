@@ -42,6 +42,17 @@ module VCAP::CloudController
         expect(hash['logging_endpoint']).to eq('loggregator_url')
       end
 
+      it 'includes cli version info when confgired' do
+        TestConfig.override(info: {
+          min_cli_version: 'min_cli_version',
+          min_recommended_cli_version: 'min_recommended_cli_version'
+        })
+        get '/v2/info', {}, {}
+        hash = MultiJson.load(last_response.body)
+        expect(hash['min_cli_version']).to eq('min_cli_version')
+        expect(hash['min_recommended_cli_version']).to eq('min_recommended_cli_version')
+      end
+
       describe 'custom fields' do
         context 'without custom fields in config' do
           it 'does not have custom fields in the hash' do
