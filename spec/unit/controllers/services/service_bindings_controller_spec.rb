@@ -235,17 +235,44 @@ module VCAP::CloudController
           })
         end
 
-        it 'unbinds the service instance when an exception is raised' do
-          req = MultiJson.dump(
-            app_guid: app_obj.guid,
-            service_instance_guid: instance.guid
-          )
+        describe 'orphan mitigation' do
+          context 'when saving to the DB fails' do
+            it 'unbinds the service instance' do
+              req = MultiJson.dump(
+                app_guid: app_obj.guid,
+                service_instance_guid: instance.guid
+              )
 
-          allow_any_instance_of(ServiceBinding).to receive(:save).and_raise
+              allow_any_instance_of(ServiceBinding).to receive(:save).and_raise
 
-          post '/v2/service_bindings', req, json_headers(headers_for(developer))
-          expect(a_request(:delete, bind_url_regex(service_instance: instance)))
-          expect(last_response.status).to eq(500)
+              post '/v2/service_bindings', req, json_headers(headers_for(developer))
+              expect(a_request(:put, bind_url_regex(service_instance: instance))).to have_been_made.times(1)
+
+              orphan_mitigating_job = Delayed::Job.first
+              expect(orphan_mitigating_job).not_to be_nil
+              expect(orphan_mitigating_job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceUnbind
+              expect(last_response.status).to eq(500)
+            end
+          end
+
+          context 'when the broker returns an error' do
+            let(:bind_status) { 500 }
+            let(:bind_body) { {} }
+
+            it 'enqueues a ServiceInstanceUnbind job' do
+              req = MultiJson.dump(
+                app_guid: app_obj.guid,
+                service_instance_guid: instance.guid
+              )
+
+              post '/v2/service_bindings', req, json_headers(headers_for(developer))
+              expect(Delayed::Job.count).to eq 1
+
+              orphan_mitigating_job = Delayed::Job.first
+              expect(orphan_mitigating_job).not_to be_nil
+              expect(orphan_mitigating_job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceUnbind
+            end
+          end
         end
 
         context 'when attempting to bind to an unbindable service' do

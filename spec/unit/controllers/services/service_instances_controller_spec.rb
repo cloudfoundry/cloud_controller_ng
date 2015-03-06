@@ -551,22 +551,6 @@ module VCAP::CloudController
           end
         end
 
-        it 'deprovisions the service instance when an exception is raised' do
-          req = MultiJson.dump(
-            name: 'foo',
-            space_guid: space.guid,
-            service_plan_guid: plan.guid
-          )
-
-          allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise
-
-          post '/v2/service_instances', req, json_headers(headers_for(developer))
-
-          expect(last_response.status).to eq(500)
-          expect(a_request(:put, service_broker_url_regex)).to have_been_made.times(1)
-          expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
-        end
-
         context 'when the model save and the subsequent deprovision both raise errors' do
           let(:save_error_text) { 'InvalidRequest' }
           let(:deprovision_error_text) { 'NotAuthorized' }
@@ -663,6 +647,52 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq(60003)
             expect(decoded_response['description']).to include('not a valid service plan')
           end
+        end
+
+        describe 'orphan mitigation' do
+          context 'when the broker returns an error' do
+            let(:response_code) { 500 }
+
+            it 'enqueues a job to deprovision the instance' do
+              req = MultiJson.dump(
+                name: 'foo',
+                space_guid: space.guid,
+                service_plan_guid: plan.guid
+              )
+
+              post '/v2/service_instances', req, json_headers(headers_for(developer))
+
+              expect(last_response.status).to eq(502)
+              expect(a_request(:put, service_broker_url_regex)).to have_been_made.times(1)
+              expect(a_request(:delete, service_broker_url_regex)).not_to have_been_made.times(1)
+
+              orphan_mitigation_job = Delayed::Job.first
+              expect(orphan_mitigation_job).not_to be_nil
+              expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceDeprovision
+            end
+          end
+
+          context 'when the instance fails to save to the DB' do
+            it 'deprovisions the service instance' do
+              req = MultiJson.dump(
+                name: 'foo',
+                space_guid: space.guid,
+                service_plan_guid: plan.guid
+              )
+
+              allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise
+
+              post '/v2/service_instances', req, json_headers(headers_for(developer))
+
+              expect(last_response.status).to eq(500)
+              expect(a_request(:put, service_broker_url_regex)).to have_been_made.times(1)
+              expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
+
+              orphan_mitigation_job = Delayed::Job.first
+              expect(orphan_mitigation_job).not_to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceDeprovision
+            end
+          end
+
         end
       end
 
