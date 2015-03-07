@@ -54,7 +54,7 @@ module VCAP::CloudController
           let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id') }
           let(:buildpack_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
 
-          it 'contains the correct payload for staging a Docker app' do
+          it 'contains the correct payload for staging a traditional app' do
             expect(message).to eq({
               'app_id' => app.guid,
               'task_id' => 'fake-staging-task-id',
@@ -71,6 +71,49 @@ module VCAP::CloudController
               'egress_rules' => ['staging_egress_rule'],
               'timeout' => 90,
             })
+          end
+
+          describe 'buildpack payload' do
+            let(:buildpack_url) { 'http://example.com/buildpack' }
+            before do
+              Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2)
+
+              allow(blobstore_url_generator).to receive(:admin_buildpack_download_url).and_return(buildpack_url)
+            end
+
+            context 'when auto-detecting' do
+              it 'sends buildpacks without skip_detect' do
+                expect(message['buildpacks']).to have(1).items
+                buildpack = message['buildpacks'][0]
+                expect(buildpack).to include(name: 'ruby')
+                expect(buildpack).to_not include(:skip_detect)
+              end
+            end
+
+            context 'when a buildpack is requested' do
+              before do
+                app.buildpack = 'ruby'
+              end
+
+              it 'sends buildpacks with skip detect' do
+                expect(message['buildpacks']).to have(1).items
+                buildpack = message['buildpacks'][0]
+                expect(buildpack).to include(name: 'ruby', skip_detect: true)
+              end
+            end
+
+            context 'when a custom buildpack is requested' do
+              let(:buildpack_url) { 'http://example.com/buildpack' }
+              before do
+                app.buildpack = buildpack_url
+              end
+
+              it 'sends buildpacks with skip detect' do
+                expect(message['buildpacks']).to have(1).items
+                buildpack = message['buildpacks'][0]
+                expect(buildpack).to include(url: buildpack_url, skip_detect: true)
+              end
+            end
           end
 
           context 'when the app memory is less than the minimum staging memory' do
