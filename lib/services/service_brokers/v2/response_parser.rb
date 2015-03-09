@@ -65,8 +65,7 @@ module VCAP::Services
                 OldNonDescriptiveStateValidator.new(['succeeded', nil],
                   SuccessValidator.new)))
           when 201
-            JsonObjectValidator.new(@logger,
-              FailingValidator.new(Errors::ServiceBrokerBadResponse))
+            IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
           when 202
             JsonObjectValidator.new(@logger,
               IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
