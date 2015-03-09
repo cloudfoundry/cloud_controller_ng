@@ -6,9 +6,9 @@ module VCAP::CloudController
     one_to_many :spaces
 
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-      :total_routes, :memory_limit, :instance_memory_limit
+      :total_routes, :memory_limit, :instance_memory_limit, :disk_limit, :instance_disk_limit
     import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
-      :total_routes, :memory_limit, :instance_memory_limit
+      :total_routes, :memory_limit, :instance_memory_limit, :disk_limit, :instance_disk_limit
 
     add_association_dependencies spaces: :nullify
 
@@ -18,11 +18,15 @@ module VCAP::CloudController
       validates_presence :total_services
       validates_presence :total_routes
       validates_presence :memory_limit
+      validates_presence :disk_limit
       validates_presence :organization
       validates_unique [:organization_id, :name]
 
       errors.add(:memory_limit, :less_than_zero) if memory_limit && memory_limit < 0
       errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < -1
+
+      errors.add(:disk_limit, :less_than_zero) if disk_limit && disk_limit < 0
+      errors.add(:instance_disk_limit, :invalid_instance_disk_limit) if instance_disk_limit && instance_disk_limit < -1
     end
 
     def validate_change_organization(new_org)

@@ -11,6 +11,8 @@ module VCAP::CloudController
           total_routes:               { type: 'integer', required: true },
           memory_limit:               { type: 'integer', required: true },
           instance_memory_limit:      { type: 'integer' },
+          disk_limit:                 { type: 'integer', required: true },
+          instance_disk_limit:        { type: 'integer' },
           organization_guid:          { type: 'string', required: true },
         })
       end
@@ -23,6 +25,8 @@ module VCAP::CloudController
           total_routes:               { type: 'integer' },
           memory_limit:               { type: 'integer' },
           instance_memory_limit:      { type: 'integer' },
+          disk_limit:               { type: 'integer' },
+          instance_disk_limit:      { type: 'integer' },
           organization_guid:          { type: 'string' },
         })
       end
@@ -142,7 +146,7 @@ module VCAP::CloudController
       let(:org) { Organization.make }
 
       it 'returns SpaceQuotaDefinitionInvalid' do
-        sqd_json = { name: '', non_basic_services_allowed: true, total_services: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
+        sqd_json = { name: '', non_basic_services_allowed: true, total_services: 1, total_routes: 1, memory_limit: 2, disk_limit: 2, organization_guid: org.guid }
         post '/v2/space_quota_definitions', MultiJson.dump(sqd_json), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
@@ -152,7 +156,7 @@ module VCAP::CloudController
 
       it 'returns SpaceQuotaDefinitionNameTaken errors on unique name errors' do
         SpaceQuotaDefinition.make(name: 'foo', organization: org)
-        sqd_json = { name: 'foo', non_basic_services_allowed: true, total_services: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
+        sqd_json = { name: 'foo', non_basic_services_allowed: true, total_services: 1, total_routes: 1, memory_limit: 2, disk_limit: 2, organization_guid: org.guid }
         post '/v2/space_quota_definitions', MultiJson.dump(sqd_json), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)

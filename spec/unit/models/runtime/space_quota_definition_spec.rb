@@ -23,6 +23,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :total_services }
       it { is_expected.to validate_presence :total_routes }
       it { is_expected.to validate_presence :memory_limit }
+      it { is_expected.to validate_presence :disk_limit }
       it { is_expected.to validate_presence :organization }
       it { is_expected.to validate_uniqueness [:organization_id, :name] }
 
@@ -45,11 +46,35 @@ module VCAP::CloudController
           expect(space_quota_definition).to be_valid
         end
       end
+
+      describe 'disk_limits' do
+        it 'total disk_limit cannot be less than zero' do
+          space_quota_definition.disk_limit = -1
+          expect(space_quota_definition).not_to be_valid
+          expect(space_quota_definition.errors.on(:disk_limit)).to include(:less_than_zero)
+
+          space_quota_definition.disk_limit = 0
+          expect(space_quota_definition).to be_valid
+        end
+
+        it 'instance_disk_limit cannot be less than zero' do
+          space_quota_definition.instance_disk_limit = -2
+          expect(space_quota_definition).not_to be_valid
+          expect(space_quota_definition.errors.on(:instance_disk_limit)).to include(:invalid_instance_disk_limit)
+
+          space_quota_definition.instance_disk_limit = -1
+          expect(space_quota_definition).to be_valid
+        end
+      end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit, :instance_memory_limit }
-      it { is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit, :instance_memory_limit }
+      it { is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
+           :total_routes, :memory_limit, :instance_memory_limit, :disk_limit, :instance_disk_limit
+      }
+      it { is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
+           :total_routes, :memory_limit, :instance_memory_limit, :disk_limit, :instance_disk_limit
+      }
     end
 
     describe '#destroy' do
