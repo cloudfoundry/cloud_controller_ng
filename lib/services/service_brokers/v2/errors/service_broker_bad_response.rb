@@ -3,13 +3,13 @@ module VCAP::Services
     module V2
       module Errors
         class ServiceBrokerBadResponse < HttpResponseError
-          def initialize(uri, method, response)
+          def initialize(uri, method, response, ignore_description_key: false)
             begin
               hash = MultiJson.load(response.body)
             rescue MultiJson::ParseError
             end
 
-            if hash.is_a?(Hash) && hash.key?('description')
+            if hash.is_a?(Hash) && hash.key?('description') && !ignore_description_key
               message = "Service broker error: #{hash['description']}"
             else
               message = "The service broker returned an invalid response for the request to #{uri}. " \

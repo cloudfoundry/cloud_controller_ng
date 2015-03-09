@@ -136,6 +136,21 @@ module VCAP::Services
           context 'when the status code is 201' do
             let(:code) { 201 }
 
+            context 'when the broker provides a description error' do
+              let(:body) do
+                {
+                  description: 'there is no spoon'
+                }.to_json
+              end
+
+              it 'raises a ServiceBrokerBadResponse error' do
+                expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse) do |error|
+                  expect(error.to_h['description']).to eq("The service broker returned an invalid response for the request to #{url}#{path}. " \
+                  "Status Code: #{code} Created, Body: #{body}")
+                end
+              end
+            end
+
             it 'raises a ServiceBrokerBadResponse error' do
               expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse) do |error|
                 expect(error.to_h['description']).to eq("The service broker returned an invalid response for the request to #{url}#{path}. " \

@@ -117,7 +117,7 @@ module VCAP::Services
               StateValidator.new(['succeeded', nil],
                 SuccessValidator.new))
           when 201
-            FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
           when 202
             JsonObjectValidator.new(@logger,
               StateValidator.new(['in progress'],
@@ -242,6 +242,16 @@ module VCAP::Services
 
           def validate(method:, uri:, code:, response:)
             raise @error_class.new(uri.to_s, method, response)
+          end
+        end
+
+        class IgnoreDescriptionKeyFailingValidator
+          def initialize(error_class)
+            @error_class = error_class
+          end
+
+          def validate(method:, uri:, code:, response:)
+            raise @error_class.new(uri.to_s, method, response, ignore_description_key: true)
           end
         end
 
