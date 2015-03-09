@@ -93,8 +93,6 @@ module VCAP::CloudController
           let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/default_overriding_config.yml')) }
 
           it 'preserves cli info from the file' do
-            require 'awesome_print'
-            ap config[:info]
             expect(config[:info][:min_cli_version]).to eq('6.0.0')
             expect(config[:info][:min_recommended_cli_version]).to eq('6.9.0')
           end
