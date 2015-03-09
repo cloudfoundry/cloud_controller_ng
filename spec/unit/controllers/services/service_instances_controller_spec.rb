@@ -692,7 +692,6 @@ module VCAP::CloudController
               expect(orphan_mitigation_job).not_to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceDeprovision
             end
           end
-
         end
       end
 

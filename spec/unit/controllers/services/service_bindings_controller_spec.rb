@@ -247,11 +247,10 @@ module VCAP::CloudController
 
               post '/v2/service_bindings', req, json_headers(headers_for(developer))
               expect(a_request(:put, bind_url_regex(service_instance: instance))).to have_been_made.times(1)
+              expect(a_request(:delete, bind_url_regex(service_instance: instance))).to have_been_made.times(1)
 
               orphan_mitigating_job = Delayed::Job.first
-              expect(orphan_mitigating_job).not_to be_nil
-              expect(orphan_mitigating_job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceUnbind
-              expect(last_response.status).to eq(500)
+              expect(orphan_mitigating_job).to be_nil
             end
           end
 
@@ -266,11 +265,17 @@ module VCAP::CloudController
               )
 
               post '/v2/service_bindings', req, json_headers(headers_for(developer))
+              expect(last_response).to have_status_code 502
+
+              expect(ServiceBinding.count).to eq 0
+
               expect(Delayed::Job.count).to eq 1
 
               orphan_mitigating_job = Delayed::Job.first
               expect(orphan_mitigating_job).not_to be_nil
               expect(orphan_mitigating_job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceUnbind
+
+              expect(a_request(:delete, bind_url_regex(service_instance: instance))).to_not have_been_made
             end
           end
         end
@@ -381,8 +386,15 @@ module VCAP::CloudController
 
             expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
               to_not have_been_made
-            expect(a_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
-              to_not have_been_made
+          end
+
+          it 'does not trigger orphan mitigation' do
+            post '/v2/service_bindings', request_body, json_headers(headers_for(developer))
+
+            orphan_mitigation_job = Delayed::Job.first
+            expect(orphan_mitigation_job).to be_nil
+
+            expect(a_request(:delete, bind_url_regex(service_instance: instance))).not_to have_been_made
           end
 
           it 'should show an error message for create bind operation' do

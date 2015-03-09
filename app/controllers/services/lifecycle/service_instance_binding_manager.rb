@@ -4,9 +4,10 @@ module VCAP::CloudController
     class ServiceInstanceNotBindable < StandardError; end
     class AppNotFound < StandardError; end
 
-    def initialize(services_event_repository, access_validator)
+    def initialize(services_event_repository, access_validator, logger)
       @services_event_repository = services_event_repository
       @access_validator = access_validator
+      @logger = logger
     end
 
     def create_service_instance_binding(request_attrs)
@@ -19,19 +20,18 @@ module VCAP::CloudController
       @access_validator.validate_access(:create, service_binding)
       raise Sequel::ValidationFailed.new(service_binding) unless service_binding.valid?
 
-      begin
-        lock_service_instance_by_blocking(service_instance) do
-          attributes_to_update = service_binding.client.bind(service_binding)
+      lock_service_instance_by_blocking(service_instance) do
+        attributes_to_update = service_binding.client.bind(service_binding)
+        begin
           service_binding.set_all(attributes_to_update)
           service_binding.save
+        rescue
+          safe_unbind_instance(service_binding)
+          raise
         end
-      rescue
-        service_binding.client.orphan_mitigator.cleanup_failed_bind(
-          service_binding.client.attrs,
-          service_binding
-        )
-        raise
       end
+
+      service_binding
     end
 
     def delete_service_instance_binding(service_binding, params)
@@ -47,6 +47,12 @@ module VCAP::CloudController
 
     private
 
+    def safe_unbind_instance(service_binding)
+      service_binding.client.unbind(service_binding)
+    rescue => e
+      @logger.error "Unable to unbind #{service_binding}: #{e}"
+    end
+
     def async?(params)
       params['async'] == 'true'
     end
@@ -61,10 +67,18 @@ module VCAP::CloudController
     end
 
     def lock_service_instance_by_blocking(service_instance, &block)
-      if service_instance.managed_instance?
-        service_instance.lock_by_blocking_other_operations(&block)
-      else
-        block.call
+      return block.call unless service_instance.managed_instance?
+
+      original_attributes = service_instance.last_operation.try(:to_hash)
+      begin
+        service_instance.lock_by_failing_other_operations('update') do
+          block.call
+        end
+      ensure
+        if original_attributes
+          service_instance.last_operation.set_all(original_attributes)
+          service_instance.last_operation.save
+        end
       end
     end
   end

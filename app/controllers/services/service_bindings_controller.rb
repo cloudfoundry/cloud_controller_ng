@@ -29,7 +29,7 @@ module VCAP::CloudController
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
       raise InvalidRequest unless request_attrs
 
-      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self)
+      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
       service_binding = binding_manager.create_service_instance_binding(@request_attrs)
 
       @services_event_repository.record_service_binding_event(:create, service_binding)
@@ -51,7 +51,7 @@ module VCAP::CloudController
       service_binding = find_guid_and_validate_access(:delete, guid, ServiceBinding)
       raise_if_has_associations!(service_binding) if v2_api? && !recursive?
 
-      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self)
+      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
       delete_job = binding_manager.delete_service_instance_binding(service_binding, params)
 
       if delete_job
