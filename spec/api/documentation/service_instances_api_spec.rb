@@ -108,7 +108,7 @@ EOF
         stub_request(:patch, uri.to_s).to_return(status: 200, body: '{}', headers: {})
       end
 
-      example 'Updating a service instance' do
+      example 'Update a Service Instance' do
         request_json = { service_plan_guid: new_plan.guid }.to_json
         client.put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", request_json, headers
 
@@ -123,7 +123,7 @@ Set to `true` if the client allows asynchronous provisioning. The cloud controll
 EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false], experimental: true
 
-      example_request 'Deleting a service instance' do
+      example_request 'Delete a Service Instance' do
         expect(status).to eq 204
         after_standard_model_delete(guid) if respond_to?(:after_standard_model_delete)
       end
