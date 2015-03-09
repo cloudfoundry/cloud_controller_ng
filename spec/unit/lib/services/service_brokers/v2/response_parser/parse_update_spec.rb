@@ -138,7 +138,8 @@ module VCAP::Services
 
             it 'raises a ServiceBrokerBadResponse error' do
               expect { parsed_response }.to raise_error(Errors::ServiceBrokerBadResponse) do |error|
-                expect(error.to_h['description']).to eq("The service broker returned an error for the request to #{url}#{path}. Status Code: #{code} Created, Body: #{body}")
+                expect(error.to_h['description']).to eq("The service broker returned an invalid response for the request to #{url}#{path}. " \
+                "Status Code: #{code} Created, Body: #{body}")
               end
             end
           end
