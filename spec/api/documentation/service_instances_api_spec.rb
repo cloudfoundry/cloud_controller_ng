@@ -128,7 +128,7 @@ EOF
         request_json = { service_plan_guid: new_plan.guid }.to_json
         client.put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", request_json, headers
 
-        expect(status).to eq 201
+        expect(status).to eq 202
         expect(service_instance.reload.service_plan.guid).to eq old_plan.guid
       end
     end

@@ -1007,6 +1007,12 @@ module VCAP::CloudController
             to_return(status: status, body: response_body)
         end
 
+        it 'returns a 202' do
+          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
+
+          expect(last_response).to have_status_code 202
+        end
+
         it 'creates a service audit event for updating the service instance' do
           put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
 
@@ -1299,7 +1305,7 @@ module VCAP::CloudController
           end
         end
 
-        describe 'the space_guid parameter' do
+        describe 'and the space_guid is provided' do
           let(:org) { Organization.make }
           let(:space) { Space.make(organization: org) }
           let(:user) { make_developer_for_space(space) }
@@ -1322,12 +1328,12 @@ module VCAP::CloudController
           it 'succeeds when the space_guid does not change' do
             req = MultiJson.dump(space_guid: instance.space.guid)
             put "/v2/service_instances/#{instance.guid}?accepts_incomplete=true", req, json_headers(headers_for(user))
-            expect(last_response).to have_status_code 201
+            expect(last_response).to have_status_code 202
           end
 
           it 'succeeds when the space_guid is not provided' do
             put "/v2/service_instances/#{instance.guid}?accepts_incomplete=true", {}.to_json, json_headers(headers_for(user))
-            expect(last_response).to have_status_code 201
+            expect(last_response).to have_status_code 202
           end
         end
       end
