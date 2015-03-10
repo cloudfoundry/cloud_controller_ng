@@ -698,8 +698,8 @@ module VCAP::CloudController
       context 'with a v1 service' do
         let(:space) { Space.make }
         let(:developer) { make_developer_for_space(space) }
-        let(:plan) { ServicePlan.make(service: service) }
-        let(:service) { Service.make(description: 'blah blah foobar') }
+        let(:plan) { ServicePlan.make(:v1, service: service) }
+        let(:service) { Service.make(:v1, description: 'blah blah foobar') }
 
         before do
           allow(service).to receive(:v2?) { false }
@@ -1741,8 +1741,8 @@ module VCAP::CloudController
 
       context 'with a v1 service instance' do
         let(:service) { Service.make(:v1) }
-        let(:service_plan) { ServicePlan.make(service: service) }
-        let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+        let(:service_plan) { ServicePlan.make(:v1, service: service) }
+        let!(:service_instance) { ManagedServiceInstance.make(:v1, service_plan: service_plan) }
 
         context 'when the service gateway returns a 409' do
           before do

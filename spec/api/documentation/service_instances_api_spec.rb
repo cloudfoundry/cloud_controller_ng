@@ -4,8 +4,11 @@ require 'uri'
 
 resource 'Service Instances', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
+  let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+  let(:service) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+  let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: true) }
   let!(:service_instance) do
-    service_instance = VCAP::CloudController::ManagedServiceInstance.make
+    service_instance = VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan)
     service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(
       state: 'succeeded',
       description: 'service broker-provided description'
@@ -17,15 +20,21 @@ resource 'Service Instances', type: [:api, :legacy_api] do
   authenticated_request
 
   describe 'Standard endpoints' do
+    let(:broker_response_body) do
+      {
+        last_operation: {
+          state: 'in progress'
+        }
+      }
+    end
+
     before do
-      service_broker = service_instance.service.service_broker
       uri = URI(service_broker.broker_url)
       broker_url = uri.host + uri.path
       broker_auth = "#{service_broker.auth_username}:#{service_broker.auth_password}"
-      stub_request(
-        :delete,
+      stub_request(:delete,
         %r{https://#{broker_auth}@#{broker_url}/v2/service_instances/#{service_instance.guid}}).
-        to_return(status: 200, body: '{}')
+        to_return(status: 202, body: broker_response_body.to_json)
     end
 
     response_field 'name', 'The human-readable name of the service instance.'
@@ -67,13 +76,20 @@ Set to `true` if the client allows asynchronous provisioning. The cloud controll
 EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false], experimental: true
 
+      before do
+        uri = URI(service_broker.broker_url)
+        uri.user = service_broker.auth_username
+        uri.password = service_broker.auth_password
+        uri.path += '/v2/service_instances/'
+        stub_request(:put, /#{uri}.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {})
+      end
+
       example 'Creating a Service Instance' do
         space_guid = VCAP::CloudController::Space.make.guid
-        service_plan_guid = VCAP::CloudController::ServicePlan.make(public: true).guid
         request_hash = {
           space_guid: space_guid,
           name: 'my-service-instance',
-          service_plan_guid: service_plan_guid,
+          service_plan_guid: service_plan.guid,
           parameters: {
             the_service_broker: 'wants this object'
           }
@@ -105,7 +121,7 @@ EOF
         uri.password = service_broker.auth_password
         uri.path += "/v2/service_instances/#{service_instance.guid}"
         uri.query = 'accepts_incomplete=true'
-        stub_request(:patch, uri.to_s).to_return(status: 200, body: '{}', headers: {})
+        stub_request(:patch, uri.to_s).to_return(status: 202, body: broker_response_body.to_json, headers: {})
       end
 
       example 'Update a Service Instance' do
@@ -113,7 +129,7 @@ EOF
         client.put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", request_json, headers
 
         expect(status).to eq 201
-        expect(service_instance.reload.service_plan.guid).to eq new_plan.guid
+        expect(service_instance.reload.service_plan.guid).to eq old_plan.guid
       end
     end
 
@@ -123,8 +139,18 @@ Set to `true` if the client allows asynchronous provisioning. The cloud controll
 EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false], experimental: true
 
-      example_request 'Delete a Service Instance' do
-        expect(status).to eq 204
+      before do
+        uri = URI(service_broker.broker_url)
+        uri.user = service_broker.auth_username
+        uri.password = service_broker.auth_password
+        uri.path += "/v2/service_instances/#{service_instance.guid}"
+        stub_request(:delete, /#{uri}?.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {})
+      end
+
+      example 'Delete a Service Instance' do
+        client.delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers
+
+        expect(status).to eq 202
         after_standard_model_delete(guid) if respond_to?(:after_standard_model_delete)
       end
     end

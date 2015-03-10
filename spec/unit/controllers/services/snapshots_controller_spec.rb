@@ -19,7 +19,7 @@ module VCAP::CloudController
     end
 
     let(:service_instance) do
-      service = Service.make(
+      service = Service.make(:v1,
         url: 'http://horsemeat.com',
       )
       ManagedServiceInstance.make(

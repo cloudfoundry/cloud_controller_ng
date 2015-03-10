@@ -7,14 +7,14 @@ describe ServiceInstancePresenter do
 
     context 'for a managed service instance' do
       let(:service_instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan)
+        VCAP::CloudController::ManagedServiceInstance.make(:v1, service_plan: service_plan)
       end
 
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(service: service)
+        VCAP::CloudController::ServicePlan.make(:v1, service: service)
       end
 
-      let(:service) { VCAP::CloudController::Service.make(tags: ['relational', 'mysql']) }
+      let(:service) { VCAP::CloudController::Service.make(:v1, tags: ['relational', 'mysql']) }
 
       specify do
         expect(subject.keys).to include(:label)

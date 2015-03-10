@@ -8,17 +8,17 @@ module VCAP::CloudController
 
       describe 'GET /services' do
         before do
-          core_service = Service.make(provider: 'core')
-          core_plan = ServicePlan.make(service: core_service)
+          core_service = Service.make(:v1, provider: 'core')
+          core_plan = ServicePlan.make(:v1, service: core_service)
           3.times.map do |i|
-            ManagedServiceInstance.make(
+            ManagedServiceInstance.make(:v1,
               name: "core-#{i}",
               space: user.default_space,
               service_plan: core_plan,
             )
           end
           2.times do |i|
-            ManagedServiceInstance.make(
+            ManagedServiceInstance.make(:v1,
               name: "noncore-#{i}",
               space: user.default_space,
             )
@@ -48,14 +48,14 @@ module VCAP::CloudController
 
       describe 'GET /services/v1/offerings' do
         before do
-          svc = Service.make(
+          svc = Service.make(:v1,
             label: 'foo',
             provider: 'core',
             version: '1.0',
             url: 'http://localhost:56789'
           )
 
-          svc_test = Service.make(
+          svc_test = Service.make(:v1,
             label: 'foo',
             provider: 'test',
             version: '1.0',
@@ -84,11 +84,11 @@ module VCAP::CloudController
 
       describe 'POST /services' do
         before do
-          svc = Service.make(label: 'postgres', version: '9.0')
-          ServicePlan.make(service: svc, name: LegacyService::LEGACY_PLAN_OVERIDE)
-          ManagedServiceInstance.make(space: user.default_space, name: 'duplicate')
+          svc = Service.make(:v1, label: 'postgres', version: '9.0')
+          ServicePlan.make(:v1, service: svc, name: LegacyService::LEGACY_PLAN_OVERIDE)
+          ManagedServiceInstance.make(:v1, space: user.default_space, name: 'duplicate')
 
-          3.times { ManagedServiceInstance.make(space: user.default_space) }
+          3.times { ManagedServiceInstance.make(:v1, space: user.default_space) }
           @num_instances_before = ManagedServiceInstance.count
           @req = {
             type: 'database',
@@ -151,7 +151,7 @@ module VCAP::CloudController
 
       describe 'GET /services/:name' do
         before do
-          @svc = ManagedServiceInstance.make(space: user.default_space)
+          @svc = ManagedServiceInstance.make(:v1, space: user.default_space)
         end
 
         describe 'with a valid name' do
@@ -183,9 +183,9 @@ module VCAP::CloudController
 
       describe 'DELETE /services/:name' do
         before do
-          3.times { ManagedServiceInstance.make(space: user.default_space) }
+          3.times { ManagedServiceInstance.make(:v2, space: user.default_space) }
 
-          @svc = ManagedServiceInstance.make(space: user.default_space)
+          @svc = ManagedServiceInstance.make(:v2, space: user.default_space)
           service_broker = @svc.service.service_broker
           uri = URI(service_broker.broker_url)
           broker_url = uri.host + uri.path

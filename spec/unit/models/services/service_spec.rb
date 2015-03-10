@@ -8,9 +8,11 @@ module VCAP::CloudController
       it { is_expected.to have_associated :service_broker }
       it { is_expected.to have_associated :service_plans }
 
-      it 'has associated service_auth_token' do
-        service = Service.make
-        expect(service.reload.service_auth_token).to be_a ServiceAuthToken
+      context 'for a v1 service' do
+        it 'has associated service_auth_token' do
+          service = Service.make(:v1)
+          expect(service.reload.service_auth_token).to be_a ServiceAuthToken
+        end
       end
     end
 
@@ -18,14 +20,17 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :label, message: 'Service name is required' }
       it { is_expected.to validate_presence :description, message: 'is required' }
       it { is_expected.to validate_presence :bindable, message: 'is required' }
-      it { is_expected.to validate_uniqueness [:label, :provider], message: 'is taken' }
       it { is_expected.to validate_uniqueness :unique_id, message: 'Service ids must be unique' }
       it { is_expected.to strip_whitespace :label }
       it { is_expected.to strip_whitespace :provider }
 
+      context 'for a v1 service' do
+        it { is_expected.to validate_uniqueness [:label, :provider], message: 'is taken', make: [:v1] }
+      end
+
       context 'when the unique_id is not unique' do
         let(:existing_service) { Service.make }
-        let(:service) { Service.make_unsaved(unique_id: existing_service.unique_id) }
+        let(:service) { Service.make_unsaved(:v1, unique_id: existing_service.unique_id) }
 
         it 'is not valid' do
           expect(service).not_to be_valid
@@ -39,13 +44,13 @@ module VCAP::CloudController
 
       describe 'urls' do
         it 'validates format of url' do
-          service = Service.make_unsaved(url: 'bogus_url')
+          service = Service.make_unsaved(url: 'bogus_url', service_broker: nil)
           expect(service).to_not be_valid
           expect(service.errors.on(:url)).to include 'must be a valid url'
         end
 
         it 'validates format of info_url' do
-          service = Service.make_unsaved(info_url: 'bogus_url')
+          service = Service.make_unsaved(info_url: 'bogus_url', service_broker: nil)
           expect(service).to_not be_valid
           expect(service.errors.on(:info_url)).to include 'must be a valid url'
         end
@@ -71,7 +76,7 @@ module VCAP::CloudController
         end
 
         it 'allows the service to have the same label as a v1 service' do
-          existing_service = Service.make_unsaved(label: 'other', provider: 'core').save
+          existing_service = Service.make_unsaved(:v1, label: 'other', provider: 'core').save
           expect {
             Service.make_unsaved(:v2, label: existing_service.label, service_broker: ServiceBroker.make).save
           }.not_to raise_error
@@ -81,8 +86,8 @@ module VCAP::CloudController
       context 'for a v1 service' do
         it 'maintains the uniqueness of the compound key [label, provider]' do
           expect {
-            Service.make_unsaved(label: 'blah', provider: 'blah').save
-            Service.make_unsaved(label: 'blah', provider: 'blah').save
+            Service.make_unsaved(:v1, label: 'blah', provider: 'blah').save
+            Service.make_unsaved(:v1, label: 'blah', provider: 'blah').save
           }.to raise_error('label and provider is taken')
         end
       end
@@ -98,7 +103,7 @@ module VCAP::CloudController
     end
 
     it 'ensures that blank provider values will be treated as nil' do
-      service = Service.make_unsaved(provider: '').save
+      service = Service.make_unsaved(provider: '', service_broker: nil).save
       expect(service.provider).to be_nil
     end
 
@@ -357,7 +362,7 @@ module VCAP::CloudController
       end
 
       context 'for a v1 service' do
-        let(:service) { Service.make(service_broker: nil) }
+        let(:service) { Service.make(:v1, service_broker: nil) }
 
         it 'returns a v1 broker client' do
           v1_client = double(VCAP::Services::ServiceBrokers::V1::Client)
@@ -377,7 +382,7 @@ module VCAP::CloudController
       end
 
       context 'for a v2 service' do
-        let(:service) { Service.make(service_broker: ServiceBroker.make) }
+        let(:service) { Service.make(:v2, service_broker: ServiceBroker.make) }
 
         it 'returns a v2 broker client' do
           v2_client = double(VCAP::Services::ServiceBrokers::V2::Client)

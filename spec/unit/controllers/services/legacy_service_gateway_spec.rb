@@ -214,29 +214,29 @@ module VCAP::CloudController
 
       describe 'GET services/v1/offerings/:label_and_version(/:provider)' do
         before :each do
-          @svc1 = Service.make(
+          @svc1 = Service.make(:v1,
             label: 'foobar',
             url: 'http://www.google.com',
             provider: 'core',
           )
-          ServicePlan.make(
+          ServicePlan.make(:v1,
             name: 'free',
             service: @svc1,
           )
-          ServicePlan.make(
+          ServicePlan.make(:v1,
             name: 'nonfree',
             service: @svc1,
           )
-          @svc2 = Service.make(
+          @svc2 = Service.make(:v1,
             label: 'foobar',
             url: 'http://www.google.com',
             provider: 'test',
           )
-          ServicePlan.make(
+          ServicePlan.make(:v1,
             name: 'free',
             service: @svc2,
           )
-          ServicePlan.make(
+          ServicePlan.make(:v1,
             name: 'nonfree',
             service: @svc2,
           )
@@ -285,14 +285,14 @@ module VCAP::CloudController
       end
 
       describe 'GET services/v1/offerings/:label_and_version(/:provider)/handles' do
-        let!(:svc1) { Service.make(label: 'foobar', version: '1.0', provider: 'core') }
-        let!(:svc2) { Service.make(label: 'foobar', version: '1.0', provider: 'test') }
+        let!(:svc1) { Service.make(:v1, label: 'foobar', version: '1.0', provider: 'core') }
+        let!(:svc2) { Service.make(:v1, label: 'foobar', version: '1.0', provider: 'test') }
 
         before do
-          plan1 = ServicePlan.make(service: svc1)
-          plan2 = ServicePlan.make(service: svc2)
+          plan1 = ServicePlan.make(:v1, service: svc1)
+          plan2 = ServicePlan.make(:v1, service: svc2)
 
-          cfg1 = ManagedServiceInstance.make(
+          cfg1 = ManagedServiceInstance.make(:v1,
             name: 'bar1',
             service_plan: plan1
           )
@@ -300,7 +300,7 @@ module VCAP::CloudController
           cfg1.gateway_data = { config: 'foo1' }
           cfg1.save
 
-          cfg2 = ManagedServiceInstance.make(
+          cfg2 = ManagedServiceInstance.make(:v1,
             name: 'bar2',
             service_plan: plan2
           )
@@ -363,14 +363,14 @@ module VCAP::CloudController
       end
 
       describe 'POST services/v1/offerings/:label_and_version(/:provider)/handles/:id' do
-        let!(:svc) { Service.make(label: 'foobar', provider: 'core') }
+        let!(:svc) { Service.make(:v1, label: 'foobar', provider: 'core') }
 
         before { @auth_header = { 'HTTP_X_VCAP_SERVICE_TOKEN' => svc.service_auth_token.token } }
 
         describe 'with default provider' do
           before :each do
-            plan = ServicePlan.make(service: svc)
-            cfg = ManagedServiceInstance.make(name: 'bar1', service_plan: plan)
+            plan = ServicePlan.make(:v1, service: svc)
+            cfg = ManagedServiceInstance.make(:v1, name: 'bar1', service_plan: plan)
             cfg.gateway_name = 'foo1'
             cfg.save
 
@@ -414,14 +414,14 @@ module VCAP::CloudController
         end
 
         describe 'with specific provider' do
-          let!(:svc) { Service.make(label: 'foobar', provider: 'test') }
+          let!(:svc) { Service.make(:v1, label: 'foobar', provider: 'test') }
 
           before :each do
-            plan = ServicePlan.make(
+            plan = ServicePlan.make(:v1,
               service: svc
             )
 
-            cfg = ManagedServiceInstance.make(
+            cfg = ManagedServiceInstance.make(:v1,
               name: 'bar2',
               service_plan: plan,
             )
@@ -459,8 +459,8 @@ module VCAP::CloudController
       end
 
       describe 'DELETE /services/v1/offerings/:label_and_version/(:provider)' do
-        let!(:service_plan_core) { ServicePlan.make(service: Service.make(label: 'foobar', provider: 'core')) }
-        let!(:service_plan_test) { ServicePlan.make(service: Service.make(label: 'foobar', provider: 'test')) }
+        let!(:service_plan_core) { ServicePlan.make(:v1, service: Service.make(:v1, label: 'foobar', provider: 'core')) }
+        let!(:service_plan_test) { ServicePlan.make(:v1, service: Service.make(:v1, label: 'foobar', provider: 'test')) }
         let(:auth_header) { { 'HTTP_X_VCAP_SERVICE_TOKEN' => service_plan_core.service.service_auth_token.token } }
 
         it 'should return not found for unknown label services' do
