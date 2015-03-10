@@ -2,4 +2,6 @@
 # in the create_stacks_table migration
 default: "lucid64"
 
-stacks: []
+stacks:
+  - name: "lucid64"
+    description: "test lucid entry"
