@@ -261,6 +261,22 @@ module CloudController
             expect(client.blob(key).public_url).to be
           end
 
+          it 'sets conten-type to mime-type of application/zip when not specified' do
+            path = File.join(local_dir, 'empty_file')
+            FileUtils.touch(path)
+
+            expect(client.files).to receive(:create).with(hash_including(content_type: 'application/zip'))
+            client.cp_to_blobstore(path, 'abcdef123456')
+          end
+
+          it 'sets conten-type to mime-type of file when specified' do
+            path = File.join(local_dir, 'empty_file.png')
+            FileUtils.touch(path)
+
+            expect(client.files).to receive(:create).with(hash_including(content_type: 'image/png'))
+            client.cp_to_blobstore(path, 'abcdef123456')
+          end
+
           context 'limit the file size' do
             let(:client) do
               Client.new(connection_config, directory_key, nil, nil, min_size, max_size)

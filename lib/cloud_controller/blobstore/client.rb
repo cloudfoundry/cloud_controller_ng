@@ -59,9 +59,12 @@ module CloudController
           next unless within_limits?(size)
 
           begin
+            mime_type = MIME::Types.of(source_path).first.try(:content_type)
+
             files.create(
               key: partitioned_key(destination_key),
               body: file,
+              content_type: mime_type || 'application/zip',
               public: local?,
             )
           # work around https://github.com/fog/fog/issues/3137
