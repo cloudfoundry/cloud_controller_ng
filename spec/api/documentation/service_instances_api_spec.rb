@@ -96,7 +96,7 @@ EOF
         }
 
         client.post '/v2/service_instances?accepts_incomplete=true', MultiJson.dump(request_hash, pretty: true), headers
-        expect(status).to eq(201)
+        expect(status).to eq(202)
       end
     end
 

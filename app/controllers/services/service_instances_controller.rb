@@ -77,7 +77,13 @@ module VCAP::CloudController
       )
       service_instance = provisioner.create_service_instance(@request_attrs, params)
 
-      [HTTP::CREATED,
+      if params['accepts_incomplete'] == 'true'
+        state = HTTP::ACCEPTED
+      else
+        state = HTTP::CREATED
+      end
+
+      [state,
        { 'Location' => "#{self.class.path}/#{service_instance.guid}" },
        object_renderer.render_json(self.class, service_instance, @opts)
       ]

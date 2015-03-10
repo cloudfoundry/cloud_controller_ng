@@ -222,7 +222,7 @@ module VCAP::CloudController
         end
 
         it 'provisions a service instance' do
-          instance = create_managed_service_instance
+          instance = create_managed_service_instance(async: 'false')
 
           expect(last_response.status).to eq(201)
 
@@ -233,6 +233,17 @@ module VCAP::CloudController
           expect(last_operation['description']).to eq ''
           expect(last_operation['type']).to eq 'create'
           expect(last_operation['updated_at']).not_to be_nil
+        end
+
+        it 'creates a CREATED service usage event' do
+          instance = nil
+          expect {
+            instance = create_managed_service_instance(async: 'false')
+          }.to change { ServiceUsageEvent.count }.by(1)
+
+          event = ServiceUsageEvent.last
+          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::CREATED_EVENT_STATE)
+          expect(event).to match_service_instance(instance)
         end
 
         context 'when the client provides arbitrary parameters' do
@@ -351,6 +362,13 @@ module VCAP::CloudController
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
             expect(event).to be_nil
+          end
+
+          it 'returns a 202 with the last operation state as in progress' do
+            service_instance = create_managed_service_instance
+
+            expect(last_response).to have_status_code(202)
+            expect(service_instance.last_operation.state).to eq('in progress')
           end
 
           context 'and the broker specifies a custom polling interval' do
@@ -509,17 +527,6 @@ module VCAP::CloudController
           end
         end
 
-        it 'creates a CREATED service usage event' do
-          instance = nil
-          expect {
-            instance = create_managed_service_instance
-          }.to change { ServiceUsageEvent.count }.by(1)
-
-          event = ServiceUsageEvent.last
-          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::CREATED_EVENT_STATE)
-          expect(event).to match_service_instance(instance)
-        end
-
         context 'when name is blank' do
           let(:body) do
             MultiJson.dump(
@@ -594,7 +601,7 @@ module VCAP::CloudController
 
         context 'with naming collisions' do
           it 'does not allow duplicate managed service instances' do
-            create_managed_service_instance
+            create_managed_service_instance(async: 'false')
             expect(last_response.status).to eq(201)
 
             create_managed_service_instance
@@ -603,7 +610,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow duplicate user provided service instances' do
-            create_user_provided_service_instance
+            create_managed_service_instance(async: 'false')
             expect(last_response.status).to eq(201)
 
             create_user_provided_service_instance
@@ -612,7 +619,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow a user provided service instance with same name as managed service instance' do
-            create_managed_service_instance
+            create_managed_service_instance(async: 'false')
             expect(last_response.status).to eq(201)
 
             create_user_provided_service_instance
