@@ -555,7 +555,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/spaces/:guid' do
       context 'when recursive is false' do
-        it 'successfully deletes spaaces with no associations' do
+        it 'successfully deletes spaces with no associations' do
           space_guid = Space.make.guid
           delete "/v2/spaces/#{space_guid}", '', json_headers(admin_headers)
 
@@ -568,20 +568,48 @@ module VCAP::CloudController
           AppModel.make(space_guid: space_guid)
           delete "/v2/spaces/#{space_guid}", '', json_headers(admin_headers)
 
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_status_code(400)
           expect(Space.find(guid: space_guid)).not_to be_nil
         end
       end
 
       context 'when recursive is true' do
-        it 'successfully deletes spaaces with v3 app associations' do
+        it 'successfully deletes spaces with v3 app associations' do
           space_guid = Space.make.guid
           app_guid = AppModel.make(space_guid: space_guid).guid
+          route_guid = Route.make(space_guid: space_guid).guid
+          service_instance_guid = ServiceInstance.make(space_guid: space_guid).guid
+
           delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
 
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_status_code(204)
           expect(Space.find(guid: space_guid)).to be_nil
           expect(AppModel.find(guid: app_guid)).to be_nil
+          expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
+          expect(Route.find(guid: route_guid)).to be_nil
+        end
+
+        it 'successfully deletes the space asynchronously when async=true' do
+          space_guid = Space.make.guid
+          app_guid = AppModel.make(space_guid: space_guid).guid
+          service_instance_guid = ServiceInstance.make(space_guid: space_guid).guid
+          route_guid = Route.make(space_guid: space_guid).guid
+
+          delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+
+          expect(last_response).to have_status_code(202)
+          expect(Space.find(guid: space_guid)).not_to be_nil
+          expect(AppModel.find(guid: app_guid)).not_to be_nil
+          expect(ServiceInstance.find(guid: service_instance_guid)).not_to be_nil
+          expect(Route.find(guid: route_guid)).not_to be_nil
+
+          successes, _ = Delayed::Worker.new.work_off
+
+          expect(successes).to eq 1
+          expect(Space.find(guid: space_guid)).to be_nil
+          expect(AppModel.find(guid: app_guid)).to be_nil
+          expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
+          expect(Route.find(guid: route_guid)).to be_nil
         end
       end
     end
