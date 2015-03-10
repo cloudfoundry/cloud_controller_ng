@@ -155,7 +155,6 @@ module ApiDsl
       path = options[:path] || model
       title = options[:title] || path.to_s.singularize.titleize
       get "#{root(path)}/:guid" do
-        parameter :guid, "The guid of the #{title}"
         example_request "Retrieve a Particular #{title}" do
           standard_entity_response parsed_response, model
           if options[:nested_associations]
