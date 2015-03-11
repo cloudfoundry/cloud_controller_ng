@@ -69,7 +69,6 @@ module VCAP::CloudController
                 before_add: proc { |org, quota| quota.organization.id == org.id }
 
     add_association_dependencies(
-      service_instances: :destroy,
       owned_private_domains: :destroy,
       private_domains: :nullify,
       service_plan_visibilities: :destroy,
