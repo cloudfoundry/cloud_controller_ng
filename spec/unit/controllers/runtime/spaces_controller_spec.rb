@@ -574,7 +574,7 @@ module VCAP::CloudController
       end
 
       context 'when recursive is true' do
-        it 'successfully deletes spaces with v3 app associations' do
+        it 'successfully deletes spaces with v3 app associations or service instances' do
           space_guid = Space.make.guid
           app_guid = AppModel.make(space_guid: space_guid).guid
           route_guid = Route.make(space_guid: space_guid).guid
