@@ -66,7 +66,7 @@ module VCAP::CloudController
       package_dataset        = package_delete_fetcher.fetch(guid)
       package_not_found! if package_dataset.empty?
 
-      PackageDelete.new.delete(package_dataset)
+      PackageDelete.new(package_dataset).delete
 
       [HTTP::NO_CONTENT]
     end

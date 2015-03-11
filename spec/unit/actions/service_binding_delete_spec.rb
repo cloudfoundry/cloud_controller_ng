@@ -3,7 +3,7 @@ require 'actions/service_binding_delete'
 
 module VCAP::CloudController
   describe ServiceBindingDelete do
-    subject(:service_binding_delete) { ServiceBindingDelete.new }
+    subject(:service_binding_delete) { ServiceBindingDelete.new(service_binding_dataset) }
 
     describe '#delete' do
       let!(:service_binding_1) { ServiceBinding.make }
@@ -33,7 +33,7 @@ module VCAP::CloudController
       end
 
       it 'deletes all the bindings' do
-        expect { service_binding_delete.delete(service_binding_dataset) }.to change { ServiceBinding.count }.by(-2)
+        expect { service_binding_delete.delete }.to change { ServiceBinding.count }.by(-2)
       end
     end
   end

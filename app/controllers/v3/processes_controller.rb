@@ -72,7 +72,7 @@ module VCAP::CloudController
       process_dataset, space = process_delete_fetcher.fetch(guid)
       not_found! if process_dataset.nil?
 
-      ProcessDelete.new.delete(process_dataset, space, current_user, current_user_email)
+      ProcessDelete.new(process_dataset, space, current_user, current_user_email).delete
 
       [HTTP::NO_CONTENT]
     end

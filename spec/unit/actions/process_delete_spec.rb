@@ -3,7 +3,7 @@ require 'actions/process_delete'
 
 module VCAP::CloudController
   describe ProcessDelete do
-    subject(:process_delete) { ProcessDelete.new }
+    subject(:process_delete) { ProcessDelete.new(process_dataset, space, user, user_email) }
 
     describe '#delete' do
       context 'when the process exists' do
@@ -16,14 +16,14 @@ module VCAP::CloudController
 
         it 'deletes the process record' do
           expect {
-            process_delete.delete(process_dataset, space, user, user_email)
+            process_delete.delete
           }.to change { App.count }.by(-1)
           expect { process.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'creates an app audit event' do
           expect {
-            process_delete.delete(process_dataset, space, user, user_email)
+            process_delete.delete
           }.to change { Event.count }.by(1)
           event = Event.last
           expect(event.type).to eq('audit.app.delete-request')
@@ -44,7 +44,7 @@ module VCAP::CloudController
 
         it 'deletes the process record' do
           expect {
-            process_delete.delete(process_dataset, space, user, user_email)
+            process_delete.delete
           }.to change { App.count }.by(-2)
           expect { process1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { process2.refresh }.to raise_error Sequel::Error, 'Record not found'

@@ -9,7 +9,7 @@ class ServiceInstanceDelete
 
   def delete
     service_instance_dataset.each do |service_instance|
-      ServiceBindingDelete.new.delete(service_instance.service_bindings_dataset)
+      ServiceBindingDelete.new(service_instance.service_bindings_dataset).delete
     end
 
     service_instance_dataset.destroy
