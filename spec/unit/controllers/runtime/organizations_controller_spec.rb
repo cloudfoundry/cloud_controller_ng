@@ -474,6 +474,116 @@ module VCAP::CloudController
       end
     end
 
+    describe '#delete' do
+      let(:org) { Organization.make }
+      let(:user) { User.make }
+
+      before do
+        org.add_manager(user)
+      end
+
+      it 'deletes the org' do
+        delete "/v2/organizations/#{org.guid}", '', admin_headers
+        expect(last_response).to have_status_code 204
+        expect { org.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      context 'with recursive=false' do
+        before do
+          Space.make(organization: org)
+        end
+
+        it 'raises an error when the org has anything in it' do
+          delete "/v2/organizations/#{org.guid}", '', admin_headers
+          expect(last_response).to have_status_code 400
+          expect(decoded_response['error_code']).to eq 'CF-AssociationNotEmpty'
+        end
+      end
+
+      context 'with recursive=true' do
+        it 'deletes the org and all of its spaces' do
+          space_1 = Space.make(organization: org)
+          space_2 = Space.make(organization: org)
+
+          delete "/v2/organizations/#{org.guid}?recursive=true", '', admin_headers
+          expect(last_response).to have_status_code 204
+          expect { org.refresh }.to raise_error Sequel::Error, 'Record not found'
+          expect { space_1.refresh }.to raise_error Sequel::Error, 'Record not found'
+          expect { space_2.refresh }.to raise_error Sequel::Error, 'Record not found'
+        end
+
+        context 'when one of the spaces has a v3 app in it' do
+          let!(:space) { Space.make(organization: org) }
+          let!(:app_model) { AppModel.make(space_guid: space.guid) }
+
+          it 'deletes the v3 app' do
+            delete "/v2/organizations/#{org.guid}?recursive=true", '', admin_headers
+            expect(last_response).to have_status_code 204
+            expect { app_model.refresh }.to raise_error Sequel::Error, 'Record not found'
+          end
+        end
+
+        context 'when one of the spaces has a service instance in it' do
+          before do
+            attrs = service_instance.client.attrs
+            uri = URI(attrs[:url])
+            uri.user = attrs[:auth_username]
+            uri.password = attrs[:auth_password]
+
+            plan = service_instance.service_plan
+            service = plan.service
+
+            uri = uri.to_s
+            uri += "/v2/service_instances/#{service_instance.guid}"
+            stub_request(:delete, uri + "?plan_id=#{plan.unique_id}&service_id=#{service.unique_id}").to_return(status: 200, body: '{}')
+          end
+
+          let!(:space) { Space.make(organization: org) }
+          let!(:service_instance) { ManagedServiceInstance.make(space: space) }
+
+          it 'deletes the service instance' do
+            delete "/v2/organizations/#{org.guid}?recursive=true", '', admin_headers
+            expect(last_response).to have_status_code 204
+            expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
+          end
+        end
+
+        context 'and async=true' do
+          it 'successfully deletes the space asynchronously' do
+            space_guid = Space.make(organization: org).guid
+            app_guid = AppModel.make(space_guid: space_guid).guid
+            service_instance_guid = ServiceInstance.make(space_guid: space_guid).guid
+            route_guid = Route.make(space_guid: space_guid).guid
+
+            delete "/v2/organizations/#{org.guid}?recursive=true&async=true", '', json_headers(admin_headers)
+
+            expect(last_response).to have_status_code(202)
+            expect(Organization.find(guid: org.guid)).not_to be_nil
+            expect(Space.find(guid: space_guid)).not_to be_nil
+            expect(AppModel.find(guid: app_guid)).not_to be_nil
+            expect(ServiceInstance.find(guid: service_instance_guid)).not_to be_nil
+            expect(Route.find(guid: route_guid)).not_to be_nil
+
+            successes, _ = Delayed::Worker.new.work_off
+
+            expect(successes).to eq 1
+            expect(Organization.find(guid: org.guid)).to be_nil
+            expect(Space.find(guid: space_guid)).to be_nil
+            expect(AppModel.find(guid: app_guid)).to be_nil
+            expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
+            expect(Route.find(guid: route_guid)).to be_nil
+          end
+        end
+      end
+
+      context 'when the user is not an admin' do
+        it 'raises an error' do
+          delete "/v2/organizations/#{org.guid}", '', headers_for(user)
+          expect(last_response).to have_status_code 403
+        end
+      end
+    end
+
     describe 'DELETE /v2/organizations/:guid/private_domains/:domain_guid' do
       context 'when PrivateDomain is owned by the organization' do
         let(:organization) { Organization.make }

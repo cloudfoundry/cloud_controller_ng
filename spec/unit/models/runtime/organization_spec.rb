@@ -314,43 +314,40 @@ module VCAP::CloudController
 
     describe '#destroy' do
       subject(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
 
       let(:guid_pattern) { '[[:alnum:]-]+' }
 
       before { org.reload }
-
-      it 'destroys all apps' do
-        app = AppFactory.make(space: space)
-        expect { org.destroy }.to change { App[id: app.id] }.from(app).to(nil)
-      end
-
-      it 'creates an AppUsageEvent for each app in the STARTED state' do
-        app = AppFactory.make(space: space)
-        app.update(state: 'STARTED')
-        expect {
-          org.destroy
-        }.to change {
-          AppUsageEvent.count
-        }.by(1)
-        event = AppUsageEvent.last
-        expect(event.app_guid).to eql(app.guid)
-        expect(event.state).to eql('STOPPED')
-        expect(event.org_guid).to eql(org.guid)
-      end
-
-      it 'destroys all spaces' do
-        expect { org.destroy }.to change { Space[id: space.id] }.from(space).to(nil)
-      end
 
       it 'destroys all space quota definitions' do
         sqd = SpaceQuotaDefinition.make(organization: org)
         expect { org.destroy }.to change { SpaceQuotaDefinition[id: sqd.id] }.from(sqd).to(nil)
       end
 
+      context 'when there are spaces in the org' do
+        let!(:space) { Space.make(organization: org) }
+
+        it 'raises a ForeignKeyConstraintViolation error' do
+          expect { org.destroy }.to raise_error(Sequel::ForeignKeyConstraintViolation)
+        end
+      end
+
       context 'when there are service instances in the org' do
+        let(:space) { Space.make(organization: org) }
+
         before do
-          ManagedServiceInstance.make(:v2, space: space)
+          service_instance = ManagedServiceInstance.make(:v2, space: space)
+          attrs = service_instance.client.attrs
+          uri = URI(attrs[:url])
+          uri.user = attrs[:auth_username]
+          uri.password = attrs[:auth_password]
+
+          plan = service_instance.service_plan
+          service = plan.service
+
+          uri = uri.to_s
+          uri += "/v2/service_instances/#{service_instance.guid}"
+          stub_request(:delete, uri + "?plan_id=#{plan.unique_id}&service_id=#{service.unique_id}").to_return(status: 200, body: '{}')
         end
 
         it 'raises a ForeignKeyConstraintViolation error' do

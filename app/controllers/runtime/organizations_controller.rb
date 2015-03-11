@@ -1,3 +1,5 @@
+require 'actions/organization_delete'
+
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
     define_attributes do
@@ -74,7 +76,15 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      org = find_guid_and_validate_access(:delete, guid)
+      raise_if_has_associations!(org) if v2_api? && !recursive?
+
+      if !org.spaces.empty? && !recursive?
+        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
+      end
+
+      deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(OrganizationDelete.for_organization(org))
+      enqueue_deletion_job(deletion_job)
     end
 
     def remove_related(guid, name, other_guid)
