@@ -371,6 +371,7 @@ module VCAP::CloudController
     total_services { 60 }
     total_routes { 1_000 }
     memory_limit { 20_480 } # 20 GB
+    disk_limit { 20_480 } # 20 GB
     organization { Organization.make }
   end
 

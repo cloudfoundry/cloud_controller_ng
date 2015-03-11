@@ -143,6 +143,11 @@ module VCAP::CloudController
       memory_remaining >= mem
     end
 
+    def has_remaining_disk_space(disk)
+      return true unless space_quota_definition
+      disk_space_remaining >= disk
+    end
+
     def in_suspended_org?
       organization.suspended?
     end
@@ -152,6 +157,11 @@ module VCAP::CloudController
     def memory_remaining
       memory_used = apps_dataset.where(state: 'STARTED').sum(Sequel.*(:memory, :instances)) || 0
       space_quota_definition.memory_limit - memory_used
+    end
+
+    def disk_space_remaining
+      disk_used = apps_dataset.where(state: 'STARTED').sum(Sequel.*(:disk_quota, :instances)) || 0
+      space_quota_definition.disk_limit - disk_used
     end
   end
 end

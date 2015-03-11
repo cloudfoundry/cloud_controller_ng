@@ -368,6 +368,26 @@ module VCAP::CloudController
       end
     end
 
+    describe '#has_remaining_disk_space' do
+      let(:space_quota) { SpaceQuotaDefinition.make(disk_limit: 500) }
+      let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
+
+      it 'returns true if there is enough disk space remaining when no apps are running' do
+        AppFactory.make(space: space, disk_quota: 50, instances: 1)
+
+        expect(space.has_remaining_disk_space(500)).to eq(true)
+        expect(space.has_remaining_disk_space(501)).to eq(false)
+      end
+
+      it 'returns true if there is enough disk space remaining when apps are consuming disk space' do
+        AppFactory.make(space: space, disk_quota: 200, instances: 2, state: 'STARTED')
+        AppFactory.make(space: space, disk_quota: 50, instances: 1, state: 'STARTED')
+
+        expect(space.has_remaining_disk_space(50)).to eq(true)
+        expect(space.has_remaining_disk_space(51)).to eq(false)
+      end
+    end
+
     describe '#having_developer' do
       it 'returns only spaces with developers containing the specified user' do
         space1 = Space.make
