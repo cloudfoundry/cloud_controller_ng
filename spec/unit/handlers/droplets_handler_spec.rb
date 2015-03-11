@@ -196,7 +196,7 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
       let(:app_guid) { app_model.guid }
-      let(:package) { PackageModel.make(app_guid: app_guid, state: PackageModel::READY_STATE, type: PackageModel::BITS_TYPE) }
+      let!(:package) { PackageModel.make(app_guid: app_guid, state: PackageModel::READY_STATE, type: PackageModel::BITS_TYPE) }
       let(:package_guid) { package.guid }
       let(:stack) { 'trusty32' }
       let(:memory_limit) { 12340 }
@@ -295,10 +295,9 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the space does not exist' do
+      context 'when the app does not exist' do
         before do
-          package # just so it gets created
-          space.destroy
+          app_model.destroy
         end
 
         it 'fails with AppNotFound' do

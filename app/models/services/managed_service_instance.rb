@@ -70,7 +70,6 @@ module VCAP::CloudController
 
     delegate :client, to: :service_plan
 
-    add_association_dependencies service_bindings: :destroy
     add_association_dependencies service_instance_operation: :destroy
 
     def validation_policies

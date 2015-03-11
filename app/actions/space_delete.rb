@@ -2,11 +2,16 @@ require 'actions/service_instance_delete'
 
 module VCAP::CloudController
   class SpaceDelete
-    attr_reader :dataset_opts, :user, :user_email
+    def self.for_space(space)
+      new({ guid: space.guid }, SecurityContext.current_user, SecurityContext.current_user_email)
+    end
+
+    def self.for_organization(org)
+      new({ organization_id: org.id }, SecurityContext.current_user, SecurityContext.current_user_email)
+    end
 
     def initialize(dataset_opts, user, user_email)
       @dataset_opts = dataset_opts
-
       @user = user
       @user_email = user_email
     end
@@ -20,5 +25,9 @@ module VCAP::CloudController
 
       space_dataset.destroy
     end
+
+    private
+
+    attr_reader :dataset_opts, :user, :user_email
   end
 end

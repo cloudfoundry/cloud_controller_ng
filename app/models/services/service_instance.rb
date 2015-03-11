@@ -45,8 +45,6 @@ module VCAP::CloudController
 
     delegate :organization, to: :space
 
-    add_association_dependencies service_bindings: :destroy
-
     encrypt :credentials, salt: :salt
 
     def self.user_visibility_filter(user)

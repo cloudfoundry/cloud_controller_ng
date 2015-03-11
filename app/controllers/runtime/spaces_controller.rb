@@ -104,12 +104,17 @@ module VCAP::CloudController
       space = find_guid_and_validate_access(:delete, guid)
       raise_if_has_associations!(space) if v2_api? && !recursive?
 
-      dataset_opts = { guid: guid }
+      if !space.app_models.empty? && !recursive?
+        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'app_model', Space.table_name)
+      end
+
+      if !space.service_instances.empty? && !recursive?
+        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instances', Space.table_name)
+      end
 
       @space_event_repository.record_space_delete_request(space, SecurityContext.current_user, SecurityContext.current_user_email, recursive?)
 
-      delete_action = SpaceDelete.new(dataset_opts, SecurityContext.current_user, SecurityContext.current_user_email)
-      deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(delete_action)
+      deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(SpaceDelete.for_space(space))
       enqueue_deletion_job(deletion_job)
     end
 

@@ -77,11 +77,9 @@ module VCAP::CloudController
     add_association_dependencies(
       default_users: :nullify,
       apps: :destroy,
-      service_instances: :destroy,
       routes: :destroy,
       events: :nullify,
       security_groups: :nullify,
-      app_models: :destroy
     )
 
     export_attributes :name, :organization_guid, :space_quota_definition_guid

@@ -104,7 +104,7 @@ module VCAP::CloudController
       db.transaction do
         self.update(purging: true)
         service_plans.each do |plan|
-          plan.service_instances_dataset.destroy
+          ServiceInstanceDelete.new(plan.service_instances_dataset).delete
         end
         self.destroy
       end

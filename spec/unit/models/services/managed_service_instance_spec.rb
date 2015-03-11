@@ -232,29 +232,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#delete' do
-      it 'creates a DELETED service usage event' do
-        instance = described_class.make
-        instance.destroy
-
-        event = VCAP::CloudController::ServiceUsageEvent.last
-
-        expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(2)
-        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
-        expect(event).to match_service_instance(instance)
-      end
-
-      it 'cascade deletes all ServiceInstanceOperations for this instance' do
-        last_operation = ServiceInstanceOperation.make
-        service_instance.service_instance_operation = last_operation
-
-        service_instance.destroy
-
-        expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
-        expect(ServiceInstanceOperation.find(guid: last_operation.guid)).to be_nil
-      end
-    end
-
     describe 'lifecycle' do
       context 'service deprovisioning' do
         it 'should deprovision a service on destroy' do
@@ -438,14 +415,37 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      subject { service_instance.destroy }
+      context 'when the instance has bindings' do
+        before do
+          ServiceBinding.make(
+            app: AppFactory.make(space: service_instance.space),
+            service_instance: service_instance
+          )
+        end
 
-      it 'destroys the service bindings' do
-        service_binding = ServiceBinding.make(
-          app: AppFactory.make(space: service_instance.space),
-          service_instance: service_instance
-        )
-        expect { subject }.to change { ServiceBinding.where(id: service_binding.id).count }.by(-1)
+        it 'raises a ForeignKeyConstraintViolation error' do
+          expect { service_instance.destroy }.to raise_error(Sequel::ForeignKeyConstraintViolation)
+        end
+      end
+
+      it 'creates a DELETED service usage event' do
+        service_instance.destroy
+
+        event = VCAP::CloudController::ServiceUsageEvent.last
+
+        expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(2)
+        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
+        expect(event).to match_service_instance(service_instance)
+      end
+
+      it 'cascade deletes all ServiceInstanceOperations for this instance' do
+        last_operation = ServiceInstanceOperation.make
+        service_instance.service_instance_operation = last_operation
+
+        service_instance.destroy
+
+        expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+        expect(ServiceInstanceOperation.find(guid: last_operation.guid)).to be_nil
       end
     end
 

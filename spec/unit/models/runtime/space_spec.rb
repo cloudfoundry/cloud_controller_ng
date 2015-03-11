@@ -292,20 +292,14 @@ module VCAP::CloudController
         expect(event.space_name).to eql(space.name)
       end
 
-      it 'destroys all service instances' do
-        service_instance = ManagedServiceInstance.make(space: space)
+      context 'when there are service instances' do
+        before do
+          ManagedServiceInstance.make(space: space)
+        end
 
-        service_broker = service_instance.service.service_broker
-        uri = URI(service_broker.broker_url)
-        broker_url = uri.host + uri.path
-        stub_request(:delete, %r{https://#{service_broker.auth_username}:#{service_broker.auth_password}@#{broker_url}/v2/service_instances/#{guid_pattern}}).
-          to_return(status: 200, body: '{}')
-
-        expect {
-          subject.destroy
-        }.to change {
-          ManagedServiceInstance.where(id: service_instance.id).count
-        }.by(-1)
+        it 'raises a ForeignKeyConstraintViolation error' do
+          expect { space.destroy }.to raise_error(Sequel::ForeignKeyConstraintViolation)
+        end
       end
 
       it 'destroys all routes' do

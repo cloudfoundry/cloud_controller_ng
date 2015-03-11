@@ -348,16 +348,14 @@ module VCAP::CloudController
         expect { org.destroy }.to change { SpaceQuotaDefinition[id: sqd.id] }.from(sqd).to(nil)
       end
 
-      it 'destroys all service instances' do
-        service_instance = ManagedServiceInstance.make(:v2, space: space)
+      context 'when there are service instances in the org' do
+        before do
+          ManagedServiceInstance.make(:v2, space: space)
+        end
 
-        service_broker = service_instance.service.service_broker
-        uri = URI(service_broker.broker_url)
-        broker_url = uri.host + uri.path
-        stub_request(:delete, %r{https://#{service_broker.auth_username}:#{service_broker.auth_password}@#{broker_url}/v2/service_instances/#{guid_pattern}}).
-          to_return(status: 200, body: '{}')
-
-        expect { org.destroy }.to change { ManagedServiceInstance[id: service_instance.id] }.from(service_instance).to(nil)
+        it 'raises a ForeignKeyConstraintViolation error' do
+          expect { org.destroy }.to raise_error(Sequel::ForeignKeyConstraintViolation)
+        end
       end
 
       it 'destroys all service plan visibilities' do
