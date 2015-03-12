@@ -24,16 +24,7 @@ module VCAP::CloudController
             }
           )
 
-          service = service_instance.service
-          service_plan = service_instance.service_plan
-          guid = service_instance.guid
-          plan_id = service_plan.unique_id
-          service_id = service.unique_id
-          path = "/v2/service_instances/#{guid}?plan_id=#{plan_id}&service_id=#{service_id}"
-          uri = URI(service.service_broker.broker_url + path)
-          uri.user = service.service_broker.auth_username
-          uri.password = service.service_broker.auth_password
-          stub_request(:delete, uri.to_s).to_return(body: body, status: status)
+          stub_deprovision(service_instance, status: status, body: body)
         end
 
         it 'deletes the service instance' do

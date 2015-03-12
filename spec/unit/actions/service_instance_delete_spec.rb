@@ -18,21 +18,8 @@ module VCAP::CloudController
 
       before do
         [service_instance_1, service_instance_2].each do |service_instance|
-          attrs = service_instance.client.attrs
-          uri = URI(attrs[:url])
-          uri.user = attrs[:auth_username]
-          uri.password = attrs[:auth_password]
-
-          plan = service_instance.service_plan
-          service = plan.service
-
-          uri = uri.to_s
-          uri += "/v2/service_instances/#{service_instance.guid}"
-          stub_request(:delete, uri + "?plan_id=#{plan.unique_id}&service_id=#{service.unique_id}").to_return(status: 200, body: '{}')
-
-          service_binding = service_instance.service_bindings.first
-          uri += "/service_bindings/#{service_binding.guid}"
-          stub_request(:delete, uri + "?plan_id=#{plan.unique_id}&service_id=#{service.unique_id}").to_return(status: 200, body: '{}')
+          stub_deprovision(service_instance)
+          stub_unbind(service_instance.service_bindings.first)
         end
       end
 

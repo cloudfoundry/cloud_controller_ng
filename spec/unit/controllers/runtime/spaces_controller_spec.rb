@@ -574,12 +574,17 @@ module VCAP::CloudController
       end
 
       context 'when recursive is true' do
-        it 'successfully deletes spaces with v3 app associations or service instances' do
-          space_guid = Space.make.guid
-          app_guid = AppModel.make(space_guid: space_guid).guid
-          route_guid = Route.make(space_guid: space_guid).guid
-          service_instance_guid = ServiceInstance.make(space_guid: space_guid).guid
+        let!(:space_guid) { Space.make.guid }
+        let!(:app_guid) { AppModel.make(space_guid: space_guid).guid }
+        let!(:route_guid) { Route.make(space_guid: space_guid).guid }
+        let!(:service_instance_guid) { ManagedServiceInstance.make(space_guid: space_guid).guid }
 
+        before do
+          service_instance = ServiceInstance.find(guid: service_instance_guid)
+          stub_deprovision(service_instance)
+        end
+
+        it 'successfully deletes spaces with v3 app associations or service instances' do
           delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
 
           expect(last_response).to have_status_code(204)
@@ -590,11 +595,6 @@ module VCAP::CloudController
         end
 
         it 'successfully deletes the space asynchronously when async=true' do
-          space_guid = Space.make.guid
-          app_guid = AppModel.make(space_guid: space_guid).guid
-          service_instance_guid = ServiceInstance.make(space_guid: space_guid).guid
-          route_guid = Route.make(space_guid: space_guid).guid
-
           delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
 
           expect(last_response).to have_status_code(202)

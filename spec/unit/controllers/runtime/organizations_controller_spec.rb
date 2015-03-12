@@ -525,17 +525,7 @@ module VCAP::CloudController
 
         context 'when one of the spaces has a service instance in it' do
           before do
-            attrs = service_instance.client.attrs
-            uri = URI(attrs[:url])
-            uri.user = attrs[:auth_username]
-            uri.password = attrs[:auth_password]
-
-            plan = service_instance.service_plan
-            service = plan.service
-
-            uri = uri.to_s
-            uri += "/v2/service_instances/#{service_instance.guid}"
-            stub_request(:delete, uri + "?plan_id=#{plan.unique_id}&service_id=#{service.unique_id}").to_return(status: 200, body: '{}')
+            stub_deprovision(service_instance)
           end
 
           let!(:space) { Space.make(organization: org) }

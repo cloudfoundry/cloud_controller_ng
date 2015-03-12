@@ -1426,19 +1426,8 @@ module VCAP::CloudController
         let(:body) { '{}' }
         let(:status) { 200 }
 
-        let(:uri) do
-          guid = service_instance.guid
-          plan_id = service_plan.unique_id
-          service_id = service.unique_id
-          path = "/v2/service_instances/#{guid}?plan_id=#{plan_id}&service_id=#{service_id}"
-          uri = URI(service.service_broker.broker_url + path)
-          uri.user = service.service_broker.auth_username
-          uri.password = service.service_broker.auth_password
-          uri
-        end
-
         before do
-          stub_request(:delete, uri.to_s).to_return(body: body, status: status)
+          stub_deprovision(service_instance, body: body, status: status)
         end
 
         it 'deletes the service instance with the given guid' do
@@ -1470,15 +1459,8 @@ module VCAP::CloudController
         end
 
         context 'with ?accepts_incomplete=true' do
-          let(:uri) do
-            guid = service_instance.guid
-            plan_id = service_plan.unique_id
-            service_id = service.unique_id
-            path = "/v2/service_instances/#{guid}?plan_id=#{plan_id}&service_id=#{service_id}&accepts_incomplete=true"
-            uri = URI(service.service_broker.broker_url + path)
-            uri.user = service.service_broker.auth_username
-            uri.password = service.service_broker.auth_password
-            uri
+          before do
+            stub_deprovision(service_instance, body: body, status: status, accepts_incomplete: true)
           end
 
           context 'when the broker returns state `in progress`' do
