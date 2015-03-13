@@ -742,3 +742,8 @@
   name: ProcessInvalid
   http_code: 400
   message: "The process is invalid: %s"
+
+350002:
+  name: UnableToDelete
+  http_code: 400
+  message: "Unable to perform delete action: %s"
