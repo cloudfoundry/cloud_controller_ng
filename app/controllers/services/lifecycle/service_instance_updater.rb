@@ -34,7 +34,7 @@ module VCAP::CloudController
     private
 
     def get_attributes_to_update(params, request_attrs, service_instance)
-      return {}, nil if request_attrs.empty?
+      return successful_sync_operation, nil if request_attrs.empty?
 
       new_name = request_attrs['name']
       return { name: new_name }.merge(successful_sync_operation), nil if new_name
