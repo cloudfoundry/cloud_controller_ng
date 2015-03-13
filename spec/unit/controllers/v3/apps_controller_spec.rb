@@ -301,11 +301,8 @@ module VCAP::CloudController
       let(:app_model) { AppModel.make(space_guid: space.guid) }
 
       before do
-        # stubbing the BaseController methods for now, this should probably be
-        # injected into the packages controller
         allow(apps_controller).to receive(:current_user).and_return(user)
-        allow(apps_controller).to receive(:check_write_permissions!)
-
+        allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
         space.organization.add_user(user)
         space.add_developer(user)
       end
@@ -318,12 +315,27 @@ module VCAP::CloudController
       end
 
       context 'when the user cannot update the app' do
-        it 'raises an ApiError with a 404 code' do
-          expect {
-            apps_controller.delete(AppModel.make.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
+        context 'because they do not have write scope' do
+          it 'raises an ApiError with a 403 code' do
+            expect(apps_controller).to receive(:check_write_permissions!).
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+            expect {
+              apps_controller.delete(app_model)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'NotAuthorized'
+              expect(error.response_code).to eq 403
+            end
+          end
+        end
+
+        context 'because they do not have the correct membership' do
+          it 'raises an ApiError with a 404 code' do
+            expect {
+              apps_controller.delete(AppModel.make.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'ResourceNotFound'
+              expect(error.response_code).to eq 404
+            end
           end
         end
       end
@@ -335,6 +347,74 @@ module VCAP::CloudController
           }.to raise_error do |error|
             expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
+          end
+        end
+      end
+    end
+
+    describe 'start' do
+      let(:app_model) { AppModel.make }
+      let(:user) { User.make }
+
+      context 'when the user cannot start the application' do
+        context 'when the user does not have write permissions' do
+          it 'raises an ApiError with a 403 code' do
+            expect(apps_controller).to receive(:check_write_permissions!).
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+            expect {
+              apps_controller.start(app_model.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'NotAuthorized'
+              expect(error.response_code).to eq 403
+            end
+          end
+        end
+
+        context 'when the user has write permissions' do
+          before do
+            allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
+            allow(apps_controller).to receive(:current_user).and_return(user)
+          end
+
+          context 'when the user does have space permission' do
+            context 'when the app does not have a droplet' do
+              before do
+                space = app_model.space
+                space.organization.add_user(user)
+                space.add_developer(user)
+              end
+
+              it 'raises an API 400 error' do
+                expect {
+                  apps_controller.start(app_model.guid)
+                }.to raise_error do |error|
+                  expect(error.name).to eq 'ResourceNotFound'
+                  expect(error.response_code).to eq 404
+                end
+              end
+            end
+          end
+
+          context 'when the user does not have space permissions' do
+            it 'raises an API 404 error' do
+              expect {
+                apps_controller.start(app_model.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'ResourceNotFound'
+                expect(error.response_code).to eq 404
+              end
+            end
+          end
+
+          context 'when the app does not exist' do
+            it 'raises an API 404 error' do
+              expect {
+                apps_controller.start('bogus')
+              }.to raise_error do |error|
+                expect(error.name).to eq 'ResourceNotFound'
+                expect(error.response_code).to eq 404
+              end
+            end
           end
         end
       end

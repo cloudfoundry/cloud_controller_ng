@@ -26,9 +26,10 @@ module VCAP::CloudController
 
     def app_hash(app)
       {
-        guid:   app.guid,
-        name:   app.name,
-        _links: build_links(app),
+        guid:            app.guid,
+        name:            app.name,
+        desired_state:   app.desired_state,
+        _links:          build_links(app),
       }
     end
 

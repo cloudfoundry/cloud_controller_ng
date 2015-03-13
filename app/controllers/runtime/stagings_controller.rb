@@ -17,6 +17,7 @@ module VCAP::CloudController
     PACKAGE_DROPLET_PATH         = "#{STAGING_PATH}/packages/droplets"
     PACKAGE_BUILDPACK_CACHE_PATH = "#{STAGING_PATH}/packages/buildpack_cache"
     BUILDPACK_CACHE_PATH         = "#{STAGING_PATH}/buildpack_cache"
+    V3_DROPLET_PATH              = "#{STAGING_PATH}/v3_droplets"
 
     # Endpoint does its own basic auth
     allow_unauthenticated_access
@@ -166,6 +167,20 @@ module VCAP::CloudController
       blob_name = 'buildpack cache'
 
       @missing_blob_handler.handle_missing_blob!(guid, blob_name) unless blob
+      @blob_sender.send_blob(guid, blob_name, blob, self)
+    end
+
+    get "#{V3_DROPLET_PATH}/:guid/download", :download_v3_droplet
+    def download_v3_droplet(guid)
+      raise ApiError.new_from_details('BlobstoreNotLocal') unless @blobstore.local?
+
+      droplet = DropletModel.find(guid: guid)
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if droplet.nil?
+
+      blob = @blobstore.blob(droplet.blobstore_key)
+      blob_name = "droplet_#{droplet.guid}"
+
+      @missing_blob_handler.handle_missing_blob!(droplet.blobstore_key, blob_name) unless blob
       @blob_sender.send_blob(guid, blob_name, blob, self)
     end
 

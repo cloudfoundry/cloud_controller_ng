@@ -11,6 +11,8 @@ module VCAP::CloudController
         result      = MultiJson.load(json_result)
 
         expect(result['guid']).to eq(app.guid)
+        expect(result['name']).to eq(app.name)
+        expect(result['desired_state']).to eq(app.desired_state)
         expect(result['_links']).not_to include('desired_droplet')
       end
 

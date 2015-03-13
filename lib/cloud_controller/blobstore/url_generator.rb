@@ -41,6 +41,10 @@ module CloudController
         @droplet_blobstore.local? ? staging_uri("/staging/droplets/#{app.guid}/download") : url
       end
 
+      def v3_droplet_download_url(droplet)
+        generate_download_url(@droplet_blobstore, "/staging/v3_droplets/#{droplet.guid}/download", droplet.blobstore_key)
+      end
+
       def perma_droplet_download_url(app_guid)
         staging_uri("/staging/droplets/#{app_guid}/download")
       end

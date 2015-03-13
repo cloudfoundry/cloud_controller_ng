@@ -3,6 +3,8 @@ require 'handlers/apps_handler'
 require 'cloud_controller/paging/pagination_options'
 require 'queries/app_delete_fetcher'
 require 'actions/app_delete'
+require 'queries/app_start_fetcher'
+require 'actions/app_start'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
@@ -80,6 +82,19 @@ module VCAP::CloudController
       AppDelete.new(app_dataset, current_user, current_user_email).delete
 
       [HTTP::NO_CONTENT]
+    end
+
+    put '/v3/apps/:guid/start', :start
+    def start(guid)
+      check_write_permissions!
+
+      app = AppStartFetcher.new(current_user).fetch(guid)
+      app_not_found! if app.nil?
+
+      AppStart.new.start(app)
+      [HTTP::OK, @app_presenter.present_json(app)]
+    rescue AppStart::DropletNotFound
+      droplet_not_found!
     end
 
     private

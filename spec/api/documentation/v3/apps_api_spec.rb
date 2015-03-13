@@ -57,6 +57,7 @@ resource 'Apps (Experimental)', type: :api do
           {
             'name'   => name3,
             'guid'   => app_model3.guid,
+            'desired_state' => app_model3.desired_state,
             '_links' => {
               'self'      => { 'href' => "/v3/apps/#{app_model3.guid}" },
               'processes' => { 'href' => "/v3/apps/#{app_model3.guid}/processes" },
@@ -67,6 +68,7 @@ resource 'Apps (Experimental)', type: :api do
           {
             'name'   => name2,
             'guid'   => app_model2.guid,
+            'desired_state' => app_model2.desired_state,
             '_links' => {
               'self'      => { 'href' => "/v3/apps/#{app_model2.guid}" },
               'processes' => { 'href' => "/v3/apps/#{app_model2.guid}/processes" },
@@ -131,6 +133,7 @@ resource 'Apps (Experimental)', type: :api do
       expected_response = {
         'name'   => name,
         'guid'   => guid,
+        'desired_state' => app_model.desired_state,
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{guid}" },
           'processes'       => { 'href' => "/v3/apps/#{guid}/processes" },
@@ -172,6 +175,7 @@ resource 'Apps (Experimental)', type: :api do
       expected_response = {
         'name'   => name,
         'guid'   => expected_guid,
+        'desired_state' => 'STOPPED',
         '_links' => {
           'self'      => { 'href' => "/v3/apps/#{expected_guid}" },
           'processes' => { 'href' => "/v3/apps/#{expected_guid}/processes" },
@@ -212,6 +216,7 @@ resource 'Apps (Experimental)', type: :api do
       expected_response = {
         'name'   => name,
         'guid'   => app_model.guid,
+        'desired_state' => app_model.desired_state,
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
@@ -248,6 +253,48 @@ resource 'Apps (Experimental)', type: :api do
       expect { package.refresh }.to raise_error Sequel::Error, 'Record not found'
       expect { droplet.refresh }.to raise_error Sequel::Error, 'Record not found'
       expect { process.refresh }.to raise_error Sequel::Error, 'Record not found'
+    end
+  end
+
+  put '/v3/apps/:guid/start' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid) }
+    let(:droplet_guid) { droplet.guid }
+
+    let(:app_model) do
+      VCAP::CloudController::AppModel.make(name: 'original_name', space_guid: space_guid, desired_state: 'STOPPED')
+    end
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      app_model.update(desired_droplet_guid: droplet_guid)
+    end
+
+    let(:guid) { app_model.guid }
+
+    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+
+    example 'Starting an App' do
+      do_request_with_error_handling
+
+      expected_response = {
+        'name'   => app_model.name,
+        'guid'   => app_model.guid,
+        'desired_state'   => 'STARTED',
+        '_links' => {
+          'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
+          'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
+          'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
+          'desired_droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
+        }
+      }
+
+      parsed_response = MultiJson.load(response_body)
+      expect(response_status).to eq(200)
+      expect(parsed_response).to match(expected_response)
     end
   end
 end

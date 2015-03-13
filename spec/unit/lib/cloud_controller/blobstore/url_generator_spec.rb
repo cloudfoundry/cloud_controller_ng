@@ -160,6 +160,34 @@ module CloudController
           end
         end
 
+        context 'v3 droplet downloads' do
+          let(:droplet) { VCAP::CloudController::DropletModel.make }
+
+          context 'when the blobstore is local' do
+            let(:droplet_blobstore) { double(local?: true) }
+
+            it 'returns a url to cloud controller' do
+              expect(droplet_blobstore).to receive(:download_uri).with(droplet.blobstore_key).and_return('foobar')
+              uri = URI.parse(url_generator.v3_droplet_download_url(droplet))
+              expect(uri.host).to eql blobstore_host
+              expect(uri.port).to eql blobstore_port
+              expect(uri.user).to eql 'username'
+              expect(uri.password).to eql 'password'
+              expect(uri.path).to eql "/staging/v3_droplets/#{droplet.guid}/download"
+            end
+          end
+
+          context 'when the blobstore is remote' do
+            let(:droplet_blobstore) { double(local?: false) }
+
+            it 'gives out signed url to remote blobstore from the blob' do
+              remote_uri = 'http://s3.example.com/signed'
+              expect(droplet_blobstore).to receive(:download_uri).with(droplet.blobstore_key).and_return(remote_uri)
+              expect(url_generator.v3_droplet_download_url(droplet)).to eql(remote_uri)
+            end
+          end
+        end
+
         context 'download droplets' do
           let(:app) { VCAP::CloudController::AppFactory.make }
           let(:blob) { double('blob', download_url: 'http://example.com/blob') }
