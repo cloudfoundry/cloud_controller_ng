@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'queries/app_start_fetcher'
+require 'queries/app_fetcher'
 
 module VCAP::CloudController
-  describe AppStartFetcher do
+  describe AppFetcher do
     describe '#fetch' do
       let(:space) { Space.make }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
@@ -13,7 +13,7 @@ module VCAP::CloudController
         let(:admin) { true }
 
         it 'should return the desired app' do
-          expect(AppStartFetcher.new(user).fetch(app_model.guid)).to eq(app_model)
+          expect(AppFetcher.new(user).fetch(app_model.guid)).to eq(app_model)
         end
       end
 
@@ -22,13 +22,13 @@ module VCAP::CloudController
           space.organization.add_user(user)
           space.add_developer(user)
 
-          expect(AppStartFetcher.new(user).fetch(app_model.guid)).to eq(app_model)
+          expect(AppFetcher.new(user).fetch(app_model.guid)).to eq(app_model)
         end
       end
 
       context 'as a user without correct permission' do
         it 'should return nil' do
-          expect(AppStartFetcher.new(user).fetch(app_model.guid)).to eq(nil)
+          expect(AppFetcher.new(user).fetch(app_model.guid)).to eq(nil)
         end
       end
     end

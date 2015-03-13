@@ -12,8 +12,6 @@ module VCAP::CloudController
       app.db.transaction do
         app.update(desired_state: 'STARTED')
 
-        # this will force a query, may want to eager load processes in
-        # AppStartFetcher
         app.processes.each do |process|
           process.update({
             state: 'STARTED',

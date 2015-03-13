@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class AppStartFetcher
+  class AppFetcher
     def initialize(user)
       @user = user
     end
@@ -8,8 +8,10 @@ module VCAP::CloudController
       dataset.where(:"#{AppModel.table_name}__guid" => app_guid).first
     end
 
+    private
+
     def dataset
-      ds = AppModel.dataset
+      ds = AppModel.dataset.eager(:processes)
       return ds if @user.admin?
 
       ds.select_all(AppModel.table_name).

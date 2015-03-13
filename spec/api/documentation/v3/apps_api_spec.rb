@@ -297,4 +297,46 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to match(expected_response)
     end
   end
+
+  put '/v3/apps/:guid/stop' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid) }
+    let(:droplet_guid) { droplet.guid }
+
+    let(:app_model) do
+      VCAP::CloudController::AppModel.make(name: 'original_name', space_guid: space_guid, desired_state: 'STARTED')
+    end
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      app_model.update(desired_droplet_guid: droplet_guid)
+    end
+
+    let(:guid) { app_model.guid }
+
+    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+
+    example 'Stopping an App' do
+      do_request_with_error_handling
+
+      expected_response = {
+        'name'   => app_model.name,
+        'guid'   => app_model.guid,
+        'desired_state'   => 'STOPPED',
+        '_links' => {
+          'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
+          'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
+          'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
+          'desired_droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
+        }
+      }
+
+      parsed_response = MultiJson.load(response_body)
+      expect(response_status).to eq(200)
+      expect(parsed_response).to match(expected_response)
+    end
+  end
 end
