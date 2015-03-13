@@ -1,9 +1,11 @@
 require 'spec_helper'
 require 'actions/organization_delete'
+require 'actions/space_delete'
 
 module VCAP::CloudController
   describe OrganizationDelete do
-    subject(:org_delete) { OrganizationDelete.new({ guid: [org_1.guid, org_2.guid] }, user, user_email) }
+    let(:space_delete) { SpaceDelete.new(user.id, user_email) }
+    subject(:org_delete) { OrganizationDelete.new(space_delete) }
 
     describe '#delete' do
       let!(:org_1) { Organization.make }
@@ -12,7 +14,7 @@ module VCAP::CloudController
       let!(:app) { AppModel.make(space_guid: space.guid) }
       let!(:service_instance) { ManagedServiceInstance.make(space: space) }
 
-      let!(:org_dataset) { Organization.dataset }
+      let!(:org_dataset) { Organization.where(guid: [org_1.guid, org_2.guid]) }
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
 
@@ -23,45 +25,44 @@ module VCAP::CloudController
       context 'when the org exists' do
         it 'deletes the org record' do
           expect {
-            org_delete.delete
+            org_delete.delete(org_dataset)
           }.to change { Organization.count }.by(-2)
           expect { org_1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { org_2.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
       end
 
+      context 'when the user does not exist' do
+        before do
+          user.destroy
+        end
+
+        it 'raises a UserNotFoundError' do
+          expect { org_delete.delete(org_dataset) }.to raise_error VCAP::Errors::ApiError, /user could not be found/
+        end
+      end
+
       describe 'recursive deletion' do
         it 'deletes any spaces in the org' do
           expect {
-            org_delete.delete
+            org_delete.delete(org_dataset)
           }.to change { Space.count }.by(-1)
           expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'deletes associated apps' do
           expect {
-            org_delete.delete
+            org_delete.delete(org_dataset)
           }.to change { AppModel.count }.by(-1)
           expect { app.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'deletes associated service instances' do
           expect {
-            org_delete.delete
+            org_delete.delete(org_dataset)
           }.to change { ServiceInstance.count }.by(-1)
           expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
-      end
-    end
-
-    describe '.for_organization_guid' do
-      let!(:org) { Organization.make }
-      let!(:space_1) { Space.make(organization: org) }
-      let!(:space_2) { Space.make(organization: org) }
-
-      it 'returns a new OrganizationDelete for the org' do
-        action = OrganizationDelete.for_organization(org)
-        expect { action.delete }.to change { Organization.count }.by(-1)
       end
     end
   end

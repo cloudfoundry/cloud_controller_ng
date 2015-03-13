@@ -255,7 +255,7 @@ module VCAP::CloudController
             it "disallows a user that only has #{perm_name} permission on the space" do
               get "/v2/spaces/#{@space_a.guid}/service_instances", {}, headers_for(member_a)
 
-              expect(last_response.status).to eq(403)
+              expect(last_response).to have_status_code(403)
             end
           end
         end
@@ -280,7 +280,7 @@ module VCAP::CloudController
 
           it "should not return a service instance to a user with the #{perm_name} permission on a different space" do
             get path, {}, headers_for(member_b)
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_status_code(403)
           end
         end
 
@@ -513,7 +513,7 @@ module VCAP::CloudController
         request_body = { organization_guid: organization.guid, name: 'space_name' }.to_json
         post '/v2/spaces', request_body, json_headers(admin_headers)
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_status_code(201)
 
         new_space_guid = decoded_response['metadata']['guid']
         event = Event.find(type: 'audit.space.create', actee: new_space_guid)
@@ -527,7 +527,7 @@ module VCAP::CloudController
         request_body = { name: 'new_space_name' }.to_json
         put "/v2/spaces/#{space.guid}", request_body, json_headers(admin_headers)
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_status_code(201)
 
         space_guid = decoded_response['metadata']['guid']
         event = Event.find(type: 'audit.space.update', actee: space_guid)
@@ -542,7 +542,7 @@ module VCAP::CloudController
         space_guid = space.guid
         delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
 
-        expect(last_response.status).to eq(204)
+        expect(last_response).to have_status_code(204)
 
         event = Event.find(type: 'audit.space.delete-request', actee: space_guid)
         expect(event).not_to be_nil
@@ -559,7 +559,7 @@ module VCAP::CloudController
           space_guid = Space.make.guid
           delete "/v2/spaces/#{space_guid}", '', json_headers(admin_headers)
 
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_status_code(204)
           expect(Space.find(guid: space_guid)).to be_nil
         end
 
@@ -625,12 +625,12 @@ module VCAP::CloudController
 
       it 'allows space managers' do
         get "/v2/spaces/#{space.guid}/developers", '', headers_for(mgr)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
       end
 
       it 'allows space developers' do
         get "/v2/spaces/#{space.guid}/developers", '', headers_for(user)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
       end
     end
 

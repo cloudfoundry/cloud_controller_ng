@@ -1,12 +1,14 @@
 module VCAP::CloudController
   module Jobs
     class DeleteActionJob < VCAP::CloudController::Jobs::CCJob
-      def initialize(delete_action)
+      def initialize(fetcher, delete_action)
+        @fetcher = fetcher
         @delete_action = delete_action
       end
 
       def perform
-        @delete_action.delete
+        dataset = @fetcher.fetch
+        @delete_action.delete(dataset)
       end
 
       def job_name_in_configuration

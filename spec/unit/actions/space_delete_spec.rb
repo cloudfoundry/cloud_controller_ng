@@ -3,7 +3,7 @@ require 'actions/space_delete'
 
 module VCAP::CloudController
   describe SpaceDelete do
-    subject(:space_delete) { SpaceDelete.new({}, user, user_email) }
+    subject(:space_delete) { SpaceDelete.new(user.id, user_email) }
 
     describe '#delete' do
       let!(:space) { Space.make }
@@ -22,46 +22,36 @@ module VCAP::CloudController
       context 'when the space exists' do
         it 'deletes the space record' do
           expect {
-            space_delete.delete
+            space_delete.delete(space_dataset)
           }.to change { Space.count }.by(-2)
           expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
+        end
+      end
+
+      context 'when the user does not exist' do
+        before do
+          user.destroy
+        end
+
+        it 'raises a UserNotFoundError' do
+          expect { space_delete.delete(space_dataset) }.to raise_error VCAP::Errors::ApiError, /user could not be found/
         end
       end
 
       describe 'recursive deletion' do
         it 'deletes associated apps' do
           expect {
-            space_delete.delete
+            space_delete.delete(space_dataset)
           }.to change { AppModel.count }.by(-1)
           expect { app.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'deletes associated service instances' do
           expect {
-            space_delete.delete
+            space_delete.delete(space_dataset)
           }.to change { ServiceInstance.count }.by(-1)
           expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
-      end
-    end
-
-    describe '.for_space_guid' do
-      let!(:space) { Space.make }
-
-      it 'returns a new SpaceDelete for the given space guid' do
-        action = SpaceDelete.for_space(space)
-        expect { action.delete }.to change { Space.count }.by(-1)
-      end
-    end
-
-    describe '.for_organization_guid' do
-      let!(:org) { Organization.make }
-      let!(:space_1) { Space.make(organization: org) }
-      let!(:space_2) { Space.make(organization: org) }
-
-      it 'returns a new SpaceDelete for the all the spaces in the org with the given guid' do
-        action = SpaceDelete.for_organization(org)
-        expect { action.delete }.to change { Space.count }.by(-2)
       end
     end
   end
