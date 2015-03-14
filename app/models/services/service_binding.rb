@@ -88,11 +88,6 @@ module VCAP::CloudController
       self.guid ||= SecureRandom.uuid
     end
 
-    def before_destroy
-      client.unbind(self)
-      super
-    end
-
     def self.user_visibility_filter(user)
       { service_instance: ServiceInstance.user_visible(user) }
     end

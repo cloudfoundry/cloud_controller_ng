@@ -37,8 +37,8 @@ module VCAP::CloudController
           user.destroy
         end
 
-        it 'raises a UserNotFoundError' do
-          expect { org_delete.delete(org_dataset) }.to raise_error VCAP::Errors::ApiError, /user could not be found/
+        it 'returns a DeletionError' do
+          expect(org_delete.delete(org_dataset)[0]).to be_instance_of(UserNotFoundDeletionError)
         end
       end
 
@@ -62,6 +62,11 @@ module VCAP::CloudController
             org_delete.delete(org_dataset)
           }.to change { ServiceInstance.count }.by(-1)
           expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
+        end
+
+        it 'returns any errors that it received' do
+          stub_deprovision(service_instance, status: 500)
+          expect(org_delete.delete(org_dataset)[0]).to be_instance_of(ServiceInstanceDeletionError)
         end
       end
     end

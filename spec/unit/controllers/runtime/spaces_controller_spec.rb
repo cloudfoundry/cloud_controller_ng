@@ -574,7 +574,9 @@ module VCAP::CloudController
       end
 
       context 'when recursive is true' do
-        let!(:space_guid) { Space.make.guid }
+        let!(:org) { Organization.make }
+        let!(:space) { Space.make(organization: org) }
+        let!(:space_guid) { space.guid }
         let!(:app_guid) { AppModel.make(space_guid: space_guid).guid }
         let!(:route_guid) { Route.make(space_guid: space_guid).guid }
         let!(:service_instance_guid) { ManagedServiceInstance.make(space_guid: space_guid).guid }
@@ -610,6 +612,78 @@ module VCAP::CloudController
           expect(AppModel.find(guid: app_guid)).to be_nil
           expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
           expect(Route.find(guid: route_guid)).to be_nil
+        end
+
+        describe 'deleting service instances' do
+          let(:app_model) { AppFactory.make(space_guid: space_guid) }
+
+          let(:service_instance_1) { ManagedServiceInstance.make(space_guid: space_guid) }
+          let(:service_instance_2) { ManagedServiceInstance.make(space_guid: space_guid) }
+          let(:service_instance_3) { ManagedServiceInstance.make(space_guid: space_guid) }
+
+          before do
+            stub_deprovision(service_instance_1)
+            stub_deprovision(service_instance_2)
+            stub_deprovision(service_instance_3)
+          end
+
+          context 'when the second of three bindings fails to delete' do
+            let!(:binding_1) { ServiceBinding.make(service_instance: service_instance_1, app: app_model) }
+            let!(:binding_2) { ServiceBinding.make(service_instance: service_instance_2, app: app_model) }
+            let!(:binding_3) { ServiceBinding.make(service_instance: service_instance_3, app: app_model) }
+
+            before do
+              stub_unbind(binding_1)
+              stub_unbind(binding_2, status: 500)
+              stub_unbind(binding_3)
+            end
+
+            it 'deletes the first and third of the instances and their bindings' do
+              delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+
+              expect(last_response).to have_status_code 502
+              expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
+
+              expect { service_instance_1.refresh }.to raise_error Sequel::Error, 'Record not found'
+              expect { service_instance_2.refresh }.not_to raise_error
+              expect { service_instance_3.refresh }.to raise_error Sequel::Error, 'Record not found'
+
+              expect { binding_1.refresh }.to raise_error Sequel::Error, 'Record not found'
+              expect { binding_2.refresh }.not_to raise_error
+              expect { binding_3.refresh }.to raise_error Sequel::Error, 'Record not found'
+            end
+          end
+        end
+
+        context 'when the user does not exist when the job runs' do
+          it 'returns an UserNotFound error' do
+            user = User.make
+            org.add_user(user)
+            org.add_manager(user)
+            space.add_manager(user)
+
+            delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(headers_for(user))
+            user.destroy
+
+            job = Delayed::Job.first
+            expect {
+              job.invoke_job
+            }.to raise_error VCAP::Errors::ApiError, /user could not be found/
+          end
+        end
+
+        it 'does not rollback any changes if recursive deletion fails halfway through' do
+          service_instance_2 = ManagedServiceInstance.make(space_guid: space_guid)
+          stub_deprovision(service_instance_2, status: 500)
+
+          delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+
+          expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
+          expect(ServiceInstance.find(guid: service_instance_2.guid)).not_to be_nil
+          expect(Space.find(guid: space_guid)).not_to be_nil
+
+          expect(last_response).to have_status_code 502
+          expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
         end
       end
     end

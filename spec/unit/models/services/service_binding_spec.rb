@@ -66,27 +66,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#destroy' do
-      let(:binding) { ServiceBinding.make }
-      it 'unbinds at the broker' do
-        expect(binding.client).to receive(:unbind)
-        binding.destroy
-      end
-
-      context 'when unbind fails' do
-        let(:error) { RuntimeError.new('Some error') }
-        before { allow(binding.client).to receive(:unbind).and_raise(error) }
-
-        it 'propagates the error and rolls back' do
-          expect {
-            binding.destroy
-          }.to raise_error(error)
-
-          expect(binding).to be_exists
-        end
-      end
-    end
-
     it_behaves_like 'a model with an encrypted attribute' do
       let(:service_instance) { ManagedServiceInstance.make }
 

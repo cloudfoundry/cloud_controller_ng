@@ -276,7 +276,7 @@ module VCAP::CloudController
       it 'deletes the service and its dependent models' do
         delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
 
-        expect(last_response.status).to eq(204)
+        expect(last_response).to have_status_code(204)
         expect(Service.first(guid: service.guid)).to be_nil
         expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
         expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil

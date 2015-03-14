@@ -7,15 +7,23 @@ module VCAP::CloudController
       @user_email = user_email
     end
 
-    def delete(space_dataset)
-      raise VCAP::Errors::ApiError.new_from_details('UserNotFound', user_id) if user.nil?
+    def delete(dataset)
+      return [UserNotFoundDeletionError.new(@user_id)] if user.nil?
 
-      space_dataset.each do |space_model|
+      errors = []
+      dataset.each do |space_model|
+        errs = ServiceInstanceDelete.new(space_model.service_instances_dataset).delete
+        unless errs.empty?
+          errors += errs
+          return errors
+        end
+
         AppDelete.new(space_model.app_models_dataset, user, user_email).delete
-        ServiceInstanceDelete.new(space_model.service_instances_dataset).delete
+
+        space_model.destroy
       end
 
-      space_dataset.destroy
+      errors
     end
 
     private

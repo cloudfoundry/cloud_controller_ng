@@ -1,17 +1,27 @@
 require 'actions/service_binding_delete'
+require 'actions/deletion_errors'
 
-class ServiceInstanceDelete
-  attr_reader :service_instance_dataset
+module VCAP::CloudController
+  class ServiceInstanceDelete
+    attr_reader :service_instance_dataset
 
-  def initialize(service_instance_dataset)
-    @service_instance_dataset = service_instance_dataset
-  end
-
-  def delete
-    service_instance_dataset.each do |service_instance|
-      ServiceBindingDelete.new(service_instance.service_bindings_dataset).delete
+    def initialize(service_instance_dataset)
+      @service_instance_dataset = service_instance_dataset
     end
 
-    service_instance_dataset.destroy
+    def delete
+      service_instance_dataset.each_with_object([]) do |service_instance, errs|
+        errors = ServiceBindingDelete.new.delete(service_instance.service_bindings_dataset)
+        errs.concat(errors)
+        if errors.empty?
+          begin
+            service_instance.client.deprovision(service_instance)
+            service_instance.destroy
+          rescue HttpRequestError, HttpResponseError => e
+            errs << ServiceInstanceDeletionError.new(e)
+          end
+        end
+      end
+    end
   end
 end

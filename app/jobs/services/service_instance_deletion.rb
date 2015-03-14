@@ -19,7 +19,10 @@ module VCAP::CloudController
               if service_instance.managed_instance?
                 service_instance.last_operation.try(:destroy)
               end
-              ServiceInstanceDelete.new(ServiceInstance.where(guid: @guid)).delete
+              errs = ServiceInstanceDelete.new([service_instance]).delete
+              unless errs.empty?
+                raise errs.first.underlying_error
+              end
             end
           rescue
             service_instance.save_with_operation(

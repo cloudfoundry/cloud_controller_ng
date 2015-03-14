@@ -217,7 +217,7 @@ module VCAP::CloudController
         expect(UserProvidedServiceInstance.all.count).to eq 1
         delete "/v2/user_provided_service_instances/#{service_instance.guid}", {}, headers_for(developer)
 
-        expect(last_response.status).to eq 204
+        expect(last_response).to have_status_code(204)
 
         expect(UserProvidedServiceInstance.all.count).to eq 0
       end

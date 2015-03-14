@@ -26,8 +26,8 @@ module VCAP
       attr_accessor :details_hash
 
       def initialize(name)
-        self.details_hash = HARD_CODED_DETAILS.fetch(name.to_s)
-        self.name = name
+        @details_hash = HARD_CODED_DETAILS.fetch(name.to_s)
+        @name = name
       end
 
       def code

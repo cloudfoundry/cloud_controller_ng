@@ -103,8 +103,6 @@ module VCAP::CloudController
     def after_destroy
       super
 
-      client.deprovision(self)
-
       ServiceDeleteEvent.create_from_service_instance(self)
     end
 

@@ -6,10 +6,7 @@ module VCAP
 
       def self.new_from_details(name, *args)
         details = Details.new(name)
-        api_error = new
-        api_error.details = details
-        api_error.args = args
-        api_error
+        new(details, args)
       end
 
       def self.setup_i18n(load_path, default_locale)
@@ -18,6 +15,11 @@ module VCAP
         I18n.default_locale = default_locale
         I18n::Backend::Simple.send(:include, I18n::Backend::Fallbacks)
         I18n.backend.reload!
+      end
+
+      def initialize(details=nil, args=nil)
+        @details = details
+        @args = args
       end
 
       def message

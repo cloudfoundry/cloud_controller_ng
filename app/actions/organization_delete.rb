@@ -8,10 +8,11 @@ module VCAP::CloudController
 
     def delete(org_dataset)
       org_dataset.each do |org|
-        @space_deleter.delete(org.spaces_dataset)
+        errs = @space_deleter.delete(org.spaces_dataset)
+        return errs unless errs.empty?
+        org.destroy
+        []
       end
-
-      org_dataset.destroy
     end
   end
 end

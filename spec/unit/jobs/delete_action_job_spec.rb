@@ -23,6 +23,18 @@ module VCAP::CloudController
       it 'knows its job name' do
         expect(job.job_name_in_configuration).to equal(:delete_action_job)
       end
+
+      context 'when the delete action fails' do
+        let(:errors) { [ServiceInstanceDeletionError.new(nil)] }
+
+        before do
+          expect(delete_action).to receive(:delete).and_return(errors)
+        end
+
+        it 'raises an error' do
+          expect { job.perform }.to raise_error
+        end
+      end
     end
   end
 end

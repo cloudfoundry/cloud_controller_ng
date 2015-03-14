@@ -232,25 +232,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'lifecycle' do
-      context 'service deprovisioning' do
-        it 'should deprovision a service on destroy' do
-          expect(service_instance.client).to receive(:deprovision).with(service_instance)
-          service_instance.destroy
-        end
-      end
-
-      context 'when deprovision fails' do
-        it 'should raise and rollback' do
-          allow(service_instance.client).to receive(:deprovision).and_raise
-          expect {
-            service_instance.destroy
-          }.to raise_error
-          expect(VCAP::CloudController::ManagedServiceInstance.find(id: service_instance.id)).to be
-        end
-      end
-    end
-
     context 'billing' do
       context 'creating a service instance' do
         it 'should call ServiceCreateEvent.create_from_service_instance' do

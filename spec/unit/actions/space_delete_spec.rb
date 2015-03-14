@@ -33,8 +33,8 @@ module VCAP::CloudController
           user.destroy
         end
 
-        it 'raises a UserNotFoundError' do
-          expect { space_delete.delete(space_dataset) }.to raise_error VCAP::Errors::ApiError, /user could not be found/
+        it 'returns a DeletionError' do
+          expect(space_delete.delete(space_dataset)[0]).to be_instance_of(UserNotFoundDeletionError)
         end
       end
 
@@ -51,6 +51,27 @@ module VCAP::CloudController
             space_delete.delete(space_dataset)
           }.to change { ServiceInstance.count }.by(-1)
           expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
+        end
+
+        context 'when deletion of one instance fails' do
+          let!(:service_instance_2) { ManagedServiceInstance.make(space: space_2) }
+
+          before do
+            stub_deprovision(service_instance, status: 500)
+            stub_deprovision(service_instance_2)
+          end
+
+          it 'deletes the other instances' do
+            expect {
+              space_delete.delete(space_dataset) rescue nil
+            }.to change { ServiceInstance.count }.by(-1)
+            expect { service_instance.refresh }.not_to raise_error
+            expect { service_instance_2.refresh }.to raise_error Sequel::Error, 'Record not found'
+          end
+
+          it 'returns a DeletionError' do
+            expect(space_delete.delete(space_dataset)[0]).to be_instance_of(ServiceInstanceDeletionError)
+          end
         end
       end
     end

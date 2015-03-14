@@ -8,7 +8,11 @@ module VCAP::CloudController
 
       def perform
         dataset = @fetcher.fetch
-        @delete_action.delete(dataset)
+        errors = @delete_action.delete(dataset)
+        unless errors.empty?
+          error = errors.first
+          raise error.underlying_error
+        end
       end
 
       def job_name_in_configuration

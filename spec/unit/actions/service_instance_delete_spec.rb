@@ -30,6 +30,42 @@ module VCAP::CloudController
       it 'deletes all the bindings for all the service instance' do
         expect { service_instance_delete.delete }.to change { ServiceBinding.count }.by(-2)
       end
+
+      context 'when the broker returns an error for one of the deletions' do
+        before do
+          stub_deprovision(service_instance_2, status: 500)
+        end
+
+        it 'does not rollback previous deletions of service instances' do
+          expect(ServiceInstance.count).to eq 2
+          service_instance_delete.delete
+          expect(ServiceInstance.count).to eq 1
+        end
+
+        it 'returns errors it has captured' do
+          errors = service_instance_delete.delete
+          expect(errors.count).to eq(1)
+          expect(errors[0]).to be_instance_of(ServiceInstanceDeletionError)
+        end
+      end
+
+      context 'when the broker returns an error for unbinding' do
+        before do
+          stub_unbind(service_instance_2.service_bindings.first, status: 500)
+        end
+
+        it 'does not rollback previous deletions of service instances' do
+          expect(ServiceInstance.count).to eq 2
+          service_instance_delete.delete
+          expect(ServiceInstance.count).to eq 1
+        end
+
+        it 'propagates service unbind errors' do
+          errors = service_instance_delete.delete
+          expect(errors.count).to eq(1)
+          expect(errors[0]).to be_instance_of(ServiceBindingDeletionError)
+        end
+      end
     end
   end
 end

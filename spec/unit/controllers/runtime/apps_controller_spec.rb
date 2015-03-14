@@ -247,7 +247,7 @@ module VCAP::CloudController
           it 'should succeed on a recursive delete' do
             delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
 
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_status_code(204)
           end
         end
       end
