@@ -2,6 +2,8 @@ module VCAP::CloudController
   class AppModel < Sequel::Model(:apps_v3)
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
+    many_to_many :routes, join_table: :apps_v3_routes, left_key: :apps_v3_id, right_key: :route_id
+
     many_to_one :space, class: 'VCAP::CloudController::Space', key: :space_guid, primary_key: :guid, without_guid_generation: true
     one_to_many :processes, class: 'VCAP::CloudController::App', key: :app_guid, primary_key: :guid
     one_to_many :packages, class: 'VCAP::CloudController::PackageModel', key: :app_guid, primary_key: :guid

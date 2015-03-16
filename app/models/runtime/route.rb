@@ -9,6 +9,8 @@ module VCAP::CloudController
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
 
+    many_to_many :app_models, join_table: :apps_v3_routes
+
     many_to_many :apps,
       before_add:   :validate_app,
       after_add:    :handle_add_app,

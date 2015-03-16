@@ -63,5 +63,6 @@ require 'models/job'
 
 require 'models/v3/domain/app_process'
 require 'models/v3/persistence/app_model'
+require 'models/v3/persistence/app_model_route'
 require 'models/v3/persistence/package_model'
 require 'models/v3/persistence/droplet_model'
