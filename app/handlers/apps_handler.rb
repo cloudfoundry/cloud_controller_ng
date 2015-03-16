@@ -153,6 +153,8 @@ module VCAP::CloudController
         end
 
         app.add_process_by_guid(process.guid)
+        route = app.routes_dataset.where(type: process.type).first
+        process.add_route(route) unless route.nil?
       end
     end
 

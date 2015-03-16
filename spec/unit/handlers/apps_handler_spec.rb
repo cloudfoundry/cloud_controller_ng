@@ -355,6 +355,19 @@ module VCAP::CloudController
       let(:guid) { app_model.guid }
       let(:process) { AppFactory.make(type: 'special', space_guid: app_model.space_guid) }
 
+      context 'when the app has a route for the same process type' do
+        before do
+          allow(access_context).to receive(:cannot?).and_return(false)
+        end
+
+        it 'associates that route to the process' do
+          route = Route.make(space: app_model.space)
+          AppModelRoute.create(apps_v3_id: app_model.id, route_id: route.id, type: process.type)
+          apps_handler.add_process(app_model, process, access_context)
+          expect(process.reload.routes).to eq([route])
+        end
+      end
+
       context 'when the user cannot update the app' do
         before do
           allow(access_context).to receive(:cannot?).and_return(true)
