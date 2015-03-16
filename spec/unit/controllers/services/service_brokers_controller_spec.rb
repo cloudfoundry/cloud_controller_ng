@@ -3,6 +3,58 @@ require 'spec_helper'
 module VCAP::CloudController
   describe ServiceBrokersController, :services do
     let(:headers) { json_headers(admin_headers) }
+    let(:broker) { ServiceBroker.make }
+    let(:catalog_json) do
+      {
+        'services' => [{
+            'name' => 'fake-service',
+            'id' => 'f479b64b-7c25-42e6-8d8f-e6d22c456c9b',
+            'description' => 'fake service',
+            'tags' => ['no-sql', 'relational'],
+            'max_db_per_node' => 5,
+            'bindable' => true,
+            'metadata' => {
+              'provider' => { 'name' => 'The name' },
+              'listing' => {
+                'imageUrl' => 'http://catgifpage.com/cat.gif',
+                'blurb' => 'fake broker that is fake',
+                'longDescription' => 'A long time ago, in a galaxy far far away...'
+              },
+              'displayName' => 'The Fake Broker'
+            },
+            'dashboard_client' => nil,
+            'plan_updateable' => true,
+            'plans' => [{
+                'name' => 'fake-plan',
+                'id' => 'f52eabf8-e38d-422f-8ef9-9dc83b75cc05',
+                'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
+                'max_storage_tb' => 5,
+                'metadata' => {
+                  'cost' => 0.0,
+                  'bullets' => [
+                    { 'content' => 'Shared fake server' },
+                    { 'content' => '5 TB storage' },
+                    { 'content' => '40 concurrent connections' }
+                  ],
+                },
+              }],
+          }],
+      }
+    end
+
+    let(:broker_catalog_url) do
+      attributes = {
+        url: body_hash[:url] || body_hash[:broker_url],
+        auth_username: body_hash[:auth_username],
+        auth_password: body_hash[:auth_password],
+      }
+      build_broker_url(attributes, '/v2/catalog')
+    end
+
+    def stub_catalog
+      stub_request(:get, broker_catalog_url).
+          to_return(status: 200, body: catalog_json.to_json)
+    end
 
     let(:non_admin_headers) do
       user = VCAP::CloudController::User.make(admin: false)
@@ -38,43 +90,6 @@ module VCAP::CloudController
       let(:broker_url) { 'http://cf-service-broker.example.com' }
       let(:auth_username) { 'me' }
       let(:auth_password) { 'abc123' }
-      let(:catalog_json) do
-        {
-          'services' => [{
-            'name' => 'fake-service',
-            'id' => 'f479b64b-7c25-42e6-8d8f-e6d22c456c9b',
-            'description' => 'fake service',
-            'tags' => ['no-sql', 'relational'],
-            'max_db_per_node' => 5,
-            'bindable' => true,
-            'metadata' => {
-              'provider' => { 'name' => 'The name' },
-              'listing' => {
-                'imageUrl' => 'http://catgifpage.com/cat.gif',
-                'blurb' => 'fake broker that is fake',
-                'longDescription' => 'A long time ago, in a galaxy far far away...'
-              },
-              'displayName' => 'The Fake Broker'
-            },
-            'dashboard_client' => nil,
-            'plan_updateable' => true,
-            'plans' => [{
-              'name' => 'fake-plan',
-              'id' => 'f52eabf8-e38d-422f-8ef9-9dc83b75cc05',
-              'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
-              'max_storage_tb' => 5,
-              'metadata' => {
-                'cost' => 0.0,
-                'bullets' => [
-                  { 'content' => 'Shared fake server' },
-                  { 'content' => '5 TB storage' },
-                  { 'content' => '40 concurrent connections' }
-                ],
-              },
-            }],
-          }],
-        }
-      end
 
       let(:body_hash) do
         {
@@ -84,20 +99,13 @@ module VCAP::CloudController
           auth_password: auth_password,
         }
       end
-      let(:catalog_status_code) { 200 }
-      let(:catalog_url) { "http://#{auth_username}:#{auth_password}@cf-service-broker.example.com/v2/catalog" }
 
       let(:body) { body_hash.to_json }
       let(:errors) { instance_double(Sequel::Model::Errors, on: nil) }
 
-      def stub_get_catalog_request(status_code, body)
-        stub_request(:get, catalog_url).
-          to_return(status: status_code, body: MultiJson.dump(body))
-      end
-
       it 'creates a broker create event' do
         email = 'email@example.com'
-        stub_get_catalog_request(catalog_status_code, catalog_json)
+        stub_catalog
         post '/v2/service_brokers', body, headers_for(admin_user, email: email)
         broker = ServiceBroker.last
 
@@ -122,15 +130,15 @@ module VCAP::CloudController
       end
 
       it 'creates a service broker registration' do
-        stub_get_catalog_request(catalog_status_code, catalog_json)
+        stub_catalog
         post '/v2/service_brokers', body, headers
 
         expect(last_response).to have_status_code(201)
-        expect(a_request(:get, catalog_url)).to have_been_made
+        expect(a_request(:get, broker_catalog_url)).to have_been_made
       end
 
       it 'returns the serialized broker' do
-        stub_get_catalog_request(catalog_status_code, catalog_json)
+        stub_catalog
         post '/v2/service_brokers', body, headers
 
         service_broker = ServiceBroker.last
@@ -150,7 +158,7 @@ module VCAP::CloudController
       end
 
       it 'includes a location header for the resource' do
-        stub_get_catalog_request(catalog_status_code, catalog_json)
+        stub_catalog
         post '/v2/service_brokers', body, headers
 
         headers = last_response.original_headers
@@ -175,7 +183,7 @@ module VCAP::CloudController
           end
 
           it 'returns an error' do
-            stub_get_catalog_request(catalog_status_code, catalog_json)
+            stub_catalog
             post '/v2/service_brokers', body, headers
 
             expect(last_response.status).to eq(400)
@@ -189,7 +197,7 @@ module VCAP::CloudController
           end
 
           it 'returns an error' do
-            stub_get_catalog_request(catalog_status_code, catalog_json)
+            stub_catalog
             post '/v2/service_brokers', body, headers
 
             expect(last_response.status).to eq(400)
@@ -203,7 +211,7 @@ module VCAP::CloudController
           end
 
           it 'returns an error' do
-            stub_get_catalog_request(200, catalog_json)
+            stub_catalog
             post '/v2/service_brokers', body, headers
 
             expect(last_response).to have_status_code(502)
@@ -227,7 +235,7 @@ module VCAP::CloudController
         end
 
         it 'emits warnings as headers to the CC client' do
-          stub_get_catalog_request(catalog_status_code, catalog_json)
+          stub_catalog
           post('/v2/service_brokers', body, headers)
 
           warnings = last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
@@ -313,35 +321,23 @@ module VCAP::CloudController
       let(:body) { body_hash.to_json }
       let(:errors) { instance_double(Sequel::Model::Errors, on: nil) }
       let(:broker) do
-        instance_double(ServiceBroker, {
+        ServiceBroker.make(
           guid: '123',
           name: 'My Custom Service',
           broker_url: 'http://broker.example.com',
           auth_username: 'me',
           auth_password: 'abc123',
-          set: nil
-        })
+        )
       end
-
-      let(:registration) do
-        reg = instance_double(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration, {
-          broker: broker,
-          errors: errors
-        })
-        allow(reg).to receive(:update).and_return(reg)
-        allow(reg).to receive(:warnings).and_return([])
-        reg
-      end
-
-      let(:presenter) { instance_double(ServiceBrokerPresenter, {
-        to_json: "{\"metadata\":{\"guid\":\"#{broker.guid}\"}}"
-      }) }
 
       before do
-        allow(ServiceBroker).to receive(:find)
-        allow(ServiceBroker).to receive(:find).with(guid: broker.guid).and_return(broker)
-        allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new).and_return(registration)
-        allow(ServiceBrokerPresenter).to receive(:new).with(broker).and_return(presenter)
+        attrs = {
+          url: 'http://broker.example.com',
+          auth_username: 'new-username',
+          auth_password: 'new-password',
+        }
+        stub_request(:get, build_broker_url(attrs, '/v2/catalog')).
+          to_return(status: 200, body: catalog_json.to_json)
       end
 
       context 'when changing credentials' do
@@ -371,14 +367,24 @@ module VCAP::CloudController
         it 'updates the broker' do
           put "/v2/service_brokers/#{broker.guid}", body, headers
 
-          expect(broker).to have_received(:set).with(body_hash)
-          expect(registration).to have_received(:update)
+          broker.reload
+          expect(broker.name).to eq(body_hash[:name])
+          expect(broker.auth_username).to eq(body_hash[:auth_username])
+          expect(broker.auth_password).to eq(body_hash[:auth_password])
         end
 
         it 'returns the serialized broker' do
           put "/v2/service_brokers/#{broker.guid}", body, headers
 
-          expect(last_response.body).to eq(presenter.to_json)
+          expect(last_response).to have_status_code(200)
+          json_response = MultiJson.load(last_response.body)
+          expect(json_response).to include({
+            'entity' =>  {
+              'name' => 'My Updated Service',
+              'broker_url' => broker.broker_url,
+              'auth_username' => 'new-username',
+            },
+          })
         end
 
         context 'when specifying an unknown broker' do
@@ -390,22 +396,21 @@ module VCAP::CloudController
         end
 
         context 'when there is an error in Broker Registration' do
-          before { allow(registration).to receive(:update).and_return(nil) }
-
           context 'when the broker url is not a valid http/https url' do
-            before { allow(errors).to receive(:on).with(:broker_url).and_return([:url]) }
+            before { body_hash[:broker_url] = 'foo.bar' }
 
             it 'returns an error' do
               put "/v2/service_brokers/#{broker.guid}", body, headers
 
-              expect(last_response.status).to eq(400)
+              expect(last_response).to have_status_code(400)
               expect(decoded_response.fetch('code')).to eq(270011)
               expect(decoded_response.fetch('description')).to match(/is not a valid URL/)
             end
           end
 
           context 'when the broker url is taken' do
-            before { allow(errors).to receive(:on).with(:broker_url).and_return([:unique]) }
+            let!(:another_broker) { ServiceBroker.make(broker_url: 'http://example.com') }
+            before { body_hash[:broker_url] = another_broker.broker_url }
 
             it 'returns an error' do
               put "/v2/service_brokers/#{broker.guid}", body, headers
@@ -417,7 +422,8 @@ module VCAP::CloudController
           end
 
           context 'when the broker name is taken' do
-            before { allow(errors).to receive(:on).with(:name).and_return([:unique]) }
+            let!(:another_broker) { ServiceBroker.make(broker_url: 'http://example.com') }
+            before { body_hash[:name] = another_broker.name }
 
             it 'returns an error' do
               put "/v2/service_brokers/#{broker.guid}", body, headers
@@ -427,31 +433,58 @@ module VCAP::CloudController
               expect(decoded_response.fetch('description')).to match(/The service broker name is taken/)
             end
           end
-
-          context 'when there are other errors on the registration' do
-            before { allow(errors).to receive(:full_messages).and_return('A bunch of stuff was wrong') }
-
-            it 'returns an error' do
-              put "/v2/service_brokers/#{broker.guid}", body, headers
-
-              expect(last_response.status).to eq(400)
-              expect(decoded_response.fetch('code')).to eq(270001)
-              expect(decoded_response.fetch('description')).to eq('Service broker is invalid: A bunch of stuff was wrong')
-            end
-          end
         end
 
         context 'when the broker registration has warnings' do
+          let(:catalog_json) do
+            {
+              'services' => [{
+                  'name' => 'fake-service',
+                  'id' => 'f479b64b-7c25-42e6-8d8f-e6d22c456c9b',
+                  'description' => 'fake service',
+                  'tags' => ['no-sql', 'relational'],
+                  'max_db_per_node' => 5,
+                  'bindable' => true,
+                  'metadata' => {
+                    'provider' => { 'name' => 'The name' },
+                    'listing' => {
+                      'imageUrl' => 'http://catgifpage.com/cat.gif',
+                      'blurb' => 'fake broker that is fake',
+                      'longDescription' => 'A long time ago, in a galaxy far far away...'
+                    },
+                    'displayName' => 'The Fake Broker'
+                  },
+                  'dashboard_client' => nil,
+                  'plan_updateable' => true,
+                  'plans' => [{
+                      'name' => 'fake-plan-2',
+                      'id' => 'fake-plan-2-guid',
+                      'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
+                      'max_storage_tb' => 5,
+                      'metadata' => {
+                        'cost' => 0.0,
+                        'bullets' => [
+                          { 'content' => 'Shared fake server' },
+                          { 'content' => '5 TB storage' },
+                          { 'content' => '40 concurrent connections' }
+                        ],
+                      },
+                    }],
+                }],
+            }
+          end
+          let(:service) { Service.make(:v2, service_broker: broker) }
+          let(:service_plan) { ServicePlan.make(:v2, service: service) }
+
           before do
-            allow(registration).to receive(:warnings).and_return(['warning1', 'warning2'])
+            ManagedServiceInstance.make(:v2, service_plan: service_plan)
           end
 
-          it 'adds the warnings' do
+          it 'includes the warnings in the response' do
             put("/v2/service_brokers/#{broker.guid}", body, headers)
             warnings = last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
-            expect(warnings.length).to eq(2)
-            expect(warnings[0]).to eq('warning1')
-            expect(warnings[1]).to eq('warning2')
+            expect(warnings.length).to eq(1)
+            expect(warnings[0]).to match(/Service plans are missing from the broker/)
           end
         end
 

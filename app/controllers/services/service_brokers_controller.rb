@@ -52,17 +52,20 @@ module VCAP::CloudController
       broker = ServiceBroker.find(guid: guid)
       return HTTP::NOT_FOUND unless broker
 
-      broker.set(params)
-      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager, @services_event_repository)
+      ServiceBroker.db.transaction do
+        old_broker = broker.clone
+        broker.set(params)
+        registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager, @services_event_repository)
 
-      unless registration.update
-        raise get_exception_from_errors(registration)
-      end
+        unless registration.update
+          raise get_exception_from_errors(registration)
+        end
 
-      @services_event_repository.record_broker_event(:update, broker, params)
+        @services_event_repository.record_broker_event(:update, old_broker, params)
 
-      if !registration.warnings.empty?
-        registration.warnings.each { |warning| add_warning(warning) }
+        if !registration.warnings.empty?
+          registration.warnings.each { |warning| add_warning(warning) }
+        end
       end
 
       body = ServiceBrokerPresenter.new(broker).to_json
