@@ -1490,6 +1490,23 @@ module VCAP::CloudController
           expect(event.metadata).to eq({ 'request' => {} })
         end
 
+        context 'when recursive=true' do
+          let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+
+          before do
+            stub_unbind(service_binding)
+          end
+
+          it 'deletes the associated service bindings' do
+            expect {
+              delete "/v2/service_instances/#{service_instance.guid}?recursive=true", {}, admin_headers
+            }.to change(ServiceBinding, :count).by(-1)
+            expect(last_response.status).to eq(204)
+            expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+            expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
+          end
+        end
+
         context 'with ?accepts_incomplete=true' do
           before do
             stub_deprovision(service_instance, body: body, status: status, accepts_incomplete: true)
