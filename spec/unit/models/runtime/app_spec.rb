@@ -1435,6 +1435,90 @@ module VCAP::CloudController
       end
     end
 
+    describe '#prior_state' do
+      let!(:app) { AppFactory.make(name: 'app-name') }
+
+      before do
+        app.state = 'STOPPED'
+      end
+
+      context 'when app not started' do
+        it 'should return prior state STOPPED' do
+          app.start!
+          expect(app.prior_state).to eql('STOPPED')
+        end
+      end
+
+      it 'should return prior state for different state changes ' do
+        app.start!
+        expect(app.prior_state).to eql('STOPPED')
+        app.stop!
+        expect(app.prior_state).to eql('STARTED')
+        app.start!
+        expect(app.prior_state).to eql('STOPPED')
+      end
+
+      context 'when app not staged' do
+        let(:config) do
+          TestConfig.override(
+            diego: {
+              staging: 'optional',
+              running: 'optional',
+              },
+            diego_docker: true,
+          )
+          TestConfig.config
+        end
+
+        let(:message_bus)  { instance_double(CfMessageBus::MessageBus, publish: nil) }
+        let(:dea_pool)     { instance_double(Dea::Pool, reserve_app_memory: nil) }
+        let(:stager_pool)  { instance_double(Dea::StagerPool, find_stager: 'some-staging-id', reserve_app_memory: nil) }
+        let(:runners)      { Runners.new(config, message_bus, dea_pool, stager_pool) }
+        let(:package_hash) { 'fake-package-hash' }
+        let(:buildpack)    { instance_double(AutoDetectionBuildpack, custom?: true, valid?: true) }
+        let(:docker_image) { nil }
+        let(:stagers) { Stagers.new(config, message_bus, dea_pool, stager_pool, runners) }
+
+        before do
+          app.package_state = 'PENDING'
+          app.instances = 1
+          allow(app).to receive(:docker_image).and_return(docker_image)
+          allow(app).to receive(:package_hash).and_return(package_hash)
+          allow(app).to receive(:buildpack).and_return(buildpack)
+          allow(app).to receive(:custom_buildpacks_enabled?).and_return(true)
+          allow(app).to receive(:buildpack_specified?).and_return(false)
+          allow(app).to receive(:create_app_usage_event)
+          AppObserver.configure(stagers, runners)
+          allow(EM).to receive(:schedule_sync)
+        end
+
+        # When package not staged and app need to be started it will update app state as 'STARTED' and
+        # then it will go for check if package need to be stage. if required it will stage it first.
+        # So dirty plugin will return 'staging_task_id' in change_previous instead of 'state'.
+        it 'app has not started should return prior state STOPPED ', isolation: :truncation do
+          app.state = 'STOPPED'
+
+          App.db.transaction(savepoint: true) do
+            app.update_from_hash({ state: 'STARTED' })
+          end
+
+          expect(app.prior_state).to eql('STOPPED')
+        end
+
+        # Restage will stop app first then it will start it after staging(if required).
+        # Here also if staging is pending then it will go for check if package need to be stage. if required it will stage it first.
+        # So dirty plugin will return 'staging_task_id' in change_previous instead of 'state'.
+        it 'app is running and restaged should return prior state STOPPED ', isolation: :truncation do
+          app.state = 'STARTED'
+
+          App.db.transaction(savepoint: true) do
+            app.restage!
+          end
+          expect(app.prior_state).to eql('STOPPED')
+        end
+      end
+    end
+
     describe '#stop!' do
       let!(:app) { AppFactory.make }
 
