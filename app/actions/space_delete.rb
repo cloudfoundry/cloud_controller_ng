@@ -12,13 +12,13 @@ module VCAP::CloudController
 
       errors = []
       dataset.each do |space_model|
-        errs = ServiceInstanceDelete.new(space_model.service_instances_dataset).delete
+        errs = ServiceInstanceDelete.new.delete(space_model.service_instances_dataset)
         unless errs.empty?
           errors += errs
           return errors
         end
 
-        AppDelete.new(space_model.app_models_dataset, user, user_email).delete
+        AppDelete.new(user, user_email).delete(space_model.app_models_dataset)
 
         space_model.destroy
       end

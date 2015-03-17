@@ -3,13 +3,7 @@ require 'actions/deletion_errors'
 
 module VCAP::CloudController
   class ServiceInstanceDelete
-    attr_reader :service_instance_dataset
-
-    def initialize(service_instance_dataset)
-      @service_instance_dataset = service_instance_dataset
-    end
-
-    def delete
+    def delete(service_instance_dataset)
       service_instance_dataset.each_with_object([]) do |service_instance, errs|
         errors = ServiceBindingDelete.new.delete(service_instance.service_bindings_dataset)
         errs.concat(errors)

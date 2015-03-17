@@ -40,7 +40,7 @@ module VCAP::CloudController
       droplet_dataset        = droplet_delete_fetcher.fetch(guid)
       droplet_not_found! if droplet_dataset.empty?
 
-      DropletDelete.new(droplet_dataset).delete
+      DropletDelete.new.delete(droplet_dataset)
 
       [HTTP::NO_CONTENT]
     end

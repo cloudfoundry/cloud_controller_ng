@@ -1,13 +1,12 @@
 module VCAP::CloudController
   class ProcessDelete
-    def initialize(process_dataset, space, user, user_email)
-      @process_dataset = process_dataset
+    def initialize(space, user, user_email)
       @space = space
       @user = user
       @user_email = user_email
     end
 
-    def delete
+    def delete(process_dataset)
       select_columns = [:guid, :app_guid, :name]
       select_columns = select_columns.map do |column|
         :"#{App.table_name}__#{column}"
@@ -21,6 +20,6 @@ module VCAP::CloudController
 
     private
 
-    attr_reader :process_dataset, :space, :user, :user_email
+    attr_reader :space, :user, :user_email
   end
 end

@@ -3,7 +3,7 @@ require 'actions/app_delete'
 
 module VCAP::CloudController
   describe AppDelete do
-    subject(:app_delete) { AppDelete.new(app_dataset, user, user_email) }
+    subject(:app_delete) { AppDelete.new(user, user_email) }
 
     describe '#delete' do
       let!(:app_model) { AppModel.make }
@@ -14,7 +14,7 @@ module VCAP::CloudController
       context 'when the app exists' do
         it 'deletes the app record' do
           expect {
-            app_delete.delete
+            app_delete.delete(app_dataset)
           }.to change { AppModel.count }.by(-1)
           expect { app_model.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
@@ -25,7 +25,7 @@ module VCAP::CloudController
           package = PackageModel.make(app_guid: app_model.guid)
 
           expect {
-            app_delete.delete
+            app_delete.delete(app_dataset)
           }.to change { PackageModel.count }.by(-1)
           expect { package.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
@@ -34,7 +34,7 @@ module VCAP::CloudController
           droplet = DropletModel.make(app_guid: app_model.guid)
 
           expect {
-            app_delete.delete
+            app_delete.delete(app_dataset)
           }.to change { DropletModel.count }.by(-1)
           expect { droplet.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
@@ -43,7 +43,7 @@ module VCAP::CloudController
           process = App.make(app_guid: app_model.guid)
 
           expect {
-            app_delete.delete
+            app_delete.delete(app_dataset)
           }.to change { App.count }.by(-1)
           expect { process.refresh }.to raise_error Sequel::Error, 'Record not found'
         end

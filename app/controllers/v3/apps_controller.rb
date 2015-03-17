@@ -80,7 +80,7 @@ module VCAP::CloudController
       app_dataset        = app_delete_fetcher.fetch(guid)
       app_not_found! if app_dataset.empty?
 
-      AppDelete.new(app_dataset, current_user, current_user_email).delete
+      AppDelete.new(current_user, current_user_email).delete(app_dataset)
 
       [HTTP::NO_CONTENT]
     end
