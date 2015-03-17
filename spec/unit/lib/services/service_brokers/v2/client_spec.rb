@@ -814,6 +814,12 @@ module VCAP::Services::ServiceBrokers::V2
           app: app
         )
       end
+      let(:service_key) do
+        VCAP::CloudController::ServiceKey.new(
+            name: 'fake-service_key',
+            service_instance: instance
+        )
+      end
 
       let(:response_data) do
         {
@@ -850,6 +856,16 @@ module VCAP::Services::ServiceBrokers::V2
              plan_id:    binding.service_plan.broker_provided_id,
              service_id: binding.service.broker_provided_id,
              app_guid:   binding.app_guid
+        )
+      end
+
+      it 'makes a put request to create a service key with correct message' do
+        client.bind(service_key)
+
+        expect(http_client).to have_received(:put).
+          with(anything,
+              plan_id:    binding.service_plan.broker_provided_id,
+              service_id: binding.service.broker_provided_id
         )
       end
 

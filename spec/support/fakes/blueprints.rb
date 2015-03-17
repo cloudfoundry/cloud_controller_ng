@@ -194,6 +194,12 @@ module VCAP::CloudController
     syslog_drain_url  { nil }
   end
 
+  ServiceKey.blueprint do
+    credentials       { Sham.service_credentials }
+    service_instance  { ManagedServiceInstance.make }
+    name               { Sham.name }
+  end
+
   ServiceBroker.blueprint do
     name              { Sham.name }
     broker_url        { Sham.url }
