@@ -4,6 +4,7 @@ module VCAP::Services
       module Errors
         class ServiceBrokerResponseMalformed < HttpResponseError
           def initialize(uri, method, response, description=nil)
+            @uri = uri
             super(
               description || description_from_response(response),
               uri,
@@ -25,9 +26,9 @@ module VCAP::Services
             end
 
             if hash.is_a?(Hash) && hash.key?('last_operation')
-              "The service broker response was not understood: expected state was 'succeeded', broker returned '#{hash['last_operation']['state']}'"
+              "The service broker returned an invalid response for the request to #{@uri}: expected state was 'succeeded', broker returned '#{hash['last_operation']['state']}'"
             else
-              "The service broker response was not understood: expected valid JSON object in body, broker returned '#{response.body}'"
+              "The service broker returned an invalid response for the request to #{@uri}: expected valid JSON object in body, broker returned '#{response.body}'"
             end
           end
         end

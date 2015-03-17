@@ -13,7 +13,8 @@ module VCAP::Services
 
           it 'initializes the base class correctly' do
             exception = ServiceBrokerResponseMalformed.new(uri, method, response)
-            expect(exception.message).to eq("The service broker response was not understood: expected valid JSON object in body, broker returned 'foo'")
+            expect(exception.message).to eq('The service broker returned an invalid response for the request to http://uri.example.com: ' \
+              "expected valid JSON object in body, broker returned 'foo'")
             expect(exception.uri).to eq(uri)
             expect(exception.method).to eq(method)
             expect(exception.source).to be(response.body)
@@ -22,7 +23,8 @@ module VCAP::Services
           context 'with an invalid JSON body' do
             it 'parses an invalid last operation state correctly' do
               exception = ServiceBrokerResponseMalformed.new(uri, method, response)
-              expect(exception.message).to eq(("The service broker response was not understood: expected valid JSON object in body, broker returned 'foo'"))
+              expect(exception.message).to eq(('The service broker returned an invalid response for the request to http://uri.example.com: ' \
+               "expected valid JSON object in body, broker returned 'foo'"))
             end
           end
 
@@ -37,7 +39,8 @@ module VCAP::Services
 
             it 'parses an invalid last operation state correctly' do
               exception = ServiceBrokerResponseMalformed.new(uri, method, response)
-              expect(exception.message).to eq(("The service broker response was not understood: expected state was 'succeeded', broker returned 'foo'"))
+              expect(exception.message).to eq(('The service broker returned an invalid response for the request to http://uri.example.com: ' \
+                "expected state was 'succeeded', broker returned 'foo'"))
             end
           end
 
