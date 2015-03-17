@@ -286,6 +286,49 @@ module VCAP::CloudController
       end
     end
 
+    describe '#check_read_permissions!' do
+      subject(:base_controller) do
+        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil)
+      end
+
+      before do
+        allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: false))
+        allow(SecurityContext).to receive(:scopes).and_return([])
+      end
+
+      context 'when the user is an admin' do
+        before do
+          allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: true))
+        end
+
+        it 'does not raise an error' do
+          expect {
+            base_controller.check_read_permissions!
+          }.not_to raise_error
+        end
+      end
+
+      context 'when user has read scope' do
+        before do
+          allow(SecurityContext).to receive(:scopes).and_return(['cloud_controller.read'])
+        end
+
+        it 'does not raise an error' do
+          expect {
+            base_controller.check_read_permissions!
+          }.not_to raise_error
+        end
+      end
+
+      context 'when user does not have read scope' do
+        it 'raises an unauthorized API error' do
+          expect {
+            base_controller.check_read_permissions!
+          }.to raise_error VCAP::Errors::ApiError
+        end
+      end
+    end
+
     describe '#check_write_permissions!' do
       subject(:base_controller) do
         VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil)

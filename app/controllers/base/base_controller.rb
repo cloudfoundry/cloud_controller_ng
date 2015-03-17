@@ -170,6 +170,12 @@ module VCAP::CloudController::RestController
       raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') if !admin && !write_scope
     end
 
+    def check_read_permissions!
+      admin      = SecurityContext.roles.admin?
+      read_scope = SecurityContext.scopes.include?('cloud_controller.read')
+      raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') if !admin && !read_scope
+    end
+
     def current_user
       SecurityContext.current_user
     end

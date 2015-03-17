@@ -16,8 +16,51 @@ resource 'App Routes (Experimental)', type: :api do
     end
   end
 
-  # get '/v3/apps/:guid/routes' do
-  # end
+  get '/v3/apps/:guid/routes' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+
+    let!(:route1) { VCAP::CloudController::Route.make(space_guid: space_guid) }
+    let!(:route2) { VCAP::CloudController::Route.make(space_guid: space_guid) }
+
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:guid) { app_model.guid }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      VCAP::CloudController::AppModelRoute.create(apps_v3_id: app_model.id, route_id: route1.id, type: 'web')
+      VCAP::CloudController::AppModelRoute.create(apps_v3_id: app_model.id, route_id: route2.id, type: 'web')
+    end
+
+    example 'List routes' do
+      do_request_with_error_handling
+
+      expected_response = {
+        'resources' => [
+          {
+            'guid' => route1.guid,
+            'host' => route1.host,
+            '_links' => {
+              'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+              'domain' => { 'href' => "/v2/domains/#{route1.domain.guid}" }
+            }
+          },
+          {
+            'guid' => route2.guid,
+            'host' => route2.host,
+            '_links' => {
+              'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+              'domain' => { 'href' => "/v2/domains/#{route2.domain.guid}" }
+            }
+          },
+        ]
+      }
+      parsed_response = MultiJson.load(response_body)
+      expect(response_status).to eq(200)
+      expect(parsed_response).to match(expected_response)
+    end
+  end
 
   put '/v3/apps/:guid/routes' do
     parameter :route_guid, 'GUID of the route', required: true
