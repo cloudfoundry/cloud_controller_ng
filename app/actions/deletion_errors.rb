@@ -11,21 +11,21 @@ module VCAP::CloudController
   class UserNotFoundDeletionError < DeletionError
     def initialize(user_id)
       underlying_error = VCAP::Errors::ApiError.new_from_details('UserNotFound', user_id)
-      super('Please delete the service binding association for your service instance.',
+      super(underlying_error.message,
             underlying_error)
     end
   end
 
   class ServiceBindingDeletionError < DeletionError
     def initialize(underlying_error)
-      super('Please delete the service binding association for your service instance.',
+      super(underlying_error.message,
             underlying_error)
     end
   end
 
   class ServiceInstanceDeletionError < DeletionError
     def initialize(underlying_error)
-      super('Please delete the service instance association for your space.',
+      super(underlying_error.message,
             underlying_error)
     end
   end

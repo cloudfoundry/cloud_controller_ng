@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       context 'when the delete action fails' do
-        let(:errors) { [ServiceInstanceDeletionError.new(nil)] }
+        let(:errors) { [ServiceInstanceDeletionError.new(StandardError.new('foobar'))] }
 
         before do
           expect(delete_action).to receive(:delete).and_return(errors)
