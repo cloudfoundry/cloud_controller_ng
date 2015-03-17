@@ -1,5 +1,4 @@
 require 'actions/organization_delete'
-require 'queries/org_delete_fetcher'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
@@ -84,9 +83,8 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 
-      fetcher = OrganizationDeleteFetcher.new(guid)
       delete_action = OrganizationDelete.new(SpaceDelete.new(current_user.id, current_user_email))
-      deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(fetcher, delete_action)
+      deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end
 

@@ -1,13 +1,14 @@
 module VCAP::CloudController
   module Jobs
     class DeleteActionJob < VCAP::CloudController::Jobs::CCJob
-      def initialize(fetcher, delete_action)
-        @fetcher = fetcher
+      def initialize(model_class, guid, delete_action)
+        @model_class = model_class
+        @guid = guid
         @delete_action = delete_action
       end
 
       def perform
-        dataset = @fetcher.fetch
+        dataset = @model_class.where(guid: @guid)
         errors = @delete_action.delete(dataset)
         unless errors.empty?
           error = errors.first

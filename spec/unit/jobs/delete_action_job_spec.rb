@@ -4,21 +4,16 @@ module VCAP::CloudController
   module Jobs
     describe DeleteActionJob do
       let(:delete_action) { double(:delete_action, delete: []) }
-      let(:fetcher) { double(:fetcher, fetch: nil) }
+      let(:space) { Space.make }
 
-      subject(:job) { DeleteActionJob.new(fetcher, delete_action) }
+      subject(:job) { DeleteActionJob.new(Space, space.guid, delete_action) }
+
+      it { is_expected.to be_a_valid_job }
 
       it 'calls the delete method on the delete_action object' do
         job.perform
-        expect(delete_action).to have_received(:delete)
+        expect(delete_action).to have_received(:delete).with([space])
       end
-
-      it 'calls the fetch method on the fetcher object' do
-        job.perform
-        expect(fetcher).to have_received(:fetch)
-      end
-
-      it { is_expected.to be_a_valid_job }
 
       it 'knows its job name' do
         expect(job.job_name_in_configuration).to equal(:delete_action_job)
