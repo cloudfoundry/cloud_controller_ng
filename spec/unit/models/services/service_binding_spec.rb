@@ -2,12 +2,6 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceBinding, type: :model do
-    let(:client) { double('broker client', unbind: nil, deprovision: nil) }
-
-    before do
-      allow_any_instance_of(Service).to receive(:client).and_return(client)
-    end
-
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
@@ -214,14 +208,28 @@ module VCAP::CloudController
         expect(app.needs_staging?).to be false
       end
 
-      it 'should not trigger restaging when indirectly destroying a binding' do
-        binding = ServiceBinding.make(app: app, service_instance: service_instance)
-        app.refresh
-        fake_app_staging(app)
-        expect(app.needs_staging?).to be false
+      context 'when indirectly destroying a binding' do
+        let(:binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+        before do
+          app.refresh
+          fake_app_staging(app)
+          expect(app.needs_staging?).to be false
+        end
 
-        app.remove_service_binding(binding)
-        expect(app.needs_staging?).to be false
+        it 'should not trigger restaging if the broker successfully unbinds' do
+          stub_unbind(binding, status: 200)
+
+          app.remove_service_binding(binding)
+          expect(app.needs_staging?).to be false
+        end
+
+        it 'should raise a broker error if the broker cannot successfully unbind' do
+          stub_unbind(binding, status: 500)
+
+          expect {
+            app.remove_service_binding(binding)
+          }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
+        end
       end
     end
 
@@ -229,14 +237,14 @@ module VCAP::CloudController
       let(:binding) { ServiceBinding.make }
 
       before do
-        allow(client).to receive(:bind)
+        stub_bind(binding.service_instance)
         allow(binding).to receive(:save)
       end
 
       it 'sends a bind request to the broker' do
         binding.bind!
 
-        expect(client).to have_received(:bind).with(binding)
+        expect(a_request(:put, service_binding_url(binding))).to have_been_made.times(1)
       end
 
       it 'saves the binding to the database' do
@@ -247,24 +255,24 @@ module VCAP::CloudController
 
       context 'when sending a bind request to the broker raises an error' do
         before do
-          allow(client).to receive(:bind).and_raise(StandardError.new('bind_error'))
+          stub_bind(binding.service_instance, status: 500)
         end
 
         it 'raises the bind error' do
-          expect { binding.bind! }.to raise_error(/bind_error/)
+          expect { binding.bind! }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
         end
       end
 
       context 'when the model save raises an error' do
         before do
           allow(binding).to receive(:save).and_raise(StandardError.new('save'))
-          allow(client).to receive(:unbind)
+          stub_unbind(binding)
         end
 
         it 'sends an unbind request to the broker' do
+          query = "plan_id=#{binding.service_plan.broker_provided_id}&service_id=#{binding.service.broker_provided_id}"
           binding.bind! rescue nil
-
-          expect(client).to have_received(:unbind).with(binding)
+          expect(a_request(:delete, service_binding_url(binding, query))).to have_been_made.times(1)
         end
 
         it 'raises the save error' do
@@ -275,14 +283,14 @@ module VCAP::CloudController
           let(:logger) { double('logger') }
 
           before do
-            allow(client).to receive(:unbind).and_raise(StandardError.new('unbind_error'))
+            stub_unbind(binding, status: 500)
             allow(binding).to receive(:logger).and_return(logger)
             allow(logger).to receive(:error)
           end
 
           it 'logs the unbind error' do
             binding.bind! rescue nil
-            expect(logger).to have_received(:error).with(/Unable to unbind.*unbind_error/)
+            expect(logger).to have_received(:error).with(/Unable to unbind.*/)
           end
 
           it 'raises the save error' do

@@ -14,6 +14,16 @@ module ServiceBrokerHelpers
       to_return(status: status, body: body)
   end
 
+  def stub_bind(service_instance, opts={})
+    status = opts[:status] || 200
+    body = opts[:body] || '{}'
+
+    fake_service_binding = VCAP::CloudController::ServiceBinding.new(service_instance: service_instance, guid: '')
+
+    stub_request(:put, /#{service_binding_url(fake_service_binding)}[A-Za-z0-9-]+/).
+      to_return(status: status, body: body)
+  end
+
   def stub_unbind(service_binding, opts={})
     status = opts[:status] || 200
     body = opts[:body] || '{}'

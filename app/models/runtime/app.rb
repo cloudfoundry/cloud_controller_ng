@@ -245,7 +245,8 @@ module VCAP::CloudController
     end
 
     def destroy_service_bindings
-      ServiceBindingDelete.new.delete(self.service_bindings_dataset)
+      errors = ServiceBindingDelete.new.delete(self.service_bindings_dataset)
+      raise errors.first.underlying_error unless errors.empty?
     end
 
     def after_destroy
@@ -378,7 +379,8 @@ module VCAP::CloudController
     # state that the correct way to overide the remove_bla functionality is to
     # do so with the _ prefixed private method like we do here.
     def _remove_service_binding(binding)
-      ServiceBindingDelete.new.delete([binding])
+      err = ServiceBindingDelete.new.delete([binding])
+      raise(err[0].underlying_error) if !err.empty?
     end
 
     def self.user_visibility_filter(user)
