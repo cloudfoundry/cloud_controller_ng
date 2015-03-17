@@ -78,6 +78,9 @@ module VCAP::CloudController
         if original_attributes
           service_instance.last_operation.set_all(original_attributes)
           service_instance.last_operation.save
+        else
+          service_instance.service_instance_operation.destroy
+          service_instance.save
         end
       end
     end

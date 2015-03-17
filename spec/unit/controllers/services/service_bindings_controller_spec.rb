@@ -404,6 +404,43 @@ module VCAP::CloudController
           end
         end
 
+        describe 'locking the instance as a result of binding' do
+          context 'when the instance has a previous operation' do
+            before do
+              instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+              instance.save
+            end
+
+            it 'reverts the last_operation of the instance to its previous operation' do
+              req = {
+                app_guid: app_obj.guid,
+                service_instance_guid: instance.guid
+              }.to_json
+
+              post '/v2/service_bindings', req, json_headers(headers_for(developer))
+              expect(instance.last_operation.state).to eq 'succeeded'
+              expect(instance.last_operation.type).to eq 'create'
+            end
+          end
+
+          context 'when the instance does not have a last_operation' do
+            before do
+              instance.service_instance_operation = nil
+              instance.save
+            end
+
+            it 'does not save a last_operation' do
+              req = {
+                app_guid: app_obj.guid,
+                service_instance_guid: instance.guid
+              }.to_json
+
+              post '/v2/service_bindings', req, json_headers(headers_for(developer))
+              expect(instance.refresh.last_operation).to be_nil
+            end
+          end
+        end
+
         describe 'binding errors' do
           subject(:make_request) do
             req = {
@@ -453,6 +490,19 @@ module VCAP::CloudController
               make_request
               expect(last_response).to have_status_code 502
               expect(decoded_response['description']).to match /ERROR MESSAGE HERE/
+              expect(instance.refresh.last_operation).to be_nil
+            end
+
+            context 'when the instance has a last_operation' do
+              before do
+                instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+              end
+
+              it 'rolls back the last_operation of the service instance' do
+                make_request
+                expect(instance.refresh.last_operation.state).to eq 'succeeded'
+                expect(instance.refresh.last_operation.type).to eq 'create'
+              end
             end
           end
         end
@@ -500,6 +550,62 @@ module VCAP::CloudController
         expect(event.metadata).to include({
           'request' => {}
         })
+      end
+
+      describe 'locking the service instance of the binding' do
+        context 'when the instance does not have a last_operation' do
+          before do
+            service_binding.service_instance.service_instance_operation = nil
+            service_binding.service_instance.save
+          end
+
+          it 'does not save a last_operation' do
+            service_instance = service_binding.service_instance
+
+            delete "/v2/service_bindings/#{service_binding.guid}", '{}', json_headers(headers_for(developer))
+            expect(service_instance.refresh.last_operation).to be_nil
+          end
+
+          context 'when ?async=true' do
+            it 'does not save a last_operation' do
+              service_instance = service_binding.service_instance
+
+              delete "/v2/service_bindings/#{service_binding.guid}?async=true", '{}', json_headers(headers_for(developer))
+              expect(service_binding).not_to be_nil
+              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::AuditEventJob
+
+              expect(service_instance.refresh.last_operation).to be_nil
+            end
+          end
+        end
+
+        context 'when the instance has a last_operation' do
+          before do
+            service_binding.service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+            service_binding.service_instance.save
+          end
+
+          it 'reverts to the previous last_operation' do
+            service_instance = service_binding.service_instance
+
+            delete "/v2/service_bindings/#{service_binding.guid}", '{}', json_headers(headers_for(developer))
+            expect(service_instance.refresh.last_operation.state).to eq 'succeeded'
+            expect(service_instance.refresh.last_operation.type).to eq 'create'
+          end
+
+          context 'when ?async=true' do
+            it 'reverts to the previous last_operation' do
+              service_instance = service_binding.service_instance
+
+              delete "/v2/service_bindings/#{service_binding.guid}?async=true", '{}', json_headers(headers_for(developer))
+              expect(service_binding).not_to be_nil
+              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::AuditEventJob
+
+              expect(service_instance.refresh.last_operation.state).to eq 'succeeded'
+              expect(service_instance.refresh.last_operation.type).to eq 'create'
+            end
+          end
+        end
       end
 
       context 'with ?async=true' do
