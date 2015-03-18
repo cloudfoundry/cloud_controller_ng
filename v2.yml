@@ -752,3 +752,13 @@
   name: UnableToDelete
   http_code: 400
   message: "Unable to perform delete action: %s"
+
+360001:
+  name: ServiceKeyTaken
+  http_code: 400
+  message: "The service key to service is taken: %s"
+
+360002:
+  name: ServiceKeyInvalid
+  http_code: 400
+  message: "The service key is invalid: %s"
