@@ -3,6 +3,7 @@ require 'handlers/apps_handler'
 require 'cloud_controller/paging/pagination_options'
 require 'queries/app_delete_fetcher'
 require 'actions/app_delete'
+require 'actions/app_update'
 require 'queries/app_fetcher'
 require 'actions/app_start'
 require 'actions/app_stop'
@@ -57,18 +58,18 @@ module VCAP::CloudController
 
     patch '/v3/apps/:guid', :update
     def update(guid)
-      message = AppUpdateMessage.create_from_http_request(guid, body)
-      bad_request!(message.error) if message.error
+      check_write_permissions!
+      message = parse_and_validate_json(body)
 
-      app = @app_handler.update(message, @access_context)
+      app = AppFetcher.new(current_user).fetch(guid)
       app_not_found! if app.nil?
 
+      app = AppUpdate.update(app, message)
+
       [HTTP::OK, @app_presenter.present_json(app)]
-    rescue AppsHandler::DropletNotFound
+    rescue AppUpdate::DropletNotFound
       droplet_not_found!
-    rescue AppsHandler::Unauthorized
-      unauthorized!
-    rescue AppsHandler::InvalidApp => e
+    rescue AppUpdate::InvalidApp => e
       unprocessable!(e.message)
     end
 
@@ -110,6 +111,14 @@ module VCAP::CloudController
     end
 
     private
+
+    def parse_and_validate_json(body)
+      parsed = body && MultiJson.load(body)
+      raise MultiJson::ParseError.new('invalid request body') unless parsed.is_a?(Hash)
+      parsed
+    rescue MultiJson::ParseError => e
+      bad_request!(e.message)
+    end
 
     def validate_allowed_params(params)
       schema = {

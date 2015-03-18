@@ -187,7 +187,10 @@ module VCAP::CloudController
     end
 
     describe '#update' do
+      let(:space) { Space.make }
+      let(:user) { User.make }
       let!(:app_model) { AppModel.make }
+
       let(:new_name) { 'new-name' }
       let(:req_body) do
         {
@@ -195,33 +198,58 @@ module VCAP::CloudController
         }.to_json
       end
 
-      before do
-        allow(apps_handler).to receive(:update).and_return(app_model)
-      end
-
-      context 'when the user cannot update the app' do
-        before do
-          allow(apps_handler).to receive(:update).and_raise(AppsHandler::Unauthorized)
-        end
-
-        it 'returns a 403 NotAuthorized error' do
-          expect {
-            apps_controller.update(app_model.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
+      context 'when the user cannot update the application' do
+        context 'when the user does not have write permissions' do
+          it 'raises an ApiError with a 403 code' do
+            expect(apps_controller).to receive(:check_write_permissions!).
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+            expect {
+              apps_controller.update(app_model.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'NotAuthorized'
+              expect(error.response_code).to eq 403
+            end
           end
         end
-      end
 
-      context 'when the request body is invalid JSON' do
-        let(:req_body) { '{ invalid_json }' }
-        it 'returns an 400 Bad Request' do
-          expect {
-            apps_controller.update(app_model.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'MessageParseError'
-            expect(error.response_code).to eq 400
+        context 'when the user has write permissions' do
+          before do
+            allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
+            allow(apps_controller).to receive(:current_user).and_return(user)
+          end
+
+          context 'when the user does not have space permissions' do
+            it 'raises an API 404 error' do
+              expect {
+                apps_controller.update(app_model.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'ResourceNotFound'
+                expect(error.response_code).to eq 404
+              end
+            end
+          end
+
+          context 'when the app does not exist' do
+            it 'raises an API 404 error' do
+              expect {
+                apps_controller.start('bogus')
+              }.to raise_error do |error|
+                expect(error.name).to eq 'ResourceNotFound'
+                expect(error.response_code).to eq 404
+              end
+            end
+
+            context 'when the request body is invalid JSON' do
+              let(:req_body) { '{ invalid_json }' }
+              it 'returns an 400 Bad Request' do
+                expect {
+                  apps_controller.update(app_model.guid)
+                }.to raise_error do |error|
+                  expect(error.name).to eq 'MessageParseError'
+                  expect(error.response_code).to eq 400
+                end
+              end
+            end
           end
         end
       end
@@ -235,6 +263,14 @@ module VCAP::CloudController
           }
         end
 
+        before do
+          allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
+          allow(apps_controller).to receive(:current_user).and_return(user)
+          space = app_model.space
+          space.organization.add_user(user)
+          space.add_developer(user)
+        end
+
         it 'returns a 200 OK response' do
           response_code, _ = apps_controller.update(app_model.guid)
           expect(response_code).to eq 200
@@ -244,52 +280,34 @@ module VCAP::CloudController
           _, response = apps_controller.update(app_model.guid)
           expect(response).to eq(app_response)
         end
-      end
+        context 'when the app is invalid' do
+          before do
+            allow(AppUpdate).to receive(:update).and_raise(AppUpdate::InvalidApp.new('ya done goofed'))
+          end
 
-      context 'when the app does not exist' do
-        let(:guid) { 'bad-guid' }
-
-        before do
-          allow(apps_handler).to receive(:update).and_return(nil)
-        end
-
-        it 'raises an ApiError with a 404 code' do
-          expect {
-            apps_controller.update(guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
+          it 'returns an UnprocessableEntity error' do
+            expect {
+              apps_controller.update(app_model.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'UnprocessableEntity'
+              expect(error.response_code).to eq(422)
+              expect(error.message).to match('ya done goofed')
+            end
           end
         end
-      end
 
-      context 'when the app is invalid' do
-        before do
-          allow(apps_handler).to receive(:update).and_raise(AppsHandler::InvalidApp.new('ya done goofed'))
-        end
-
-        it 'returns an UnprocessableEntity error' do
-          expect {
-            apps_controller.update(app_model.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'UnprocessableEntity'
-            expect(error.response_code).to eq(422)
-            expect(error.message).to match('ya done goofed')
+        context 'when the droplet was not found' do
+          before do
+            allow(AppUpdate).to receive(:update).and_raise(AppUpdate::DropletNotFound.new)
           end
-        end
-      end
 
-      context 'when the droplet was not found' do
-        before do
-          allow(apps_handler).to receive(:update).and_raise(AppsHandler::DropletNotFound)
-        end
-
-        it 'returns an NotFound error' do
-          expect {
-            apps_controller.update(app_model.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq(404)
+          it 'returns an NotFound error' do
+            expect {
+              apps_controller.update(app_model.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'ResourceNotFound'
+              expect(error.response_code).to eq(404)
+            end
           end
         end
       end
@@ -384,7 +402,7 @@ module VCAP::CloudController
                 space.add_developer(user)
               end
 
-              it 'raises an API 400 error' do
+              it 'raises an API 404 error' do
                 expect {
                   apps_controller.start(app_model.guid)
                 }.to raise_error do |error|
