@@ -77,7 +77,6 @@ require 'cloud_controller/dea/client'
 require 'cloud_controller/dea/respondent'
 
 require 'cloud_controller/diego/client'
-require 'cloud_controller/diego/service_registry'
 
 require 'cloud_controller/dea/stager_pool'
 

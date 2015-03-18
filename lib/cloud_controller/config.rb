@@ -221,6 +221,7 @@ module VCAP::CloudController
         optional(:dea_advertisement_timeout_in_seconds) => Integer,
 
         optional(:diego_docker) => bool,
+        optional(:diego_tps_url) => String,
         optional(:users_can_select_backend) => bool,
         optional(:default_to_diego_backend) => bool,
       }
@@ -254,7 +255,7 @@ module VCAP::CloudController
         legacy_hm_client = Dea::HM9000::LegacyClient.new(@message_bus, @config)
         hm_client = Dea::HM9000::Client.new(legacy_hm_client, @config)
         dependency_locator.register(:health_manager_client, hm_client)
-        diego_client = Diego::Client.new(Diego::ServiceRegistry.new(message_bus))
+        diego_client = Diego::Client.new(@config)
         dependency_locator.register(:diego_client, diego_client)
         dependency_locator.register(:upload_handler, UploadHandler.new(config))
         dependency_locator.register(:app_event_repository, Repositories::Runtime::AppEventRepository.new)
@@ -269,8 +270,6 @@ module VCAP::CloudController
         dependency_locator.register(:runners, runners)
         dependency_locator.register(:instances_reporters, InstancesReporters.new(diego_client, hm_client))
         dependency_locator.register(:index_stopper, IndexStopper.new(runners))
-
-        diego_client.connect!
 
         Dea::Client.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 

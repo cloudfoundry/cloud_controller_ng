@@ -151,6 +151,7 @@ cloud_controller_username_lookup_client_secret: 'username_lookup_secret'
 
 users_can_select_backend: true
 diego_docker: false
+diego_tps_url: http://tps.service.dc1.consul:1518
 
 renderer:
   max_results_per_page: 100

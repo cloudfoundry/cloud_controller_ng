@@ -2,36 +2,18 @@ require 'spec_helper'
 
 module VCAP::CloudController::Diego
   describe Client do
-    let(:service_registry) { double(:service_registry) }
     let(:app) { VCAP::CloudController::AppFactory.make }
-    subject(:client) { Client.new(service_registry) }
-
-    describe '#connect!' do
-      before do
-        allow(service_registry).to receive(:run!)
-      end
-
-      it 'runs the service_registry' do
-        client.connect!
-        expect(service_registry).to have_received(:run!)
-      end
-    end
+    subject(:client) { Client.new(TestConfig.config) }
 
     describe 'getting app instance information' do
-      context 'when there are tps addresses registered' do
-        before do
-          allow(service_registry).to receive(:tps_addrs).and_return(['http://some-tps-addr:5151'])
-        end
-
+      context 'when there is a tps url configured' do
         context 'and the first endpoint returns instance info' do
           before do
-            stub_request(:get, "http://some-tps-addr:5151/lrps/#{app.guid}-#{app.version}").to_return(
+            stub_request(:get, "http://tps.service.dc1.consul:1518/lrps/#{app.guid}-#{app.version}").to_return(
               status: 200,
               body: [{ process_guid: 'abc', instance_guid: '123', index: 0, state: 'running', since_in_ns: '1257894000000000001' },
                      { process_guid: 'abc', instance_guid: '456', index: 1, state: 'starting', since_in_ns: '1257895000000000001' },
                      { process_guid: 'abc', instance_guid: '789', index: 1, state: 'crashed', details: 'down-hard', since_in_ns: '1257896000000000001' }].to_json)
-
-            allow(service_registry).to receive(:tps_addrs).and_return(['http://some-tps-addr:5151'])
           end
 
           it "reports each instance's index, state, since, process_guid, instance_guid" do
@@ -44,18 +26,17 @@ module VCAP::CloudController::Diego
         end
 
         context 'when the TPS endpoint is unavailable' do
-          before do
-            stub_request(:get, "http://some-tps-addr:5151/lrps/#{app.guid}-#{app.version}").to_raise(Errno::ECONNREFUSED)
-          end
+          it 'retries and eventually raises Diego::Unavailable' do
+            stub = stub_request(:get, "http://tps.service.dc1.consul:1518/lrps/#{app.guid}-#{app.version}").to_raise(Errno::ECONNREFUSED)
 
-          it 'raises Diego::Unavailable' do
             expect { client.lrp_instances(app) }.to raise_error(Unavailable, /connection refused/i)
+            expect(stub).to have_been_requested.times(3)
           end
         end
 
         context 'when the TPS endpoint fails' do
           before do
-            stub_request(:get, "http://some-tps-addr:5151/lrps/#{app.guid}-#{app.version}").to_return(status: 500, body: ' ')
+            stub_request(:get, "http://tps.service.dc1.consul:1518/lrps/#{app.guid}-#{app.version}").to_return(status: 500, body: ' ')
           end
 
           it 'raises DiegoUnavailable' do
@@ -86,9 +67,9 @@ module VCAP::CloudController::Diego
         end
       end
 
-      context 'when there are no tps addresses registered' do
+      context 'when there is no tps url' do
         before do
-          allow(service_registry).to receive(:tps_addrs).and_return([])
+          TestConfig.override(diego_tps_url: nil)
         end
 
         it 'raises Diego::Unavailable' do

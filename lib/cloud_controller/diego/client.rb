@@ -4,30 +4,33 @@ require 'cloud_controller/diego/process_guid'
 module VCAP::CloudController
   module Diego
     class Client
-      def initialize(service_registry)
-        @service_registry = service_registry
-      end
-
-      def connect!
-        @service_registry.run!
+      def initialize(config)
+        @tps_url = config[:diego_tps_url]
       end
 
       def lrp_instances(app)
-        if @service_registry.tps_addrs.empty?
+        if @tps_url.nil?
           raise Unavailable
         end
 
-        address = @service_registry.tps_addrs.first
         guid = ProcessGuid.from_app(app)
 
-        uri = URI("#{address}/lrps/#{guid}")
-        logger.info "Requesting lrp information for #{guid} from #{address}"
+        uri = URI("#{@tps_url}/lrps/#{guid}")
+        logger.info "Requesting lrp information for #{guid} from #{@tps_url}"
+
 
         http = Net::HTTP.new(uri.host, uri.port)
         http.read_timeout = 10
         http.open_timeout = 10
 
-        response = http.get(uri.path)
+        begin
+          tries ||= 3
+          response = http.get(uri.path)
+        rescue Errno::ECONNREFUSED => e
+          retry unless(tries -= 1).zero?
+          raise Unavailable.new(e)
+        end
+
         raise Unavailable.new unless response.code == '200'
 
         logger.info "Received lrp response for #{guid}: #{response.body}"
@@ -50,8 +53,6 @@ module VCAP::CloudController
         logger.info "Returning lrp instances for #{guid}: #{result.inspect}"
 
         result
-      rescue Errno::ECONNREFUSED => e
-        raise Unavailable.new(e)
       end
 
       private

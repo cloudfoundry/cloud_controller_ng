@@ -12,14 +12,16 @@ module VCAP::CloudController
       end
     end
 
-    let(:url) { "/internal/apps/#{diego_app.guid}/crashed" }
+    let(:process_guid) { Diego::ProcessGuid.from(diego_app.guid, 'some-version-guid') }
+
+    let(:url) { "/internal/apps/#{process_guid}/crashed" }
 
     let(:crashed_request) do
       {
         'instance' => Sham.guid,
         'index' => 3,
         'exit_status' => 137,
-        'exit_description' => "description",
+        'exit_description' => 'description',
         'reason' => 'CRASHED'
       }
     end
@@ -96,7 +98,9 @@ module VCAP::CloudController
         end
       end
 
-      let(:url) { "/internal/apps/#{dea_app.guid}/crashed" }
+      let(:process_guid) { Diego::ProcessGuid.from(dea_app.guid, 'some-version-guid') }
+
+      let(:url) { "/internal/apps/#{process_guid}/crashed" }
 
       it 'fails with a 403' do
         post url, MultiJson.dump(crashed_request)
