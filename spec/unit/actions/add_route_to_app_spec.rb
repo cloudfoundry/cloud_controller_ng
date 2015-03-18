@@ -21,6 +21,30 @@ module VCAP::CloudController
           add_route_to_app.add(route)
           expect(process.reload.routes).to eq([route])
         end
+
+        it 'notifies the dea if the process is started and staged' do
+          process.update(state: 'STARTED')
+          process.update(package_state: 'STAGED')
+          expect(Dea::Client).to receive(:update_uris).with(process)
+          add_route_to_app.add(route)
+          expect(process.reload.routes).to eq([route])
+        end
+
+        it 'does not notify the dea if the process not started' do
+          process.update(state: 'STOPPED')
+          process.update(package_state: 'STAGED')
+          expect(Dea::Client).not_to receive(:update_uris).with(process)
+          add_route_to_app.add(route)
+          expect(process.reload.routes).to eq([route])
+        end
+
+        it 'does not notify the dea if the process not staged' do
+          process.update(state: 'STARTED')
+          process.update(package_state: 'PENDING')
+          expect(Dea::Client).not_to receive(:update_uris).with(process)
+          add_route_to_app.add(route)
+          expect(process.reload.routes).to eq([route])
+        end
       end
     end
   end

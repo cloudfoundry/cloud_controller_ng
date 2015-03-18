@@ -9,9 +9,9 @@ resource 'App Routes (Experimental)', type: :api do
 
   def do_request_with_error_handling
     do_request
-    if response_status == 500
+    if response_status > 399
       error = MultiJson.load(response_body)
-      ap error
+      ap({ response_status: response_status, error: error })
       raise error['description']
     end
   end
@@ -29,8 +29,8 @@ resource 'App Routes (Experimental)', type: :api do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      VCAP::CloudController::AppModelRoute.create(apps_v3_id: app_model.id, route_id: route1.id, type: 'web')
-      VCAP::CloudController::AppModelRoute.create(apps_v3_id: app_model.id, route_id: route2.id, type: 'web')
+      VCAP::CloudController::AddRouteToApp.new(app_model).add(route1)
+      VCAP::CloudController::AddRouteToApp.new(app_model).add(route2)
     end
 
     example 'List routes' do
@@ -86,7 +86,7 @@ resource 'App Routes (Experimental)', type: :api do
       app_model.add_process(worker_process)
     end
 
-    example 'Add a Route' do
+    example 'Map a Route' do
       expect {
         do_request_with_error_handling
       }.not_to change { VCAP::CloudController::App.count }
@@ -95,6 +95,39 @@ resource 'App Routes (Experimental)', type: :api do
       expect(app_model.routes).to eq([route])
       expect(web_process.reload.routes).to eq([route])
       expect(worker_process.reload.routes).to be_empty
+    end
+  end
+
+  delete '/v3/apps/:guid/routes' do
+    parameter :route_guid, 'GUID of the route', required: true
+
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+
+    let!(:route1) { VCAP::CloudController::Route.make(space_guid: space_guid) }
+    let!(:route2) { VCAP::CloudController::Route.make(space_guid: space_guid) }
+
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let!(:web_process) { VCAP::CloudController::AppFactory.make(space_guid: space_guid, type: 'web') }
+    let(:guid) { app_model.guid }
+
+    let(:route_guid) { route1.guid }
+    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      app_model.add_process(web_process)
+      VCAP::CloudController::AddRouteToApp.new(app_model).add(route1)
+      VCAP::CloudController::AddRouteToApp.new(app_model).add(route2)
+    end
+
+    example 'Unmap a Route' do
+      do_request_with_error_handling
+      expect(response_status).to eq(204)
+      app_model.refresh
+      expect(app_model.routes).to eq([route2])
+      expect(web_process.routes).to eq([route2])
     end
   end
 end
