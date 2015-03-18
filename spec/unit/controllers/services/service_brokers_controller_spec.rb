@@ -172,7 +172,7 @@ module VCAP::CloudController
 
           it 'returns a 400 error' do
             post '/v2/service_brokers', body, headers
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_status_code(400)
             expect(decoded_response.fetch('code')).to eq(270011)
           end
         end
@@ -186,7 +186,7 @@ module VCAP::CloudController
             stub_catalog
             post '/v2/service_brokers', body, headers
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_status_code(400)
             expect(decoded_response.fetch('code')).to eq(270003)
           end
         end
@@ -200,7 +200,7 @@ module VCAP::CloudController
             stub_catalog
             post '/v2/service_brokers', body, headers
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_status_code(400)
             expect(decoded_response.fetch('code')).to eq(270002)
           end
         end
@@ -391,7 +391,7 @@ module VCAP::CloudController
           it 'returns 404' do
             put '/v2/service_brokers/nonexistent', body, headers
 
-            expect(last_response.status).to eq(HTTP::NOT_FOUND)
+            expect(last_response).to have_status_code(HTTP::NOT_FOUND)
           end
         end
 
@@ -490,7 +490,7 @@ module VCAP::CloudController
 
         describe 'authentication' do
           it 'returns a forbidden status for non-admin users' do
-            put "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers
+            put "/v2/service_brokers/#{broker.guid}", body, non_admin_headers
             expect(last_response).to be_forbidden
           end
         end

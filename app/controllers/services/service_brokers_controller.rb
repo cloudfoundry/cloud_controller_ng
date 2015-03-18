@@ -1,4 +1,6 @@
 require 'presenters/api/service_broker_presenter'
+require 'controllers/services/lifecycle/broker_instance_provisioner'
+require 'controllers/services/lifecycle/broker_instance_updater'
 
 module VCAP::CloudController
   # This controller is an experiment breaking away from the old
@@ -25,49 +27,32 @@ module VCAP::CloudController
     end
 
     def create
-      validate_access(:create, ServiceBroker)
+      provisioner = BrokerInstanceProvisioner.new(
+        @service_manager,
+        @services_event_repository,
+        self,
+        self
+      )
       params = CreateMessage.decode(body).extract
-      broker = ServiceBroker.new(params)
 
-      registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager, @services_event_repository)
-
-      unless registration.create
-        raise get_exception_from_errors(registration)
-      end
-
-      @services_event_repository.record_broker_event(:create, broker, params)
-
-      if !registration.warnings.empty?
-        registration.warnings.each { |warning| add_warning(warning) }
-      end
+      broker = provisioner.create_broker_instance(params)
 
       headers = { 'Location' => url_of(broker) }
       body = ServiceBrokerPresenter.new(broker).to_json
+
       [HTTP::CREATED, headers, body]
     end
 
     def update(guid)
-      validate_access(:update, ServiceBroker)
+      updater = BrokerInstanceUpdater.new(
+        @service_manager,
+        @services_event_repository,
+        self,
+        self
+      )
       params = UpdateMessage.decode(body).extract
-      broker = ServiceBroker.find(guid: guid)
+      broker = updater.update_broker_instance(guid, params)
       return HTTP::NOT_FOUND unless broker
-
-      ServiceBroker.db.transaction do
-        old_broker = broker.clone
-        broker.set(params)
-        registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager, @services_event_repository)
-
-        unless registration.update
-          raise get_exception_from_errors(registration)
-        end
-
-        @services_event_repository.record_broker_event(:update, old_broker, params)
-
-        if !registration.warnings.empty?
-          registration.warnings.each { |warning| add_warning(warning) }
-        end
-      end
-
       body = ServiceBrokerPresenter.new(broker).to_json
       [HTTP::OK, {}, body]
     end
@@ -102,23 +87,6 @@ module VCAP::CloudController
 
     def url_of(broker)
       "#{self.class.path}/#{broker.guid}"
-    end
-
-    def get_exception_from_errors(registration)
-      errors = registration.errors
-      broker = registration.broker
-
-      if errors.on(:broker_url) && errors.on(:broker_url).include?(:url)
-        Errors::ApiError.new_from_details('ServiceBrokerUrlInvalid', broker.broker_url)
-      elsif errors.on(:broker_url) && errors.on(:broker_url).include?(:unique)
-        Errors::ApiError.new_from_details('ServiceBrokerUrlTaken', broker.broker_url)
-      elsif errors.on(:name) && errors.on(:name).include?(:unique)
-        Errors::ApiError.new_from_details('ServiceBrokerNameTaken', broker.name)
-      elsif errors.on(:services)
-        Errors::ApiError.new_from_details('ServiceBrokerInvalid', errors.on(:services))
-      else
-        Errors::ApiError.new_from_details('ServiceBrokerInvalid', errors.full_messages)
-      end
     end
   end
 end
