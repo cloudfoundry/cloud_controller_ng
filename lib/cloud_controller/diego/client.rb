@@ -18,7 +18,6 @@ module VCAP::CloudController
         uri = URI("#{@tps_url}/lrps/#{guid}")
         logger.info "Requesting lrp information for #{guid} from #{@tps_url}"
 
-
         http = Net::HTTP.new(uri.host, uri.port)
         http.read_timeout = 10
         http.open_timeout = 10
@@ -27,7 +26,7 @@ module VCAP::CloudController
           tries ||= 3
           response = http.get(uri.path)
         rescue Errno::ECONNREFUSED => e
-          retry unless(tries -= 1).zero?
+          retry unless (tries -= 1).zero?
           raise Unavailable.new(e)
         end
 
