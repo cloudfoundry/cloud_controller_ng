@@ -1,6 +1,8 @@
 require 'cloud_controller/diego/traditional/buildpack_entry_generator'
 require 'cloud_controller/diego/environment'
 require 'cloud_controller/diego/process_guid'
+require 'cloud_controller/diego/staging_request'
+require 'cloud_controller/diego/traditional/lifecycle_data'
 
 module VCAP::CloudController
   module Diego
@@ -25,22 +27,27 @@ module VCAP::CloudController
         end
 
         def stage_app_message(app, staging_config)
-          {
-            'app_id' => app.guid,
-            'task_id' => app.staging_task_id,
-            'memory_mb' => [app.memory, staging_config[:minimum_staging_memory_mb]].max,
-            'disk_mb' => [app.disk_quota, staging_config[:minimum_staging_disk_mb]].max,
-            'file_descriptors' => [app.file_descriptors, staging_config[:minimum_staging_file_descriptor_limit]].max,
-            'environment' => Environment.new(app).as_json,
-            'stack' => app.stack.name,
-            'buildpacks' => @buildpack_entry_generator.buildpack_entries(app),
-            'app_bits_download_uri' => @blobstore_url_generator.app_package_download_url(app),
-            'droplet_upload_uri' => @blobstore_url_generator.droplet_upload_url(app),
-            'build_artifacts_cache_download_uri' => @blobstore_url_generator.buildpack_cache_download_url(app),
-            'build_artifacts_cache_upload_uri' => @blobstore_url_generator.buildpack_cache_upload_url(app),
-            'egress_rules' => @common_protocol.staging_egress_rules,
-            'timeout' => staging_config[:timeout_in_seconds],
-          }
+          lifecycle_data = LifecycleData.new
+          lifecycle_data.app_bits_download_uri = @blobstore_url_generator.app_package_download_url(app)
+          lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(app)
+          lifecycle_data.build_artifacts_cache_upload_uri = @blobstore_url_generator.buildpack_cache_upload_url(app)
+          lifecycle_data.droplet_upload_uri = @blobstore_url_generator.droplet_upload_url(app)
+          lifecycle_data.buildpacks = @buildpack_entry_generator.buildpack_entries(app)
+
+          staging_request = StagingRequest.new
+          staging_request.app_id = app.guid
+          staging_request.log_guid = app.guid
+          staging_request.environment = Environment.new(app).as_json
+          staging_request.memory_mb = [app.memory, staging_config[:minimum_staging_memory_mb]].max
+          staging_request.disk_mb = [app.disk_quota, staging_config[:minimum_staging_disk_mb]].max
+          staging_request.file_descriptors = [app.file_descriptors, staging_config[:minimum_staging_file_descriptor_limit]].max
+          staging_request.stack = app.stack.name
+          staging_request.egress_rules = @common_protocol.staging_egress_rules
+          staging_request.timeout = staging_config[:timeout_in_seconds]
+          staging_request.lifecycle = 'buildpack'
+          staging_request.lifecycle_data = lifecycle_data.message
+
+          staging_request.message
         end
 
         def desire_app_message(app, default_health_check_timeout)
