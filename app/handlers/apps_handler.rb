@@ -36,7 +36,7 @@ module VCAP::CloudController
       raise MultiJson::ParseError.new('invalid request body') unless opts.is_a?(Hash)
       AppCreateMessage.new(opts)
     rescue MultiJson::ParseError => e
-      message = AppCreateMessage.new({})
+      message       = AppCreateMessage.new({})
       message.error = e.message
       message
     end
@@ -56,14 +56,14 @@ module VCAP::CloudController
       raise MultiJson::ParseError.new('invalid request body') unless opts.is_a?(Hash)
       AppUpdateMessage.new(opts.merge('guid' => guid))
     rescue MultiJson::ParseError => e
-      message = AppUpdateMessage.new({})
+      message       = AppUpdateMessage.new({})
       message.error = e.message
       message
     end
 
     def initialize(opts)
-      @guid = opts['guid']
-      @name = opts['name']
+      @guid                 = opts['guid']
+      @name                 = opts['name']
       @desired_droplet_guid = opts['desired_droplet_guid']
     end
   end
@@ -78,11 +78,11 @@ module VCAP::CloudController
     class IncorrectPackageSpace < StandardError; end
 
     def initialize(packages_handler, droplets_handler, processes_handler, paginator=SequelPaginator.new, apps_repository=AppsRepository.new)
-      @packages_handler = packages_handler
-      @droplets_handler = droplets_handler
+      @packages_handler  = packages_handler
+      @droplets_handler  = droplets_handler
       @processes_handler = processes_handler
-      @paginator = paginator
-      @apps_repository = apps_repository
+      @paginator         = paginator
+      @apps_repository   = apps_repository
     end
 
     def show(guid, access_context)
@@ -103,7 +103,7 @@ module VCAP::CloudController
       app.space_guid = message.space_guid
 
       raise InvalidApp.new('Space was not found') if Space.find(guid: message.space_guid).nil?
-      raise Unauthorized if access_context.cannot?(:create,  app)
+      raise Unauthorized if access_context.cannot?(:create, app)
 
       app.save
       app
@@ -154,13 +154,16 @@ module VCAP::CloudController
 
         app.add_process_by_guid(process.guid)
         route = app.routes_dataset.where(type: process.type).first
-        process.add_route(route) unless route.nil?
+        unless route.nil?
+          real_process = App.find(guid: process.guid)
+          real_process.add_route(route)
+        end
       end
     end
 
     def update_web_process_name(process, name, access_context)
       opts = { 'name' => name }
-      msg = ProcessUpdateMessage.new(process.guid, opts)
+      msg  = ProcessUpdateMessage.new(process.guid, opts)
       @processes_handler.update(msg, access_context)
     end
 
