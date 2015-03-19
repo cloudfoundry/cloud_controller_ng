@@ -40,9 +40,9 @@ module VCAP::CloudController
 
     let(:staging_response) do
       {
-        'buildpack_key' => buildpack_key,
-        'detected_buildpack' => detected_buildpack,
-        'execution_metadata' => execution_metadata
+        buildpack_key: buildpack_key,
+        detected_buildpack: detected_buildpack,
+        execution_metadata: execution_metadata
       }
     end
 

@@ -54,7 +54,7 @@ module VCAP::CloudController
       staging_response = {}
       begin
         payload = body.read
-        staging_response = MultiJson.load(payload)
+        staging_response = MultiJson.load(payload, symbolize_keys: true)
       rescue MultiJson::ParseError => pe
         logger.error('diego.staging.parse-error', payload: payload, error: pe.to_s)
         raise Errors::ApiError.new_from_details('MessageParseError', payload)
