@@ -23,6 +23,15 @@ module VCAP::CloudController
       def max_attempts
         1
       end
+
+      def timeout_error
+        if @delete_action.respond_to?(:timeout_error)
+          dataset = @model_class.where(guid: @guid)
+          @delete_action.timeout_error(dataset)
+        else
+          VCAP::Errors::ApiError.new_from_details('JobTimeout')
+        end
+      end
     end
   end
 end

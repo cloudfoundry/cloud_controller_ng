@@ -5,7 +5,7 @@ module VCAP::CloudController
     describe DeleteActionJob do
       let(:user) { User.make(admin: true) }
       let(:delete_action) { SpaceDelete.new(user.id, 'admin@example.com') }
-      let(:space) { Space.make }
+      let(:space) { Space.make(name: Sham.guid) }
 
       subject(:job) { DeleteActionJob.new(Space, space.guid, delete_action) }
 
@@ -19,6 +19,23 @@ module VCAP::CloudController
 
       it 'knows its job name' do
         expect(job.job_name_in_configuration).to equal(:delete_action_job)
+      end
+
+      context 'when deleting a space' do
+        it 'has a custom timeout API error message' do
+          expect(job.timeout_error).to be_a(VCAP::Errors::ApiError)
+          expect(job.timeout_error.message).to eq("Deletion of space #{space.name} timed out before all resources within could be deleted")
+        end
+      end
+
+      context 'when not deleting a space' do
+        let(:app) { AppFactory.make }
+        subject(:job) { DeleteActionJob.new(App, app.guid, AppDelete.new(user.id, 'admin@example.com')) }
+
+        it 'does not have a custom error message' do
+          expect(job.timeout_error).to be_a(VCAP::Errors::ApiError)
+          expect(job.timeout_error.message).to eq('The job execution has timed out.')
+        end
       end
 
       context 'when the delete action fails with one error' do
