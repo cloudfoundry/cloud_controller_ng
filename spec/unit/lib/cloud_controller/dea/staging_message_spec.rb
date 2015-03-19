@@ -53,6 +53,8 @@ module VCAP::CloudController
           expect(request[:properties][:buildpack_key]).to eq('buildpack_key')
           expect(request[:properties][:buildpack_git_url]).to eq('http://git.url')
           expect(request[:stack]).to eq('trusty32')
+          expect(request[:memory_limit]).to eq(memory_limit)
+          expect(request[:disk_limit]).to eq(disk_limit)
         end
 
         it 'includes egress security group staging information by aggregating all sg with staging_default=true' do

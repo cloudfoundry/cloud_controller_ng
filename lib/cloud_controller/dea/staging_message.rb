@@ -94,6 +94,8 @@ module VCAP::CloudController
           buildpack_cache_upload_uri:   @blobstore_url_generator.package_buildpack_cache_upload_url(@package),
           buildpack_cache_download_uri: @blobstore_url_generator.package_buildpack_cache_download_url(@package),
           admin_buildpacks:             admin_buildpacks,
+          memory_limit:                 memory_limit,
+          disk_limit:                   disk_limit,
           egress_network_rules:         staging_egress_rules,
           properties:                   {
             buildpack_key:     buildpack_key,
