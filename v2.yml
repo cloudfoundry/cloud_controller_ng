@@ -633,6 +633,11 @@
   http_code: 524
   message: "The job execution has timed out."
 
+290007:
+  name: SpaceDeleteTimeout
+  http_code: 524
+  message: "Deletion of space %s timed out before all resources within could be deleted"
+
 300001:
   name: SecurityGroupInvalid
   http_code: 400
