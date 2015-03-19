@@ -5,8 +5,8 @@ module VCAP::CloudController::Diego
     let(:app) do
       app = VCAP::CloudController::AppFactory.make
       app.environment_json = {
-        APP_KEY1: 'APP_VAL1',
-        APP_KEY2: 'APP_VAL2',
+        'APP_KEY1' => 'APP_VAL1',
+        'APP_KEY2' => 'APP_VAL2',
       }
       app
     end

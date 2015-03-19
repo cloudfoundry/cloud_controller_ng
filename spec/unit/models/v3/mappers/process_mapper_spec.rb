@@ -44,7 +44,7 @@ module VCAP::CloudController
           'buildpack'            => 'buildpack',
           'health_check_timeout' => 3,
           'docker_image'         => 'docker_image',
-          'environment_json'     => 'env_json',
+          'environment_json'     => { 'env' => 'json' },
           'type'                 => 'worker'
         }
       end
@@ -67,7 +67,7 @@ module VCAP::CloudController
         expect(model.buildpack.url).to eq('buildpack')
         expect(model.health_check_timeout).to eq(3)
         expect(model.docker_image).to eq('docker_image:latest')
-        expect(model.environment_json).to eq('env_json')
+        expect(model.environment_json).to eq({ 'env' => 'json' })
         expect(model.type).to eq('worker')
       end
 
@@ -89,7 +89,7 @@ module VCAP::CloudController
           expect(model.buildpack.url).to eq('buildpack')
           expect(model.health_check_timeout).to eq(3)
           expect(model.docker_image).to eq('docker_image:latest')
-          expect(model.environment_json).to eq('env_json')
+          expect(model.environment_json).to eq({ 'env' => 'json' })
           expect(model.type).to eq('worker')
         end
       end
@@ -128,7 +128,7 @@ module VCAP::CloudController
           'buildpack'            => 'buildpack',
           'health_check_timeout' => 3,
           'docker_image'         => 'docker_image',
-          'environment_json'     => 'env_json',
+          'environment_json'     => { 'env' => 'json' },
           'type'                 => 'worker'
         }
       end
@@ -150,7 +150,7 @@ module VCAP::CloudController
         expect(model.buildpack.url).to eq('buildpack')
         expect(model.health_check_timeout).to eq(3)
         expect(model.docker_image).to eq('docker_image:latest')
-        expect(model.environment_json).to eq('env_json')
+        expect(model.environment_json).to eq({ 'env' => 'json' })
         expect(model.type).to eq('worker')
       end
 

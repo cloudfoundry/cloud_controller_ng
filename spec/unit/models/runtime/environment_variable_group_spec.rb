@@ -6,11 +6,6 @@ module VCAP::CloudController
 
     it { is_expected.to have_timestamp_columns }
 
-    it_behaves_like 'a model with an encrypted attribute' do
-      let(:encrypted_attr) { :environment_json }
-      let(:attr_salt) { :salt }
-    end
-
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :environment_json }
       it { is_expected.to import_attributes :environment_json }

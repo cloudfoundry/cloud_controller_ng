@@ -24,7 +24,7 @@ module VCAP::CloudController
 
     it 'is encrypted before being written to the database' do
       saved_attribute = last_row[storage_column]
-      expect(saved_attribute).not_to include value_to_encrypt
+      expect(saved_attribute).not_to include YAML.dump(value_to_encrypt)
     end
 
     it 'is decrypted when it is read from the database' do
