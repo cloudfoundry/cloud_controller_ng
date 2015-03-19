@@ -14,7 +14,7 @@ module VCAP::CloudController
       AppModel.make(name: app_1.name, space_guid: space_3.guid)
     end
 
-    it 'filters by faccess_contextets' do
+    it 'filters by access_context' do
       access_context = double(:access_context, roles: double(:roles, admin?: true))
       apps_repository = AppsRepository.new
 
@@ -23,7 +23,8 @@ module VCAP::CloudController
         'space_guids' => [space_1.guid, space_2.guid]
       }).all
 
-      expect(apps).to eq([app_1, app_2])
+      expect(apps.length).to eq(2)
+      expect(apps).to include(app_1, app_2)
     end
 
     it 'filters by orgs' do

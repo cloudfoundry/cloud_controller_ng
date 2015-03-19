@@ -9,10 +9,28 @@ module VCAP::CloudController
     one_to_many :packages, class: 'VCAP::CloudController::PackageModel', key: :app_guid, primary_key: :guid
     one_to_many :droplets, class: 'VCAP::CloudController::DropletModel', key: :app_guid, primary_key: :guid
 
+    encrypt :environment_variables, salt: :salt, column: :encrypted_environment_variables
+
     def validate
       validates_presence :name
       validates_unique [:space_guid, :name]
       validates_format APP_NAME_REGEX, :name
+      validate_environment_variables
+    end
+
+    def validate_environment_variables
+      return unless environment_variables
+      keys = environment_variables.keys
+      keys.each do |key|
+        key = key.to_s
+        if key =~ /^CF_/i
+          errors.add(:environment_variables, 'cannot start with CF_')
+        elsif key =~ /^VCAP_/i
+          errors.add(:environment_variables, 'cannot start with VCAP_')
+        elsif key == 'PORT'
+          errors.add(:environment_variables, 'cannot set PORT')
+        end
+      end
     end
 
     def self.user_visible(user)

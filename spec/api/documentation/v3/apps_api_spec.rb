@@ -203,9 +203,16 @@ resource 'Apps (Experimental)', type: :api do
 
     parameter :name, 'Name of the App'
     parameter :desired_droplet_guid, 'GUID of the Droplet to be used for the App'
+    parameter :environment_variables, 'Environment variables to be used for the App when running'
 
     let(:name) { 'new_name' }
     let(:desired_droplet_guid) { droplet.guid }
+    let(:environment_variables) do
+      {
+        'MY_ENV_VAR' => 'foobar',
+        'FOOBAR' => 'MY_ENV_VAR'
+      }
+    end
     let(:guid) { app_model.guid }
 
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
@@ -217,6 +224,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => name,
         'guid'   => app_model.guid,
         'desired_state' => app_model.desired_state,
+        'environment_variables' => environment_variables,
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },

@@ -47,6 +47,43 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'encrypting a hash' do
+      let(:input) { { a: 'hash' } }
+      let!(:encrypted_string) { Encryptor.encrypt(input, salt) }
+
+      it 'returns an encrypted string' do
+        expect(encrypted_string).to match(/\w+/)
+        expect(encrypted_string).not_to include(YAML.dump(input))
+      end
+
+      it 'is deterministic' do
+        expect(Encryptor.encrypt(input, salt)).to eql(encrypted_string)
+      end
+
+      it 'depends on the salt' do
+        expect(Encryptor.encrypt(input, Encryptor.generate_salt)).not_to eql(encrypted_string)
+      end
+
+      it 'depends on the db_encryption_key from the CC config file' do
+        allow(VCAP::CloudController::Encryptor).to receive(:db_encryption_key).and_return('a-totally-different-key')
+        expect(Encryptor.encrypt(input, salt)).not_to eql(encrypted_string)
+      end
+
+      it 'does not encrypt null values' do
+        expect(Encryptor.encrypt(nil, salt)).to be_nil
+      end
+
+      describe 'decrypting the hash' do
+        it 'returns the original hash' do
+          expect(Encryptor.decrypt(encrypted_string, salt)).to eq(input)
+        end
+
+        it 'returns nil if the encrypted input is nil' do
+          expect(Encryptor.decrypt(nil, salt)).to be_nil
+        end
+      end
+    end
   end
 
   describe Encryptor::FieldEncryptor do
