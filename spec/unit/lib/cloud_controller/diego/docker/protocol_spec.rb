@@ -31,7 +31,7 @@ module VCAP::CloudController
           it 'includes a subject and message for CfMessageBus::MessageBus#publish' do
             expect(request.size).to eq(2)
             expect(request.first).to eq('diego.docker.staging.start')
-            expect(request.last).to match_json(protocol.stage_app_message(app, staging_config))
+            expect(request.last).to eq(protocol.stage_app_message(app, staging_config).to_json)
           end
         end
 
@@ -51,15 +51,19 @@ module VCAP::CloudController
 
           it 'contains the correct payload for staging a Docker app' do
             expect(message).to eq({
-              'app_id' => app.guid,
-              'task_id' => app.staging_task_id,
-              'memory_mb' => app.memory,
-              'disk_mb' => app.disk_quota,
-              'file_descriptors' => app.file_descriptors,
-              'stack' => app.stack.name,
-              'docker_image' => app.docker_image,
-              'egress_rules' => ['staging_egress_rule'],
-              'timeout' => 90,
+              app_id: app.guid,
+              log_guid: app.guid,
+              environment: Environment.new(app).as_json,
+              memory_mb: app.memory,
+              disk_mb: app.disk_quota,
+              file_descriptors: app.file_descriptors,
+              stack: app.stack.name,
+              egress_rules: ['staging_egress_rule'],
+              timeout: 90,
+              lifecycle: 'docker',
+              lifecycle_data: {
+                docker_image: app.docker_image,
+              },
             })
           end
 
@@ -71,7 +75,7 @@ module VCAP::CloudController
             end
 
             it 'uses the minimum staging memory' do
-              expect(message['memory_mb']).to eq(staging_config[:minimum_staging_memory_mb])
+              expect(message[:memory_mb]).to eq(staging_config[:minimum_staging_memory_mb])
             end
           end
 
@@ -83,7 +87,7 @@ module VCAP::CloudController
             end
 
             it 'includes the fields needed to stage a Docker app' do
-              expect(message['disk_mb']).to eq(staging_config[:minimum_staging_disk_mb])
+              expect(message[:disk_mb]).to eq(staging_config[:minimum_staging_disk_mb])
             end
           end
 
@@ -95,7 +99,7 @@ module VCAP::CloudController
             end
 
             it 'includes the fields needed to stage a Docker app' do
-              expect(message['file_descriptors']).to eq(staging_config[:minimum_staging_file_descriptor_limit])
+              expect(message[:file_descriptors]).to eq(staging_config[:minimum_staging_file_descriptor_limit])
             end
           end
         end

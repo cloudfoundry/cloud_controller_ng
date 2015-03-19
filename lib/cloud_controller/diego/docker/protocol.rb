@@ -1,5 +1,7 @@
 require 'cloud_controller/diego/environment'
 require 'cloud_controller/diego/process_guid'
+require 'cloud_controller/diego/staging_request'
+require 'cloud_controller/diego/docker/lifecycle_data'
 
 module VCAP::CloudController
   module Diego
@@ -14,17 +16,23 @@ module VCAP::CloudController
         end
 
         def stage_app_message(app, staging_config)
-          {
-            'app_id' => app.guid,
-            'task_id' => app.staging_task_id,
-            'memory_mb' => [app.memory, staging_config[:minimum_staging_memory_mb]].max,
-            'disk_mb' => [app.disk_quota, staging_config[:minimum_staging_disk_mb]].max,
-            'file_descriptors' => [app.file_descriptors, staging_config[:minimum_staging_file_descriptor_limit]].max,
-            'stack' => app.stack.name,
-            'docker_image' => app.docker_image,
-            'egress_rules' => @common_protocol.staging_egress_rules,
-            'timeout' => staging_config[:timeout_in_seconds],
-          }
+          lifecycle_data = LifecycleData.new
+          lifecycle_data.docker_image = app.docker_image
+
+          staging_request = StagingRequest.new
+          staging_request.app_id = app.guid
+          staging_request.log_guid = app.guid
+          staging_request.environment = Environment.new(app).as_json
+          staging_request.memory_mb = [app.memory, staging_config[:minimum_staging_memory_mb]].max
+          staging_request.disk_mb = [app.disk_quota, staging_config[:minimum_staging_disk_mb]].max
+          staging_request.file_descriptors = [app.file_descriptors, staging_config[:minimum_staging_file_descriptor_limit]].max
+          staging_request.stack = app.stack.name
+          staging_request.egress_rules = @common_protocol.staging_egress_rules
+          staging_request.timeout = staging_config[:timeout_in_seconds]
+          staging_request.lifecycle = 'docker'
+          staging_request.lifecycle_data = lifecycle_data.message
+
+          staging_request.message
         end
 
         def desire_app_request(app, default_health_check_timeout)
