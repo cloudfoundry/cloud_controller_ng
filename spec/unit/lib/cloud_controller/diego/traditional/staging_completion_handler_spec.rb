@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'cloud_controller/diego/staging_guid'
 
 module VCAP::CloudController
   describe Diego::Traditional::StagingCompletionHandler do
@@ -6,6 +7,7 @@ module VCAP::CloudController
     let(:staged_app) { App.make(instances: 3, staging_task_id: 'the-staging-task-id', diego: diego) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
     let(:app_id) { staged_app.guid }
+    let(:staging_guid) { Diego::StagingGuid.from_app(staged_app) }
     let(:buildpack) { Buildpack.make }
 
     let(:success_response) do
@@ -51,7 +53,7 @@ module VCAP::CloudController
     end
 
     def handle_staging_result(response)
-      subject.staging_complete(response)
+      subject.staging_complete(staging_guid, response)
     end
 
     describe 'success cases' do

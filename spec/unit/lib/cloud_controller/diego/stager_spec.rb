@@ -40,18 +40,17 @@ module VCAP::CloudController
       end
 
       describe '#staging_complete' do
-        let(:staging_response) do
-          { app_id: 'app-id', task_id: 'task_id' }
-        end
+        let(:staging_guid) { 'a-staging-guid' }
+        let(:staging_response) { { app_id: 'app-id' } }
 
         before do
           allow(completion_handler).to receive(:staging_complete)
 
-          stager.staging_complete(staging_response)
+          stager.staging_complete(staging_guid, staging_response)
         end
 
         it 'delegates to the staging completion handler' do
-          expect(completion_handler).to have_received(:staging_complete).with(staging_response)
+          expect(completion_handler).to have_received(:staging_complete).with(staging_guid, staging_response)
         end
       end
     end

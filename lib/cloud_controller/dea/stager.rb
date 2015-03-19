@@ -46,7 +46,7 @@ module VCAP::CloudController
         end
       end
 
-      def staging_complete(_)
+      def staging_complete(_, _)
         raise NotImplementedError
       end
 

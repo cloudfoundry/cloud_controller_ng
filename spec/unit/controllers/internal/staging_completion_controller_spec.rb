@@ -1,10 +1,9 @@
 require 'spec_helper'
 require 'membrane'
+require 'cloud_controller/diego/staging_guid'
 
 module VCAP::CloudController
   describe StagingCompletionController do
-    let(:url) { '/internal/staging/completed' }
-
     let(:stager) { instance_double(Diego::Stager, staging_complete: nil) }
 
     let(:buildpack) { Buildpack.make }
@@ -13,7 +12,7 @@ module VCAP::CloudController
       AppFactory.make.tap do |app|
         app.package_state = 'PENDING'
         app.state = 'STARTED'
-        app.staging_task_id = 'task-1'
+        app.staging_task_id = Sham.guid
         app.diego = true
         app.save
       end
@@ -23,22 +22,24 @@ module VCAP::CloudController
       AppFactory.make.tap do |app|
         app.package_state = 'PENDING'
         app.state = 'STARTED'
-        app.staging_task_id = 'task-1'
+        app.staging_task_id = Sham.guid
         app.save
       end
     end
+
     let(:staged_app) { make_diego_app }
 
     let(:app_id) { staged_app.guid }
     let(:task_id) { staged_app.staging_task_id }
+    let(:staging_guid) { Diego::StagingGuid.from_app(staged_app) }
     let(:buildpack_key) { buildpack.key }
     let(:detected_buildpack) { 'detected_buildpack' }
     let(:execution_metadata) { 'execution_metadata' }
 
+    let(:url) { "/internal/staging/#{staging_guid}/completed" }
+
     let(:staging_response) do
       {
-        'app_id' => app_id,
-        'task_id' => task_id,
         'buildpack_key' => buildpack_key,
         'detected_buildpack' => detected_buildpack,
         'execution_metadata' => execution_metadata
@@ -87,11 +88,19 @@ module VCAP::CloudController
           expect(last_response.body).to match /MessageParseError/
         end
       end
+
+      context 'with an invalid staging guid' do
+        let(:task_id) { 'bogus-taskid' }
+
+        it 'fails with a 400' do
+          post url, MultiJson.dump(staging_response)
+        end
+      end
     end
 
     context 'with a diego app' do
-      it 'calls the stager with the staging response' do
-        expect(stager).to receive(:staging_complete).with(staging_response)
+      it 'calls the stager with the staging guid and response' do
+        expect(stager).to receive(:staging_complete).with(staging_guid, staging_response)
 
         post url, MultiJson.dump(staging_response)
         expect(last_response.status).to eq(200)

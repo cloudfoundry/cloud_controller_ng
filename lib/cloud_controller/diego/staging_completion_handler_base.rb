@@ -7,7 +7,7 @@ module VCAP::CloudController
         @logger_prefix = logger_prefix
       end
 
-      def staging_complete(payload)
+      def staging_complete(staging_guid, payload)
         logger.info(@logger_prefix + 'finished', response: payload)
 
         if payload['error']

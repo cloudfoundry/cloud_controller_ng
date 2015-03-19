@@ -25,17 +25,17 @@ module VCAP::CloudController
       @stagers = dependencies.fetch(:stagers)
     end
 
-    post '/internal/staging/completed', :completed
+    post '/internal/staging/:staging_guid/completed', :completed
 
-    def completed
+    def completed(staging_guid)
       staging_response = read_body
 
-      app = App.find(guid: staging_response['app_id'])
+      app = App.find(guid: Diego::StagingGuid.app_guid(staging_guid))
       raise Errors::ApiError.new_from_details('NotFound') unless app
       raise Errors::ApiError.new_from_details('StagingBackendInvalid') unless app.diego?
 
       begin
-        stagers.stager_for_app(app).staging_complete(staging_response)
+        stagers.stager_for_app(app).staging_complete(staging_guid, staging_response)
       rescue Errors::ApiError => api_err
         raise api_err
       rescue => e

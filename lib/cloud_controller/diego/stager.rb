@@ -21,8 +21,8 @@ module VCAP::CloudController
         @messenger.send_stage_request(@app, @staging_config)
       end
 
-      def staging_complete(staging_response)
-        @completion_handler.staging_complete(staging_response)
+      def staging_complete(staging_guid, staging_response)
+        @completion_handler.staging_complete(staging_guid, staging_response)
       end
     end
   end
