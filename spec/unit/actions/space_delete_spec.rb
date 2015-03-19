@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'actions/space_delete'
+require 'actions/deletion_errors'
 
 module VCAP::CloudController
   describe SpaceDelete do
@@ -69,8 +70,8 @@ module VCAP::CloudController
             expect { service_instance_2.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
 
-          it 'returns a DeletionError' do
-            expect(space_delete.delete(space_dataset)[0]).to be_instance_of(ServiceInstanceDeletionError)
+          it 'returns a service broker bad response error' do
+            expect(space_delete.delete(space_dataset)[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
           end
         end
       end

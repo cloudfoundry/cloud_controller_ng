@@ -66,7 +66,7 @@ module VCAP::CloudController
 
         it 'returns any errors that it received' do
           stub_deprovision(service_instance, status: 500)
-          expect(org_delete.delete(org_dataset)[0]).to be_instance_of(ServiceInstanceDeletionError)
+          expect(org_delete.delete(org_dataset)[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
         end
       end
     end

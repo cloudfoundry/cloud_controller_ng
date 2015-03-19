@@ -44,7 +44,7 @@ module VCAP::CloudController
 
         it 'returns all of the errors caught' do
           errors = service_binding_delete.delete(service_binding_dataset)
-          expect(errors[0]).to be_instance_of(ServiceBindingDeletionError)
+          expect(errors[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
         end
       end
     end

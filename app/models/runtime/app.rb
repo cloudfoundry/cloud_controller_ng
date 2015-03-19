@@ -246,7 +246,7 @@ module VCAP::CloudController
 
     def destroy_service_bindings
       errors = ServiceBindingDelete.new.delete(self.service_bindings_dataset)
-      raise errors.first.underlying_error unless errors.empty?
+      raise errors.first unless errors.empty?
     end
 
     def after_destroy
@@ -380,7 +380,7 @@ module VCAP::CloudController
     # do so with the _ prefixed private method like we do here.
     def _remove_service_binding(binding)
       err = ServiceBindingDelete.new.delete([binding])
-      raise(err[0].underlying_error) if !err.empty?
+      raise(err[0]) if !err.empty?
     end
 
     def self.user_visibility_filter(user)

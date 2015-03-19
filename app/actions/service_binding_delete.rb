@@ -6,7 +6,7 @@ module VCAP::CloudController
           service_binding.client.unbind(service_binding)
           service_binding.destroy
         rescue HttpRequestError, HttpResponseError => e
-          errs << ServiceBindingDeletionError.new(e)
+          errs << e
         end
         errs
       end

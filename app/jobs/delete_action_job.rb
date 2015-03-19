@@ -11,8 +11,8 @@ module VCAP::CloudController
         dataset = @model_class.where(guid: @guid)
         errors = @delete_action.delete(dataset)
         unless errors.empty?
-          error = errors.first
-          raise error.underlying_error
+          raise errors.first if errors.count == 1
+          raise DeletionError.new(errors.map(&:message).join("\n\n"))
         end
       end
 

@@ -668,7 +668,7 @@ module VCAP::CloudController
             job = Delayed::Job.first
             expect {
               job.invoke_job
-            }.to raise_error VCAP::Errors::ApiError, /user could not be found/
+            }.to raise_error VCAP::CloudController::DeletionError, /user could not be found/
           end
         end
 

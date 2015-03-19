@@ -99,7 +99,7 @@ module VCAP::CloudController
         it 'returns errors it has captured' do
           errors = service_instance_delete.delete(service_instance_dataset)
           expect(errors.count).to eq(1)
-          expect(errors[0]).to be_instance_of(ServiceInstanceDeletionError)
+          expect(errors[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
         end
       end
 
@@ -117,7 +117,7 @@ module VCAP::CloudController
         it 'propagates service unbind errors' do
           errors = service_instance_delete.delete(service_instance_dataset)
           expect(errors.count).to eq(1)
-          expect(errors[0]).to be_instance_of(ServiceBindingDeletionError)
+          expect(errors[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
         end
       end
     end

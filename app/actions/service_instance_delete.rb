@@ -12,7 +12,7 @@ module VCAP::CloudController
             service_instance.client.deprovision(service_instance)
             service_instance.destroy
           rescue HttpRequestError, HttpResponseError => e
-            errs << ServiceInstanceDeletionError.new(e)
+            errs << e
           ensure
             service_instance.save_with_operation(
               last_operation: {

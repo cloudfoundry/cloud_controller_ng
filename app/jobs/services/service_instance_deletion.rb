@@ -21,7 +21,7 @@ module VCAP::CloudController
               end
               errs = ServiceInstanceDelete.new.delete([service_instance])
               unless errs.empty?
-                raise errs.first.underlying_error
+                raise errs.first
               end
             end
           rescue
