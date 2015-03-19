@@ -3,7 +3,7 @@ require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
   module Diego
-    class Client
+    class TPSClient
       def initialize(config)
         @tps_url = config[:diego_tps_url]
       end
@@ -57,7 +57,7 @@ module VCAP::CloudController
       private
 
       def logger
-        @logger ||= Steno.logger('cc.diego.client')
+        @logger ||= Steno.logger('cc.tps.client')
       end
     end
   end

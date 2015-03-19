@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 module VCAP::CloudController::Diego
-  describe Client do
+  describe TPSClient do
     let(:app) { VCAP::CloudController::AppFactory.make }
-    subject(:client) { Client.new(TestConfig.config) }
+    subject(:client) { TPSClient.new(TestConfig.config) }
 
     describe 'getting app instance information' do
       context 'when there is a tps url configured' do

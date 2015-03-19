@@ -1,8 +1,8 @@
 require 'sinatra'
 require 'controllers/base/base_controller'
-require 'cloud_controller/diego/client'
 require 'cloud_controller/internal_api'
 require 'cloud_controller/diego/process_guid'
+require 'cloud_controller/diego/tps_client'
 
 module VCAP::CloudController
   class BulkAppsController < RestController::BaseController

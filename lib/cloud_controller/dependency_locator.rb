@@ -6,7 +6,7 @@ require 'cloud_controller/upload_handler'
 require 'cloud_controller/blob_sender/ngx_blob_sender'
 require 'cloud_controller/blob_sender/default_blob_sender'
 require 'cloud_controller/blob_sender/missing_blob_handler'
-require 'cloud_controller/diego/client'
+require 'cloud_controller/diego//tps_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/diego/traditional/protocol'
 
@@ -44,8 +44,8 @@ module CloudController
       @dependencies[:stagers] || raise('stagers not set')
     end
 
-    def diego_client
-      @dependencies[:diego_client] || raise('diego_client not set')
+    def tps_client
+      @dependencies[:tps_client] || raise('tps_client not set')
     end
 
     def upload_handler

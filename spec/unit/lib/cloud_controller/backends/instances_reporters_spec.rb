@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe InstancesReporters do
-    let(:diego_client) { instance_double(Diego::Client) }
+    let(:tps_client) { instance_double(Diego::TPSClient) }
     let(:hm_client) { instance_double(Dea::HM9000::Client) }
 
     let(:dea_app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
@@ -16,11 +16,11 @@ module VCAP::CloudController
 
     let(:dea_reporter) { instance_double(Dea::InstancesReporter) }
     let(:diego_reporter) { instance_double(Diego::InstancesReporter) }
-    let(:instances_reporters) { InstancesReporters.new(diego_client, hm_client) }
+    let(:instances_reporters) { InstancesReporters.new(tps_client, hm_client) }
 
     before do
       allow(Dea::InstancesReporter).to receive(:new).with(hm_client).and_return(dea_reporter)
-      allow(Diego::InstancesReporter).to receive(:new).with(diego_client).and_return(diego_reporter)
+      allow(Diego::InstancesReporter).to receive(:new).with(tps_client).and_return(diego_reporter)
     end
 
     describe '#number_of_starting_and_running_instances_for_app' do

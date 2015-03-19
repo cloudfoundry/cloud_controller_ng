@@ -1,15 +1,15 @@
 module VCAP::CloudController
   module Diego
     class InstancesReporter
-      attr_reader :diego_client
+      attr_reader :tps_client
 
-      def initialize(diego_client)
-        @diego_client = diego_client
+      def initialize(tps_client)
+        @tps_client = tps_client
       end
 
       def all_instances_for_app(app)
         result    = {}
-        instances = diego_client.lrp_instances(app)
+        instances = tps_client.lrp_instances(app)
 
         for_each_desired_instance(instances, app) do |instance|
           info = {
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       def number_of_starting_and_running_instances_for_app(app)
         return 0 unless app.started?
-        instances = diego_client.lrp_instances(app)
+        instances = tps_client.lrp_instances(app)
 
         running_indices = Set.new
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       def crashed_instances_for_app(app)
         result    = []
-        instances = diego_client.lrp_instances(app)
+        instances = tps_client.lrp_instances(app)
 
         for_each_desired_instance(instances, app) do |instance|
           if instance[:state] == 'CRASHED'
@@ -68,7 +68,7 @@ module VCAP::CloudController
       # TODO: this is only a stub. stats are not yet available from diego.
       def stats_for_app(app)
         result    = {}
-        instances = diego_client.lrp_instances(app)
+        instances = tps_client.lrp_instances(app)
 
         for_each_desired_instance(instances, app) do |instance|
           info = {

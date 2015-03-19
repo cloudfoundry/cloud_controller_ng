@@ -256,6 +256,7 @@ cloud_controller_username_lookup_client_secret: <%= p("uaa.clients.cloud_control
 users_can_select_backend: <%= p("cc.users_can_select_backend") %>
 diego_docker: <%= p("cc.diego_docker") %>
 diego_tps_url: http://tps.service.dc1.consul:1518
+diego_stager_url: http://stager.service.dc1.consul:8888
 default_to_diego_backend: <%= p("cc.default_to_diego_backend") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
