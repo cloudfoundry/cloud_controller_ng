@@ -35,8 +35,14 @@ resource 'App Routes (Experimental)', type: :api do
 
     example 'List routes' do
       do_request_with_error_handling
-
       expected_response = {
+        'pagination' => {
+          'total_results' => 2,
+          'first'         => { 'href' => "/v3/apps/#{guid}/routes?page=1&per_page=50" },
+          'last'          => { 'href' => "/v3/apps/#{guid}/routes?page=1&per_page=50" },
+          'next'          => nil,
+          'previous'      => nil,
+        },
         'resources' => [
           {
             'guid' => route1.guid,

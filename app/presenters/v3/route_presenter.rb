@@ -1,17 +1,23 @@
 module VCAP::CloudController
   class RoutePresenter
+    def initialize(pagination_presenter=PaginationPresenter.new)
+      @pagination_presenter = pagination_presenter
+    end
+
     def present_json(route)
       MultiJson.dump(route_hash(route), pretty: true)
     end
 
-    def present_json_list(routes, base_url)
+    def present_json_list(paginated_result, base_url)
+      routes      = paginated_result.records
       route_hashes = routes.collect { |route| route_hash(route) }
 
-      response = {
+      paginated_response = {
+        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url),
         resources:  route_hashes
       }
 
-      MultiJson.dump(response, pretty: true)
+      MultiJson.dump(paginated_response, pretty: true)
     end
 
     private

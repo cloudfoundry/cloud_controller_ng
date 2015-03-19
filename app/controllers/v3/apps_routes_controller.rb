@@ -13,7 +13,10 @@ module VCAP::CloudController
       app_model = AppFetcher.new(current_user).fetch(app_guid)
       app_not_found! if app_model.nil?
 
-      routes_json = RoutePresenter.new.present_json_list(app_model.routes, '/v3/routes')
+      pagination_options = PaginationOptions.from_params(params)
+      routes = SequelPaginator.new.get_page(app_model.routes_dataset, pagination_options)
+
+      routes_json = RoutePresenter.new.present_json_list(routes, "/v3/apps/#{app_guid}/routes")
       [HTTP::OK, routes_json]
     end
 
@@ -40,7 +43,6 @@ module VCAP::CloudController
       route_not_found! if route.nil?
 
       RemoveRouteFromApp.new(app_model).remove(route)
-
       [HTTP::NO_CONTENT]
     end
 
