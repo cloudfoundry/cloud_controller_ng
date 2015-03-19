@@ -23,6 +23,30 @@ module VCAP::CloudController
           remove_route_from_app.remove(route)
           expect(process.reload.routes).to be_empty
         end
+
+        it 'notifies the dea if the process is started and staged' do
+          process.update(state: 'STARTED')
+          process.update(package_state: 'STAGED')
+          expect(Dea::Client).to receive(:update_uris).with(process)
+          remove_route_from_app.remove(route)
+          expect(process.reload.routes).to be_empty
+        end
+
+        it 'does not notify the dea if the process not started' do
+          process.update(state: 'STOPPED')
+          process.update(package_state: 'STAGED')
+          expect(Dea::Client).not_to receive(:update_uris).with(process)
+          remove_route_from_app.remove(route)
+          expect(process.reload.routes).to be_empty
+        end
+
+        it 'does not notify the dea if the process not staged' do
+          process.update(state: 'STARTED')
+          process.update(package_state: 'PENDING')
+          expect(Dea::Client).not_to receive(:update_uris).with(process)
+          remove_route_from_app.remove(route)
+          expect(process.reload.routes).to be_empty
+        end
       end
     end
   end
