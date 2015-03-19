@@ -35,6 +35,50 @@ module VCAP::CloudController
         }.to change { ServiceBinding.count }.by(-2)
       end
 
+      context 'when unbinding a service instance times out' do
+        before do
+          stub_unbind(service_binding_1, body: lambda { |r| sleep 10; raise 'Should time out' })
+        end
+
+        it 'should leave the service instance unchanged' do
+          original_attrs = service_binding_1.as_json
+          expect {
+            Timeout::timeout(0.5.second) do
+              service_instance_delete.delete(service_instance_dataset)
+            end
+          }.to raise_error(Timeout::Error)
+
+          service_binding_1.reload
+
+          expect(a_request(:delete, service_instance_unbind_url(service_binding_1))).
+            to have_been_made.times(1)
+          expect(service_binding_1.as_json).to eq(original_attrs)
+
+          expect(ServiceInstance.first(id: service_instance_1.id)).to be
+        end
+      end
+
+      context 'when deprovisioning a service instance times out' do
+        before do
+          stub_deprovision(service_instance_1, body: lambda { |r| sleep 10; raise 'Should time out' })
+        end
+
+        it 'should mark the service instance as failed' do
+          expect {
+            Timeout::timeout(0.5.second) do
+              service_instance_delete.delete(service_instance_dataset)
+            end
+          }.to raise_error(Timeout::Error)
+
+          service_instance_1.reload
+
+          expect(a_request(:delete, service_instance_deprovision_url(service_instance_1))).
+            to have_been_made.times(1)
+          expect(service_instance_1.last_operation.type).to eq('delete')
+          expect(service_instance_1.last_operation.state).to eq('failed')
+        end
+      end
+
       context 'when the broker returns an error for one of the deletions' do
         before do
           stub_deprovision(service_instance_2, status: 500)

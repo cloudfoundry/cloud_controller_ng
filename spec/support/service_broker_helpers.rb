@@ -4,13 +4,9 @@ module ServiceBrokerHelpers
     body = opts[:body] || '{}'
     accepts_incomplete = opts[:accepts_incomplete]
 
-    plan = service_instance.service_plan
-    service = plan.service
+    url = service_instance_deprovision_url(service_instance, accepts_incomplete: accepts_incomplete)
 
-    query = "plan_id=#{plan.unique_id}&service_id=#{service.unique_id}"
-    query += "&accepts_incomplete=#{accepts_incomplete}" unless accepts_incomplete.nil?
-
-    stub_request(:delete, service_instance_url(service_instance, query)).
+    stub_request(:delete, url).
       to_return(status: status, body: body)
   end
 
@@ -28,12 +24,25 @@ module ServiceBrokerHelpers
     status = opts[:status] || 200
     body = opts[:body] || '{}'
 
+    stub_request(:delete, service_instance_unbind_url(service_binding)).
+      to_return(status: status, body: body)
+  end
+
+  def service_instance_unbind_url(service_binding)
     plan = service_binding.service_instance.service_plan
     service = plan.service
     query = "plan_id=#{plan.unique_id}&service_id=#{service.unique_id}"
+    service_binding_url(service_binding, query)
+  end
 
-    stub_request(:delete, service_binding_url(service_binding, query)).
-      to_return(status: status, body: body)
+  def service_instance_deprovision_url(service_instance, accepts_incomplete: nil)
+    plan = service_instance.service_plan
+    service = plan.service
+
+    query = "plan_id=#{plan.unique_id}&service_id=#{service.unique_id}"
+    query += "&accepts_incomplete=#{accepts_incomplete}" unless accepts_incomplete.nil?
+
+    service_instance_url(service_instance, query)
   end
 
   def service_instance_url(service_instance, query=nil)
