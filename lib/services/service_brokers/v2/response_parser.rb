@@ -329,7 +329,7 @@ module VCAP::Services
                 uri.to_s,
                 @method,
                 response,
-                description_from_states(uri.to_s, parsed_state, @valid_states)
+                description_from_states(parsed_state, @valid_states)
               )
             end
           end
@@ -342,7 +342,7 @@ module VCAP::Services
             last_operation['state']
           end
 
-          def description_from_states(url, actual_state, expected_states)
+          def description_from_states(actual_state, expected_states)
             actual = actual_state ? "'#{actual_state}'" : 'null'
             "expected state was '#{expected_states.first}', broker returned #{actual}."
           end
