@@ -26,6 +26,11 @@ module VCAP::CloudController
       errors
     end
 
+    def timeout_error(dataset)
+      space_name = dataset.first.name
+      VCAP::Errors::ApiError.new_from_details('SpaceDeleteTimeout', space_name)
+    end
+
     private
 
     attr_reader :user_id, :user_email
