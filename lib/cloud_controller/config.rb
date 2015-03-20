@@ -221,8 +221,8 @@ module VCAP::CloudController
         optional(:dea_advertisement_timeout_in_seconds) => Integer,
 
         optional(:diego_docker) => bool,
-        optional(:diego_tps_url) => String,
         optional(:diego_stager_url) => String,
+        optional(:diego_tps_url) => String,
         optional(:users_can_select_backend) => bool,
         optional(:default_to_diego_backend) => bool,
       }
