@@ -8,7 +8,6 @@ module VCAP::CloudController
         app.lock!
 
         app.name = message['name'] unless message['name'].nil?
-        app.environment_variables = message['environment_variables'] unless message['environment_variables'].nil?
 
         if message['desired_droplet_guid']
           droplet = DropletModel.find(guid: message['desired_droplet_guid'])

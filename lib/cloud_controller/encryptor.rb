@@ -12,12 +12,12 @@ module VCAP::CloudController::Encryptor
 
     def encrypt(input, salt)
       return nil unless input
-      Base64.strict_encode64(run_cipher(make_cipher.encrypt, YAML.dump(input), salt))
+      Base64.strict_encode64(run_cipher(make_cipher.encrypt, input, salt))
     end
 
     def decrypt(encrypted_input, salt)
       return nil unless encrypted_input
-      YAML.load(run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt))
+      run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt)
     end
 
     attr_accessor :db_encryption_key

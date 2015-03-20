@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:app_update) { AppUpdate }
     let(:app_model) { AppModel.make }
 
-    describe '.update' do
+    describe '#update' do
       context 'when the desired_droplet does not exist' do
         let(:message) { { 'desired_droplet_guid' => 'not_a_guid' } }
 
@@ -52,18 +52,6 @@ module VCAP::CloudController
           app_model.reload
 
           expect(app_model.name).to eq(name)
-        end
-      end
-
-      context 'when updating the environment variables' do
-        let(:environment_variables) { { 'VARIABLE' => 'VALUE' } }
-        let(:message) { { 'environment_variables' => environment_variables } }
-
-        it 'updates the app name' do
-          app_update.update(app_model, message)
-          app_model.reload
-
-          expect(app_model.environment_variables).to eq(environment_variables)
         end
       end
 
