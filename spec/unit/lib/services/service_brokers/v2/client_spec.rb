@@ -386,7 +386,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           context 'ServiceBrokerResponseMalformed error' do
-            let(:error) { Errors::ServiceBrokerResponseMalformed.new(uri, :put, response) }
+            let(:error) { Errors::ServiceBrokerResponseMalformed.new(uri, :put, response, '') }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
@@ -742,7 +742,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         describe 'when the response parser raises a ServiceBrokerResponseMalformed error' do
           let(:response) { instance_double(HttpResponse, code: 200, body: 'some arbitrary body') }
-          let(:error) { Errors::ServiceBrokerResponseMalformed.new('some-uri.com', :patch, response) }
+          let(:error) { Errors::ServiceBrokerResponseMalformed.new('some-uri.com', :patch, response, '') }
           before do
             allow(response_parser).to receive(:parse).and_raise(error)
           end

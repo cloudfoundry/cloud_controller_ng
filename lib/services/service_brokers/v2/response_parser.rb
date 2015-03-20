@@ -268,10 +268,16 @@ module VCAP::Services
             end
 
             unless parsed_response.is_a?(Hash)
-              raise Errors::ServiceBrokerResponseMalformed.new(uri, @method, response)
+              raise Errors::ServiceBrokerResponseMalformed.new(uri, @method, response, error_description(response))
             end
 
             @validator.validate(method: method, uri: uri, code: code, response: response)
+          end
+
+          private
+
+          def error_description(response)
+            "expected valid JSON object in body, broker returned '#{response.body}'"
           end
         end
 
@@ -286,10 +292,11 @@ module VCAP::Services
 
           def validate(method:, uri:, code:, response:)
             parsed_response = MultiJson.load(response.body)
-            if @valid_states.include?(state_from_parsed_response(parsed_response))
+            state = state_from_parsed_response(parsed_response)
+            if @valid_states.include?(state)
               @validator.validate(method: method, uri: uri, code: code, response: response)
             else
-              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, @method, response)
+              raise Errors::ServiceBrokerResponseMalformed.new(uri.to_s, @method, response, error_description(state))
             end
           end
 
@@ -299,6 +306,10 @@ module VCAP::Services
             parsed_response ||= {}
             last_operation = parsed_response['last_operation'] || {}
             last_operation['state']
+          end
+
+          def error_description(actual)
+            "expected state was 'succeeded', broker returned '#{actual}'."
           end
         end
 
@@ -318,7 +329,7 @@ module VCAP::Services
                 uri.to_s,
                 @method,
                 response,
-                description_from_states(parsed_state, @valid_states)
+                description_from_states(uri.to_s, parsed_state, @valid_states)
               )
             end
           end
@@ -331,9 +342,9 @@ module VCAP::Services
             last_operation['state']
           end
 
-          def description_from_states(actual_state, expected_states)
+          def description_from_states(url, actual_state, expected_states)
             actual = actual_state ? "'#{actual_state}'" : 'null'
-            "The service broker response was not understood: expected state was '#{expected_states.first}', broker returned #{actual}."
+            "expected state was '#{expected_states.first}', broker returned #{actual}."
           end
         end
 

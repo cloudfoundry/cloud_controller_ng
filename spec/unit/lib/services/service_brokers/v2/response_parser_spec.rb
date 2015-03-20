@@ -82,7 +82,13 @@ module VCAP::Services
 
         def self.response_not_understood(expected_state, actual_state)
           actual_state = (actual_state) ? "'#{actual_state}'" : 'null'
-          "The service broker response was not understood: expected state was '#{expected_state}', broker returned #{actual_state}."
+          'The service broker returned an invalid response for the request to service-broker.com/v2/service_instances/GUID: ' + \
+          "expected state was '#{expected_state}', broker returned #{actual_state}."
+        end
+
+        def self.invalid_json_error(body)
+          'The service broker returned an invalid response for the request to service-broker.com/v2/service_instances/GUID: ' + \
+          "expected valid JSON object in body, broker returned '#{body}'"
         end
 
         def self.verify_response(desired_response, error)
@@ -90,16 +96,20 @@ module VCAP::Services
         end
 
         # parse provision or bind spec
-        test_case(:provision, 200, partial_json,                        error: Errors::ServiceBrokerResponseMalformed)
+        test_case(:provision, 200, partial_json,                        error: Errors::ServiceBrokerResponseMalformed,
+                                                                        description: invalid_json_error(partial_json))
         test_case(:provision, 200, malformed_json,                      error: Errors::ServiceBrokerResponseMalformed,
-                                                                        expect_warning: true)
+                                                                        expect_warning: true,
+                                                                        description: invalid_json_error(malformed_json))
         test_case(:provision, 200, async_body('succeeded').to_json,     result: async_body('succeeded'))
         test_case(:provision, 200, async_body(nil).to_json,             result: async_body(nil))
         test_case(:provision, 200, async_body('in progress').to_json,   result: async_body('in progress'))
         test_case(:provision, 200, async_body('failed').to_json,        result: async_body('failed'))
-        test_case(:provision, 200, async_body('fake-state').to_json,    error: Errors::ServiceBrokerResponseMalformed)
+        test_case(:provision, 200, async_body('fake-state').to_json,    error: Errors::ServiceBrokerResponseMalformed,
+                                                                        description: response_not_understood('succeeded', 'fake-state'))
         test_case(:provision, 201, malformed_json,                      error: Errors::ServiceBrokerResponseMalformed,
-                                                                        expect_warning: true)
+                                                                        expect_warning: true,
+                                                                        description: invalid_json_error(malformed_json))
         test_case(:provision, 201, async_body('succeeded').to_json,     result: async_body('succeeded'))
         test_case(:provision, 201, async_body(nil).to_json,             result: async_body(nil))
         test_case(:provision, 201, async_body('in progress').to_json,   error: Errors::ServiceBrokerResponseMalformed,
@@ -109,7 +119,8 @@ module VCAP::Services
         test_case(:provision, 201, async_body('fake-state').to_json,    error: Errors::ServiceBrokerResponseMalformed,
                                                                         description: response_not_understood('succeeded', 'fake-state'))
         test_case(:provision, 202, malformed_json,                      error: Errors::ServiceBrokerResponseMalformed,
-                                                                        expect_warning: true)
+                                                                        expect_warning: true,
+                                                                        description: invalid_json_error(malformed_json))
         test_case(:provision, 202, async_body('succeeded').to_json,     error: Errors::ServiceBrokerResponseMalformed,
                                                                         description: response_not_understood('in progress', 'succeeded'))
         test_case(:provision, 202, async_body(nil).to_json,             error: Errors::ServiceBrokerResponseMalformed,
