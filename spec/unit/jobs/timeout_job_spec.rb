@@ -26,27 +26,9 @@ module VCAP::CloudController::Jobs
         expect { timeout_job.perform }.to raise_error
       end
 
-      context 'and the job does not specify a custom timeout error' do
-        it 'raises a VCAP::Errors::JobTimeout to ensure the error message reaches the API consumer' do
-          expect(timeout_job).to receive(:max_run_time).with('my-job').and_return(1)
-          expect { timeout_job.perform }.to raise_error(VCAP::Errors::ApiError)
-        end
-      end
-
-      context 'and the job specifies a custom timeout error' do
-        let(:custom_timeout_error) { StandardError.new('Yo, a timeout occurred') }
-        let(:job) do
-          double(
-            job_name_in_configuration: 'my-job-with-custom-timeout',
-            max_attempts: 2,
-            timeout_error: custom_timeout_error
-          )
-        end
-
-        it 'raises the timeout error the job wants' do
-          expect(timeout_job).to receive(:max_run_time).with('my-job-with-custom-timeout').and_return(1)
-          expect { timeout_job.perform }.to raise_error(custom_timeout_error)
-        end
+      it 'raises a VCAP::Errors::JobTimeout to ensure the error message reaches the API consumer' do
+        expect(timeout_job).to receive(:max_run_time).with('my-job').and_return(1)
+        expect { timeout_job.perform }.to raise_error(VCAP::Errors::ApiError)
       end
     end
 
