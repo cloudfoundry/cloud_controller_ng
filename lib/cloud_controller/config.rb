@@ -256,6 +256,8 @@ module VCAP::CloudController
         legacy_hm_client = Dea::HM9000::LegacyClient.new(@message_bus, @config)
         hm_client = Dea::HM9000::Client.new(legacy_hm_client, @config)
         dependency_locator.register(:health_manager_client, hm_client)
+        stager_client = Diego::StagerClient.new(@config)
+        dependency_locator.register(:stager_client, stager_client)
         tps_client = Diego::TPSClient.new(@config)
         dependency_locator.register(:tps_client, tps_client)
         dependency_locator.register(:upload_handler, UploadHandler.new(config))

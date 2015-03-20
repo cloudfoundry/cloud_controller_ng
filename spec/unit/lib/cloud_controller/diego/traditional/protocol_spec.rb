@@ -31,10 +31,8 @@ module VCAP::CloudController
         describe '#stage_app_request' do
           let(:request) { protocol.stage_app_request(app, staging_config) }
 
-          it 'returns arguments intended for CfMessageBus::MessageBus#publish' do
-            expect(request.size).to eq(2)
-            expect(request.first).to eq('diego.staging.start')
-            expect(request.last).to eq(protocol.stage_app_message(app, staging_config).to_json)
+          it 'returns the staging request message to be used by the stager client' do
+            expect(request).to eq(protocol.stage_app_message(app, staging_config).to_json)
           end
         end
 
@@ -223,29 +221,6 @@ module VCAP::CloudController
             it 'uses the default app health check from the config' do
               expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)
             end
-          end
-        end
-
-        describe '#stop_staging_app_request' do
-          let(:task_id) { 'staging_task_id' }
-          let(:request) { protocol.stop_staging_app_request(app, task_id) }
-
-          it 'returns an array of arguments including the subject and message' do
-            expect(request.size).to eq(2)
-            expect(request[0]).to eq('diego.staging.stop')
-            expect(request[1]).to match_json(protocol.stop_staging_message(app, task_id))
-          end
-        end
-
-        describe '#stop_staging_message' do
-          let(:task_id) { 'staging_task_id' }
-          let(:message) { protocol.stop_staging_message(app, task_id) }
-
-          it 'is a nats message with the appropriate staging subject and payload' do
-            expect(message).to eq(
-              'app_id' => app.guid,
-              'task_id' => task_id,
-            )
           end
         end
 

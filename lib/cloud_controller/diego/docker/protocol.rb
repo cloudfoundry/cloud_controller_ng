@@ -12,7 +12,7 @@ module VCAP::CloudController
         end
 
         def stage_app_request(app, staging_config)
-          ['diego.docker.staging.start', stage_app_message(app, staging_config).to_json]
+          stage_app_message(app, staging_config).to_json
         end
 
         def stage_app_message(app, staging_config)
@@ -39,10 +39,6 @@ module VCAP::CloudController
           ['diego.docker.desire.app', desire_app_message(app, default_health_check_timeout).to_json]
         end
 
-        def stop_staging_app_request(app, task_id)
-          ['diego.docker.staging.stop', stop_staging_message(app, task_id).to_json]
-        end
-
         def desire_app_message(app, default_health_check_timeout)
           {
             'process_guid' => ProcessGuid.from_app(app),
@@ -61,13 +57,6 @@ module VCAP::CloudController
             'health_check_timeout_in_seconds' => app.health_check_timeout || default_health_check_timeout,
             'egress_rules' => @common_protocol.running_egress_rules(app),
             'etag' => app.updated_at.to_f.to_s
-          }
-        end
-
-        def stop_staging_message(app, task_id)
-          {
-            'app_id' => app.guid,
-            'task_id' => task_id,
           }
         end
 

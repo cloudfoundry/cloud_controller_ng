@@ -374,8 +374,14 @@ describe CloudController::DependencyLocator do
     end
   end
 
-  describe '#diego_client' do
-    it 'returns the diego client' do
+  describe '#stager_client' do
+    it 'returns the diego stager client' do
+      expect(locator.stager_client).to be_an_instance_of(VCAP::CloudController::Diego::StagerClient)
+    end
+  end
+
+  describe '#tps_client' do
+    it 'returns the diego tps client' do
       expect(locator.tps_client).to be_an_instance_of(VCAP::CloudController::Diego::TPSClient)
     end
   end

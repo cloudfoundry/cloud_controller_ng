@@ -18,8 +18,6 @@ module VCAP::CloudController
       it_behaves_like 'a stager'
 
       describe '#stage_app' do
-        let(:task_id) { app.staging_task_id }
-
         before do
           allow(messenger).to receive(:send_stage_request)
           allow(messenger).to receive(:send_stop_staging_request)
@@ -33,7 +31,7 @@ module VCAP::CloudController
 
         context 'when there is a pending stage' do
           it 'attempts to stop the outstanding stage request' do
-            expect(messenger).to receive(:send_stop_staging_request).with(app, task_id)
+            expect(messenger).to receive(:send_stop_staging_request).with(app)
             stager.stage_app
           end
         end

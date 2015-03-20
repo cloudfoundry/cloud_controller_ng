@@ -15,15 +15,11 @@ module VCAP::CloudController
         end
 
         def stage_app_request(app, staging_config)
-          ['diego.staging.start', stage_app_message(app, staging_config).to_json]
+          stage_app_message(app, staging_config).to_json
         end
 
         def desire_app_request(app, default_health_check_timeout)
           ['diego.desire.app', desire_app_message(app, default_health_check_timeout).to_json]
-        end
-
-        def stop_staging_app_request(app, task_id)
-          ['diego.staging.stop', stop_staging_message(app, task_id).to_json]
         end
 
         def stage_app_message(app, staging_config)
@@ -71,13 +67,6 @@ module VCAP::CloudController
           }
 
           message
-        end
-
-        def stop_staging_message(app, task_id)
-          {
-            'app_id' => app.guid,
-            'task_id' => task_id,
-          }
         end
 
         def stop_index_request(app, index)
