@@ -303,11 +303,15 @@ module VCAP::CloudController
       self.metadata && self.metadata['debug']
     end
 
+    def environment_json_with_serialization=(env)
+      self.environment_json_without_serialization = MultiJson.dump(env)
+    end
+    alias_method_chain :environment_json=, 'serialization'
+
     def environment_json_with_serialization
-      environment_variables = environment_json_without_serialization
-      return environment_variables if environment_variables.is_a?(Hash)
-      return if environment_variables.blank?
-      MultiJson.load environment_variables
+      string = environment_json_without_serialization
+      return if string.blank?
+      MultiJson.load string
     end
     alias_method_chain :environment_json, 'serialization'
 

@@ -32,8 +32,8 @@ module VCAP::CloudController
     end
 
     it_behaves_like 'a model with an encrypted attribute' do
-      let(:value_to_encrypt) { { 'foo' => 'bar' } }
-      let(:encrypted_attr) { :environment_json }
+      let(:value_to_encrypt) { '{"foo":"bar"}' }
+      let(:encrypted_attr) { :environment_json_without_serialization }
       let(:storage_column) { :encrypted_environment_json }
       let(:attr_salt) { :salt }
     end
@@ -768,12 +768,6 @@ module VCAP::CloudController
       it 'deserializes the serialized value' do
         app = AppFactory.make(environment_json: { 'jesse' => 'awesome' })
         expect(app.environment_json).to eq('jesse' => 'awesome')
-      end
-
-      it 'is resilient' do
-        app = AppFactory.make
-        app.environment_json = { 'a' => 'b' }
-        expect(app.environment_json).to eq('a' => 'b')
       end
 
       def self.it_does_not_mark_for_re_staging

@@ -13,7 +13,7 @@ describe AppEnvironmentPolicy do
 
     it 'does allow an array' do
       app.environment_json = []
-      expect(app.environment_json).to eq(nil)
+      expect(validator).to validate_with_error(app, :environment_json, :invalid_environment)
     end
 
     it 'allows multiple variables' do
