@@ -6,41 +6,36 @@ module VCAP::CloudController
       class StagingCompletionHandler < VCAP::CloudController::Diego::StagingCompletionHandlerBase
         def initialize(runners)
           super(runners, Steno.logger('cc.stager'), 'diego.staging.')
-          @staging_response_schema = Membrane::SchemaParser.parse do
+        end
+
+        def self.success_parser
+          @staging_response_schema ||= Membrane::SchemaParser.parse do
             {
-              'app_id' => String,
-              'task_id' => String,
-              'buildpack_key' => String,
-              'detected_buildpack' => String,
-              'execution_metadata' => String,
+              execution_metadata: String,
+              detected_start_command: Hash,
+              lifecycle_data: {
+                buildpack_key: String,
+                detected_buildpack: String,
+              }
             }
           end
         end
 
         private
 
-        def handle_success(payload)
-          begin
-            @staging_response_schema.validate(payload)
-          rescue Membrane::SchemaValidationError => e
-            logger.error('diego.staging.invalid-message', payload: payload, error: e.to_s)
-            raise Errors::ApiError.new_from_details('InvalidRequest', payload)
-          end
-
-          super
-        end
-
         def save_staging_result(app, payload)
+          lifecycle_data = payload[:lifecycle_data]
+
           app.class.db.transaction do
             app.lock!
             app.mark_as_staged
-            app.update_detected_buildpack(payload['detected_buildpack'], payload['buildpack_key'])
+            app.update_detected_buildpack(lifecycle_data[:detected_buildpack], lifecycle_data[:buildpack_key])
 
             droplet = app.current_droplet
             droplet.lock!
-            droplet.update_execution_metadata(payload['execution_metadata'])
-            if payload.key?('detected_start_command')
-              droplet.update_detected_start_command(payload['detected_start_command']['web'])
+            droplet.update_execution_metadata(payload[:execution_metadata])
+            if payload.key?(:detected_start_command)
+              droplet.update_detected_start_command(payload[:detected_start_command][:web])
             end
 
             app.save_changes(raise_on_save_failure: true)

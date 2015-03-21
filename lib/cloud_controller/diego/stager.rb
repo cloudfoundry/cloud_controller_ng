@@ -18,6 +18,10 @@ module VCAP::CloudController
         @app.staging_task_id = VCAP.secure_uuid
         @app.save_changes
         @messenger.send_stage_request(@app, @staging_config)
+      rescue => e
+        @app.mark_as_failed_to_stage
+        @app.save_changes
+        raise e
       end
 
       def staging_complete(staging_guid, staging_response)

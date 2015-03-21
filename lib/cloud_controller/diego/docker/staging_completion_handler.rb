@@ -9,6 +9,15 @@ module VCAP::CloudController
           super(runners, Steno.logger('cc.docker.stager'), 'diego.docker.staging.')
         end
 
+        def self.success_parser
+          @staging_response_schema ||= Membrane::SchemaParser.parse do
+            {
+              execution_metadata: String,
+              detected_start_command: Hash,
+            }
+          end
+        end
+
         private
 
         def save_staging_result(app, payload)
@@ -18,12 +27,12 @@ module VCAP::CloudController
             app.mark_as_staged
             app.add_new_droplet(SecureRandom.hex) # placeholder until image ID is obtained during staging
 
-            if payload.key?('execution_metadata')
+            if payload.key?(:execution_metadata)
               droplet = app.current_droplet
               droplet.lock!
-              droplet.update_execution_metadata(payload['execution_metadata'])
-              if payload.key?('detected_start_command')
-                droplet.update_detected_start_command(payload['detected_start_command']['web'])
+              droplet.update_execution_metadata(payload[:execution_metadata])
+              if payload.key?(:detected_start_command)
+                droplet.update_detected_start_command(payload[:detected_start_command][:web])
               end
             end
 

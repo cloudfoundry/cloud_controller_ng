@@ -23,8 +23,8 @@ module VCAP::CloudController
         context 'when it receives a success response' do
           let(:payload) do
             {
-              'app_id' => app.guid,
-              'task_id' => app.staging_task_id
+              execution_metadata: '"{\"cmd\":[\"start\"]}"',
+              detected_start_command: { web: 'start' },
             }
           end
 
@@ -44,15 +44,6 @@ module VCAP::CloudController
           end
 
           context 'when it receives execution metadata' do
-            let(:payload) do
-              {
-                'app_id' => app.guid,
-                'task_id' => app.staging_task_id,
-                'execution_metadata' => '"{\"cmd\":[\"start\"]}"',
-                'detected_start_command' => { 'web' => 'start' },
-              }
-            end
-
             it 'creates a droplet with the metadata' do
               handler.staging_complete(staging_guid, payload)
 
@@ -62,12 +53,8 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the app_id is invalid' do
-            let(:payload) do
-              {
-                'app_id' => 'bad-app-id'
-              }
-            end
+          context 'when the staging guid is invalid' do
+            let(:staging_guid) { Diego::StagingGuid.from('unknown_app_guid', 'unknown_task_id') }
 
             it 'returns without sending a desire request for the app' do
               handler.staging_complete(staging_guid, payload)
@@ -81,44 +68,12 @@ module VCAP::CloudController
 
               expect(logger).to have_received(:error).with(
                 'diego.docker.staging.unknown-app',
-                response: payload
-              )
-            end
-          end
-
-          context 'when the task_id is invalid' do
-            let(:payload) do
-              {
-                'app_id' => app.guid,
-                'task_id' => 'bad-task-id'
-              }
-            end
-
-            it 'returns without sending a desired request for the app' do
-              handler.staging_complete(staging_guid, payload)
-
-              expect(runners).not_to have_received(:runner_for_app)
-              expect(runner).not_to have_received(:start)
-            end
-
-            it 'logs info about an invalid task id for the CF operator and returns' do
-              handler.staging_complete(staging_guid, payload)
-
-              expect(logger).to have_received(:warn).with(
-                'diego.docker.staging.not-current',
-                response: payload,
-                current: app.staging_task_id
+                staging_guid: staging_guid
               )
             end
           end
 
           context 'when updating the app table with data from staging fails' do
-            let(:payload) do
-              {
-                'app_id' => app.guid,
-                'task_id' => app.staging_task_id,
-              }
-            end
             let(:save_error) { StandardError.new('save-error') }
 
             before do
@@ -137,6 +92,7 @@ module VCAP::CloudController
 
               expect(logger).to have_received(:error).with(
                 'diego.docker.staging.saving-staging-result-failed',
+                staging_guid: staging_guid,
                 response: payload,
                 error: 'save-error',
               )
@@ -147,9 +103,7 @@ module VCAP::CloudController
         context 'when it receives a failure response' do
           let(:payload) do
             {
-              'app_id' => app.guid,
-              'task_id' => app.staging_task_id,
-              'error' => { 'id' => 'InsufficientResources', 'message' => 'Insufficient resources' }
+              error: { id: 'InsufficientResources', message: 'Insufficient resources' }
             }
           end
 

@@ -35,6 +35,17 @@ module VCAP::CloudController
             stager.stage_app
           end
         end
+
+        context 'when the stage fails' do
+          before do
+            allow(messenger).to receive(:send_stage_request).and_raise
+          end
+
+          it 'attempts to stop the outstanding stage request' do
+            expect(app).to receive(:mark_as_failed_to_stage)
+            expect { stager.stage_app }.to raise_error
+          end
+        end
       end
 
       describe '#staging_complete' do

@@ -10,59 +10,87 @@ module VCAP::CloudController
       def staging_complete(staging_guid, payload)
         logger.info(@logger_prefix + 'finished', response: payload)
 
-        if payload['error']
-          handle_failure(payload)
+        if payload[:error]
+          handle_failure(staging_guid, payload)
         else
-          handle_success(payload)
+          handle_success(staging_guid, payload)
         end
       end
 
       private
 
-      def handle_failure(payload)
-        app = get_app(payload)
+      def handle_failure(staging_guid, payload)
+        begin
+          self.class.error_parser.validate(payload)
+        rescue Membrane::SchemaValidationError => e
+          logger.error('diego.staging.failure.invalid-message', staging_guid: staging_guid, payload: payload, error: e.to_s)
+          raise Errors::ApiError.new_from_details('InvalidRequest', payload)
+        end
+
+        app = get_app(staging_guid)
         return if app.nil?
 
-        error = payload['error']
-        id = error['id'] || 'StagingError'
-        message = error['message']
+        error = payload[:error]
+        id = error[:id] || 'StagingError'
+        message = error[:message]
         app.mark_as_failed_to_stage(id)
         Loggregator.emit_error(app.guid, "Failed to stage application: #{message}")
       end
 
-      def handle_success(payload)
-        app = get_app(payload)
+      def handle_success(staging_guid, payload)
+        begin
+          self.class.success_parser.validate(payload)
+        rescue Membrane::SchemaValidationError => e
+          logger.error('diego.staging.success.invalid-message', staging_guid: staging_guid, payload: payload, error: e.to_s)
+          raise Errors::ApiError.new_from_details('InvalidRequest', payload)
+        end
+
+        app = get_app(staging_guid)
         return if app.nil?
 
         begin
           save_staging_result(app, payload)
           @runners.runner_for_app(app).start
         rescue => e
-          logger.error(@logger_prefix + 'saving-staging-result-failed', response: payload, error: e.message)
+          logger.error(@logger_prefix + 'saving-staging-result-failed', staging_guid: staging_guid, response: payload, error: e.message)
         end
       end
 
-      def get_app(payload)
-        app = App.find(guid: payload['app_id'])
+      def get_app(staging_guid)
+        app_guid = StagingGuid.app_guid(staging_guid)
+
+        app = App.find(guid: app_guid)
         if app.nil?
-          logger.error(@logger_prefix + 'unknown-app', response: payload)
+          logger.error(@logger_prefix + 'unknown-app', staging_guid: staging_guid)
           return
         end
 
-        return app if staging_is_current(app, payload)
+        return app if staging_is_current(app, staging_guid)
         nil
       end
 
-      def staging_is_current(app, payload)
-        if payload['task_id'] != app.staging_task_id
+      def staging_is_current(app, staging_guid)
+        staging_task_id = StagingGuid.staging_task_id(staging_guid)
+        if staging_task_id != app.staging_task_id
           logger.warn(
             @logger_prefix + 'not-current',
-            response: payload,
+            staging_guid: staging_guid,
             current: app.staging_task_id)
           return false
         end
 
         true
+      end
+
+      def self.error_parser
+        @error_schema ||= Membrane::SchemaParser.parse do
+          {
+            error: {
+              id: String,
+              message: String,
+            },
+          }
+        end
       end
 
       attr_reader :logger
