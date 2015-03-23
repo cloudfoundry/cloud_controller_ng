@@ -7,4 +7,3 @@ Sequel.migration do
     set_column_type :service_instance_operations, :description, String
   end
 end
-
