@@ -29,9 +29,10 @@ resource 'Apps (Experimental)', type: :api do
     let(:name1) { 'my_app1' }
     let(:name2) { 'my_app2' }
     let(:name3) { 'my_app3' }
+    let(:environment_variables) { { 'magic' => 'beautiful' } }
     let!(:app_model1) { VCAP::CloudController::AppModel.make(name: name1, space_guid: space.guid, created_at: Time.at(1)) }
     let!(:app_model2) { VCAP::CloudController::AppModel.make(name: name2, space_guid: space.guid, created_at: Time.at(2)) }
-    let!(:app_model3) { VCAP::CloudController::AppModel.make(name: name3, space_guid: space.guid, created_at: Time.at(3)) }
+    let!(:app_model3) { VCAP::CloudController::AppModel.make(name: name3, space_guid: space.guid, environment_variables: environment_variables, created_at: Time.at(3)) }
     let!(:app_model4) { VCAP::CloudController::AppModel.make(space_guid: VCAP::CloudController::Space.make.guid) }
     let(:space) { VCAP::CloudController::Space.make }
     let(:page) { 1 }
@@ -58,6 +59,7 @@ resource 'Apps (Experimental)', type: :api do
             'name'   => name3,
             'guid'   => app_model3.guid,
             'desired_state' => app_model3.desired_state,
+            'environment_variables' => environment_variables,
             '_links' => {
               'self'      => { 'href' => "/v3/apps/#{app_model3.guid}" },
               'processes' => { 'href' => "/v3/apps/#{app_model3.guid}/processes" },
@@ -92,10 +94,12 @@ resource 'Apps (Experimental)', type: :api do
       let(:space_guids) { [app_model5.space_guid, space.guid, app_model6.space_guid] }
       let(:per_page) { 2 }
       let(:names) { [name1] }
+
       def space_guid_facets(space_guids)
         space_guids.map { |sg| "space_guids[]=#{sg}" }.join('&')
       end
-      example 'Filters apps by name and spaces and guids and orgs' do
+
+      example 'Filters Apps by guids, names, spaces, and organizations' do
         user.admin = true
         user.save
         expected_pagination = {
@@ -118,7 +122,8 @@ resource 'Apps (Experimental)', type: :api do
 
   get '/v3/apps/:guid' do
     let(:desired_droplet_guid) { 'a-droplet-guid' }
-    let(:app_model) { VCAP::CloudController::AppModel.make(name: name, desired_droplet_guid: desired_droplet_guid) }
+    let(:environment_variables) { { 'darkness' => 'ugly' } }
+    let(:app_model) { VCAP::CloudController::AppModel.make(name: name, desired_droplet_guid: desired_droplet_guid, environment_variables: environment_variables) }
     let(:guid) { app_model.guid }
     let(:space_guid) { app_model.space_guid }
     let(:space) { VCAP::CloudController::Space.find(guid: space_guid) }
@@ -134,6 +139,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => name,
         'guid'   => guid,
         'desired_state' => app_model.desired_state,
+        'environment_variables' => environment_variables,
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{guid}" },
           'processes'       => { 'href' => "/v3/apps/#{guid}/processes" },
@@ -155,6 +161,7 @@ resource 'Apps (Experimental)', type: :api do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
     let(:name) { 'my_app' }
+    let(:environment_variables) { { 'open' => 'source' } }
 
     before do
       space.organization.add_user(user)
@@ -163,6 +170,7 @@ resource 'Apps (Experimental)', type: :api do
 
     parameter :name, 'Name of the App', required: true
     parameter :space_guid, 'GUID of associated Space', required: true
+    parameter :environment_variables, 'Environment variables to be used for the App when running', required: false
 
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
 
@@ -176,6 +184,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => name,
         'guid'   => expected_guid,
         'desired_state' => 'STOPPED',
+        'environment_variables' => environment_variables,
         '_links' => {
           'self'      => { 'href' => "/v3/apps/#{expected_guid}" },
           'processes' => { 'href' => "/v3/apps/#{expected_guid}/processes" },
@@ -203,9 +212,16 @@ resource 'Apps (Experimental)', type: :api do
 
     parameter :name, 'Name of the App'
     parameter :desired_droplet_guid, 'GUID of the Droplet to be used for the App'
+    parameter :environment_variables, 'Environment variables to be used for the App when running'
 
     let(:name) { 'new_name' }
     let(:desired_droplet_guid) { droplet.guid }
+    let(:environment_variables) do
+      {
+        'MY_ENV_VAR' => 'foobar',
+        'FOOBAR' => 'MY_ENV_VAR'
+      }
+    end
     let(:guid) { app_model.guid }
 
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
@@ -217,6 +233,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => name,
         'guid'   => app_model.guid,
         'desired_state' => app_model.desired_state,
+        'environment_variables' => environment_variables,
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },

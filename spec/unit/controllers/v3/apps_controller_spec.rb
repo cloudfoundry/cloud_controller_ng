@@ -280,6 +280,7 @@ module VCAP::CloudController
           _, response = apps_controller.update(app_model.guid)
           expect(response).to eq(app_response)
         end
+
         context 'when the app is invalid' do
           before do
             allow(AppUpdate).to receive(:update).and_raise(AppUpdate::InvalidApp.new('ya done goofed'))
@@ -307,6 +308,25 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'ResourceNotFound'
               expect(error.response_code).to eq(404)
+            end
+          end
+        end
+
+        context 'when the user attempts to set a reserved environment variable' do
+          let(:req_body) do
+            {
+              environment_variables: {
+                CF_GOOFY_GOOF: 'you done goofed!'
+              }
+            }.to_json
+          end
+
+          it 'returns the correct error' do
+            expect {
+              apps_controller.update(app_model.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq('UnprocessableEntity')
+              expect(error.message).to match('The request is semantically invalid: environment_variables cannot start with CF_')
             end
           end
         end

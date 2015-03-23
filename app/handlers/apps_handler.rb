@@ -28,7 +28,7 @@ module VCAP::CloudController
   end
 
   class AppCreateMessage
-    attr_reader :name, :space_guid
+    attr_reader :name, :space_guid, :environment_variables
     attr_accessor :error
 
     def self.create_from_http_request(body)
@@ -42,29 +42,9 @@ module VCAP::CloudController
     end
 
     def initialize(opts)
-      @name       = opts['name']
-      @space_guid = opts['space_guid']
-    end
-  end
-
-  class AppUpdateMessage
-    attr_reader :guid, :name, :desired_droplet_guid
-    attr_accessor :error
-
-    def self.create_from_http_request(guid, body)
-      opts = body && MultiJson.load(body)
-      raise MultiJson::ParseError.new('invalid request body') unless opts.is_a?(Hash)
-      AppUpdateMessage.new(opts.merge('guid' => guid))
-    rescue MultiJson::ParseError => e
-      message       = AppUpdateMessage.new({})
-      message.error = e.message
-      message
-    end
-
-    def initialize(opts)
-      @guid                 = opts['guid']
-      @name                 = opts['name']
-      @desired_droplet_guid = opts['desired_droplet_guid']
+      @name                  = opts['name']
+      @space_guid            = opts['space_guid']
+      @environment_variables = opts['environment_variables']
     end
   end
 
@@ -98,44 +78,16 @@ module VCAP::CloudController
     end
 
     def create(message, access_context)
-      app            = AppModel.new
-      app.name       = message.name
-      app.space_guid = message.space_guid
+      app                       = AppModel.new
+      app.name                  = message.name
+      app.space_guid            = message.space_guid
+      app.environment_variables = message.environment_variables
 
       raise InvalidApp.new('Space was not found') if Space.find(guid: message.space_guid).nil?
       raise Unauthorized if access_context.cannot?(:create, app)
 
       app.save
       app
-    rescue Sequel::ValidationFailed => e
-      raise InvalidApp.new(e.message)
-    end
-
-    def update(message, access_context)
-      app = AppModel.find(guid: message.guid)
-      return nil if app.nil?
-
-      app.db.transaction do
-        app.lock!
-
-        app.name = message.name unless message.name.nil?
-        if message.desired_droplet_guid
-          droplet = DropletModel.find(guid: message.desired_droplet_guid)
-          raise DropletNotFound if droplet.nil?
-          raise DropletNotFound if droplet.app_guid != app.guid
-          app.desired_droplet_guid = message.desired_droplet_guid
-        end
-
-        raise Unauthorized if access_context.cannot?(:update, app)
-
-        app.save
-
-        web_process = app.processes.find { |p| p.type == 'web' }
-        update_web_process_name(web_process, message.name, access_context) unless web_process.nil?
-      end
-
-      return app
-
     rescue Sequel::ValidationFailed => e
       raise InvalidApp.new(e.message)
     end

@@ -14,7 +14,7 @@ module VCAP::CloudController
       AppModel.make(name: app_1.name, space_guid: space_3.guid)
     end
 
-    it 'filters by access_contexts' do
+    it 'filters by access_context' do
       access_context = double(:access_context, roles: double(:roles, admin?: true))
       apps_repository = AppsRepository.new
 
@@ -159,7 +159,7 @@ module VCAP::CloudController
 
     describe '#create' do
       let(:space_guid) { Space.make.guid }
-      let(:create_message) { AppCreateMessage.new({ 'name' => 'my_name', 'space_guid' => space_guid }) }
+      let(:create_message) { AppCreateMessage.new({ 'name' => 'my_name', 'space_guid' => space_guid, 'environment_variables' => { 'a' => 'b' } }) }
 
       context 'when the user cannot create an app' do
         before do
@@ -219,132 +219,6 @@ module VCAP::CloudController
         it 'raises an AppInvalid error' do
           expect {
             apps_handler.create(create_message, access_context)
-          }.to raise_error(AppsHandler::InvalidApp, 'the message')
-        end
-      end
-    end
-
-    describe '#update' do
-      let!(:app_model) { AppModel.make(desired_droplet_guid: '123') }
-      let!(:droplet_model) { DropletModel.make(app_guid: guid) }
-      let(:new_name) { 'new-name' }
-      let(:guid) { app_model.guid }
-      let(:desired_droplet_guid) { droplet_model.guid }
-      let(:update_message) { AppUpdateMessage.new({ 'guid' => guid, 'name' => new_name, 'desired_droplet_guid' => desired_droplet_guid }) }
-      let(:empty_update_message) { AppUpdateMessage.new({ 'guid' => guid }) }
-
-      context 'when the user cannot update the app' do
-        before do
-          allow(access_context).to receive(:cannot?).and_return(true)
-        end
-
-        it 'raises Unauthorized error' do
-          expect {
-            apps_handler.update(update_message, access_context)
-          }.to raise_error(AppsHandler::Unauthorized)
-          expect(access_context).to have_received(:cannot?).with(:update, app_model)
-        end
-      end
-
-      context 'when the user can update the app' do
-        it 'updates the app' do
-          result = apps_handler.update(update_message, access_context)
-          expect(result.guid).to eq(guid)
-          expect(result.name).to eq(new_name)
-          expect(result.desired_droplet_guid).to eq(desired_droplet_guid)
-
-          updated_app = AppModel.find(guid: guid)
-          expect(updated_app.name).to eq(new_name)
-          expect(updated_app.desired_droplet_guid).to eq(desired_droplet_guid)
-        end
-
-        it 'prevents droplets from other apps to be assigned' do
-          update_message = AppUpdateMessage.new({ 'guid' => guid, 'desired_droplet_guid' => DropletModel.make.guid })
-          expect {
-            apps_handler.update(update_message, access_context)
-          }.to raise_error AppsHandler::DropletNotFound
-        end
-
-        it 'prevents inexistent droplets to be assigned' do
-          update_message = AppUpdateMessage.new({ 'guid' => guid, 'desired_droplet_guid' => 'some-garbage' })
-          expect {
-            apps_handler.update(update_message, access_context)
-          }.to raise_error AppsHandler::DropletNotFound
-        end
-
-        it 'keeps current, non-updated attributes' do
-          result = apps_handler.update(empty_update_message, access_context)
-          expect(result.guid).to eq(guid)
-          expect(result.name).to eq(app_model.name)
-          expect(result.desired_droplet_guid).to eq(app_model.desired_droplet_guid)
-
-          updated_app = AppModel.find(guid: guid)
-          expect(updated_app.name).to eq(app_model.name)
-          expect(updated_app.desired_droplet_guid).to eq(app_model.desired_droplet_guid)
-        end
-
-        context 'when the app has a web process' do
-          let(:space) { Space.find(guid: app_model.space_guid) }
-          let(:user) { User.make }
-          let(:process_opts) { { space: space } }
-          let(:process) { AppFactory.make(process_opts) }
-          let(:process_guid) { process.guid }
-
-          before do
-            allow(access_context).to receive(:user).and_return(user)
-            allow(access_context).to receive(:user_email).and_return('email')
-            apps_handler.add_process(app_model, process, access_context)
-
-            allow(processes_handler).to receive(:update) do
-              process.name = new_name
-              process.save
-            end
-          end
-
-          it 'also updates the name of the web process' do
-            result = apps_handler.update(update_message, access_context)
-            expect(result.guid).to eq(guid)
-            expect(result.name).to eq(new_name)
-
-            updated_app     = AppModel.find(guid: guid)
-            updated_process = App.find(guid: process_guid)
-
-            expect(updated_app.name).to eq(new_name)
-            expect(updated_process.name).to eq(new_name)
-          end
-
-          it 'does not update the app or process if the process raises an exception' do
-            allow(access_context).to receive(:cannot?).and_return(true).once
-            expect {
-              apps_handler.update(empty_update_message, access_context)
-            }.to raise_error
-
-            updated_app     = AppModel.find(guid: guid)
-            updated_process = App.find(guid: process_guid)
-
-            expect(updated_app.name).to eq(app_model.name)
-            expect(updated_process.name).to eq(process.name)
-          end
-        end
-      end
-
-      context 'when the app does not exist' do
-        let(:guid) { 'bad-guid' }
-
-        it 'returns nil' do
-          result = apps_handler.update(update_message, access_context)
-          expect(result).to be_nil
-        end
-      end
-
-      context 'when the app is invalid' do
-        before do
-          allow_any_instance_of(AppModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('the message'))
-        end
-
-        it 'raises an AppInvalid error' do
-          expect {
-            apps_handler.update(update_message, access_context)
           }.to raise_error(AppsHandler::InvalidApp, 'the message')
         end
       end

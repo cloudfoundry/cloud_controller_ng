@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class DropletModel < Sequel::Model(:v3_droplets)
+    include Serializer
+
     DROPLET_STATES = [
       PENDING_STATE = 'PENDING',
       STAGING_STATE = 'STAGING',
