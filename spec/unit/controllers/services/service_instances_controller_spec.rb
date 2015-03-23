@@ -1055,7 +1055,7 @@ module VCAP::CloudController
               })
         end
 
-        context 'when the service instance client returns a 202 with an empty body' do
+        context 'when the broker returns a 202 with an empty body' do
           let(:status) { 202 }
           let(:response_body) { '{}' }
 
@@ -1067,7 +1067,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the service instance client returns a last_operation with state `in progress`' do
+        context 'when the broker returns a last_operation with state `in progress`' do
           let(:status) { 202 }
           let(:response_body) do
             {
@@ -1094,6 +1094,22 @@ module VCAP::CloudController
           it 'returns a 202' do
             put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
             expect(last_response).to have_status_code 202
+          end
+
+          context 'when the broker returns a long text description (mysql)' do
+            let(:response_body) do
+              {
+                last_operation: {
+                  state: 'in progress',
+                  description: '123' * 512,
+                }
+              }.to_json
+            end
+
+            it 'returns a 202' do
+              put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
+              expect(last_response).to have_status_code 202
+            end
           end
 
           context 'when the broker returns 410 for a service instance fetch request' do
@@ -1174,7 +1190,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the service instance client returns a last_operation with state `succeeded`' do
+        context 'when the broker returns a last_operation with state `succeeded`' do
           let(:response_body) do
             {
               last_operation: {
