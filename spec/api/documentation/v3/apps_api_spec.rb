@@ -71,6 +71,7 @@ resource 'Apps (Experimental)', type: :api do
             'name'   => name2,
             'guid'   => app_model2.guid,
             'desired_state' => app_model2.desired_state,
+            'environment_variables' => {},
             '_links' => {
               'self'      => { 'href' => "/v3/apps/#{app_model2.guid}" },
               'processes' => { 'href' => "/v3/apps/#{app_model2.guid}/processes" },
@@ -300,6 +301,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => app_model.name,
         'guid'   => app_model.guid,
         'desired_state'   => 'STARTED',
+        'environment_variables' => {},
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
@@ -342,6 +344,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => app_model.name,
         'guid'   => app_model.guid,
         'desired_state'   => 'STOPPED',
+        'environment_variables' => {},
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },

@@ -119,6 +119,16 @@ module VCAP::CloudController
       end
 
       describe 'environment_variables' do
+        it 'validates that the input is a hash' do
+          expect {
+            AppModel.make(environment_variables: '')
+          }.to raise_error(Sequel::ValidationFailed, /must be a JSON hash/)
+
+          expect {
+            AppModel.make(environment_variables: 3)
+          }.to raise_error(Sequel::ValidationFailed, /must be a JSON hash/)
+        end
+
         it 'does not allow variables that start with CF_' do
           expect {
             AppModel.make(environment_variables: { CF_POTATO: 'muy bueno' })

@@ -22,6 +22,10 @@ module VCAP::CloudController
 
     def validate_environment_variables
       return unless environment_variables
+      unless environment_variables.is_a?(Hash)
+        errors.add(:environment_variables, 'must be a JSON hash')
+        return
+      end
       keys = environment_variables.keys
       keys.each do |key|
         key = key.to_s

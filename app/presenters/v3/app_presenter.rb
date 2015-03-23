@@ -25,14 +25,13 @@ module VCAP::CloudController
     private
 
     def app_hash(app)
-      hash = {
+      {
         guid:                  app.guid,
         name:                  app.name,
         desired_state:         app.desired_state,
-        _links:                build_links(app),
+        environment_variables: app.environment_variables || {},
+        _links:                build_links(app)
       }
-      hash[:environment_variables] = app.environment_variables if app.environment_variables
-      hash
     end
 
     def build_links(app)

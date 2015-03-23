@@ -17,6 +17,15 @@ module VCAP::CloudController
         expect(result['_links']).not_to include('desired_droplet')
       end
 
+      it 'returns an empty hash as environment_variables if not present' do
+        app = AppModel.make
+
+        json_result = AppPresenter.new.present_json(app)
+        result      = MultiJson.load(json_result)
+
+        expect(result['environment_variables']).to eq({})
+      end
+
       it 'includes a link to the droplet if present' do
         app = AppModel.make(desired_droplet_guid: '123')
 
