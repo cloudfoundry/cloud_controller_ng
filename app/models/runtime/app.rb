@@ -19,6 +19,7 @@ module VCAP::CloudController
 
       self.instances ||=  default_instances
       self.memory ||= VCAP::CloudController::Config.config[:default_app_memory]
+      self.disk_quota ||= VCAP::CloudController::Config.config[:default_app_disk_in_mb]
     end
 
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
@@ -87,6 +88,8 @@ module VCAP::CloudController
       [
         AppEnvironmentPolicy.new(self),
         DiskQuotaPolicy.new(self, max_app_disk_in_mb),
+        MinDiskQuotaPolicy.new(self),
+        MaxDiskQuotaPolicy.new(self, space, :space_disk_quota_exceeded),
         MetadataPolicy.new(self, metadata_deserialized),
         MinMemoryPolicy.new(self),
         MaxMemoryPolicy.new(self, space, :space_quota_exceeded),

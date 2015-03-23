@@ -48,9 +48,11 @@ module VCAP::CloudController
         expect(app.instances).to eq(schema_default)
       end
 
-      it 'has a default memory' do
+      it 'has a default memory and disk quota' do
         allow(VCAP::CloudController::Config.config).to receive(:[]).with(:default_app_memory).and_return(873565)
+        allow(VCAP::CloudController::Config.config).to receive(:[]).with(:default_app_disk_in_mb).and_return(873565)
         expect(app.memory).to eq(873565)
+        expect(app.disk_quota).to eq(873565)
       end
     end
 
@@ -82,6 +84,8 @@ module VCAP::CloudController
         expect_validator(InstancesPolicy)
         expect_validator(AppEnvironmentPolicy)
         expect_validator(DiskQuotaPolicy)
+        expect_validator(MinDiskQuotaPolicy)
+        expect_validator(MaxDiskQuotaPolicy)
         expect_validator(MetadataPolicy)
         expect_validator(MinMemoryPolicy)
         expect_validator(MaxInstanceMemoryPolicy)
@@ -95,6 +99,13 @@ module VCAP::CloudController
         subject(:app) { AppFactory.make(space: space) }
         let(:org) { Organization.make }
         let(:space) { Space.make(organization: org, space_quota_definition: SpaceQuotaDefinition.make(organization: org)) }
+
+        it 'validates space using MaxDiskQuotaPolicy' do
+          max_disk_quota_policy_policies = app.validation_policies.select { |policy| policy.instance_of? MaxDiskQuotaPolicy }
+          expect(max_disk_quota_policy_policies.length).to eq(1)
+          targets = max_disk_quota_policy_policies.collect(&:policy_target)
+          expect(targets).to match_array([space])
+        end
 
         it 'validates org and space using MaxMemoryPolicy' do
           max_memory_policies = app.validation_policies.select { |policy| policy.instance_of? MaxMemoryPolicy }
@@ -1637,12 +1648,12 @@ module VCAP::CloudController
           TestConfig.override({ default_app_disk_in_mb: 512 })
         end
 
-        it 'should use the provided quota' do
+        it 'should use the provided disk_quota' do
           app = App.create_from_hash(name: 'test', space_guid: space.guid, disk_quota: 256)
           expect(app.disk_quota).to eq(256)
         end
 
-        it 'should use the default quota' do
+        it 'should use the default disk_quota' do
           app = App.create_from_hash(name: 'test', space_guid: space.guid)
           expect(app.disk_quota).to eq(512)
         end
