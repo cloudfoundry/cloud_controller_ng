@@ -76,6 +76,7 @@ require 'cloud_controller/dea/pool'
 require 'cloud_controller/dea/client'
 require 'cloud_controller/dea/respondent'
 
+require 'cloud_controller/diego/nsync_client'
 require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/tps_client'
 

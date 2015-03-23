@@ -45,6 +45,10 @@ module CloudController
       @dependencies[:stagers] || raise('stagers not set')
     end
 
+    def nsync_client
+      @dependencies[:nsync_client] || raise('nsync_client not set')
+    end
+
     def stager_client
       @dependencies[:stager_client] || raise('stager_client not set')
     end

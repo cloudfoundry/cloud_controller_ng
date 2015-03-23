@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     describe Stager do
       let(:messenger) { instance_double(Messenger, send_desire_request: nil) }
-      let(:app) { AppFactory.make(staging_task_id: 'first_id') }
+      let(:app) { AppFactory.make }
       let(:staging_config) { TestConfig.config[:stager] }
 
       let(:completion_handler) do
@@ -37,13 +37,19 @@ module VCAP::CloudController
         end
 
         context 'when the stage fails' do
+          let(:error) do
+            { error: { id: 'StagingError', message: 'staging failed' } }
+          end
+
           before do
-            allow(messenger).to receive(:send_stage_request).and_raise
+            allow(messenger).to receive(:send_stage_request).and_raise Errors::ApiError.new_from_details('StagerError')
+            allow(stager).to receive(:staging_complete)
           end
 
           it 'attempts to stop the outstanding stage request' do
-            expect(app).to receive(:mark_as_failed_to_stage)
-            expect { stager.stage_app }.to raise_error
+            expect { stager.stage_app }.to raise_error(Errors::ApiError)
+            app.reload
+            expect(stager).to have_received(:staging_complete).with(StagingGuid.from_app(app), error)
           end
         end
       end

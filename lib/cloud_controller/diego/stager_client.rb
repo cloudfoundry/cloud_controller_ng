@@ -1,4 +1,3 @@
-require 'cloud_controller/diego/unavailable'
 require 'cloud_controller/diego/staging_guid'
 
 module VCAP::CloudController
@@ -17,7 +16,7 @@ module VCAP::CloudController
 
       def stage(staging_guid, staging_message)
         if @http_client.nil?
-          raise Unavailable
+          raise Errors::ApiError.new_from_details('StagerUnavailable', 'invalid config')
         end
 
         logger.info('stage.request', staging_guid: staging_guid)
@@ -29,13 +28,13 @@ module VCAP::CloudController
           response = @http_client.put(path, staging_message, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED => e
           retry unless (tries -= 1).zero?
-          raise Unavailable.new(e)
+          raise Errors::ApiError.new_from_details('StagerUnavailable', e)
         end
 
         logger.info('stage.response', staging_guid: staging_guid, response_code: response.code)
 
         if response.code != '202'
-          raise Errors::ApiError.new_from_details('StagingError', "Stager response code: #{response.code}")
+          raise Errors::ApiError.new_from_details('StagerError', "staging failed: #{response.code}")
         end
 
         nil
@@ -43,7 +42,7 @@ module VCAP::CloudController
 
       def stop_staging(staging_guid)
         if @http_client.nil?
-          raise Unavailable
+          raise Errors::ApiError.new_from_details('StagerUnavailable', 'invalid config')
         end
 
         logger.info('stop.staging.request', staging_guid: staging_guid)
@@ -55,10 +54,14 @@ module VCAP::CloudController
           response = @http_client.delete(path, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED => e
           retry unless (tries -= 1).zero?
-          raise Unavailable.new(e)
+          raise Errors::ApiError.new_from_details('StagerUnavailable', e)
         end
 
         logger.info('stop.staging.response', staging_guid: staging_guid, response_code: response.code)
+
+        if response.code != '202'
+          raise Errors::ApiError.new_from_details('StagerError', "stop failed: #{response.code}")
+        end
 
         nil
       end

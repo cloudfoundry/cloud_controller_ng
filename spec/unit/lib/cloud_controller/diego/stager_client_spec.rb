@@ -25,10 +25,10 @@ module VCAP::CloudController::Diego
         end
 
         context 'when the stager endpoint is unavailable' do
-          it 'retries and eventually raises Diego::Unavailable' do
+          it 'retries and eventually raises StagerUnavailable' do
             stub = stub_request(:put, staging_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.stage(staging_guid, staging_message) }.to raise_error(Unavailable, /connection refused/i)
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -38,8 +38,8 @@ module VCAP::CloudController::Diego
             stub_request(:put, staging_url).to_return(status: 500, body: '')
           end
 
-          it 'raises DiegoUnavailable' do
-            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::CloudController::Errors::ApiError, /response code: 500/i)
+          it 'raises StagerUnavailable' do
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: 500/i)
           end
         end
 
@@ -71,8 +71,8 @@ module VCAP::CloudController::Diego
           TestConfig.override(diego_stager_url: nil)
         end
 
-        it 'raises Diego::Unavailable' do
-          expect { client.stage(staging_guid, staging_message) }.to raise_error(Unavailable, 'Diego runtime is unavailable.')
+        it 'raises StagerUnavailable' do
+          expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /invalid config/)
         end
       end
     end
@@ -91,10 +91,10 @@ module VCAP::CloudController::Diego
         end
 
         context 'when the stager endpoint is unavailable' do
-          it 'retries and eventually raises Diego::Unavailable' do
+          it 'retries and eventually raises StagerUnavailable' do
             stub = stub_request(:delete, staging_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.stop_staging(staging_guid) }.to raise_error(Unavailable, /connection refused/i)
+            expect { client.stop_staging(staging_guid) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -105,8 +105,8 @@ module VCAP::CloudController::Diego
           TestConfig.override(diego_stager_url: nil)
         end
 
-        it 'raises Diego::Unavailable' do
-          expect { client.stop_staging(staging_guid) }.to raise_error(Unavailable, 'Diego runtime is unavailable.')
+        it 'raises StagerUnavailable' do
+          expect { client.stop_staging(staging_guid) }.to raise_error(VCAP::Errors::ApiError, /invalid config/)
         end
       end
     end

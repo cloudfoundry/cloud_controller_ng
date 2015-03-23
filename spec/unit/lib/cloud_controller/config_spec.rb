@@ -229,6 +229,8 @@ module VCAP::CloudController
     end
 
     describe '.configure_components' do
+      let(:dependency_locator) { CloudController::DependencyLocator.instance }
+
       before do
         @test_config = {
           packages: {
@@ -392,6 +394,20 @@ module VCAP::CloudController
           Config.configure_components(config)
           expect(GC::Profiler.enabled?).to eq(true)
         end
+      end
+
+      it 'creates the nsync client' do
+        expect(Diego::NsyncClient).to receive(:new).with(@test_config).and_call_original
+
+        Config.configure_components(@test_config)
+        expect(dependency_locator.nsync_client).to be_an_instance_of(VCAP::CloudController::Diego::NsyncClient)
+      end
+
+      it 'creates the stager client' do
+        expect(Diego::StagerClient).to receive(:new).with(@test_config).and_call_original
+
+        Config.configure_components(@test_config)
+        expect(dependency_locator.stager_client).to be_an_instance_of(VCAP::CloudController::Diego::StagerClient)
       end
     end
   end

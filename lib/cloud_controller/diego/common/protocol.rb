@@ -2,10 +2,6 @@ module VCAP::CloudController
   module Diego
     module Common
       class Protocol
-        def stop_index_request(app, index)
-          ['diego.stop.index', stop_index_message(app, index).to_json]
-        end
-
         def staging_egress_rules
           staging_security_groups = SecurityGroup.where(staging_default: true).all
           order_rules(EgressNetworkRulesPresenter.new(staging_security_groups).to_array)
@@ -16,13 +12,6 @@ module VCAP::CloudController
         end
 
         private
-
-        def stop_index_message(app, index)
-          {
-            'process_guid' => ProcessGuid.from_app(app),
-            'index' => index,
-          }
-        end
 
         def order_rules(rules)
           logging_rules = []

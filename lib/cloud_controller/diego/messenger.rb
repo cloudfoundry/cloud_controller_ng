@@ -1,9 +1,9 @@
 module VCAP::CloudController
   module Diego
     class Messenger
-      def initialize(stager_client, message_bus, protocol)
+      def initialize(stager_client, nsync_client, protocol)
         @stager_client = stager_client
-        @message_bus = message_bus
+        @nsync_client = nsync_client
         @protocol = protocol
       end
 
@@ -24,12 +24,17 @@ module VCAP::CloudController
 
       def send_desire_request(app, default_health_check_timeout)
         logger.info('desire.app.begin', app_guid: app.guid)
-        @message_bus.publish(*@protocol.desire_app_request(app, default_health_check_timeout))
+
+        process_guid = ProcessGuid.from_app(app)
+        desire_message = @protocol.desire_app_request(app, default_health_check_timeout)
+        @nsync_client.desire_app(process_guid, desire_message)
       end
 
       def send_stop_index_request(app, index)
         logger.info('stop.index', app_guid: app.guid, index: index)
-        @message_bus.publish(*@protocol.stop_index_request(app, index))
+
+        process_guid = ProcessGuid.from_app(app)
+        @nsync_client.stop_index(process_guid, index)
       end
 
       private

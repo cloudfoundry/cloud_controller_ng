@@ -2126,6 +2126,7 @@ module VCAP::CloudController
 
         before do
           subject.diego = true
+          allow(AppObserver).to receive(:routes_changed).with(subject)
         end
 
         it "do not update the app's version" do
@@ -2148,6 +2149,8 @@ module VCAP::CloudController
           let(:routes) { 3.times.collect { Route.make domain: domain, space: subject.space } }
 
           before do
+            allow(AppObserver).to receive(:updated).with(subject)
+
             subject.add_route(route)
             subject.save
           end

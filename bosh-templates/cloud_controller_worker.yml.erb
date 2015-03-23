@@ -240,7 +240,8 @@ uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 
 users_can_select_backend: <%= p("cc.users_can_select_backend") %>
 diego_docker: <%= p("cc.diego_docker") %>
-diego_diego_url: http://diego.service.consul:1518
+diego_nsync_url: http://nsync.service.consul:8787
+diego_stager_url: http://diego.service.consul:8888
 diego_tps_url: http://tps.service.consul:1518
 default_to_diego_backend: <%= p("cc.default_to_diego_backend") %>
 

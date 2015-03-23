@@ -7,18 +7,6 @@ module VCAP::CloudController
       describe Protocol do
         subject(:protocol) { described_class.new }
 
-        describe '#stop_index_request' do
-          let(:app) { double(:app, { guid: 'guid', version: 'versioned' }) }
-
-          it 'includes a subject and message for CfMessageBus::MessageBus#publish' do
-            request = protocol.stop_index_request(app, 33)
-
-            expect(request.size).to eq(2)
-            expect(request.first).to eq('diego.stop.index')
-            expect(request.last).to match_json({ 'process_guid' => 'guid-versioned', 'index' => 33 })
-          end
-        end
-
         describe 'staging_egress_rules' do
           before do
             SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)

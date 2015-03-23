@@ -47,13 +47,24 @@ module VCAP::CloudController
           expect(result[6][:state]).to eq('DOWN')
         end
 
-        context 'when diego is unavailable' do
+        context 'when an error is raised' do
           before do
-            allow(tps_client).to receive(:lrp_instances).and_raise(Diego::Unavailable)
+            allow(tps_client).to receive(:lrp_instances).and_raise(StandardError.new('oh no'))
           end
 
           it 'raises an InstancesUnavailable exception' do
-            expect { subject.all_instances_for_app(app) }.to raise_error(Errors::InstancesUnavailable, /Diego/)
+            expect { subject.all_instances_for_app(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, /oh no/)
+          end
+
+          context 'when its an InstancesUnavailable' do
+            let(:error) { Errors::InstancesUnavailable.new('oh my') }
+            before do
+              allow(tps_client).to receive(:lrp_instances).and_raise(error)
+            end
+
+            it 're-raises' do
+              expect { subject.all_instances_for_app(app) }.to raise_error(error)
+            end
           end
         end
       end
@@ -151,13 +162,24 @@ module VCAP::CloudController
 
           context 'when diego is unavailable' do
             before do
-              allow(tps_client).to receive(:lrp_instances).and_raise(Diego::Unavailable)
+              allow(tps_client).to receive(:lrp_instances).and_raise(StandardError.new('oh no'))
             end
 
             it 'raises an InstancesUnavailable exception' do
               expect {
                 subject.number_of_starting_and_running_instances_for_app(app)
-              }.to raise_error(Errors::InstancesUnavailable, /Diego/)
+              }.to raise_error(Errors::InstancesUnavailable, /oh no/)
+            end
+
+            context 'when its an InstancesUnavailable' do
+              let(:error) { Errors::InstancesUnavailable.new('oh my') }
+              before do
+                allow(tps_client).to receive(:lrp_instances).and_raise(error)
+              end
+
+              it 're-raises' do
+                expect { subject.number_of_starting_and_running_instances_for_app(app) }.to raise_error(error)
+              end
             end
           end
         end
@@ -170,18 +192,6 @@ module VCAP::CloudController
         it 'returns a hash of app => instance count' do
           result = subject.number_of_starting_and_running_instances_for_apps([app1, app2])
           expect(result).to eq({ app1.guid => 2, app2.guid => 4 })
-        end
-
-        context 'when diego is unavailable' do
-          before do
-            allow(tps_client).to receive(:lrp_instances).and_raise(Diego::Unavailable)
-          end
-
-          it 'raises an InstancesUnavailable exception' do
-            expect {
-              subject.number_of_starting_and_running_instances_for_apps([app1, app2])
-            }.to raise_error(Errors::InstancesUnavailable, /Diego/)
-          end
         end
       end
 
@@ -197,13 +207,24 @@ module VCAP::CloudController
 
         context 'when diego is unavailable' do
           before do
-            allow(tps_client).to receive(:lrp_instances).and_raise(Diego::Unavailable)
+            allow(tps_client).to receive(:lrp_instances).and_raise(StandardError.new('oh no'))
           end
 
           it 'raises an InstancesUnavailable exception' do
             expect {
               subject.crashed_instances_for_app(app)
-            }.to raise_error(Errors::InstancesUnavailable, /Diego/)
+            }.to raise_error(Errors::InstancesUnavailable, /oh no/)
+          end
+
+          context 'when its an InstancesUnavailable' do
+            let(:error) { Errors::InstancesUnavailable.new('oh my') }
+            before do
+              allow(tps_client).to receive(:lrp_instances).and_raise(error)
+            end
+
+            it 're-raises' do
+              expect { subject.crashed_instances_for_app(app) }.to raise_error(error)
+            end
           end
         end
       end
@@ -267,13 +288,24 @@ module VCAP::CloudController
 
         context 'when diego is unavailable' do
           before do
-            allow(tps_client).to receive(:lrp_instances).and_raise(Diego::Unavailable)
+            allow(tps_client).to receive(:lrp_instances).and_raise(StandardError.new('oh no'))
           end
 
           it 'raises an InstancesUnavailable exception' do
             expect {
               subject.stats_for_app(app)
-            }.to raise_error(Errors::InstancesUnavailable, /Diego/)
+            }.to raise_error(Errors::InstancesUnavailable, /oh no/)
+          end
+
+          context 'when its an InstancesUnavailable' do
+            let(:error) { Errors::InstancesUnavailable.new('oh my') }
+            before do
+              allow(tps_client).to receive(:lrp_instances).and_raise(error)
+            end
+
+            it 're-raises' do
+              expect { subject.stats_for_app(app) }.to raise_error(error)
+            end
           end
         end
       end

@@ -107,10 +107,8 @@ module VCAP::CloudController
             protocol.desire_app_request(app, default_health_check_timeout)
           end
 
-          it 'includes a subject and message for CfMessageBus::MessageBus#publish' do
-            expect(request.size).to eq(2)
-            expect(request.first).to eq('diego.docker.desire.app')
-            expect(request.last).to match_json(protocol.desire_app_message(app, default_health_check_timeout))
+          it 'returns the message' do
+            expect(request).to match_json(protocol.desire_app_message(app, default_health_check_timeout))
           end
         end
 
@@ -150,17 +148,6 @@ module VCAP::CloudController
             it 'uses the default app health check from the config' do
               expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)
             end
-          end
-        end
-
-        describe '#stop_index_request' do
-          let(:app) { AppFactory.make }
-          before { allow(common_protocol).to receive(:stop_index_request) }
-
-          it 'delegates to the common protocol' do
-            protocol.stop_index_request(app, 33)
-
-            expect(common_protocol).to have_received(:stop_index_request).with(app, 33)
           end
         end
       end

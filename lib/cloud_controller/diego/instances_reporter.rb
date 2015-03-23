@@ -21,7 +21,9 @@ module VCAP::CloudController
         end
 
         fill_unreported_instances_with_down_instances(result, app)
-      rescue Unavailable => e
+      rescue Errors::InstancesUnavailable => e
+        raise e
+      rescue => e
         raise Errors::InstancesUnavailable.new(e)
       end
 
@@ -43,7 +45,9 @@ module VCAP::CloudController
         end
 
         running_indices.length
-      rescue Unavailable => e
+      rescue Errors::InstancesUnavailable => e
+        raise e
+      rescue => e
         raise Errors::InstancesUnavailable.new(e)
       end
 
@@ -61,7 +65,10 @@ module VCAP::CloudController
         end
 
         result
-      rescue Unavailable => e
+
+      rescue Errors::InstancesUnavailable => e
+        raise e
+      rescue => e
         raise Errors::InstancesUnavailable.new(e)
       end
 
@@ -88,7 +95,10 @@ module VCAP::CloudController
         end
 
         fill_unreported_instances_with_down_instances(result, app)
-      rescue Unavailable => e
+
+      rescue Errors::InstancesUnavailable => e
+        raise e
+      rescue => e
         raise Errors::InstancesUnavailable.new(e)
       end
 

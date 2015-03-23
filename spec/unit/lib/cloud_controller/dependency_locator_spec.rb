@@ -374,6 +374,12 @@ describe CloudController::DependencyLocator do
     end
   end
 
+  describe '#nsync_client' do
+    it 'returns the diego nsync listener client' do
+      expect(locator.nsync_client).to be_an_instance_of(VCAP::CloudController::Diego::NsyncClient)
+    end
+  end
+
   describe '#stager_client' do
     it 'returns the diego stager client' do
       expect(locator.stager_client).to be_an_instance_of(VCAP::CloudController::Diego::StagerClient)

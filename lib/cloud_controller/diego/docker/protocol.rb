@@ -36,7 +36,7 @@ module VCAP::CloudController
         end
 
         def desire_app_request(app, default_health_check_timeout)
-          ['diego.docker.desire.app', desire_app_message(app, default_health_check_timeout).to_json]
+          desire_app_message(app, default_health_check_timeout).to_json
         end
 
         def desire_app_message(app, default_health_check_timeout)
@@ -58,10 +58,6 @@ module VCAP::CloudController
             'egress_rules' => @common_protocol.running_egress_rules(app),
             'etag' => app.updated_at.to_f.to_s
           }
-        end
-
-        def stop_index_request(app, index)
-          @common_protocol.stop_index_request(app, index)
         end
       end
     end
