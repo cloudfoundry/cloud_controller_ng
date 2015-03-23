@@ -18,6 +18,21 @@ module VCAP::CloudController
           }.to change { AppModel.count }.by(-1)
           expect { app_model.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
+
+        context 'when the app has associated routes' do
+          before do
+            app_model.add_route(Route.make)
+            app_model.add_route(Route.make)
+          end
+
+          it 'removes the association and deletes the app' do
+            expect(app_model.routes.count).to eq(2)
+            expect {
+              app_delete.delete(app_dataset)
+            }.to change { AppModel.count }.by(-1)
+            expect { app_model.refresh }.to raise_error Sequel::Error, 'Record not found'
+          end
+        end
       end
 
       describe 'recursive deletion' do
