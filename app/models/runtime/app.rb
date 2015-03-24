@@ -556,6 +556,19 @@ module VCAP::CloudController
       app_event_repository.record_unmap_route(self, route, SecurityContext.current_user, SecurityContext.current_user_email)
     end
 
+    def prior_state
+      changes = previous_changes
+      return self.state unless changes
+
+      if changes.key?(:state)
+        return changes[:state][0]
+      elsif changes.key?(:staging_task_id)
+        return 'STOPPED'
+      end
+
+      self.state
+    end
+
     private
 
     def mark_routes_changed(_=nil)

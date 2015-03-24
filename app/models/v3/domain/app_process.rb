@@ -2,7 +2,7 @@ module VCAP::CloudController
   class AppProcess
     attr_reader :guid, :app_guid, :space_guid, :stack_guid, :disk_quota,
       :memory, :instances, :state, :command, :buildpack, :health_check_timeout,
-      :docker_image, :environment_json, :name, :type
+      :docker_image, :environment_json, :name, :type, :prior_state
 
     def initialize(opts)
       opts.symbolize_keys!
@@ -21,6 +21,7 @@ module VCAP::CloudController
       @state                = opts[:state]
       @type                 = opts[:type] || 'web'
       @name                 = opts[:name] || "v3-proc-#{@type}-#{@guid}"
+      @prior_state          = opts[:prior_state]
     end
 
     def with_changes(changes)

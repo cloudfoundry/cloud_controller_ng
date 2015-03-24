@@ -187,6 +187,41 @@ module VCAP::CloudController
 
             update_app
           end
+
+          it 'receive prior state' do
+            allow(app_event_repository).to receive(:record_app_update).and_call_original
+
+            update_app
+
+            expect(app_event_repository).to have_received(:record_app_update) do |recorded_app, recorded_space, user, user_name, attributes|
+              expect(recorded_app.guid).to eq(app_obj.guid)
+              expect(recorded_app.instances).to eq(2)
+              expect(user).to eq(admin_user)
+              expect(user_name).to eq(SecurityContext.current_user_email)
+              expect(attributes).to eq({ 'instances' => 2 })
+              expect(recorded_app.prior_state).to eq('STOPPED')
+            end
+          end
+        end
+
+        context 'when state update succeeds' do
+          let(:update_hash) { { 'state' => 'STARTED' } }
+          let(:app_tmp_obj) { AppFactory.make(instances: 1) }
+
+          it 'receive previous state' do
+            allow(app_event_repository).to receive(:record_app_update).and_call_original
+
+            update_app
+
+            expect(app_event_repository).to have_received(:record_app_update) do |recorded_app, recorded_space, user, user_name, attributes|
+              expect(recorded_app.guid).to eq(app_obj.guid)
+              expect(recorded_app.state).to eq('STARTED')
+              expect(user).to eq(admin_user)
+              expect(user_name).to eq(SecurityContext.current_user_email)
+              expect(attributes).to eq({ 'state' => 'STARTED' })
+              expect(recorded_app.prior_state).to eq('STOPPED')
+            end
+          end
         end
 
         context 'when the update fails' do

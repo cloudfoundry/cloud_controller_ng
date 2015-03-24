@@ -15,7 +15,8 @@ module VCAP::CloudController
         'health_check_timeout' => model.values[:health_check_timeout],
         'docker_image'         => model.values[:docker_image],
         'environment_json'     => model.environment_json,
-        'type'                 => model.type
+        'type'                 => model.type,
+        'prior_state'          => model.prior_state
       })
     end
 
