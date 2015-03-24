@@ -443,6 +443,26 @@
   http_code: 400
   message: "Found no compatible cell"
 
+170010:
+  name: StagerUnavailable
+  http_code: 503
+  message: "Stager is unavailable: %s"
+
+170011:
+  name: StagerError
+  http_code: 500
+  message: "Stager error: %s"
+
+170015:
+  name: RunnerUnavailable
+  http_code: 503
+  message: "Runner is unavailable: %s"
+
+170016:
+  name: RunnerError
+  http_code: 500
+  message: "Runner error: %s"
+
 180001:
   name: SnapshotNotFound
   http_code: 404
