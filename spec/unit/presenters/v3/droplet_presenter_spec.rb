@@ -10,6 +10,7 @@ module VCAP::CloudController
           buildpack_guid:         'a-buildpack',
           failure_reason:         'example failure reason',
           detected_start_command: 'blast off!',
+          environment_variables:  { 'elastic' => 'runtime' },
           buildpack_git_url:      'http://git.url', droplet_hash: '1234')
 
         json_result = DropletPresenter.new.present_json(droplet)
@@ -21,6 +22,7 @@ module VCAP::CloudController
         expect(result['buildpack_git_url']).to eq(droplet.buildpack_git_url)
         expect(result['failure_reason']).to eq(droplet.failure_reason)
         expect(result['detected_start_command']).to eq(droplet.detected_start_command)
+        expect(result['environment_variables']).to eq(droplet.environment_variables)
         expect(result['created_at']).to eq(droplet.created_at.as_json)
         expect(result['_links']).to include('self')
         expect(result['_links']['self']['href']).to eq("/v3/droplets/#{droplet.guid}")

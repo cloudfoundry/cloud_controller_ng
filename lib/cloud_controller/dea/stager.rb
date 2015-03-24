@@ -16,7 +16,7 @@ module VCAP::CloudController
 
         staging_message = PackageDEAStagingMessage.new(
           @app, droplet.guid, droplet.guid, stack, memory_limit, disk_limit, buildpack_key,
-          buildpack_git_url, @config, blobstore_url_generator)
+          buildpack_git_url, @config, droplet.environment_variables, blobstore_url_generator)
 
         task.stage(staging_message) do |staging_result, error|
           if error

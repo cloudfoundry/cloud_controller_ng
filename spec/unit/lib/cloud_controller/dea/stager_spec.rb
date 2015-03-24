@@ -117,6 +117,7 @@ module VCAP::CloudController
               anything,
               buildpack_git_url,
               config,
+              environment_variables,
               an_instance_of(CloudController::Blobstore::UrlGenerator)).
             and_return(staging_message)
           allow(stager_task).to receive(:stage).and_yield(staging_result, staging_error).and_return('fake-stager-response')
@@ -124,9 +125,10 @@ module VCAP::CloudController
 
         let(:buildpack) { Buildpack.make(name: 'buildpack-name') }
         let(:buildpack_key) { buildpack.key }
+        let(:environment_variables) { { 'VAR' => 'IABLE' } }
 
         let(:package) { PackageModel.make }
-        let(:droplet) { DropletModel.make }
+        let(:droplet) { DropletModel.make(environment_variables: environment_variables) }
         let(:thing_to_stage) { package }
 
         it 'stages the package with a stager task' do

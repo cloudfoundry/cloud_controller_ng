@@ -194,7 +194,7 @@ module VCAP::CloudController
 
     describe '#create' do
       let(:space) { Space.make }
-      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let(:app_model) { AppModel.make(space_guid: space.guid, environment_variables: { 'APP_VAR' => 'is here' }) }
       let(:app_guid) { app_model.guid }
       let!(:package) { PackageModel.make(app_guid: app_guid, state: PackageModel::READY_STATE, type: PackageModel::BITS_TYPE) }
       let(:package_guid) { package.guid }
@@ -220,6 +220,7 @@ module VCAP::CloudController
       before do
         allow(stagers).to receive(:stager_for_package).with(package).and_return(stager)
         allow(stager).to receive(:stage_package)
+        EnvironmentVariableGroup.make(name: :staging, environment_json: { 'another' => 'var', 'STAGING_ENV' => 'staging_value' })
       end
 
       context 'when the package exists' do
@@ -244,6 +245,59 @@ module VCAP::CloudController
             droplets_handler.create(staging_message, access_context)
             droplet = DropletModel.last
             expect(stager).to have_received(:stage_package).with(droplet, stack, memory_limit, disk_limit, buildpack_key, buildpack_git_url)
+          end
+        end
+
+        context 'environment variables' do
+          it 'records the evironment variables used for staging' do
+            app_model.environment_variables = app_model.environment_variables.merge({ 'another' => 'override' })
+            app_model.save
+            droplet = droplets_handler.create(staging_message, access_context)
+            expect(droplet.environment_variables).to match({
+              'another'     => 'override',
+              'APP_VAR'     => 'is here',
+              'STAGING_ENV' => 'staging_value',
+              'VCAP_APPLICATION' => {
+                'limits' => {
+                  'mem' => staging_message.memory_limit,
+                  'disk' => staging_message.disk_limit,
+                  'fds' => 16384
+                },
+                'application_name' => app_model.name,
+                'name' => app_model.name,
+                'application_uris' => [],
+                'uris' => [],
+                'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                'version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                'space_name' => space.name,
+                'space_id' => space.guid,
+                'users' => nil
+              }
+            })
+          end
+
+          context 'when the app has a route associated with it' do
+            it 'sends the uris of the app as part of vcap_application' do
+              route1 = Route.make(space: space)
+              route2 = Route.make(space: space)
+              route_adder = AddRouteToApp.new(app_model)
+              route_adder.add(route1)
+              route_adder.add(route2)
+
+              droplet = droplets_handler.create(staging_message, access_context)
+              expect(droplet.environment_variables['VCAP_APPLICATION']['uris']).to match([route1.fqdn, route2.fqdn])
+              expect(droplet.environment_variables['VCAP_APPLICATION']['application_uris']).to match([route1.fqdn, route2.fqdn])
+            end
+          end
+
+          context 'when instance_file_descriptor_limit is set' do
+            it 'uses that value as the fds for staging' do
+              TestConfig.config[:instance_file_descriptor_limit] = 100
+              droplet = droplets_handler.create(staging_message, access_context)
+              expect(droplet.environment_variables['VCAP_APPLICATION']['limits']).to include({
+                'fds' => TestConfig.config[:instance_file_descriptor_limit]
+              })
+            end
           end
         end
 

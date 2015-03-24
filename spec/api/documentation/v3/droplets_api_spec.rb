@@ -29,7 +29,9 @@ resource 'Droplets (Experimental)', type: :api do
         app_guid: app_model.guid,
         package_guid: package_model.guid,
         failure_reason: 'example failure reason',
-        detected_start_command: 'run -c all_the_things')
+        detected_start_command: 'run -c all_the_things',
+        environment_variables: { 'cloud' => 'foundry' },
+      )
     end
 
     let(:app_guid) { droplet_model.app_guid }
@@ -47,6 +49,7 @@ resource 'Droplets (Experimental)', type: :api do
         'buildpack_git_url'      => droplet_model.buildpack_git_url,
         'failure_reason'         => droplet_model.failure_reason,
         'detected_start_command' => droplet_model.detected_start_command,
+        'environment_variables'  => droplet_model.environment_variables,
         'created_at'             => droplet_model.created_at.as_json,
         '_links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{guid}" },
@@ -107,7 +110,8 @@ resource 'Droplets (Experimental)', type: :api do
       VCAP::CloudController::DropletModel.make(
         app_guid: app_model.guid,
         package_guid: package.guid,
-        buildpack_guid: buildpack.guid
+        buildpack_guid: buildpack.guid,
+        environment_variables: { 'yuu' => 'huuu' }
       )
     end
     let!(:droplet2) do
@@ -147,6 +151,7 @@ resource 'Droplets (Experimental)', type: :api do
               'buildpack_git_url'      => nil,
               'failure_reason'         => droplet1.failure_reason,
               'detected_start_command' => droplet1.detected_start_command,
+              'environment_variables'  => droplet1.environment_variables,
               'created_at'             => droplet1.created_at.as_json,
               '_links'                 => {
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
@@ -162,6 +167,7 @@ resource 'Droplets (Experimental)', type: :api do
               'buildpack_git_url'      => 'https://github.com/cloudfoundry/my-buildpack.git',
               'failure_reason'         => droplet2.failure_reason,
               'detected_start_command' => droplet2.detected_start_command,
+              'environment_variables'  => {},
               'created_at'             => droplet2.created_at.as_json,
               '_links'                 => {
                 'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },

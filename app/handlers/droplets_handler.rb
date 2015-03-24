@@ -112,12 +112,18 @@ module VCAP::CloudController
       raise AppNotFound if app_model.nil?
       space = Space.find(guid: app_model.space_guid)
 
+      app_env = app_model.environment_variables || {}
+      environment_variables = EnvironmentVariableGroup.staging.environment_json.merge(app_env).merge({
+        VCAP_APPLICATION: vcap_application(message, app_model, space)
+      })
+
       droplet = DropletModel.new(
         app_guid: package.app_guid,
         buildpack_git_url: message.buildpack_git_url,
         buildpack_guid: message.buildpack_guid,
         package_guid: package.guid,
         state: DropletModel::PENDING_STATE,
+        environment_variables: environment_variables
       )
       raise Unauthorized if access_context.cannot?(:create, droplet, space)
 
@@ -151,6 +157,29 @@ module VCAP::CloudController
       end
 
       @paginator.get_page(dataset, pagination_options)
+    end
+
+    private
+
+    def vcap_application(message, app_model, space)
+      version = SecureRandom.uuid
+      uris = app_model.routes.map(&:fqdn)
+      {
+        limits: {
+          mem: message.memory_limit,
+          disk: message.disk_limit,
+          fds: Config.config[:instance_file_descriptor_limit] || 16384,
+        },
+        application_version: version,
+        application_name: app_model.name,
+        application_uris: uris,
+        version: version,
+        name: app_model.name,
+        space_name: space.name,
+        space_id: space.guid,
+        uris: uris,
+        users: nil
+      }
     end
   end
 end

@@ -30,6 +30,7 @@ module VCAP::CloudController
         buildpack_git_url:      droplet.buildpack_git_url,
         failure_reason:         droplet.failure_reason,
         detected_start_command: droplet.detected_start_command,
+        environment_variables:  droplet.environment_variables || {},
         created_at:             droplet.created_at,
         _links:                 build_links(droplet),
       }

@@ -71,15 +71,18 @@ module VCAP::CloudController
     class PackageDEAStagingMessage < StagingMessage
       attr_reader :stack, :memory_limit, :disk_limit, :buildpack_key, :buildpack_git_url, :log_id, :droplet_guid
 
-      def initialize(package, droplet_guid, log_id, stack, memory_limit, disk_limit, buildpack_key, buildpack_git_url, config, blobstore_url_generator)
-        @package           = package
-        @stack             = stack
-        @memory_limit      = memory_limit
-        @disk_limit        = disk_limit
-        @buildpack_key     = buildpack_key
-        @buildpack_git_url = buildpack_git_url
-        @droplet_guid      = droplet_guid
-        @log_id            = log_id
+      def initialize(package, droplet_guid, log_id, stack, memory_limit,
+                     disk_limit, buildpack_key, buildpack_git_url, config,
+                     environment_variables, blobstore_url_generator)
+        @package               = package
+        @stack                 = stack
+        @memory_limit          = memory_limit
+        @disk_limit            = disk_limit
+        @buildpack_key         = buildpack_key
+        @buildpack_git_url     = buildpack_git_url
+        @environment_variables = environment_variables
+        @droplet_guid          = droplet_guid
+        @log_id                = log_id
         super(config, blobstore_url_generator)
       end
 
@@ -98,6 +101,7 @@ module VCAP::CloudController
           disk_limit:                   disk_limit,
           egress_network_rules:         staging_egress_rules,
           properties:                   {
+            environment:       @environment_variables.map { |k, v| "#{k}=#{v}" },
             buildpack_key:     buildpack_key,
             buildpack_git_url: buildpack_git_url,
           }

@@ -19,7 +19,7 @@ module VCAP::CloudController
     let(:staging_message) do
       Dea::PackageDEAStagingMessage.new(
         package, droplet_guid, log_id, stack, memory_limit, disk_limit, buildpack_guid, buildpack_git_url,
-        config_hash, blobstore_url_generator)
+        config_hash, {}, blobstore_url_generator)
     end
     let(:stager_id) { 'my_stager' }
 
