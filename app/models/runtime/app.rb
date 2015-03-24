@@ -431,6 +431,7 @@ module VCAP::CloudController
       self.package_state = 'FAILED'
       self.staging_failed_reason = reason
       self.package_pending_since = nil
+      self.state = 'STOPPED' if diego?
       save
     end
 
@@ -531,7 +532,7 @@ module VCAP::CloudController
       begin
         AppObserver.updated(self)
       rescue Errors::ApiError => e
-        UndoAppChanges.new(self).undo(previous_changes)
+        UndoAppChanges.new(self).undo(previous_changes) unless diego?
         raise e
       end
     end
