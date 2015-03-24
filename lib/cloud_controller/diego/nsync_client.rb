@@ -4,16 +4,11 @@ module VCAP::CloudController
   module Diego
     class NsyncClient
       def initialize(config)
-        url = URI(config[:diego_nsync_url] || '')
-        if url.host && url.port
-          @http_client = Net::HTTP.new(url.host, url.port)
-          @http_client.read_timeout = 10
-          @http_client.open_timeout = 10
-        end
+        @url = URI(config[:diego_nsync_url]) if config[:diego_nsync_url]
       end
 
       def desire_app(process_guid, desire_message)
-        if @http_client.nil?
+        if @url.nil?
           raise Errors::ApiError.new_from_details('RunnerUnavailable', 'invalid config')
         end
 
@@ -23,7 +18,7 @@ module VCAP::CloudController
 
         begin
           tries ||= 3
-          response = @http_client.put(path, desire_message, REQUEST_HEADERS)
+          response = http_client.put(path, desire_message, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED => e
           retry unless (tries -= 1).zero?
           raise Errors::ApiError.new_from_details('RunnerUnavailable', e)
@@ -39,7 +34,7 @@ module VCAP::CloudController
       end
 
       def stop_index(process_guid, index)
-        if @http_client.nil?
+        if @url.nil?
           raise Errors::ApiError.new_from_details('RunnerUnavailable', 'invalid config')
         end
 
@@ -49,7 +44,7 @@ module VCAP::CloudController
 
         begin
           tries ||= 3
-          response = @http_client.delete(path, REQUEST_HEADERS)
+          response = http_client.delete(path, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED => e
           retry unless (tries -= 1).zero?
           raise Errors::ApiError.new_from_details('RunnerUnavailable', e)
@@ -68,6 +63,13 @@ module VCAP::CloudController
       end
 
       private
+
+      def http_client
+        http_client = Net::HTTP.new(@url.host, @url.port)
+        http_client.read_timeout = 10
+        http_client.open_timeout = 10
+        http_client
+      end
 
       def logger
         @logger ||= Steno.logger('cc.nsync.listener.client')

@@ -4,16 +4,11 @@ module VCAP::CloudController
   module Diego
     class TPSClient
       def initialize(config)
-        url = URI(config[:diego_tps_url] || '')
-        if url.host && url.port
-          @http_client = Net::HTTP.new(url.host, url.port)
-          @http_client.read_timeout = 10
-          @http_client.open_timeout = 10
-        end
+        @url = URI(config[:diego_tps_url]) if config[:diego_tps_url]
       end
 
       def lrp_instances(app)
-        if @http_client.nil?
+        if @url.nil?
           raise Errors::InstancesUnavailable.new('invalid config')
         end
 
@@ -24,7 +19,7 @@ module VCAP::CloudController
 
         begin
           tries ||= 3
-          response = @http_client.get(path)
+          response = http_client.get(path)
         rescue Errno::ECONNREFUSED => e
           retry unless (tries -= 1).zero?
           raise Errors::InstancesUnavailable.new(e)
@@ -53,6 +48,13 @@ module VCAP::CloudController
       end
 
       private
+
+      def http_client
+        http_client = Net::HTTP.new(@url.host, @url.port)
+        http_client.read_timeout = 10
+        http_client.open_timeout = 10
+        http_client
+      end
 
       def logger
         @logger ||= Steno.logger('cc.tps.client')
