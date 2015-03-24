@@ -88,6 +88,16 @@ module VCAP::CloudController::Diego
             expect(client.stop_staging(staging_guid)).to be_nil
             expect(a_request(:delete, staging_url).with(body: nil, headers: content_type_header)).to have_been_made.once
           end
+
+          context 'when the stager returns a 404' do
+            before do
+              stub_request(:delete, staging_url).to_return(status: 404)
+            end
+
+            it 'does not raise an error' do
+              expect { client.stop_staging(staging_guid) }.to_not raise_error
+            end
+          end
         end
 
         context 'when the stager endpoint is unavailable' do

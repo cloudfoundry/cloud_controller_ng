@@ -13,7 +13,10 @@ module VCAP::CloudController
       end
 
       def stage_app
-        @messenger.send_stop_staging_request(@app) if @app.pending?
+        if @app.pending? && @app.staging_task_id
+          @messenger.send_stop_staging_request(@app)
+        end
+
         @app.mark_for_restaging
         @app.staging_task_id = VCAP.secure_uuid
         @app.save_changes

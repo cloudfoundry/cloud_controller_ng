@@ -57,7 +57,10 @@ module VCAP::CloudController
 
         logger.info('stop.index.response', process_guid: process_guid, index: index, response_code: response.code)
 
-        if response.code != '202'
+        case response.code
+        when '202', '404'
+          # success
+        else
           raise Errors::ApiError.new_from_details('RunnerError', "stop index failed: #{response.code}")
         end
 

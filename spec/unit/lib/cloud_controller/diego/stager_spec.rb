@@ -30,9 +30,26 @@ module VCAP::CloudController
         end
 
         context 'when there is a pending stage' do
-          it 'attempts to stop the outstanding stage request' do
-            expect(messenger).to receive(:send_stop_staging_request).with(app)
-            stager.stage_app
+          context 'when a staging task id is nil' do
+            before do
+              app.staging_task_id = nil
+            end
+
+            it 'attempts to stop the outstanding stage request' do
+              expect(messenger).to_not receive(:send_stop_staging_request)
+              stager.stage_app
+            end
+          end
+
+          context 'when a staging task id is not nil' do
+            before do
+              app.staging_task_id = Sham.guid
+            end
+
+            it 'attempts to stop the outstanding stage request' do
+              expect(messenger).to receive(:send_stop_staging_request).with(app)
+              stager.stage_app
+            end
           end
         end
 

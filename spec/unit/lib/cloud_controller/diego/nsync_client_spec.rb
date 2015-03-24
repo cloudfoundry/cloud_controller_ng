@@ -91,6 +91,16 @@ module VCAP::CloudController::Diego
             expect(client.stop_index(process_guid, index)).to be_nil
             expect(a_request(:delete, stop_index_url).with(body: nil, headers: content_type_header)).to have_been_made.once
           end
+
+          context 'when nsync returns a 404' do
+            before do
+              stub_request(:delete, stop_index_url).to_return(status: 404)
+            end
+
+            it 'does not raise an error' do
+              expect { client.stop_index(process_guid, index) }.to_not raise_error
+            end
+          end
         end
 
         context 'when the endpoint is unavailable' do
