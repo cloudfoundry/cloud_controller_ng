@@ -658,6 +658,11 @@
   http_code: 524
   message: "Deletion of space %s timed out before all resources within could be deleted"
 
+290008:
+  name: SpaceDeletionFailed
+  http_code: 502
+  message: "Deletion of space %s failed because one or more resources within could not be deleted.\n\n%s"
+
 300001:
   name: SecurityGroupInvalid
   http_code: 400
