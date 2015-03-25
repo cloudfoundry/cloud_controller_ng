@@ -349,6 +349,18 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the app does not exist' do
+        before do
+          app_model.destroy
+        end
+
+        it 'fails with AppNotFound' do
+          expect {
+            droplets_handler.create(staging_message, access_context)
+          }.to raise_error(DropletsHandler::AppNotFound)
+        end
+      end
+
       context 'when a specific admin buildpack is requested' do
         context 'and the buildpack exists' do
           let(:buildpack) { Buildpack.make }
