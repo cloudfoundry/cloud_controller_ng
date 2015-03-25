@@ -40,6 +40,98 @@ module VCAP::CloudController
       %r{#{broker_url(broker)}/v2/service_instances/#{service_instance_guid}/service_bindings/#{service_binding_guid}}
     end
 
+    describe 'Permissions' do
+      include_context 'permissions'
+
+      before do
+        @service_instance_a = ManagedServiceInstance.make(space: @space_a)
+        @obj_a = ServiceKey.make(
+            name: 'fake-name-a',
+            service_instance: @service_instance_a
+        )
+
+        @service_instance_b = ManagedServiceInstance.make(space: @space_b)
+        @obj_b = ServiceKey.make(
+            name: 'fake-name-b',
+            service_instance: @service_instance_b
+        )
+      end
+
+      describe 'Org Level Permissions' do
+        describe 'OrgManager' do
+          let(:member_a) { @org_a_manager }
+          let(:member_b) { @org_b_manager }
+
+          include_examples 'permission enumeration', 'OrgManager',
+                           name: 'getting service key',
+                           path: '/v2/service_keys',
+                           enumerate: 0
+        end
+
+        describe 'OrgUser' do
+          let(:member_a) { @org_a_member }
+          let(:member_b) { @org_b_member }
+
+          include_examples 'permission enumeration', 'OrgUser',
+                           name: 'getting service key',
+                           path: '/v2/service_keys',
+                           enumerate: 0
+        end
+
+        describe 'BillingManager' do
+          let(:member_a) { @org_a_billing_manager }
+          let(:member_b) { @org_b_billing_manager }
+
+          include_examples 'permission enumeration', 'BillingManager',
+                           name: 'getting service key',
+                           path: '/v2/service_keys',
+                           enumerate: 0
+        end
+
+        describe 'Auditor' do
+          let(:member_a) { @org_a_auditor }
+          let(:member_b) { @org_b_auditor }
+
+          include_examples 'permission enumeration', 'Auditor',
+                           name: 'getting service key',
+                           path: '/v2/service_keys',
+                           enumerate: 0
+        end
+      end
+
+      describe 'App Space Level Permissions' do
+        describe 'SpaceManager' do
+          let(:member_a) { @space_a_manager }
+          let(:member_b) { @space_b_manager }
+
+          include_examples 'permission enumeration', 'SpaceManager',
+                           name: 'getting service key',
+                           path: '/v2/service_keys',
+                           enumerate: 0
+        end
+
+        describe 'Developer' do
+          let(:member_a) { @space_a_developer }
+          let(:member_b) { @space_b_developer }
+
+          include_examples 'permission enumeration', 'Developer',
+                           name: 'getting service key',
+                           path: '/v2/service_keys',
+                           enumerate: 1
+        end
+
+        describe 'SpaceAuditor' do
+          let(:member_a) { @space_a_auditor }
+          let(:member_b) { @space_b_auditor }
+
+          include_examples 'permission enumeration', 'SpaceAuditor',
+                           name: 'getting service key',
+                           path: '/v2/service_keys',
+                           enumerate: 1
+        end
+      end
+    end
+
     describe 'create' do
       context 'for managed instances' do
         let(:instance) { ManagedServiceInstance.make }
@@ -209,6 +301,46 @@ module VCAP::CloudController
             end
           end
         end
+      end
+    end
+
+    describe 'GET', '/v2/service_keys' do
+      let(:space)   { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:instance_a)  { ManagedServiceInstance.make(space: space) }
+      let(:instance_b)  { ManagedServiceInstance.make(space: space) }
+      let(:service_key_a) { ServiceKey.make(name: 'fake-key-a', service_instance: instance_a) }
+      let(:service_key_b) { ServiceKey.make(name: 'fake-key-b', service_instance: instance_a) }
+      let(:service_key_c) { ServiceKey.make(name: 'fake-key-c', service_instance: instance_b) }
+
+      before do
+        service_key_a.save
+        service_key_b.save
+        service_key_c.save
+      end
+
+      it 'returns the service keys filtered by service_instance_guid' do
+        get "/v2/service_keys?q=service_instance_guid:#{instance_a.guid}", {}, json_headers(headers_for(developer))
+        expect(last_response.status).to eql(200)
+        expect(decoded_response.fetch('total_results')).to eq(2)
+        expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
+        expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(service_key_b.guid)
+
+        get "/v2/service_keys?q=service_instance_guid:#{instance_b.guid}", {}, json_headers(headers_for(developer))
+        expect(last_response.status).to eql(200)
+        expect(decoded_response.fetch('total_results')).to eq(1)
+        expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_c.guid)
+      end
+
+      it 'returns the service keys filtered by key name' do
+        get '/v2/service_keys?q=name:fake-key-a', {}, json_headers(headers_for(developer))
+        expect(last_response.status).to eql(200)
+        expect(decoded_response.fetch('total_results')).to eq(1)
+        expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
+
+        get '/v2/service_keys?q=name:non-exist-key-name', {}, json_headers(headers_for(developer))
+        expect(last_response.status).to eql(200)
+        expect(decoded_response.fetch('total_results')).to eq(0)
       end
     end
   end
