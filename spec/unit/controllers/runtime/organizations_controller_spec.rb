@@ -474,7 +474,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#delete' do
+    describe 'deleting an organization' do
       let(:org) { Organization.make }
       let(:user) { User.make }
 

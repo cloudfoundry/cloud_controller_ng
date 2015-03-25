@@ -54,24 +54,40 @@ module VCAP::CloudController
           expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
-        context 'when deletion of one instance fails' do
-          let!(:service_instance_2) { ManagedServiceInstance.make(space: space_2) }
+        context 'when deletion of serviceinstances fail' do
+          let!(:space_3) { Space.make }
+
+          let!(:service_instance_1) { ManagedServiceInstance.make(space: space_3) } # deletion fail
+          let!(:service_instance_2) { ManagedServiceInstance.make(space: space_3) } # deletion fail
+          let!(:service_instance_3) { ManagedServiceInstance.make(space: space_3) } # deletion succeeds
 
           before do
-            stub_deprovision(service_instance, status: 500)
-            stub_deprovision(service_instance_2)
+            stub_deprovision(service_instance_1, status: 500)
+            stub_deprovision(service_instance_2, status: 500)
+            stub_deprovision(service_instance_3)
           end
 
           it 'deletes the other instances' do
             expect {
               space_delete.delete(space_dataset) rescue nil
-            }.to change { ServiceInstance.count }.by(-1)
-            expect { service_instance.refresh }.not_to raise_error
-            expect { service_instance_2.refresh }.to raise_error Sequel::Error, 'Record not found'
+            }.to change { ServiceInstance.count }.by(-2)
+            expect { service_instance_1.refresh }.not_to raise_error
+            expect { service_instance_2.refresh }.not_to raise_error
+            expect { service_instance_3.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
 
           it 'returns a service broker bad response error' do
-            expect(space_delete.delete(space_dataset)[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
+            results = space_delete.delete(space_dataset)
+            expect(results.length).to be(1)
+            result = results.first
+            expect(result).to be_instance_of(VCAP::Errors::ApiError)
+
+            instance_1_url = remove_basic_auth(service_instance_deprovision_url(service_instance_1))
+            instance_2_url = remove_basic_auth(service_instance_deprovision_url(service_instance_2))
+
+            expect(result.message).to include("Deletion of space #{space_3.name} failed because one or more resources within could not be deleted.")
+            expect(result.message).to include("The service broker returned an invalid response for the request to #{instance_1_url}")
+            expect(result.message).to include("The service broker returned an invalid response for the request to #{instance_2_url}")
           end
         end
       end

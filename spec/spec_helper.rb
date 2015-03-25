@@ -61,6 +61,7 @@ RSpec.configure do |rspec_config|
 
   rspec_config.before :each do
     Fog::Mock.reset
+    Delayed::Worker.destroy_failed_jobs = false
     Sequel::Deprecation.output = StringIO.new
     Sequel::Deprecation.backtrace_filter = 5
 

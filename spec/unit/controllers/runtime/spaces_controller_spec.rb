@@ -579,10 +579,10 @@ module VCAP::CloudController
         let!(:space_guid) { space.guid }
         let!(:app_guid) { AppModel.make(space_guid: space_guid).guid }
         let!(:route_guid) { Route.make(space_guid: space_guid).guid }
-        let!(:service_instance_guid) { ManagedServiceInstance.make(space_guid: space_guid).guid }
+        let!(:service_instance) { ManagedServiceInstance.make(space_guid: space_guid) }
+        let!(:service_instance_guid) { service_instance.guid }
 
         before do
-          service_instance = ServiceInstance.find(guid: service_instance_guid)
           stub_deprovision(service_instance)
         end
 
@@ -642,7 +642,7 @@ module VCAP::CloudController
               delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
 
               expect(last_response).to have_status_code 502
-              expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
+              expect(decoded_response['error_code']).to eq 'CF-SpaceDeletionFailed'
 
               expect { service_instance_1.refresh }.to raise_error Sequel::Error, 'Record not found'
               expect { service_instance_2.refresh }.not_to raise_error
@@ -651,6 +651,58 @@ module VCAP::CloudController
               expect { binding_1.refresh }.to raise_error Sequel::Error, 'Record not found'
               expect { binding_2.refresh }.not_to raise_error
               expect { binding_3.refresh }.to raise_error Sequel::Error, 'Record not found'
+            end
+          end
+
+          context 'when the second of three service instances fails to delete' do
+            before do
+              stub_deprovision(service_instance_2, status: 500)
+
+              instance_url = remove_basic_auth(service_instance_deprovision_url(service_instance_2))
+
+              @expected_description = "Deletion of space #{space.name} failed because one or more resources within could not be deleted.
+
+The service broker returned an invalid response for the request to #{instance_url}. Status Code: 500 Internal Server Error, Body: {}"
+            end
+
+            context 'synchronous' do
+              it 'deletes the first and third instances and returns an error' do
+                delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+
+                expect(last_response).to have_status_code 502
+                expect(decoded_response['error_code']).to eq 'CF-SpaceDeletionFailed'
+                expect(decoded_response['description']).to eq @expected_description
+
+                expect { service_instance_1.refresh }.to raise_error Sequel::Error, 'Record not found'
+                expect { service_instance_2.refresh }.not_to raise_error
+                expect { service_instance_3.refresh }.to raise_error Sequel::Error, 'Record not found'
+              end
+            end
+
+            context 'asynchronous (async=true)' do
+              it 'deletes the first and third instances and returns an error' do
+                delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+                expect(last_response).to have_status_code 202
+                job_url = MultiJson.load(last_response.body)['metadata']['url']
+
+                successes, failures = Delayed::Worker.new.work_off
+
+                expect(successes).to eq(0)
+                expect(failures).to eq(1)
+
+                get job_url, {}, json_headers(admin_headers)
+                expect(last_response).to have_status_code 200
+
+                expect(MultiJson.load(last_response.body)['entity']['error_details']).to eq({
+                  'error_code' => 'CF-SpaceDeletionFailed',
+                  'description' => @expected_description,
+                  'code' => 290008
+                })
+
+                expect { service_instance_1.refresh }.to raise_error Sequel::Error, 'Record not found'
+                expect { service_instance_2.refresh }.not_to raise_error
+                expect { service_instance_3.refresh }.to raise_error Sequel::Error, 'Record not found'
+              end
             end
           end
         end
@@ -683,7 +735,7 @@ module VCAP::CloudController
           expect(Space.find(guid: space_guid)).not_to be_nil
 
           expect(last_response).to have_status_code 502
-          expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
+          expect(decoded_response['error_code']).to eq 'CF-SpaceDeletionFailed'
         end
       end
     end

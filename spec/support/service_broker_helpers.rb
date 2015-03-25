@@ -45,6 +45,14 @@ module ServiceBrokerHelpers
     service_instance_url(service_instance, query)
   end
 
+  def remove_basic_auth(url)
+    uri = URI(url)
+    uri.user = nil
+    uri.password = nil
+    uri.query = nil
+    uri.to_s
+  end
+
   def service_instance_url(service_instance, query=nil)
     path = "/v2/service_instances/#{service_instance.guid}"
     build_broker_url(service_instance.client.attrs, path, query)

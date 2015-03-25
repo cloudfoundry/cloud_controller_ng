@@ -64,9 +64,12 @@ module VCAP::CloudController
           expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
-        it 'returns any errors that it received' do
-          stub_deprovision(service_instance, status: 500)
-          expect(org_delete.delete(org_dataset)[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
+        context 'when the space deleter returns errors' do
+          it 'returns any errors that it received' do
+            stub_deprovision(service_instance, status: 500)
+            errors = org_delete.delete(org_dataset)
+            expect(errors.first).to be_instance_of(VCAP::Errors::ApiError)
+          end
         end
       end
     end
