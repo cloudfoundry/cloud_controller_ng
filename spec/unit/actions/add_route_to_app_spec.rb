@@ -14,6 +14,12 @@ module VCAP::CloudController
         expect(app.reload.routes).to eq([route])
       end
 
+      it 'does not allow for duplicate route association' do
+        add_route_to_app.add(route)
+        add_route_to_app.add(route)
+        expect(app.reload.routes).to eq([route])
+      end
+
       context 'when a web process is present' do
         let!(:process) { AppFactory.make(app_guid: app.guid, space: space) }
 

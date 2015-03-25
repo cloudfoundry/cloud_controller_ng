@@ -4,23 +4,22 @@ module VCAP::CloudController
   describe RemoveRouteFromApp do
     let(:remove_route_from_app) { RemoveRouteFromApp.new(app) }
     let(:space) { Space.make }
-    let(:app) { AppModel.make }
+    let(:app) { AppModel.make(space: space) }
 
     describe '#remove' do
       let(:route) { Route.make(space: space) }
-      before do
-        AddRouteToApp.new(app).add(route)
-      end
 
       it 'removes the route from the app' do
+        AddRouteToApp.new(app).add(route)
         remove_route_from_app.remove(route)
         expect(app.reload.routes).to be_empty
       end
 
       context 'when a web process is present' do
-        let!(:process) { AppFactory.make(app_guid: app.guid, space: space, type: 'web') }
+        let!(:process) { AppFactory.make(app: app, space: space, type: 'web') }
         before do
           AddRouteToApp.new(app).add(route)
+          expect(process.reload.routes).to eq([route])
         end
 
         it 'removes the route from the web process' do
@@ -29,8 +28,8 @@ module VCAP::CloudController
         end
 
         it 'notifies the dea if the process is started and staged' do
-          process.update(state: 'STARTED')
           process.update(package_state: 'STAGED')
+          process.update(state: 'STARTED')
           expect(Dea::Client).to receive(:update_uris).with(process)
           remove_route_from_app.remove(route)
           expect(process.reload.routes).to be_empty

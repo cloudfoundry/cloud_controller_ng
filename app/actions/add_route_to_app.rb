@@ -13,6 +13,7 @@ module VCAP::CloudController
       if web_process.dea_update_pending?
         Dea::Client.update_uris(web_process)
       end
+    rescue Sequel::ValidationFailed
     end
   end
 end

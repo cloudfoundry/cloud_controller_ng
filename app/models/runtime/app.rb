@@ -27,7 +27,7 @@ module VCAP::CloudController
     one_to_many :droplets
     one_to_many :service_bindings
     one_to_many :events, class: VCAP::CloudController::AppEvent
-    one_to_one :app, class: 'VCAP::CloudController::AppModel', key: :guid, primary_key: :app_guid
+    many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :admin_buildpack, class: VCAP::CloudController::Buildpack
     many_to_one :space, after_set: :validate_space
     many_to_one :stack
