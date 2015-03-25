@@ -15,6 +15,8 @@ module VCAP::CloudController
         expect(result['desired_state']).to eq(app.desired_state)
         expect(result['environment_variables']).to eq(app.environment_variables)
         expect(result['_links']).not_to include('desired_droplet')
+        expect(result['_links']).to include('start')
+        expect(result['_links']).to include('stop')
       end
 
       it 'returns an empty hash as environment_variables if not present' do
@@ -33,6 +35,16 @@ module VCAP::CloudController
         result      = MultiJson.load(json_result)
 
         expect(result['_links']['desired_droplet']['href']).to eq('/v3/droplets/123')
+      end
+
+      it 'includes methods on the start and stop links' do
+        app = AppModel.make(environment_variables: { 'some' => 'stuff' }, desired_state: 'STOPPED')
+
+        json_result = AppPresenter.new.present_json(app)
+        result      = MultiJson.load(json_result)
+
+        expect(result['_links']['start']['method']).to eq('PUT')
+        expect(result['_links']['stop']['method']).to eq('PUT')
       end
     end
 

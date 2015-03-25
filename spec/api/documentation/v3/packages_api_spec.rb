@@ -71,7 +71,7 @@ resource 'Packages (Experimental)', type: :api do
               'created_at' => package1.created_at.as_json,
               '_links'     => {
                 'self'   => { 'href' => "/v3/packages/#{package1.guid}" },
-                'upload' => { 'href' => "/v3/packages/#{package1.guid}/upload" },
+                'upload' => { 'href' => "/v3/packages/#{package1.guid}/upload", 'method' => 'POST' },
                 'app'    => { 'href' => "/v3/apps/#{package1.app_guid}" },
               }
             },
@@ -125,7 +125,7 @@ resource 'Packages (Experimental)', type: :api do
         'created_at' => package_model.created_at.as_json,
         '_links'     => {
           'self'   => { 'href' => "/v3/packages/#{guid}" },
-          'upload' => { 'href' => "/v3/packages/#{guid}/upload" },
+          'upload' => { 'href' => "/v3/packages/#{guid}/upload", 'method' => 'POST' },
           'app'    => { 'href' => "/v3/apps/#{app_model.guid}" },
         }
       }
@@ -247,7 +247,7 @@ resource 'Packages (Experimental)', type: :api do
         'created_at' => package_model.created_at.as_json,
         '_links'     => {
           'self'   => { 'href' => "/v3/packages/#{package_model.guid}" },
-          'upload' => { 'href' => "/v3/packages/#{package_model.guid}/upload" },
+          'upload' => { 'href' => "/v3/packages/#{package_model.guid}/upload", 'method' => 'POST' },
           'app'    => { 'href' => "/v3/apps/#{app_model.guid}" },
         }
       }

@@ -40,7 +40,7 @@ module VCAP::CloudController
     def build_links(package)
       upload_link = nil
       if package.type == 'bits'
-        upload_link = { href: "/v3/packages/#{package.guid}/upload" }
+        upload_link = { href: "/v3/packages/#{package.guid}/upload", method: 'POST' }
       end
 
       links = {

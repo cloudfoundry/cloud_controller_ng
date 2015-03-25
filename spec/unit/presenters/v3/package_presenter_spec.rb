@@ -29,6 +29,7 @@ module VCAP::CloudController
           result      = MultiJson.load(json_result)
 
           expect(result['_links']['upload']['href']).to eq("/v3/packages/#{package.guid}/upload")
+          expect(result['_links']['upload']['method']).to eq('POST')
         end
       end
 

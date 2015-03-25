@@ -51,7 +51,7 @@ resource 'Apps (Experimental)', type: :api do
             'created_at' => package.created_at.as_json,
             '_links'     => {
               'self'   => { 'href' => "/v3/packages/#{package.guid}" },
-              'upload' => { 'href' => "/v3/packages/#{package.guid}/upload" },
+              'upload' => { 'href' => "/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
               'app'    => { 'href' => "/v3/apps/#{guid}" },
             }
           }
