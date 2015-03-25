@@ -229,16 +229,18 @@ module VCAP::CloudController
       let(:guid) { app_model.guid }
       let(:process) { AppFactory.make(type: 'web', space_guid: app_model.space_guid) }
 
-      context 'when the app has a route for the same process type' do
+      context 'when the app has routes for the same process type' do
         before do
           allow(access_context).to receive(:cannot?).and_return(false)
         end
 
         it 'associates that route to the process' do
-          route = Route.make(space: app_model.space)
-          AddRouteToApp.new(app_model).add(route)
+          route1 = Route.make(space: app_model.space)
+          route2 = Route.make(space: app_model.space)
+          AddRouteToApp.new(app_model).add(route1)
+          AddRouteToApp.new(app_model).add(route2)
           apps_handler.add_process(app_model, process, access_context)
-          expect(process.reload.routes).to eq([route])
+          expect(process.reload.routes).to eq([route1, route2])
         end
       end
 
