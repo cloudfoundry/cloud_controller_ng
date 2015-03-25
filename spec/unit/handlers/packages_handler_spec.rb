@@ -307,16 +307,6 @@ module VCAP::CloudController
             end
           end
         end
-
-        context 'when the app does not exist' do
-          let(:app_guid) { 'non-existant' }
-
-          it 'raises an AppNotFound exception' do
-            expect {
-              packages_handler.upload(upload_message, access_context)
-            }.to raise_error(PackagesHandler::AppNotFound)
-          end
-        end
       end
 
       context 'when the package does not exist' do
