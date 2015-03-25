@@ -344,17 +344,17 @@ resource 'Packages (Experimental)', type: :api do
         'buildpack_git_url'      => 'http://github.com/myorg/awesome-buildpack',
         'failure_reason'         => nil,
         'detected_start_command' => nil,
-        'environment_variables'  => {"VCAP_APPLICATION"=>{
-          "limits"=>{"mem"=>1024, "disk"=>4096, "fds"=>16384},
-          "application_version"=>'whatuuid',
-          "application_name"=>app_model.name, "application_uris"=>[],
-          "version"=>'whatuuid',
-          "name"=>app_model.name,
-          "space_name"=>space.name,
-          "space_id"=>space.guid,
-          "uris"=>[],
-          "users"=>nil
-        }},
+        'environment_variables'  => { 'VCAP_APPLICATION' => {
+          'limits' => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
+          'application_version' => 'whatuuid',
+          'application_name' => app_model.name, 'application_uris' => [],
+          'version' => 'whatuuid',
+          'name' => app_model.name,
+          'space_name' => space.name,
+          'space_id' => space.guid,
+          'uris' => [],
+          'users' => nil
+        } },
         'created_at'             => droplet.created_at.as_json,
         '_links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{droplet.guid}" },
