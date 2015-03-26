@@ -373,4 +373,72 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to match(expected_response)
     end
   end
+
+  get '/v3/apps/:guid/env' do
+    let(:space_name) { 'some_space' }
+    let(:space) { VCAP::CloudController::Space.make(name: space_name) }
+    let(:space_guid) { space.guid }
+
+    let(:app_model) do
+      VCAP::CloudController::AppModel.make(
+        name: 'app_name',
+        space_guid: space_guid,
+        environment_variables: {
+          'SOME_KEY' => 'some_val'
+        }
+      )
+    end
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      VCAP::CloudController::EnvironmentVariableGroup.make name: :staging, environment_json: { STAGING_ENV: 'staging_value' }
+      VCAP::CloudController::EnvironmentVariableGroup.make name: :running, environment_json: { RUNNING_ENV: 'running_value' }
+    end
+
+    let(:guid) { app_model.guid }
+
+    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+
+    example 'getting the env of an app' do
+      do_request_with_error_handling
+
+      expected_response = {
+        'staging_env_json' => {
+          'STAGING_ENV' => 'staging_value'
+        },
+        'running_env_json' => {
+          'RUNNING_ENV' => 'running_value'
+        },
+        'environment_variables' => {
+          'SOME_KEY' => 'some_val'
+        },
+        # 'system_env_json' => {
+        #   'VCAP_SERVICES' => "NOT YET IMPLEMENTED"
+        # },
+        'application_env_json' =>   {
+          'VCAP_APPLICATION' =>     {
+            'limits' => {
+              # 'mem' => 1024,
+              # 'disk' => 1024,
+              'fds' => 16384
+            },
+            # 'application_version' => 'a4340b70-5fe6-425f-a319-f6af377ea26b',
+            'application_name' => 'app_name',
+            'application_uris' => [],
+            # 'version' => 'a4340b70-5fe6-425f-a319-f6af377ea26b',
+            'name' => 'app_name',
+            'space_name' => space_name,
+            'space_id' => space_guid,
+            'uris' => [],
+            'users' => nil
+          }
+        }
+      }
+
+      parsed_response = MultiJson.load(response_body)
+      expect(response_status).to eq(200)
+      expect(parsed_response).to match(expected_response)
+    end
+  end
 end

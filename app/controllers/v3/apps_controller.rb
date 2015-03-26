@@ -110,6 +110,41 @@ module VCAP::CloudController
       [HTTP::OK, @app_presenter.present_json(app)]
     end
 
+    get '/v3/apps/:guid/env', :env
+    def env(guid)
+      check_read_permissions!
+
+      app = AppFetcher.new(current_user).fetch(guid)
+      app_not_found! if app.nil?
+
+      env_vars = app.environment_variables
+      uris = app.routes.map(&:fqdn)
+      vcap_application = {
+        'VCAP_APPLICATION' => {
+          limits: {
+            fds: Config.config[:instance_file_descriptor_limit] || 16384,
+          },
+          application_name: app.name,
+          application_uris: uris,
+          name: app.name,
+          space_name: app.space.name,
+          space_id: app.space.guid,
+          uris: uris,
+          users: nil
+        }
+      }
+
+      [
+        HTTP::OK,
+        {
+          'environment_variables' => env_vars,
+          'staging_env_json' => EnvironmentVariableGroup.staging.environment_json,
+          'running_env_json' => EnvironmentVariableGroup.running.environment_json,
+          'application_env_json' => vcap_application
+        }.to_json
+      ]
+    end
+
     private
 
     def parse_and_validate_json(body)

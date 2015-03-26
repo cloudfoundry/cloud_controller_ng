@@ -506,5 +506,45 @@ module VCAP::CloudController
         end
       end
     end
+    describe '#env' do
+      let(:user) { User.make }
+      let(:app_model) { AppModel.make }
+      let(:guid) { app_model.guid }
+
+      context 'when the user does not have read permissions' do
+        it 'returns a 403' do
+          # response_code, _ = apps_controller.env(guid)
+          # expect(response_code).to eq 403
+          expect(apps_controller).to receive(:check_read_permissions!).
+            and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+          expect {
+            apps_controller.env(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+        end
+      end
+
+      context 'when the user has read permissions' do
+        before do
+          allow(apps_controller).to receive(:check_read_permissions!).and_return(nil)
+          allow(apps_controller).to receive(:current_user).and_return(user)
+        end
+
+        context 'when the app does not exist' do
+          let(:guid) { 'ABC123' }
+
+          it 'raises an ApiError with a 404 code' do
+            expect {
+              apps_controller.env(guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'ResourceNotFound'
+              expect(error.response_code).to eq 404
+            end
+          end
+        end
+      end
+    end
   end
 end
