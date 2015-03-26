@@ -18,6 +18,9 @@ module VCAP::CloudController
                                space_name: app.space.name,
                                buildpack_guid: app.detected_buildpack_guid,
                                buildpack_name: app.custom_buildpack_url || app.detected_buildpack_name,
+                               parent_app_guid: app.app ? app.app.guid : nil,
+                               parent_app_name: app.app ? app.app.name : nil,
+                               process_type: app.type
           )
         end
 

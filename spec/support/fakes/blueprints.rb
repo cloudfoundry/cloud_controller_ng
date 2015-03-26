@@ -335,6 +335,7 @@ module VCAP::CloudController
     space_name { Sham.name }
     buildpack_guid { Sham.guid }
     buildpack_name { Sham.name }
+    process_type { 'web' }
   end
 
   ServiceUsageEvent.blueprint do
