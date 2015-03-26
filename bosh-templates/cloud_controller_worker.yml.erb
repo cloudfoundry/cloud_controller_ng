@@ -2,6 +2,9 @@
 #Actually NGX host and port
 local_route: <%= spec.networks.send(properties.networks.apps).ip %>
 external_port: <%= p("cc.external_port") %>
+<% if_p("cc.internal_service_hostname") do |service_hostname| %>
+internal_service_hostname: <%= service_hostname %>
+<% end %>
 
 pid_filename: /this/isnt/used/by/the/worker
 newrelic_enabled: <%= !!properties.cc.newrelic.license_key %>
