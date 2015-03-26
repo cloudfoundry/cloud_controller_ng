@@ -8,7 +8,7 @@ Sequel.migration do
       self[:apps_v3].truncate
       self[:v3_droplets].truncate
       self[:packages].truncate
-      run "UPDATE apps SET app_guid = NULL;"
+      run 'UPDATE apps SET app_guid = NULL;'
 
       alter_table(:apps_v3_routes) do
         add_foreign_key :app_v3_id, :apps_v3
