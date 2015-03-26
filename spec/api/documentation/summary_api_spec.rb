@@ -119,40 +119,6 @@ resource 'Organizations', type: [:api, :legacy_api] do
   end
 end
 
-resource 'Users', type: [:api, :legacy_api] do
-  let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:user) { VCAP::CloudController::User.make }
-
-  authenticated_request
-
-  get '/v2/users/:guid/summary' do
-    field :guid, 'The guid of the user for which summary is requested', required: true
-    field :audited_spaces, 'List of spaces that the user is an auditor for.'
-    field :managed_spaces, 'List of spaces that the user is a manager for.'
-    field :spaces, 'List of spaces that the user is developer for.'
-    field :audited_organizations, 'List of organizations that the user is an auditor for.'
-    field :billing_managed_organizations, 'List of organizations that the user is a billing manager for.'
-    field :managed_organizations, 'List of organizations that the user is a manager for.'
-    field :organizations, 'List of organizations that the user is a member of.'
-
-    example 'Get User summary' do
-      organization = VCAP::CloudController::Organization.make
-      space = VCAP::CloudController::Space.make(organization: organization)
-      user.add_organization organization
-      organization.add_manager user
-      organization.add_billing_manager user
-      organization.add_auditor user
-      space.add_manager user
-      space.add_developer user
-      space.add_auditor user
-
-      client.get "/v2/users/#{user.guid}/summary", {}, headers
-
-      expect(status).to eq 200
-      expect(parsed_response['metadata']['guid']).to eq(user.guid)
-    end
-  end
-end
 resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
