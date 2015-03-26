@@ -741,26 +741,54 @@ module VCAP::CloudController
     end
 
     describe 'vcap_application' do
-      it 'has the expected values' do
-        app = AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'app-name')
-        expected_hash = {
-            limits: {
-                mem: 259,
-                disk: 799,
-                fds: 1234,
-            },
-            application_version: app.version,
-            application_name: 'app-name',
-            application_uris: app.uris,
-            version: app.version,
-            name: 'app-name',
-            space_name: app.space.name,
-            space_id: app.space.guid,
-            uris: app.uris,
-            users: nil
-        }
+      context 'when a v3 app is associated' do
+        it 'has the expected values' do
+          app_model = AppModel.make(name: 'jim-is-suiteeeee')
+          process = AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'process-name')
+          app_model.add_process(process)
+          expected_hash = {
+              limits: {
+                  mem: 259,
+                  disk: 799,
+                  fds: 1234,
+              },
+              application_version: process.version,
+              application_name: app_model.name,
+              application_uris: process.uris,
+              version: process.version,
+              name: process.name,
+              space_name: process.space.name,
+              space_id: process.space.guid,
+              uris: process.uris,
+              users: nil
+          }
 
-        expect(app.vcap_application).to eq(expected_hash)
+          expect(process.vcap_application).to eq(expected_hash)
+        end
+      end
+
+      context 'when a v3 app is not associated' do
+        it 'has the expected values' do
+          app = AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'app-name')
+          expected_hash = {
+              limits: {
+                  mem: 259,
+                  disk: 799,
+                  fds: 1234,
+              },
+              application_version: app.version,
+              application_name: 'app-name',
+              application_uris: app.uris,
+              version: app.version,
+              name: 'app-name',
+              space_name: app.space.name,
+              space_id: app.space.guid,
+              uris: app.uris,
+              users: nil
+          }
+
+          expect(app.vcap_application).to eq(expected_hash)
+        end
       end
     end
 

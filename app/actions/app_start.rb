@@ -18,6 +18,7 @@ module VCAP::CloudController
             package_hash: package_hash,
             package_state: 'STAGED',
             package_pending_since: nil,
+            environment_json: app.environment_variables
           })
         end
       end

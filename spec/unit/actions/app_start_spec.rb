@@ -6,9 +6,17 @@ module VCAP::CloudController
     let(:app_start) { AppStart.new }
 
     describe '#start' do
-      let(:app_model) { AppModel.make(desired_state: 'STOPPED', desired_droplet_guid: droplet_guid) }
+      let(:environment_variables) { { 'FOO' => 'bar' } }
       let(:process1) { AppFactory.make(state: 'STOPPED') }
       let(:process2) { AppFactory.make(state: 'STOPPED') }
+
+      let(:app_model) do
+        AppModel.make({
+          desired_state: 'STOPPED',
+          desired_droplet_guid: droplet_guid,
+          environment_variables: environment_variables
+        })
+      end
 
       before do
         app_model.add_process_by_guid(process1.guid)
@@ -63,6 +71,7 @@ module VCAP::CloudController
             expect(process.needs_staging?).to eq(false)
             expect(process.started?).to eq(true)
             expect(process.state).to eq('STARTED')
+            expect(process.environment_json).to eq(app_model.environment_variables)
           end
         end
       end
