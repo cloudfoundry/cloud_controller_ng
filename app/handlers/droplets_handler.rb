@@ -114,7 +114,8 @@ module VCAP::CloudController
 
       app_env = app_model.environment_variables || {}
       environment_variables = EnvironmentVariableGroup.staging.environment_json.merge(app_env).merge({
-        VCAP_APPLICATION: vcap_application(message, app_model, space)
+        VCAP_APPLICATION: vcap_application(message, app_model, space),
+        CF_STACK: message.stack
       })
 
       droplet = DropletModel.new(

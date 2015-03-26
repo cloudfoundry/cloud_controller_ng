@@ -257,6 +257,7 @@ module VCAP::CloudController
               'another'     => 'override',
               'APP_VAR'     => 'is here',
               'STAGING_ENV' => 'staging_value',
+              'CF_STACK' => stack,
               'VCAP_APPLICATION' => {
                 'limits' => {
                   'mem' => staging_message.memory_limit,

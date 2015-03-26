@@ -47,7 +47,7 @@ module VCAP::CloudController
 
           expect(request[:app_id]).to eq(log_id)
           expect(request[:task_id]).to eq(droplet_guid)
-          expect(request[:properties][:environment]).to eq(['KEY=value'])
+          expect(request[:properties][:environment]).to eq(['KEY=value', "CF_STACK=#{stack}"])
           expect(request[:download_uri]).to eq('http://www.package.uri')
           expect(request[:upload_uri]).to eq('http://www.droplet.upload.uri')
           expect(request[:buildpack_cache_download_uri]).to eq('http://www.bpdownload.uri')
@@ -73,9 +73,9 @@ module VCAP::CloudController
             expect(request[:properties][:environment]).to include('KEY=value')
           end
 
-          xit 'includes CF_STACK' do
+          it 'includes the stack on the environment' do
             request = staging_message.staging_request
-            expect(request[:properties][:environment]).to include("CF_STACK=#{app.stack.name}")
+            expect(request[:properties][:environment]).to include("CF_STACK=#{stack}")
           end
 
           it 'prefers app environment variables when they conflict with staging group variables' do

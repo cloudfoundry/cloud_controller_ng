@@ -306,10 +306,11 @@ resource 'Packages (Experimental)', type: :api do
 
     let(:stager_id) { 'abc123' }
     let(:stager_subject) { "staging.#{stager_id}.start" }
+    let(:stack) { 'trusty64' }
     let(:advertisment) do
       {
         'id' => stager_id,
-        'stacks' => ['default-stack-name'],
+        'stacks' => [stack],
         'available_memory' => 2048,
         'app_id_to_count' => {},
       }
@@ -344,7 +345,7 @@ resource 'Packages (Experimental)', type: :api do
         'buildpack_git_url'      => 'http://github.com/myorg/awesome-buildpack',
         'failure_reason'         => nil,
         'detected_start_command' => nil,
-        'environment_variables'  => { 'VCAP_APPLICATION' => {
+        'environment_variables'  => { 'CF_STACK' => stack, 'VCAP_APPLICATION' => {
           'limits' => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
           'application_version' => 'whatuuid',
           'application_name' => app_model.name, 'application_uris' => [],
