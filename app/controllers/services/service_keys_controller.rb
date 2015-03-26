@@ -27,6 +27,15 @@ module VCAP::CloudController
       raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
     end
 
+    delete path_guid, :delete
+    def delete(guid)
+      service_key = find_guid_and_validate_access(:delete, guid, ServiceKey)
+      key_manager = ServiceKeyManager.new(@services_event_repository, self, logger)
+      key_manager.delete_service_key(service_key)
+
+      [HTTP::NO_CONTENT, nil]
+    end
+
     private
 
     def self.translate_validation_exception(e, attributes)
