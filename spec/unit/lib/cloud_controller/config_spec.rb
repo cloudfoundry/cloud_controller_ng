@@ -86,6 +86,10 @@ module VCAP::CloudController
         it 'sets a default value for broker_client_default_async_poll_interval_seconds' do
           expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(60)
         end
+
+        it 'does not set a default value for internal_service_hostname' do
+          expect(config[:internal_service_hostname]).to be_nil
+        end
       end
 
       context 'when config values are provided' do
@@ -174,6 +178,10 @@ module VCAP::CloudController
 
           it 'preserves the broker_client_default_async_poll_interval_seconds value from the file' do
             expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(120)
+          end
+
+          it 'preserves the internal_service_hostname value from the file' do
+            expect(config[:internal_service_hostname]).to eq('cloud_controller_ng.service.consul')
           end
 
           context 'when the staging auth is already url encoded' do
