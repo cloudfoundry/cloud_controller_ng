@@ -145,6 +145,17 @@ module VCAP::CloudController
           response
         end
 
+        context 'it sets up the app' do
+          before do
+            app.stub(:update).and_call_original
+          end
+
+          it 'sets the app package state to pending before it tries to stage' do
+            expect(app).to receive(:update).with({package_state: "PENDING", staging_task_id: staging_task.task_id})
+            stage
+          end
+        end
+
         context 'when staging setup succeeds' do
           it 'returns streaming log url and rest will happen asynchronously' do
             expect(stage.streaming_log_url).to eq('task-streaming-log-url')

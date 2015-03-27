@@ -29,7 +29,7 @@ module VCAP::CloudController
         @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
 
         # Save the current staging task
-        @app.update(staging_task_id: task_id)
+        @app.update(package_state: 'PENDING', staging_task_id: task_id)
 
         # Attempt to stop any in-flight staging for this app
         @message_bus.publish('staging.stop', app_id: @app.guid)
