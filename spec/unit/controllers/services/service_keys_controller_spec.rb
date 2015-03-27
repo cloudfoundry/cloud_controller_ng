@@ -1,0 +1,215 @@
+require 'spec_helper'
+
+module VCAP::CloudController
+  describe ServiceKeysController do
+    describe 'Attributes' do
+      it do
+        expect(described_class).to have_creatable_attributes({
+                                                                 name: { type: 'string', required: true },
+                                                                 service_instance_guid: { type: 'string', required: true }
+                                                             })
+      end
+    end
+
+    CREDENTIALS = { 'foo' => 'bar' }
+
+    let(:guid_pattern) { '[[:alnum:]-]+' }
+    let(:bind_status) { 200 }
+    let(:bind_body) { { credentials: CREDENTIALS } }
+    let(:unbind_status) { 200 }
+    let(:unbind_body) { {} }
+
+    def broker_url(broker)
+      base_broker_uri = URI.parse(broker.broker_url)
+      base_broker_uri.user = broker.auth_username
+      base_broker_uri.password = broker.auth_password
+      base_broker_uri.to_s
+    end
+
+    def stub_requests(broker)
+      stub_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+          to_return(status: bind_status, body: bind_body.to_json)
+    end
+
+    def bind_url_regex(opts={})
+      service_binding = opts[:service_binding]
+      service_binding_guid = service_binding.try(:guid) || guid_pattern
+      service_instance = opts[:service_instance] || service_binding.try(:service_instance)
+      service_instance_guid = service_instance.try(:guid) || guid_pattern
+      broker = opts[:service_broker] || service_instance.service_plan.service.service_broker
+      %r{#{broker_url(broker)}/v2/service_instances/#{service_instance_guid}/service_bindings/#{service_binding_guid}}
+    end
+
+    describe 'create' do
+      context 'for managed instances' do
+        let(:instance) { ManagedServiceInstance.make }
+        let(:space) { instance.space }
+        let(:service) { instance.service }
+        let(:developer) { make_developer_for_space(space) }
+        let(:name) { 'fake-service-key' }
+        let(:service_instance_guid) { instance.guid }
+        let(:req) {
+          {
+              name: name,
+              service_instance_guid: service_instance_guid
+          }.to_json
+        }
+
+        before do
+          stub_requests(service.service_broker)
+        end
+
+        it 'creates a service key to a service instance' do
+          post '/v2/service_keys', req, json_headers(headers_for(developer))
+          expect(last_response).to have_status_code(201)
+          service_key = ServiceKey.last
+          expect(service_key.credentials).to eq(CREDENTIALS)
+        end
+
+        context 'when attempting to create service key for an unbindable service' do
+          before do
+            service.bindable = false
+            service.save
+
+            req = {
+                name: name,
+                service_instance_guid: instance.guid }.to_json
+
+            post '/v2/service_keys', req, json_headers(headers_for(developer))
+          end
+
+          it 'raises UnbindableService error' do
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-UnbindableService')
+            expect(last_response).to have_status_code(400)
+          end
+
+          it 'does not send a bind request to broker' do
+            expect(a_request(:put, bind_url_regex(service_instance: instance))).to_not have_been_made
+          end
+        end
+
+        context 'when the service instance is invalid' do
+          context 'because service_instance_guid is invalid' do
+            let(:service_instance_guid) { 'THISISWRONG' }
+
+            it 'returns CF-ServiceInstanceNotFound error' do
+              post '/v2/service_keys', req, json_headers(headers_for(developer))
+
+              hash_body = JSON.parse(last_response.body)
+              expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
+              expect(last_response.status).to eq(404)
+            end
+          end
+
+          context 'when the instance operation is in progress' do
+            before do
+              instance.save_with_operation(
+                  last_operation: {
+                      type: 'delete',
+                      state: 'in progress',
+                  }
+              )
+            end
+
+            it 'does not tell the service broker to bind the service' do
+              broker = service.service_broker
+              post '/v2/service_keys', req, json_headers(headers_for(developer))
+
+              expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
+                  to_not have_been_made
+            end
+
+            it 'should show an error message for create key operation' do
+              post '/v2/service_keys', req, json_headers(headers_for(developer))
+              expect(last_response).to have_status_code 400
+              expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+            end
+          end
+
+          describe 'locking the instance as a result of creating service key' do
+            context 'when the instance has a previous operation' do
+              before do
+                instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+                instance.save
+              end
+
+              it 'reverts the last_operation of the instance to its previous operation' do
+                post '/v2/service_keys', req, json_headers(headers_for(developer))
+                expect(instance.last_operation.state).to eq 'succeeded'
+                expect(instance.last_operation.type).to eq 'create'
+              end
+            end
+
+            context 'when the instance does not have a last_operation' do
+              before do
+                instance.service_instance_operation = nil
+                instance.save
+              end
+
+              it 'does not save a last_operation' do
+                post '/v2/service_keys', req, json_headers(headers_for(developer))
+                expect(instance.refresh.last_operation).to be_nil
+              end
+            end
+          end
+
+          describe 'creating key errors' do
+            subject(:make_request) do
+              post '/v2/service_keys', req, json_headers(headers_for(developer))
+            end
+
+            context 'when attempting to create key and service key already exists' do
+              before do
+                ServiceKey.make(name: name, service_instance: instance)
+              end
+
+              it 'returns a ServiceKeyTaken error' do
+                make_request
+                expect(last_response.status).to eq(400)
+                expect(decoded_response['error_code']).to eq('CF-ServiceKeyTaken')
+              end
+
+              it 'does not send a bind request to broker' do
+                make_request
+                expect(a_request(:put, bind_url_regex(service_instance: instance))).to_not have_been_made
+              end
+            end
+
+            context 'when the v2 broker returns a 409' do
+              let(:bind_status) { 409 }
+              let(:bind_body) { {} }
+
+              it 'returns a 409' do
+                make_request
+                expect(last_response).to have_status_code 409
+              end
+
+              it 'returns a ServiceBrokerConflict error' do
+                make_request
+                expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerConflict'
+              end
+            end
+
+            context 'when the v2 broker returns any other error' do
+              let(:bind_status) { 500 }
+              let(:bind_body) { { description: 'ERROR MESSAGE HERE' } }
+
+              context 'when the instance has a last_operation' do
+                before do
+                  instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+                end
+
+                it 'rolls back the last_operation of the service instance' do
+                  make_request
+                  expect(instance.refresh.last_operation.state).to eq 'succeeded'
+                  expect(instance.refresh.last_operation.type).to eq 'create'
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+end
