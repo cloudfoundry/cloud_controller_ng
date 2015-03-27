@@ -4,7 +4,7 @@ require 'queries/droplet_delete_fetcher'
 require 'actions/droplet_delete'
 
 module VCAP::CloudController
-  class DropletsController < RestController::BaseController
+  class DropletsController < RestController::ModelController
     def self.dependencies
       [:droplets_handler, :droplet_presenter]
     end
