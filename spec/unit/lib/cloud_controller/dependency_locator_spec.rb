@@ -215,11 +215,11 @@ describe CloudController::DependencyLocator do
     end
 
     context 'when the internal_service_hostname is not nil' do
-      let(:internal_service_hostname) { 'external.service.hostname' }
+      let(:internal_service_hostname) { 'internal.service.hostname' }
 
-      it 'creates blobstore_url_generator with the external service hostname, port, and blobstores' do
+      it 'creates blobstore_url_generator with the internal service hostname, port, and blobstores' do
         connection_options = {
-          blobstore_host: 'external.service.hostname',
+          blobstore_host: 'internal.service.hostname',
           blobstore_port: 8282,
           user: 'username',
           password: 'password'
