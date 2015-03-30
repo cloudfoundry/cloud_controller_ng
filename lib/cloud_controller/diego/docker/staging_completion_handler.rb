@@ -12,8 +12,9 @@ module VCAP::CloudController
         def self.success_parser
           @staging_response_schema ||= Membrane::SchemaParser.parse do
             {
-              execution_metadata: String,
-              detected_start_command: Hash,
+              :execution_metadata => String,
+              :detected_start_command => Hash,
+              optional(:lifecycle_data) => Hash
             }
           end
         end
@@ -34,6 +35,12 @@ module VCAP::CloudController
               if payload.key?(:detected_start_command)
                 droplet.update_detected_start_command(payload[:detected_start_command][:web])
               end
+            end
+
+            if payload.key?(:lifecycle_data) && payload[:lifecycle_data][:docker_image].present?
+              droplet.update_cached_docker_image(payload[:lifecycle_data][:docker_image])
+            else
+              droplet.update_cached_docker_image(nil)
             end
 
             app.save_changes(raise_on_save_failure: true)
