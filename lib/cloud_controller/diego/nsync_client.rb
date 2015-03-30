@@ -33,6 +33,35 @@ module VCAP::CloudController
         nil
       end
 
+      def stop_app(process_guid)
+        if @url.nil?
+          raise Errors::ApiError.new_from_details('RunnerUnavailable', 'invalid config')
+        end
+
+        logger.info('stop.app.request', process_guid: process_guid)
+
+        path = "/v1/apps/#{process_guid}"
+
+        begin
+          tries ||= 3
+          response = http_client.delete(path, REQUEST_HEADERS)
+        rescue Errno::ECONNREFUSED => e
+          retry unless (tries -= 1).zero?
+          raise Errors::ApiError.new_from_details('RunnerUnavailable', e)
+        end
+
+        logger.info('stop.app.response', process_guid: process_guid, response_code: response.code)
+
+        case response.code
+        when '202', '404'
+          # success
+        else
+          raise Errors::ApiError.new_from_details('RunnerError', "stop app failed: #{response.code}")
+        end
+
+        nil
+      end
+
       def stop_index(process_guid, index)
         if @url.nil?
           raise Errors::ApiError.new_from_details('RunnerUnavailable', 'invalid config')
