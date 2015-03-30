@@ -151,7 +151,7 @@ module VCAP::CloudController
           end
 
           it 'sets the app package state to pending before it tries to stage' do
-            expect(app).to receive(:update).with({package_state: "PENDING", staging_task_id: staging_task.task_id})
+            expect(app).to receive(:update).with({ package_state: 'PENDING', staging_task_id: staging_task.task_id })
             stage
           end
         end
