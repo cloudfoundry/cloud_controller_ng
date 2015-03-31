@@ -566,6 +566,17 @@ module VCAP::CloudController
           expect(last_response.status).to eq 200
         end
 
+        it 'prepends the apps stack to the key' do
+          expect {
+            post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req
+          }.to change {
+            Delayed::Job.count
+          }.by(1)
+
+          job = Delayed::Job.last
+          expect(job.handler).to include("#{app_obj.stack.guid}-#{app_obj.guid}")
+        end
+
         context 'when a content-md5 is specified' do
           it 'returns a 400 if the value does not match the md5 of the body' do
             post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
@@ -620,12 +631,12 @@ module VCAP::CloudController
           it 'redirects nginx to serve staged droplet' do
             buildpack_cache_blobstore.cp_to_blobstore(
                 buildpack_cache.path,
-                app_obj.guid
+                "#{app_obj.stack.guid}-#{app_obj.guid}"
             )
 
             make_request
             expect(last_response.status).to eq(200)
-            expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{app_obj.guid}")
+            expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{app_obj.stack.guid}-#{app_obj.guid}")
           end
         end
 
@@ -637,7 +648,7 @@ module VCAP::CloudController
           it 'should return the buildpack cache' do
             buildpack_cache_blobstore.cp_to_blobstore(
                 buildpack_cache.path,
-                app_obj.guid
+                "#{app_obj.stack.guid}-#{app_obj.guid}"
             )
 
             make_request

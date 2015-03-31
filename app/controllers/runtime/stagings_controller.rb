@@ -94,8 +94,9 @@ module VCAP::CloudController
       check_app_exists(app, guid)
       check_file_was_uploaded(app)
       check_file_md5
+      blobstore_key = "#{app.stack.guid}-#{app.guid}"
 
-      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, app.guid, :buildpack_cache_blobstore)
+      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, blobstore_key, :buildpack_cache_blobstore)
       Jobs::Enqueuer.new(blobstore_upload, queue: Jobs::LocalQueue.new(config)).enqueue
       HTTP::OK
     end
@@ -105,7 +106,8 @@ module VCAP::CloudController
       app = App.find(guid: guid)
       check_app_exists(app, guid)
 
-      blob = buildpack_cache_blobstore.blob(app.guid)
+      blobstore_key = "#{app.stack.guid}-#{app.guid}"
+      blob = buildpack_cache_blobstore.blob(blobstore_key)
       blob_name = 'buildpack cache'
 
       @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless blob
