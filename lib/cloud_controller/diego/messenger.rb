@@ -37,6 +37,13 @@ module VCAP::CloudController
         @nsync_client.stop_index(process_guid, index)
       end
 
+      def send_stop_app_request(app)
+        logger.info('stop.app', app_guid: app.guid)
+
+        process_guid = ProcessGuid.from_app(app)
+        @nsync_client.stop_app(process_guid)
+      end
+
       private
 
       def logger

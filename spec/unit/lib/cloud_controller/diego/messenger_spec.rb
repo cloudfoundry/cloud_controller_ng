@@ -81,6 +81,20 @@ module VCAP::CloudController
           expect(nsync_client).to have_received(:stop_index).with(process_guid, index)
         end
       end
+
+      describe '#send_stop_app_request' do
+        let(:process_guid) { ProcessGuid.from_app(app) }
+
+        before do
+          allow(nsync_client).to receive(:stop_app)
+        end
+
+        it 'sends a stop app request' do
+          messenger.send_stop_app_request(app)
+
+          expect(nsync_client).to have_received(:stop_app).with(process_guid)
+        end
+      end
     end
   end
 end

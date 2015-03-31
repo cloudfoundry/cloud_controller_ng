@@ -95,7 +95,7 @@ module VCAP::CloudController
       dependency_locator = CloudController::DependencyLocator.instance
       nsync_client = dependency_locator.nsync_client
       stager_client = dependency_locator.stager_client
-      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator, Diego::Common::Protocol.new)
+      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator(true), Diego::Common::Protocol.new)
       messenger = Diego::Messenger.new(stager_client, nsync_client, protocol)
       Diego::Runner.new(app, messenger, protocol, @config[:default_health_check_timeout])
     end

@@ -16,10 +16,6 @@ module VCAP::CloudController
         @messenger.send_desire_request(@app, @default_health_check_timeout)
       end
 
-      def stop
-        @messenger.send_desire_request(@app, @default_health_check_timeout)
-      end
-
       def update_routes
         @messenger.send_desire_request(@app, @default_health_check_timeout)
       end
@@ -30,6 +26,10 @@ module VCAP::CloudController
 
       def desired_app_info
         raise NotImplementedError
+      end
+
+      def stop
+        @messenger.send_stop_app_request(@app)
       end
 
       def stop_index(index)

@@ -134,13 +134,16 @@ module CloudController
       )
     end
 
-    def blobstore_url_generator
+    def blobstore_url_generator(use_service_dns=false)
+      hostname = use_service_dns && @config[:internal_service_hostname] || @config[:external_host]
+
       connection_options = {
-        blobstore_host: @config[:internal_service_hostname] || @config[:external_host],
+        blobstore_host: hostname,
         blobstore_port: @config[:external_port],
         user: @config[:staging][:auth][:user],
         password: @config[:staging][:auth][:password]
       }
+
       Blobstore::UrlGenerator.new(
         connection_options,
         package_blobstore,

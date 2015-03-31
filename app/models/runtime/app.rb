@@ -320,6 +320,7 @@ module VCAP::CloudController
     end
 
     def vcap_application
+      app_name = app.nil? ? name : app.name
       {
         limits: {
           mem: memory,
@@ -327,7 +328,7 @@ module VCAP::CloudController
           fds: file_descriptors
         },
         application_version: version,
-        application_name: name,
+        application_name: app_name,
         application_uris: uris,
         version: version,
         name: name,
