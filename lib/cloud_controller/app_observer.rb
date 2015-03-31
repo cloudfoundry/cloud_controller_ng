@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       def routes_changed(app)
-        @runners.runner_for_app(app).update_routes
+        @runners.runner_for_app(app).update_routes if app.started?
       end
 
       private

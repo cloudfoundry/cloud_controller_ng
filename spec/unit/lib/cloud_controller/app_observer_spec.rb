@@ -183,9 +183,23 @@ module VCAP::CloudController
 
     describe '.routes_changed' do
       subject { AppObserver.routes_changed(app) }
-      it 'updates routes' do
-        expect(runner).to receive(:update_routes)
-        subject
+
+      context 'if the app has not been started' do
+        let(:app_started) { false }
+
+        it 'does not update routes' do
+          expect(runner).to_not receive(:update_routes)
+          subject
+        end
+      end
+
+      context 'when the app is started' do
+        let(:app_started) { true }
+
+        it 'updates routes' do
+          expect(runner).to receive(:update_routes)
+          subject
+        end
       end
     end
   end
