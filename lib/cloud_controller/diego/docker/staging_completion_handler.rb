@@ -12,8 +12,9 @@ module VCAP::CloudController
         def self.success_parser
           @staging_response_schema ||= Membrane::SchemaParser.parse do
             {
-              execution_metadata: String,
-              detected_start_command: Hash,
+                :execution_metadata => String,
+                :detected_start_command => Hash,
+                optional(:lifecycle_data) => Hash
             }
           end
         end
@@ -23,6 +24,10 @@ module VCAP::CloudController
         def save_staging_result(app, payload)
           app.class.db.transaction do
             app.lock!
+
+            if payload.key?(:lifecycle_data) && payload[:lifecycle_data].key?(:docker_image)
+              app.update_docker_image(payload[:lifecycle_data][:docker_image])
+            end
 
             app.mark_as_staged
             app.add_new_droplet(SecureRandom.hex) # placeholder until image ID is obtained during staging

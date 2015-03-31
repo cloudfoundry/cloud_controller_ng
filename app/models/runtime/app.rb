@@ -189,6 +189,10 @@ module VCAP::CloudController
       create_app_usage_buildpack_event
     end
 
+    def update_docker_image(image)
+      update(docker_image: image)
+    end
+
     def generate_start_event?
       # Change to app state is given priority over change to footprint as
       # we would like to generate only either start or stop event exactly
