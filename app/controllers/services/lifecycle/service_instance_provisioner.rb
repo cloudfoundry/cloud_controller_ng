@@ -19,13 +19,9 @@ module VCAP::CloudController
       validate_create_action(request_attrs, params)
 
       service_instance = ManagedServiceInstance.new(request_attrs.except('parameters'))
-      attributes_to_update = service_instance.client.provision(
+      attributes_to_update, poll_interval_seconds = service_instance.client.provision(
         service_instance,
         accepts_incomplete: accepts_incomplete?(params),
-        event_repository_opts: {
-          user: @access_context.user,
-          user_email: @access_context.user_email
-        },
         request_attrs: request_attrs,
       )
 
@@ -34,6 +30,18 @@ module VCAP::CloudController
       rescue => e
         safe_deprovision_instance(service_instance)
         raise e
+      end
+
+      if service_instance.operation_in_progress?
+        job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
+          'service-instance-state-fetch',
+          service_instance.client.attrs,
+          service_instance.guid,
+          event_repository_opts,
+          request_attrs,
+          poll_interval_seconds,
+        )
+        job.enqueue
       end
 
       if (!accepts_incomplete?(params)) || service_instance.last_operation.state != 'in progress'
@@ -64,6 +72,13 @@ module VCAP::CloudController
       space = Space.filter(guid: request_attrs['space_guid']).first
       raise InvalidSpace unless space
       space
+    end
+
+    def event_repository_opts
+      {
+        user: @access_context.user,
+        user_email: @access_context.user_email
+      }
     end
 
     def validate_create_action(request_attrs, params)

@@ -16,12 +16,6 @@ module VCAP::Services::ServiceBrokers::V2
 
     let(:http_client) { instance_double(HttpClient) }
     let(:orphan_mitigator) { instance_double(OrphanMitigator, cleanup_failed_provision: nil, cleanup_failed_bind: nil) }
-    let(:options) do
-      {
-        event_repository_opts: nil,
-        request_attrs: {}
-      }
-    end
 
     before do
       allow(HttpClient).to receive(:new).
@@ -115,7 +109,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a put request with correct path' do
-        client.provision(instance, options)
+        client.provision(instance)
 
         expect(http_client).to have_received(:put).
           with(path, anything)
@@ -125,7 +119,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:path) { "/v2/service_instances/#{instance.guid}?accepts_incomplete=true" }
 
         it 'adds the flag to the path of the service broker request' do
-          client.provision(instance, options.merge(accepts_incomplete: true))
+          client.provision(instance, accepts_incomplete: true)
 
           expect(http_client).to have_received(:put).
             with(path, anything)
@@ -133,7 +127,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a put request with correct message' do
-        client.provision(instance, options)
+        client.provision(instance)
 
         expect(http_client).to have_received(:put).with(
           anything,
@@ -145,33 +139,40 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'returns the attributes to update on a service instance' do
-        attributes, error = client.provision(instance, options)
+        attributes, _ = client.provision(instance)
         # ensure updating attributes and saving to service instance works
         instance.save_with_operation(attributes)
 
         expect(instance.dashboard_url).to eq('foo')
-        expect(error).to be_nil
       end
 
       it 'defaults the state to "succeeded"' do
-        attributes, error = client.provision(instance, options)
+        attributes, _ = client.provision(instance)
 
         expect(attributes[:last_operation][:state]).to eq('succeeded')
-        expect(error).to be_nil
       end
 
       it 'leaves the description blank' do
-        attributes, error = client.provision(instance, options)
+        attributes, _ = client.provision(instance)
 
         expect(attributes[:last_operation][:description]).to eq('')
-        expect(error).to be_nil
       end
 
       it 'DEPRECATED, maintain for database not null constraint: sets the credentials on the instance' do
-        attributes, error = client.provision(instance, options)
+        attributes, _ = client.provision(instance)
 
         expect(attributes[:credentials]).to eq({})
-        expect(error).to be_nil
+      end
+
+      it 'passes arbitrary params in the broker request' do
+        request_attrs = {
+          'parameters' => {
+            'some_param' => 'some-value'
+          }
+        }
+
+        client.provision(instance, request_attrs: request_attrs)
+        expect(http_client).to have_received(:put).with(path, hash_including(parameters: request_attrs['parameters']))
       end
 
       context 'when the broker returns 204 (No Content)' do
@@ -180,14 +181,14 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'throws ServiceBrokerBadResponse and initiates orphan mitigation' do
           expect {
-            client.provision(instance, options)
+            client.provision(instance)
           }.to raise_error(Errors::ServiceBrokerBadResponse)
 
           expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
         end
       end
 
-      context 'when the broker returns no state or the state is created, or succeeded' do
+      context 'when the broker returns no state or the state is succeeded' do
         let(:response_data) do
           {
             'last_operation' => {}
@@ -195,20 +196,12 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'return immediately with the broker response' do
-          client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          attributes, error = client.provision(instance, options)
+          client = Client.new(client_attrs)
+          attributes, _ = client.provision(instance, accepts_incomplete: true)
 
           expect(attributes[:last_operation][:type]).to eq('create')
           expect(attributes[:last_operation][:state]).to eq('succeeded')
           expect(attributes[:last_operation][:description]).to eq('')
-          expect(error).to be_nil
-        end
-
-        it 'does not enqueue a polling job' do
-          client.provision(instance, options)
-          Timecop.freeze(Time.now + 1.hour) do
-            expect(Delayed::Worker.new.work_off).to eq([0, 0])
-          end
         end
       end
 
@@ -220,20 +213,12 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'return immediately with the broker response' do
-          client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          attributes, error = client.provision(instance, options)
+          client = Client.new(client_attrs)
+          attributes, _ = client.provision(instance, accepts_incomplete: true)
 
           expect(attributes[:last_operation][:type]).to eq('create')
           expect(attributes[:last_operation][:state]).to eq('succeeded')
           expect(attributes[:last_operation][:description]).to eq('')
-          expect(error).to be_nil
-        end
-
-        it 'does not enqueue a polling job' do
-          client.provision(instance, options)
-          Timecop.freeze(Time.now + 1.hour) do
-            expect(Delayed::Worker.new.work_off).to eq([0, 0])
-          end
         end
       end
 
@@ -250,58 +235,40 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'return immediately with the broker response' do
-          client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          attributes, error = client.provision(instance, options)
+          client = Client.new(client_attrs)
+          attributes, _ = client.provision(instance, accepts_incomplete: true)
 
           expect(attributes[:last_operation][:type]).to eq('create')
           expect(attributes[:last_operation][:state]).to eq('in progress')
           expect(attributes[:last_operation][:description]).to eq('10% done')
-          expect(error).to be_nil
         end
 
-        it 'enqueues a polling job' do
-          expect {
-            client.provision(instance, options)
-          }.to change {
-            Delayed::Job.count
-          }.by(1)
+        it 'returns the interval for polling the operation state' do
+          _, polling_interval = client.provision(instance)
+          expect(polling_interval).to eq 60
+        end
 
-          expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
-          inner_job = unwrap_delayed_job(Delayed::Job.last)
-          expect(inner_job.name).to eq 'service-instance-state-fetch'
-          expect(inner_job.client_attrs).to eq client.attrs
-          expect(inner_job.service_instance_guid).to eq instance.guid
-          expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
-          expect(inner_job.request_attrs).to eq options[:request_attrs]
+        it 'does not enqueue a polling job' do
+          expect {
+            client.provision(instance)
+          }.not_to change { Delayed::Job.count }
         end
 
         context 'and async_poll_interval_seconds is set by the broker' do
-          let(:poll_interval) { '120' }
+          let(:broker_polling_interval) { '120' }
           let(:response_data) do
             {
               last_operation: {
                 state: 'in progress',
                 description: '10% done',
-                async_poll_interval_seconds: poll_interval
+                async_poll_interval_seconds: broker_polling_interval
               },
             }
           end
 
-          it 'parses the value as an integer and passes it to the state poller' do
-            expect {
-              client.provision(instance, options)
-            }.to change {
-              Delayed::Job.count
-            }.by(1)
-
-            expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
-            inner_job = unwrap_delayed_job(Delayed::Job.last)
-            expect(inner_job.name).to eq 'service-instance-state-fetch'
-            expect(inner_job.client_attrs).to eq client.attrs
-            expect(inner_job.service_instance_guid).to eq instance.guid
-            expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
-            expect(inner_job.request_attrs).to eq options[:request_attrs]
-            expect(inner_job.poll_interval).to eq poll_interval.to_i
+          it 'parses the value as an integer and returns the polling interval' do
+            _, polling_interval = client.provision(instance, accepts_incomplete: true)
+            expect(polling_interval).to eq 120
           end
         end
       end
@@ -316,12 +283,12 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'raises an error' do
-          client = Client.new(client_attrs.merge(accepts_incomplete: true))
-          expect { client.provision(instance, options) }.to raise_error(Errors::ServiceBrokerRequestRejected)
+          client = Client.new(client_attrs)
+          expect { client.provision(instance, accepts_incomplete: true) }.to raise_error(Errors::ServiceBrokerRequestRejected)
         end
 
         it 'does not enqueue a polling job' do
-          client.provision(instance, options) rescue nil
+          client.provision(instance, accepts_incomplete: true) rescue nil
           Timecop.freeze(Time.now + 1.hour) do
             expect(Delayed::Worker.new.work_off).to eq([0, 0])
           end
@@ -344,7 +311,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.provision(instance, options)
+                client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
@@ -365,7 +332,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.provision(instance, options)
+                client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_provision).
@@ -378,7 +345,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.provision(instance, options)
+                client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
@@ -390,7 +357,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.provision(instance, options)
+                client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerResponseMalformed)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
@@ -401,7 +368,7 @@ module VCAP::Services::ServiceBrokers::V2
 
               it 'does not initiate orphan mitigation' do
                 expect {
-                  client.provision(instance, options)
+                  client.provision(instance)
                 }.to raise_error(Errors::ServiceBrokerResponseMalformed)
 
                 expect(orphan_mitigator).not_to have_received(:cleanup_failed_provision).with(client_attrs, instance)
@@ -542,7 +509,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a patch request with the new service plan' do
-        client.update_service_plan(instance, new_plan, options)
+        client.update_service_plan(instance, new_plan)
 
         expect(http_client).to have_received(:patch).with(
           anything,
@@ -559,7 +526,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a patch request to the correct path' do
-        client.update_service_plan(instance, new_plan, options)
+        client.update_service_plan(instance, new_plan)
 
         expect(http_client).to have_received(:patch).with(path, anything)
       end
@@ -568,7 +535,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:path) { "/v2/service_instances/#{instance.guid}?accepts_incomplete=true" }
 
         it 'adds the flag to the path of the service broker request' do
-          client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+          client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
           expect(http_client).to have_received(:patch).
             with(path, anything)
@@ -585,7 +552,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'forwards the last operation state from the broker' do
-            attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+            attributes, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
             last_operation = attributes[:last_operation]
             expect(err).to be_nil
@@ -596,7 +563,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'returns the new service_plan in a hash' do
-            attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+            attributes, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
             expect(err).to be_nil
             expect(attributes[:service_plan]).to eq new_plan
           end
@@ -606,7 +573,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response_data) { { bogus_key: 'bogus_value' } }
 
           it 'defaults the last operation state to `succeeded`' do
-            attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+            attributes, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
             last_operation = attributes[:last_operation]
             expect(err).to be_nil
@@ -617,7 +584,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'returns the new service_plan in a hash' do
-            attributes, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+            attributes, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
             expect(err).to be_nil
             expect(attributes[:service_plan]).to eq new_plan
           end
@@ -637,7 +604,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'return immediately with the broker response' do
             client = Client.new(client_attrs.merge(accepts_incomplete: true))
-            attributes, error = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
+            attributes, _, error = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:type]).to eq('update')
             expect(attributes[:last_operation][:state]).to eq('in progress')
@@ -645,49 +612,32 @@ module VCAP::Services::ServiceBrokers::V2
             expect(error).to be_nil
           end
 
-          it 'enqueues a polling job' do
+          it 'does not enqueue a job to fetch operation state' do
             expect {
-              client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
-            }.to change {
-                Delayed::Job.count
-              }.by(1)
+              client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+            }.not_to change { Delayed::Job.count }
+          end
 
-            expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
-            inner_job = unwrap_delayed_job(Delayed::Job.last)
-            expect(inner_job.name).to eq 'service-instance-state-fetch'
-            expect(inner_job.client_attrs).to eq client.attrs
-            expect(inner_job.service_instance_guid).to eq instance.guid
-            expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
-            expect(inner_job.request_attrs).to eq options[:request_attrs]
+          it 'returns an interval for polling the operation state' do
+            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+            expect(polling_interval).to eq(60)
           end
 
           context 'and async_poll_interval_seconds is set by the broker' do
-            let(:poll_interval) { '120' }
+            let(:broker_polling_interval) { '120' }
             let(:response_data) do
               {
                 last_operation: {
                   state: 'in progress',
                   description: '10% done',
-                  async_poll_interval_seconds: poll_interval
+                  async_poll_interval_seconds: broker_polling_interval
                 },
               }
             end
 
-            it 'parses the value as an integer and passes it to the state poller' do
-              expect {
-                client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: true))
-              }.to change {
-                  Delayed::Job.count
-                }.by(1)
-
-              expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
-              inner_job = unwrap_delayed_job(Delayed::Job.last)
-              expect(inner_job.name).to eq 'service-instance-state-fetch'
-              expect(inner_job.client_attrs).to eq client.attrs
-              expect(inner_job.service_instance_guid).to eq instance.guid
-              expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
-              expect(inner_job.request_attrs).to eq options[:request_attrs]
-              expect(inner_job.poll_interval).to eq poll_interval.to_i
+            it 'parses the value as an integer' do
+              _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+              expect(polling_interval).to eq 120
             end
           end
         end
@@ -705,8 +655,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(http_client).to receive(:patch).and_raise(error)
           end
 
+          it 'returns no polling_interval' do
+            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+            expect(polling_interval).to be_nil
+          end
+
           it 'returns an array containing the update attributes and the error' do
-            attrs, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: 'true'))
+            attrs, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -726,8 +681,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(response_parser).to receive(:parse).and_raise(error)
           end
 
+          it 'returns no polling_interval' do
+            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+            expect(polling_interval).to be_nil
+          end
+
           it 'returns an array containing the update attributes and the error' do
-            attrs, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: 'true'))
+            attrs, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -747,8 +707,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(response_parser).to receive(:parse).and_raise(error)
           end
 
+          it 'returns no polling_interval' do
+            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+            expect(polling_interval).to be_nil
+          end
+
           it 'returns an array containing the update attributes and the error' do
-            attrs, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: 'true'))
+            attrs, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -768,8 +733,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(response_parser).to receive(:parse).and_raise(error)
           end
 
+          it 'returns no polling_interval' do
+            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+            expect(polling_interval).to be_nil
+          end
+
           it 'returns an array containing the update attributes and the error' do
-            attrs, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: 'true'))
+            attrs, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: 'true')
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -789,8 +759,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(response_parser).to receive(:parse).and_raise(error)
           end
 
+          it 'returns no polling_interval' do
+            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+            expect(polling_interval).to be_nil
+          end
+
           it 'returns an array containing the update attributes and the error' do
-            attrs, err = client.update_service_plan(instance, new_plan, options.merge(accepts_incomplete: 'true'))
+            attrs, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: 'true')
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -1052,7 +1027,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the caller does not pass the accepts_incomplete flag' do
         it 'returns a last_operation hash with a state defaulted to `succeeded`' do
-          attrs = client.deprovision(instance)
+          attrs, _  = client.deprovision(instance)
           expect(attrs).to eq({
             last_operation: {
               type: 'delete',
@@ -1064,7 +1039,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'does not enqueue a job to fetch the state of the instance' do
           expect {
-            client.deprovision(instance, options)
+            client.deprovision(instance)
           }.not_to change {
             Delayed::Job.count
           }
@@ -1094,7 +1069,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:state) { 'in progress' }
 
           it 'returns the last_operation hash' do
-            attrs = client.deprovision(instance, options.merge(accepts_incomplete: true))
+            attrs, _ = client.deprovision(instance, accepts_incomplete: true)
             expect(attrs).to eq({
               last_operation: {
                 type: 'delete',
@@ -1104,20 +1079,10 @@ module VCAP::Services::ServiceBrokers::V2
             })
           end
 
-          it 'enqueues a job to fetch the state of the instance' do
+          it 'does not enqueue a job to fetch operation state' do
             expect {
-              client.deprovision(instance, options)
-            }.to change {
-              Delayed::Job.count
-            }.by(1)
-
-            expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
-            inner_job = unwrap_delayed_job(Delayed::Job.last)
-            expect(inner_job.name).to eq 'service-instance-state-fetch'
-            expect(inner_job.client_attrs).to eq client.attrs
-            expect(inner_job.service_instance_guid).to eq instance.guid
-            expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
-            expect(inner_job.request_attrs).to eq options[:request_attrs]
+              client.deprovision(instance, accepts_incomplete: true)
+            }.not_to change { Delayed::Job.count }
           end
 
           context 'and async_poll_interval_seconds is set by the broker' do
@@ -1132,21 +1097,9 @@ module VCAP::Services::ServiceBrokers::V2
               }
             end
 
-            it 'parses the value as an integer and passes it to the state poller' do
-              expect {
-                client.deprovision(instance, options)
-              }.to change {
-                Delayed::Job.count
-              }.by(1)
-
-              expect(Delayed::Job.last).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch
-              inner_job = unwrap_delayed_job(Delayed::Job.last)
-              expect(inner_job.name).to eq 'service-instance-state-fetch'
-              expect(inner_job.client_attrs).to eq client.attrs
-              expect(inner_job.service_instance_guid).to eq instance.guid
-              expect(inner_job.services_event_repository_opts).to eq options[:event_repository_opts]
-              expect(inner_job.request_attrs).to eq options[:request_attrs]
-              expect(inner_job.poll_interval).to eq poll_interval.to_i
+            it 'parses the value as an integer' do
+              _, polling_interval = client.deprovision(instance, accepts_incomplete: true)
+              expect(polling_interval).to eq 500
             end
           end
         end
@@ -1156,7 +1109,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:state) { 'succeeded' }
 
           it 'returns the last_operation hash' do
-            attrs = client.deprovision(instance, options.merge(accepts_incomplete: true))
+            attrs, _ = client.deprovision(instance, accepts_incomplete: true)
             expect(attrs).to eq({
               last_operation: {
                 type: 'delete',
@@ -1168,10 +1121,15 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'does not enqueue a job to fetch the state of the instance' do
             expect {
-              client.deprovision(instance, options)
+              client.deprovision(instance, accepts_incomplete: true)
             }.not_to change {
               Delayed::Job.count
             }
+          end
+
+          it 'returns no polling_interval' do
+            _, polling_interval, _ = client.deprovision(instance, accepts_incomplete: true)
+            expect(polling_interval).to be_nil
           end
         end
 
@@ -1180,7 +1138,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response_data) { {} }
 
           it 'returns a last_operation hash that has state defaulted to `succeeded`' do
-            attrs = client.deprovision(instance, options.merge(accepts_incomplete: true))
+            attrs, _ = client.deprovision(instance, accepts_incomplete: true)
             expect(attrs).to eq({
               last_operation: {
                 type: 'delete',
@@ -1192,10 +1150,15 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'does not enqueue a job to fetch the state of the instance' do
             expect {
-              client.deprovision(instance, options)
+              client.deprovision(instance, accepts_incomplete: true)
             }.not_to change {
               Delayed::Job.count
             }
+          end
+
+          it 'returns no polling_interval' do
+            _, polling_interval, _ = client.deprovision(instance, accepts_incomplete: true)
+            expect(polling_interval).to be_nil
           end
         end
       end

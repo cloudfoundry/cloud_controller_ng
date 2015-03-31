@@ -49,13 +49,8 @@ module VCAP::CloudController
     end
 
     def perform_accepts_incomplete_delete(service_instance)
-      attributes_to_update = service_instance.client.deprovision(
+      attributes_to_update, poll_interval_seconds = service_instance.client.deprovision(
         service_instance,
-        event_repository_opts: {
-          user: SecurityContext.current_user,
-          user_email: SecurityContext.current_user_email
-        },
-        request_attrs: {},
         accepts_incomplete: true
       )
 
@@ -64,13 +59,28 @@ module VCAP::CloudController
         service_instance.last_operation.try(:destroy)
         # do not destroy, we already deprovisioned from the broker
         service_instance.delete
+        return nil
       end
 
-      attributes_to_update ||= {}
-      last_operation_hash = attributes_to_update[:last_operation] || {}
-      if last_operation_hash[:state] == 'in progress'
+      if service_instance.operation_in_progress?
+        job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
+          'service-instance-state-fetch',
+          service_instance.client.attrs,
+          service_instance.guid,
+          event_repository_opts,
+          {},
+          poll_interval_seconds,
+        )
+        job.enqueue
         [service_instance, nil]
       end
+    end
+
+    def event_repository_opts
+      {
+        user: SecurityContext.current_user,
+        user_email: SecurityContext.current_user_email
+      }
     end
   end
 end
