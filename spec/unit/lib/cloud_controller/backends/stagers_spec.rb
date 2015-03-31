@@ -136,8 +136,20 @@ module VCAP::CloudController
 
         it 'finds a diego stager' do
           expect(stagers).to receive(:diego_stager).with(app).and_call_original
-
           expect(stager).to be_a(Diego::Stager)
+        end
+
+        context 'when the app is a traditional buildpack app' do
+          let(:docker_image) { nil }
+
+          before do
+            locator = CloudController::DependencyLocator.instance
+            expect(locator).to receive(:blobstore_url_generator).with(true).and_call_original
+          end
+
+          it 'uses a service dns name blobstore url generator' do
+            expect(stager).to_not be_nil
+          end
         end
 
         context 'when the app has a docker image' do
@@ -145,7 +157,6 @@ module VCAP::CloudController
 
           it 'finds a diego stager' do
             expect(stagers).to receive(:diego_stager).with(app).and_call_original
-
             expect(stager).to be_a(Diego::Stager)
           end
         end
