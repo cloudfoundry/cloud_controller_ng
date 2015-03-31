@@ -102,45 +102,6 @@ module VCAP::CloudController
       @paginator = paginator
     end
 
-    def create(message, access_context)
-      package = PackageModel.find(guid: message.package_guid)
-      raise PackageNotFound if package.nil?
-      raise InvalidRequest.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
-      raise InvalidRequest.new('Cannot stage package whose type is not bits.') if package.type != PackageModel::BITS_TYPE
-
-      app_model = AppModel.find(guid: package.app_guid)
-      raise AppNotFound if app_model.nil?
-      space = Space.find(guid: app_model.space_guid)
-
-      app_env = app_model.environment_variables || {}
-      environment_variables = EnvironmentVariableGroup.staging.environment_json.merge(app_env).merge({
-        VCAP_APPLICATION: vcap_application(message, app_model, space),
-        CF_STACK: message.stack
-      })
-
-      droplet = DropletModel.new(
-        app_guid: package.app_guid,
-        buildpack_git_url: message.buildpack_git_url,
-        buildpack_guid: message.buildpack_guid,
-        package_guid: package.guid,
-        state: DropletModel::PENDING_STATE,
-        environment_variables: environment_variables
-      )
-      raise Unauthorized if access_context.cannot?(:create, droplet, space)
-
-      buildpack_key = nil
-      if message.buildpack_guid
-        buildpack = Buildpack.find(guid: message.buildpack_guid)
-        raise BuildpackNotFound if buildpack.nil?
-        buildpack_key = buildpack.key
-      end
-
-      droplet.save
-
-      @stagers.stager_for_package(package).stage_package(droplet, message.stack, message.memory_limit, message.disk_limit, buildpack_key, message.buildpack_git_url)
-      droplet
-    end
-
     def show(guid, access_context)
       droplet = DropletModel.find(guid: guid)
       return nil if droplet.nil?

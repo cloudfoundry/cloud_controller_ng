@@ -1,20 +1,21 @@
 require 'presenters/v3/package_presenter'
 require 'presenters/v3/droplet_presenter'
 require 'handlers/packages_handler'
-require 'handlers/droplets_handler'
 require 'queries/package_delete_fetcher'
+require 'queries/package_stage_fetcher'
+require 'actions/package_stage_action'
 require 'actions/package_delete'
 
 module VCAP::CloudController
   class PackagesController < RestController::BaseController
     def self.dependencies
-      [:packages_handler, :package_presenter, :droplets_handler, :droplet_presenter, :apps_handler]
+      [:packages_handler, :package_presenter, :droplet_presenter, :apps_handler, :stagers]
     end
 
     def inject_dependencies(dependencies)
       @packages_handler  = dependencies[:packages_handler]
       @package_presenter = dependencies[:package_presenter]
-      @droplets_handler  = dependencies[:droplets_handler]
+      @stagers  = dependencies[:stagers]
       @droplet_presenter = dependencies[:droplet_presenter]
       @apps_handler      = dependencies[:apps_handler]
     end
@@ -76,21 +77,31 @@ module VCAP::CloudController
 
     post '/v3/packages/:guid/droplets', :stage
     def stage(package_guid)
+      check_write_permissions!
+
       staging_message = StagingMessage.create_from_http_request(package_guid, body)
       valid, error    = staging_message.validate
       unprocessable!(error) if !valid
 
-      droplet = @droplets_handler.create(staging_message, @access_context)
+      package, app, space, buildpack = package_stage_fetcher.fetch(package_guid, staging_message.buildpack_guid)
+      package_not_found! if package.nil?
+      app_not_found! if app.nil?
+      space_not_found! if space.nil?
+      buildpack_not_found! if buildpack.nil? && staging_message.buildpack_guid
+
+      droplet = package_stage_action.stage(package, app, space, buildpack, staging_message, @stagers)
 
       [HTTP::CREATED, @droplet_presenter.present_json(droplet)]
-    rescue DropletsHandler::BuildpackNotFound
-      buildpack_not_found!
-    rescue DropletsHandler::PackageNotFound
-      package_not_found!
-    rescue DropletsHandler::Unauthorized
-      unauthorized!
-    rescue DropletsHandler::InvalidRequest => e
+    rescue PackageStageAction::InvalidPackage => e
       invalid_request!(e.message)
+    end
+
+    def package_stage_action
+      PackageStageAction.new
+    end
+
+    def package_stage_fetcher
+      PackageStageFetcher.new(current_user)
     end
 
     private
@@ -101,6 +112,14 @@ module VCAP::CloudController
 
     def buildpack_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Buildpack not found')
+    end
+
+    def app_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found ')
+    end
+
+    def space_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
     end
 
     def unauthorized!
