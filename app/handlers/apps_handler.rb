@@ -77,21 +77,6 @@ module VCAP::CloudController
       @paginator.get_page(dataset, pagination_options)
     end
 
-    def create(message, access_context)
-      app                       = AppModel.new
-      app.name                  = message.name
-      app.space_guid            = message.space_guid
-      app.environment_variables = message.environment_variables
-
-      raise InvalidApp.new('Space was not found') if Space.find(guid: message.space_guid).nil?
-      raise Unauthorized if access_context.cannot?(:create, app)
-
-      app.save
-      app
-    rescue Sequel::ValidationFailed => e
-      raise InvalidApp.new(e.message)
-    end
-
     def add_process(app, process, access_context)
       raise Unauthorized if access_context.cannot?(:update, app)
       raise IncorrectProcessSpace if app.space_guid != process.space_guid

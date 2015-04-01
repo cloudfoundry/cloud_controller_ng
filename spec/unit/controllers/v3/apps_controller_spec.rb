@@ -119,30 +119,28 @@ module VCAP::CloudController
     end
 
     describe '#create' do
+      let(:space_guid) { Sham.guid }
       let(:req_body) do
         {
           name: 'some-name',
-          space_guid: Space.make.guid,
+          space_guid: space_guid,
         }.to_json
       end
+      let(:membership) { instance_double(Membership) }
+      let(:app_create) { instance_double(AppCreate) }
 
       before do
-        allow(apps_handler).to receive(:create).and_return(app_model)
+        allow(apps_controller).to receive(:current_user).and_return(user)
+        allow(apps_controller).to receive(:check_write_permissions!)
+        allow(Membership).to receive(:new).and_return(membership)
+        allow(membership).to receive(:developed_spaces).and_return([double(:space, guid: space_guid)])
+        allow(AppCreate).to receive(:new).and_return(app_create)
+        allow(app_create).to receive(:create)
       end
 
-      context 'when the user cannot create an app' do
-        before do
-          allow(apps_handler).to receive(:create).and_raise(AppsHandler::Unauthorized)
-        end
-
-        it 'returns a 403 NotAuthorized error' do
-          expect {
-            apps_controller.create
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
-        end
+      it 'checks for write permissions' do
+        expect(apps_controller).to receive(:check_write_permissions!)
+        apps_controller.create
       end
 
       context 'when the request body is invalid JSON' do
@@ -159,7 +157,7 @@ module VCAP::CloudController
 
       context 'when the app is invalid' do
         before do
-          allow(apps_handler).to receive(:create).and_raise(AppsHandler::InvalidApp.new('ya done goofed'))
+          allow(app_create).to receive(:create).and_raise(AppCreate::InvalidApp.new('ya done goofed'))
         end
 
         it 'returns an UnprocessableEntity error' do
@@ -169,6 +167,22 @@ module VCAP::CloudController
             expect(error.name).to eq 'UnprocessableEntity'
             expect(error.response_code).to eq(422)
             expect(error.message).to match('ya done goofed')
+          end
+        end
+      end
+
+      context 'when the user is not a member of the requested space' do
+        before do
+          allow(membership).to receive(:developed_spaces).and_return([double(:some_space, guid: Sham.guid)])
+        end
+
+        it 'returns an NotFound error' do
+          expect {
+            apps_controller.create
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq(404)
+            expect(error.message).to match('Space not found')
           end
         end
       end

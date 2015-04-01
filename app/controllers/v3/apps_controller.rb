@@ -7,6 +7,7 @@ require 'actions/app_update'
 require 'queries/app_fetcher'
 require 'actions/app_start'
 require 'actions/app_stop'
+require 'actions/app_create'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
@@ -44,15 +45,17 @@ module VCAP::CloudController
 
     post '/v3/apps', :create
     def create
+      check_write_permissions!
       message = AppCreateMessage.create_from_http_request(body)
       bad_request!(message.error) if message.error
 
-      app = @app_handler.create(message, @access_context)
+      space_guids = Membership.new(current_user).developed_spaces.map(&:guid)
+      space_not_found! unless space_guids.include?(message.space_guid)
+
+      app = AppCreate.new.create(message)
 
       [HTTP::CREATED, @app_presenter.present_json(app)]
-    rescue AppsHandler::Unauthorized
-      unauthorized!
-    rescue AppsHandler::InvalidApp => e
+    rescue AppCreate::InvalidApp => e
       unprocessable!(e.message)
     end
 
@@ -179,6 +182,10 @@ module VCAP::CloudController
 
     def droplet_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found')
+    end
+
+    def space_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
     end
 
     def app_not_found!
