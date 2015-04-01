@@ -21,10 +21,22 @@ module VCAP::CloudController
       end
 
       it 'only returns the spaces for an active org' do
-        expect(membership.spaces(roles: %i(developer))).not_to include space_whose_org_is_suspended
-        expect(membership.spaces(roles: %i(developer))).not_to include space_that_user_doesnt_develop_in
-        expect(membership.spaces(roles: %i(developer))).not_to include space_in_some_other_org
-        expect(membership.spaces(roles: %i(developer))).to include space
+        spaces = membership.spaces(roles: %i(developer))
+
+        expect(spaces).not_to include space_whose_org_is_suspended
+        expect(spaces).not_to include space_that_user_doesnt_develop_in
+        expect(spaces).not_to include space_in_some_other_org
+        expect(spaces).to include space
+      end
+
+      it 'returns all the spaces if the user is admin' do
+        user.update(admin: true)
+        spaces = membership.spaces(roles: %i(developer))
+
+        expect(spaces).to include space_whose_org_is_suspended
+        expect(spaces).to include space_that_user_doesnt_develop_in
+        expect(spaces).to include space_in_some_other_org
+        expect(spaces).to include space
       end
     end
 
@@ -34,6 +46,11 @@ module VCAP::CloudController
         suspended_organization.add_user(user)
         space.add_developer(user)
         space_whose_org_is_suspended.add_developer(user)
+      end
+
+      it 'is true for admins no matter what' do
+        user.update(admin: true)
+        expect(membership.space_role?(:developer, space_that_user_doesnt_develop_in)).to be_truthy
       end
 
       it 'is true for spaces where the user is a developer' do

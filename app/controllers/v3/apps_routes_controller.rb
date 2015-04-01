@@ -10,8 +10,10 @@ module VCAP::CloudController
     def list(app_guid)
       check_read_permissions!
 
-      app_model = AppFetcher.new(current_user).fetch(app_guid)
+      app_model = AppFetcher.new.fetch(app_guid)
       app_not_found! if app_model.nil?
+      membership = Membership.new(current_user)
+      app_not_found! unless membership.space_role?(:developer, app_model.space_guid)
 
       pagination_options = PaginationOptions.from_params(params)
       routes = SequelPaginator.new.get_page(app_model.routes_dataset, pagination_options)
