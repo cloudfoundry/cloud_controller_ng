@@ -88,5 +88,31 @@ module VCAP::CloudController
         expect(Droplet.droplet_key('abc', 'xyz')).to eql('abc/xyz')
       end
     end
+
+    describe 'update_cached_docker_image' do
+      let(:docker_image_name) { '10.244.2.6:8080/uuid_generated:latest' }
+
+      context 'when there is no cached_docker_image' do
+        let(:droplet) { Droplet.make }
+
+        it 'sets the docker image' do
+          expect { droplet.update_cached_docker_image(docker_image_name) }.to_not raise_error
+          expect(droplet.cached_docker_image).to eq(docker_image_name)
+        end
+      end
+
+      context 'when there is an existing cached_docker_image' do
+        let(:old_docker_image) { 'cloudfoundry/diego-docker-app:latest' }
+        let(:droplet) { Droplet.make(cached_docker_image: old_docker_image) }
+
+        it 'updates the docker image' do
+          expect {
+            droplet.update_cached_docker_image(docker_image_name)
+          }.to change {
+            droplet.cached_docker_image
+          }.from(old_docker_image).to(docker_image_name)
+        end
+      end
+    end
   end
 end

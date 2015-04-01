@@ -40,6 +40,8 @@ module VCAP::CloudController
         end
 
         def desire_app_message(app, default_health_check_timeout)
+          cached_docker_image = app.current_droplet.cached_docker_image if app.current_droplet
+
           {
             'process_guid' => ProcessGuid.from_app(app),
             'memory_mb' => app.memory,
@@ -52,7 +54,7 @@ module VCAP::CloudController
             'num_instances' => app.desired_instances,
             'routes' => app.uris,
             'log_guid' => app.guid,
-            'docker_image' => app.docker_image,
+            'docker_image' => cached_docker_image || app.docker_image,
             'health_check_type' => app.health_check_type,
             'health_check_timeout_in_seconds' => app.health_check_timeout || default_health_check_timeout,
             'egress_rules' => @common_protocol.running_egress_rules(app),

@@ -149,6 +149,33 @@ module VCAP::CloudController
               expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)
             end
           end
+
+          context 'when there is a cached_docker_image' do
+            let(:cached_docker_image) { '10.244.2.6:8080/uuid' }
+            let(:app) { AppFactory.make(docker_image: 'cloudfoundry/diego-docker-app:latest') }
+
+            before { app.current_droplet.cached_docker_image = cached_docker_image }
+
+            it 'uses the cached_docker_image instead of the user provided' do
+              expect(message['docker_image']).to eq(cached_docker_image)
+            end
+          end
+
+          context 'when there is no current_droplet for app' do
+            let(:docker_image) { 'cloudfoundry/diego-docker-app:latest' }
+            let(:app) do
+              App.new(
+                name: Sham.name,
+                space: Space.make,
+                stack: Stack.default,
+                docker_image: docker_image,
+              )
+            end
+
+            it 'uses the user provided docker image' do
+              expect(message['docker_image']).to eq(docker_image)
+            end
+          end
         end
       end
     end
