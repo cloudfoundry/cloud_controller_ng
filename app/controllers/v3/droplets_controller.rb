@@ -36,9 +36,12 @@ module VCAP::CloudController
     def delete(guid)
       check_write_permissions!
 
-      droplet_delete_fetcher = DropletDeleteFetcher.new(current_user)
+      droplet_delete_fetcher = DropletDeleteFetcher.new
       droplet_dataset        = droplet_delete_fetcher.fetch(guid)
       droplet_not_found! if droplet_dataset.empty?
+
+      membership = Membership.new(current_user)
+      droplet_not_found! unless membership.space_role?(:developer, droplet_dataset.first.app.space_guid)
 
       DropletDelete.new.delete(droplet_dataset)
 
