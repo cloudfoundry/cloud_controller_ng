@@ -160,6 +160,22 @@ module VCAP::CloudController
               expect(message['docker_image']).to eq(cached_docker_image)
             end
           end
+
+          context 'when there is no current_droplet for app' do
+            let(:docker_image) { 'cloudfoundry/diego-docker-app:latest' }
+            let(:app) do
+              App.new(
+                name: Sham.name,
+                space: Space.make,
+                stack: Stack.default,
+                docker_image: docker_image,
+              )
+            end
+
+            it 'uses the user provided docker image' do
+              expect(message['docker_image']).to eq(docker_image)
+            end
+          end
         end
       end
     end

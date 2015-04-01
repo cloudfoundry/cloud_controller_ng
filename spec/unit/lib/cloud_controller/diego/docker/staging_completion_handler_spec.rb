@@ -74,7 +74,7 @@ module VCAP::CloudController
             end
           end
 
-          RSpec.shared_examples 'a handler with no lifecycle data' do
+          shared_examples 'a handler with no lifecycle data' do
             it 'does not update the cached image' do
               expect {
                 handler.staging_complete(staging_guid, payload)
