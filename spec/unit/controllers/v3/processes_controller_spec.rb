@@ -271,8 +271,8 @@ module VCAP::CloudController
     describe '#delete' do
       let(:space) { Space.make }
       let(:user) { User.make }
-      let(:app_model) { AppModel.make(space_guid: space.guid) }
-      let(:process) { AppFactory.make(app_guid: app_model.guid) }
+      let(:app_model) { AppModel.make(space: space) }
+      let(:process) { AppFactory.make(space: space, app: app_model) }
 
       before do
         # stubbing the BaseController methods for now, this should probably be

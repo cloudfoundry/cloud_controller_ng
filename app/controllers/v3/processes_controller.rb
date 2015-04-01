@@ -68,9 +68,12 @@ module VCAP::CloudController
     def delete(guid)
       check_write_permissions!
 
-      process_delete_fetcher = ProcessDeleteFetcher.new(current_user)
+      process_delete_fetcher = ProcessDeleteFetcher.new
       process_dataset, space = process_delete_fetcher.fetch(guid)
       not_found! if process_dataset.nil?
+
+      membership = Membership.new(current_user)
+      not_found! unless membership.space_role?(:developer, space.guid)
 
       ProcessDelete.new(space, current_user, current_user_email).delete(process_dataset)
 
