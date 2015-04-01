@@ -36,9 +36,9 @@ resource 'App Usage Events', type: [:api, :legacy_api] do
       field :space_guid, 'The GUID of the space.', required: false, readonly: true
       field :space_name, 'The name of the space.', required: false, readonly: true
       field :buildpack_guid, 'The GUID of the buildpack used to stage the app.', required: false, readonly: true
-      field :parent_app_guid, 'The GUID for a parent v3 application if one exists', required: false, readonly: true
-      field :parent_app_name, 'The name for a parent v3 application if one exists', required: false, readonly: true
-      field :process_type, 'The process_type for applictions.', required: false, readonly: true
+      field :parent_app_guid, 'The GUID for a parent v3 application if one exists', required: false, readonly: true, experimental: true
+      field :parent_app_name, 'The name for a parent v3 application if one exists', required: false, readonly: true, experimental: true
+      field :process_type, 'The process_type for applictions.', required: false, readonly: true, experimental: true
 
       field :buildpack_name,
         'The name of the buildpack or the URL of the custom buildpack used to stage the app.',
