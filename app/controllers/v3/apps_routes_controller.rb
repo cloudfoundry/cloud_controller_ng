@@ -43,9 +43,12 @@ module VCAP::CloudController
       check_write_permissions!
       opts = MultiJson.load(body)
 
-      app_model, route = DeleteRouteFetcher.new(current_user).fetch(app_guid, opts['route_guid'])
+      app_model, route = DeleteRouteFetcher.new.fetch(app_guid, opts['route_guid'])
       app_not_found! if app_model.nil?
       route_not_found! if route.nil?
+
+      membership = Membership.new(current_user)
+      app_not_found! unless membership.space_role?(:developer, app_model.space_guid)
 
       RemoveRouteFromApp.new(app_model).remove(route)
       [HTTP::NO_CONTENT]
