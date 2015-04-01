@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class User < Sequel::Model
     class InvalidOrganizationRelation < VCAP::Errors::InvalidRelation; end
-    attr_accessor :username
+    attr_accessor :username, :organization_roles
 
     no_auto_guid
 
@@ -84,11 +84,9 @@ module VCAP::CloudController
 
     def export_attrs
       attrs = super
-      if username
-        attrs + [:username]
-      else
-        attrs
-      end
+      attrs += [:username] if username
+      attrs += [:organization_roles] if organization_roles
+      attrs
     end
 
     def admin?

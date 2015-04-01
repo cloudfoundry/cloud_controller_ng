@@ -2,10 +2,10 @@ require 'spec_helper'
 require 'digest/sha1'
 
 describe 'Stable API warning system', api_version_check: true do
-  API_FOLDER_CHECKSUM = 'b919d1e2aefb41a863ff956c8a87aa9ffecd79dc'
+  API_FOLDER_CHECKSUM = 'e6c61589dbb0861904a6e9279febe12cf9b589b8'
 
   it 'double-checks the version' do
-    expect(VCAP::CloudController::Constants::API_VERSION).to eq('2.23.0')
+    expect(VCAP::CloudController::Constants::API_VERSION).to eq('2.24.0')
   end
 
   it 'tells the developer if the API specs change' do
@@ -25,9 +25,9 @@ You are about to make a breaking change in API!
 Do you really want to do it? Then update the checksum (see below) & CC version.
 
 expected:
-  #{API_FOLDER_CHECKSUM}
+    #{API_FOLDER_CHECKSUM}
 got:
-  #{new_checksum}
-END
+    #{new_checksum}
+    END
   end
 end

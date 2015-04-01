@@ -242,6 +242,15 @@ module VCAP::CloudController
         user.username = 'somebody'
         expect(user.export_attrs).to include(:username)
       end
+
+      it 'does not include organization_roles when organization_roles has not been set' do
+        expect(user.export_attrs).to_not include(:organization_roles)
+      end
+
+      it 'includes organization_roles when organization_roles has been set' do
+        user.organization_roles = 'something'
+        expect(user.export_attrs).to include(:organization_roles)
+      end
     end
   end
 end

@@ -1,7 +1,17 @@
 require 'actions/organization_delete'
+require 'queries/organization_user_roles_fetcher'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
+    def self.dependencies
+      [:username_and_roles_populating_collection_renderer]
+    end
+
+    def inject_dependencies(dependencies)
+      super
+      @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
+    end
+
     define_attributes do
       attribute :name,            String
       attribute :billing_enabled, Message::Boolean, default: false
@@ -35,6 +45,26 @@ module VCAP::CloudController
       else
         Errors::ApiError.new_from_details('OrganizationInvalid', e.errors.full_messages)
       end
+    end
+
+    get '/v2/organizations/:guid/user_roles', :enumerate_user_roles
+    def enumerate_user_roles(guid)
+      logger.debug('cc.enumerate.related', guid: guid, association: 'user_roles')
+
+      org = find_guid_and_validate_access(:read, guid)
+      users_dataset = OrganizationUserRolesFetcher.new.fetch(org)
+
+      associated_controller = UsersController
+      associated_path = "#{self.class.url_for_guid(guid)}/user_roles"
+      opts = @opts.merge(transform_opts: { organization_id: org.id })
+
+      @user_roles_collection_renderer.render_json(
+        associated_controller,
+        users_dataset,
+        associated_path,
+        opts,
+        {},
+      )
     end
 
     get '/v2/organizations/:guid/services', :enumerate_services

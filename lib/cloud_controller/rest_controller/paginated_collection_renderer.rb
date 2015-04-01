@@ -97,7 +97,8 @@ module VCAP::CloudController::RestController
 
       dataset_records = dataset.all
 
-      collection_transformer.transform(dataset_records) if collection_transformer
+      transform_opts = opts[:transform_opts] || {}
+      collection_transformer.transform(dataset_records, transform_opts) if collection_transformer
 
       dataset_records.map { |obj| @serializer.serialize(controller, obj, opts, orphans) }
     end

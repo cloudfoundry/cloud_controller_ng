@@ -198,13 +198,17 @@ module ApiDsl
         examples = ['q=filter:value', 'q=filter>value', 'q=filter IN a,b,c']
         request_parameter :q, query_parameter_description, { html: true, example_values: examples }
       end
-      request_parameter :page, 'Page of results to fetch'
-      request_parameter :'results-per-page', 'Number of results per page'
-      request_parameter :'order-direction', 'Order of the results: asc (default) or desc'
+      pagination_parameters
       request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N.", deprecated: true
       request_parameter :'orphan-relations', '0 - de-duplicate object entries in response', deprecated: true
       request_parameter :'exclude-relations', 'comma-delimited list of relations to drop from response', deprecated: true
       request_parameter :'include-relations', 'comma-delimited list of the only relations to include in response', deprecated: true
+    end
+
+    def pagination_parameters
+      request_parameter :page, 'Page of results to fetch'
+      request_parameter :'results-per-page', 'Number of results per page'
+      request_parameter :'order-direction', 'Order of the results: asc (default) or desc'
     end
 
     def request_parameter(name, description, options={})
