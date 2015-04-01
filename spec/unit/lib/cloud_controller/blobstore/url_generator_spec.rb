@@ -116,7 +116,7 @@ module CloudController
             it 'gives out signed url to remote blobstore for appbits' do
               remote_uri = 'http://s3.example.com/signed'
 
-              expect(buildpack_cache_blobstore).to receive(:download_uri).with(app.guid).and_return(remote_uri)
+              expect(buildpack_cache_blobstore).to receive(:download_uri).with("#{app.stack.guid}-#{app.guid}").and_return(remote_uri)
 
               expect(url_generator.buildpack_cache_download_url(app)).to eql(remote_uri)
             end
