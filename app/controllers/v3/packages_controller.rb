@@ -62,9 +62,12 @@ module VCAP::CloudController
     def delete(guid)
       check_write_permissions!
 
-      package_delete_fetcher = PackageDeleteFetcher.new(current_user)
+      package_delete_fetcher = PackageDeleteFetcher.new
       package_dataset        = package_delete_fetcher.fetch(guid)
       package_not_found! if package_dataset.empty?
+
+      membership = Membership.new(current_user)
+      package_not_found! unless membership.space_role?(:developer, package_dataset.first.app.space_guid)
 
       PackageDelete.new.delete(package_dataset)
 
