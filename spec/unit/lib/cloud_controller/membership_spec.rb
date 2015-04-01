@@ -10,7 +10,9 @@ module VCAP::CloudController
     let(:suspended_organization) { Organization.make(status: 'suspended') }
     let(:space_in_some_other_org) { Space.make }
 
-    describe '#developed_spaces' do
+    subject(:membership) { Membership.new(user) }
+
+    describe '#spaces' do
       before do
         organization.add_user(user)
         suspended_organization.add_user(user)
@@ -19,11 +21,31 @@ module VCAP::CloudController
       end
 
       it 'only returns the spaces for an active org' do
-        membership = Membership.new(user)
-        expect(membership.developed_spaces).not_to include space_whose_org_is_suspended
-        expect(membership.developed_spaces).not_to include space_that_user_doesnt_develop_in
-        expect(membership.developed_spaces).not_to include space_in_some_other_org
-        expect(membership.developed_spaces).to include space
+        expect(membership.spaces(roles: %i(developer))).not_to include space_whose_org_is_suspended
+        expect(membership.spaces(roles: %i(developer))).not_to include space_that_user_doesnt_develop_in
+        expect(membership.spaces(roles: %i(developer))).not_to include space_in_some_other_org
+        expect(membership.spaces(roles: %i(developer))).to include space
+      end
+    end
+
+    describe '#space_role?' do
+      before do
+        organization.add_user(user)
+        suspended_organization.add_user(user)
+        space.add_developer(user)
+        space_whose_org_is_suspended.add_developer(user)
+      end
+
+      it 'is true for spaces where the user is a developer' do
+        expect(membership.space_role?(:developer, space.guid)).to be_truthy
+      end
+
+      it 'is false for spaces in which the org is suspended' do
+        expect(membership.space_role?(:developer, space_whose_org_is_suspended.guid)).to be_falsey
+      end
+
+      it 'is false for spaces where the user is not a developer in' do
+        expect(membership.space_role?(:developer, space_that_user_doesnt_develop_in.guid)).to be_falsey
       end
     end
   end

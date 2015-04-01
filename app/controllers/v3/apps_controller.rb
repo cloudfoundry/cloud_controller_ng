@@ -49,8 +49,8 @@ module VCAP::CloudController
       message = AppCreateMessage.create_from_http_request(body)
       bad_request!(message.error) if message.error
 
-      space_guids = Membership.new(current_user).developed_spaces.map(&:guid)
-      space_not_found! unless space_guids.include?(message.space_guid)
+      membership = Membership.new(current_user)
+      space_not_found! unless membership.space_role?(:developer, message.space_guid)
 
       app = AppCreate.new.create(message)
 

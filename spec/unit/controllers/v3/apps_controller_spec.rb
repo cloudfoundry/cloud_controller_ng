@@ -133,7 +133,7 @@ module VCAP::CloudController
         allow(apps_controller).to receive(:current_user).and_return(user)
         allow(apps_controller).to receive(:check_write_permissions!)
         allow(Membership).to receive(:new).and_return(membership)
-        allow(membership).to receive(:developed_spaces).and_return([double(:space, guid: space_guid)])
+        allow(membership).to receive(:space_role?).with(:developer, space_guid).and_return(true)
         allow(AppCreate).to receive(:new).and_return(app_create)
         allow(app_create).to receive(:create)
       end
@@ -173,7 +173,7 @@ module VCAP::CloudController
 
       context 'when the user is not a member of the requested space' do
         before do
-          allow(membership).to receive(:developed_spaces).and_return([double(:some_space, guid: Sham.guid)])
+          allow(membership).to receive(:space_role?).with(:developer, space_guid).and_return(false)
         end
 
         it 'returns an NotFound error' do
