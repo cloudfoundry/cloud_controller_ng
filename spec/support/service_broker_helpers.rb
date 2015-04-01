@@ -1,13 +1,17 @@
 module ServiceBrokerHelpers
-  def stub_deprovision(service_instance, opts={})
+  def stub_deprovision(service_instance, opts={}, &block)
     status = opts[:status] || 200
     body = opts[:body] || '{}'
     accepts_incomplete = opts[:accepts_incomplete]
 
     url = service_instance_deprovision_url(service_instance, accepts_incomplete: accepts_incomplete)
 
-    stub_request(:delete, url).
-      to_return(status: status, body: body)
+    if block
+      stub_request(:delete, url).to_return(&block)
+    else
+      stub_request(:delete, url).
+        to_return(status: status, body: body)
+    end
   end
 
   def stub_bind(service_instance, opts={})

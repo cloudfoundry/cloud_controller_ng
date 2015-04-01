@@ -214,17 +214,5 @@ module VCAP::Services::ServiceBrokers::V2
       end
       path
     end
-
-    def enqueue_state_fetch_job(service_instance_guid, event_repository_opts, request_attrs, poll_interval_seconds)
-      job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-        'service-instance-state-fetch',
-        @attrs,
-        service_instance_guid,
-        event_repository_opts,
-        request_attrs,
-        poll_interval_seconds,
-      )
-      job.enqueue
-    end
   end
 end

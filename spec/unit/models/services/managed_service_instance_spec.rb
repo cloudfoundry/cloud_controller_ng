@@ -88,48 +88,51 @@ module VCAP::CloudController
       end
     end
 
-    describe '#lock_by_blocking_other_operations' do
-      it 'locks the service instance' do
-        allow(service_instance).to receive(:lock!).and_call_original
-
-        service_instance.lock_by_blocking_other_operations {}
-
-        expect(service_instance).to have_received(:lock!)
-      end
-
-      context 'when the instance has a last_operation' do
-        let(:last_operation) { ServiceInstanceOperation.make(state: 'succeeded') }
-        before do
-          allow(service_instance).to receive(:last_operation).and_return(last_operation)
-        end
-
-        it 'locks the last_operation' do
-          allow(last_operation).to receive(:lock!).and_call_original
-
-          service_instance.lock_by_blocking_other_operations {}
-
-          expect(last_operation).to have_received(:lock!)
-        end
-      end
-
-      context 'when there is an operation in progress' do
-        before do
-          service_instance.save_with_operation({
-            last_operation: {
-              state: 'in progress'
-            }
-          })
-        end
-
-        it 'raises an error' do
-          expect {
-            service_instance.lock_by_blocking_other_operations {}
-          }.to raise_error(Errors::ApiError)
-        end
-      end
-    end
-
     describe '#lock_by_failing_other_operations' do
+      it 'locks the service instance so other attempts will fail', isolation: :truncation do
+        service_instance_id = service_instance.id
+
+        DbConfig.connection.disconnect
+        Process.fork do
+          begin
+            ManagedServiceInstance.first(id: service_instance_id).lock_by_failing_other_operations('jeff') do
+              sleep(5)
+            end
+          rescue
+            exit 1
+          end
+          exit 0
+        end
+
+        Process.fork do
+          begin
+            ManagedServiceInstance.first(id: service_instance_id).lock_by_failing_other_operations('jeff') do
+              sleep(5)
+            end
+          rescue
+            exit 1
+          end
+          exit 0
+        end
+
+        processes = Process.waitall
+
+        num_failures = processes.inject(0) do |count, process|
+          _, exit_code = process
+          count += 1 if exit_code != 0
+          count
+        end
+
+        num_succeeded = processes.inject(0) do |count, process|
+          _, exit_code = process
+          count += 1 if exit_code == 0
+          count
+        end
+
+        expect(num_failures).to eq(1)
+        expect(num_succeeded).to eq(1)
+      end
+
       it 'locks the service instance' do
         allow(service_instance).to receive(:lock!).and_call_original
 

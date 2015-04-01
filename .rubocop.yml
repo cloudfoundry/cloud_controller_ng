@@ -128,3 +128,6 @@ Style/SingleLineBlockParams:
 
 Style/TrivialAccessors:
   Enabled: false
+
+Style/EachWithObject:
+  Enabled: false

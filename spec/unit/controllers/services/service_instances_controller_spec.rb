@@ -1096,6 +1096,12 @@ module VCAP::CloudController
             expect(last_response).to have_status_code 202
           end
 
+          it 'enqueues a job to fetch the state' do
+            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user)
+            expect(Delayed::Job.count).to eq 1
+            expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
+          end
+
           context 'when the broker returns a long text description (mysql)' do
             let(:response_body) do
               {
@@ -1274,6 +1280,61 @@ module VCAP::CloudController
               put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
               expect(last_response).to have_status_code 400
               expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+            end
+          end
+
+          describe 'concurrent requests' do
+            before do
+              stub_request(:patch,  "#{service_broker_url}?accepts_incomplete=true").to_return do |_|
+                sleep 5
+                { status: 202, body: { last_operation: { state: 'in progress' } }.to_json }
+              end
+            end
+
+            it 'succeeds for exactly one of the requests', isolation: :truncation do
+              service_instance_guid = service_instance.guid
+              saved_body = body
+              admin_header = admin_headers
+
+              DbConfig.connection.disconnect
+              Process.fork do
+                put "/v2/service_instances/#{service_instance_guid}?accepts_incomplete=true", saved_body, admin_header
+                begin
+                  expect(last_response).to have_status_code 202
+                rescue
+                  exit 1
+                end
+
+                exit 0
+              end
+
+              Process.fork do
+                put "/v2/service_instances/#{service_instance_guid}?accepts_incomplete=true", saved_body, admin_header
+                begin
+                  expect(last_response).to have_status_code 202
+                rescue
+                  exit 1
+                end
+
+                exit 0
+              end
+
+              processes = Process.waitall
+
+              num_failures = processes.inject(0) do |count, process|
+                _, exit_code = process
+                count += 1 if exit_code != 0
+                count
+              end
+
+              num_succeeded = processes.inject(0) do |count, process|
+                _, exit_code = process
+                count += 1 if exit_code == 0
+                count
+              end
+
+              expect(num_failures).to eq(1)
+              expect(num_succeeded).to eq(1)
             end
           end
 
@@ -1528,6 +1589,60 @@ module VCAP::CloudController
             stub_deprovision(service_instance, body: body, status: status, accepts_incomplete: true)
           end
 
+          describe 'concurrent requests' do
+            before do
+              stub_deprovision(service_instance, accepts_incomplete: true) do |req|
+                sleep 5
+                { status: 202, body: { last_operation: { state: 'in progress' } }.to_json }
+              end
+            end
+
+            it 'succeeds for exactly one of the requests', isolation: :truncation do
+              service_instance_guid = service_instance.guid
+              admin_header = admin_headers
+
+              DbConfig.connection.disconnect
+              Process.fork do
+                delete "/v2/service_instances/#{service_instance_guid}?accepts_incomplete=true", {}, admin_header
+                begin
+                  expect(last_response).to have_status_code 202
+                rescue
+                  exit 1
+                end
+
+                exit 0
+              end
+
+              Process.fork do
+                delete "/v2/service_instances/#{service_instance_guid}?accepts_incomplete=true", {}, admin_header
+                begin
+                  expect(last_response).to have_status_code 202
+                rescue
+                  exit 1
+                end
+
+                exit 0
+              end
+
+              processes = Process.waitall
+
+              num_failures = processes.inject(0) do |count, process|
+                _, exit_code = process
+                count += 1 if exit_code != 0
+                count
+              end
+
+              num_succeeded = processes.inject(0) do |count, process|
+                _, exit_code = process
+                count += 1 if exit_code == 0
+                count
+              end
+
+              expect(num_failures).to eq(1)
+              expect(num_succeeded).to eq(1)
+            end
+          end
+
           context 'when the broker returns state `in progress`' do
             let(:status) { 202 }
             let(:body) do
@@ -1561,7 +1676,8 @@ module VCAP::CloudController
                 }.to_json)
 
               Timecop.freeze Time.now + 2.minute do
-                expect(Delayed::Worker.new.work_off).to eq [1, 0]
+                Delayed::Job.last.invoke_job
+                # expect(Delayed::Worker.new.work_off).to eq [1, 0]
                 expect(Event.find(type: 'audit.service_instance.delete')).to be
               end
             end
@@ -1755,6 +1871,60 @@ module VCAP::CloudController
             expect(successes).to eq 1
             expect(failures).to eq 0
             expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+          end
+
+          describe 'concurrent requests' do
+            before do
+              stub_deprovision(service_instance) do |req|
+                sleep 5
+                { status: 200, body: {}.to_json }
+              end
+            end
+
+            it 'succeeds for exactly one of the requests', isolation: :truncation do
+              service_instance_guid = service_instance.guid
+              admin_header = admin_headers
+
+              DbConfig.connection.disconnect
+              Process.fork do
+                delete "/v2/service_instances/#{service_instance_guid}?async=true", {}, admin_header
+                begin
+                  expect(last_response).to have_status_code 202
+                rescue
+                  exit 1
+                end
+
+                exit 0
+              end
+
+              Process.fork do
+                delete "/v2/service_instances/#{service_instance_guid}?async=true", {}, admin_header
+                begin
+                  expect(last_response).to have_status_code 202
+                rescue
+                  exit 1
+                end
+
+                exit 0
+              end
+
+              processes = Process.waitall
+
+              num_failures = processes.inject(0) do |count, process|
+                _, exit_code = process
+                count += 1 if exit_code != 0
+                count
+              end
+
+              num_succeeded = processes.inject(0) do |count, process|
+                _, exit_code = process
+                count += 1 if exit_code == 0
+                count
+              end
+
+              expect(num_failures).to eq(1)
+              expect(num_succeeded).to eq(1)
+            end
           end
 
           context 'when the service broker returns 500' do

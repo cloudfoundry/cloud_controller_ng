@@ -1,3 +1,5 @@
+require 'controllers/services/locks/updater_lock'
+
 module VCAP::CloudController
   class ServiceInstanceUpdater
     class InvalidRequest < StandardError; end
@@ -19,29 +21,40 @@ module VCAP::CloudController
       validate_update_request(service_instance, request_attrs, params)
 
       err = nil
-      polling_interval = 60
-      service_instance.lock_by_failing_other_operations('update') do
-        attributes_to_update, polling_interval, err = get_attributes_to_update(params, request_attrs, service_instance)
-        service_instance.save_with_operation(attributes_to_update)
+
+      lock = UpdaterLock.new(service_instance)
+      lock.lock!
+
+      begin
+        attributes_to_update, poll_interval_seconds, err = get_attributes_to_update(params, request_attrs, service_instance)
+
+        if attributes_to_update[:last_operation][:state] == 'in progress'
+          job = build_fetch_job(poll_interval_seconds, request_attrs, service_instance)
+          lock.enqueue_unlock!(attributes_to_update, job)
+        else
+          lock.synchronous_unlock!(attributes_to_update)
+        end
+      rescue
+        lock.unlock_and_fail!
+        raise
       end
 
       raise err if err
 
-      if service_instance.operation_in_progress?
-        job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-          'service-instance-state-fetch',
-          service_instance.client.attrs,
-          service_instance.guid,
-          event_repository_opts,
-          request_attrs,
-          polling_interval,
-        )
-        job.enqueue
-      end
-
       if !accepts_incomplete?(params) || !service_instance.operation_in_progress?
         @services_event_repository.record_service_instance_event(:update, service_instance, request_attrs)
       end
+    end
+
+    def build_fetch_job(poll_interval_seconds, request_attrs, service_instance)
+      VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
+        'service-instance-state-fetch',
+        service_instance.client.attrs,
+        service_instance.guid,
+        event_repository_opts,
+        request_attrs,
+        poll_interval_seconds,
+      )
     end
 
     private
