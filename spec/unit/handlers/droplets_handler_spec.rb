@@ -45,8 +45,6 @@ module VCAP::CloudController
       it 'provides default values' do
         psm = StagingMessage.create_from_http_request(package_guid, body)
 
-        expect(psm.memory_limit).to eq(1024)
-        expect(psm.disk_limit).to eq(4096)
         expect(psm.stack).to eq(Stack.default.name)
       end
     end

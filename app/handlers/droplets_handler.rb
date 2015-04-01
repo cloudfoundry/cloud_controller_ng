@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class StagingMessage
-    attr_reader :package_guid, :buildpack_guid, :buildpack_git_url
+    attr_reader :package_guid, :buildpack_guid, :buildpack_git_url, :disk_limit, :memory_limit
     attr_accessor :error
 
     def self.create_from_http_request(package_guid, body)
@@ -41,23 +41,7 @@ module VCAP::CloudController
       @stack ||= Stack.default.name
     end
 
-    def memory_limit
-      [@memory_limit, default_memory_limit].compact.max
-    end
-
-    def disk_limit
-      [@disk_limit, default_disk_limit].compact.max
-    end
-
     private
-
-    def default_disk_limit
-      @config[:staging][:minimum_staging_disk_mb] || 4096
-    end
-
-    def default_memory_limit
-      (@config[:staging] && @config[:staging][:minimum_staging_memory_mb] || 1024)
-    end
 
     def validate_memory_limit_field
       return 'The memory_limit field must be an Integer' unless @memory_limit.is_a?(Integer) || @memory_limit.nil?
