@@ -253,6 +253,7 @@ module VCAP::CloudController
       let(:package_stage_action) { double(:package_stage_action) }
       let(:app) { AppModel.make }
       let(:space) { app.space }
+      let(:org) { space.organization }
       let(:droplet) { DropletModel.make }
       let(:buildpack) { Buildpack.make }
 
@@ -267,7 +268,7 @@ module VCAP::CloudController
       context 'when the buildpack does not exist' do
         context 'and is requested' do
           before do
-            allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, nil])
+            allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, org, nil])
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -284,7 +285,7 @@ module VCAP::CloudController
           let(:req_body)  { '{}' }
 
           before do
-            allow(package_stage_fetcher).to receive(:fetch).with(package.guid, nil).and_return([package, app, space, nil])
+            allow(package_stage_fetcher).to receive(:fetch).with(package.guid, nil).and_return([package, app, space, org, nil])
             allow(package_stage_action).to receive(:stage).and_return(droplet)
           end
 
@@ -293,14 +294,14 @@ module VCAP::CloudController
             expect(response_code).to eq 201
             expect(body).to eq droplet_response
             expect(package_stage_action).to have_received(:stage).with(
-              package, app, space, nil, an_instance_of(StagingMessage), stagers)
+              package, app, space, org, nil, an_instance_of(StagingMessage), stagers)
           end
         end
       end
 
       context 'when the package does not exist' do
         before do
-          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([nil, app, space, nil])
+          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([nil, app, space, org, nil])
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -315,7 +316,7 @@ module VCAP::CloudController
 
       context 'when the app does not exist' do
         before do
-          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, nil, space, buildpack])
+          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, nil, space, org, buildpack])
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -330,7 +331,7 @@ module VCAP::CloudController
 
       context 'when the space does not exist' do
         before do
-          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, nil, buildpack])
+          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, nil, org, buildpack])
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -346,7 +347,7 @@ module VCAP::CloudController
       context 'when all the dependencies exists' do
         context 'and the user is a space developer' do
           before do
-            allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, buildpack])
+            allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, org, buildpack])
             allow(package_stage_action).to receive(:stage).and_return(droplet)
           end
 
@@ -355,7 +356,7 @@ module VCAP::CloudController
             expect(response_code).to eq 201
             expect(body).to eq droplet_response
             expect(package_stage_action).to have_received(:stage).with(
-              package, app, space, buildpack, an_instance_of(StagingMessage), stagers)
+              package, app, space, org, buildpack, an_instance_of(StagingMessage), stagers)
           end
 
           context 'when the StagingMessage is not valid' do
@@ -375,7 +376,7 @@ module VCAP::CloudController
 
       context 'when the request package is invalid' do
         before do
-          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, buildpack])
+          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, org, buildpack])
           allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::InvalidPackage)
         end
 
@@ -401,6 +402,60 @@ module VCAP::CloudController
           end
         end
       end
+
+     context 'when the space quota is exceeded' do
+       before do
+         allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
+         allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::SpaceQuotaExceeded)
+       end
+
+       it 'raises ApiError UnableToPerform' do
+         expect {
+           packages_controller.stage(package.guid)
+         }.to raise_error do |error|
+           expect(error.name).to eq 'UnableToPerform'
+           expect(error.response_code).to eq 400
+           expect(error.message).to include('Staging request')
+           expect(error.message).to include("space's memory limit exceeded")
+         end
+       end
+     end
+
+     context 'when the org quota is exceeded' do
+       before do
+         allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
+         allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::OrgQuotaExceeded)
+       end
+
+       it 'raises ApiError UnableToPerform' do
+         expect {
+           packages_controller.stage(package.guid)
+         }.to raise_error do |error|
+           expect(error.name).to eq 'UnableToPerform'
+           expect(error.response_code).to eq 400
+           expect(error.message).to include('Staging request')
+           expect(error.message).to include("organization's memory limit exceeded")
+         end
+       end
+     end
+
+     context 'when the disk limit is exceeded' do
+       before do
+         allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
+         allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::DiskLimitExceeded)
+       end
+
+       it 'raises ApiError UnableToPerform' do
+         expect {
+           packages_controller.stage(package.guid)
+         }.to raise_error do |error|
+           expect(error.name).to eq 'UnableToPerform'
+           expect(error.response_code).to eq 400
+           expect(error.message).to include('Staging request')
+           expect(error.message).to include('disk limit exceeded')
+         end
+       end
+     end
     end
   end
 end

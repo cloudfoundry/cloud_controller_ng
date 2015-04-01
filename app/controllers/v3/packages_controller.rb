@@ -83,17 +83,23 @@ module VCAP::CloudController
       valid, error    = staging_message.validate
       unprocessable!(error) if !valid
 
-      package, app, space, buildpack = package_stage_fetcher.fetch(package_guid, staging_message.buildpack_guid)
+      package, app, space, org, buildpack = package_stage_fetcher.fetch(package_guid, staging_message.buildpack_guid)
       package_not_found! if package.nil?
       app_not_found! if app.nil?
       space_not_found! if space.nil?
-      buildpack_not_found! if buildpack.nil? && staging_message.buildpack_guid
+      buildpack_not_found! if staging_message.buildpack_guid && buildpack.nil?
 
-      droplet = package_stage_action.stage(package, app, space, buildpack, staging_message, @stagers)
+      droplet = package_stage_action.stage(package, app, space, org, buildpack, staging_message, @stagers)
 
       [HTTP::CREATED, @droplet_presenter.present_json(droplet)]
     rescue PackageStageAction::InvalidPackage => e
       invalid_request!(e.message)
+    rescue PackageStageAction::SpaceQuotaExceeded
+      unable_to_perform!('Staging request', "space's memory limit exceeded")
+    rescue PackageStageAction::OrgQuotaExceeded
+      unable_to_perform!('Staging request', "organization's memory limit exceeded")
+    rescue PackageStageAction::DiskLimitExceeded
+      unable_to_perform!('Staging request', 'disk limit exceeded')
     end
 
     def package_stage_action
@@ -136,6 +142,10 @@ module VCAP::CloudController
 
     def invalid_request!(message)
       raise VCAP::Errors::ApiError.new_from_details('InvalidRequest', message)
+    end
+
+    def unable_to_perform!(operation, message)
+      raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', operation, message)
     end
   end
 end

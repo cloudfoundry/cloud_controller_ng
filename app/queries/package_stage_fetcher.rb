@@ -11,7 +11,8 @@ module VCAP::CloudController
 
       buildpack = Buildpack.find(guid: buildpack_guid)
 
-      [package, package.app, package.space, buildpack]
+      org = package.space ? package.space.organization : nil
+      [package, package.app, package.space, org, buildpack]
     end
 
     private
