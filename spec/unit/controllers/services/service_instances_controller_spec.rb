@@ -1554,13 +1554,6 @@ module VCAP::CloudController
           end
 
           describe 'concurrent requests' do
-            before do
-              stub_deprovision(service_instance, accepts_incomplete: true) do |req|
-                sleep 5
-                { status: 202, body: { last_operation: { state: 'in progress' } }.to_json }
-              end
-            end
-
             it 'succeeds for exactly one of the requests' do
               stub_deprovision(service_instance, accepts_incomplete: true) do |req|
                 delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, admin_headers
