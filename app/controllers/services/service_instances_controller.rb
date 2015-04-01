@@ -1,6 +1,5 @@
 require 'services/api'
 require 'jobs/audit_event_job'
-require 'jobs/services/service_instance_deletion'
 require 'controllers/services/lifecycle/service_instance_provisioner'
 require 'controllers/services/lifecycle/service_instance_updater'
 require 'controllers/services/lifecycle/service_instance_deprovisioner'

@@ -35,6 +35,23 @@ module VCAP::CloudController
         }.to change { ServiceBinding.count }.by(-2)
       end
 
+      it 'deletes user provided service instances' do
+        user_provided_instance = UserProvidedServiceInstance.make
+        service_instance_delete.delete(service_instance_dataset)
+        expect { user_provided_instance.refresh }.to raise_error('Record not found')
+      end
+
+      it 'deletes the last operation for each managed service instance' do
+        instance_operation_1 = ServiceInstanceOperation.make
+        service_instance_1.service_instance_operation = instance_operation_1
+        service_instance_1.save
+
+        service_instance_delete.delete(service_instance_dataset)
+
+        expect { service_instance_1.refresh }.to raise_error('Record not found')
+        expect { instance_operation_1.refresh }.to raise_error('Record not found')
+      end
+
       context 'when unbinding a service instance times out' do
         before do
           stub_unbind(service_binding_1, body: lambda { |r|
@@ -118,6 +135,24 @@ module VCAP::CloudController
           errors = service_instance_delete.delete(service_instance_dataset)
           expect(errors.count).to eq(1)
           expect(errors[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
+        end
+      end
+
+      context 'when deletion from the database fails for a service instance' do
+        before do
+          allow(service_instance_2).to receive(:destroy).and_raise('BOOM')
+        end
+
+        it 'does not rollback previous deletions of service instances' do
+          expect(ServiceInstance.count).to eq 2
+          service_instance_delete.delete([service_instance_1, service_instance_2])
+          expect(ServiceInstance.count).to eq 1
+        end
+
+        it 'returns errors it has captured' do
+          errors = service_instance_delete.delete([service_instance_1, service_instance_2])
+          expect(errors.count).to eq(1)
+          expect(errors[0].message).to eq 'BOOM'
         end
       end
     end
