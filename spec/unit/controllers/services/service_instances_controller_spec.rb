@@ -1284,57 +1284,19 @@ module VCAP::CloudController
           end
 
           describe 'concurrent requests' do
-            before do
-              stub_request(:patch,  "#{service_broker_url}?accepts_incomplete=true").to_return do |_|
-                sleep 5
+            it 'succeeds for exactly one request' do
+              stub_request(:patch, "#{service_broker_url}?accepts_incomplete=true").to_return do |_|
+                put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
+                expect(last_response).to have_status_code 400
+                expect(last_response.body).to match /ServiceInstanceOperationInProgress/
+
+                { status: 202, body: { last_operation: { state: 'in progress' } }.to_json }
+              end.times(1).then.to_return do |_|
                 { status: 202, body: { last_operation: { state: 'in progress' } }.to_json }
               end
-            end
 
-            it 'succeeds for exactly one of the requests', isolation: :truncation do
-              service_instance_guid = service_instance.guid
-              saved_body = body
-              admin_header = admin_headers
-
-              DbConfig.connection.disconnect
-              Process.fork do
-                put "/v2/service_instances/#{service_instance_guid}?accepts_incomplete=true", saved_body, admin_header
-                begin
-                  expect(last_response).to have_status_code 202
-                rescue
-                  exit 1
-                end
-
-                exit 0
-              end
-
-              Process.fork do
-                put "/v2/service_instances/#{service_instance_guid}?accepts_incomplete=true", saved_body, admin_header
-                begin
-                  expect(last_response).to have_status_code 202
-                rescue
-                  exit 1
-                end
-
-                exit 0
-              end
-
-              processes = Process.waitall
-
-              num_failures = processes.inject(0) do |count, process|
-                _, exit_code = process
-                count += 1 if exit_code != 0
-                count
-              end
-
-              num_succeeded = processes.inject(0) do |count, process|
-                _, exit_code = process
-                count += 1 if exit_code == 0
-                count
-              end
-
-              expect(num_failures).to eq(1)
-              expect(num_succeeded).to eq(1)
+              put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
+              expect(last_response).to have_status_code 202
             end
           end
 
@@ -1597,49 +1559,19 @@ module VCAP::CloudController
               end
             end
 
-            it 'succeeds for exactly one of the requests', isolation: :truncation do
-              service_instance_guid = service_instance.guid
-              admin_header = admin_headers
+            it 'succeeds for exactly one of the requests' do
+              stub_deprovision(service_instance, accepts_incomplete: true) do |req|
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, admin_headers
+                expect(last_response).to have_status_code 400
+                expect(last_response.body).to match /ServiceInstanceOperationInProgress/
 
-              DbConfig.connection.disconnect
-              Process.fork do
-                delete "/v2/service_instances/#{service_instance_guid}?accepts_incomplete=true", {}, admin_header
-                begin
-                  expect(last_response).to have_status_code 202
-                rescue
-                  exit 1
-                end
-
-                exit 0
+                { status: 202, body: { last_operation: { state: 'in progress' } }.to_json }
+              end.times(1).then.to_return do |_|
+                { status: 202, body: { last_operation: { state: 'in progress' } }.to_json }
               end
 
-              Process.fork do
-                delete "/v2/service_instances/#{service_instance_guid}?accepts_incomplete=true", {}, admin_header
-                begin
-                  expect(last_response).to have_status_code 202
-                rescue
-                  exit 1
-                end
-
-                exit 0
-              end
-
-              processes = Process.waitall
-
-              num_failures = processes.inject(0) do |count, process|
-                _, exit_code = process
-                count += 1 if exit_code != 0
-                count
-              end
-
-              num_succeeded = processes.inject(0) do |count, process|
-                _, exit_code = process
-                count += 1 if exit_code == 0
-                count
-              end
-
-              expect(num_failures).to eq(1)
-              expect(num_succeeded).to eq(1)
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, admin_headers
+              expect(last_response).to have_status_code 202
             end
           end
 
@@ -1874,56 +1806,23 @@ module VCAP::CloudController
           end
 
           describe 'concurrent requests' do
-            before do
-              stub_deprovision(service_instance) do |req|
-                sleep 5
+            it 'succeeds for exactly one of the requests' do
+              stub_deprovision(service_instance, accepts_incomplete: true) do |req|
                 { status: 200, body: {}.to_json }
               end
-            end
 
-            it 'succeeds for exactly one of the requests', isolation: :truncation do
-              service_instance_guid = service_instance.guid
-              admin_header = admin_headers
+              delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
+              expect(last_response).to have_status_code 202
 
-              DbConfig.connection.disconnect
-              Process.fork do
-                delete "/v2/service_instances/#{service_instance_guid}?async=true", {}, admin_header
-                begin
-                  expect(last_response).to have_status_code 202
-                rescue
-                  exit 1
-                end
+              delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
+              expect(last_response).to have_status_code 400
 
-                exit 0
-              end
+              successes, failures = Delayed::Worker.new.work_off
+              expect(successes).to eq 1
+              expect(failures).to eq 0
 
-              Process.fork do
-                delete "/v2/service_instances/#{service_instance_guid}?async=true", {}, admin_header
-                begin
-                  expect(last_response).to have_status_code 202
-                rescue
-                  exit 1
-                end
-
-                exit 0
-              end
-
-              processes = Process.waitall
-
-              num_failures = processes.inject(0) do |count, process|
-                _, exit_code = process
-                count += 1 if exit_code != 0
-                count
-              end
-
-              num_succeeded = processes.inject(0) do |count, process|
-                _, exit_code = process
-                count += 1 if exit_code == 0
-                count
-              end
-
-              expect(num_failures).to eq(1)
-              expect(num_succeeded).to eq(1)
+              delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
+              expect(last_response).to have_status_code 404
             end
           end
 
