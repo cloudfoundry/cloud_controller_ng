@@ -69,7 +69,7 @@ module VCAP::CloudController
       membership = Membership.new(current_user)
       app_not_found! unless membership.space_role?(:developer, app.space_guid)
 
-      app = AppUpdate.update(app, message)
+      app = AppUpdate.new(current_user, current_user_email).update(app, message)
 
       [HTTP::OK, @app_presenter.present_json(app)]
     rescue AppUpdate::DropletNotFound

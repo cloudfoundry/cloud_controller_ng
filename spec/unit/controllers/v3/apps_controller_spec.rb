@@ -296,8 +296,10 @@ module VCAP::CloudController
         end
 
         context 'when the app is invalid' do
+          let(:app_update) { double(:app_update) }
           before do
-            allow(AppUpdate).to receive(:update).and_raise(AppUpdate::InvalidApp.new('ya done goofed'))
+            allow(AppUpdate).to receive(:new).and_return(app_update)
+            allow(app_update).to receive(:update).and_raise(AppUpdate::InvalidApp.new('ya done goofed'))
           end
 
           it 'returns an UnprocessableEntity error' do
@@ -312,8 +314,10 @@ module VCAP::CloudController
         end
 
         context 'when the droplet was not found' do
+          let(:app_update) { double(:app_update) }
           before do
-            allow(AppUpdate).to receive(:update).and_raise(AppUpdate::DropletNotFound.new)
+            allow(AppUpdate).to receive(:new).and_return(app_update)
+            allow(app_update).to receive(:update).and_raise(AppUpdate::DropletNotFound.new)
           end
 
           it 'returns an NotFound error' do
