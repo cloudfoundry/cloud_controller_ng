@@ -531,6 +531,26 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:patch).with(path, anything)
       end
 
+      context 'when the caller passes arbitrary parameters' do
+        it 'includes the parameters in the request to the broker' do
+          client.update_service_plan(instance, new_plan, parameters: { myParam: 'some-value' })
+
+          expect(http_client).to have_received(:patch).with(
+            anything,
+            {
+              plan_id:	new_plan.broker_provided_id,
+              parameters: { myParam: 'some-value' },
+              previous_values: {
+                plan_id: old_plan.broker_provided_id,
+                service_id: old_plan.service.broker_provided_id,
+                organization_id: instance.organization.guid,
+                space_id: instance.space.guid
+              }
+            }
+          )
+        end
+      end
+
       context 'when the caller passes the accepts_incomplete flag' do
         let(:path) { "/v2/service_instances/#{instance.guid}?accepts_incomplete=true" }
 

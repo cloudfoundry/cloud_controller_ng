@@ -75,6 +75,7 @@ module VCAP::CloudController
         service_instance,
         new_plan,
         accepts_incomplete: accepts_incomplete?(params),
+        parameters: request_attrs['parameters']
       )
     end
 

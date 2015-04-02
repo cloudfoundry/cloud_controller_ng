@@ -152,18 +152,20 @@ module VCAP::Services::ServiceBrokers::V2
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
 
-    def update_service_plan(instance, plan, accepts_incomplete: false)
+    def update_service_plan(instance, plan, accepts_incomplete: false, parameters: nil)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
-      response = @http_client.patch(path, {
-          plan_id:	plan.broker_provided_id,
-          previous_values: {
-            plan_id: instance.service_plan.broker_provided_id,
-            service_id: instance.service.broker_provided_id,
-            organization_id: instance.organization.guid,
-            space_id: instance.space.guid
-          }
-      })
+      body_hash = {
+        plan_id: plan.broker_provided_id,
+        previous_values: {
+          plan_id: instance.service_plan.broker_provided_id,
+          service_id: instance.service.broker_provided_id,
+          organization_id: instance.organization.guid,
+          space_id: instance.space.guid
+        }
+      }
+      body_hash[:parameters] = parameters if parameters
+      response = @http_client.patch(path, body_hash)
 
       parsed_response = @response_parser.parse(:patch, path, response)
       last_operation_hash = parsed_response['last_operation'] || {}

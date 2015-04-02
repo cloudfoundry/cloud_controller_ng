@@ -855,6 +855,37 @@ module VCAP::CloudController
           expect(last_response).to have_status_code 201
         end
 
+        context 'when the request has arbitrary parameters' do
+          let(:body) do
+            {
+              service_plan_guid: new_service_plan.guid,
+              parameters: parameters
+            }.to_json
+          end
+
+          let(:parameters) do
+            { myParam: 'some-value' }
+          end
+
+          it 'should pass along the parameters to the service broker' do
+            put "/v2/service_instances/#{service_instance.guid}", body, headers_for(admin_user, email: 'admin@example.com')
+            expect(last_response).to have_status_code(201)
+            expect(a_request(:patch, service_broker_url_regex).with(body: hash_including(parameters: parameters))).to have_been_made.times(1)
+          end
+
+          context 'and the parameter is not a JSON object' do
+            let(:parameters) { 'foo' }
+
+            it 'should reject the request' do
+              put "/v2/service_instances/#{service_instance.guid}", body, headers_for(admin_user, email: 'admin@example.com')
+              expect(last_response).to have_status_code(400)
+              expect(a_request(:put, service_broker_url_regex).
+                       with(body: hash_including(parameters: parameters))).
+                to have_been_made.times(0)
+            end
+          end
+        end
+
         context 'when the request is a service instance rename' do
           let(:status) { 200 }
           let(:body) do
