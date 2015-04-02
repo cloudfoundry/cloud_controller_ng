@@ -89,6 +89,19 @@ module VCAP::CloudController
           raise DuplicateProcessType if p.type == process.type
         end
 
+        Event.create({
+          type: 'audit.app.add_process',
+          actee: app.guid,
+          actee_type: 'v3-app',
+          actee_name: app.name,
+          actor: access_context.user.guid,
+          actor_type: 'user',
+          actor_name: access_context.user_email,
+          space_guid: app.space_guid,
+          organization_guid: app.space.organization.guid,
+          timestamp: Sequel::CURRENT_TIMESTAMP,
+        })
+
         app.add_process_by_guid(process.guid)
         routes = app.routes_dataset.where(type: process.type)
         routes.each do |route|

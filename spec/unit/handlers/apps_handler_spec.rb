@@ -226,6 +226,17 @@ module VCAP::CloudController
           app_model.reload
           expect(app_model.processes.count).to eq(1)
         end
+
+        it 'creates an audit event' do
+          apps_handler.add_process(app_model, process, access_context)
+
+          event = Event.last
+          expect(event.type).to eq('audit.app.add_process')
+          expect(event.actor).to eq(access_context.user.guid)
+          expect(event.actor_name).to eq(access_context.user_email)
+          expect(event.actee_type).to eq('v3-app')
+          expect(event.actee).to eq(app_model.guid)
+        end
       end
 
       context 'when a user can add a process to the app' do
@@ -237,6 +248,17 @@ module VCAP::CloudController
           app_model.reload
           expect(app_model.processes.count).to eq(1)
           expect(app_model.processes.first.guid).to eq(process.guid)
+        end
+
+        it 'creates an audit event' do
+          apps_handler.add_process(app_model, process, access_context)
+
+          event = Event.last
+          expect(event.type).to eq('audit.app.add_process')
+          expect(event.actor).to eq(access_context.user.guid)
+          expect(event.actor_name).to eq(access_context.user_email)
+          expect(event.actee_type).to eq('v3-app')
+          expect(event.actee).to eq(app_model.guid)
         end
       end
     end
