@@ -34,9 +34,9 @@ module VCAP::CloudController
       )
     end
 
-    def unlock_and_delete!
+    def unlock_and_destroy!
       service_instance.last_operation.try(:destroy)
-      service_instance.delete
+      service_instance.destroy
     end
 
     def enqueue_unlock!(attributes_to_update, job)

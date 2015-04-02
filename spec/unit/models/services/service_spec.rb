@@ -224,10 +224,6 @@ module VCAP::CloudController
       let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: service_plan_2) }
       let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance_2) }
 
-      before do
-        stub_request(:delete, /.*/).to_return(body: '{}', status: 200)
-      end
-
       context 'for v1 services' do
         let!(:service) { Service.make(:v1) }
 

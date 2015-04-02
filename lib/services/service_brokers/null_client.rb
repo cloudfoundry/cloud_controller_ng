@@ -4,8 +4,12 @@ module VCAP::Services::ServiceBrokers
       {}
     end
 
-    def deprovision(_)
-      {}
+    def deprovision(_, accepts_incomplete: false)
+      {
+        last_operation: {
+          state: 'succeeded'
+        }
+      }
     end
   end
 end

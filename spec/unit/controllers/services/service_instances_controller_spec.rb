@@ -1604,7 +1604,6 @@ module VCAP::CloudController
 
               Timecop.freeze Time.now + 2.minute do
                 Delayed::Job.last.invoke_job
-                # expect(Delayed::Worker.new.work_off).to eq [1, 0]
                 expect(Event.find(type: 'audit.service_instance.delete')).to be
               end
             end
@@ -1791,33 +1790,52 @@ module VCAP::CloudController
             expect(decoded_response['entity']['guid']).to be
             expect(decoded_response['entity']['status']).to eq 'queued'
 
-            expect(service_instance.last_operation.state).to eq 'in progress'
-            expect(service_instance.last_operation.type).to eq 'delete'
-
             successes, failures = Delayed::Worker.new.work_off
             expect(successes).to eq 1
             expect(failures).to eq 0
             expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
           end
 
-          describe 'concurrent requests' do
-            it 'succeeds for exactly one of the requests' do
-              stub_deprovision(service_instance, accepts_incomplete: true) do |req|
-                { status: 200, body: {}.to_json }
-              end
+          it 'creates a service audit event for deleting the service instance' do
+            delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, headers_for(admin_user, email: 'admin@example.com')
+            expect(last_response).to have_status_code 202
 
+            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
+            expect(event).to be_nil
+
+            expect(Delayed::Worker.new.work_off).to eq([1, 0])
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
+            expect(event.type).to eq('audit.service_instance.delete')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor).to eq(admin_user.guid)
+            expect(event.actor_name).to eq('admin@example.com')
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(service_instance.guid)
+            expect(event.actee_type).to eq('service_instance')
+            expect(event.actee_name).to eq(service_instance.name)
+            expect(event.space_guid).to eq(service_instance.space.guid)
+            expect(event.space_id).to eq(service_instance.space.id)
+            expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+            expect(event.metadata).to eq({ 'request' => {} })
+          end
+
+          context 'when the instance has an operation in progress' do
+            it 'succeeds for exactly one of the requests' do
               delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
               expect(last_response).to have_status_code 202
 
-              delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
-              expect(last_response).to have_status_code 400
+              stub_deprovision(service_instance) do |_|
+                job = Delayed::Job.first
+                expect { job.invoke_job }.to raise_error(VCAP::Errors::ApiError)
 
-              successes, failures = Delayed::Worker.new.work_off
-              expect(successes).to eq 1
-              expect(failures).to eq 0
+                { status: 202, body: { last_operation: { state: 'in progress' } }.to_json }
+              end.times(1).then.to_return do |_|
+                { status: 202, body: { last_operation: { state: 'in progress' } }.to_json }
+              end
 
-              delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
-              expect(last_response).to have_status_code 404
+              delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+              expect(last_response).to have_status_code 204
             end
           end
 

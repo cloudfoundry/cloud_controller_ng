@@ -42,7 +42,7 @@ module VCAP::CloudController
       end
 
       it 'deletes the last operation for each managed service instance' do
-        instance_operation_1 = ServiceInstanceOperation.make
+        instance_operation_1 = ServiceInstanceOperation.make(state: 'succeeded')
         service_instance_1.service_instance_operation = instance_operation_1
         service_instance_1.save
 
@@ -50,6 +50,41 @@ module VCAP::CloudController
 
         expect { service_instance_1.refresh }.to raise_error('Record not found')
         expect { instance_operation_1.refresh }.to raise_error('Record not found')
+      end
+
+      it 'defaults accepts_incomplete to false' do
+        service_instance_delete.delete([service_instance_1])
+        broker_url = service_instance_deprovision_url(service_instance_1, accepts_incomplete: nil)
+        expect(a_request(:delete, broker_url)).to have_been_made
+      end
+
+      context 'when accepts_incomplete is true' do
+        let(:service_instance) { ManagedServiceInstance.make }
+        let(:last_operation_hash) do
+          {
+            last_operation: {
+              state: 'in progress',
+              description: 'description'
+            }
+          }
+        end
+        subject(:service_instance_delete) { ServiceInstanceDelete.new(accepts_incomplete: true) }
+
+        before do
+          stub_deprovision(service_instance, accepts_incomplete: true, status: 202, body: last_operation_hash.to_json)
+        end
+
+        it 'passes the accepts_incomplete flag to the client call' do
+          service_instance_delete.delete([service_instance])
+          broker_url = service_instance_deprovision_url(service_instance, accepts_incomplete: true)
+          expect(a_request(:delete, broker_url)).to have_been_made
+        end
+
+        it 'updates the instance with the values provided by the broker' do
+          service_instance_delete.delete([service_instance])
+          expect(service_instance.last_operation.state).to eq 'in progress'
+          expect(service_instance.last_operation.description).to eq 'description'
+        end
       end
 
       context 'when unbinding a service instance times out' do

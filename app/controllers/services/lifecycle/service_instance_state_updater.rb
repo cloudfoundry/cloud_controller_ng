@@ -38,7 +38,7 @@ module VCAP::CloudController
     def apply_proposed_changes(service_instance)
       if service_instance.last_operation.type == 'delete'
         service_instance.last_operation.destroy
-        service_instance.delete
+        service_instance.destroy
       else
         service_instance.save_with_operation(service_instance.last_operation.proposed_changes)
       end

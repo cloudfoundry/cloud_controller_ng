@@ -19,7 +19,7 @@ module VCAP::CloudController
           service_instance.save_with_operation(
             last_operation: {
               type: 'delete',
-              state: 'in progress',
+              state: 'succeeded',
               description: 'description'
             }
           )

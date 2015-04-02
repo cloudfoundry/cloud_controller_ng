@@ -15,8 +15,14 @@ module VCAP::Services::ServiceBrokers
     describe '#deprovision' do
       let(:instance) { double(:instance) }
 
-      it 'returns an empty hash' do
-        expect(client.deprovision(instance)).to eq({})
+      it 'returns a successful operation' do
+        expect(client.deprovision(instance)).to eq(
+          {
+            last_operation: {
+              state: 'succeeded'
+            }
+          }
+        )
       end
     end
   end
