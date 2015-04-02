@@ -294,6 +294,17 @@ module VCAP::CloudController
             apps_handler.remove_process(app_model, process, access_context)
           }.not_to raise_error
         end
+
+        it 'creates an audit event' do
+          apps_handler.remove_process(app_model, process, access_context)
+
+          event = Event.last
+          expect(event.type).to eq('audit.app.remove_process')
+          expect(event.actor).to eq(access_context.user.guid)
+          expect(event.actor_name).to eq(access_context.user_email)
+          expect(event.actee_type).to eq('v3-app')
+          expect(event.actee).to eq(app_model.guid)
+        end
       end
 
       context 'when user can remove the app' do
@@ -303,6 +314,17 @@ module VCAP::CloudController
           apps_handler.remove_process(app_model, process, access_context)
 
           expect(app_model.processes.count).to eq(0)
+        end
+
+        it 'creates an audit event' do
+          apps_handler.remove_process(app_model, process, access_context)
+
+          event = Event.last
+          expect(event.type).to eq('audit.app.remove_process')
+          expect(event.actor).to eq(access_context.user.guid)
+          expect(event.actor_name).to eq(access_context.user_email)
+          expect(event.actee_type).to eq('v3-app')
+          expect(event.actee).to eq(app_model.guid)
         end
       end
     end

@@ -132,6 +132,18 @@ resource 'Apps (Experimental)', type: :api do
 
       expect(response_status).to eq(204)
       expect(app_model.reload.processes).to eq([])
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type: 'audit.app.remove_process',
+        actee: guid,
+        actee_type: 'v3-app',
+        actee_name: app_model.name,
+        actor: user.guid,
+        actor_type: 'user',
+        space_guid: space.guid,
+        organization_guid: space.organization.guid,
+      })
     end
   end
 

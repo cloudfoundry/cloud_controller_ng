@@ -120,6 +120,19 @@ module VCAP::CloudController
     def remove_process(app, process, access_context)
       raise Unauthorized if access_context.cannot?(:update, app)
       app.remove_process_by_guid(process.guid)
+
+      Event.create({
+        type: 'audit.app.remove_process',
+        actee: app.guid,
+        actee_type: 'v3-app',
+        actee_name: app.name,
+        actor: access_context.user.guid,
+        actor_type: 'user',
+        actor_name: access_context.user_email,
+        space_guid: app.space_guid,
+        organization_guid: app.space.organization.guid,
+        timestamp: Sequel::CURRENT_TIMESTAMP,
+      })
     end
   end
 end
