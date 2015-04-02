@@ -138,7 +138,7 @@ module VCAP::CloudController
 
     let(:config) { TestConfig.config }
     let(:packages_handler) { described_class.new(config) }
-    let(:access_context) { double(:access_context) }
+    let(:access_context) { double(:access_context, user: User.make, user_email: 'user_emai') }
     let(:space) { Space.make }
     let(:app_model) { AppModel.make(space_guid: space.guid) }
 
@@ -166,6 +166,23 @@ module VCAP::CloudController
             expect(created_package).to eq(result)
           end
 
+          it 'creates an audit event' do
+            packages_handler.create(create_message, access_context)
+
+            event = Event.last
+            expect(event.values).to include({
+              type: 'audit.app.add_package',
+              actee: app_model.guid,
+              actee_type: 'v3-app',
+              actee_name: app_model.name,
+              actor: access_context.user.guid,
+              actor_type: 'user',
+              actor_name: access_context.user_email,
+              space_guid: space.guid,
+              organization_guid: space.organization.guid,
+            })
+          end
+
           context 'when the type is bits' do
             let(:create_opts) { { 'type' => 'bits' } }
 
@@ -189,7 +206,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the user cannot create an package' do
+        context 'when the user cannot create a package' do
           before do
             allow(access_context).to receive(:cannot?).and_return(true)
           end

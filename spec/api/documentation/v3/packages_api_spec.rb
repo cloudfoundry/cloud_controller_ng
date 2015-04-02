@@ -186,6 +186,17 @@ resource 'Packages (Experimental)', type: :api do
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(201)
       expect(parsed_response).to match(expected_response)
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type: 'audit.app.add_package',
+        actee: guid,
+        actee_type: 'v3-app',
+        actee_name: app_model.name,
+        actor: user.guid,
+        actor_type: 'user',
+        space_guid: space.guid,
+        organization_guid: space.organization.guid,
+      })
     end
   end
 
