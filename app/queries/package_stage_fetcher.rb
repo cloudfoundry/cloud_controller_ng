@@ -1,30 +1,13 @@
 module VCAP::CloudController
   class PackageStageFetcher
-    def initialize(user)
-      @user = user
-    end
-
     def fetch(package_guid, buildpack_guid)
-      package = dataset.where(:"#{PackageModel.table_name}__guid" => package_guid).first
-
+      package = PackageModel.where(guid: package_guid).eager(:app, :space, :space => :organization).all.first
       return nil if package.nil?
 
       buildpack = Buildpack.find(guid: buildpack_guid)
+      org       = package.space ? package.space.organization : nil
 
-      org = package.space ? package.space.organization : nil
       [package, package.app, package.space, org, buildpack]
-    end
-
-    private
-
-    def dataset
-      ds = PackageModel.dataset
-      return ds if @user.admin?
-
-      ds.association_join(:space).
-        where(space__guid: @user.spaces_dataset.association_join(:organization).
-        where(organization__status: 'active').select(:space__guid)).
-        select_all(PackageModel.table_name)
     end
   end
 end

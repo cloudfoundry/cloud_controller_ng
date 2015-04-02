@@ -85,9 +85,10 @@ module VCAP::CloudController
 
       package, app, space, org, buildpack = package_stage_fetcher.fetch(package_guid, staging_message.buildpack_guid)
       package_not_found! if package.nil?
-      app_not_found! if app.nil?
       space_not_found! if space.nil?
+      app_not_found! if app.nil?
       buildpack_not_found! if staging_message.buildpack_guid && buildpack.nil?
+      unauthorized! unless membership.space_role?(:developer, space.guid)
 
       droplet = package_stage_action.stage(package, app, space, org, buildpack, staging_message, @stagers)
 
@@ -108,6 +109,10 @@ module VCAP::CloudController
 
     def package_stage_fetcher
       PackageStageFetcher.new(current_user)
+    end
+
+    def membership
+      Membership.new(current_user)
     end
 
     private

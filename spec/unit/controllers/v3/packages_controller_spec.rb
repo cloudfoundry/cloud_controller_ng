@@ -256,13 +256,16 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:droplet) { DropletModel.make }
       let(:buildpack) { Buildpack.make }
+      let(:membership) { double(:membership) }
 
       before do
         allow(packages_controller).to receive(:package_stage_fetcher).and_return(package_stage_fetcher)
+        allow(packages_controller).to receive(:membership).and_return(membership)
         allow(packages_controller).to receive(:package_stage_action).and_return(package_stage_action)
         allow(packages_controller).to receive(:current_user).and_return(user)
         allow(packages_controller).to receive(:check_write_permissions!).and_return(nil)
         allow(droplet_presenter).to receive(:present_json).and_return(droplet_response)
+        allow(membership).to receive(:space_role?).and_return(true)
       end
 
       context 'when the buildpack does not exist' do
@@ -456,6 +459,22 @@ module VCAP::CloudController
          end
        end
      end
+
+      context 'when the user is not a space developer' do
+        before do
+          allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
+          allow(membership).to receive(:space_role?).and_return(false)
+        end
+
+        it 'raises ApiError NotAuthorized' do
+          expect {
+            packages_controller.stage(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+        end
+      end
     end
   end
 end
