@@ -408,7 +408,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'start' do
+    describe '#start' do
       let(:app_model) { AppModel.make }
       let(:user) { User.make }
 

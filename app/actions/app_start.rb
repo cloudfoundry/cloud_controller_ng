@@ -2,6 +2,11 @@ module VCAP::CloudController
   class AppStart
     class DropletNotFound < StandardError; end
 
+    def initialize(user, user_email)
+      @user = user
+      @user_email = user_email
+    end
+
     def start(app)
       droplet = DropletModel.find(guid: app.desired_droplet_guid)
       raise DropletNotFound if droplet.nil?
@@ -11,6 +16,19 @@ module VCAP::CloudController
 
       app.db.transaction do
         app.update(desired_state: 'STARTED')
+
+        Event.create({
+          type: 'audit.app.start',
+          actee: app.guid,
+          actee_type: 'v3-app',
+          actee_name: app.name,
+          actor: @user.guid,
+          actor_type: 'user',
+          actor_name: @user_email,
+          space_guid: app.space_guid,
+          organization_guid: app.space.organization.guid,
+          timestamp: Sequel::CURRENT_TIMESTAMP,
+        })
 
         app.processes.each do |process|
           process.update({

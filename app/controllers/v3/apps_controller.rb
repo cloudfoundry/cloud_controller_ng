@@ -102,7 +102,7 @@ module VCAP::CloudController
       membership = Membership.new(current_user)
       app_not_found! unless membership.space_role?(:developer, app.space_guid)
 
-      AppStart.new.start(app)
+      AppStart.new(current_user, current_user_email).start(app)
       [HTTP::OK, @app_presenter.present_json(app)]
     rescue AppStart::DropletNotFound
       droplet_not_found!
