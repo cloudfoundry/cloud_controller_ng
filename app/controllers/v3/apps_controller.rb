@@ -117,7 +117,7 @@ module VCAP::CloudController
       membership = Membership.new(current_user)
       app_not_found! unless membership.space_role?(:developer, app.space_guid)
 
-      AppStop.new.stop(app)
+      AppStop.new(current_user, current_user_email).stop(app)
       [HTTP::OK, @app_presenter.present_json(app)]
     end
 
