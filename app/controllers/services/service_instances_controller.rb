@@ -13,9 +13,10 @@ module VCAP::CloudController
       to_one :space
       to_one :service_plan
       to_many :service_bindings
+      to_many :service_keys
     end
 
-    query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid, :gateway_name, :organization_guid
+    query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid, :gateway_name, :organization_guid, :service_key_guid
     # added :organization_guid here for readability, it is actually implemented as a search filter
     # in the #get_filtered_dataset_for_enumeration method because ModelControl does not support
     # searching on parameters that are not directly associated with the model

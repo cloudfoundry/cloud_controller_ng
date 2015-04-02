@@ -20,6 +20,7 @@ module VCAP::CloudController
           space_guid: { type: 'string', required: true },
           service_plan_guid: { type: 'string', required: true },
           service_binding_guids: { type: '[string]' },
+          service_key_guids: { type: '[string]' },
           parameters: { type: 'hash', default: nil },
         })
       end
@@ -30,6 +31,7 @@ module VCAP::CloudController
           space_guid: { type: 'string' },
           service_plan_guid: { type: 'string' },
           service_binding_guids: { type: '[string]' },
+          service_key_guids: { type: '[string]' },
           parameters: { type: 'hash' },
         })
       end
@@ -183,7 +185,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes({ service_bindings: [:get, :put, :delete] })
+        expect(described_class).to have_nested_routes({ service_bindings: [:get, :put, :delete], service_keys: [:get, :put, :delete] })
       end
     end
 
@@ -1994,6 +1996,59 @@ module VCAP::CloudController
         it 'returns an error saying the instance was not found' do
           get '/v2/service_instances/nonexistent_instance/permissions', {}, json_headers(headers_for(developer))
           expect(last_response.status).to eql 404
+        end
+      end
+    end
+
+    describe 'GET', '/v2/service_instances/:service_instance_guid/service_keys' do
+      let(:space)   { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+
+      context 'when the user is not a member of the space this instance exists in' do
+        let(:space_a)   { Space.make }
+        let(:instance)  { ManagedServiceInstance.make(space: space_a) }
+
+        it 'returns the forbidden code' do
+          get "/v2/service_instances/#{instance.guid}/service_keys", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql(403)
+        end
+      end
+
+      context 'when the user is a member of the space this instance exists in' do
+        let(:instance_a)  { ManagedServiceInstance.make(space: space) }
+        let(:instance_b)  { ManagedServiceInstance.make(space: space) }
+        let(:service_key_a) { ServiceKey.make(name: 'fake-key-a', service_instance: instance_a) }
+        let(:service_key_b) { ServiceKey.make(name: 'fake-key-b', service_instance: instance_a) }
+        let(:service_key_c) { ServiceKey.make(name: 'fake-key-c', service_instance: instance_b) }
+
+        before do
+          service_key_a.save
+          service_key_b.save
+          service_key_c.save
+        end
+
+        it 'returns the service keys that belong to the service instance' do
+          get "/v2/service_instances/#{instance_a.guid}/service_keys", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql(200)
+          expect(decoded_response.fetch('total_results')).to eq(2)
+          expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
+          expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(service_key_b.guid)
+
+          get "/v2/service_instances/#{instance_b.guid}/service_keys", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql(200)
+          expect(decoded_response.fetch('total_results')).to eq(1)
+          expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_c.guid)
+        end
+
+        it 'returns the service keys filtered by key name' do
+          get "/v2/service_instances/#{instance_a.guid}/service_keys?q=name:fake-key-a", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql(200)
+          expect(decoded_response.fetch('total_results')).to eq(1)
+          expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
+
+          get "/v2/service_instances/#{instance_b.guid}/service_keys?q=name:non-exist-key-name", {}, json_headers(headers_for(developer))
+          expect(last_response.status).to eql(200)
+          expect(decoded_response.fetch('total_results')).to eq(0)
         end
       end
     end

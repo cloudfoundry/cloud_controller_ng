@@ -7,6 +7,9 @@ module VCAP::CloudController
       attribute :name, String
     end
 
+    get path,      :enumerate
+    query_parameters :name, :service_instance_guid
+
     post path, :create
     def create
       @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
