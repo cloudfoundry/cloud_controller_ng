@@ -304,6 +304,17 @@ resource 'Apps (Experimental)', type: :api do
       expect { package.refresh }.to raise_error Sequel::Error, 'Record not found'
       expect { droplet.refresh }.to raise_error Sequel::Error, 'Record not found'
       expect { process.refresh }.to raise_error Sequel::Error, 'Record not found'
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type: 'audit.app.delete',
+        actee: app_model.guid,
+        actee_type: 'v3-app',
+        actee_name: app_model.name,
+        actor: user.guid,
+        actor_type: 'user',
+        space_guid: space_guid,
+        organization_guid: space.organization.guid
+      })
     end
   end
 
