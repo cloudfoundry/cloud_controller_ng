@@ -52,7 +52,7 @@ module VCAP::CloudController
       membership = Membership.new(current_user)
       space_not_found! unless membership.space_role?(:developer, message.space_guid)
 
-      app = AppCreate.new.create(message)
+      app = AppCreate.new(current_user, current_user_email).create(message)
 
       [HTTP::CREATED, @app_presenter.present_json(app)]
     rescue AppCreate::InvalidApp => e

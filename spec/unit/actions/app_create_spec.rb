@@ -2,7 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe AppCreate do
-    subject(:app_create) { AppCreate.new }
+    let(:user) { double(:user, guid: 'single') }
+    subject(:app_create) { AppCreate.new(user, 'quotes') }
 
     describe '#create' do
       let(:space) { Space.make }
@@ -22,6 +23,17 @@ module VCAP::CloudController
         expect {
           app_create.create(message)
         }.to raise_error(AppCreate::InvalidApp)
+      end
+
+      it 'creates an audit event' do
+        message = AppCreateMessage.new('name' => 'my-app', 'space_guid' => space_guid, 'environment_variables' => environment_variables)
+        app = app_create.create(message)
+        event = Event.last
+        expect(event.type).to eq('audit.app.create')
+        expect(event.actor).to eq('single')
+        expect(event.actor_name).to eq('quotes')
+        expect(event.actee_type).to eq('v3-app')
+        expect(event.actee).to eq(app.guid)
       end
     end
   end

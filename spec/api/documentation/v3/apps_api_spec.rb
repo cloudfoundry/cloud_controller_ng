@@ -9,7 +9,7 @@ resource 'Apps (Experimental)', type: :api do
 
   def do_request_with_error_handling
     do_request
-    if response_status == 500
+    if response_status > 299
       error = MultiJson.load(response_body)
       ap error
       raise error['description']
@@ -205,6 +205,17 @@ resource 'Apps (Experimental)', type: :api do
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(201)
       expect(parsed_response).to match(expected_response)
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type: 'audit.app.create',
+        actee: expected_guid,
+        actee_type: 'v3-app',
+        actee_name: name,
+        actor: user.guid,
+        actor_type: 'user',
+        space_guid: space_guid,
+        organization_guid: space.organization.guid,
+      })
     end
   end
 
