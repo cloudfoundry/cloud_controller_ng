@@ -2,17 +2,20 @@ require 'spec_helper'
 require 'actions/package_stage_action'
 require 'cloud_controller/backends/staging_memory_calculator'
 require 'cloud_controller/backends/staging_disk_calculator'
+require 'cloud_controller/backends/staging_environment_builder'
 
 module VCAP::CloudController
   describe PackageStageAction do
     describe '#stage' do
-      let(:action) { PackageStageAction.new(memory_limit_calculator, disk_limit_calculator) }
+      let(:action) { PackageStageAction.new(memory_limit_calculator, disk_limit_calculator, environment_builder) }
       let(:memory_limit_calculator) { double(:memory_limit_calculator) }
       let(:calculated_mem_limit) { 32 }
       let(:disk_limit_calculator) { double(:disk_limit_calculator) }
       let(:calculated_disk_limit) { 64 }
+      let(:environment_builder) { double(:environment_builder) }
+      let(:environment_builder_response) { 'environment_builder_response' }
       let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
-      let(:app)  { AppModel.make(space: space, environment_variables: { 'APP_VAR' => 'is here' }) }
+      let(:app)  { AppModel.make(space: space) }
       let(:space)  { Space.make }
       let(:org) { space.organization }
       let(:buildpack)  { Buildpack.make }
@@ -37,7 +40,7 @@ module VCAP::CloudController
         allow(stager).to receive(:stage_package)
         allow(memory_limit_calculator).to receive(:get_limit).with(memory_limit, space, org).and_return(calculated_mem_limit)
         allow(disk_limit_calculator).to receive(:get_limit).with(disk_limit).and_return(calculated_disk_limit)
-        EnvironmentVariableGroup.make(name: :staging, environment_json: { 'another' => 'var', 'STAGING_ENV' => 'staging_value' })
+        allow(environment_builder).to receive(:build).and_return(environment_builder_response)
       end
 
       it 'creates a droplet' do
@@ -48,64 +51,13 @@ module VCAP::CloudController
           expect(droplet.buildpack_git_url).to eq(staging_message.buildpack_git_url)
           expect(droplet.buildpack_guid).to eq(buildpack.guid)
           expect(droplet.app_guid).to eq(app.guid)
+          expect(droplet.environment_variables).to eq(environment_builder_response)
         }.to change { DropletModel.count }.by(1)
       end
 
       it 'initiates a staging request' do
         droplet = action.stage(package, app, space, org, buildpack, staging_message, stagers)
         expect(stager).to have_received(:stage_package).with(droplet, stack, calculated_mem_limit, calculated_disk_limit, buildpack.key, buildpack_git_url)
-      end
-
-      it 'records the environment variables used for staging' do
-        app.environment_variables = app.environment_variables.merge({ 'another' => 'override' })
-        app.save
-        droplet = action.stage(package, app, space, org, buildpack, staging_message, stagers)
-        expect(droplet.environment_variables).to match({
-          'another'     => 'override',
-          'APP_VAR'     => 'is here',
-          'STAGING_ENV' => 'staging_value',
-          'CF_STACK' => stack,
-          'VCAP_APPLICATION' => {
-            'limits' => {
-              'mem' => calculated_mem_limit,
-              'disk' => calculated_disk_limit,
-              'fds' => 16384
-            },
-            'application_name' => app.name,
-            'name' => app.name,
-            'application_uris' => [],
-            'uris' => [],
-            'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-            'version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-            'space_name' => space.name,
-            'space_id' => space.guid,
-            'users' => nil
-          }
-        })
-      end
-
-      context 'when the app has a route associated with it' do
-        it 'sends the uris of the app as part of vcap_application' do
-          route1 = Route.make(space: space)
-          route2 = Route.make(space: space)
-          route_adder = AddRouteToApp.new(app)
-          route_adder.add(route1)
-          route_adder.add(route2)
-
-          droplet = action.stage(package, app, space, org, buildpack, staging_message, stagers)
-          expect(droplet.environment_variables['VCAP_APPLICATION']['uris']).to match([route1.fqdn, route2.fqdn])
-          expect(droplet.environment_variables['VCAP_APPLICATION']['application_uris']).to match([route1.fqdn, route2.fqdn])
-        end
-      end
-
-      context 'when instance_file_descriptor_limit is set' do
-        it 'uses that value as the fds for staging' do
-          TestConfig.config[:instance_file_descriptor_limit] = 100
-          droplet = action.stage(package, app, space, org, buildpack, staging_message, stagers)
-          expect(droplet.environment_variables['VCAP_APPLICATION']['limits']).to include({
-            'fds' => TestConfig.config[:instance_file_descriptor_limit]
-          })
-        end
       end
 
       context 'when the package is not type bits' do

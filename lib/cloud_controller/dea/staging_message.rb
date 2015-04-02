@@ -102,7 +102,7 @@ module VCAP::CloudController
           disk_limit:                   disk_limit,
           egress_network_rules:         staging_egress_rules,
           properties:                   {
-            environment:       @environment_variables.merge(CF_STACK: @stack).map { |k, v| "#{k}=#{v}" },
+            environment:       @environment_variables.map { |k, v| "#{k}=#{v}" },
             buildpack_key:     buildpack_key,
             buildpack_git_url: buildpack_git_url,
           }
