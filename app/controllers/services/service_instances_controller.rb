@@ -179,6 +179,10 @@ module VCAP::CloudController
       service_instance = find_guid(guid, ServiceInstance)
       raise_if_has_associations!(service_instance) if v2_api? && !recursive?
 
+      if !service_instance.service_bindings.empty? && !recursive?
+        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', :service_bindings, :service_instances)
+      end
+
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
       service_instance, delete_job = deprovisioner.deprovision_service_instance(service_instance, params)
 

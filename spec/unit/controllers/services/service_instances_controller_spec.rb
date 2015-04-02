@@ -1562,20 +1562,40 @@ module VCAP::CloudController
           expect(event.metadata).to eq({ 'request' => {} })
         end
 
-        context 'when recursive=true' do
-          let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+        context 'when the instance has bindings' do
+          context 'and recursive=true' do
+            let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
 
-          before do
-            stub_unbind(service_binding)
+            before do
+              stub_unbind(service_binding)
+            end
+
+            it 'deletes the associated service bindings' do
+              expect {
+                delete "/v2/service_instances/#{service_instance.guid}?recursive=true", {}, admin_headers
+              }.to change(ServiceBinding, :count).by(-1)
+              expect(last_response.status).to eq(204)
+              expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+              expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
+            end
           end
 
-          it 'deletes the associated service bindings' do
-            expect {
-              delete "/v2/service_instances/#{service_instance.guid}?recursive=true", {}, admin_headers
-            }.to change(ServiceBinding, :count).by(-1)
-            expect(last_response.status).to eq(204)
-            expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
-            expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
+          context 'and recursive=false' do
+            let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+
+            before do
+              stub_unbind(service_binding)
+            end
+
+            it 'should give the user an error' do
+              delete "/v2/service_instances/#{service_instance.guid}?recursive=false", {}, admin_headers
+
+              expect(last_response).to have_status_code 400
+              expect(last_response.body).to match /AssociationNotEmpty/
+              expect(last_response.body).to match /Please delete the service_bindings associations for your service_instances/
+              expect(ServiceInstance.find(guid: service_instance.guid)).not_to be_nil
+              expect(ServiceBinding.find(guid: service_binding.guid)).not_to be_nil
+            end
           end
         end
 
