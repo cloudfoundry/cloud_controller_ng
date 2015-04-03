@@ -779,9 +779,9 @@
   message: "Unable to perform delete action: %s"
 
 360001:
-  name: ServiceKeyTaken
+  name: ServiceKeyNameTaken
   http_code: 400
-  message: "The service key to service is taken: %s"
+  message: "The service key name is taken: %s"
 
 360002:
   name: ServiceKeyInvalid
