@@ -173,6 +173,14 @@ module VCAP::Services
 
         expect(http_client).to have_received(:deprovision)
       end
+
+      it 'returns a successful synchronous response' do
+        expect(client.deprovision(instance)).to eq({
+          last_operation: {
+            state: 'succeeded'
+          }
+        })
+      end
     end
   end
 end
