@@ -73,11 +73,20 @@ module VCAP::CloudController
           {
             last_operation: {
               state: 'in progress',
-              description: 'description'
+              description: 'description',
+              async_poll_interval_seconds: polling_interval
             }
           }
         end
-        subject(:service_instance_delete) { ServiceInstanceDelete.new(accepts_incomplete: true) }
+        let(:event_repository_opts) { { some_opt: 'some value' }}
+        let(:polling_interval) { 60 }
+
+        subject(:service_instance_delete) do
+          ServiceInstanceDelete.new(
+            accepts_incomplete: true,
+            event_repository_opts: event_repository_opts
+          )
+        end
 
         before do
           stub_deprovision(service_instance, accepts_incomplete: true, status: 202, body: last_operation_hash.to_json)
@@ -93,6 +102,21 @@ module VCAP::CloudController
           service_instance_delete.delete([service_instance])
           expect(service_instance.last_operation.state).to eq 'in progress'
           expect(service_instance.last_operation.description).to eq 'description'
+        end
+
+        it 'enqueues a job to fetch state' do
+          service_instance_delete.delete([service_instance])
+
+          job = Delayed::Job.last
+          expect(job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
+
+          inner_job = job.payload_object.handler.job.job
+          expect(inner_job.name).to eq 'service-instance-state-fetch'
+          expect(inner_job.client_attrs).to eq service_instance.client.attrs
+          expect(inner_job.service_instance_guid).to eq service_instance.guid
+          expect(inner_job.services_event_repository_opts).to eq event_repository_opts
+          expect(inner_job.request_attrs).to eq({})
+          expect(inner_job.poll_interval).to eq(polling_interval)
         end
       end
 
@@ -162,6 +186,11 @@ module VCAP::CloudController
           expect(errors.count).to eq(1)
           expect(errors[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
         end
+
+        it 'fails the last operation of the service instance' do
+          service_instance_delete.delete(service_instance_dataset)
+          expect(service_instance_2.last_operation.state).to eq('failed')
+        end
       end
 
       context 'when the broker returns an error for unbinding' do
@@ -179,6 +208,17 @@ module VCAP::CloudController
           errors = service_instance_delete.delete(service_instance_dataset)
           expect(errors.count).to eq(1)
           expect(errors[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
+        end
+
+        it 'does not attempt to delete that service instance' do
+          service_instance_delete.delete(service_instance_dataset)
+          expect(service_instance_1.exists?).to be_falsey
+          expect(service_instance_2.exists?).to be_truthy
+
+          broker_url_1 = service_instance_deprovision_url(service_instance_1, accepts_incomplete: nil)
+          broker_url_2 = service_instance_deprovision_url(service_instance_2, accepts_incomplete: nil)
+          expect(a_request(:delete, broker_url_1)).to have_been_made
+          expect(a_request(:delete, broker_url_2)).not_to have_been_made
         end
       end
 
