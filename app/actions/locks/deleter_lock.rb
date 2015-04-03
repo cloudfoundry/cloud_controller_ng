@@ -38,7 +38,6 @@ module VCAP::CloudController
     end
 
     def unlock_and_destroy!
-      service_instance.last_operation.try(:destroy)
       service_instance.destroy
       @needs_unlock = false
     end
