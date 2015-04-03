@@ -5,6 +5,7 @@ module VCAP::CloudController
     def initialize(service_instance, type='delete')
       @service_instance = service_instance
       @type = type
+      @needs_unlock = false
     end
 
     def lock!
@@ -22,6 +23,7 @@ module VCAP::CloudController
             state: 'in progress'
           }
         )
+        @needs_unlock = true
       end
     end
 
@@ -32,17 +34,24 @@ module VCAP::CloudController
           state: 'failed'
         }
       )
+      @needs_unlock = false
     end
 
     def unlock_and_destroy!
       service_instance.last_operation.try(:destroy)
       service_instance.destroy
+      @needs_unlock = false
     end
 
     def enqueue_unlock!(attributes_to_update, job)
       service_instance.save_with_operation(attributes_to_update)
       enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
       enqueuer.enqueue
+      @needs_unlock = false
+    end
+
+    def needs_unlock?
+      @needs_unlock
     end
   end
 end

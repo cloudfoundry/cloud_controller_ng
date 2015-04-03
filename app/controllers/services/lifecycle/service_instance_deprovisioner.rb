@@ -1,5 +1,3 @@
-require 'controllers/services/locks/deleter_lock'
-
 module VCAP::CloudController
   class ServiceInstanceDeprovisioner
     def initialize(services_event_repository, access_validator, logger)
