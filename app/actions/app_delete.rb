@@ -3,8 +3,9 @@ module VCAP::CloudController
     attr_reader :user, :user_email
 
     def initialize(user, user_email)
-      @user       = user
+      @user = user
       @user_email = user_email
+      @logger = Steno.logger('cc.action.app_delete')
     end
 
     def delete(app_dataset)
@@ -14,6 +15,7 @@ module VCAP::CloudController
         ProcessDelete.new(app_model.space, user, user_email).delete(app_model.processes_dataset)
         app_model.remove_all_routes
 
+        @logger.info("Deleted app #{app_model.name} #{app_model.guid}")
         Event.create({
           type: 'audit.app.delete',
           actee: app_model.guid,

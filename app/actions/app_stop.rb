@@ -3,12 +3,14 @@ module VCAP::CloudController
     def initialize(user, user_email)
       @user = user
       @user_email = user_email
+      @logger = Steno.logger('cc.action.app_stop')
     end
 
     def stop(app)
       app.db.transaction do
         app.update(desired_state: 'STOPPED')
 
+        @logger.info("Stopped app #{app.name} #{app.guid}")
         Event.create({
           type: 'audit.app.stop',
           actee: app.guid,

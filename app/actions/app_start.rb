@@ -5,6 +5,7 @@ module VCAP::CloudController
     def initialize(user, user_email)
       @user = user
       @user_email = user_email
+      @logger = Steno.logger('cc.action.app_start')
     end
 
     def start(app)
@@ -17,6 +18,7 @@ module VCAP::CloudController
       app.db.transaction do
         app.update(desired_state: 'STARTED')
 
+        @logger.info("Started app #{app.name} #{app.guid}")
         Event.create({
           type: 'audit.app.start',
           actee: app.guid,

@@ -5,11 +5,13 @@ module VCAP::CloudController
     def initialize(user, user_email)
       @user = user
       @user_email = user_email
+      @logger = Steno.logger('cc.action.app_create')
     end
 
     def create(message)
       app = AppModel.create(name: message.name, space_guid: message.space_guid, environment_variables: message.environment_variables)
 
+      @logger.info("Created app #{app.name} #{app.guid}")
       Event.create({
         type: 'audit.app.create',
         actee: app.guid,

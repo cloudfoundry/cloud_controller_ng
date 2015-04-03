@@ -6,6 +6,7 @@ module VCAP::CloudController
     def initialize(user, user_email)
       @user = user
       @user_email = user_email
+      @logger = Steno.logger('cc.action.app_update')
     end
 
     def update(app, message)
@@ -31,6 +32,7 @@ module VCAP::CloudController
           updated_fields << 'desired_droplet_guid'
         end
 
+        @logger.info("Updated app #{app.name} #{app.guid}, message: #{message}")
         Event.create({
           type: 'audit.app.update',
           actee: app.guid,
