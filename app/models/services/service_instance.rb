@@ -129,6 +129,14 @@ module VCAP::CloudController
       service_instance_usage_event_repository.deleted_event_from_service_instance(self)
     end
 
+    def last_operation
+      nil
+    end
+
+    def operation_in_progress?
+      false
+    end
+
     private
 
     def validate_service_binding(service_binding)

@@ -15,5 +15,8 @@ module VCAP::CloudController
     def client
       VCAP::Services::ServiceBrokers::UserProvided::Client.new
     end
+
+    def save_with_operation(_)
+    end
   end
 end

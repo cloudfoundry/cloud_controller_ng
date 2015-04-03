@@ -14,6 +14,11 @@ module VCAP::Services
     end
 
     def deprovision(_, _={})
+      {
+        last_operation: {
+          state: 'succeeded'
+        }
+      }
     end
   end
 end

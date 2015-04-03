@@ -89,5 +89,9 @@ module VCAP::CloudController
         expect(service_instance.tags).to eq []
       end
     end
+
+    it 'pretends it can #save_with_operation' do
+      service_instance.save_with_operation({ foo: 'bar' })
+    end
   end
 end
