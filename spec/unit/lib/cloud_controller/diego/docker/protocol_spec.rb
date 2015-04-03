@@ -55,7 +55,6 @@ module VCAP::CloudController
               memory_mb: app.memory,
               disk_mb: app.disk_quota,
               file_descriptors: app.file_descriptors,
-              stack: app.stack.name,
               egress_rules: ['staging_egress_rule'],
               timeout: 90,
               lifecycle: 'docker',

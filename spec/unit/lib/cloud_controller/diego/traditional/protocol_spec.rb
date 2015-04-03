@@ -60,7 +60,6 @@ module VCAP::CloudController
               disk_mb: app.disk_quota,
               file_descriptors: app.file_descriptors,
               environment: Environment.new(app).as_json,
-              stack: app.stack.name,
               egress_rules: ['staging_egress_rule'],
               timeout: 90,
               lifecycle: 'buildpack',
@@ -70,6 +69,7 @@ module VCAP::CloudController
                 app_bits_download_uri: 'http://app-package.com',
                 droplet_upload_uri: 'http://droplet-upload-uri',
                 buildpacks: buildpack_generator.buildpack_entries(app),
+                stack: app.stack.name,
               },
             })
           end

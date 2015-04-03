@@ -29,6 +29,7 @@ module VCAP::CloudController
           lifecycle_data.build_artifacts_cache_upload_uri = @blobstore_url_generator.buildpack_cache_upload_url(app)
           lifecycle_data.droplet_upload_uri = @blobstore_url_generator.droplet_upload_url(app)
           lifecycle_data.buildpacks = @buildpack_entry_generator.buildpack_entries(app)
+          lifecycle_data.stack = app.stack.name
 
           staging_request = StagingRequest.new
           staging_request.app_id = app.guid
@@ -37,7 +38,6 @@ module VCAP::CloudController
           staging_request.memory_mb = [app.memory, staging_config[:minimum_staging_memory_mb]].max
           staging_request.disk_mb = [app.disk_quota, staging_config[:minimum_staging_disk_mb]].max
           staging_request.file_descriptors = [app.file_descriptors, staging_config[:minimum_staging_file_descriptor_limit]].max
-          staging_request.stack = app.stack.name
           staging_request.egress_rules = @common_protocol.staging_egress_rules
           staging_request.timeout = staging_config[:timeout_in_seconds]
           staging_request.lifecycle = 'buildpack'

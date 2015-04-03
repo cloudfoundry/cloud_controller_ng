@@ -12,6 +12,7 @@ module VCAP::CloudController
           data.build_artifacts_cache_upload_uri = 'build_artifact_upload'
           data.droplet_upload_uri = 'droplet_upload'
           data.buildpacks = []
+          data.stack = 'stack'
           data
         end
 
@@ -21,7 +22,8 @@ module VCAP::CloudController
             build_artifacts_cache_download_uri: 'build_artifact_download',
             build_artifacts_cache_upload_uri: 'build_artifact_upload',
             droplet_upload_uri: 'droplet_upload',
-            buildpacks: []
+            buildpacks: [],
+            stack: 'stack',
           }
         end
 

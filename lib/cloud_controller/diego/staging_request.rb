@@ -1,13 +1,12 @@
 module VCAP::CloudController
   module Diego
     class StagingRequest
-      attr_accessor :app_id, :stack, :file_descriptors, :memory_mb, :disk_mb, :environment
+      attr_accessor :app_id, :file_descriptors, :memory_mb, :disk_mb, :environment
       attr_accessor :egress_rules, :timeout, :log_guid, :lifecycle, :lifecycle_data
 
       def message
         message = {
           app_id: app_id,
-          stack: stack,
           file_descriptors: file_descriptors,
           memory_mb: memory_mb,
           disk_mb: disk_mb,
@@ -29,7 +28,6 @@ module VCAP::CloudController
         @schema ||= Membrane::SchemaParser.parse do
           {
             app_id: String,
-            stack: String,
             file_descriptors: Fixnum,
             memory_mb: Fixnum,
             disk_mb: Fixnum,

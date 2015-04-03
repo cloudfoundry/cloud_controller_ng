@@ -26,7 +26,6 @@ module VCAP::CloudController
           staging_request.memory_mb = [app.memory, staging_config[:minimum_staging_memory_mb]].max
           staging_request.disk_mb = [app.disk_quota, staging_config[:minimum_staging_disk_mb]].max
           staging_request.file_descriptors = [app.file_descriptors, staging_config[:minimum_staging_file_descriptor_limit]].max
-          staging_request.stack = app.stack.name
           staging_request.egress_rules = @common_protocol.staging_egress_rules
           staging_request.timeout = staging_config[:timeout_in_seconds]
           staging_request.lifecycle = 'docker'
