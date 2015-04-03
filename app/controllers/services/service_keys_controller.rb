@@ -32,7 +32,7 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:name, :service_instance_id])
       if unique_errors && unique_errors.include?(:unique)
-        Errors::ApiError.new_from_details('ServiceKeyTaken', "#{attributes['name']} #{attributes['service_instance_guid']}")
+        Errors::ApiError.new_from_details('ServiceKeyNameTaken', "#{attributes['name']}")
       elsif e.errors.on(:service_instance) && e.errors.on(:service_instance).include?(:presence)
         Errors::ApiError.new_from_details('ServiceInstanceNotFound', attributes['service_instance_guid'])
       else

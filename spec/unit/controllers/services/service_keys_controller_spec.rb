@@ -256,10 +256,10 @@ module VCAP::CloudController
                 ServiceKey.make(name: name, service_instance: instance)
               end
 
-              it 'returns a ServiceKeyTaken error' do
+              it 'returns a ServiceKeyNameTaken error' do
                 make_request
                 expect(last_response.status).to eq(400)
-                expect(decoded_response['error_code']).to eq('CF-ServiceKeyTaken')
+                expect(decoded_response['error_code']).to eq('CF-ServiceKeyNameTaken')
               end
 
               it 'does not send a bind request to broker' do
