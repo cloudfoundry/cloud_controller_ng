@@ -200,6 +200,13 @@ module VCAP::CloudController
             stage { callback_called = true }
             expect(callback_called).to be false
           end
+
+          it 'builds the staging message before scheduling the promise' do
+            expect(staging_task).to receive(:staging_request).ordered
+            expect(EM).to receive(:schedule_sync).ordered
+
+            staging_task.stage
+          end
         end
 
         context 'when staging setup fails without a reason' do
