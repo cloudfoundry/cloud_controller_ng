@@ -147,7 +147,7 @@ module VCAP::CloudController
 
         context 'it sets up the app' do
           before do
-            app.stub(:update).and_call_original
+            allow(app).to receive(:update).and_call_original
           end
 
           it 'sets the app package state to pending before it tries to stage' do
