@@ -54,7 +54,6 @@ module VCAP::CloudController
     private
 
     def safe_deprovision_instance(service_instance)
-      # this needs to go into a retry queue
       service_instance.client.deprovision(service_instance)
     rescue => e
       @logger.error "Unable to deprovision #{service_instance}: #{e}"

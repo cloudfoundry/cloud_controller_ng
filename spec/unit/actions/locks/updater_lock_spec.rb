@@ -49,7 +49,7 @@ module VCAP::CloudController
         it 'updates the service instance' do
           old_service_plan = service_instance.service_plan
           expect {
-            updater_lock.synchronous_unlock!(service_plan_id: new_service_plan.id )
+            updater_lock.synchronous_unlock!(service_plan_id: new_service_plan.id)
           }.to change { service_instance.service_plan }.from(old_service_plan).to(new_service_plan)
         end
 
@@ -67,7 +67,7 @@ module VCAP::CloudController
         it 'updates the attributes on the service instance' do
           job = double(Jobs::Services::ServiceInstanceStateFetch)
           new_description = 'new description'
-          updater_lock.enqueue_unlock!({ last_operation: { description: new_description} }, job)
+          updater_lock.enqueue_unlock!({ last_operation: { description: new_description } }, job)
           expect(service_instance.last_operation.description).to eq new_description
         end
 

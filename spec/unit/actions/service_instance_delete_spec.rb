@@ -78,7 +78,7 @@ module VCAP::CloudController
             }
           }
         end
-        let(:event_repository_opts) { { some_opt: 'some value' }}
+        let(:event_repository_opts) { { some_opt: 'some value' } }
         let(:polling_interval) { 60 }
 
         subject(:service_instance_delete) do
@@ -167,6 +167,23 @@ module VCAP::CloudController
             to have_been_made.times(1)
           expect(service_instance_1.last_operation.type).to eq('delete')
           expect(service_instance_1.last_operation.state).to eq('failed')
+        end
+      end
+
+      context 'when a service instance has an operation in progress' do
+        before do
+          service_instance_1.service_instance_operation = ServiceInstanceOperation.make(state: 'in progress')
+        end
+
+        it 'returns an error' do
+          errors = service_instance_delete.delete(service_instance_dataset)
+          expect(errors.length).to eq 1
+          expect(errors.first).to be_instance_of VCAP::Errors::ApiError
+        end
+
+        it 'keeps the instance in an `in progress` state' do
+          service_instance_delete.delete(service_instance_dataset)
+          expect(service_instance_1.last_operation.reload.state).to eq 'in progress'
         end
       end
 

@@ -25,10 +25,11 @@ module VCAP::CloudController
 
     def delete_service_instance(service_instance)
       errors = []
-      lock = DeleterLock.new(service_instance)
-      lock.lock!
 
       begin
+        lock = DeleterLock.new(service_instance)
+        lock.lock!
+
         attributes_to_update, poll_interval = service_instance.client.deprovision(
           service_instance,
           accepts_incomplete: @accepts_incomplete
@@ -41,7 +42,6 @@ module VCAP::CloudController
         end
       rescue => e
         errors << e
-        lock.unlock_and_fail!
       ensure
         lock.unlock_and_fail! if lock.needs_unlock?
       end

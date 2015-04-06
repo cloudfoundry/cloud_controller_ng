@@ -63,7 +63,7 @@ module VCAP::CloudController
         it 'updates the attributes on the service instance' do
           job = double(Jobs::Services::ServiceInstanceStateFetch)
           new_description = 'new description'
-          deleter_lock.enqueue_unlock!({ last_operation: { description: new_description} }, job)
+          deleter_lock.enqueue_unlock!({ last_operation: { description: new_description } }, job)
           expect(service_instance.last_operation.description).to eq new_description
         end
 
