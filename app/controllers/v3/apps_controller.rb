@@ -49,8 +49,7 @@ module VCAP::CloudController
       message = AppCreateMessage.create_from_http_request(body)
       bad_request!(message.error) if message.error
 
-      membership = Membership.new(current_user)
-      space_not_found! unless membership.space_role?(:developer, message.space_guid)
+      space_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], message.space_guid)
 
       app = AppCreate.new(current_user, current_user_email).create(message)
 
@@ -65,9 +64,9 @@ module VCAP::CloudController
       message = parse_and_validate_json(body)
 
       app = AppFetcher.new.fetch(guid)
+
       app_not_found! if app.nil?
-      membership = Membership.new(current_user)
-      app_not_found! unless membership.space_role?(:developer, app.space_guid)
+      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
 
       app = AppUpdate.new(current_user, current_user_email).update(app, message)
 
@@ -84,9 +83,9 @@ module VCAP::CloudController
 
       app_delete_fetcher = AppDeleteFetcher.new
       app_dataset        = app_delete_fetcher.fetch(guid)
+
       app_not_found! if app_dataset.empty?
-      membership = Membership.new(current_user)
-      app_not_found! unless membership.space_role?(:developer, app_dataset.first.space_guid)
+      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app_dataset.first.space_guid)
 
       AppDelete.new(current_user, current_user_email).delete(app_dataset)
 
@@ -99,8 +98,7 @@ module VCAP::CloudController
 
       app = AppFetcher.new.fetch(guid)
       app_not_found! if app.nil?
-      membership = Membership.new(current_user)
-      app_not_found! unless membership.space_role?(:developer, app.space_guid)
+      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
 
       AppStart.new(current_user, current_user_email).start(app)
       [HTTP::OK, @app_presenter.present_json(app)]
@@ -114,8 +112,7 @@ module VCAP::CloudController
 
       app = AppFetcher.new.fetch(guid)
       app_not_found! if app.nil?
-      membership = Membership.new(current_user)
-      app_not_found! unless membership.space_role?(:developer, app.space_guid)
+      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
 
       AppStop.new(current_user, current_user_email).stop(app)
       [HTTP::OK, @app_presenter.present_json(app)]
@@ -127,8 +124,7 @@ module VCAP::CloudController
 
       app = AppFetcher.new.fetch(guid)
       app_not_found! if app.nil?
-      membership = Membership.new(current_user)
-      app_not_found! unless membership.space_role?(:developer, app.space_guid)
+      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
 
       env_vars = app.environment_variables
       uris = app.routes.map(&:fqdn)
@@ -156,6 +152,10 @@ module VCAP::CloudController
           'application_env_json' => vcap_application
         }.to_json
       ]
+    end
+
+    def membership
+      Membership.new(current_user)
     end
 
     private

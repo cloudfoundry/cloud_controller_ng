@@ -10,6 +10,7 @@ module VCAP::CloudController
     let(:app_model) { AppModel.make }
     let(:process) { ProcessMapper.map_model_to_domain(process_model) }
     let(:guid) { process.guid }
+    let(:membership) { double(:membership) }
     let(:req_body) { '' }
     let(:expected_response) { 'process_response_body' }
 
@@ -31,6 +32,8 @@ module VCAP::CloudController
     before do
       allow(logger).to receive(:debug)
       allow(process_presenter).to receive(:present_json).and_return(expected_response)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow(processes_controller).to receive(:membership).and_return(membership)
     end
 
     describe '#list' do
@@ -270,23 +273,24 @@ module VCAP::CloudController
 
     describe '#delete' do
       let(:space) { Space.make }
-      let(:user) { User.make }
       let(:app_model) { AppModel.make(space: space) }
       let(:process) { AppFactory.make(space: space, app: app_model) }
 
       before do
-        # stubbing the BaseController methods for now, this should probably be
-        # injected into the packages controller
-        allow(processes_controller).to receive(:current_user).and_return(user)
         allow(processes_controller).to receive(:check_write_permissions!)
-
-        space.organization.add_user(user)
-        space.add_developer(user)
+        allow(processes_controller).to receive(:current_user).and_return(User.make)
       end
 
       it 'checks for write permissions' do
         processes_controller.delete(process.guid)
         expect(processes_controller).to have_received(:check_write_permissions!)
+      end
+
+      it 'checks for the proper roles' do
+        processes_controller.delete(process.guid)
+
+        expect(membership).to have_received(:has_any_roles?).
+          with([Membership::SPACE_DEVELOPER], space.guid)
       end
 
       context 'when the process exists' do
@@ -300,7 +304,7 @@ module VCAP::CloudController
 
         context 'when the user cannot access the process' do
           before do
-            allow(processes_controller).to receive(:current_user).and_return(User.make)
+            allow(membership).to receive(:has_any_roles?).and_return(false)
           end
 
           it 'returns a 404 NotFound error' do

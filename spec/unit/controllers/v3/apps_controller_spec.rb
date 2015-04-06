@@ -11,6 +11,7 @@ module VCAP::CloudController
     let(:apps_handler) { double(:apps_handler) }
     let(:app_model) { nil }
     let(:app_presenter) { double(:app_presenter) }
+    let(:membership) { double(:membership) }
     let(:apps_controller) do
       AppsV3Controller.new(
         {},
@@ -31,6 +32,8 @@ module VCAP::CloudController
 
     before do
       allow(logger).to receive(:debug)
+      allow(apps_controller).to receive(:membership).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
       allow(apps_handler).to receive(:show).and_return(app_model)
       allow(app_presenter).to receive(:present_json).and_return(app_response)
     end
@@ -126,14 +129,10 @@ module VCAP::CloudController
           space_guid: space_guid,
         }.to_json
       end
-      let(:membership) { instance_double(Membership) }
       let(:app_create) { instance_double(AppCreate) }
 
       before do
-        allow(apps_controller).to receive(:current_user).and_return(user)
         allow(apps_controller).to receive(:check_write_permissions!)
-        allow(Membership).to receive(:new).and_return(membership)
-        allow(membership).to receive(:space_role?).with(:developer, space_guid).and_return(true)
         allow(AppCreate).to receive(:new).and_return(app_create)
         allow(app_create).to receive(:create)
       end
@@ -141,6 +140,12 @@ module VCAP::CloudController
       it 'checks for write permissions' do
         expect(apps_controller).to receive(:check_write_permissions!)
         apps_controller.create
+      end
+
+      it 'checks for proper roles' do
+        apps_controller.create
+
+        expect(membership).to have_received(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space_guid)
       end
 
       context 'when the request body is invalid JSON' do
@@ -173,7 +178,7 @@ module VCAP::CloudController
 
       context 'when the user is not a member of the requested space' do
         before do
-          allow(membership).to receive(:space_role?).with(:developer, space_guid).and_return(false)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
         it 'returns an NotFound error' do
@@ -201,8 +206,6 @@ module VCAP::CloudController
     end
 
     describe '#update' do
-      let(:space) { Space.make }
-      let(:user) { User.make }
       let!(:app_model) { AppModel.make }
 
       let(:new_name) { 'new-name' }
@@ -229,10 +232,13 @@ module VCAP::CloudController
         context 'when the user has write permissions' do
           before do
             allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
-            allow(apps_controller).to receive(:current_user).and_return(user)
           end
 
           context 'when the user does not have space permissions' do
+            before do
+              allow(membership).to receive(:has_any_roles?).and_return(false)
+            end
+
             it 'raises an API 404 error' do
               expect {
                 apps_controller.update(app_model.guid)
@@ -279,10 +285,13 @@ module VCAP::CloudController
 
         before do
           allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
-          allow(apps_controller).to receive(:current_user).and_return(user)
-          space = app_model.space
-          space.organization.add_user(user)
-          space.add_developer(user)
+        end
+
+        it 'checks for the proper roles' do
+          apps_controller.update(app_model.guid)
+
+          expect(membership).to have_received(:has_any_roles?).
+            with([Membership::SPACE_DEVELOPER], app_model.space.guid)
         end
 
         it 'returns a 200 OK response' do
@@ -353,14 +362,17 @@ module VCAP::CloudController
 
     describe '#delete' do
       let(:space) { Space.make }
-      let(:user) { User.make }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
 
       before do
-        allow(apps_controller).to receive(:current_user).and_return(user)
         allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
-        space.organization.add_user(user)
-        space.add_developer(user)
+      end
+
+      it 'checks for the proper roles' do
+        apps_controller.delete(app_model.guid)
+
+        expect(membership).to have_received(:has_any_roles?).
+          with([Membership::SPACE_DEVELOPER], space.guid)
       end
 
       context 'when the app exists' do
@@ -385,6 +397,10 @@ module VCAP::CloudController
         end
 
         context 'because they do not have the correct membership' do
+          before do
+            allow(membership).to receive(:has_any_roles?).and_return(false)
+          end
+
           it 'raises an ApiError with a 404 code' do
             expect {
               apps_controller.delete(AppModel.make.guid)
@@ -410,7 +426,12 @@ module VCAP::CloudController
 
     describe '#start' do
       let(:app_model) { AppModel.make }
-      let(:user) { User.make }
+      let(:droplet) { DropletModel.make(app_guid: app_model.guid) }
+
+      before do
+        app_model.desired_droplet_guid = droplet.guid
+        app_model.save
+      end
 
       context 'when the user cannot start the application' do
         context 'when the user does not have write permissions' do
@@ -429,29 +450,35 @@ module VCAP::CloudController
         context 'when the user has write permissions' do
           before do
             allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
-            allow(apps_controller).to receive(:current_user).and_return(user)
           end
 
-          context 'when the user has space permission' do
-            context 'when the app does not have a droplet' do
-              before do
-                space = app_model.space
-                space.organization.add_user(user)
-                space.add_developer(user)
-              end
+          it 'checks for the proper roles' do
+            apps_controller.start(app_model.guid)
 
-              it 'raises an API 404 error' do
-                expect {
-                  apps_controller.start(app_model.guid)
-                }.to raise_error do |error|
-                  expect(error.name).to eq 'ResourceNotFound'
-                  expect(error.response_code).to eq 404
-                end
+            expect(membership).to have_received(:has_any_roles?).
+              with([Membership::SPACE_DEVELOPER], app_model.space.guid)
+          end
+
+          context 'when the app does not have a droplet' do
+            before do
+              droplet.destroy
+            end
+
+            it 'raises an API 404 error' do
+              expect {
+                apps_controller.start(app_model.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'ResourceNotFound'
+                expect(error.response_code).to eq 404
               end
             end
           end
 
           context 'when the user does not have space permissions' do
+            before do
+              allow(membership).to receive(:has_any_roles?).and_return(false)
+            end
+
             it 'raises an API 404 error' do
               expect {
                 apps_controller.start(app_model.guid)
@@ -476,9 +503,8 @@ module VCAP::CloudController
       end
     end
 
-    describe 'stop' do
+    describe '#stop' do
       let(:app_model) { AppModel.make }
-      let(:user) { User.make }
 
       context 'when the user cannot stop the application' do
         context 'when the user does not have write permissions' do
@@ -497,10 +523,13 @@ module VCAP::CloudController
         context 'when the user has write permissions' do
           before do
             allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
-            allow(apps_controller).to receive(:current_user).and_return(user)
           end
 
           context 'when the user does not have space permissions' do
+            before do
+              allow(membership).to receive(:has_any_roles?).and_return(false)
+            end
+
             it 'raises an API 404 error' do
               expect {
                 apps_controller.stop(app_model.guid)
@@ -524,15 +553,33 @@ module VCAP::CloudController
         end
       end
     end
+
     describe '#env' do
-      let(:user) { User.make }
       let(:app_model) { AppModel.make }
       let(:guid) { app_model.guid }
 
+      before do
+        allow(apps_controller).to receive(:check_read_permissions!).and_return(nil)
+      end
+
+      it 'returns 200' do
+        response_code, _ = apps_controller.env(guid)
+        expect(response_code).to eq(200)
+      end
+
+      it 'checks for the proper roles' do
+        apps_controller.env(guid)
+
+        expect(membership).to have_received(:has_any_roles?).
+          with([Membership::SPACE_DEVELOPER], app_model.space.guid)
+      end
+
       context 'when the user does not have read permissions' do
+        before do
+          allow(apps_controller).to receive(:check_read_permissions!).and_raise(StandardError)
+        end
+
         it 'returns a 403' do
-          # response_code, _ = apps_controller.env(guid)
-          # expect(response_code).to eq 403
           expect(apps_controller).to receive(:check_read_permissions!).
             and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
           expect {
@@ -544,22 +591,30 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the user has read permissions' do
+      context 'when the user does not have space permissions' do
         before do
-          allow(apps_controller).to receive(:check_read_permissions!).and_return(nil)
-          allow(apps_controller).to receive(:current_user).and_return(user)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
-        context 'when the app does not exist' do
-          let(:guid) { 'ABC123' }
+        it 'raises an API 404 error' do
+          expect {
+            apps_controller.env(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
 
-          it 'raises an ApiError with a 404 code' do
-            expect {
-              apps_controller.env(guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'ResourceNotFound'
-              expect(error.response_code).to eq 404
-            end
+      context 'when the app does not exist' do
+        let(:guid) { 'ABC123' }
+
+        it 'raises an ApiError with a 404 code' do
+          expect {
+            apps_controller.env(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
           end
         end
       end

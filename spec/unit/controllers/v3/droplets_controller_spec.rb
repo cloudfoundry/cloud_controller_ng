@@ -7,6 +7,7 @@ module VCAP::CloudController
     let(:params) { {} }
     let(:droplets_handler) { double(:droplets_handler) }
     let(:droplet_presenter) { double(:droplet_presenter) }
+    let(:membership) { double(:membership) }
     let(:req_body) { '{}' }
 
     let(:droplets_controller) do
@@ -26,6 +27,8 @@ module VCAP::CloudController
 
     before do
       allow(logger).to receive(:debug)
+      allow(droplets_controller).to receive(:membership).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
     end
 
     describe '#show' do
@@ -83,17 +86,12 @@ module VCAP::CloudController
     describe '#delete' do
       let(:space) { Space.make }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
-      let(:user) { User.make }
       let(:droplet) { DropletModel.make(app_guid: app_model.guid) }
 
       before do
         # stubbing the BaseController methods for now, this should probably be
         # injected into the droplets controller
-        allow(droplets_controller).to receive(:current_user).and_return(user)
         allow(droplets_controller).to receive(:check_write_permissions!)
-
-        space.organization.add_user(user)
-        space.add_developer(user)
       end
 
       it 'checks for write permissions' do
@@ -110,9 +108,16 @@ module VCAP::CloudController
           end
         end
 
+        it 'checks for the proper roles' do
+          droplets_controller.delete(droplet.guid)
+
+          expect(membership).to have_received(:has_any_roles?).
+            with([Membership::SPACE_DEVELOPER], space.guid)
+        end
+
         context 'when the user cannot access the droplet' do
           before do
-            allow(droplets_controller).to receive(:current_user).and_return(User.make)
+            allow(membership).to receive(:has_any_roles?).and_return(false)
           end
 
           it 'returns a 404 NotFound error' do

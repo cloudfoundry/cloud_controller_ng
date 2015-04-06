@@ -11,6 +11,7 @@ module VCAP::CloudController
     let(:apps_handler) { double(:apps_handler) }
     let(:package_presenter) { double(:package_presenter) }
     let(:droplet_presenter) { double(:droplet_presenter) }
+    let(:membership) { double(:membership) }
     let(:stagers) { double(:stagers) }
     let(:req_body) { '{}' }
 
@@ -34,6 +35,8 @@ module VCAP::CloudController
 
     before do
       allow(logger).to receive(:debug)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow(packages_controller).to receive(:membership).and_return(membership)
     end
 
     describe '#upload' do
@@ -167,18 +170,11 @@ module VCAP::CloudController
 
     describe '#delete' do
       let(:space) { Space.make }
-      let(:user) { User.make }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
       let(:package) { PackageModel.make(app_guid: app_model.guid) }
 
       before do
-        # stubbing the BaseController methods for now, this should probably be
-        # injected into the packages controller
-        allow(packages_controller).to receive(:current_user).and_return(user)
         allow(packages_controller).to receive(:check_write_permissions!)
-
-        space.organization.add_user(user)
-        space.add_developer(user)
       end
 
       it 'checks for write permissions' do
@@ -186,27 +182,30 @@ module VCAP::CloudController
         expect(packages_controller).to have_received(:check_write_permissions!)
       end
 
-      context 'when the package exists' do
-        context 'when a user can access a package' do
-          it 'returns a 204 NO CONTENT' do
-            response_code, response = packages_controller.delete(package.guid)
-            expect(response_code).to eq 204
-            expect(response).to be_nil
-          end
+      it 'checks for the proper roles' do
+        packages_controller.delete(package.guid)
+
+        expect(membership).to have_received(:has_any_roles?).
+          with([Membership::SPACE_DEVELOPER], space.guid)
+      end
+
+      it 'returns a 204 NO CONTENT' do
+        response_code, response = packages_controller.delete(package.guid)
+        expect(response_code).to eq 204
+        expect(response).to be_nil
+      end
+
+      context 'when the user cannot access the package' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
-        context 'when the user cannot access the package' do
-          before do
-            allow(packages_controller).to receive(:current_user).and_return(User.make)
-          end
-
-          it 'returns a 404 NotFound error' do
-            expect {
-              packages_controller.delete(package.guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'ResourceNotFound'
-              expect(error.response_code).to eq 404
-            end
+        it 'returns a 404 NotFound error' do
+          expect {
+            packages_controller.delete(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
           end
         end
       end
@@ -256,16 +255,21 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:droplet) { DropletModel.make }
       let(:buildpack) { Buildpack.make }
-      let(:membership) { double(:membership) }
 
       before do
         allow(packages_controller).to receive(:package_stage_fetcher).and_return(package_stage_fetcher)
-        allow(packages_controller).to receive(:membership).and_return(membership)
         allow(packages_controller).to receive(:package_stage_action).and_return(package_stage_action)
-        allow(packages_controller).to receive(:current_user).and_return(user)
         allow(packages_controller).to receive(:check_write_permissions!).and_return(nil)
         allow(droplet_presenter).to receive(:present_json).and_return(droplet_response)
-        allow(membership).to receive(:space_role?).and_return(true)
+        allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, org, buildpack])
+        allow(package_stage_action).to receive(:stage).and_return(droplet)
+      end
+
+      it 'checks for the proper roles' do
+        packages_controller.stage(package.guid)
+
+        expect(membership).to have_received(:has_any_roles?).
+          with([Membership::SPACE_DEVELOPER], space.guid)
       end
 
       context 'when the buildpack does not exist' do
@@ -406,64 +410,64 @@ module VCAP::CloudController
         end
       end
 
-     context 'when the space quota is exceeded' do
-       before do
-         allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
-         allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::SpaceQuotaExceeded)
-       end
+      context 'when the space quota is exceeded' do
+        before do
+          allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
+          allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::SpaceQuotaExceeded)
+        end
 
-       it 'raises ApiError UnableToPerform' do
-         expect {
-           packages_controller.stage(package.guid)
-         }.to raise_error do |error|
-           expect(error.name).to eq 'UnableToPerform'
-           expect(error.response_code).to eq 400
-           expect(error.message).to include('Staging request')
-           expect(error.message).to include("space's memory limit exceeded")
-         end
-       end
-     end
+        it 'raises ApiError UnableToPerform' do
+          expect {
+            packages_controller.stage(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnableToPerform'
+            expect(error.response_code).to eq 400
+            expect(error.message).to include('Staging request')
+            expect(error.message).to include("space's memory limit exceeded")
+          end
+        end
+      end
 
-     context 'when the org quota is exceeded' do
-       before do
-         allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
-         allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::OrgQuotaExceeded)
-       end
+      context 'when the org quota is exceeded' do
+        before do
+          allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
+          allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::OrgQuotaExceeded)
+        end
 
-       it 'raises ApiError UnableToPerform' do
-         expect {
-           packages_controller.stage(package.guid)
-         }.to raise_error do |error|
-           expect(error.name).to eq 'UnableToPerform'
-           expect(error.response_code).to eq 400
-           expect(error.message).to include('Staging request')
-           expect(error.message).to include("organization's memory limit exceeded")
-         end
-       end
-     end
+        it 'raises ApiError UnableToPerform' do
+          expect {
+            packages_controller.stage(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnableToPerform'
+            expect(error.response_code).to eq 400
+            expect(error.message).to include('Staging request')
+            expect(error.message).to include("organization's memory limit exceeded")
+          end
+        end
+      end
 
-     context 'when the disk limit is exceeded' do
-       before do
-         allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
-         allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::DiskLimitExceeded)
-       end
+      context 'when the disk limit is exceeded' do
+        before do
+          allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
+          allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::DiskLimitExceeded)
+        end
 
-       it 'raises ApiError UnableToPerform' do
-         expect {
-           packages_controller.stage(package.guid)
-         }.to raise_error do |error|
-           expect(error.name).to eq 'UnableToPerform'
-           expect(error.response_code).to eq 400
-           expect(error.message).to include('Staging request')
-           expect(error.message).to include('disk limit exceeded')
-         end
-       end
-     end
+        it 'raises ApiError UnableToPerform' do
+          expect {
+            packages_controller.stage(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnableToPerform'
+            expect(error.response_code).to eq 400
+            expect(error.message).to include('Staging request')
+            expect(error.message).to include('disk limit exceeded')
+          end
+        end
+      end
 
       context 'when the user is not a space developer' do
         before do
           allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
-          allow(membership).to receive(:space_role?).and_return(false)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
         it 'raises ApiError NotAuthorized' do

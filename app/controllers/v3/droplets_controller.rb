@@ -40,12 +40,15 @@ module VCAP::CloudController
       droplet_dataset        = droplet_delete_fetcher.fetch(guid)
       droplet_not_found! if droplet_dataset.empty?
 
-      membership = Membership.new(current_user)
-      droplet_not_found! unless membership.space_role?(:developer, droplet_dataset.first.app.space_guid)
+      droplet_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], droplet_dataset.first.app.space_guid)
 
       DropletDelete.new.delete(droplet_dataset)
 
       [HTTP::NO_CONTENT]
+    end
+
+    def membership
+      Membership.new(current_user)
     end
 
     private

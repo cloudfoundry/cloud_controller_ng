@@ -71,9 +71,7 @@ module VCAP::CloudController
       process_delete_fetcher = ProcessDeleteFetcher.new
       process_dataset, space = process_delete_fetcher.fetch(guid)
       not_found! if process_dataset.nil?
-
-      membership = Membership.new(current_user)
-      not_found! unless membership.space_role?(:developer, space.guid)
+      not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], space.guid)
 
       ProcessDelete.new(space, current_user, current_user_email).delete(process_dataset)
 
@@ -81,6 +79,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def membership
+      Membership.new(current_user)
+    end
 
     def not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')

@@ -12,8 +12,12 @@ module VCAP::CloudController
 
       app_model = AppFetcher.new.fetch(app_guid)
       app_not_found! if app_model.nil?
-      membership = Membership.new(current_user)
-      app_not_found! unless membership.space_role?(:developer, app_model.space_guid)
+      app_not_found! unless membership.has_any_roles?(
+        [Membership::SPACE_DEVELOPER,
+         Membership::SPACE_MANAGER,
+         Membership::SPACE_AUDITOR,
+         Membership::ORG_MANAGER],
+         app_model.space_guid)
 
       pagination_options = PaginationOptions.from_params(params)
       routes = SequelPaginator.new.get_page(app_model.routes_dataset, pagination_options)
@@ -31,8 +35,7 @@ module VCAP::CloudController
       app_not_found! if app_model.nil?
       route_not_found! if route.nil?
 
-      membership = Membership.new(current_user)
-      app_not_found! unless membership.space_role?(:developer, app_model.space_guid)
+      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app_model.space_guid)
 
       AddRouteToApp.new(app_model).add(route)
       [HTTP::NO_CONTENT]
@@ -47,11 +50,14 @@ module VCAP::CloudController
       app_not_found! if app_model.nil?
       route_not_found! if route.nil?
 
-      membership = Membership.new(current_user)
-      app_not_found! unless membership.space_role?(:developer, app_model.space_guid)
+      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app_model.space_guid)
 
       RemoveRouteFromApp.new(app_model).remove(route)
       [HTTP::NO_CONTENT]
+    end
+
+    def membership
+      Membership.new(current_user)
     end
 
     private

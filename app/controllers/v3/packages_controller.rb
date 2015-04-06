@@ -66,9 +66,7 @@ module VCAP::CloudController
       package_delete_fetcher = PackageDeleteFetcher.new
       package_dataset        = package_delete_fetcher.fetch(guid)
       package_not_found! if package_dataset.empty?
-
-      membership = Membership.new(current_user)
-      package_not_found! unless membership.space_role?(:developer, package_dataset.first.app.space_guid)
+      package_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], package_dataset.first.app.space_guid)
 
       PackageDelete.new.delete(package_dataset)
 
@@ -88,7 +86,7 @@ module VCAP::CloudController
       space_not_found! if space.nil?
       app_not_found! if app.nil?
       buildpack_not_found! if staging_message.buildpack_guid && buildpack.nil?
-      unauthorized! unless membership.space_role?(:developer, space.guid)
+      unauthorized! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], space.guid)
 
       droplet = package_stage_action.stage(package, app, space, org, buildpack, staging_message, @stagers)
 
@@ -108,7 +106,7 @@ module VCAP::CloudController
     end
 
     def package_stage_fetcher
-      PackageStageFetcher.new(current_user)
+      PackageStageFetcher.new
     end
 
     def membership
