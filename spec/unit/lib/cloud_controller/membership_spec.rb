@@ -136,6 +136,26 @@ module VCAP::CloudController
             expect(result).to be_falsey
           end
         end
+
+        context 'when the space is in a suspended org and the user has the required role' do
+          before do
+            space.add_developer(user)
+            space.add_manager(user)
+            space.add_auditor(user)
+            organization.status = 'suspended'
+            organization.save
+            space.save
+          end
+
+          it 'returns false' do
+            result = membership.has_any_roles?([
+              Membership::SPACE_DEVELOPER,
+              Membership::SPACE_MANAGER,
+              Membership::SPACE_AUDITOR],
+              space.guid)
+            expect(result).to be_falsey
+          end
+        end
       end
 
       context 'when org roles are provided' do
@@ -284,6 +304,28 @@ module VCAP::CloudController
 
           it 'returns false' do
             result = membership.has_any_roles?(Membership::ORG_MEMBER, space.guid, nil)
+            expect(result).to be_falsey
+          end
+        end
+
+        context 'when the org is suspended and the user has the required role' do
+          before do
+            organization.add_user(user)
+            organization.add_manager(user)
+            organization.add_billing_manager(user)
+            organization.add_auditor(user)
+            organization.status = 'suspended'
+            organization.save
+            space.save
+          end
+
+          it 'returns false' do
+            result = membership.has_any_roles?([
+              Membership::ORG_MEMBER,
+              Membership::ORG_MANAGER,
+              Membership::ORG_AUDITOR,
+              Membership::ORG_BILLING_MANAGER],
+              nil, organization.guid)
             expect(result).to be_falsey
           end
         end

@@ -25,20 +25,30 @@ module VCAP::CloudController
     def member_guids(roles: [])
       roles.map do |role|
         case role
-        when SPACE_DEVELOPER
-          @user.spaces.map(&:guid)
-        when SPACE_MANAGER
-          @user.managed_spaces.map(&:guid)
-        when SPACE_AUDITOR
-          @user.audited_spaces.map(&:guid)
-        when ORG_MEMBER
-          @user.organizations.map(&:guid)
-        when ORG_MANAGER
-          @user.managed_organizations.map(&:guid)
-        when ORG_AUDITOR
-          @user.audited_organizations.map(&:guid)
-        when ORG_BILLING_MANAGER
-          @user.billing_managed_organizations.map(&:guid)
+          when SPACE_DEVELOPER
+            @user.spaces_dataset.
+              association_join(:organization).
+              where(organization__status: 'active').map(&:guid)
+          when SPACE_MANAGER
+            @user.managed_spaces_dataset.
+              association_join(:organization).
+              where(organization__status: 'active').map(&:guid)
+          when SPACE_AUDITOR
+            @user.audited_spaces_dataset.
+              association_join(:organization).
+              where(organization__status: 'active').map(&:guid)
+          when ORG_MEMBER
+            @user.organizations_dataset.
+              where(status: 'active').map(&:guid)
+          when ORG_MANAGER
+            @user.managed_organizations_dataset.
+              where(status: 'active').map(&:guid)
+          when ORG_AUDITOR
+            @user.audited_organizations_dataset.
+              where(status: 'active').map(&:guid)
+          when ORG_BILLING_MANAGER
+            @user.billing_managed_organizations_dataset.
+              where(status: 'active').map(&:guid)
         end
       end.flatten.compact
     end
