@@ -12,7 +12,7 @@ module VCAP::CloudController
       let!(:app) { AppModel.make(space_guid: space.guid) }
       let!(:service_instance) { ManagedServiceInstance.make(space: space_2) }
 
-      let!(:space_dataset) { Space.dataset }
+      let(:space_dataset) { Space.dataset }
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
 
@@ -56,6 +56,7 @@ module VCAP::CloudController
 
         context 'when deletion of serviceinstances fail' do
           let!(:space_3) { Space.make }
+          let!(:space_4) { Space.make }
 
           let!(:service_instance_1) { ManagedServiceInstance.make(space: space_3) } # deletion fail
           let!(:service_instance_2) { ManagedServiceInstance.make(space: space_3) } # deletion fail
@@ -67,9 +68,17 @@ module VCAP::CloudController
             stub_deprovision(service_instance_3)
           end
 
+          it 'deletes other spaces' do
+            space_delete.delete(space_dataset)
+
+            expect(space.exists?).to be_falsey
+            expect(space_2.exists?).to be_falsey
+            expect(space_4.exists?).to be_falsey
+          end
+
           it 'deletes the other instances' do
             expect {
-              space_delete.delete(space_dataset) rescue nil
+              space_delete.delete(space_dataset)
             }.to change { ServiceInstance.count }.by(-2)
             expect { service_instance_1.refresh }.not_to raise_error
             expect { service_instance_2.refresh }.not_to raise_error

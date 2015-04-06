@@ -10,21 +10,18 @@ module VCAP::CloudController
     def delete(dataset)
       return [UserNotFoundDeletionError.new(@user_id)] if user.nil?
 
-      errors = []
-      dataset.each do |space_model|
-        errs = ServiceInstanceDelete.new.delete(space_model.service_instances_dataset)
-        unless errs.empty?
-          error_message = errs.map(&:message).join("\n\n")
+      dataset.inject([]) do |errors, space_model|
+        instance_delete_errors = ServiceInstanceDelete.new.delete(space_model.service_instances_dataset)
+        unless instance_delete_errors.empty?
+          error_message = instance_delete_errors.map(&:message).join("\n\n")
           errors.push VCAP::Errors::ApiError.new_from_details('SpaceDeletionFailed', dataset.first.name, error_message)
-          return errors
         end
 
         AppDelete.new(user, user_email).delete(space_model.app_models_dataset)
 
-        space_model.destroy
+        space_model.destroy if instance_delete_errors.empty?
+        errors
       end
-
-      errors
     end
 
     def timeout_error(dataset)

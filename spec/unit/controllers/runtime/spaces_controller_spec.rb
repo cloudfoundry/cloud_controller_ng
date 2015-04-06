@@ -669,10 +669,16 @@ module VCAP::CloudController
               expect { binding_3.refresh }.to raise_error Sequel::Error, 'Record not found'
             end
 
-            it 'does not delete any of the apps' do
+            it 'does not delete any of the v2 apps' do
               expect {
                 delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
               }.to_not change { App.count }
+            end
+
+            it 'deletes all the v3 apps' do
+              expect {
+                delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+              }.to change { AppModel.count }.by(-1)
             end
           end
 
