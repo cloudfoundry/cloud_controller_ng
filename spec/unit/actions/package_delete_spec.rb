@@ -8,18 +8,17 @@ module VCAP::CloudController
     describe '#delete' do
       context 'when the package exists' do
         let!(:package) { PackageModel.make }
-        let(:package_dataset) { PackageModel.where(guid: package.guid) }
 
         it 'deletes the package record' do
           expect {
-            package_delete.delete(package_dataset)
+            package_delete.delete(package)
           }.to change { PackageModel.count }.by(-1)
           expect { package.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'schedules a job to the delete the blobstore item' do
           expect {
-            package_delete.delete(package_dataset)
+            package_delete.delete(package)
           }.to change {
             Delayed::Job.count
           }.by(1)
@@ -34,15 +33,11 @@ module VCAP::CloudController
       end
 
       context 'when passed a set of packages' do
-        let(:package_dataset) { PackageModel.dataset }
+        let!(:packages) { [PackageModel.make, PackageModel.make] }
 
         it 'bulk deletes them' do
-          packages = []
-          packages << PackageModel.make
-          packages << PackageModel.make
-
           expect {
-            package_delete.delete(package_dataset)
+            package_delete.delete(packages)
           }.to change {
             PackageModel.count
           }.by(-2)

@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     def delete(app_dataset)
       app_dataset.each do |app_model|
-        PackageDelete.new.delete(app_model.packages_dataset)
+        PackageDelete.new.delete(packages_to_delete(app_model))
         DropletDelete.new.delete(app_model.droplets_dataset)
         ProcessDelete.new(app_model.space, user, user_email).delete(app_model.processes_dataset)
         app_model.remove_all_routes
@@ -31,6 +31,12 @@ module VCAP::CloudController
       end
 
       app_dataset.destroy
+    end
+
+    private
+
+    def packages_to_delete(app_model)
+      app_model.packages_dataset.select(:"#{PackageModel.table_name}__guid", :"#{PackageModel.table_name}__id").all
     end
   end
 end

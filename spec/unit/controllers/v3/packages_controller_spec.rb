@@ -170,6 +170,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       let(:space) { Space.make }
+      let(:org) { space.organization }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
       let(:package) { PackageModel.make(app_guid: app_model.guid) }
 
@@ -185,7 +186,7 @@ module VCAP::CloudController
       it 'checks for the proper roles' do
         packages_controller.delete(package.guid)
 
-        expect(membership).to have_received(:has_any_roles?).
+        expect(membership).to have_received(:has_any_roles?).at_least(1).times.
           with([Membership::SPACE_DEVELOPER], space.guid)
       end
 
@@ -195,17 +196,45 @@ module VCAP::CloudController
         expect(response).to be_nil
       end
 
-      context 'when the user cannot access the package' do
+      context 'when the user cannot read the package' do
         before do
-          allow(membership).to receive(:has_any_roles?).and_return(false)
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER,
+              Membership::SPACE_MANAGER,
+              Membership::SPACE_AUDITOR,
+              Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
         end
 
-        it 'returns a 404 NotFound error' do
+        it 'returns a 404 ResourceNotFound error' do
           expect {
             packages_controller.delete(package.guid)
           }.to raise_error do |error|
             expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the user can read but cannot write to the package' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER,
+              Membership::SPACE_MANAGER,
+              Membership::SPACE_AUDITOR,
+              Membership::ORG_MANAGER], space.guid, org.guid).
+            and_return(true)
+          allow(membership).to receive(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space.guid).
+            and_return(false)
+        end
+
+        it 'raises ApiError NotAuthorized' do
+          expect {
+            packages_controller.delete(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
           end
         end
       end
@@ -268,8 +297,8 @@ module VCAP::CloudController
       it 'checks for the proper roles' do
         packages_controller.stage(package.guid)
 
-        expect(membership).to have_received(:has_any_roles?).
-          with([Membership::SPACE_DEVELOPER], space.guid)
+        expect(membership).to have_received(:has_any_roles?).at_least(1).times.
+          with([Membership::SPACE_DEVELOPER], space.guid,)
       end
 
       context 'when the buildpack does not exist' do
@@ -397,7 +426,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the user cannot access the droplet' do
+      context 'when the user does not have the write scope' do
         it 'raises an ApiError with a 403 code' do
           expect(packages_controller).to receive(:check_write_permissions!).
             and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
@@ -464,10 +493,39 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the user is not a space developer' do
+      context 'when the user cannot read the package' do
         before do
           allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
-          allow(membership).to receive(:has_any_roles?).and_return(false)
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER,
+              Membership::SPACE_MANAGER,
+              Membership::SPACE_AUDITOR,
+              Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            packages_controller.stage(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the user can read but cannot write to the package' do
+        before do
+          allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER,
+              Membership::SPACE_MANAGER,
+              Membership::SPACE_AUDITOR,
+              Membership::ORG_MANAGER], space.guid, org.guid).
+            and_return(true)
+          allow(membership).to receive(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space.guid).
+            and_return(false)
         end
 
         it 'raises ApiError NotAuthorized' do
