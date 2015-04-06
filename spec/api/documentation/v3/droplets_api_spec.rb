@@ -48,6 +48,7 @@ resource 'Droplets (Experimental)', type: :api do
         'hash'                   => droplet_model.droplet_hash,
         'buildpack_git_url'      => droplet_model.buildpack_git_url,
         'failure_reason'         => droplet_model.failure_reason,
+        'procfile'               => droplet_model.procfile,
         'detected_start_command' => droplet_model.detected_start_command,
         'environment_variables'  => droplet_model.environment_variables,
         'created_at'             => droplet_model.created_at.as_json,
@@ -152,6 +153,7 @@ resource 'Droplets (Experimental)', type: :api do
               'failure_reason'         => droplet1.failure_reason,
               'detected_start_command' => droplet1.detected_start_command,
               'environment_variables'  => droplet1.environment_variables,
+              'procfile'               => droplet1.procfile,
               'created_at'             => droplet1.created_at.as_json,
               '_links'                 => {
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
@@ -167,6 +169,7 @@ resource 'Droplets (Experimental)', type: :api do
               'buildpack_git_url'      => 'https://github.com/cloudfoundry/my-buildpack.git',
               'failure_reason'         => droplet2.failure_reason,
               'detected_start_command' => droplet2.detected_start_command,
+              'procfile'               => droplet2.procfile,
               'environment_variables'  => {},
               'created_at'             => droplet2.created_at.as_json,
               '_links'                 => {

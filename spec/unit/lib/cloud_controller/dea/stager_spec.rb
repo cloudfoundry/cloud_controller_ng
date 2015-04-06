@@ -46,6 +46,7 @@ module VCAP::CloudController
           'task_streaming_log_url' => nil,
           'detected_buildpack' => detected_buildpack,
           'buildpack_key' => buildpack_key,
+          'procfile' => { 'web' => 'npm start' },
           'detected_start_command' => detected_start_command,
           'error' => reply_json_error,
           'error_info' => reply_error_info,
@@ -156,6 +157,13 @@ module VCAP::CloudController
         it 'updates the droplet with the detected start command' do
           stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
           expect(droplet.refresh.detected_start_command).to eq(detected_start_command)
+        end
+
+        it 'updates the droplet with the procfile' do
+          stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
+          expect(droplet.refresh.procfile).to eq(YAML.dump({
+            'web' => 'npm start'
+          }))
         end
 
         context 'when buildpack is not present' do
