@@ -117,7 +117,7 @@ http {
       upload_cleanup 400-505;
     }
 
-    location ~ /staging/(packages/droplets|packages/buildpack_cache|droplets|buildpack_cache)/.*/upload {
+    location ~ /staging/(v3/)?(droplets|buildpack_cache)/.*/upload {
       # Allow download the droplets and buildpacks
       if ($request_method = GET){
         proxy_pass http://cloud_controller;

@@ -39,10 +39,11 @@ module VCAP::CloudController
 
       describe '#staging_request' do
         it 'includes app guid, task id, download/upload uris, buildpack_key, stack' do
+          app_guid = package.app_guid
           allow(blobstore_url_generator).to receive(:package_download_url).with(package).and_return('http://www.package.uri')
           allow(blobstore_url_generator).to receive(:package_droplet_upload_url).with(droplet_guid).and_return('http://www.droplet.upload.uri')
-          allow(blobstore_url_generator).to receive(:package_buildpack_cache_upload_url).with(package).and_return('http://www.bpupload.uri')
-          allow(blobstore_url_generator).to receive(:package_buildpack_cache_download_url).with(package).and_return('http://www.bpdownload.uri')
+          allow(blobstore_url_generator).to receive(:v3_app_buildpack_cache_upload_url).with(app_guid, stack).and_return('http://www.bpupload.uri')
+          allow(blobstore_url_generator).to receive(:v3_app_buildpack_cache_download_url).with(app_guid, stack).and_return('http://www.bpdownload.uri')
           request = staging_message.staging_request
 
           expect(request[:app_id]).to eq(log_id)

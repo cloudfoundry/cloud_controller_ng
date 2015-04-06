@@ -140,8 +140,7 @@ module VCAP::CloudController
               config,
               message_bus,
               dea_pool,
-              stager_pool,
-              an_instance_of(CloudController::Blobstore::UrlGenerator))
+              stager_pool)
         end
 
         it 'updates the droplet to a STAGED state' do

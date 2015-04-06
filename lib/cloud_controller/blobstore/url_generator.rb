@@ -19,11 +19,11 @@ module CloudController
       end
 
       def buildpack_cache_download_url(app)
-        generate_download_url(@buildpack_cache_blobstore, "/staging/buildpack_cache/#{app.guid}/download", "#{app.stack.guid}-#{app.guid}")
+        generate_download_url(@buildpack_cache_blobstore, "/staging/buildpack_cache/#{app.guid}/download", "#{app.stack.name}-#{app.guid}")
       end
 
-      def package_buildpack_cache_download_url(package)
-        generate_download_url(@buildpack_cache_blobstore, "/staging/packages/buildpack_cache/#{package.guid}/download", package.guid)
+      def v3_app_buildpack_cache_download_url(app_guid, stack)
+        generate_download_url(@buildpack_cache_blobstore, "/staging/v3/buildpack_cache/#{stack}/#{app_guid}/download", "#{stack}-#{app_guid}")
       end
 
       def admin_buildpack_download_url(buildpack)
@@ -42,7 +42,7 @@ module CloudController
       end
 
       def v3_droplet_download_url(droplet)
-        generate_download_url(@droplet_blobstore, "/staging/v3_droplets/#{droplet.guid}/download", droplet.blobstore_key)
+        generate_download_url(@droplet_blobstore, "/staging/v3/droplets/#{droplet.guid}/download", droplet.blobstore_key)
       end
 
       def perma_droplet_download_url(app_guid)
@@ -55,11 +55,11 @@ module CloudController
       end
 
       def package_droplet_upload_url(droplet_guid)
-        staging_uri("/staging/packages/droplets/#{droplet_guid}/upload")
+        staging_uri("/staging/v3/droplets/#{droplet_guid}/upload")
       end
 
-      def package_buildpack_cache_upload_url(package)
-        staging_uri("/staging/packages/buildpack_cache/#{package.guid}/upload")
+      def v3_app_buildpack_cache_upload_url(app_guid, stack)
+        staging_uri("/staging/v3/buildpack_cache/#{stack}/#{app_guid}/upload")
       end
 
       def buildpack_cache_upload_url(app)

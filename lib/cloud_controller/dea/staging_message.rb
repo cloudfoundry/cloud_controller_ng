@@ -74,6 +74,7 @@ module VCAP::CloudController
       def initialize(package, droplet_guid, log_id, stack, memory_limit,
                      disk_limit, buildpack_key, buildpack_git_url, config,
                      environment_variables, blobstore_url_generator)
+        @app_guid              = package.app_guid
         @package               = package
         @stack                 = stack
         @memory_limit          = memory_limit
@@ -94,8 +95,8 @@ module VCAP::CloudController
           # All url generation should go to blobstore_url_generator
           download_uri:                 @blobstore_url_generator.package_download_url(@package),
           upload_uri:                   @blobstore_url_generator.package_droplet_upload_url(droplet_guid),
-          buildpack_cache_upload_uri:   @blobstore_url_generator.package_buildpack_cache_upload_url(@package),
-          buildpack_cache_download_uri: @blobstore_url_generator.package_buildpack_cache_download_url(@package),
+          buildpack_cache_upload_uri:   @blobstore_url_generator.v3_app_buildpack_cache_upload_url(@app_guid, @stack),
+          buildpack_cache_download_uri: @blobstore_url_generator.v3_app_buildpack_cache_download_url(@app_guid, @stack),
           admin_buildpacks:             admin_buildpacks,
           memory_limit:                 memory_limit,
           disk_limit:                   disk_limit,

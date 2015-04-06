@@ -23,7 +23,7 @@ module VCAP::CloudController
     end
     let(:stager_id) { 'my_stager' }
 
-    subject(:staging_task) { Dea::PackageStagerTask.new(config_hash, message_bus, dea_pool, stager_pool, blobstore_url_generator) }
+    subject(:staging_task) { Dea::PackageStagerTask.new(config_hash, message_bus, dea_pool, stager_pool) }
 
     let(:first_reply_json_error) { nil }
 

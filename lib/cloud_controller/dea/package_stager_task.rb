@@ -10,12 +10,11 @@ module VCAP::CloudController
         end
       end
 
-      def initialize(config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
+      def initialize(config, message_bus, dea_pool, stager_pool)
         @config                  = config
         @message_bus             = message_bus
         @dea_pool                = dea_pool
         @stager_pool             = stager_pool
-        @blobstore_url_generator = blobstore_url_generator
       end
 
       def staging_timeout
