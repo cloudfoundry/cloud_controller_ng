@@ -59,6 +59,7 @@ resource 'Apps (Experimental)', type: :api do
             'name'   => name3,
             'guid'   => app_model3.guid,
             'desired_state' => app_model3.desired_state,
+            'total_desired_instances' => 0,
             'environment_variables' => environment_variables,
             '_links' => {
               'self'      => { 'href' => "/v3/apps/#{app_model3.guid}" },
@@ -73,6 +74,7 @@ resource 'Apps (Experimental)', type: :api do
             'name'   => name2,
             'guid'   => app_model2.guid,
             'desired_state' => app_model2.desired_state,
+            'total_desired_instances' => 0,
             'environment_variables' => {},
             '_links' => {
               'self'      => { 'href' => "/v3/apps/#{app_model2.guid}" },
@@ -129,6 +131,8 @@ resource 'Apps (Experimental)', type: :api do
     let(:desired_droplet_guid) { 'a-droplet-guid' }
     let(:environment_variables) { { 'darkness' => 'ugly' } }
     let(:app_model) { VCAP::CloudController::AppModel.make(name: name, desired_droplet_guid: desired_droplet_guid, environment_variables: environment_variables) }
+    let(:process1) { VCAP::CloudController::App.make(space: space, instances: 1) }
+    let(:process2) { VCAP::CloudController::App.make(space: space, instances: 2) }
     let(:guid) { app_model.guid }
     let(:space_guid) { app_model.space_guid }
     let(:space) { VCAP::CloudController::Space.find(guid: space_guid) }
@@ -137,6 +141,9 @@ resource 'Apps (Experimental)', type: :api do
     before do
       space.organization.add_user user
       space.add_developer user
+
+      app_model.add_process(process1)
+      app_model.add_process(process2)
     end
 
     example 'Get an App' do
@@ -144,6 +151,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => name,
         'guid'   => guid,
         'desired_state' => app_model.desired_state,
+        'total_desired_instances' => 3,
         'environment_variables' => environment_variables,
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{guid}" },
@@ -191,6 +199,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => name,
         'guid'   => expected_guid,
         'desired_state' => 'STOPPED',
+        'total_desired_instances' => 0,
         'environment_variables' => environment_variables,
         '_links' => {
           'self'      => { 'href' => "/v3/apps/#{expected_guid}" },
@@ -253,6 +262,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => name,
         'guid'   => app_model.guid,
         'desired_state' => app_model.desired_state,
+        'total_desired_instances' => 0,
         'environment_variables' => environment_variables,
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
@@ -345,6 +355,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => app_model.name,
         'guid'   => app_model.guid,
         'desired_state'   => 'STARTED',
+        'total_desired_instances' => 0,
         'environment_variables' => {},
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
@@ -401,6 +412,7 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => app_model.name,
         'guid'   => app_model.guid,
         'desired_state'   => 'STOPPED',
+        'total_desired_instances' => 0,
         'environment_variables' => {},
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },

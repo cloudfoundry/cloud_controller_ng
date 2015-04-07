@@ -26,11 +26,12 @@ module VCAP::CloudController
 
     def app_hash(app)
       {
-        guid:                  app.guid,
-        name:                  app.name,
-        desired_state:         app.desired_state,
-        environment_variables: app.environment_variables || {},
-        _links:                build_links(app)
+        guid:                    app.guid,
+        name:                    app.name,
+        desired_state:           app.desired_state,
+        total_desired_instances: app.processes.map(&:instances).reduce(:+) || 0,
+        environment_variables:   app.environment_variables || {},
+        _links:                  build_links(app)
       }
     end
 
