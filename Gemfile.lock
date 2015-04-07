@@ -58,7 +58,6 @@ GEM
       parser (>= 2.2.0.pre.3, < 3.0)
     awesome_print (1.2.0)
     backports (3.6.4)
-    bcrypt (3.1.9)
     beefcake (1.0.0)
     builder (3.2.2)
     cf-message-bus (0.3.3)
@@ -325,7 +324,6 @@ DEPENDENCIES
   allowy
   astrolabe
   awesome_print
-  bcrypt
   cf-message-bus (~> 0.3.0)
   cf-registrar (~> 1.0.2)!
   cf-uaa-lib (~> 3.1.0)!

@@ -214,7 +214,6 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
 
    >>> activesupport-3.2.13
    >>> backports-3.3.2
-   >>> bcrypt-ruby-3.0.1
    >>> builder-3.2.2
    >>> ci_reporter-1.8.4
    >>> cloudfront-signer-2.1.0
@@ -383,75 +382,6 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
->>> bcrypt-ruby-3.0.1
-
-Copyright 2007-2011:
-
-* Coda Hale <coda.hale@gmail.com>
-
-C implementation of the BCrypt algorithm by Solar Designer and placed in the
-public domain.
-jBCrypt is Copyright (c) 2006 Damien Miller <djm@mindrot.org>.
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-ADDITIONAL LICENSE INFORMATION:
-
-> Public domain
-
-bcrypt-ruby-3.0.1.gem\data.tar.gz\data.tar\ext\mri\crypt_blowfish.c
-
-
-This code comes from John the Ripper password cracker, with reentrant
-and crypt(3) interfaces added, but optimizations specific to password
-cracking removed.
-
-Written by Solar Designer <solar at openwall.com> in 1998-2002 and
-placed in the public domain.  Quick self-test added in 2011 and also
-placed in the public domain.
-
-There's absolutely no warranty.
-
-It is my intent that you should be able to use this on your system,
-as a part of a software package, or anywhere else to improve security,
-ensure compatibility, or for any other purpose.  I would appreciate
-it if you give credit where it is due and keep your modifications in
-the public domain as well, but I don't require that in order to let
-you place this code and any modifications you make under a license
-of your choice.
-
-This implementation is compatible with OpenBSD bcrypt.c (version 2a)
-by Niels Provos <provos at citi.umich.edu>, and uses some of his
-ideas.  The password hashing algorithm was designed by David Mazieres
-<dm at lcs.mit.edu>.
-
-There's a paper on the algorithm that explains its design decisions:
-
-http://www.usenix.org/events/usenix99/provos.html
-
-Some of the tricks in BF_ROUND might be inspired by Eric Young's
-Blowfish library (I can't be sure if I would think of something if I
-hadn't seen his code).
 
 
 >>> builder-3.2.2

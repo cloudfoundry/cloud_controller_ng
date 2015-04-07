@@ -1,4 +1,3 @@
-require 'bcrypt'
 require 'sinatra'
 require 'sequel'
 require 'thin'
