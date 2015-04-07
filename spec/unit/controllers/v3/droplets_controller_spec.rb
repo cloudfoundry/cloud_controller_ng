@@ -100,21 +100,19 @@ module VCAP::CloudController
         expect(droplets_controller).to have_received(:check_write_permissions!)
       end
 
-          it 'returns a 204 NO CONTENT' do
-            response_code, response = droplets_controller.delete(droplet.guid)
-            expect(response_code).to eq 204
-            expect(response).to be_nil
-          end
+      it 'returns a 204 NO CONTENT' do
+        response_code, response = droplets_controller.delete(droplet.guid)
+        expect(response_code).to eq 204
+        expect(response).to be_nil
+      end
 
+      it 'checks for the proper roles' do
+        droplets_controller.delete(droplet.guid)
 
-        it 'checks for the proper roles' do
-          droplets_controller.delete(droplet.guid)
-
-          expect(membership).to have_received(:has_any_roles?).at_least(1).times
-          expect(membership).to have_received(:has_any_roles?).exactly(1).times.
-            with([Membership::SPACE_DEVELOPER], space.guid)
-        end
-
+        expect(membership).to have_received(:has_any_roles?).at_least(1).times
+        expect(membership).to have_received(:has_any_roles?).exactly(1).times.
+          with([Membership::SPACE_DEVELOPER], space.guid)
+      end
 
       context 'when the droplet does not exist' do
         before do
@@ -136,9 +134,9 @@ module VCAP::CloudController
           allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
           allow(membership).to receive(:has_any_roles?).with(
             [Membership::SPACE_DEVELOPER,
-              Membership::SPACE_MANAGER,
-              Membership::SPACE_AUDITOR,
-              Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+             Membership::SPACE_MANAGER,
+             Membership::SPACE_AUDITOR,
+             Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -156,9 +154,9 @@ module VCAP::CloudController
           allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
           allow(membership).to receive(:has_any_roles?).with(
             [Membership::SPACE_DEVELOPER,
-              Membership::SPACE_MANAGER,
-              Membership::SPACE_AUDITOR,
-              Membership::ORG_MANAGER], space.guid, org.guid).
+             Membership::SPACE_MANAGER,
+             Membership::SPACE_AUDITOR,
+             Membership::ORG_MANAGER], space.guid, org.guid).
             and_return(true)
           allow(membership).to receive(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space.guid).
             and_return(false)

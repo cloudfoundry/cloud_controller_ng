@@ -316,9 +316,9 @@ module VCAP::CloudController
             allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
             allow(membership).to receive(:has_any_roles?).with(
               [Membership::SPACE_DEVELOPER,
-                Membership::SPACE_MANAGER,
-                Membership::SPACE_AUDITOR,
-                Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
           end
 
           it 'returns a 404 ResourceNotFound error' do
@@ -337,9 +337,9 @@ module VCAP::CloudController
             allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
             allow(membership).to receive(:has_any_roles?).with(
               [Membership::SPACE_DEVELOPER,
-                Membership::SPACE_MANAGER,
-                Membership::SPACE_AUDITOR,
-                Membership::ORG_MANAGER], space.guid, org.guid).
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).
               and_return(true)
             allow(membership).to receive(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space.guid).
               and_return(false)
@@ -354,7 +354,6 @@ module VCAP::CloudController
             end
           end
         end
-
       end
 
       context 'when the process does not exist' do

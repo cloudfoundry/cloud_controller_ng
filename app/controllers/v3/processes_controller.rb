@@ -89,9 +89,9 @@ module VCAP::CloudController
 
     def can_read?(space_guid, org_guid)
       membership.has_any_roles?([Membership::SPACE_DEVELOPER,
-        Membership::SPACE_MANAGER,
-        Membership::SPACE_AUDITOR,
-        Membership::ORG_MANAGER], space_guid, org_guid)
+                                 Membership::SPACE_MANAGER,
+                                 Membership::SPACE_AUDITOR,
+                                 Membership::ORG_MANAGER], space_guid, org_guid)
     end
 
     def can_delete?(space_guid)
