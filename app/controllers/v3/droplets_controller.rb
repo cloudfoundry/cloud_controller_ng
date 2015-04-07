@@ -37,21 +37,32 @@ module VCAP::CloudController
       check_write_permissions!
 
       droplet_delete_fetcher = DropletDeleteFetcher.new
-      droplet_dataset        = droplet_delete_fetcher.fetch(guid)
-      droplet_not_found! if droplet_dataset.empty?
+      droplet, space, org = droplet_delete_fetcher.fetch(guid)
+      droplet_not_found! if droplet.nil? || !can_read?(space.guid, org.guid)
 
-      droplet_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], droplet_dataset.first.app.space_guid)
+      unauthorized! unless can_delete?(space.guid)
 
-      DropletDelete.new.delete(droplet_dataset)
+      DropletDelete.new.delete(droplet)
 
       [HTTP::NO_CONTENT]
     end
 
     def membership
-      Membership.new(current_user)
+      @membership ||= Membership.new(current_user)
     end
 
     private
+
+    def can_read?(space_guid, org_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER,
+        Membership::SPACE_MANAGER,
+        Membership::SPACE_AUDITOR,
+        Membership::ORG_MANAGER], space_guid, org_guid)
+    end
+
+    def can_delete?(space_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+    end
 
     def droplet_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found')

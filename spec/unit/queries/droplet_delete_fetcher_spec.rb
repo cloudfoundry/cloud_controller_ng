@@ -5,11 +5,13 @@ module VCAP::CloudController
   describe DropletDeleteFetcher do
     describe '#fetch' do
       let!(:droplet) { DropletModel.make }
+      let(:space) { droplet.space }
+      let(:org) { space.organization }
 
       subject(:droplet_delete_fetcher) { DropletDeleteFetcher.new }
 
-      it 'returns the droplet, nothing else' do
-        expect(droplet_delete_fetcher.fetch(droplet.guid)).to include(droplet)
+      it 'returns the droplet, space, and org' do
+        expect(droplet_delete_fetcher.fetch(droplet.guid)).to include(droplet, space, org)
       end
     end
   end

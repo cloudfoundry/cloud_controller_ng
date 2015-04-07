@@ -85,6 +85,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       let(:space) { Space.make }
+      let(:org) { space.organization }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
       let(:droplet) { DropletModel.make(app_guid: app_model.guid) }
 
@@ -99,37 +100,21 @@ module VCAP::CloudController
         expect(droplets_controller).to have_received(:check_write_permissions!)
       end
 
-      context 'when the droplet exists' do
-        context 'when a user can access a droplet' do
           it 'returns a 204 NO CONTENT' do
             response_code, response = droplets_controller.delete(droplet.guid)
             expect(response_code).to eq 204
             expect(response).to be_nil
           end
-        end
+
 
         it 'checks for the proper roles' do
           droplets_controller.delete(droplet.guid)
 
-          expect(membership).to have_received(:has_any_roles?).
+          expect(membership).to have_received(:has_any_roles?).at_least(1).times
+          expect(membership).to have_received(:has_any_roles?).exactly(1).times.
             with([Membership::SPACE_DEVELOPER], space.guid)
         end
 
-        context 'when the user cannot access the droplet' do
-          before do
-            allow(membership).to receive(:has_any_roles?).and_return(false)
-          end
-
-          it 'returns a 404 NotFound error' do
-            expect {
-              droplets_controller.delete(droplet.guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'ResourceNotFound'
-              expect(error.response_code).to eq 404
-            end
-          end
-        end
-      end
 
       context 'when the droplet does not exist' do
         before do
@@ -142,6 +127,49 @@ module VCAP::CloudController
           }.to raise_error do |error|
             expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the user cannot read the droplet' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER,
+              Membership::SPACE_MANAGER,
+              Membership::SPACE_AUDITOR,
+              Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            droplets_controller.delete(droplet.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the user can read but cannot write to the droplet' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER,
+              Membership::SPACE_MANAGER,
+              Membership::SPACE_AUDITOR,
+              Membership::ORG_MANAGER], space.guid, org.guid).
+            and_return(true)
+          allow(membership).to receive(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space.guid).
+            and_return(false)
+        end
+
+        it 'raises ApiError NotAuthorized' do
+          expect {
+            droplets_controller.delete(droplet.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
           end
         end
       end

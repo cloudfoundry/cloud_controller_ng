@@ -8,18 +8,17 @@ module VCAP::CloudController
     describe '#delete' do
       context 'when the droplet exists' do
         let!(:droplet) { DropletModel.make(droplet_hash: 'droplet_hash') }
-        let!(:droplet_dataset) { DropletModel.where(guid: droplet.guid) }
 
         it 'deletes the droplet record' do
           expect {
-            droplet_delete.delete(droplet_dataset)
+            droplet_delete.delete([droplet])
           }.to change { DropletModel.count }.by(-1)
           expect { droplet.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
         it 'schedules a job to the delete the blobstore item' do
           expect {
-            droplet_delete.delete(droplet_dataset)
+            droplet_delete.delete([droplet])
           }.to change {
             Delayed::Job.count
           }.by(1)
