@@ -1,11 +1,11 @@
 module VCAP::CloudController
   class ProcessDeleteFetcher
     def fetch(process_guid)
-      process_dataset = App.where(guid: process_guid).eager(:space)
-      return nil if process_dataset.empty?
+      process = App.where(guid: process_guid).eager(:space).all.first
+      return nil if process.nil?
 
-      space = process_dataset.first.space
-      [process_dataset, space]
+      org = process.space ? process.space.organization : nil
+      [process, process.space, org]
     end
   end
 end

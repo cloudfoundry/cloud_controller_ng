@@ -275,10 +275,14 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:app_model) { AppModel.make(space: space) }
       let(:process) { AppFactory.make(space: space, app: app_model) }
+      let(:org) { space.organization }
+      let(:process_delete_fetcher) { double(:process_delete_fetcher) }
 
       before do
         allow(processes_controller).to receive(:check_write_permissions!)
+        allow(processes_controller).to receive(:process_delete_fetcher).and_return(process_delete_fetcher)
         allow(processes_controller).to receive(:current_user).and_return(User.make)
+        allow(process_delete_fetcher).to receive(:fetch).and_return([process, space, org])
       end
 
       it 'checks for write permissions' do
@@ -295,6 +299,10 @@ module VCAP::CloudController
 
       context 'when the process exists' do
         context 'when a user can access a process' do
+          before do
+            allow(process_delete_fetcher).to receive(:fetch).and_return([process, space, org])
+            allow(membership).to receive(:has_any_roles?).and_return(true)
+          end
           it 'returns a 204 NO CONTENT' do
             response_code, response = processes_controller.delete(process.guid)
             expect(response_code).to eq 204
@@ -302,12 +310,18 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the user cannot access the process' do
+        context 'when the user cannot read the process' do
           before do
-            allow(membership).to receive(:has_any_roles?).and_return(false)
+            allow(process_delete_fetcher).to receive(:fetch).and_return([process, space, org])
+            allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+            allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+                Membership::SPACE_MANAGER,
+                Membership::SPACE_AUDITOR,
+                Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
           end
 
-          it 'returns a 404 NotFound error' do
+          it 'returns a 404 ResourceNotFound error' do
             expect {
               processes_controller.delete(process.guid)
             }.to raise_error do |error|
@@ -316,9 +330,38 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when the user can read but cannot write to the process' do
+          before do
+            allow(process_delete_fetcher).to receive(:fetch).and_return([process, space, org])
+            allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+            allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+                Membership::SPACE_MANAGER,
+                Membership::SPACE_AUDITOR,
+                Membership::ORG_MANAGER], space.guid, org.guid).
+              and_return(true)
+            allow(membership).to receive(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space.guid).
+              and_return(false)
+          end
+
+          it 'raises ApiError NotAuthorized' do
+            expect {
+              processes_controller.delete(process.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'NotAuthorized'
+              expect(error.response_code).to eq 403
+            end
+          end
+        end
+
       end
 
       context 'when the process does not exist' do
+        before do
+          allow(process_delete_fetcher).to receive(:fetch).and_return(nil)
+        end
+
         it 'raises an ApiError with a 404 code' do
           expect {
             processes_controller.delete('bad_guid')

@@ -6,16 +6,13 @@ module VCAP::CloudController
       @user_email = user_email
     end
 
-    def delete(process_dataset)
-      select_columns = [:guid, :app_guid, :name]
-      select_columns = select_columns.map do |column|
-        :"#{App.table_name}__#{column}"
-      end
+    def delete(processes)
+      processes = [processes] unless processes.is_a?(Array)
 
-      process_dataset.select(*select_columns).each do |process|
+      processes.each do |process|
         Repositories::Runtime::AppEventRepository.new.record_app_delete_request(process, space, user, user_email, true)
+        process.destroy
       end
-      process_dataset.destroy
     end
 
     private
