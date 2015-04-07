@@ -64,7 +64,7 @@ module VCAP::CloudController
 
     def build_audit_job(service_instance, deletion_job)
       event_method = service_instance.managed_instance? ? :record_service_instance_event : :record_user_provided_service_instance_event
-      Jobs::AuditEventJob.new(deletion_job, @services_event_repository, event_method, :delete, service_instance, {})
+      Jobs::AuditEventJob.new(deletion_job, @services_event_repository, event_method, :delete, service_instance.class, service_instance.guid, {})
     end
 
     def event_repository_opts

@@ -77,7 +77,8 @@ module VCAP::CloudController
         @services_event_repository,
         :record_service_plan_visibility_event,
         :delete,
-        service_plan_visibility,
+        service_plan_visibility.class,
+        service_plan_visibility.guid,
         {}
       )
 

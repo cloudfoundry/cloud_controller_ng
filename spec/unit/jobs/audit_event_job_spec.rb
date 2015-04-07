@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:params) { {} }
 
       subject(:audit_event_job) do
-        AuditEventJob.new(job, event_repository, event_creation_method, event_type, model, params)
+        AuditEventJob.new(job, event_repository, event_creation_method, event_type, Service, model.guid, params)
       end
       let(:job) { double(:job, perform: 'fake-perform', max_attempts: 1, reschedule_at: Time.now) }
 

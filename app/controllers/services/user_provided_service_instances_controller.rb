@@ -85,7 +85,8 @@ module VCAP::CloudController
         @services_event_repository,
         :record_user_provided_service_instance_event,
         :delete,
-        service_instance,
+        service_instance.class,
+        service_instance.guid,
         {}
       )
 

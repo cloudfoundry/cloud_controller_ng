@@ -1869,6 +1869,21 @@ module VCAP::CloudController
             expect(event.metadata).to eq({ 'request' => {} })
           end
 
+          it 'does not get stuck in progress if the service instance is delete synchronously before the job runs' do
+            delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
+            expect(last_response).to have_status_code 202
+
+            job_url = decoded_response['metadata']['url']
+
+            delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+            expect(last_response).to have_status_code 204
+
+            Delayed::Worker.new.work_off
+
+            get job_url, {}, admin_headers
+            expect(decoded_response['entity']['status']).to eq 'finished'
+          end
+
           context 'when the instance has an operation in progress' do
             it 'succeeds for exactly one of the requests' do
               delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
@@ -1916,7 +1931,6 @@ module VCAP::CloudController
           it 'it returns a CF-ServiceBrokerBadResponse error' do
             delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
 
-            # expect(last_response.status).to eq 409  old handeling, check to make sure we don't do this anymore
             expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
             expect(JSON.parse(last_response.body)['description']).to include 'service broker error'
           end
