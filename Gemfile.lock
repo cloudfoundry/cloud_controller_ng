@@ -255,7 +255,7 @@ GEM
     ruby_parser (3.6.3)
       sexp_processor (~> 4.1)
     safe_yaml (1.0.4)
-    sequel (4.17.0)
+    sequel (4.21.0)
     sexp_processor (4.4.4)
     simplecov (0.9.1)
       docile (~> 1.1.0)
