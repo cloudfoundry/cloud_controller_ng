@@ -40,6 +40,24 @@ module VCAP::CloudController
       %r{#{broker_url(broker)}/v2/service_instances/#{service_instance_guid}/service_bindings/#{service_binding_guid}}
     end
 
+    describe 'Dependencies' do
+      let(:object_renderer) { double :object_renderer }
+      let(:collection_renderer) { double :collection_renderer }
+      let(:dependencies) {{
+          object_renderer: object_renderer,
+          collection_renderer: collection_renderer
+      }}
+      let(:logger) { Steno.logger('vcap_spec') }
+
+      it 'contains services_event_repository in the dependencies' do
+        expect(described_class.dependencies).to include :services_event_repository
+      end
+
+      it 'injects the services_event_repository dependency' do
+        expect { described_class.new(nil, logger, nil, {}, nil, nil, dependencies) }.to raise_error KeyError, 'key not found: :services_event_repository'
+      end
+    end
+
     describe 'Permissions' do
       include_context 'permissions'
 
@@ -156,6 +174,37 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(201)
           service_key = ServiceKey.last
           expect(service_key.credentials).to eq(CREDENTIALS)
+        end
+
+        it 'creates an audit event after a service key created' do
+          req = {
+              name: 'fake-service-key',
+              service_instance_guid: instance.guid
+          }
+
+          email = 'email@example.com'
+          post '/v2/service_keys', req.to_json, json_headers(headers_for(developer, email: email))
+
+          service_key = ServiceKey.last
+
+          event = Event.first(type: 'audit.service_key.create')
+          expect(event.actor_type).to eq('user')
+          expect(event.timestamp).to be
+          expect(event.actor).to eq(developer.guid)
+          expect(event.actor_name).to eq(email)
+          expect(event.actee).to eq(service_key.guid)
+          expect(event.actee_type).to eq('service_key')
+          expect(event.actee_name).to eq('fake-service-key')
+          expect(event.space_guid).to eq(space.guid)
+          expect(event.space_id).to eq(space.id)
+          expect(event.organization_guid).to eq(space.organization.guid)
+
+          expect(event.metadata).to include({
+                                                'request' => {
+                                                    'service_instance_guid' => req[:service_instance_guid],
+                                                    'name' => req[:name]
+                                                }
+                                            })
         end
 
         context 'when attempting to create service key for an unbindable service' do
