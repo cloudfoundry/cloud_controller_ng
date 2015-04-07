@@ -17,7 +17,7 @@ module VCAP::CloudController
           errors.push VCAP::Errors::ApiError.new_from_details('SpaceDeletionFailed', dataset.first.name, error_message)
         end
 
-        AppDelete.new(user, user_email).delete(space_model.app_models_dataset)
+        AppDelete.new(user, user_email).delete(space_model.app_models)
 
         space_model.destroy if instance_delete_errors.empty?
         errors

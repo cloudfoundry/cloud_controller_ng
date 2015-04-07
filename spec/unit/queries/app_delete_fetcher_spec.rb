@@ -4,12 +4,24 @@ require 'queries/app_delete_fetcher'
 module VCAP::CloudController
   describe AppDeleteFetcher do
     describe '#fetch' do
-      let(:app_model) { AppModel.make }
+      let(:app) { AppModel.make }
+      let(:space) { app.space }
+      let(:org) { space.organization }
 
-      subject(:app_delete_fetcher) { AppDeleteFetcher.new }
+      it 'returns the desired app, space, org' do
+        returned_app, returned_space, returned_org = AppDeleteFetcher.new.fetch(app.guid)
+        expect(returned_app).to eq(app)
+        expect(returned_space).to eq(space)
+        expect(returned_org).to eq(org)
+      end
 
-      it 'returns the app, nothing else' do
-        expect(app_delete_fetcher.fetch(app_model.guid)).to include(app_model)
+      context 'when the app is not found' do
+        it 'returns nil' do
+          returned_app, returned_space, returned_org = AppDeleteFetcher.new.fetch('bogus-guid')
+          expect(returned_app).to be_nil
+          expect(returned_space).to be_nil
+          expect(returned_org).to be_nil
+        end
       end
     end
   end

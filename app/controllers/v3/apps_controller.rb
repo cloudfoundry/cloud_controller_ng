@@ -63,10 +63,10 @@ module VCAP::CloudController
       check_write_permissions!
       message = parse_and_validate_json(body)
 
-      app = AppFetcher.new.fetch(guid)
+      app, space, org = AppFetcher.new.fetch(guid)
 
-      app_not_found! if app.nil?
-      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
+      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+      unauthorized! unless can_update?(space.guid)
 
       app = AppUpdate.new(current_user, current_user_email).update(app, message)
 
@@ -82,12 +82,12 @@ module VCAP::CloudController
       check_write_permissions!
 
       app_delete_fetcher = AppDeleteFetcher.new
-      app_dataset        = app_delete_fetcher.fetch(guid)
+      app, space, org    = app_delete_fetcher.fetch(guid)
 
-      app_not_found! if app_dataset.empty?
-      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app_dataset.first.space_guid)
+      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+      unauthorized! unless can_delete?(space.guid)
 
-      AppDelete.new(current_user, current_user_email).delete(app_dataset)
+      AppDelete.new(current_user, current_user_email).delete(app)
 
       [HTTP::NO_CONTENT]
     end
@@ -96,9 +96,9 @@ module VCAP::CloudController
     def start(guid)
       check_write_permissions!
 
-      app = AppFetcher.new.fetch(guid)
-      app_not_found! if app.nil?
-      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
+      app, space, org = AppFetcher.new.fetch(guid)
+      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+      unauthorized! unless can_start?(space.guid)
 
       AppStart.new(current_user, current_user_email).start(app)
       [HTTP::OK, @app_presenter.present_json(app)]
@@ -110,9 +110,9 @@ module VCAP::CloudController
     def stop(guid)
       check_write_permissions!
 
-      app = AppFetcher.new.fetch(guid)
-      app_not_found! if app.nil?
-      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
+      app, space, org = AppFetcher.new.fetch(guid)
+      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+      unauthorized! unless can_stop?(space.guid)
 
       AppStop.new(current_user, current_user_email).stop(app)
       [HTTP::OK, @app_presenter.present_json(app)]
@@ -122,9 +122,9 @@ module VCAP::CloudController
     def env(guid)
       check_read_permissions!
 
-      app = AppFetcher.new.fetch(guid)
-      app_not_found! if app.nil?
-      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
+      app, space, org = AppFetcher.new.fetch(guid)
+      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+      unauthorized! unless can_read_envs?(space.guid)
 
       env_vars = app.environment_variables
       uris = app.routes.map(&:fqdn)
@@ -155,10 +155,37 @@ module VCAP::CloudController
     end
 
     def membership
-      Membership.new(current_user)
+      @membership ||= Membership.new(current_user)
     end
 
     private
+
+    def can_read?(space_guid, org_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER,
+                                 Membership::SPACE_MANAGER,
+                                 Membership::SPACE_AUDITOR,
+                                 Membership::ORG_MANAGER], space_guid, org_guid)
+    end
+
+    def can_update?(space_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+    end
+
+    def can_delete?(space_guid)
+      can_update?(space_guid)
+    end
+
+    def can_start?(space_guid)
+      can_update?(space_guid)
+    end
+
+    def can_stop?(space_guid)
+      can_update?(space_guid)
+    end
+
+    def can_read_envs?(space_guid)
+      can_update?(space_guid)
+    end
 
     def parse_and_validate_json(body)
       parsed = body && MultiJson.load(body)

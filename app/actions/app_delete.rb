@@ -8,29 +8,30 @@ module VCAP::CloudController
       @logger = Steno.logger('cc.action.app_delete')
     end
 
-    def delete(app_dataset)
-      app_dataset.each do |app_model|
-        PackageDelete.new.delete(packages_to_delete(app_model))
-        DropletDelete.new.delete(droplets_to_delete(app_model))
-        ProcessDelete.new(app_model.space, user, user_email).delete(processes_to_delete(app_model))
-        app_model.remove_all_routes
+    def delete(apps)
+      apps = [apps] unless apps.is_a?(Array)
 
-        @logger.info("Deleted app #{app_model.name} #{app_model.guid}")
+      apps.each do |app|
+        PackageDelete.new.delete(packages_to_delete(app))
+        DropletDelete.new.delete(droplets_to_delete(app))
+        ProcessDelete.new(app.space, user, user_email).delete(processes_to_delete(app))
+        app.remove_all_routes
+
+        @logger.info("Deleted app #{app.name} #{app.guid}")
         Event.create({
           type: 'audit.app.delete',
-          actee: app_model.guid,
+          actee: app.guid,
           actee_type: 'v3-app',
-          actee_name: app_model.name,
+          actee_name: app.name,
           actor: @user.guid,
           actor_type: 'user',
           actor_name: @user_email,
-          space_guid: app_model.space_guid,
-          organization_guid: app_model.space.organization.guid,
+          space_guid: app.space_guid,
+          organization_guid: app.space.organization.guid,
           timestamp: Sequel::CURRENT_TIMESTAMP,
         })
+        app.destroy
       end
-
-      app_dataset.destroy
     end
 
     private

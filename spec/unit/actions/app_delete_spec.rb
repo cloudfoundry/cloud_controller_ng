@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       let!(:app_model) { AppModel.make }
-      let!(:app_dataset) { AppModel.where(guid: app_model.guid) }
+      let!(:app_dataset) { app_model }
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
 
