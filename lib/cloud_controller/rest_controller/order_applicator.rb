@@ -9,9 +9,15 @@ module VCAP::CloudController::RestController
       validate!
 
       if descending?
-        @order_by.inject(dataset) { |ds, col| ds.order_more(Sequel.desc(col)) }
+        @order_by.inject(dataset) do |ds, col|
+          validate_column(ds, col)
+          ds.order_more(Sequel.desc(col))
+        end
       else
-        @order_by.inject(dataset) { |ds, col| ds.order_more(Sequel.asc(col)) }
+        @order_by.inject(dataset) do |ds, col|
+          validate_column(ds, col)
+          ds.order_more(Sequel.asc(col))
+        end
       end
     end
 
@@ -22,6 +28,14 @@ module VCAP::CloudController::RestController
         raise VCAP::Errors::ApiError.new_from_details(
                 'BadQueryParameter',
                 "order_direction must be 'asc' or 'desc' but was '#{@order_direction}'")
+      end
+    end
+
+    def validate_column(ds, col)
+      unless ds.columns.include?(col)
+        raise VCAP::Errors::ApiError.new_from_details(
+                'BadQueryParameter',
+                "invalid request parameter '#{col}' in order_by")
       end
     end
 

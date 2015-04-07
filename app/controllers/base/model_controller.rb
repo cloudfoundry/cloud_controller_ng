@@ -7,6 +7,32 @@ module VCAP::CloudController::RestController
 
     attr_reader :object_renderer, :collection_renderer
 
+    def initialize(config, logger, env, params, body, sinatra=nil, dependencies={})
+      validate_parameters(params)
+      super(config, logger, env, params, body, sinatra, dependencies)
+    end
+
+    def validate_parameters(params)
+      valid_params = {}
+      [
+        ['order-by',               String],
+
+      ].each do |key, klass|
+        val = params[key]
+        valid_params[key.underscore.to_sym] = Object.send(klass.name, val) if val
+      end
+
+      if valid_params[:order_by]
+        valid_params[:order_by].split(',').each do |col|
+          unless self.class.query_parameters.to_a.include?(col)
+            raise VCAP::Errors::ApiError.new_from_details(
+                'BadQueryParameter',
+                "invalid request parameter '#{col}' in order_by")
+          end
+        end
+      end
+    end
+
     def inject_dependencies(dependencies)
       super
       @object_renderer = dependencies.fetch(:object_renderer)

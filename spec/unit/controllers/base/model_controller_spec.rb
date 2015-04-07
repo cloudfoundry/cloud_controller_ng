@@ -50,6 +50,27 @@ module VCAP::CloudController
       end
     end
 
+    describe '#validate_parameters' do
+      before do
+        dep = { object_renderer: nil, collection_renderer: nil }
+        @model_controller = VCAP::CloudController::TestModelsController.new(
+          nil, FakeLogger.new([]), nil, {}, nil, nil, dep
+        )
+      end
+
+      context 'when order-by include query parameter' do
+        it 'do not raises an error' do
+          expect { @model_controller.validate_parameters({ 'order-by' => 'unique_value,created_at' }) }.not_to raise_error
+        end
+      end
+
+      context 'when order-by include non query parameter' do
+        it 'raises an error which makes sense to an api client' do
+          expect { @model_controller.validate_parameters({ 'order-by' => 'unique_value,non_query_parameter' }) }.to raise_error(VCAP::Errors::ApiError)
+        end
+      end
+    end
+
     describe 'common model controller behavior' do
       before do
         get '/v2/test_models', '', headers

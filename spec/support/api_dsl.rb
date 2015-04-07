@@ -199,6 +199,7 @@ module ApiDsl
         request_parameter :q, query_parameter_description, { html: true, example_values: examples }
       end
       pagination_parameters
+      request_parameter :'order-by', 'comma-delimited list of query parameters for sorting', deprecated: false
       request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N.", deprecated: true
       request_parameter :'orphan-relations', '0 - de-duplicate object entries in response', deprecated: true
       request_parameter :'exclude-relations', 'comma-delimited list of relations to drop from response', deprecated: true

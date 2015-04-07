@@ -29,18 +29,18 @@ module VCAP::CloudController::RestController
       end
 
       context 'when order_by is specified' do
-        let(:opts) { { order_by: 'field' } }
+        let(:opts) { { order_by: 'created_at' } }
 
         it 'orders by the specified column' do
-          expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `field` ASC')
+          expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `created_at` ASC')
         end
       end
 
       context 'when order_by has multiple values' do
-        let(:opts) { { order_by: ['field', 'id'] } }
+        let(:opts) { { order_by: ['created_at', 'id'] } }
 
         it 'orders by the specified column' do
-          expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `field` ASC, `id` ASC')
+          expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `created_at` ASC, `id` ASC')
         end
       end
 
@@ -53,16 +53,32 @@ module VCAP::CloudController::RestController
         end
 
         context 'when order_by has multiple values' do
-          let(:order_by) { { order_by: ['field', 'id'] } }
+          let(:order_by) { { order_by: ['created_at', 'id'] } }
 
           it 'orders by the specified column' do
-            expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `field` DESC, `id` DESC')
+            expect(sql).to eq(normalize_quotes 'SELECT * FROM `test_models` ORDER BY `created_at` DESC, `id` DESC')
           end
         end
       end
 
       context 'when order_direction is specified with an invalid value' do
         let(:opts) { { order_direction: 'decs' } }
+
+        it 'raises an error which makes sense to an api client' do
+          expect { sql }.to raise_error(VCAP::Errors::ApiError)
+        end
+      end
+
+      context 'when order_by is specified with an invalid column' do
+        let(:opts) { { order_by: ['invalid_col', 'id'] } }
+
+        it 'raises an error which makes sense to an api client' do
+          expect { sql }.to raise_error(VCAP::Errors::ApiError)
+        end
+      end
+
+      context 'when order_by is specified with an empty column' do
+        let(:opts) { { order_by: ['id', '', 'created_at'] } }
 
         it 'raises an error which makes sense to an api client' do
           expect { sql }.to raise_error(VCAP::Errors::ApiError)
