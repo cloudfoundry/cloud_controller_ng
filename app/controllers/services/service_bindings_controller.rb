@@ -7,6 +7,7 @@ module VCAP::CloudController
       to_one :app
       to_one :service_instance
       attribute :binding_options, Hash, default: {}
+      attribute :parameters, Hash, default: nil
     end
 
     get path,      :enumerate

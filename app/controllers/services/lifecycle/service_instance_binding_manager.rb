@@ -18,12 +18,12 @@ module VCAP::CloudController
       raise ServiceInstanceNotBindable unless service_instance.bindable?
       raise AppNotFound unless App.first(guid: request_attrs['app_guid'])
 
-      service_binding = ServiceBinding.new(request_attrs)
+      service_binding = ServiceBinding.new(request_attrs.except('parameters'))
       @access_validator.validate_access(:create, service_binding)
       raise Sequel::ValidationFailed.new(service_binding) unless service_binding.valid?
 
       lock_service_instance_by_blocking(service_instance) do
-        attributes_to_update = service_binding.client.bind(service_binding)
+        attributes_to_update = service_binding.client.bind(service_binding, request_attrs: request_attrs)
         begin
           service_binding.set_all(attributes_to_update)
           service_binding.save

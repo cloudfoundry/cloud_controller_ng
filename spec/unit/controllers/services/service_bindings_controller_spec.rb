@@ -12,7 +12,8 @@ module VCAP::CloudController
         expect(described_class).to have_creatable_attributes({
           binding_options: { type: 'hash', default: {} },
           app_guid: { type: 'string', required: true },
-          service_instance_guid: { type: 'string', required: true }
+          service_instance_guid: { type: 'string', required: true },
+          parameters: { type: 'hash', required: false }
         })
       end
 
@@ -20,7 +21,8 @@ module VCAP::CloudController
         expect(described_class).to have_updatable_attributes({
           binding_options: { type: 'hash' },
           app_guid: { type: 'string' },
-          service_instance_guid: { type: 'string' }
+          service_instance_guid: { type: 'string' },
+          parameters: { type: 'hash', required: false }
         })
       end
     end
@@ -158,14 +160,15 @@ module VCAP::CloudController
     end
 
     describe 'create' do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:app_obj) { AppFactory.make(space: space) }
+
       context 'for user provided instances' do
-        let(:space) { Space.make }
-        let(:developer) { make_developer_for_space(space) }
-        let(:application) { AppFactory.make(space: space) }
         let(:service_instance) { UserProvidedServiceInstance.make(space: space) }
         let(:params) do
           {
-            'app_guid' => application.guid,
+            'app_guid' => app_obj.guid,
             'service_instance_guid' => service_instance.guid
           }
         end
@@ -178,26 +181,32 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(201)
           expect(ServiceBinding.last.binding_options).to eq(binding_options)
         end
+
+        context 'when the client passes arbitrary params' do
+          it 'does not use the arbitrary params' do
+            body = params.merge(parameters: { 'key' => 'value' })
+            post '/v2/service_bindings', body.to_json, headers_for(developer)
+            expect(last_response).to have_status_code 201
+          end
+        end
       end
 
       context 'for managed instances' do
-        let(:instance) { ManagedServiceInstance.make }
-        let(:space) { instance.space }
-        let(:service) { instance.service }
-        let(:developer) { make_developer_for_space(space) }
-        let(:app_obj) { AppFactory.make(space: space) }
+        let(:broker) { instance.service.service_broker }
+        let(:instance) { ManagedServiceInstance.make(space: space) }
+        let(:req) do
+          {
+            app_guid: app_obj.guid,
+            service_instance_guid: instance.guid
+          }
+        end
 
         before do
-          stub_requests(service.service_broker)
+          stub_requests(broker)
         end
 
         it 'binds a service instance to an app' do
-          req = {
-            app_guid: app_obj.guid,
-            service_instance_guid: instance.guid
-          }.to_json
-
-          post '/v2/service_bindings', req, json_headers(headers_for(developer))
+          post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer))
           expect(last_response).to have_status_code(201)
 
           binding = ServiceBinding.last
@@ -205,11 +214,6 @@ module VCAP::CloudController
         end
 
         it 'creates an audit event upon binding' do
-          req = {
-            app_guid: app_obj.guid,
-            service_instance_guid: instance.guid
-          }
-
           email = 'email@example.com'
           post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer, email: email))
 
@@ -280,10 +284,28 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the client provides arbitrary parameters' do
+          let(:parameters) { { 'key' => 'value' } }
+          let(:req) do
+            {
+              app_guid: app_obj.guid,
+              service_instance_guid: instance.guid,
+              parameters: parameters
+            }
+          end
+
+          it 'sends the parameters in the request to the broker' do
+            post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer))
+            expect(last_response).to have_status_code(201)
+            binding_endpoint = %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
+            expect(a_request(:put, binding_endpoint).with(body: hash_including(parameters: parameters))).to have_been_made
+          end
+        end
+
         context 'when attempting to bind to an unbindable service' do
           before do
-            service.bindable = false
-            service.save
+            instance.service.bindable = false
+            instance.service.save
 
             req = {
               app_guid: app_obj.guid,
@@ -332,10 +354,6 @@ module VCAP::CloudController
               }.to_json
             end
 
-            before do
-              service.save
-            end
-
             it 'returns CF-ServiceInstanceNotFound error' do
               post '/v2/service_bindings', req, json_headers(headers_for(developer))
 
@@ -381,7 +399,6 @@ module VCAP::CloudController
           end
 
           it 'does not tell the service broker to bind the service' do
-            broker = service.service_broker
             post '/v2/service_bindings', request_body, json_headers(headers_for(developer))
 
             expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
@@ -504,6 +521,61 @@ module VCAP::CloudController
                 expect(instance.refresh.last_operation.type).to eq 'create'
               end
             end
+          end
+        end
+      end
+
+      context 'for v1 service instances' do
+        let(:fake_client) { double(:v1_client) }
+        before do
+          allow(fake_client).to receive(:bind).and_return(
+            {
+               'service_id' => Sham.guid,
+               'configuration' => 'CONFIGURATION',
+               'credentials' => CREDENTIALS,
+             }
+          )
+          allow(VCAP::Services::ServiceBrokers::V1::HttpClient).to receive(:new).and_return(fake_client)
+        end
+
+        let(:service_instance) { ManagedServiceInstance.make(:v1, space: space) }
+        let(:req) do
+          {
+            service_instance_guid: service_instance.guid,
+            app_guid: app_obj.guid
+          }
+        end
+
+        it 'binds a service instance to an app' do
+          post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer))
+          expect(last_response).to have_status_code(201)
+
+          binding = ServiceBinding.last
+          expect(binding.credentials).to eq(CREDENTIALS)
+        end
+
+        context 'and the client provides arbitrary params' do
+          let(:req) do
+            {
+              service_instance_guid: service_instance.guid,
+              app_guid: app_obj.guid,
+              parameters: { 'key' => 'value' }
+            }
+          end
+
+          it 'ignores arbitrary params' do
+            post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer, email: 'email@example.com'))
+            expect(last_response).to have_status_code(201)
+
+            label_with_version = "#{service_instance.service.label}-#{service_instance.service.version}"
+
+            expect(fake_client).to have_received(:bind).with(
+               service_instance.broker_provided_id,
+               app_obj.guid,
+               label_with_version,
+               'email@example.com',
+               ServiceBinding.last.binding_options
+             )
           end
         end
       end

@@ -87,7 +87,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
-    def bind(binding)
+    def bind(binding, request_attrs: {})
       path = service_binding_resource_path(binding)
       attr = {
           service_id:  binding.service.broker_provided_id,
@@ -96,6 +96,8 @@ module VCAP::Services::ServiceBrokers::V2
       if binding.respond_to? 'app_guid'
         attr[:app_guid] = binding.app_guid
       end
+
+      attr[:parameters] = request_attrs['parameters'] if request_attrs['parameters']
 
       response = @http_client.put(path, attr)
       parsed_response = @response_parser.parse(:put, path, response)

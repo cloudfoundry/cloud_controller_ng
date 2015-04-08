@@ -45,7 +45,7 @@ module VCAP::Services
       end
     end
 
-    def bind(binding)
+    def bind(binding, request_attrs: {})
       instance = binding.service_instance
       service = instance.service_plan.service
 
