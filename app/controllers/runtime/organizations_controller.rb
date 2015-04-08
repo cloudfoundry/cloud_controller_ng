@@ -52,7 +52,6 @@ module VCAP::CloudController
       logger.debug('cc.enumerate.related', guid: guid, association: 'user_roles')
 
       org = find_guid_and_validate_access(:read, guid)
-      users_dataset = OrganizationUserRolesFetcher.new.fetch(org)
 
       associated_controller = UsersController
       associated_path = "#{self.class.url_for_guid(guid)}/user_roles"
@@ -60,7 +59,7 @@ module VCAP::CloudController
 
       @user_roles_collection_renderer.render_json(
         associated_controller,
-        users_dataset,
+        OrganizationUserRolesFetcher.new.fetch(org),
         associated_path,
         opts,
         {},

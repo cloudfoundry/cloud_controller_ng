@@ -142,6 +142,32 @@ resource 'Spaces', type: [:api, :legacy_api] do
       nested_model_remove :auditor, :space
     end
 
+    describe 'User Roles' do
+      let(:everything_user) { VCAP::CloudController::User.make }
+
+      before do
+        space.organization.add_user(everything_user)
+        space.add_manager(everything_user)
+        space.add_auditor(everything_user)
+        space.add_developer(everything_user)
+
+        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ everything_user.guid => 'everything@example.com' })
+      end
+
+      get '/v2/spaces/:guid/user_roles' do
+        pagination_parameters
+
+        example 'Retrieving the roles of all Users in the Space' do
+          client.get "/v2/spaces/#{guid}/user_roles?results-per-page=1&page=1", {}, headers
+
+          expect(status).to eq(200)
+          expect(parsed_response['resources'].length).to eq(1)
+          expect(parsed_response['resources'][0]['entity']['space_roles']).
+            to include('space_developer', 'space_manager', 'space_auditor')
+        end
+      end
+    end
+
     describe 'Apps' do
       before do
         VCAP::CloudController::AppFactory.make(space: space)

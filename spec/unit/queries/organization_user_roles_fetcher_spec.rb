@@ -27,6 +27,7 @@ module VCAP::CloudController
       it 'should return a list of all users with their associated roles' do
         users = OrganizationUserRolesFetcher.new.fetch(org)
         expect(users).to include(everything_user, manager, auditor, biller, user)
+        expect(users).not_to include(not_a_user)
       end
     end
   end

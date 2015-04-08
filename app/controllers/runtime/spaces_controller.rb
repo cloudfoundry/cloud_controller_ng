@@ -1,9 +1,10 @@
 require 'actions/space_delete'
+require 'queries/space_user_roles_fetcher'
 
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
-      [:space_event_repository]
+      [:space_event_repository, :username_and_roles_populating_collection_renderer]
     end
 
     define_attributes do
@@ -39,6 +40,26 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @space_event_repository = dependencies.fetch(:space_event_repository)
+      @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
+    end
+
+    get '/v2/spaces/:guid/user_roles', :enumerate_user_roles
+    def enumerate_user_roles(guid)
+      logger.debug('cc.enumerate.related', guid: guid, association: 'user_roles')
+
+      space = find_guid_and_validate_access(:read, guid)
+
+      associated_controller = UsersController
+      associated_path = "#{self.class.url_for_guid(guid)}/user_roles"
+      opts = @opts.merge(transform_opts: { space_id: space.id })
+
+      @user_roles_collection_renderer.render_json(
+        associated_controller,
+        SpaceUserRolesFetcher.new.fetch(space),
+        associated_path,
+        opts,
+        {},
+      )
     end
 
     get '/v2/spaces/:guid/services', :enumerate_services

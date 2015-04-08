@@ -174,6 +174,24 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/spaces/:guid/user_roles' do
+      context 'for an space that does not exist' do
+        it 'returns a 404' do
+          get '/v2/spaces/foobar/user_roles', {}, admin_headers
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      context 'when the user does not have permissions to read' do
+        let(:user) { User.make }
+
+        it 'returns a 403' do
+          get "/v2/spaces/#{space_one.guid}/user_roles", {}, headers_for(user)
+          expect(last_response.status).to eq(403)
+        end
+      end
+    end
+
     describe 'GET /v2/spaces/:guid/service_instances' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
