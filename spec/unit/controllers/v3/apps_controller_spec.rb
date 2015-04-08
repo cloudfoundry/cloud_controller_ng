@@ -93,6 +93,31 @@ module VCAP::CloudController
     end
 
     describe '#show' do
+      let(:app_model) { AppModel.make }
+      let(:space) { app_model.space }
+      let(:org) { space.organization }
+      let(:guid) { app_model.guid }
+
+      before do
+        allow(apps_controller).to receive(:check_read_permissions!)
+      end
+
+      it 'checks for read permissions' do
+        apps_controller.show(guid)
+
+        expect(apps_controller).to have_received(:check_read_permissions!)
+      end
+
+      it 'returns a 200' do
+        response_code, _ = apps_controller.show(guid)
+        expect(response_code).to eq 200
+      end
+
+      it 'returns the app' do
+        _, response = apps_controller.show(guid)
+        expect(response).to eq(app_response)
+      end
+
       context 'when the app does not exist' do
         let(:guid) { 'ABC123' }
 
@@ -106,18 +131,36 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app does exist' do
-        let(:app_model) { AppModel.make }
-        let(:guid) { app_model.guid }
+      context 'when the user does not have cc read scope' do
+        it 'raises an ApiError with a 403 code' do
+          expect(apps_controller).to receive(:check_read_permissions!).
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+          expect {
+            apps_controller.show(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+        end
+      end
 
-        it 'returns a 200' do
-          response_code, _ = apps_controller.show(guid)
-          expect(response_code).to eq 200
+      context 'when the user cannot read the app' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+                Membership::SPACE_MANAGER,
+                Membership::SPACE_AUDITOR,
+                Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
         end
 
-        it 'returns the app' do
-          _, response = apps_controller.show(guid)
-          expect(response).to eq(app_response)
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            apps_controller.show(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
         end
       end
     end

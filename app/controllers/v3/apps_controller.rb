@@ -37,8 +37,11 @@ module VCAP::CloudController
 
     get '/v3/apps/:guid', :show
     def show(guid)
-      app = @app_handler.show(guid, @access_context)
-      app_not_found! if app.nil?
+      check_read_permissions!
+
+      app, space, org = AppFetcher.new.fetch(guid)
+
+      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
 
       [HTTP::OK, @app_presenter.present_json(app)]
     end
