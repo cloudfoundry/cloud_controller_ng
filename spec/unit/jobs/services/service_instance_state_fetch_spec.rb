@@ -49,7 +49,8 @@ module VCAP::CloudController
           }
         end
         let(:poll_interval) { 60.second }
-        let(:max_attempts) { 25 }
+        let(:max_duration) { 10088 }
+        let(:deprecated_attempts_remaining) { nil }
         let(:request_attrs) do
           {
             dummy_data: 'dummy_data'
@@ -64,7 +65,7 @@ module VCAP::CloudController
             service_event_repository_opts,
             request_attrs,
             poll_interval,
-            max_attempts,
+            deprecated_attempts_remaining,
           )
         end
 
@@ -75,26 +76,19 @@ module VCAP::CloudController
 
         describe '#initialize' do
           let(:default_polling_interval) { 120 }
-          let(:default_max_poll_attempts) { 25 }
+          let(:default_max_poll_attempts) { 10080 }
 
           before do
             allow(VCAP::CloudController::Config).to receive(:config).and_return({
               broker_client_default_async_poll_interval_seconds: default_polling_interval,
-              broker_client_max_async_poll_attempts: default_max_poll_attempts,
+              broker_client_max_async_poll_duration_minutes: default_max_poll_attempts,
             })
-          end
-
-          context 'when the caller provides a maximum number of attempts' do
-            let(:max_attempts) { 100 }
-
-            it 'should use that number of attempts' do
-              expect(job.attempts_remaining).to eq(100)
-            end
           end
 
           context 'when the caller does not provide the maximum number of attempts' do
             it 'should the default configuration value' do
-              expect(job.attempts_remaining).to eq(default_max_poll_attempts)
+              Timecop.freeze(Time.now)
+              expect(job.end_timestamp).to eq(Time.now + default_max_poll_attempts.minutes)
             end
           end
 
@@ -344,20 +338,18 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the job has fetched for more than the max attempts' do
+          context 'when the job has fetched for more than the max poll duration' do
             let(:state) { 'in progress' }
 
             before do
               run_job(job)
-              24.times do |i|
-                Timecop.freeze(Time.now + 1.hour * (i + 1)) do
-                  expect(Delayed::Worker.new.work_off).to eq([1, 0])
-                end
+              Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+                expect(Delayed::Worker.new.work_off).to eq([1, 0])
               end
             end
 
             it 'should not enqueue another fetch job' do
-              Timecop.freeze(Time.now + 26.hour) do
+              Timecop.freeze(Time.now + max_duration.minutes + 1.minute) do
                 expect(Delayed::Worker.new.work_off).to eq([0, 0])
               end
             end
@@ -369,17 +361,54 @@ module VCAP::CloudController
               expect(service_instance.last_operation.description).to eq('Service Broker failed to provision within the required time.')
             end
           end
+
+          context 'when enqueuing the job would exceed the max poll duration by the time it runs' do
+            let(:state) { 'in progress' }
+
+            it 'should not enqueue another fetch job' do
+              Timecop.freeze(job.end_timestamp - (job.poll_interval * 0.5) )
+              run_job(job)
+
+              Timecop.freeze(Time.now + job.poll_interval * 2)
+              expect(Delayed::Worker.new.work_off).to eq([0, 0])
+            end
+          end
+
+          context 'when the job was migrated before the addition of end_timestamp' do
+            let(:state) { 'in progress' }
+
+            before do
+              job.instance_variable_set(:@end_timestamp, nil) # terrible
+            end
+
+            it 'should compute the end_timestamp based on the current time' do
+              Timecop.freeze(Time.now)
+
+              run_job(job)
+
+              # should run enqueued job
+              Timecop.travel(Time.now + max_duration.minutes - 1.minute) do
+                expect(Delayed::Worker.new.work_off).to eq([1, 0])
+              end
+
+              # should not run enqueued job
+              Timecop.travel(Time.now + max_duration.minutes) do
+                expect(Delayed::Worker.new.work_off).to eq([0, 0])
+              end
+            end
+
+            it 'should enqueue another fetch job' do
+              run_job(job)
+
+              expect(Delayed::Job.count).to eq 1
+              expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceInstanceStateFetch)
+            end
+          end
         end
 
         describe '#job_name_in_configuration' do
           it 'returns the name of the job' do
             expect(job.job_name_in_configuration).to eq(:service_instance_state_fetch)
-          end
-        end
-
-        describe '#max_attempts' do
-          it 'returns 1' do
-            expect(job.max_attempts).to eq(1)
           end
         end
       end

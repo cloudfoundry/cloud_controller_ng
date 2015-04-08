@@ -12,7 +12,8 @@ module VCAP::CloudController
           @service_instance_guid = service_instance_guid
           @services_event_repository_opts = services_event_repository_opts
           @request_attrs = request_attrs
-          @attempts_remaining = attempts_remaining || VCAP::CloudController::Config.config[:broker_client_max_async_poll_attempts]
+          # TODO: remove that line below
+          @attempts_remaining = attempts_remaining || VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes]
 
           default_poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds]
           poll_interval ||= default_poll_interval
@@ -35,8 +36,7 @@ module VCAP::CloudController
         end
 
         def retry_state_updater
-          @attempts_remaining -= 1
-          if @attempts_remaining == 0
+          if Time.now + @poll_interval > end_timestamp
             ManagedServiceInstance.first(guid: service_instance_guid).save_with_operation(
               last_operation: {
                 state: 'failed',
@@ -54,6 +54,10 @@ module VCAP::CloudController
 
         def max_attempts
           1
+        end
+
+        def end_timestamp
+          @end_timestamp ||= Time.now + VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes].minutes
         end
       end
     end
