@@ -30,7 +30,7 @@ module VCAP::CloudController
       to_many :routes
     end
 
-    query_parameters :name, :space_guid, :organization_guid, :diego
+    query_parameters :name, :space_guid, :organization_guid, :diego, :stack_guid
 
     get '/v2/apps/:guid/env', :read_env
     def read_env(guid)

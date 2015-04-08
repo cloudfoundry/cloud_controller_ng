@@ -10,6 +10,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:space_guid) }
       it { expect(described_class).to be_queryable_by(:organization_guid) }
       it { expect(described_class).to be_queryable_by(:diego) }
+      it { expect(described_class).to be_queryable_by(:stack_guid) }
     end
 
     describe 'query by org_guid' do
@@ -18,6 +19,20 @@ module VCAP::CloudController
         get "/v2/apps?q=organization_guid:#{app_obj.organization.guid}", {}, json_headers(admin_headers)
         expect(last_response.status).to eq(200)
         expect(decoded_response['resources'][0]['entity']['name']).to eq(app_obj.name)
+      end
+    end
+
+    describe 'querying by stack guid' do
+      let(:stack1) { Stack.make }
+      let(:stack2) { Stack.make }
+      let!(:app1) { App.make(stack_id: stack1.id) }
+      let!(:app2) { App.make(stack_id: stack2.id) }
+
+      it 'filters apps by stack guid' do
+        get "/v2/apps?q=stack_guid:#{stack1.guid}", {}, json_headers(admin_headers)
+        expect(last_response.status).to eq(200)
+        expect(decoded_response['resources'].length).to eq(1)
+        expect(decoded_response['resources'][0]['entity']['name']).to eq(app1.name)
       end
     end
 

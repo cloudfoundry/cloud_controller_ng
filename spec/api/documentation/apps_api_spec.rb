@@ -24,7 +24,7 @@ resource 'Apps', type: [:api, :legacy_api] do
 
     field :disk_quota, 'The maximum amount of disk available to an instance of an app. In megabytes.', example_values: [1_204, 2_048]
     field :space_guid, 'The guid of the associated space.', required: opts[:required], example_values: [Sham.guid]
-    field :stack_guid, 'The guid of the associated stack.', default: 'Uses the default system stack.'
+    field :stack_guid, 'The guid of the associated stack.', default: 'Uses the default system stack.', example_values: [Sham.guid]
     field :state, 'The current desired state of the app. One of STOPPED or STARTED.', default: 'STOPPED', valid_values: %w(STOPPED STARTED)
     field :detected_start_command, 'The command detected by the buildpack during staging.', read_only: true
     field :command, "The command to start an app after it is staged, maximum length: 4096 (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT')."
