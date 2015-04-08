@@ -37,22 +37,18 @@ module VCAP::CloudController
     end
 
     def delete_service_instance_binding(service_binding, params)
-      service_instance = ServiceInstance.first(guid: service_binding.service_instance_guid)
+      delete_action = ServiceBindingDelete.new
+      deletion_job = Jobs::DeleteActionJob.new(ServiceBinding, service_binding.guid, delete_action)
+      delete_and_audit_job = Jobs::AuditEventJob.new(
+        deletion_job,
+        @services_event_repository,
+        :record_service_binding_event,
+        :delete,
+        service_binding.class,
+        service_binding.guid
+      )
 
-      lock_service_instance_by_blocking(service_instance) do
-        delete_action = ServiceBindingDelete.new
-        deletion_job = Jobs::DeleteActionJob.new(ServiceBinding, service_binding.guid, delete_action)
-        delete_and_audit_job = Jobs::AuditEventJob.new(
-          deletion_job,
-          @services_event_repository,
-          :record_service_binding_event,
-          :delete,
-          service_binding.class,
-          service_binding.guid
-        )
-
-        enqueue_deletion_job(delete_and_audit_job, params)
-      end
+      enqueue_deletion_job(delete_and_audit_job, params)
     end
 
     private

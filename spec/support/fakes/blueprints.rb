@@ -167,7 +167,7 @@ module VCAP::CloudController
 
   ServiceInstanceOperation.blueprint do
     type                      { 'create' }
-    state                     { 'in progress' }
+    state                     { 'succeeded' }
     description               { 'description goes here' }
     updated_at                { Time.now.utc }
   end
