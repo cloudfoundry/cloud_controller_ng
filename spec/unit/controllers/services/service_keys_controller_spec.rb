@@ -29,6 +29,8 @@ module VCAP::CloudController
     def stub_requests(broker)
       stub_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
           to_return(status: bind_status, body: bind_body.to_json)
+      stub_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+          to_return(status: unbind_status, body: unbind_body.to_json)
     end
 
     def bind_url_regex(opts={})
@@ -341,6 +343,30 @@ module VCAP::CloudController
         get '/v2/service_keys?q=name:non-exist-key-name', {}, json_headers(headers_for(developer))
         expect(last_response.status).to eql(200)
         expect(decoded_response.fetch('total_results')).to eq(0)
+      end
+    end
+
+    describe 'DELETE', '/v2/service_keys/:service_key_guid' do
+      let(:service_key) { ServiceKey.make }
+      let(:developer) { make_developer_for_space(service_key.service_instance.space) }
+
+      before do
+        stub_requests(service_key.service_instance.service.service_broker)
+      end
+
+      it 'returns ServiceKeyNotFound error if there is no such key' do
+        delete '/v2/service_keys/non-exist-service-key', '', json_headers(headers_for(developer))
+        expect(last_response).to have_status_code 500
+        expect(decoded_response.fetch('code')).to eq(10001)
+      end
+
+      it 'deletes the service key' do
+        expect {
+          delete "/v2/service_keys/#{service_key.guid}", '', json_headers(headers_for(developer))
+        }.to change(ServiceKey, :count).by(-1)
+        expect(last_response).to have_status_code 204
+        expect(last_response.body).to be_empty
+        expect { service_key.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
     end
   end

@@ -1,3 +1,5 @@
+require 'actions/service_key_delete'
+
 module VCAP::CloudController
   class ServiceKeyManager
     class ServiceInstanceNotFound < StandardError; end
@@ -30,6 +32,12 @@ module VCAP::CloudController
       end
 
       service_key
+    end
+
+    def delete_service_key(service_key)
+      delete_action = ServiceKeyDelete.new
+      deletion_job = Jobs::DeleteActionJob.new(ServiceKey, service_key.guid, delete_action)
+      deletion_job.perform
     end
 
     private
