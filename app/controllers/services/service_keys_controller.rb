@@ -10,6 +10,15 @@ module VCAP::CloudController
     get path,      :enumerate
     query_parameters :name, :service_instance_guid
 
+    def self.dependencies
+      [:services_event_repository]
+    end
+
+    def inject_dependencies(dependencies)
+      super
+      @services_event_repository = dependencies.fetch(:services_event_repository)
+    end
+
     post path, :create
     def create
       @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
@@ -17,6 +26,9 @@ module VCAP::CloudController
       raise InvalidRequest unless request_attrs
       service_key_manager = ServiceKeyManager.new(@services_event_repository, self, logger)
       service_key = service_key_manager.create_service_key(@request_attrs)
+
+      @services_event_repository.record_service_key_event(:create, service_key)
+
       [HTTP::CREATED,
        { 'Location' => "#{self.class.path}/#{service_key.guid}" },
        object_renderer.render_json(self.class, service_key, @opts)
