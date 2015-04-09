@@ -75,12 +75,6 @@ module VCAP::CloudController
             binder_lock.unlock_and_revert_operation!
             expect(binder_lock.needs_unlock?).to be_falsey
           end
-
-          it 'is false if you enqueue an unlock' do
-            job = double(Jobs::Services::ServiceInstanceStateFetch)
-            binder_lock.enqueue_unlock!({}, job)
-            expect(binder_lock.needs_unlock?).to be_falsey
-          end
         end
       end
     end
