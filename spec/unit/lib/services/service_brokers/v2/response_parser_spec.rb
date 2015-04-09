@@ -13,19 +13,19 @@ module VCAP::Services
         def get_method_and_path(operation)
           case operation
           when :provision
-            method = :put
+            method = :parse_provision_or_bind
             path = '/v2/service_instances/GUID'
           when :deprovision
-            method = :delete
+            method = :parse_deprovision_or_unbind
             path = '/v2/service_instances/GUID'
           when :update
-            method = :patch
+            method = :parse_update
             path = '/v2/service_instances/GUID'
           when :bind
-            method = :put
+            method = :parse_provision_or_bind
             path = '/v2/service_instances/GUID/service_bindings/BINDING_GUID'
           when :unbind
-            method = :delete
+            method = :parse_deprovision_or_unbind
             path = '/v2/service_instances/GUID/service_bindings/BINDING_GUID'
           end
 
@@ -54,14 +54,14 @@ module VCAP::Services
 
             if error
               it "raises a #{error} error" do
-                expect { response_parser.parse(@method, @path, fake_response) }.to raise_error(error) do |e|
+                expect { response_parser.send(@method, @path, fake_response) }.to raise_error(error) do |e|
                   expect(e.to_h['description']).to eq(description) if description
                 end
                 expect(logger).to have_received(:warn) if expect_warning
               end
             else
               it 'returns the parsed response' do
-                expect(response_parser.parse(@method, @path, fake_response)).to eq(result)
+                expect(response_parser.send(@method, @path, fake_response)).to eq(result)
               end
             end
           end

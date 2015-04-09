@@ -12,7 +12,7 @@ module VCAP::Services
         end
 
         describe 'parsing the state fetch response' do
-          subject(:parsed_response) { ResponseParser.new(url).parse_fetch_state(method, path, response) }
+          subject(:parsed_response) { ResponseParser.new(url).parse_fetch_state(path, response) }
           let(:response) { instance_double(VCAP::Services::ServiceBrokers::V2::HttpResponse) }
           let(:path) { '/v2/service_instances' }
           let(:body) { '{}' }

@@ -323,7 +323,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response_parser) { instance_double(ResponseParser) }
 
           before do
-            allow(response_parser).to receive(:parse).and_raise(error)
+            allow(response_parser).to receive(:parse_provision_or_bind).and_raise(error)
             allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
           end
 
@@ -698,7 +698,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response) { instance_double(HttpResponse, code: 500, body: { description: 'BOOOO' }.to_json) }
           let(:error) { Errors::ServiceBrokerBadResponse.new('some-uri.com', :patch, response) }
           before do
-            allow(response_parser).to receive(:parse).and_raise(error)
+            allow(response_parser).to receive(:parse_update).and_raise(error)
           end
 
           it 'returns no polling_interval' do
@@ -724,7 +724,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response) { instance_double(HttpResponse, code: 200, body: 'some arbitrary body') }
           let(:error) { Errors::ServiceBrokerResponseMalformed.new('some-uri.com', :patch, response, '') }
           before do
-            allow(response_parser).to receive(:parse).and_raise(error)
+            allow(response_parser).to receive(:parse_update).and_raise(error)
           end
 
           it 'returns no polling_interval' do
@@ -750,7 +750,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response) { instance_double(HttpResponse, code: 422, body: { description: 'update not allowed' }.to_json) }
           let(:error) { Errors::ServiceBrokerRequestRejected.new('some-uri.com', :patch, response) }
           before do
-            allow(response_parser).to receive(:parse).and_raise(error)
+            allow(response_parser).to receive(:parse_update).and_raise(error)
           end
 
           it 'returns no polling_interval' do
@@ -776,7 +776,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response) { instance_double(HttpResponse, code: 422, body: { error: 'AsyncRequired', description: 'update not allowed' }.to_json) }
           let(:error) { Errors::AsyncRequired.new('some-uri.com', :patch, response) }
           before do
-            allow(response_parser).to receive(:parse).and_raise(error)
+            allow(response_parser).to receive(:parse_update).and_raise(error)
           end
 
           it 'returns no polling_interval' do
@@ -955,7 +955,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response_parser) { instance_double(ResponseParser) }
 
           before do
-            allow(response_parser).to receive(:parse).and_raise(error)
+            allow(response_parser).to receive(:parse_provision_or_bind).and_raise(error)
             allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
           end
 

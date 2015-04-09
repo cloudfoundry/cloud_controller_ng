@@ -16,7 +16,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def catalog
       response = @http_client.get(CATALOG_PATH)
-      @response_parser.parse(:get, CATALOG_PATH, response)
+      @response_parser.parse_catalog(CATALOG_PATH, response)
     end
 
     # The broker is expected to guarantee uniqueness of instance_id.
@@ -33,7 +33,7 @@ module VCAP::Services::ServiceBrokers::V2
       body_parameters[:parameters] = request_attrs['parameters'] if request_attrs['parameters']
       response = @http_client.put(path, body_parameters)
 
-      parsed_response = @response_parser.parse(:put, path, response)
+      parsed_response = @response_parser.parse_provision_or_bind(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
       poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i) || 60
       attributes = {
@@ -65,7 +65,7 @@ module VCAP::Services::ServiceBrokers::V2
     def fetch_service_instance_state(instance)
       path = service_instance_resource_path(instance)
       response = @http_client.get(path)
-      parsed_response = @response_parser.parse_fetch_state(:get, path, response)
+      parsed_response = @response_parser.parse_fetch_state(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
 
       if parsed_response.empty?
@@ -100,7 +100,7 @@ module VCAP::Services::ServiceBrokers::V2
       attr[:parameters] = request_attrs['parameters'] if request_attrs['parameters']
 
       response = @http_client.put(path, attr)
-      parsed_response = @response_parser.parse(:put, path, response)
+      parsed_response = @response_parser.parse_provision_or_bind(path, response)
 
       attributes = {
         credentials: parsed_response['credentials']
@@ -123,7 +123,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id:    binding.service_plan.broker_provided_id,
       })
 
-      @response_parser.parse(:delete, path, response)
+      @response_parser.parse_deprovision_or_unbind(path, response)
     end
 
     def deprovision(instance, accepts_incomplete: false)
@@ -136,7 +136,7 @@ module VCAP::Services::ServiceBrokers::V2
       request_params.merge!(accepts_incomplete: true) if accepts_incomplete
       response = @http_client.delete(path, request_params)
 
-      parsed_response = @response_parser.parse(:delete, path, response) || {}
+      parsed_response = @response_parser.parse_deprovision_or_unbind(path, response) || {}
       last_operation_hash = parsed_response['last_operation'] || {}
       poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i)
       state = last_operation_hash['state']
@@ -169,7 +169,7 @@ module VCAP::Services::ServiceBrokers::V2
       body_hash[:parameters] = parameters if parameters
       response = @http_client.patch(path, body_hash)
 
-      parsed_response = @response_parser.parse(:patch, path, response)
+      parsed_response = @response_parser.parse_update(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
       poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i) || 60
       state = last_operation_hash['state'] || 'succeeded'

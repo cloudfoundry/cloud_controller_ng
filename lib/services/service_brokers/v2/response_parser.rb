@@ -9,21 +9,8 @@ module VCAP::Services
           @logger = Steno.logger('cc.service_broker.v2.client')
         end
 
-        def parse(method, path, response)
-          case method
-          when :put
-            return parse_provision_or_bind(method, path, response)
-          when :delete
-            return parse_deprovision_or_unbind(method, path, response)
-          when :get
-            return parse_catalog(method, path, response)
-          when :patch
-            return parse_update(method, path, response)
-          end
-        end
-
-        def parse_provision_or_bind(method, path, response)
-          unvalidated_response = UnvalidatedResponse.new(method, @url, path, response)
+        def parse_provision_or_bind(path, response)
+          unvalidated_response = UnvalidatedResponse.new(:put, @url, path, response)
 
           validator =
           case unvalidated_response.code
@@ -53,8 +40,8 @@ module VCAP::Services
           validator.validate(unvalidated_response.to_hash)
         end
 
-        def parse_deprovision_or_unbind(method, path, response)
-          unvalidated_response = UnvalidatedResponse.new(method, @url, path, response)
+        def parse_deprovision_or_unbind(path, response)
+          unvalidated_response = UnvalidatedResponse.new(:delete, @url, path, response)
 
           validator =
           case unvalidated_response.code
@@ -88,8 +75,8 @@ module VCAP::Services
           validator.validate(unvalidated_response.to_hash)
         end
 
-        def parse_catalog(method, path, response)
-          unvalidated_response = UnvalidatedResponse.new(method, @url, path, response)
+        def parse_catalog(path, response)
+          unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
 
           validator =
           case unvalidated_response.code
@@ -106,8 +93,8 @@ module VCAP::Services
           validator.validate(unvalidated_response.to_hash)
         end
 
-        def parse_update(method, path, response)
-          unvalidated_response = UnvalidatedResponse.new(method, @url, path, response)
+        def parse_update(path, response)
+          unvalidated_response = UnvalidatedResponse.new(:patch, @url, path, response)
 
           validator =
           case unvalidated_response.code
@@ -132,8 +119,8 @@ module VCAP::Services
           validator.validate(unvalidated_response.to_hash)
         end
 
-        def parse_fetch_state(method, path, response)
-          unvalidated_response = UnvalidatedResponse.new(method, @url, path, response)
+        def parse_fetch_state(path, response)
+          unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
 
           validator =
           case unvalidated_response.code

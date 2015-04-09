@@ -5,7 +5,7 @@ module VCAP::Services
     module V2
       describe ResponseParser do
         let(:url) { 'my.service-broker.com' }
-        subject(:parsed_response) { ResponseParser.new(url).parse(method, path, response) }
+        subject(:parsed_response) { ResponseParser.new(url).parse_deprovision_or_unbind(path, response) }
 
         let(:logger) { instance_double(Steno::Logger, warn: nil) }
         before do
