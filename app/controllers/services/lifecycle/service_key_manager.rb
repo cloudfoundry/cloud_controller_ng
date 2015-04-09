@@ -35,11 +35,9 @@ module VCAP::CloudController
     end
 
     def delete_service_key(service_key)
-      lock_service_instance_by_blocking(service_key.service_instance) do
-        delete_action = ServiceKeyDelete.new
-        deletion_job = Jobs::DeleteActionJob.new(ServiceKey, service_key.guid, delete_action)
-        deletion_job.perform
-      end
+      delete_action = ServiceKeyDelete.new
+      deletion_job = Jobs::DeleteActionJob.new(ServiceKey, service_key.guid, delete_action)
+      deletion_job.perform
     end
 
     private

@@ -346,7 +346,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'DELETE', '/v2/service_keys/:service_binding_guid' do
+    describe 'DELETE', '/v2/service_keys/:service_key_guid' do
       let(:service_key) { ServiceKey.make }
       let(:developer) { make_developer_for_space(service_key.service_instance.space) }
 
