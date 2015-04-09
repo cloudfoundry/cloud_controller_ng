@@ -40,7 +40,7 @@ module VCAP::CloudController
 
         staging_env = EnvironmentVariableGroup.running.environment_json
         app_env     = app.environment_json || {}
-        env         = staging_env.merge(app_env).map { |k, v| "#{k}=#{v}" }
+        env         = staging_env.merge(app_env).merge({ 'CF_PROCESS_TYPE' => app.type }).map { |k, v| "#{k}=#{v}" }
         self[:env]  = env
 
         self[:cc_partition]         = config[:cc_partition]
