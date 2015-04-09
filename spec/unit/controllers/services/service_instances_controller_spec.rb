@@ -224,7 +224,7 @@ module VCAP::CloudController
         end
 
         it 'provisions a service instance' do
-          instance = create_managed_service_instance(async: 'false')
+          instance = create_managed_service_instance(accepts_incomplete: 'false')
 
           expect(last_response.status).to eq(201)
 
@@ -240,7 +240,7 @@ module VCAP::CloudController
         it 'creates a CREATED service usage event' do
           instance = nil
           expect {
-            instance = create_managed_service_instance(async: 'false')
+            instance = create_managed_service_instance(accepts_incomplete: 'false')
           }.to change { ServiceUsageEvent.count }.by(1)
 
           event = ServiceUsageEvent.last
@@ -252,7 +252,7 @@ module VCAP::CloudController
           before do
             create_managed_service_instance(
               email: 'developer@example.com',
-              async: false,
+              accepts_incomplete: false,
               parameters: parameters
             )
           end
@@ -292,7 +292,7 @@ module VCAP::CloudController
           end
 
           it 'creates a service audit event for creating the service instance' do
-            instance = create_managed_service_instance(email: 'developer@example.com', async: false)
+            instance = create_managed_service_instance(email: 'developer@example.com', accepts_incomplete: false)
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
             expect(event.type).to eq('audit.service_instance.create')
@@ -316,14 +316,14 @@ module VCAP::CloudController
           end
 
           it 'tells the service broker to provision a new service instance synchronously' do
-            create_managed_service_instance(async: false)
+            create_managed_service_instance(accepts_incomplete: false)
 
             expect(a_request(:put, service_broker_url)).to have_been_made.times(1)
             expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
           end
 
           it 'fails with with InvalidRequest when accepts_incomplete is not true or false strings' do
-            create_managed_service_instance(async: 'lol')
+            create_managed_service_instance(accepts_incomplete: 'lol')
 
             expect(a_request(:put, service_broker_url_regex)).to have_been_made.times(0)
             expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(0)
@@ -502,14 +502,14 @@ module VCAP::CloudController
 
         context 'when the client explicitly does not request asynchronous provisioning (accepts_incomplete=false)' do
           it 'tells the service broker to provision a new service instance synchronous' do
-            create_managed_service_instance(async: 'false')
+            create_managed_service_instance(accepts_incomplete: 'false')
 
             expect(a_request(:put, service_broker_url)).to have_been_made.times(1)
             expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
           end
 
           it 'creates a service audit event for creating the service instance' do
-            instance = create_managed_service_instance(email: 'developer@example.com', async: 'false')
+            instance = create_managed_service_instance(email: 'developer@example.com', accepts_incomplete: 'false')
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
             expect(event.type).to eq('audit.service_instance.create')
@@ -622,7 +622,7 @@ module VCAP::CloudController
 
         context 'with naming collisions' do
           it 'does not allow duplicate managed service instances' do
-            create_managed_service_instance(async: 'false')
+            create_managed_service_instance(accepts_incomplete: 'false')
             expect(last_response.status).to eq(201)
 
             create_managed_service_instance
@@ -631,7 +631,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow duplicate user provided service instances' do
-            create_managed_service_instance(async: 'false')
+            create_managed_service_instance(accepts_incomplete: 'false')
             expect(last_response.status).to eq(201)
 
             create_user_provided_service_instance
@@ -640,7 +640,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow a user provided service instance with same name as managed service instance' do
-            create_managed_service_instance(async: 'false')
+            create_managed_service_instance(accepts_incomplete: 'false')
             expect(last_response.status).to eq(201)
 
             create_user_provided_service_instance
@@ -2277,7 +2277,7 @@ module VCAP::CloudController
 
     def create_managed_service_instance(user_opts={})
       arbitrary_params = user_opts.delete(:parameters)
-      use_async = user_opts.delete(:async) { |_| 'true' }
+      accepts_incomplete = user_opts.delete(:accepts_incomplete) { |_| 'true' }
       headers = json_headers(headers_for(developer, user_opts))
 
       body = {
@@ -2288,8 +2288,8 @@ module VCAP::CloudController
       body[:parameters] = arbitrary_params if arbitrary_params
       req = MultiJson.dump(body)
 
-      if use_async
-        post "/v2/service_instances?accepts_incomplete=#{use_async}", req, headers
+      if accepts_incomplete
+        post "/v2/service_instances?accepts_incomplete=#{accepts_incomplete}", req, headers
       else
         post '/v2/service_instances', req, headers
       end
