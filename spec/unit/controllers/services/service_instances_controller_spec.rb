@@ -1135,22 +1135,6 @@ module VCAP::CloudController
             expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
           end
 
-          context 'when the broker returns a long text description (mysql)' do
-            let(:response_body) do
-              {
-                last_operation: {
-                  state: 'in progress',
-                  description: '123' * 512,
-                }
-              }.to_json
-            end
-
-            it 'returns a 202' do
-              put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
-              expect(last_response).to have_status_code 202
-            end
-          end
-
           context 'when the broker returns 410 for a service instance fetch request' do
             before do
               put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')

@@ -38,13 +38,15 @@ module VCAP::CloudController
         end
 
         let(:status) { 200 }
+        let(:state) { 'succeeded' }
+        let(:description) { 'description' }
         let(:response) do
           {
             dashboard_url: 'url.com/dashboard',
             last_operation: {
               type: 'should-not-change',
               state: state,
-              description: 'the description'
+              description: description
             },
           }
         end
@@ -137,6 +139,22 @@ module VCAP::CloudController
               status: status,
               body: response.to_json
             )
+          end
+
+          describe 'updating the service instance description' do
+            it 'saves the description provided by the broker' do
+              expect { run_job(job) }.to change { service_instance.last_operation.reload.description }.from('description goes here').to('description')
+            end
+
+            context 'when the broker returns a long text description (mysql)' do
+              let(:state) { 'in progress' }
+              let(:description) { '123' * 512 }
+
+              it 'saves the description in the database' do
+                run_job(job)
+                expect(service_instance.last_operation.reload.description).to eq description
+              end
+            end
           end
 
           context 'when all operations succeed and the state is `succeeded`' do
