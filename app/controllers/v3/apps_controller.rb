@@ -1,10 +1,10 @@
 require 'presenters/v3/app_presenter'
-require 'handlers/apps_handler'
 require 'cloud_controller/paging/pagination_options'
 require 'queries/app_delete_fetcher'
+require 'queries/app_fetcher'
+require 'queries/app_list_fetcher'
 require 'actions/app_delete'
 require 'actions/app_update'
-require 'queries/app_fetcher'
 require 'actions/app_start'
 require 'actions/app_stop'
 require 'actions/app_create'
@@ -14,23 +14,30 @@ module VCAP::CloudController
     class InvalidParam < StandardError; end
 
     def self.dependencies
-      [:apps_handler, :app_presenter]
+      [:app_presenter]
     end
 
     def inject_dependencies(dependencies)
-      @app_handler       = dependencies[:apps_handler]
       @app_presenter     = dependencies[:app_presenter]
     end
 
     get '/v3/apps', :list
     def list
+      check_read_permissions!
       validate_allowed_params(params)
 
       pagination_options = PaginationOptions.from_params(params)
       facets = params.slice('guids', 'space_guids', 'organization_guids', 'names')
-      paginated_result   = @app_handler.list(pagination_options, @access_context, facets)
 
-      [HTTP::OK, @app_presenter.present_json_list(paginated_result, facets)]
+      paginated_apps = []
+      if membership.admin?
+        paginated_apps = AppListFetcher.new.fetch_all(pagination_options, facets)
+      else
+        allowed_space_guids = membership.space_guids
+        paginated_apps = AppListFetcher.new.fetch(pagination_options, facets, allowed_space_guids)
+      end
+
+      [HTTP::OK, @app_presenter.present_json_list(paginated_apps, facets)]
     rescue InvalidParam => e
       invalid_param!(e.message)
     end

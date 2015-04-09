@@ -3,14 +3,13 @@ require 'spec_helper'
 module VCAP::CloudController
   describe Membership do
     let(:user) { User.make }
-    let(:space) { Space.make(organization: organization) }
-    let(:space_whose_org_is_suspended) { Space.make(organization: suspended_organization) }
-    let(:space_that_user_doesnt_develop_in) { Space.make(organization: organization) }
+    let!(:space) { Space.make(organization: organization) }
+    let!(:space_whose_org_is_suspended) { Space.make(organization: suspended_organization) }
     let(:organization) { Organization.make }
     let(:suspended_organization) { Organization.make(status: 'suspended') }
-    let(:space_in_some_other_org) { Space.make }
+    let!(:space_in_some_other_org) { Space.make }
 
-    subject(:membership) { Membership.new(user) }
+    let(:membership) { Membership.new(user) }
 
     describe '#has_any_roles?' do
       it 'returns true for admins' do
@@ -351,7 +350,7 @@ module VCAP::CloudController
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_AUDITOR
             ],
-              space.guid, organization.guid)
+            space.guid, organization.guid)
 
             expect(result).to be_truthy
           end
@@ -372,10 +371,53 @@ module VCAP::CloudController
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_AUDITOR
             ],
-              space.guid, organization.guid)
+            space.guid, organization.guid)
 
             expect(result).to be_falsey
           end
+        end
+      end
+    end
+
+    describe '#space_guids' do
+      let(:result) { membership.space_guids }
+
+      it 'returns all spaces in suspended organizations' do
+        user = make_manager_for_org(suspended_organization)
+        result = Membership.new(user).space_guids
+
+        expect(result).to include(space_whose_org_is_suspended.guid)
+      end
+
+      it 'returns all spaces belonging to each org the user manages' do
+        user = make_manager_for_org(organization)
+        result = Membership.new(user).space_guids
+
+        expect(result).to include(space.guid)
+        expect(result).to_not include(space_in_some_other_org.guid)
+      end
+
+      context 'space developers' do
+        let(:user) { make_developer_for_space(space) }
+
+        it 'returns all spaces in which the user develops' do
+          expect(membership.space_guids).to include(space.guid)
+        end
+      end
+
+      context 'space managers' do
+        let(:user) { make_manager_for_space(space) }
+
+        it 'returns all spaces that the user audits' do
+          expect(result).to include(space.guid)
+        end
+      end
+
+      context 'space auditors' do
+        let(:user) { make_auditor_for_space(space) }
+
+        it 'returns all spaces in which the user manages' do
+          expect(result).to include(space.guid)
         end
       end
     end
