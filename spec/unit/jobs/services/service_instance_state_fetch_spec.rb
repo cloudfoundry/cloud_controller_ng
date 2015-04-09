@@ -366,7 +366,7 @@ module VCAP::CloudController
             let(:state) { 'in progress' }
 
             it 'should not enqueue another fetch job' do
-              Timecop.freeze(job.end_timestamp - (job.poll_interval * 0.5) )
+              Timecop.freeze(job.end_timestamp - (job.poll_interval * 0.5))
               run_job(job)
 
               Timecop.freeze(Time.now + job.poll_interval * 2)
