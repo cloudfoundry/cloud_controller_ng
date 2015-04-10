@@ -218,6 +218,11 @@
   http_code: 400
   message: "Another operation for this service instance is in progress."
 
+60016:
+  name: AsyncServiceInstanceOperationInProgress
+  http_code: 400
+  message: "An operation for service instance %s is in progress."
+
 70001:
   name: RuntimeInvalid
   http_code: 400
@@ -361,7 +366,7 @@
 140001:
   name: LegacyApiWithoutDefaultSpace
   http_code: 400
-  message: "A legacy api call requring a default app space was called, but no default app space is set for the user."
+  message: "A legacy api call requiring a default app space was called, but no default app space is set for the user."
 
 150001:
   name: AppPackageInvalid
