@@ -16,17 +16,15 @@ module VCAP::Services
           case unvalidated_response.code
           when 200
             JsonObjectValidator.new(@logger,
-              OldNonDescriptiveStateValidator.new(['succeeded', 'failed', 'in progress', nil],
-                SuccessValidator.new))
+                SuccessValidator.new(state: 'succeeded'))
           when 201
             JsonObjectValidator.new(@logger,
-              StateValidator.new(['succeeded', nil],
-                SuccessValidator.new))
+                SuccessValidator.new(state: 'succeeded'))
           when 202
             JsonObjectValidator.new(@logger,
               IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
                 FailingValidator.new(Errors::ServiceBrokerBadResponse),
-                StateValidator.new(['in progress'], SuccessValidator.new)))
+                SuccessValidator.new(state: 'in progress')))
           when 409
             FailingValidator.new(Errors::ServiceBrokerConflict)
           when 422
@@ -47,23 +45,19 @@ module VCAP::Services
           case unvalidated_response.code
           when 200
             JsonObjectValidator.new(@logger,
-              IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
-                SuccessValidator.new,
-                OldNonDescriptiveStateValidator.new(['succeeded', nil],
-                  SuccessValidator.new)))
+                SuccessValidator.new(state: 'succeeded'))
           when 201
             IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
           when 202
             JsonObjectValidator.new(@logger,
               IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
                 FailingValidator.new(Errors::ServiceBrokerBadResponse),
-                StateValidator.new(['in progress'],
-                  SuccessValidator.new)))
+                  SuccessValidator.new(state: 'in progress')))
           when 204
             SuccessValidator.new { |res| {} }
           when 410
             @logger.warn("Already deleted: #{unvalidated_response.uri}")
-            SuccessValidator.new { |res| nil }
+            SuccessValidator.new { |res| {} }
           when 422
             FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
               FailingValidator.new(Errors::ServiceBrokerBadResponse))
@@ -100,14 +94,12 @@ module VCAP::Services
           case unvalidated_response.code
           when 200
             JsonObjectValidator.new(@logger,
-              StateValidator.new(['succeeded', nil],
-                SuccessValidator.new))
+                SuccessValidator.new(state: 'succeeded'))
           when 201
             IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
           when 202
             JsonObjectValidator.new(@logger,
-              StateValidator.new(['in progress'],
-                SuccessValidator.new))
+                SuccessValidator.new(state: 'in progress'))
           when 422
             FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
               FailingValidator.new(Errors::ServiceBrokerRequestRejected))
@@ -208,11 +200,23 @@ module VCAP::Services
         end
 
         class SuccessValidator
-          def initialize(&block)
+          def initialize(state: nil, &block)
             if block_given?
               @processor = block
             else
-              @processor = ->(response) { MultiJson.load(response.body) }
+              @processor = ->(response) do
+                broker_response = MultiJson.load(response.body)
+                base_async_body = {
+                  'last_operation' => {
+                    'state' => state
+                  }
+                }
+                if state
+                  base_async_body.merge(broker_response)
+                else
+                  broker_response
+                end
+              end
             end
           end
 
