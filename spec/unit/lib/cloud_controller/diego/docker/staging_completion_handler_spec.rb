@@ -74,16 +74,6 @@ module VCAP::CloudController
             end
           end
 
-          shared_examples 'a handler with no lifecycle data' do
-            it 'does not update the cached image' do
-              expect {
-                handler.staging_complete(staging_guid, payload)
-              }.not_to change {
-                droplet.cached_docker_image
-              }
-            end
-          end
-
           context 'when it receives no lifecycle_data in response' do
             let(:payload) do
               {
@@ -93,7 +83,13 @@ module VCAP::CloudController
             end
             let(:droplet) { app.reload.current_droplet }
 
-            it_behaves_like 'a handler with no lifecycle data'
+            it 'does not update the cached image' do
+              expect {
+                handler.staging_complete(staging_guid, payload)
+              }.not_to change {
+                droplet.cached_docker_image
+              }
+            end
           end
 
           context 'when it receives empty lifecycle_data in response' do
@@ -106,7 +102,13 @@ module VCAP::CloudController
             end
             let(:droplet) { app.reload.current_droplet }
 
-            it_behaves_like 'a handler with no lifecycle data'
+            it 'does not update the cached image' do
+              expect {
+                handler.staging_complete(staging_guid, payload)
+              }.not_to change {
+                droplet.cached_docker_image
+              }
+            end
           end
 
           context 'when the app is restaged and user opted-out from caching' do
