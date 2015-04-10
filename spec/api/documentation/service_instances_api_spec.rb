@@ -109,6 +109,7 @@ EOF
 
       field :name, 'The new name for the service instance', required: false, example_values: ['my-new-service-instance']
       field :service_plan_guid, 'The new plan guid for the service instance', required: false, example_values: ['6c4bd80f-4593-41d1-a2c9-b20cb65ec76e']
+      field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
 
       param_description = <<EOF
 Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
@@ -125,7 +126,12 @@ EOF
       end
 
       example 'Update a Service Instance' do
-        request_json = { service_plan_guid: new_plan.guid }.to_json
+        request_json = {
+          service_plan_guid: new_plan.guid,
+          parameters: {
+            the_service_broker: 'wants this object'
+          }
+        }.to_json
         client.put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", request_json, headers
 
         expect(status).to eq 202
