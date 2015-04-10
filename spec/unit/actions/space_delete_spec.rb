@@ -17,7 +17,7 @@ module VCAP::CloudController
       let(:user_email) { 'user@example.com' }
 
       before do
-        stub_deprovision(service_instance)
+        stub_deprovision(service_instance, accepts_incomplete: true)
       end
 
       context 'when the space exists' do
@@ -54,7 +54,42 @@ module VCAP::CloudController
           expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
-        context 'when deletion of serviceinstances fail' do
+        context 'when deletion of a service instance is "in progress"' do
+          before do
+            stub_deprovision(service_instance, accepts_incomplete: true, status: 202)
+          end
+
+          it 'fails to delete the space because instances are not yet deleted' do
+            result = space_delete.delete(space_dataset)
+            expect { service_instance.refresh }.not_to raise_error
+            expect(result.length).to be(1)
+
+            result = result.first
+            expect(result).to be_instance_of(VCAP::Errors::ApiError)
+            expect(result.message).to include("An operation for service instance #{service_instance.name} is in progress.")
+          end
+
+          context 'and there are multiple service instances deprovisioned asynchronously' do
+            let!(:service_instance_2) { ManagedServiceInstance.make(space: space) } # deletion fail
+
+            before do
+              stub_deprovision(service_instance_2, accepts_incomplete: true, status: 202)
+            end
+
+            it 'returns an error message for each service instance' do
+              result = space_delete.delete(space_dataset)
+              expect { service_instance.refresh }.not_to raise_error
+              expect { service_instance_2.refresh }.not_to raise_error
+              expect(result.length).to be(2)
+
+              message = result.map(&:message).join("\n")
+              expect(message).to include("An operation for service instance #{service_instance.name} is in progress.")
+              expect(message).to include("An operation for service instance #{service_instance_2.name} is in progress.")
+            end
+          end
+        end
+
+        context 'when deletion of service instances fail' do
           let!(:space_3) { Space.make }
           let!(:space_4) { Space.make }
 
@@ -63,9 +98,9 @@ module VCAP::CloudController
           let!(:service_instance_3) { ManagedServiceInstance.make(space: space_3) } # deletion succeeds
 
           before do
-            stub_deprovision(service_instance_1, status: 500)
-            stub_deprovision(service_instance_2, status: 500)
-            stub_deprovision(service_instance_3)
+            stub_deprovision(service_instance_1, accepts_incomplete: true, status: 500)
+            stub_deprovision(service_instance_2, accepts_incomplete: true, status: 500)
+            stub_deprovision(service_instance_3, accepts_incomplete: true)
           end
 
           it 'deletes other spaces' do

@@ -4,9 +4,10 @@ require 'actions/locks/deleter_lock'
 
 module VCAP::CloudController
   class ServiceInstanceDelete
-    def initialize(accepts_incomplete: false, event_repository_opts: {})
+    def initialize(accepts_incomplete: false, event_repository_opts: nil, error_when_in_progress: false)
       @accepts_incomplete = accepts_incomplete
       @event_repository_opts = event_repository_opts
+      @error_when_in_progress = error_when_in_progress
     end
 
     def delete(service_instance_dataset)
@@ -16,6 +17,11 @@ module VCAP::CloudController
 
         if binding_errors.empty?
           instance_errors = delete_service_instance(service_instance)
+
+          if service_instance.operation_in_progress? && @error_when_in_progress && instance_errors.empty?
+            errors_accumulator.push VCAP::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+          end
+
           errors_accumulator.concat instance_errors
         end
       end

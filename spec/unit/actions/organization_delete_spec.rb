@@ -19,7 +19,7 @@ module VCAP::CloudController
       let(:user_email) { 'user@example.com' }
 
       before do
-        stub_deprovision(service_instance)
+        stub_deprovision(service_instance, accepts_incomplete: true)
       end
 
       context 'when the org exists' do
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
         context 'when the space deleter returns errors' do
           it 'returns any errors that it received' do
-            stub_deprovision(service_instance, status: 500)
+            stub_deprovision(service_instance, status: 500, accepts_incomplete: true)
             errors = org_delete.delete(org_dataset)
             expect(errors.first).to be_instance_of(VCAP::Errors::ApiError)
           end

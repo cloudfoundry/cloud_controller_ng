@@ -54,7 +54,7 @@ module VCAP::CloudController
 
       it 'defaults accepts_incomplete to false' do
         service_instance_delete.delete([service_instance_1])
-        broker_url = service_instance_deprovision_url(service_instance_1, accepts_incomplete: nil)
+        broker_url = service_instance_deprovision_url(service_instance_1)
         expect(a_request(:delete, broker_url)).to have_been_made
       end
 
@@ -80,11 +80,13 @@ module VCAP::CloudController
         end
         let(:event_repository_opts) { { some_opt: 'some value' } }
         let(:polling_interval) { 60 }
+        let(:error_when_in_progress) { false }
 
         subject(:service_instance_delete) do
           ServiceInstanceDelete.new(
             accepts_incomplete: true,
-            event_repository_opts: event_repository_opts
+            event_repository_opts: event_repository_opts,
+            error_when_in_progress: error_when_in_progress,
           )
         end
 
@@ -117,6 +119,17 @@ module VCAP::CloudController
           expect(inner_job.services_event_repository_opts).to eq event_repository_opts
           expect(inner_job.request_attrs).to eq({})
           expect(inner_job.poll_interval).to eq(polling_interval)
+        end
+
+        context 'and the caller wants to treat async deprovisioning as a failure' do
+          let(:error_when_in_progress) { true }
+
+          it 'should return an error if there is an operation in progress' do
+            result = service_instance_delete.delete([service_instance])
+
+            expect(result.length).to be(1)
+            expect(result.first.message).to include("An operation for service instance #{service_instance.name} is in progress.")
+          end
         end
       end
 

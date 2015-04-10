@@ -11,7 +11,11 @@ module VCAP::CloudController
       return [UserNotFoundDeletionError.new(@user_id)] if user.nil?
 
       dataset.inject([]) do |errors, space_model|
-        instance_delete_errors = ServiceInstanceDelete.new.delete(space_model.service_instances_dataset)
+        service_instance_deleter = ServiceInstanceDelete.new(
+            accepts_incomplete: true,
+            error_when_in_progress: true
+        )
+        instance_delete_errors = service_instance_deleter.delete(space_model.service_instances_dataset)
         unless instance_delete_errors.empty?
           error_message = instance_delete_errors.map(&:message).join("\n\n")
           errors.push VCAP::Errors::ApiError.new_from_details('SpaceDeletionFailed', dataset.first.name, error_message)

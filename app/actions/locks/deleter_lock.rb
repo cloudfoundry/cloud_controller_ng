@@ -38,6 +38,8 @@ module VCAP::CloudController
     end
 
     def unlock_and_destroy!
+      # set state for code that use the service instance afterwards
+      service_instance.last_operation.state = 'succeeded' if service_instance.last_operation
       service_instance.destroy
       @needs_unlock = false
     end

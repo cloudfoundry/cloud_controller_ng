@@ -601,7 +601,7 @@ module VCAP::CloudController
         let!(:service_instance_guid) { service_instance.guid }
 
         before do
-          stub_deprovision(service_instance)
+          stub_deprovision(service_instance, accepts_incomplete: true)
         end
 
         it 'successfully deletes spaces with v3 app associations' do
@@ -640,9 +640,9 @@ module VCAP::CloudController
           let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(space_guid: space_guid) }
 
           before do
-            stub_deprovision(service_instance_1)
-            stub_deprovision(service_instance_2)
-            stub_deprovision(service_instance_3)
+            stub_deprovision(service_instance_1, accepts_incomplete: true)
+            stub_deprovision(service_instance_2, accepts_incomplete: true)
+            stub_deprovision(service_instance_3, accepts_incomplete: true)
           end
 
           it 'successfully deletes spaces with managed service instances' do
@@ -702,7 +702,7 @@ module VCAP::CloudController
 
           context 'when the second of three service instances fails to delete' do
             before do
-              stub_deprovision(service_instance_2, status: 500)
+              stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
 
               instance_url = remove_basic_auth(service_instance_deprovision_url(service_instance_2))
 
@@ -837,7 +837,7 @@ The service broker returned an invalid response for the request to #{instance_ur
 
         it 'does not rollback any changes if recursive deletion fails halfway through' do
           service_instance_2 = ManagedServiceInstance.make(space_guid: space_guid)
-          stub_deprovision(service_instance_2, status: 500)
+          stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
 
           delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
 

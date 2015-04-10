@@ -543,7 +543,7 @@ module VCAP::CloudController
 
         context 'when one of the spaces has a service instance in it' do
           before do
-            stub_deprovision(service_instance)
+            stub_deprovision(service_instance, accepts_incomplete: true)
           end
 
           let!(:space) { Space.make(organization: org) }
