@@ -6,11 +6,12 @@ module VCAP::CloudController
     let(:unbind_status) { 200 }
     let(:unbind_body) { {} }
 
+    let(:services_event_repository) { double :services_event_respository, record_service_key_event: nil }
     let(:service_key) { ServiceKey.make }
     let(:service_key_delete_action) { double(:service_key_delete_action) }
     let(:delete_action_job) { double(:delete_action_job) }
 
-    subject { described_class.new(nil, nil, nil) }
+    subject { described_class.new(services_event_repository, nil, nil) }
 
     def broker_url(broker)
       base_broker_uri = URI.parse(broker.broker_url)

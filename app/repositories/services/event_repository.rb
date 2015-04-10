@@ -121,8 +121,11 @@ module VCAP::CloudController
 
         def record_service_key_event(type, service_key, params=nil)
           metadata = { request: {} }
-          metadata[:request][:service_instance_guid] = service_key.service_instance.guid
-          metadata[:request][:name] = service_key.name
+
+          unless type == :delete
+            metadata[:request][:service_instance_guid] = service_key.service_instance.guid
+            metadata[:request][:name] = service_key.name
+          end
 
           actee = {
               actee: service_key.guid,

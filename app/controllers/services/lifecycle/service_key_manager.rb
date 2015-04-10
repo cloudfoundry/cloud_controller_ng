@@ -37,7 +37,16 @@ module VCAP::CloudController
     def delete_service_key(service_key)
       delete_action = ServiceKeyDelete.new
       deletion_job = Jobs::DeleteActionJob.new(ServiceKey, service_key.guid, delete_action)
-      deletion_job.perform
+      delete_and_audit_job = Jobs::AuditEventJob.new(
+          deletion_job,
+          @services_event_repository,
+          :record_service_key_event,
+          :delete,
+          service_key.class,
+          service_key.guid
+      )
+
+      delete_and_audit_job.perform
     end
 
     private
