@@ -4,10 +4,7 @@ module VCAP::CloudController
   describe Membership do
     let(:user) { User.make }
     let!(:space) { Space.make(organization: organization) }
-    let!(:space_whose_org_is_suspended) { Space.make(organization: suspended_organization) }
     let(:organization) { Organization.make }
-    let(:suspended_organization) { Organization.make(status: 'suspended') }
-    let!(:space_in_some_other_org) { Space.make }
 
     let(:membership) { Membership.new(user) }
 
@@ -379,45 +376,115 @@ module VCAP::CloudController
       end
     end
 
-    describe '#space_guids' do
-      let(:result) { membership.space_guids }
+    describe '#space_guids_for_roles' do
+      let(:user) { User.make }
 
-      it 'returns all spaces in suspended organizations' do
-        user = make_manager_for_org(suspended_organization)
-        result = Membership.new(user).space_guids
-
-        expect(result).to include(space_whose_org_is_suspended.guid)
-      end
-
-      it 'returns all spaces belonging to each org the user manages' do
-        user = make_manager_for_org(organization)
-        result = Membership.new(user).space_guids
-
-        expect(result).to include(space.guid)
-        expect(result).to_not include(space_in_some_other_org.guid)
+      before do
+        organization.add_user(user)
       end
 
       context 'space developers' do
-        let(:user) { make_developer_for_space(space) }
+        before do
+          space.add_developer(user)
+        end
 
         it 'returns all spaces in which the user develops' do
-          expect(membership.space_guids).to include(space.guid)
+          guids = membership.space_guids_for_roles(Membership::SPACE_DEVELOPER)
+
+          expect(guids).to eq([space.guid])
         end
       end
 
       context 'space managers' do
-        let(:user) { make_manager_for_space(space) }
+        before do
+          space.add_manager(user)
+        end
 
-        it 'returns all spaces that the user audits' do
-          expect(result).to include(space.guid)
+        it 'returns all spaces that the user managers' do
+          guids = membership.space_guids_for_roles(Membership::SPACE_MANAGER)
+
+          expect(guids).to eq([space.guid])
         end
       end
 
       context 'space auditors' do
-        let(:user) { make_auditor_for_space(space) }
+        before do
+          space.add_auditor(user)
+        end
 
-        it 'returns all spaces in which the user manages' do
-          expect(result).to include(space.guid)
+        it 'returns all spaces that the user audits' do
+          guids = membership.space_guids_for_roles(Membership::SPACE_AUDITOR)
+
+          expect(guids).to eq([space.guid])
+        end
+      end
+
+      context 'org member' do
+        it 'returns all spaces that the user is in the org' do
+          guids = membership.space_guids_for_roles(Membership::ORG_MEMBER)
+
+          expect(guids).to eq([space.guid])
+        end
+      end
+
+      context 'org manager' do
+        before do
+          organization.add_manager(user)
+        end
+
+        it 'returns all spaces that the user org manages' do
+          guids = membership.space_guids_for_roles(Membership::ORG_MANAGER)
+
+          expect(guids).to eq([space.guid])
+        end
+      end
+
+      context 'org billing manager' do
+        before do
+          organization.add_billing_manager(user)
+        end
+
+        it 'returns all spaces that the user org billing manages' do
+          guids = membership.space_guids_for_roles(Membership::ORG_BILLING_MANAGER)
+
+          expect(guids).to eq([space.guid])
+        end
+      end
+
+      context 'org auditor' do
+        before do
+          organization.add_auditor(user)
+        end
+
+        it 'returns all spaces that the user org audits' do
+          guids = membership.space_guids_for_roles(Membership::ORG_AUDITOR)
+
+          expect(guids).to eq([space.guid])
+        end
+      end
+
+      context 'mix of org and space roles' do
+        let(:org_managed) { Organization.make }
+        let(:space1_in_managed_org) { Space.make(organization: org_managed) }
+        let(:space2_in_managed_org) { Space.make(organization: org_managed) }
+        let(:org_audited) { Organization.make }
+        let(:space_in_audited_org) { Space.make(organization: org_audited) }
+        let(:some_other_space) { Space.make }
+
+        before do
+          org_managed.add_manager(user)
+          org_audited.add_auditor(user)
+          space.add_developer(user)
+        end
+
+        it 'returns the correct spaces' do
+          expected = [space1_in_managed_org.guid, space2_in_managed_org.guid, space.guid]
+          not_included  = [space_in_audited_org.guid, some_other_space.guid]
+
+          guids = membership.space_guids_for_roles([Membership::ORG_MANAGER, Membership::SPACE_DEVELOPER])
+
+          expect(guids).to eq(expected)
+          expect(guids).not_to include(not_included)
         end
       end
     end

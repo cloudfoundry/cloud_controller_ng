@@ -35,7 +35,7 @@ module VCAP::CloudController
       if membership.admin?
         paginated_apps = AppListFetcher.new.fetch_all(pagination_options, facets)
       else
-        allowed_space_guids = membership.space_guids
+        allowed_space_guids = membership.space_guids_for_roles([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
         paginated_apps = AppListFetcher.new.fetch(pagination_options, facets, allowed_space_guids)
       end
 

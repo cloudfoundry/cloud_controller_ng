@@ -24,12 +24,35 @@ module VCAP::CloudController
       @user.admin?
     end
 
-    def space_guids
-      spaces = @user.spaces + @user.audited_spaces + @user.managed_spaces
-      org_guids = @user.managed_organizations.map(&:guid)
-      space_guids_from_orgs = Space.join(:organizations, organizations__id: :spaces__organization_id).where(organizations__guid: org_guids).select(:spaces__guid).map(&:guid)
+    def space_guids_for_roles(roles)
+      roles = [roles] unless roles.is_a?(Array)
 
-      spaces.map(&:guid) + space_guids_from_orgs
+      roles.map do |role|
+        case role
+        when SPACE_DEVELOPER
+          @user.spaces.map(&:guid)
+        when SPACE_MANAGER
+          @user.managed_spaces.map(&:guid)
+        when SPACE_AUDITOR
+          @user.audited_spaces.map(&:guid)
+        when ORG_MEMBER
+          @user.organizations_dataset.join(
+            :spaces, spaces__organization_id: :organizations__id
+          ).select(:spaces__guid).map(&:guid)
+        when ORG_MANAGER
+          @user.managed_organizations_dataset.join(
+            :spaces, spaces__organization_id: :organizations__id
+          ).select(:spaces__guid).map(&:guid)
+        when ORG_BILLING_MANAGER
+          @user.billing_managed_organizations_dataset.join(
+            :spaces, spaces__organization_id: :organizations__id
+          ).select(:spaces__guid).map(&:guid)
+        when ORG_AUDITOR
+          @user.audited_organizations_dataset.join(
+            :spaces, spaces__organization_id: :organizations__id
+          ).select(:spaces__guid).map(&:guid)
+        end
+      end.flatten.compact
     end
 
     private

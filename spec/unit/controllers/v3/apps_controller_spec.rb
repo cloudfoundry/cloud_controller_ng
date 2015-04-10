@@ -53,7 +53,8 @@ module VCAP::CloudController
         allow(membership).to receive(:space_guids_for_managed_orgs).
           and_return(['some-space-guid', 'yet-another-space-guid'])
         allow(membership).to receive(:admin?).and_return(false)
-        allow(membership).to receive(:space_guids).and_return([app.space.guid])
+        allow(membership).to receive(:space_guids_for_roles).and_return([app.space.guid]).
+          with([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
       end
 
       it 'returns 200 and lists the apps' do
