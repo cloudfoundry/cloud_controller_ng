@@ -20,11 +20,6 @@ module VCAP::CloudController
         })
       end
 
-      before do
-        app_model.add_process_by_guid(process1.guid)
-        app_model.add_process_by_guid(process2.guid)
-      end
-
       context 'when the desired_droplet does not exist' do
         let(:droplet_guid) { nil }
 

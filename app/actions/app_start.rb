@@ -1,3 +1,5 @@
+require 'actions/procfile_parse'
+
 module VCAP::CloudController
   class AppStart
     class DropletNotFound < StandardError; end
@@ -9,13 +11,13 @@ module VCAP::CloudController
     end
 
     def start(app)
-      droplet = DropletModel.find(guid: app.desired_droplet_guid)
-      raise DropletNotFound if droplet.nil?
+      raise DropletNotFound if !app.desired_droplet
 
-      package = PackageModel.find(guid: droplet.package_guid)
+      package = PackageModel.find(guid: app.desired_droplet.package_guid)
       package_hash = package.nil? ? 'unknown' : package.package_hash
 
       app.db.transaction do
+        app.lock!
         app.update(desired_state: 'STARTED')
 
         @logger.info("Started app #{app.name} #{app.guid}")

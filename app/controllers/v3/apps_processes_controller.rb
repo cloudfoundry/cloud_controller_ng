@@ -3,7 +3,6 @@ require 'handlers/processes_handler'
 require 'handlers/procfile_handler'
 require 'handlers/apps_handler'
 require 'cloud_controller/paging/pagination_options'
-require 'cloud_controller/procfile'
 
 module VCAP::CloudController
   class AppsProcessesController < RestController::BaseController
@@ -67,28 +66,6 @@ module VCAP::CloudController
       [HTTP::NO_CONTENT]
     rescue MultiJson::ParseError => e
       raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
-    rescue AppsHandler::Unauthorized
-      app_not_found!
-    end
-
-    put '/v3/apps/:guid/procfile', :process_procfile
-    def process_procfile(guid)
-      app = @app_handler.show(guid, @access_context)
-      app_not_found! if app.nil?
-
-      procfile = Procfile.load(body)
-      @procfile_handler.process_procfile(app, procfile, @access_context)
-
-      pagination_options = PaginationOptions.from_params(params)
-      paginated_result   = @processes_handler.list(pagination_options, @access_context, app_guid: app.guid)
-
-      [HTTP::OK, @process_presenter.present_json_list(paginated_result, "/v3/apps/#{guid}/processes")]
-    rescue Procfile::ParseError => e
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
-    rescue ProcfileHandler::Unauthorized
-      app_not_found!
-    rescue ProcessesHandler::Unauthorized
-      app_not_found!
     rescue AppsHandler::Unauthorized
       app_not_found!
     end

@@ -548,10 +548,10 @@ module VCAP::CloudController
       let(:app_model) { AppModel.make }
       let(:space) { app_model.space }
       let(:org) { space.organization }
-      let(:droplet) { DropletModel.make(app_guid: app_model.guid) }
+      let(:droplet) { DropletModel.make(procfile: 'web: a', app_guid: app_model.guid) }
 
       before do
-        app_model.desired_droplet_guid = droplet.guid
+        app_model.update(desired_droplet: droplet)
         app_model.save
       end
 
