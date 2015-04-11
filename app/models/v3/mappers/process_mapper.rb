@@ -15,6 +15,8 @@ module VCAP::CloudController
         'health_check_timeout' => model.values[:health_check_timeout],
         'docker_image'         => model.values[:docker_image],
         'environment_json'     => model.environment_json,
+        'created_at'           => model.created_at,
+        'updated_at'           => model.updated_at,
         'type'                 => model.type
       })
     end
@@ -50,6 +52,8 @@ module VCAP::CloudController
       attrs[:environment_json]     = domain.environment_json
       attrs[:docker_image]         = domain.docker_image if domain.docker_image
       attrs[:type]                 = domain.type
+      attrs[:created_at]           = domain.created_at
+      attrs[:updated_at]           = domain.updated_at
       attrs[:metadata]             = {}
       attrs
     end
