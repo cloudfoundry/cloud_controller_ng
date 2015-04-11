@@ -3,6 +3,7 @@ require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
 resource 'App Routes (Experimental)', type: :api do
+  let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user)['HTTP_AUTHORIZATION'] }
   header 'AUTHORIZATION', :user_header
@@ -45,16 +46,20 @@ resource 'App Routes (Experimental)', type: :api do
         },
         'resources' => [
           {
-            'guid' => route1.guid,
-            'host' => route1.host,
+            'guid'       => route1.guid,
+            'host'       => route1.host,
+            'created_at' => iso8601,
+            'updated_at' => nil,
             '_links' => {
               'space' => { 'href' => "/v2/spaces/#{space.guid}" },
               'domain' => { 'href' => "/v2/domains/#{route1.domain.guid}" }
             }
           },
           {
-            'guid' => route2.guid,
-            'host' => route2.host,
+            'guid'       => route2.guid,
+            'host'       => route2.host,
+            'created_at' => iso8601,
+            'updated_at' => nil,
             '_links' => {
               'space' => { 'href' => "/v2/spaces/#{space.guid}" },
               'domain' => { 'href' => "/v2/domains/#{route2.domain.guid}" }
@@ -64,7 +69,7 @@ resource 'App Routes (Experimental)', type: :api do
       }
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 

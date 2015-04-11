@@ -5,7 +5,7 @@ module VCAP::CloudController
   describe PackagePresenter do
     describe '#present_json' do
       it 'presents the package as json' do
-        package = PackageModel.make(type: 'package_type', url: 'foobar')
+        package = PackageModel.make(type: 'package_type', url: 'foobar', created_at: Time.at(0), updated_at: Time.at(1))
 
         json_result = PackagePresenter.new.present_json(package)
         result      = MultiJson.load(json_result)
@@ -16,7 +16,8 @@ module VCAP::CloudController
         expect(result['error']).to eq(package.error)
         expect(result['hash']).to eq(package.package_hash)
         expect(result['url']).to eq(package.url)
-        expect(result['created_at']).to eq(package.created_at.as_json)
+        expect(result['created_at']).to eq('1970-01-01T00:00:00Z')
+        expect(result['updated_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['_links']).to include('self')
         expect(result['_links']).to include('app')
       end

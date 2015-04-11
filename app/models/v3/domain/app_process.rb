@@ -2,7 +2,7 @@ module VCAP::CloudController
   class AppProcess
     attr_reader :guid, :app_guid, :space_guid, :stack_guid, :disk_quota,
       :memory, :instances, :state, :command, :buildpack, :health_check_timeout,
-      :docker_image, :environment_json, :name, :type
+      :docker_image, :environment_json, :name, :type, :updated_at, :created_at
 
     def initialize(opts)
       opts.symbolize_keys!
@@ -21,6 +21,8 @@ module VCAP::CloudController
       @state                = opts[:state]
       @type                 = opts[:type] || 'web'
       @name                 = opts[:name] || "v3-proc-#{@type}-#{@guid}"
+      @created_at           = opts[:created_at]
+      @updated_at           = opts[:updated_at]
     end
 
     def with_changes(changes)
@@ -40,6 +42,8 @@ module VCAP::CloudController
         state:                  self.state,
         type:                   self.type,
         name:                   self.name,
+        created_at:             self.created_at,
+        updated_at:             self.updated_at,
       }.merge(changes.symbolize_keys))
     end
   end

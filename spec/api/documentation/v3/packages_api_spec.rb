@@ -3,6 +3,7 @@ require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
 resource 'Packages (Experimental)', type: :api do
+  let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
   let(:tmpdir) { Dir.mktmpdir }
   let(:valid_zip) {
     zip_name = File.join(tmpdir, 'file.zip')
@@ -68,7 +69,8 @@ resource 'Packages (Experimental)', type: :api do
               'url'        => nil,
               'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
               'error'      => nil,
-              'created_at' => package1.created_at.as_json,
+              'created_at' => iso8601,
+              'updated_at' => nil,
               '_links'     => {
                 'self'   => { 'href' => "/v3/packages/#{package1.guid}" },
                 'upload' => { 'href' => "/v3/packages/#{package1.guid}/upload", 'method' => 'POST' },
@@ -82,7 +84,8 @@ resource 'Packages (Experimental)', type: :api do
               'url'        => 'http://docker-repo/my-image',
               'state'      => VCAP::CloudController::PackageModel::READY_STATE,
               'error'      => nil,
-              'created_at' => package2.created_at.as_json,
+              'created_at' => iso8601,
+              'updated_at' => nil,
               '_links'     => {
                 'self'  => { 'href' => "/v3/packages/#{package2.guid}" },
                 'app'   => { 'href' => "/v3/apps/#{package2.app_guid}" },
@@ -95,7 +98,7 @@ resource 'Packages (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 
@@ -122,7 +125,8 @@ resource 'Packages (Experimental)', type: :api do
         'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
         'url'        => nil,
         'error'      => nil,
-        'created_at' => package_model.created_at.as_json,
+        'created_at' => iso8601,
+        'updated_at' => nil,
         '_links'     => {
           'self'   => { 'href' => "/v3/packages/#{guid}" },
           'upload' => { 'href' => "/v3/packages/#{guid}/upload", 'method' => 'POST' },
@@ -134,7 +138,7 @@ resource 'Packages (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 
@@ -176,7 +180,8 @@ resource 'Packages (Experimental)', type: :api do
         'state'      => 'READY',
         'error'      => nil,
         'url'        => url,
-        'created_at' => package.created_at.as_json,
+        'created_at' => iso8601,
+        'updated_at' => nil,
         '_links'     => {
           'self'  => { 'href' => "/v3/packages/#{package.guid}" },
           'app'   => { 'href' => "/v3/apps/#{guid}" },
@@ -185,7 +190,7 @@ resource 'Packages (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(201)
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
         type: 'audit.app.add_package',
@@ -248,6 +253,7 @@ resource 'Packages (Experimental)', type: :api do
       expect(job.handler).to include(package_model.guid)
       expect(job.guid).not_to be_nil
 
+      package_model.reload
       expected_response = {
         'guid'       => guid,
         'type'       => type,
@@ -255,7 +261,8 @@ resource 'Packages (Experimental)', type: :api do
         'state'      => VCAP::CloudController::PackageModel::PENDING_STATE,
         'url'        => nil,
         'error'      => nil,
-        'created_at' => package_model.created_at.as_json,
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
         '_links'     => {
           'self'   => { 'href' => "/v3/packages/#{package_model.guid}" },
           'upload' => { 'href' => "/v3/packages/#{package_model.guid}/upload", 'method' => 'POST' },
@@ -265,7 +272,7 @@ resource 'Packages (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(201)
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 
@@ -357,6 +364,8 @@ resource 'Packages (Experimental)', type: :api do
         'failure_reason'         => nil,
         'detected_start_command' => nil,
         'procfile'               => nil,
+        'created_at'             => iso8601,
+        'updated_at'             => nil,
         'environment_variables'  => { 'CF_STACK' => stack, 'VCAP_APPLICATION' => {
           'limits' => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
           'application_version' => 'whatuuid',
@@ -368,7 +377,6 @@ resource 'Packages (Experimental)', type: :api do
           'uris' => [],
           'users' => nil
         } },
-        'created_at'             => droplet.created_at.as_json,
         '_links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{droplet.guid}" },
           'package' => { 'href' => "/v3/packages/#{guid}" },
@@ -379,7 +387,7 @@ resource 'Packages (Experimental)', type: :api do
       expect(response_status).to eq(201)
 
       parsed_response = MultiJson.load(response_body)
-      expect(parsed_response).to eq(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 end

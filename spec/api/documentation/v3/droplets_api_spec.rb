@@ -3,6 +3,7 @@ require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
 resource 'Droplets (Experimental)', type: :api do
+  let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user)['HTTP_AUTHORIZATION'] }
   header 'AUTHORIZATION', :user_header
@@ -51,7 +52,8 @@ resource 'Droplets (Experimental)', type: :api do
         'procfile'               => droplet_model.procfile,
         'detected_start_command' => droplet_model.detected_start_command,
         'environment_variables'  => droplet_model.environment_variables,
-        'created_at'             => droplet_model.created_at.as_json,
+        'created_at'             => iso8601,
+        'updated_at'             => nil,
         '_links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{guid}" },
           'package' => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -63,7 +65,7 @@ resource 'Droplets (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 
@@ -154,7 +156,8 @@ resource 'Droplets (Experimental)', type: :api do
               'detected_start_command' => droplet1.detected_start_command,
               'environment_variables'  => droplet1.environment_variables,
               'procfile'               => droplet1.procfile,
-              'created_at'             => droplet1.created_at.as_json,
+              'created_at'             => iso8601,
+              'updated_at'             => nil,
               '_links'                 => {
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
                 'package'   => { 'href' => "/v3/packages/#{package.guid}" },
@@ -171,7 +174,8 @@ resource 'Droplets (Experimental)', type: :api do
               'detected_start_command' => droplet2.detected_start_command,
               'procfile'               => droplet2.procfile,
               'environment_variables'  => {},
-              'created_at'             => droplet2.created_at.as_json,
+              'created_at'             => iso8601,
+              'updated_at'             => nil,
               '_links'                 => {
                 'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },
                 'package' => { 'href' => "/v3/packages/#{package.guid}" },
@@ -185,7 +189,7 @@ resource 'Droplets (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 end
