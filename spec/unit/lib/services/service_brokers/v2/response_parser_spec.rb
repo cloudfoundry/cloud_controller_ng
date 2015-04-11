@@ -47,6 +47,12 @@ module VCAP::Services
           test_case(operation, 500, empty_json,                                error: Errors::ServiceBrokerBadResponse)
         end
 
+        def self.test_pass_through(operation, status, with_body={}, expected_state:)
+          response_body = with_additional_field
+          response_body.merge!(with_body)
+          test_case(operation, status, response_body.to_json, result: base_async_body(expected_state).merge(response_body))
+        end
+
         def self.test_case(operation, code, body, opts={})
           expect_warning = !!opts[:expect_warning]
           description = opts[:description]
@@ -100,6 +106,12 @@ module VCAP::Services
           }
         end
 
+        def self.with_additional_field
+          {
+            'foo' => 'bar'
+          }
+        end
+
         def self.valid_catalog
           {
             'services' => [
@@ -143,6 +155,7 @@ module VCAP::Services
           "Status Code: #{status} message, Body: #{body}"
         end
 
+        # rubocop:disable Metrics/LineLength
         test_case(:provision, 200, partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(partial_json))
         test_case(:provision, 200, malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(malformed_json))
         test_case(:provision, 200, empty_json,                                result: base_async_body('succeeded'))
@@ -176,6 +189,7 @@ module VCAP::Services
         test_case(:fetch_state, 200, empty_json,                              error: Errors::ServiceBrokerResponseMalformed, description: response_not_understood('succeeded', ''))
         test_case(:fetch_state, 200, base_async_body('unrecognized').to_json, error: Errors::ServiceBrokerResponseMalformed, description: response_not_understood('succeeded', 'unrecognized'))
         test_case(:fetch_state, 200, base_async_body('succeeded').to_json,    result: base_async_body('succeeded'))
+        test_pass_through(:fetch_state, 200, base_async_body('succeeded'),    expected_state: 'succeeded')
         test_case(:fetch_state, 201, partial_json,                            error: Errors::ServiceBrokerResponseMalformed)
         test_case(:fetch_state, 201, malformed_json,                          error: Errors::ServiceBrokerResponseMalformed)
         test_case(:fetch_state, 201, base_async_body('succeeded').to_json,    error: Errors::ServiceBrokerBadResponse)
@@ -222,6 +236,7 @@ module VCAP::Services
         test_case(:deprovision, 200, partial_json,                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(partial_json))
         test_case(:deprovision, 200, malformed_json,                          error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(malformed_json))
         test_case(:deprovision, 200, empty_json,                              result: base_async_body('succeeded'))
+        test_pass_through(:deprovision, 200,                                  expected_state: 'succeeded')
         test_case(:deprovision, 201, partial_json,                            error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, partial_json))
         test_case(:deprovision, 201, malformed_json,                          error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, malformed_json))
         test_case(:deprovision, 201, empty_json,                              error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, empty_json))
@@ -229,6 +244,7 @@ module VCAP::Services
         test_case(:deprovision, 202, partial_json,                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(partial_json))
         test_case(:deprovision, 202, malformed_json,                          error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(malformed_json))
         test_case(:deprovision, 202, empty_json,                              result: base_async_body('in progress'))
+        test_pass_through(:deprovision, 202,                                  expected_state: 'in progress')
         test_case(:unbind,      202, empty_json,                              error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 204, partial_json,                            result: {})
         test_case(:deprovision, 204, malformed_json,                          result: {})
@@ -247,7 +263,7 @@ module VCAP::Services
         test_case(:update, 200, partial_json,                                 error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(partial_json))
         test_case(:update, 200, malformed_json,                               error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(malformed_json))
         test_case(:update, 200, empty_json,                                   result: base_async_body('succeeded'))
-        test_case(:update, 200, { foo: 'bar' }.to_json,                       result: base_async_body('succeeded').merge({ 'foo' => 'bar' }))
+        test_pass_through(:update, 200,                                       expected_state: 'succeeded')
         test_case(:update, 201, partial_json,                                 error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, partial_json))
         test_case(:update, 201, malformed_json,                               error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, malformed_json))
         test_case(:update, 201, empty_json,                                   error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, empty_json))
@@ -255,7 +271,7 @@ module VCAP::Services
         test_case(:update, 202, partial_json,                                 error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(partial_json))
         test_case(:update, 202, malformed_json,                               error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(malformed_json))
         test_case(:update, 202, empty_json,                                   result: base_async_body('in progress'))
-        test_case(:update, 202, { foo: 'bar' }.to_json,                       result: base_async_body('in progress').merge({ 'foo' => 'bar' }))
+        test_pass_through(:update, 202,                                       expected_state: 'in progress')
         test_case(:update, 204, partial_json,                                 error: Errors::ServiceBrokerBadResponse)
         test_case(:update, 204, malformed_json,                               error: Errors::ServiceBrokerBadResponse)
         test_case(:update, 204, empty_json,                                   error: Errors::ServiceBrokerBadResponse)
@@ -267,6 +283,7 @@ module VCAP::Services
         test_case(:update, 422, partial_json,                                 error: Errors::ServiceBrokerRequestRejected)
         test_case(:update, 422, { error: 'AsyncRequired' }.to_json,           error: Errors::AsyncRequired)
         test_common_error_cases(:update)
+        # rubocop:enable Metrics/LineLength
       end
     end
   end
