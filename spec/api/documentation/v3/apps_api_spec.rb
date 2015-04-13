@@ -3,6 +3,7 @@ require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
 resource 'Apps (Experimental)', type: :api do
+  let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user)['HTTP_AUTHORIZATION'] }
   header 'AUTHORIZATION', :user_header
@@ -15,8 +16,6 @@ resource 'Apps (Experimental)', type: :api do
       raise error['description']
     end
   end
-
-
 
   get '/v3/apps' do
     parameter :names, 'Names of apps to filter by', valid_values: 'array of strings', example_values: 'names[]=name1&names[]=name2'
@@ -48,6 +47,8 @@ resource 'Apps (Experimental)', type: :api do
     end
 
     example 'List all Apps' do
+      do_request_with_error_handling
+
       expected_response = {
         'pagination' => {
           'total_results' => 3,
@@ -62,7 +63,7 @@ resource 'Apps (Experimental)', type: :api do
             'guid'   => app_model3.guid,
             'desired_state' => app_model3.desired_state,
             'total_desired_instances' => 0,
-            'created_at' => /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/,
+            'created_at' => iso8601,
             'updated_at' => nil,
             'environment_variables' => environment_variables,
             '_links' => {
@@ -72,13 +73,15 @@ resource 'Apps (Experimental)', type: :api do
               'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
               'start'     => { 'href' => "/v3/apps/#{app_model3.guid}/start", 'method' => 'PUT' },
               'stop'      => { 'href' => "/v3/apps/#{app_model3.guid}/stop", 'method' => 'PUT' },
-            }
+            },
           },
           {
             'name'   => name2,
             'guid'   => app_model2.guid,
-            'desired_state' => app_model2.desired_state,
+            'desired_state' => app_model3.desired_state,
             'total_desired_instances' => 0,
+            'created_at' => iso8601,
+            'updated_at' => nil,
             'environment_variables' => {},
             '_links' => {
               'self'      => { 'href' => "/v3/apps/#{app_model2.guid}" },
@@ -91,13 +94,11 @@ resource 'Apps (Experimental)', type: :api do
           }
         ]
       }
-      expect("1970-01-01T00:00:01Z").to match(a_string_matching(/^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/),)
-      do_request_with_error_handling
 
       parsed_response = MultiJson.load(response_body)
-      #expect(response_status).to eq(200)
-      expect(parsed_response).to match(expected_response)
-      # expect(parsed_response.to_hash).to be_a_response_like(expected_response.to_hash)
+
+      expect(response_status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
 
     context 'faceted search' do
@@ -159,6 +160,8 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => guid,
         'desired_state' => app_model.desired_state,
         'total_desired_instances' => 3,
+        'created_at' => iso8601,
+        'updated_at' => nil,
         'environment_variables' => environment_variables,
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{guid}" },
@@ -173,7 +176,7 @@ resource 'Apps (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      match_response(parsed_response.to_hash, expected_response.to_hash)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 
@@ -206,6 +209,8 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => expected_guid,
         'desired_state' => 'STOPPED',
         'total_desired_instances' => 0,
+        'created_at' => iso8601,
+        'updated_at' => nil,
         'environment_variables' => environment_variables,
         '_links' => {
           'self'      => { 'href' => "/v3/apps/#{expected_guid}" },
@@ -219,7 +224,7 @@ resource 'Apps (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(201)
-      match_response(parsed_response.to_hash, expected_response.to_hash)
+      expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
         type: 'audit.app.create',
@@ -270,6 +275,8 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => app_model.guid,
         'desired_state' => app_model.desired_state,
         'total_desired_instances' => 0,
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
         'environment_variables' => environment_variables,
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
@@ -284,7 +291,7 @@ resource 'Apps (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      match_response(parsed_response.to_hash, expected_response.to_hash)
+      expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
         type: 'audit.app.update',
@@ -363,6 +370,8 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => app_model.guid,
         'desired_state'   => 'STARTED',
         'total_desired_instances' => 0,
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
         'environment_variables' => {},
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
@@ -377,7 +386,7 @@ resource 'Apps (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      match_response(parsed_response.to_hash, expected_response.to_hash)
+      expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
         type: 'audit.app.start',
@@ -420,6 +429,8 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => app_model.guid,
         'desired_state'   => 'STOPPED',
         'total_desired_instances' => 0,
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
         'environment_variables' => {},
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
@@ -434,7 +445,7 @@ resource 'Apps (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      match_response(parsed_response.to_hash, expected_response.to_hash)
+      expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
         type: 'audit.app.stop',
