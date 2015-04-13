@@ -8,6 +8,8 @@ require 'actions/app_update'
 require 'actions/app_start'
 require 'actions/app_stop'
 require 'actions/app_create'
+require 'queries/assign_current_droplet_fetcher'
+require 'actions/set_current_droplet'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
@@ -162,6 +164,25 @@ module VCAP::CloudController
           'application_env_json' => vcap_application
         }.to_json
       ]
+    end
+
+    put '/v3/apps/:guid/current_droplet', :assign_current_droplet
+    def assign_current_droplet(app_guid)
+      check_write_permissions!
+
+      droplet_guid = parse_and_validate_json(body)['desired_droplet_guid']
+
+      app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
+
+      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+      unauthorized! unless can_update?(space.guid)
+      unprocessable!('Stop the app before changing droplet') if app.desired_state != 'STOPPED'
+
+      droplet_not_found! if droplet.nil?
+
+      app = SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
+
+      [HTTP::OK, @app_presenter.present_json(app)]
     end
 
     def membership

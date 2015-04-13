@@ -9,54 +9,6 @@ module VCAP::CloudController
     let(:app_update) { AppUpdate.new(user, user_email) }
 
     describe '.update' do
-      context 'when the desired_droplet does not exist' do
-        let(:message) { { 'desired_droplet_guid' => 'not_a_guid' } }
-
-        it 'raises a DropletNotFound exception' do
-          expect {
-            app_update.update(app_model, message)
-          }.to raise_error(AppUpdate::DropletNotFound)
-        end
-      end
-
-      context 'when the desired_droplet exists' do
-        let(:droplet) { DropletModel.make }
-        let(:droplet_guid) { droplet.guid }
-        let(:message) { { 'desired_droplet_guid' => droplet_guid } }
-
-        context 'the droplet is not associated with the app' do
-          it 'raises a DropletNotFound exception' do
-            expect {
-              app_update.update(app_model, message)
-            }.to raise_error(AppUpdate::DropletNotFound)
-          end
-        end
-
-        context 'the droplet is associated with the app' do
-          before do
-            app_model.add_droplet_by_guid(droplet_guid)
-          end
-
-          it 'sets the desired droplet guid' do
-            updated_app = app_update.update(app_model, message)
-
-            expect(updated_app.desired_droplet_guid).to eq(droplet_guid)
-          end
-
-          it 'creates an audit event' do
-            app_update.update(app_model, message)
-
-            event = Event.last
-            expect(event.type).to eq('audit.app.update')
-            expect(event.actor).to eq('1337')
-            expect(event.actor_name).to eq(user_email)
-            expect(event.actee_type).to eq('v3-app')
-            expect(event.actee).to eq(app_model.guid)
-            expect(event.metadata['updated_fields']).to include('desired_droplet_guid')
-          end
-        end
-      end
-
       context 'when given a new name' do
         let(:name) { 'new name' }
         let(:message) { { 'name' => name } }

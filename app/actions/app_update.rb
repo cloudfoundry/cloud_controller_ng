@@ -24,14 +24,6 @@ module VCAP::CloudController
           updated_fields << 'environment_variables'
         end
 
-        if message['desired_droplet_guid']
-          droplet = DropletModel.find(guid: message['desired_droplet_guid'])
-          raise DropletNotFound if droplet.nil?
-          raise DropletNotFound if droplet.app_guid != app.guid
-          app.desired_droplet_guid = message['desired_droplet_guid']
-          updated_fields << 'desired_droplet_guid'
-        end
-
         @logger.info("Updated app #{app.name} #{app.guid}, message: #{message}")
         Event.create({
           type: 'audit.app.update',

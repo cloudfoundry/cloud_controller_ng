@@ -73,7 +73,8 @@ resource 'Apps (Experimental)', type: :api do
               'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
               'start'     => { 'href' => "/v3/apps/#{app_model3.guid}/start", 'method' => 'PUT' },
               'stop'      => { 'href' => "/v3/apps/#{app_model3.guid}/stop", 'method' => 'PUT' },
-            },
+              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model3.guid}/current_droplet", 'method' => 'PUT' }
+            }
           },
           {
             'name'   => name2,
@@ -90,6 +91,7 @@ resource 'Apps (Experimental)', type: :api do
               'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
               'start'     => { 'href' => "/v3/apps/#{app_model2.guid}/start", 'method' => 'PUT' },
               'stop'      => { 'href' => "/v3/apps/#{app_model2.guid}/stop", 'method' => 'PUT' },
+              'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model2.guid}/current_droplet", 'method' => 'PUT' }
             }
           }
         ]
@@ -171,6 +173,7 @@ resource 'Apps (Experimental)', type: :api do
           'desired_droplet' => { 'href' => "/v3/droplets/#{desired_droplet_guid}" },
           'start'           => { 'href' => "/v3/apps/#{guid}/start", 'method' => 'PUT' },
           'stop'           => { 'href' => "/v3/apps/#{guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
@@ -219,6 +222,7 @@ resource 'Apps (Experimental)', type: :api do
           'space'     => { 'href' => "/v2/spaces/#{space_guid}" },
           'start'     => { 'href' => "/v3/apps/#{expected_guid}/start", 'method' => 'PUT' },
           'stop'      => { 'href' => "/v3/apps/#{expected_guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{expected_guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
@@ -251,11 +255,9 @@ resource 'Apps (Experimental)', type: :api do
     end
 
     parameter :name, 'Name of the App'
-    parameter :desired_droplet_guid, 'GUID of the Droplet to be used for the App'
     parameter :environment_variables, 'Environment variables to be used for the App when running'
 
     let(:name) { 'new_name' }
-    let(:desired_droplet_guid) { droplet.guid }
     let(:environment_variables) do
       {
         'MY_ENV_VAR' => 'foobar',
@@ -283,9 +285,9 @@ resource 'Apps (Experimental)', type: :api do
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
-          'desired_droplet' => { 'href' => "/v3/droplets/#{desired_droplet_guid}" },
           'start'     => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'      => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
@@ -303,7 +305,7 @@ resource 'Apps (Experimental)', type: :api do
         space_guid: space_guid,
         organization_guid: space.organization.guid
       })
-      expect(event.metadata['updated_fields']).to include('name', 'environment_variables', 'desired_droplet_guid')
+      expect(event.metadata['updated_fields']).to include('name', 'environment_variables')
     end
   end
 
@@ -381,6 +383,7 @@ resource 'Apps (Experimental)', type: :api do
           'desired_droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
           'start'           => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'            => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
@@ -440,6 +443,7 @@ resource 'Apps (Experimental)', type: :api do
           'desired_droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
           'start'           => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'            => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
         }
       }
 
@@ -525,6 +529,64 @@ resource 'Apps (Experimental)', type: :api do
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
       expect(parsed_response).to match(expected_response)
+    end
+  end
+
+  put '/v3/apps/:guid/current_droplet' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:space_guid) { space.guid }
+    let(:procfile) { 'web: start the app' }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid, procfile: procfile) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space_guid: space_guid) }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
+    parameter :desired_droplet_guid, 'GUID of the Droplet to be used for the App'
+
+    let(:desired_droplet_guid) { droplet.guid }
+    let(:guid) { app_model.guid }
+
+    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+
+    example 'Assigning a droplet as a an Apps current droplet' do
+      do_request_with_error_handling
+
+      expected_response = {
+        'name'   => app_model.name,
+        'guid'   => app_model.guid,
+        'desired_state' => app_model.desired_state,
+        'environment_variables' => {},
+        '_links' => {
+          'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
+          'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
+          'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
+          'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
+          'desired_droplet' => { 'href' => "/v3/droplets/#{desired_droplet_guid}" },
+          'start'     => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+          'stop'      => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
+          'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
+        }
+      }
+
+      parsed_response = MultiJson.load(response_body)
+      expect(response_status).to eq(200)
+      expect(parsed_response).to match(expected_response)
+      event = VCAP::CloudController::Event.where(actor: user.guid).first
+      expect(event.values).to include({
+        type: 'audit.app.update',
+        actee: app_model.guid,
+        actee_type: 'v3-app',
+        actee_name: app_model.name,
+        actor: user.guid,
+        actor_type: 'user',
+        space_guid: space_guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata['updated_fields']).to include('desired_droplet_guid')
+      expect(app_model.reload.processes).not_to be_empty
     end
   end
 end

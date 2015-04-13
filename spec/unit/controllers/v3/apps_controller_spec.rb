@@ -828,5 +828,133 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'assign_current_droplet' do
+      let(:app_model) { AppModel.make }
+      let(:space) { app_model.space }
+      let(:org) { space.organization }
+      let(:guid) { app_model.guid }
+      let(:droplet) { DropletModel.make(procfile: 'web: start app') }
+      let(:droplet_guid) { droplet.guid }
+      let(:req_body) { JSON.dump({ desired_droplet_guid: droplet_guid }) }
+
+      before do
+        app_model.add_droplet(droplet)
+        allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
+      end
+
+      it 'returns 200' do
+        response_code, _ = apps_controller.assign_current_droplet(guid)
+        expect(response_code).to eq(200)
+      end
+
+      context 'bad json' do
+        let(:req_body) { "{___O___O___}" }
+        it 'returns 400 for bad json' do
+          expect {
+            response_code, _ = apps_controller.assign_current_droplet(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'MessageParseError'
+            expect(error.response_code).to eq 400
+          end
+        end
+      end
+
+      it 'doesnt let you if not stopped' do
+        app_model.update(desired_state: 'STARTED')
+        expect {
+          apps_controller.assign_current_droplet(guid)
+        }.to raise_error do |error|
+          expect(error.name).to eq 'UnprocessableEntity'
+          expect(error.response_code).to eq 422
+        end
+      end
+
+      context 'when the application exists' do
+        context 'when the user cannot update the application' do
+          context 'when the user does not have write permissions' do
+            it 'raises an ApiError with a 403 code' do
+              expect(apps_controller).to receive(:check_write_permissions!).
+                and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+              expect {
+                apps_controller.assign_current_droplet(guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'NotAuthorized'
+                expect(error.response_code).to eq 403
+              end
+            end
+          end
+
+          context 'when the user can not read the applicaiton' do
+            before do
+              allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+              allow(membership).to receive(:has_any_roles?).with(
+                [Membership::SPACE_DEVELOPER,
+                 Membership::SPACE_MANAGER,
+                 Membership::SPACE_AUDITOR,
+                 Membership::ORG_MANAGER], space.guid, org.guid).
+                 and_return(false)
+            end
+
+            it 'returns a 404 ResourceNotFound' do
+              expect {
+                apps_controller.assign_current_droplet(app_model.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'ResourceNotFound'
+                expect(error.response_code).to eq 404
+              end
+            end
+          end
+
+          context 'when the user cannot update the application' do
+            before do
+              allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+              allow(membership).to receive(:has_any_roles?).with(
+                [Membership::SPACE_DEVELOPER,
+                 Membership::SPACE_MANAGER,
+                 Membership::SPACE_AUDITOR,
+                 Membership::ORG_MANAGER], space.guid, org.guid).
+                 and_return(true)
+              allow(membership).to receive(:has_any_roles?).with(
+                [Membership::SPACE_DEVELOPER], space.guid).
+                 and_return(false)
+            end
+
+            it 'returns a 403 NotAuthorized' do
+              expect {
+                apps_controller.assign_current_droplet(app_model.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'NotAuthorized'
+                expect(error.response_code).to eq 403
+              end
+            end
+          end
+        end
+
+        context 'and the droplet is not associated to the application' do
+          let(:req_body) { JSON.dump({ desired_droplet_guid: 'bogus' }) }
+
+          it 'returns a 404 ResourceNotFound' do
+            expect {
+              apps_controller.assign_current_droplet(app_model.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'ResourceNotFound'
+              expect(error.response_code).to eq 404
+            end
+          end
+        end
+
+        context 'when the application does not exist' do
+          it 'returns a 404 ResourceNotFound' do
+            expect {
+              apps_controller.assign_current_droplet('i do not exist')
+            }.to raise_error do |error|
+              expect(error.name).to eq 'ResourceNotFound'
+              expect(error.response_code).to eq 404
+            end
+          end
+        end
+      end
+    end
   end
 end

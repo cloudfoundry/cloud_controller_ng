@@ -22,6 +22,7 @@ module VCAP::CloudController
         expect(result['_links']).not_to include('desired_droplet')
         expect(result['_links']).to include('start')
         expect(result['_links']).to include('stop')
+        expect(result['_links']).to include('assign_current_droplet')
       end
 
       it 'returns 0 if there are no processes' do
@@ -51,7 +52,7 @@ module VCAP::CloudController
         expect(result['_links']['desired_droplet']['href']).to eq('/v3/droplets/123')
       end
 
-      it 'includes methods on the start and stop links' do
+      it 'includes start, stop, and assign_current_droplet links' do
         app = AppModel.make(environment_variables: { 'some' => 'stuff' }, desired_state: 'STOPPED')
 
         json_result = AppPresenter.new.present_json(app)
@@ -59,6 +60,7 @@ module VCAP::CloudController
 
         expect(result['_links']['start']['method']).to eq('PUT')
         expect(result['_links']['stop']['method']).to eq('PUT')
+        expect(result['_links']['assign_current_droplet']['method']).to eq('PUT')
       end
     end
 

@@ -1,7 +1,6 @@
 require 'presenters/v3/process_presenter'
 require 'handlers/processes_handler'
 require 'cloud_controller/paging/pagination_options'
-require 'queries/process_delete_fetcher'
 require 'actions/process_delete'
 
 module VCAP::CloudController
@@ -31,21 +30,6 @@ module VCAP::CloudController
       [HTTP::OK, @process_presenter.present_json(process)]
     end
 
-    post '/v3/processes', :create
-    def create
-      create_message = ProcessCreateMessage.create_from_http_request(body)
-      bad_request!(create_message.error) unless create_message.valid?
-
-      process = @processes_handler.create(create_message, @access_context)
-
-      [HTTP::CREATED, @process_presenter.present_json(process)]
-
-    rescue ProcessesHandler::InvalidProcess => e
-      unprocessable!(e.message)
-    rescue ProcessesHandler::Unauthorized
-      unauthorized!
-    end
-
     patch '/v3/processes/:guid', :update
     def update(guid)
       update_message = ProcessUpdateMessage.create_from_http_request(guid, body)
@@ -64,24 +48,7 @@ module VCAP::CloudController
       unauthorized!
     end
 
-    delete '/v3/processes/:guid', :delete
-    def delete(guid)
-      check_write_permissions!
-
-      process, space, org = process_delete_fetcher.fetch(guid)
-      not_found! if process.nil? || !can_read?(space.guid, org.guid)
-      unauthorized! unless can_delete?(space.guid)
-
-      ProcessDelete.new(space, current_user, current_user_email).delete(process)
-
-      [HTTP::NO_CONTENT]
-    end
-
     private
-
-    def process_delete_fetcher
-      @process_delete_fetcher ||= ProcessDeleteFetcher.new
-    end
 
     def membership
       @membership ||= Membership.new(current_user)
@@ -92,10 +59,6 @@ module VCAP::CloudController
                                  Membership::SPACE_MANAGER,
                                  Membership::SPACE_AUDITOR,
                                  Membership::ORG_MANAGER], space_guid, org_guid)
-    end
-
-    def can_delete?(space_guid)
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 
     def not_found!
