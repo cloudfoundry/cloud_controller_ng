@@ -3,6 +3,7 @@ require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
 resource 'Apps (Experimental)', type: :api do
+  let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user)['HTTP_AUTHORIZATION'] }
   header 'AUTHORIZATION', :user_header
@@ -50,6 +51,8 @@ resource 'Apps (Experimental)', type: :api do
             'guid'    => process_guid,
             'type'    => process_type,
             'command' => nil,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
           }
         ]
       }
@@ -59,7 +62,7 @@ resource 'Apps (Experimental)', type: :api do
       parsed_response = MultiJson.load(response_body)
 
       expect(response_status).to eq(200)
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 
@@ -189,23 +192,29 @@ PROCFILE
             'guid' => web_guid,
             'type' => 'web',
             'command' => 'bundle exec rails server -p $PORT',
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
           },
           {
             'guid' => worker_guid,
             'type' => 'worker',
             'command' => 'bundle exec rake worker',
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
           },
           {
             'guid' => clock_guid,
             'type' => 'clock',
             'command' => 'bundle exec rake clockwork',
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
           }
         ]
       }
 
       parsed_response = MultiJson.load(response_body)
 
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 end
