@@ -372,7 +372,6 @@ module VCAP::CloudController
 
           context 'and the broker provisions the instance synchronously' do
             let(:response_code) { 201 }
-            let(:response_body) { '{}' }
 
             it 'returns a 201 with the last operation state as succeeded' do
               service_instance = create_managed_service_instance
@@ -1019,11 +1018,19 @@ module VCAP::CloudController
               })
         end
 
+        it 'updates the service plan in the database' do
+          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
+
+          expect(service_instance.reload.service_plan).to eq(new_service_plan)
+        end
+
+        it 'returns 201' do
+          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
+          expect(last_response).to have_status_code 201
+        end
+
         context 'when the broker returns a 202' do
           let(:status) { 202 }
-          let(:response_body) do
-            {}.to_json
-          end
 
           it 'does not update the service plan in the database' do
             put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
@@ -1131,23 +1138,6 @@ module VCAP::CloudController
               expect(service_instance.last_operation.reload.state).to eq 'succeeded'
               expect(service_instance.last_operation.reload.description).to be_nil
             end
-          end
-        end
-
-        context 'when the broker returns a last_operation with state `succeeded`' do
-          let(:response_body) do
-            {}.to_json
-          end
-
-          it 'updates the service plan in the database' do
-            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
-
-            expect(service_instance.reload.service_plan).to eq(new_service_plan)
-          end
-
-          it 'returns 201' do
-            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
-            expect(last_response).to have_status_code 201
           end
         end
 
@@ -1636,7 +1626,7 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the broker returns state `failed`' do
+          context 'when the broker returns a 400' do
             let(:status) { 400 }
             let(:body) do
               {
