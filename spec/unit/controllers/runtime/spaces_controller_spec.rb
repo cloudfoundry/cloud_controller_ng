@@ -613,7 +613,7 @@ module VCAP::CloudController
           expect(Route.find(guid: route_guid)).to be_nil
         end
 
-        it 'successfully deletes the space asynchronously when async=true' do
+        it 'successfully deletes the space in a background job when async=true' do
           delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
 
           expect(last_response).to have_status_code(202)
@@ -725,7 +725,7 @@ The service broker returned an invalid response for the request to #{instance_ur
               end
             end
 
-            context 'asynchronous (async=true)' do
+            context 'when async=true' do
               it 'deletes the first and third instances and returns an error' do
                 delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
                 expect(last_response).to have_status_code 202

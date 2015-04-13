@@ -339,7 +339,7 @@ module VCAP::CloudController
         include_examples 'tests with associations'
       end
 
-      context 'when async' do
+      context 'when async=true' do
         let(:params) { { 'async' => 'true' } }
 
         context 'and using the job enqueuer' do

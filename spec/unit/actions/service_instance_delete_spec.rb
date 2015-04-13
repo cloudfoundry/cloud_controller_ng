@@ -121,7 +121,7 @@ module VCAP::CloudController
           expect(inner_job.poll_interval).to eq(polling_interval)
         end
 
-        context 'and the caller wants to treat async deprovisioning as a failure' do
+        context 'and the caller wants to treat accepts_incomplete deprovisioning as a failure' do
           let(:error_when_in_progress) { true }
 
           it 'should return an error if there is an operation in progress' do

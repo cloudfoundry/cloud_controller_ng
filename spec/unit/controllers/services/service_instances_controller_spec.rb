@@ -192,7 +192,7 @@ module VCAP::CloudController
     describe 'POST', '/v2/service_instances' do
       context 'with a v2 service' do
         let(:service_broker_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{ServiceInstance.last.guid}" }
-        let(:service_broker_url_with_async) { "#{service_broker_url}?accepts_incomplete=true" }
+        let(:service_broker_url_with_accepts_incomplete) { "#{service_broker_url}?accepts_incomplete=true" }
         let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
         let(:service) { Service.make(service_broker: service_broker) }
         let(:space) { Space.make }
@@ -278,7 +278,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the client does not support asynchronous provisioning (no accepts_incomplete parameter)' do
+        context 'when the client does not support accepts_incomplete parameter' do
           let(:response_body) do
             {}.to_json
           end
@@ -343,16 +343,16 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the client explicitly allows asynchronous provisioning (accepts_incomplete=true)' do
+        context 'when the client explicitly allows accepts_incomplete' do
           let(:response_code) { 202 }
           let(:response_body) do
             {}.to_json
           end
 
-          it 'tells the service broker to provision a new service instance asynchronously' do
+          it 'tells the service broker to provision a new service instance with accepts_incomplete=true' do
             create_managed_service_instance
 
-            expect(a_request(:put, service_broker_url_with_async)).to have_been_made.times(1)
+            expect(a_request(:put, service_broker_url_with_accepts_incomplete)).to have_been_made.times(1)
             expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
           end
 
@@ -430,7 +430,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the client explicitly does not request asynchronous provisioning (accepts_incomplete=false)' do
+        context 'when the client explicitly does not request accepts_incomplete provisioning' do
           it 'tells the service broker to provision a new service instance synchronous' do
             create_managed_service_instance(accepts_incomplete: 'false')
 
@@ -990,7 +990,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the request allows asynchronous update' do
+      context 'when the request allows accepts_incomplete update' do
         before do
           stub_request(:patch, "#{service_broker_url}?accepts_incomplete=true").
             to_return(status: status, body: response_body)

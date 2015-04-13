@@ -206,13 +206,13 @@ module VCAP::Services
             else
               @processor = ->(response) do
                 broker_response = MultiJson.load(response.body)
-                base_async_body = {
+                base_body = {
                   'last_operation' => {
                     'state' => state
                   }
                 }
                 if state
-                  base_async_body.merge(broker_response)
+                  base_body.merge(broker_response)
                 else
                   broker_response
                 end

@@ -206,7 +206,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when running async' do
+      context 'when running async=true' do
         let(:user) { make_developer_for_space(app_obj.space) }
         let(:req_body) do
           { resources: '[]', application: valid_zip }

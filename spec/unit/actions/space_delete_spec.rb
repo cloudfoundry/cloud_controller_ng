@@ -69,7 +69,7 @@ module VCAP::CloudController
             expect(result.message).to include("An operation for service instance #{service_instance.name} is in progress.")
           end
 
-          context 'and there are multiple service instances deprovisioned asynchronously' do
+          context 'and there are multiple service instances deprovisioned with accepts_incomplete' do
             let!(:service_instance_2) { ManagedServiceInstance.make(space: space) } # deletion fail
 
             before do

@@ -583,7 +583,7 @@ module VCAP::CloudController
         end
 
         context 'and async=true' do
-          it 'successfully deletes the space asynchronously' do
+          it 'successfully deletes the space in a background job' do
             space_guid = Space.make(organization: org).guid
             app_guid = AppModel.make(space_guid: space_guid).guid
             service_instance_guid = ServiceInstance.make(space_guid: space_guid).guid

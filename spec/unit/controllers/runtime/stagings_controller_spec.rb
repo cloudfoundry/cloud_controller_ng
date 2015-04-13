@@ -207,7 +207,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when uploading async' do
+      context 'when uploading and async=true' do
         it 'adds a job that uploads and stages the app' do
           expect {
             post "/staging/droplets/#{app_obj.guid}/upload?async=true", upload_req
