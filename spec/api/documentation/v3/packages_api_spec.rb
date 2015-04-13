@@ -194,14 +194,15 @@ resource 'Packages (Experimental)', type: :api do
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
         type: 'audit.app.add_package',
-        actee: guid,
-        actee_type: 'v3-app',
-        actee_name: app_model.name,
+        actee: parsed_response['guid'],
+        actee_type: 'package',
+        actee_name: '',
         actor: user.guid,
         actor_type: 'user',
         space_guid: space.guid,
-        organization_guid: space.organization.guid,
+        organization_guid: space.organization.guid
       })
+      expect(event.metadata['request']['app_guid']).to eq(app_model.guid)
     end
   end
 

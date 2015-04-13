@@ -12,36 +12,24 @@ module VCAP::CloudController
     def update(app, message)
       app.db.transaction do
         app.lock!
-        updated_fields = []
 
         if message['name']
           app.name = message['name']
-          updated_fields << 'name'
         end
 
         if message['environment_variables']
           app.environment_variables = message['environment_variables']
-          updated_fields << 'environment_variables'
         end
 
-        @logger.info("Updated app #{app.name} #{app.guid}, message: #{message}")
-        Event.create({
-          type: 'audit.app.update',
-          actee: app.guid,
-          actee_type: 'v3-app',
-          actee_name: app.name,
-          actor: @user.guid,
-          actor_type: 'user',
-          actor_name: @user_email,
-          space_guid: app.space_guid,
-          organization_guid: app.space.organization.guid,
-          timestamp: Sequel::CURRENT_TIMESTAMP,
-          metadata: {
-            updated_fields: updated_fields
-          }
-        })
-
         app.save
+
+        Repositories::Runtime::AppEventRepository.new.record_app_update(
+          app,
+          app.space,
+          @user,
+          @user_email,
+          message
+        )
       end
 
       app

@@ -545,16 +545,26 @@ module VCAP::CloudController
       super(opts)
     end
 
+    def is_v3?
+      !is_v2?
+    end
+
+    def is_v2?
+      app.nil?
+    end
+
     def handle_add_route(route)
       mark_routes_changed(route)
-      app_event_repository = Repositories::Runtime::AppEventRepository.new
-      app_event_repository.record_map_route(self, route, SecurityContext.current_user, SecurityContext.current_user_email)
+      if is_v2?
+        Repositories::Runtime::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user, SecurityContext.current_user_email)
+      end
     end
 
     def handle_remove_route(route)
       mark_routes_changed(route)
-      app_event_repository = Repositories::Runtime::AppEventRepository.new
-      app_event_repository.record_unmap_route(self, route, SecurityContext.current_user, SecurityContext.current_user_email)
+      if is_v2?
+        Repositories::Runtime::AppEventRepository.new.record_unmap_route(self, route, SecurityContext.current_user, SecurityContext.current_user_email)
+      end
     end
 
     private

@@ -305,7 +305,7 @@ resource 'Apps (Experimental)', type: :api do
         space_guid: space_guid,
         organization_guid: space.organization.guid
       })
-      expect(event.metadata['updated_fields']).to include('name', 'environment_variables')
+      expect(event.metadata['request']).to eq({ 'name' => 'new_name', 'environment_variables' => 'PRIVATE DATA HIDDEN' })
     end
   end
 
@@ -330,9 +330,9 @@ resource 'Apps (Experimental)', type: :api do
       expect { package.refresh }.to raise_error Sequel::Error, 'Record not found'
       expect { droplet.refresh }.to raise_error Sequel::Error, 'Record not found'
       expect { process.refresh }.to raise_error Sequel::Error, 'Record not found'
-      event = VCAP::CloudController::Event.last
+      event = VCAP::CloudController::Event.last(2).first
       expect(event.values).to include({
-        type: 'audit.app.delete',
+        type: 'audit.app.delete-request',
         actee: app_model.guid,
         actee_type: 'v3-app',
         actee_name: app_model.name,
@@ -586,9 +586,10 @@ resource 'Apps (Experimental)', type: :api do
         actor: user.guid,
         actor_type: 'user',
         space_guid: space_guid,
+        space_id: space.id,
         organization_guid: space.organization.guid
       })
-      expect(event.metadata['updated_fields']).to include('desired_droplet_guid')
+      expect(event.metadata).to eq({"request"=>{"desired_droplet_guid"=>droplet.guid}})
       expect(app_model.reload.processes).not_to be_empty
     end
   end

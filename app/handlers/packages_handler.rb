@@ -1,3 +1,5 @@
+require 'repositories/runtime/package_event_repository'
+
 module VCAP::CloudController
   class PackageUploadMessage
     attr_reader :package_path, :package_guid
@@ -102,18 +104,12 @@ module VCAP::CloudController
       raise Unauthorized if access_context.cannot?(:create, package, space)
       package.save
 
-      Event.create({
-        type: 'audit.app.add_package',
-        actee: app_model.guid,
-        actee_type: 'v3-app',
-        actee_name: app_model.name,
-        actor: access_context.user.guid,
-        actor_type: 'user',
-        actor_name: access_context.user_email,
-        space_guid: app_model.space_guid,
-        organization_guid: app_model.space.organization.guid,
-        timestamp: Sequel::CURRENT_TIMESTAMP,
-      })
+      Repositories::Runtime::PackageEventRepository.record_app_add_package(
+        package,
+        access_context.user,
+        access_context.user_email,
+        message.as_json
+      )
 
       package
     rescue Sequel::ValidationFailed => e

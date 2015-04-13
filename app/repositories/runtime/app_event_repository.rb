@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Repositories
     module Runtime
       class AppEventRepository
-        CENSORED_FIELDS = [:encrypted_environment_json, :command, :environment_json]
+        CENSORED_FIELDS = [:encrypted_environment_json, :command, :environment_json, :environment_variables]
         CENSORED_MESSAGE = 'PRIVATE DATA HIDDEN'.freeze
         SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system' }
 
@@ -22,6 +22,14 @@ module VCAP::CloudController
           create_app_audit_event('audit.app.update', app, space, actor, metadata)
         end
 
+        def record_app_set_current_droplet(app, space, actor, actor_name, request_attrs)
+          Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{app_audit_hash(request_attrs)})")
+
+          actor = { name: actor_name, guid: actor.guid, type: 'user' }
+          metadata = { request: app_audit_hash(request_attrs) }
+          create_app_audit_event('audit.app.update', app, space, actor, metadata)
+        end
+
         def record_app_create(app, space, actor, actor_name, request_attrs)
           Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
 
@@ -30,11 +38,28 @@ module VCAP::CloudController
           create_app_audit_event('audit.app.create', app, space, actor, metadata)
         end
 
-        def record_app_delete_request(app, space, actor, actor_name, recursive)
+        def record_app_start(app, actor, actor_name)
+          Loggregator.emit(app.guid, "Starting v3-app with guid #{app.guid}")
+
+          actor = { name: actor_name, guid: actor.guid, type: 'user' }
+          create_app_audit_event('audit.app.start', app, app.space, actor, nil)
+        end
+
+        def record_app_stop(app, actor, actor_name)
+          Loggregator.emit(app.guid, "Stopping v3-app with guid #{app.guid}")
+
+          actor = { name: actor_name, guid: actor.guid, type: 'user' }
+          create_app_audit_event('audit.app.stop', app, app.space, actor, nil)
+        end
+
+        def record_app_delete_request(app, space, actor, actor_name, recursive=nil)
           Loggregator.emit(app.guid, "Deleted app with guid #{app.guid}")
 
           actor = { name: actor_name, guid: actor.guid, type: 'user' }
-          metadata = { request: { recursive: recursive } }
+          metadata = nil
+          unless recursive.nil?
+            metadata = { request: { recursive: recursive } }
+          end
           create_app_audit_event('audit.app.delete-request', app, space, actor, metadata)
         end
 
@@ -75,13 +100,21 @@ module VCAP::CloudController
             type: type,
             timestamp: Sequel::CURRENT_TIMESTAMP,
             actee: app.guid,
-            actee_type: 'app',
+            actee_type: actee_type(app),
             actee_name: app.name,
             actor: actor[:guid],
             actor_type: actor[:type],
             actor_name: actor[:name],
             metadata: metadata
           )
+        end
+
+        def actee_type(actee)
+          if actee.is_a? AppModel
+            'v3-app'
+          else
+            'app'
+          end
         end
 
         def app_audit_hash(request_attrs)

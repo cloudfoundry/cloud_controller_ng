@@ -30,21 +30,13 @@ module VCAP::CloudController
 
     def update_app(app, fields)
       app.update(fields)
-      Event.create({
-        type: 'audit.app.update',
-        actee: app.guid,
-        actee_type: 'v3-app',
-        actee_name: app.name,
-        actor: @user.guid,
-        actor_type: 'user',
-        actor_name: @user_email,
-        space_guid: app.space_guid,
-        organization_guid: app.space.organization.guid,
-        timestamp: Sequel::CURRENT_TIMESTAMP,
-        metadata: {
-          updated_fields: fields
-        }
-      })
+      Repositories::Runtime::AppEventRepository.new.record_app_set_current_droplet(
+          app,
+          app.space,
+          @user,
+          @user_email,
+          fields
+      )
     end
   end
 end

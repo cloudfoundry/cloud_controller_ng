@@ -9,10 +9,7 @@ module VCAP::CloudController
     def delete(processes)
       processes = [processes] unless processes.is_a?(Array)
 
-      processes.each do |process|
-        Repositories::Runtime::AppEventRepository.new.record_app_delete_request(process, space, user, user_email, true)
-        process.destroy
-      end
+      processes.each(&:destroy)
     end
 
     private

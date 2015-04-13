@@ -10,21 +10,12 @@ module VCAP::CloudController
 
     def create(message)
       app = AppModel.create(name: message.name, space_guid: message.space_guid, environment_variables: message.environment_variables)
-
-      @logger.info("Created app #{app.name} #{app.guid}")
-      Event.create({
-        type: 'audit.app.create',
-        actee: app.guid,
-        actee_type: 'v3-app',
-        actee_name: message.name,
-        actor: @user.guid,
-        actor_type: 'user',
-        actor_name: @user_email,
-        space_guid: message.space_guid,
-        organization_guid: app.space.organization.guid,
-        timestamp: Sequel::CURRENT_TIMESTAMP,
-      })
-
+      Repositories::Runtime::AppEventRepository.new.record_app_create(
+        app,
+        app.space,
+        @user,
+        @user_email,
+        message.as_json)
       app
     rescue Sequel::ValidationFailed => e
       raise InvalidApp.new(e.message)

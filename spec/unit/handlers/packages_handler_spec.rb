@@ -138,7 +138,7 @@ module VCAP::CloudController
 
     let(:config) { TestConfig.config }
     let(:packages_handler) { described_class.new(config) }
-    let(:access_context) { double(:access_context, user: User.make, user_email: 'user_emai') }
+    let(:access_context) { double(:access_context, user: User.make, user_email: 'user_email') }
     let(:space) { Space.make }
     let(:app_model) { AppModel.make(space_guid: space.guid) }
 
@@ -167,20 +167,14 @@ module VCAP::CloudController
           end
 
           it 'creates an audit event' do
-            packages_handler.create(create_message, access_context)
+            expect(Repositories::Runtime::PackageEventRepository).to receive(:record_app_add_package).with(
+                instance_of(PackageModel),
+                access_context.user,
+                access_context.user_email,
+                create_message.as_json
+              )
 
-            event = Event.last
-            expect(event.values).to include({
-              type: 'audit.app.add_package',
-              actee: app_model.guid,
-              actee_type: 'v3-app',
-              actee_name: app_model.name,
-              actor: access_context.user.guid,
-              actor_type: 'user',
-              actor_name: access_context.user_email,
-              space_guid: space.guid,
-              organization_guid: space.organization.guid,
-            })
+            packages_handler.create(create_message, access_context)
           end
 
           context 'when the type is bits' do

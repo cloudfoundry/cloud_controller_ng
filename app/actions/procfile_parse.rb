@@ -55,8 +55,7 @@ module VCAP::CloudController
           name: "v3-#{app.name}-#{type}",
           metadata: {},
         }
-        process = app.add_process(message)
-        process_event_repository.record_app_create(process, app.space, user, user_email, message)
+        app.add_process(message)
       end
     end
 

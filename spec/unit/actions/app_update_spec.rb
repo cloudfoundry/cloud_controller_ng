@@ -9,6 +9,20 @@ module VCAP::CloudController
     let(:app_update) { AppUpdate.new(user, user_email) }
 
     describe '.update' do
+      let(:message) { { 'update_message' => 'update_message' } }
+
+      it 'creates an audit event' do
+        expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_update).with(
+          app_model,
+          app_model.space,
+          user,
+          user_email,
+          message
+        )
+
+        app_update.update(app_model, message)
+      end
+
       context 'when given a new name' do
         let(:name) { 'new name' }
         let(:message) { { 'name' => name } }
@@ -19,42 +33,17 @@ module VCAP::CloudController
 
           expect(app_model.name).to eq(name)
         end
-
-        it 'creates an audit event' do
-          app_update.update(app_model, message)
-
-          event = Event.last
-          expect(event.type).to eq('audit.app.update')
-          expect(event.actor).to eq('1337')
-          expect(event.actor_name).to eq(user_email)
-          expect(event.actee_type).to eq('v3-app')
-          expect(event.actee).to eq(app_model.guid)
-          expect(event.actee_name).to eq(name)
-          expect(event.metadata['updated_fields']).to include('name')
-        end
       end
 
       context 'when updating the environment variables' do
         let(:environment_variables) { { 'VARIABLE' => 'VALUE' } }
         let(:message) { { 'environment_variables' => environment_variables } }
 
-        it 'updates the app name' do
+        it 'updates the app environment variables' do
           app_update.update(app_model, message)
           app_model.reload
 
           expect(app_model.environment_variables).to eq(environment_variables)
-        end
-
-        it 'creates an audit event' do
-          app_update.update(app_model, message)
-
-          event = Event.last
-          expect(event.type).to eq('audit.app.update')
-          expect(event.actor).to eq('1337')
-          expect(event.actor_name).to eq(user_email)
-          expect(event.actee_type).to eq('v3-app')
-          expect(event.actee).to eq(app_model.guid)
-          expect(event.metadata['updated_fields']).to include('environment_variables')
         end
       end
 

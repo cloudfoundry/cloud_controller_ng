@@ -40,14 +40,13 @@ module VCAP::CloudController
         end
 
         it 'creates an audit event' do
-          app_start.start(app_model)
+          expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_start).with(
+              app_model,
+              user,
+              user_email
+            )
 
-          event = Event.last
-          expect(event.type).to eq('audit.app.start')
-          expect(event.actor).to eq('7')
-          expect(event.actor_name).to eq(user_email)
-          expect(event.actee_type).to eq('v3-app')
-          expect(event.actee).to eq(app_model.guid)
+          app_start.start(app_model)
         end
 
         context 'and the droplet has a package' do

@@ -8,10 +8,6 @@ module VCAP::CloudController
     let(:app) { AppModel.make(desired_droplet: droplet) }
     subject(:procfile_parse) { ProcfileParse.new(user, Sham.email) }
 
-    def last_event
-      Event.last
-    end
-
     describe '#process_procfile' do
       context 'when the apps droplet has a procfile' do
         let(:procfile) do
@@ -28,9 +24,6 @@ other: stuff
 
           app.reload
           expect(app.processes.count).to eq(2)
-          expect(last_event.actee_type).to eq('app')
-          expect(last_event.actor).to eq(user.guid)
-          expect(last_event.type).to eq('audit.app.create')
         end
 
         it 'deletes processes that are no longer mentioned' do
@@ -42,10 +35,6 @@ other: stuff
           expect {
             process.refresh
           }.to raise_error(Sequel::Error)
-
-          expect(last_event.actee_type).to eq('app')
-          expect(last_event.actor).to eq(user.guid)
-          expect(last_event.type).to eq('audit.app.delete-request')
         end
 
         it 'updates existing processes' do
@@ -56,10 +45,6 @@ other: stuff
           expect {
             procfile_parse.process_procfile(app)
           }.to change { process.refresh.command }.from('old').to('stuff')
-
-          expect(last_event.actee_type).to eq('app')
-          expect(last_event.actor).to eq(user.guid)
-          expect(last_event.type).to eq('audit.app.update')
         end
       end
 

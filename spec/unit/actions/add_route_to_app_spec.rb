@@ -51,6 +51,30 @@ module VCAP::CloudController
           add_route_to_app.add(route)
           expect(process.reload.routes).to eq([route])
         end
+
+        context 'recording events' do
+          let(:user) { User.make }
+          let(:user_email) { 'user_email' }
+          let(:event_repository) { double(Repositories::Runtime::AppEventRepository) }
+
+          before do
+            allow(Repositories::Runtime::AppEventRepository).to receive(:new).and_return(event_repository)
+            allow(event_repository).to receive(:record_map_route)
+          end
+
+          it 'creates an event for adding a route to an app' do
+            allow(SecurityContext).to receive(:current_user).and_return(user)
+            allow(SecurityContext).to receive(:current_user_email).and_return(user_email)
+            expect(event_repository).to receive(:record_map_route).with(
+              app,
+              route,
+              user,
+              user_email,
+            )
+
+            add_route_to_app.add(route)
+          end
+        end
       end
     end
   end

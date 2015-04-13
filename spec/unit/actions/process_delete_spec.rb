@@ -19,17 +19,6 @@ module VCAP::CloudController
           }.to change { App.count }.by(-1)
           expect { process.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
-
-        it 'creates an app audit event' do
-          expect {
-            process_delete.delete(process)
-          }.to change { Event.count }.by(1)
-          event = Event.last
-          expect(event.type).to eq('audit.app.delete-request')
-          expect(event.actee).to eq(process.guid)
-          expect(event.actor).to eq(user.guid)
-          expect(event.actor_name).to eq(user_email)
-        end
       end
 
       context 'when deleting multiple' do

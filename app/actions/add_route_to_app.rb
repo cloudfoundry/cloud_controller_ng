@@ -10,6 +10,8 @@ module VCAP::CloudController
       return if web_process.nil?
 
       web_process.add_route(route)
+
+      Repositories::Runtime::AppEventRepository.new.record_map_route(@app_model, route, SecurityContext.current_user, SecurityContext.current_user_email)
       if web_process.dea_update_pending?
         Dea::Client.update_uris(web_process)
       end
