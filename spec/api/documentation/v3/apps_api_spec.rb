@@ -31,9 +31,9 @@ resource 'Apps (Experimental)', type: :api do
     let(:name2) { 'my_app2' }
     let(:name3) { 'my_app3' }
     let(:environment_variables) { { 'magic' => 'beautiful' } }
-    let!(:app_model1) { VCAP::CloudController::AppModel.make(name: name1, space_guid: space.guid, created_at: Time.at(0)) }
-    let!(:app_model2) { VCAP::CloudController::AppModel.make(name: name2, space_guid: space.guid, created_at: Time.at(1)) }
-    let!(:app_model3) { VCAP::CloudController::AppModel.make(name: name3, space_guid: space.guid, environment_variables: environment_variables, created_at: Time.at(2)) }
+    let!(:app_model1) { VCAP::CloudController::AppModel.make(name: name1, space_guid: space.guid, created_at: Time.at(1)) }
+    let!(:app_model2) { VCAP::CloudController::AppModel.make(name: name2, space_guid: space.guid, created_at: Time.at(2)) }
+    let!(:app_model3) { VCAP::CloudController::AppModel.make(name: name3, space_guid: space.guid, environment_variables: environment_variables, created_at: Time.at(3)) }
     let!(:app_model4) { VCAP::CloudController::AppModel.make(space_guid: VCAP::CloudController::Space.make.guid) }
     let(:space) { VCAP::CloudController::Space.make }
     let(:page) { 1 }

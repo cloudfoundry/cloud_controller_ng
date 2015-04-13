@@ -13,8 +13,8 @@ module VCAP::CloudController
           procfile: 'web: npm start',
           environment_variables:  { 'elastic' => 'runtime' },
           buildpack_git_url:      'http://git.url', droplet_hash: '1234',
-          created_at: Time.at(0),
-          updated_at: Time.at(1),
+          created_at: Time.at(1),
+          updated_at: Time.at(2),
         )
 
         json_result = DropletPresenter.new.present_json(droplet)
@@ -28,8 +28,8 @@ module VCAP::CloudController
         expect(result['detected_start_command']).to eq(droplet.detected_start_command)
         expect(result['procfile']).to eq(droplet.procfile)
         expect(result['environment_variables']).to eq(droplet.environment_variables)
-        expect(result['created_at']).to eq('1970-01-01T00:00:00Z')
-        expect(result['updated_at']).to eq('1970-01-01T00:00:01Z')
+        expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
+        expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
         expect(result['_links']).to include('self')
         expect(result['_links']['self']['href']).to eq("/v3/droplets/#{droplet.guid}")
         expect(result['_links']).to include('package')

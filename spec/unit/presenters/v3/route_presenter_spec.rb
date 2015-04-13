@@ -16,8 +16,8 @@ module VCAP::CloudController
 
     describe '#present_json_list' do
       let(:pagination_presenter) { double(:pagination_presenter) }
-      let(:route1) { Route.make(created_at: Time.at(0), updated_at: Time.at(1)) }
-      let(:route2) { Route.make(created_at: Time.at(2), updated_at: Time.at(3)) }
+      let(:route1) { Route.make(created_at: Time.at(1), updated_at: Time.at(2)) }
+      let(:route2) { Route.make(created_at: Time.at(3), updated_at: Time.at(4)) }
       let(:routes) { [route1, route2] }
       let(:presenter) { RoutePresenter.new(pagination_presenter) }
       let(:page) { 1 }
@@ -38,10 +38,10 @@ module VCAP::CloudController
         guids = result['resources'].collect { |route_json| route_json['guid'] }
         expect(guids).to eq([route1.guid, route2.guid])
 
-        expect(route1.created_at).to eq('1970-01-01T00:00:00Z')
-        expect(route1.updated_at).to eq('1970-01-01T00:00:01Z')
-        expect(route2.created_at).to eq('1970-01-01T00:00:02Z')
-        expect(route2.updated_at).to eq('1970-01-01T00:00:03Z')
+        expect(route1.created_at).to eq('1970-01-01T00:00:01Z')
+        expect(route1.updated_at).to eq('1970-01-01T00:00:02Z')
+        expect(route2.created_at).to eq('1970-01-01T00:00:03Z')
+        expect(route2.updated_at).to eq('1970-01-01T00:00:04Z')
       end
 
       it 'includes pagination section' do

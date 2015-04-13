@@ -5,7 +5,7 @@ module VCAP::CloudController
   describe AppPresenter do
     describe '#present_json' do
       it 'presents the app as json' do
-        app = AppModel.make(created_at: Time.at(0), updated_at: Time.at(1), environment_variables: { 'some' => 'stuff' }, desired_state: 'STOPPED')
+        app = AppModel.make(created_at: Time.at(1), updated_at: Time.at(2), environment_variables: { 'some' => 'stuff' }, desired_state: 'STOPPED')
         process = App.make(space: app.space, instances: 4)
         app.add_process(process)
 
@@ -17,8 +17,8 @@ module VCAP::CloudController
         expect(result['desired_state']).to eq(app.desired_state)
         expect(result['environment_variables']).to eq(app.environment_variables)
         expect(result['total_desired_instances']).to eq(4)
-        expect(result['created_at']).to eq('1970-01-01T00:00:00Z')
-        expect(result['updated_at']).to eq('1970-01-01T00:00:01Z')
+        expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
+        expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
         expect(result['_links']).not_to include('desired_droplet')
         expect(result['_links']).to include('start')
         expect(result['_links']).to include('stop')

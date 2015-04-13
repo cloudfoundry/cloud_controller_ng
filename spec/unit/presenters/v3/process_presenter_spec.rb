@@ -5,16 +5,16 @@ module VCAP::CloudController
   describe ProcessPresenter do
     describe '#present_json' do
       it 'presents the process as json' do
-        process_model = AppFactory.make(created_at: Time.at(0))
-        process_model.updated_at = Time.at(1)
+        process_model = AppFactory.make(created_at: Time.at(1))
+        process_model.updated_at = Time.at(2)
         process       = ProcessMapper.map_model_to_domain(process_model)
 
         json_result = ProcessPresenter.new.present_json(process)
         result      = MultiJson.load(json_result)
 
         expect(result['guid']).to eq(process.guid)
-        expect(result['created_at']).to eq('1970-01-01T00:00:00Z')
-        expect(result['updated_at']).to eq('1970-01-01T00:00:01Z')
+        expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
+        expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
       end
     end
 
