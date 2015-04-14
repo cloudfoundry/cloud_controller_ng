@@ -13,7 +13,7 @@ module VCAP::CloudController
           @services_event_repository_opts = services_event_repository_opts
           @request_attrs = request_attrs
           # TODO: remove that line below
-          @attempts_remaining = attempts_remaining || VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes]
+          @attempts_remaining = attempts_remaining
 
           default_poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds]
           poll_interval = [default_poll_interval, 24.hours].min
