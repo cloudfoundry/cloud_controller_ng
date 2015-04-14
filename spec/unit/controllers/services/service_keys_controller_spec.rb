@@ -417,6 +417,24 @@ module VCAP::CloudController
         expect(last_response.body).to be_empty
         expect { service_key.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
+
+      it 'creates an audit event after a service key deleted' do
+        email = 'example@example.com'
+        delete "/v2/service_keys/#{service_key.guid}", '', json_headers(headers_for(developer, email: email))
+
+        event = Event.first(type: 'audit.service_key.delete')
+        expect(event.actor_type).to eq('user')
+        expect(event.timestamp).to be
+        expect(event.actor).to eq(developer.guid)
+        expect(event.actor_name).to eq(email)
+        expect(event.actee).to eq(service_key.guid)
+        expect(event.actee_type).to eq('service_key')
+        expect(event.actee_name).to eq(service_key.name)
+        expect(event.space_guid).to eq(service_key.space.guid)
+        expect(event.space_id).to eq(service_key.space.id)
+        expect(event.organization_guid).to eq(service_key.space.organization.guid)
+        expect(event.metadata).to include({ 'request' => {} })
+      end
     end
   end
 end

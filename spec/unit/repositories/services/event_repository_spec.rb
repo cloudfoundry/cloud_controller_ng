@@ -494,16 +494,9 @@ module VCAP::CloudController
 
       describe '#record_service_key_event' do
         let(:service_key) { VCAP::CloudController::ServiceKey.make }
-        it 'records an event' do
-          repository.record_service_key_event(:create, service_key)
-          event = Event.first(type: 'audit.service_key.create')
-          metadata = {
-              'request' => {
-                  'service_instance_guid' => service_key.service_instance.guid,
-                  'name' => service_key.name
-              }
-          }
 
+        def check_event_data(event_type, metadata)
+          event = Event.first(type: event_type)
           expect(event.actor).to eq user.guid
           expect(event.actor_type).to eq 'user'
           expect(event.actor_name).to eq email
@@ -513,6 +506,24 @@ module VCAP::CloudController
           expect(event.space_guid).to eq service_key.space.guid
           expect(event.space_id).to eq service_key.space.id
           expect(event.metadata).to eq(metadata)
+        end
+
+        it 'records an event for create action' do
+          repository.record_service_key_event(:create, service_key)
+          metadata = {
+              'request' => {
+                  'service_instance_guid' => service_key.service_instance.guid,
+                  'name' => service_key.name
+              }
+          }
+
+          check_event_data 'audit.service_key.create', metadata
+        end
+
+        it 'records an event for delete action' do
+          repository.record_service_key_event(:delete, service_key)
+          metadata = { 'request' => {} }
+          check_event_data 'audit.service_key.delete', metadata
         end
       end
 
