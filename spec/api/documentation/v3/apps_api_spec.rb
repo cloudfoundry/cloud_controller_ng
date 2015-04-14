@@ -558,7 +558,10 @@ resource 'Apps (Experimental)', type: :api do
         'name'   => app_model.name,
         'guid'   => app_model.guid,
         'desired_state' => app_model.desired_state,
+        'total_desired_instances' => 1,
         'environment_variables' => {},
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
         '_links' => {
           'self'            => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
