@@ -33,18 +33,18 @@ module VCAP::Services
         end
 
         def self.test_common_error_cases(operation)
-          test_case(operation, 302, partial_json,                              error: Errors::ServiceBrokerBadResponse)
-          test_case(operation, 302, malformed_json,                            error: Errors::ServiceBrokerBadResponse)
-          test_case(operation, 302, empty_json,                                error: Errors::ServiceBrokerBadResponse)
-          test_case(operation, 401, partial_json,                              error: Errors::ServiceBrokerApiAuthenticationFailed)
-          test_case(operation, 401, malformed_json,                            error: Errors::ServiceBrokerApiAuthenticationFailed)
-          test_case(operation, 401, empty_json,                                error: Errors::ServiceBrokerApiAuthenticationFailed)
-          test_case(operation, 404, partial_json,                              error: Errors::ServiceBrokerRequestRejected)
-          test_case(operation, 404, malformed_json,                            error: Errors::ServiceBrokerRequestRejected)
-          test_case(operation, 404, empty_json,                                error: Errors::ServiceBrokerRequestRejected)
-          test_case(operation, 500, partial_json,                              error: Errors::ServiceBrokerBadResponse)
-          test_case(operation, 500, malformed_json,                            error: Errors::ServiceBrokerBadResponse)
-          test_case(operation, 500, empty_json,                                error: Errors::ServiceBrokerBadResponse)
+          test_case(operation, 302, partial_json,   error: Errors::ServiceBrokerBadResponse)
+          test_case(operation, 302, malformed_json, error: Errors::ServiceBrokerBadResponse)
+          test_case(operation, 302, empty_json,     error: Errors::ServiceBrokerBadResponse)
+          test_case(operation, 401, partial_json,   error: Errors::ServiceBrokerApiAuthenticationFailed)
+          test_case(operation, 401, malformed_json, error: Errors::ServiceBrokerApiAuthenticationFailed)
+          test_case(operation, 401, empty_json,     error: Errors::ServiceBrokerApiAuthenticationFailed)
+          test_case(operation, 404, partial_json,   error: Errors::ServiceBrokerRequestRejected)
+          test_case(operation, 404, malformed_json, error: Errors::ServiceBrokerRequestRejected)
+          test_case(operation, 404, empty_json,     error: Errors::ServiceBrokerRequestRejected)
+          test_case(operation, 500, partial_json,   error: Errors::ServiceBrokerBadResponse)
+          test_case(operation, 500, malformed_json, error: Errors::ServiceBrokerBadResponse)
+          test_case(operation, 500, empty_json,     error: Errors::ServiceBrokerBadResponse)
         end
 
         def self.test_pass_through(operation, status, with_body={}, expected_state:)
@@ -98,6 +98,15 @@ module VCAP::Services
 
         def self.empty_json
           '{}'
+        end
+
+        def self.non_empty_json
+          {
+            'last_operation' => {
+              'state' => 'foobar',
+              'random' => 'pants'
+            }
+          }.to_json
         end
 
         def self.with_dashboard_url
@@ -167,6 +176,7 @@ module VCAP::Services
         test_case(:provision, 202, partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(partial_json))
         test_case(:provision, 202, malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(malformed_json))
         test_case(:provision, 202, empty_json,                                result: body_with_state('in progress'))
+        test_case(:provision, 202, non_empty_json,                            result: body_with_state('in progress'))
         test_case(:provision, 202, with_dashboard_url.to_json,                result: body_with_state('in progress').merge(with_dashboard_url))
         test_case(:bind,      202, empty_json,                                error: Errors::ServiceBrokerBadResponse)
         test_case(:provision, 204, partial_json,                              error: Errors::ServiceBrokerBadResponse)
@@ -244,6 +254,7 @@ module VCAP::Services
         test_case(:deprovision, 202, partial_json,                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(partial_json))
         test_case(:deprovision, 202, malformed_json,                          error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(malformed_json))
         test_case(:deprovision, 202, empty_json,                              result: body_with_state('in progress'))
+        test_case(:deprovision, 202, non_empty_json,                          result: body_with_state('in progress'))
         test_pass_through(:deprovision, 202,                                  expected_state: 'in progress')
         test_case(:unbind,      202, empty_json,                              error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 204, partial_json,                            result: {})
@@ -271,6 +282,7 @@ module VCAP::Services
         test_case(:update, 202, partial_json,                                 error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(partial_json))
         test_case(:update, 202, malformed_json,                               error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(malformed_json))
         test_case(:update, 202, empty_json,                                   result: body_with_state('in progress'))
+        test_case(:update, 202, non_empty_json,                               result: body_with_state('in progress'))
         test_pass_through(:update, 202,                                       expected_state: 'in progress')
         test_case(:update, 204, partial_json,                                 error: Errors::ServiceBrokerBadResponse)
         test_case(:update, 204, malformed_json,                               error: Errors::ServiceBrokerBadResponse)

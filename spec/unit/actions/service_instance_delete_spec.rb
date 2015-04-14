@@ -69,15 +69,6 @@ module VCAP::CloudController
 
       context 'when accepts_incomplete is true' do
         let(:service_instance) { ManagedServiceInstance.make }
-        let(:last_operation_hash) do
-          {
-            last_operation: {
-              state: 'in progress',
-              description: 'description',
-              async_poll_interval_seconds: polling_interval
-            }
-          }
-        end
         let(:event_repository_opts) { { some_opt: 'some value' } }
         let(:polling_interval) { 60 }
         let(:error_when_in_progress) { false }
@@ -91,7 +82,7 @@ module VCAP::CloudController
         end
 
         before do
-          stub_deprovision(service_instance, accepts_incomplete: true, status: 202, body: last_operation_hash.to_json)
+          stub_deprovision(service_instance, accepts_incomplete: true, status: 202, body: {}.to_json)
         end
 
         it 'passes the accepts_incomplete flag to the client call' do
@@ -100,10 +91,9 @@ module VCAP::CloudController
           expect(a_request(:delete, broker_url)).to have_been_made
         end
 
-        it 'updates the instance with the values provided by the broker' do
+        it 'updates the instance to be in progress' do
           service_instance_delete.delete([service_instance])
           expect(service_instance.last_operation.state).to eq 'in progress'
-          expect(service_instance.last_operation.description).to eq 'description'
         end
 
         it 'enqueues a job to fetch state' do

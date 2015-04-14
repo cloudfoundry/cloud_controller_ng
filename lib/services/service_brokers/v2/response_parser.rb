@@ -212,7 +212,7 @@ module VCAP::Services
                   }
                 }
                 if state
-                  base_body.merge(broker_response)
+                  broker_response.merge(base_body)
                 else
                   broker_response
                 end

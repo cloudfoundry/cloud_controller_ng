@@ -188,50 +188,11 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
-      context 'when the broker returns no state or the state is succeeded' do
-        let(:response_data) do
-          {
-            'last_operation' => {}
-          }
-        end
-
-        it 'return immediately with the broker response' do
-          client = Client.new(client_attrs)
-          attributes, _ = client.provision(instance, accepts_incomplete: true)
-
-          expect(attributes[:last_operation][:type]).to eq('create')
-          expect(attributes[:last_operation][:state]).to eq('succeeded')
-          expect(attributes[:last_operation][:description]).to eq('')
-        end
-      end
-
-      context 'when the broker returns no description' do
-        let(:response_data) do
-          {
-            'last_operation' => { 'state' => 'succeeded' }
-          }
-        end
-
-        it 'return immediately with the broker response' do
-          client = Client.new(client_attrs)
-          attributes, _ = client.provision(instance, accepts_incomplete: true)
-
-          expect(attributes[:last_operation][:type]).to eq('create')
-          expect(attributes[:last_operation][:state]).to eq('succeeded')
-          expect(attributes[:last_operation][:description]).to eq('')
-        end
-      end
-
-      context 'when the broker returns the state as `in progress`' do
+      context 'when the broker returns a 202' do
         let(:code) { 202 }
         let(:message) { 'Accepted' }
         let(:response_data) do
-          {
-            last_operation: {
-              state: 'in progress',
-              description: '10% done'
-            },
-          }
+          {}
         end
 
         it 'return immediately with the broker response' do
@@ -240,36 +201,11 @@ module VCAP::Services::ServiceBrokers::V2
 
           expect(attributes[:last_operation][:type]).to eq('create')
           expect(attributes[:last_operation][:state]).to eq('in progress')
-          expect(attributes[:last_operation][:description]).to eq('10% done')
         end
 
         it 'returns the interval for polling the operation state' do
           _, polling_interval = client.provision(instance)
           expect(polling_interval).to eq 60
-        end
-
-        it 'does not enqueue a polling job' do
-          expect {
-            client.provision(instance)
-          }.not_to change { Delayed::Job.count }
-        end
-
-        context 'and async_poll_interval_seconds is set by the broker' do
-          let(:broker_polling_interval) { '120' }
-          let(:response_data) do
-            {
-              last_operation: {
-                state: 'in progress',
-                description: '10% done',
-                async_poll_interval_seconds: broker_polling_interval
-              },
-            }
-          end
-
-          it 'parses the value as an integer and returns the polling interval' do
-            _, polling_interval = client.provision(instance, accepts_incomplete: true)
-            expect(polling_interval).to eq 120
-          end
         end
       end
 
@@ -277,21 +213,12 @@ module VCAP::Services::ServiceBrokers::V2
         let(:code) { 400 }
         let(:message) { 'Failed' }
         let(:response_data) do
-          {
-            description: '100% failed'
-          }
+          {}
         end
 
         it 'raises an error' do
           client = Client.new(client_attrs)
           expect { client.provision(instance, accepts_incomplete: true) }.to raise_error(Errors::ServiceBrokerRequestRejected)
-        end
-
-        it 'does not enqueue a polling job' do
-          client.provision(instance, accepts_incomplete: true) rescue nil
-          Timecop.freeze(Time.now + 1.hour) do
-            expect(Delayed::Worker.new.work_off).to eq([0, 0])
-          end
         end
       end
 
@@ -561,24 +488,18 @@ module VCAP::Services::ServiceBrokers::V2
             with(path, anything)
         end
 
-        context 'and the broker returns last_operation state `succeeded`' do
+        context 'and the broker returns a 200' do
           let(:response_data) do
-            {
-              last_operation: {
-                state: 'succeeded',
-                description: 'finished updating'
-              }
-            }
+            {}
           end
 
-          it 'forwards the last operation state from the broker' do
+          it 'marks the last operation as succeeded' do
             attributes, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
             last_operation = attributes[:last_operation]
             expect(err).to be_nil
             expect(last_operation[:type]).to eq('update')
             expect(last_operation[:state]).to eq('succeeded')
-            expect(last_operation[:description]).to eq('finished updating')
             expect(last_operation[:proposed_changes]).to be_nil
           end
 
@@ -589,37 +510,11 @@ module VCAP::Services::ServiceBrokers::V2
           end
         end
 
-        context 'when the broker does not return a last_operation' do
-          let(:response_data) { { bogus_key: 'bogus_value' } }
-
-          it 'defaults the last operation state to `succeeded`' do
-            attributes, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
-
-            last_operation = attributes[:last_operation]
-            expect(err).to be_nil
-            expect(last_operation[:type]).to eq('update')
-            expect(last_operation[:state]).to eq('succeeded')
-            expect(last_operation[:description]).to eq('')
-            expect(last_operation[:proposed_changes]).to be_nil
-          end
-
-          it 'returns the new service_plan in a hash' do
-            attributes, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
-            expect(err).to be_nil
-            expect(attributes[:service_plan]).to eq new_plan
-          end
-        end
-
-        context 'when the broker returns the state as `in progress`' do
+        context 'when the broker returns a 202' do
           let(:code) { 202 }
           let(:message) { 'Accepted' }
           let(:response_data) do
-            {
-              last_operation: {
-                state: 'in progress',
-                description: '10% done'
-              },
-            }
+            {}
           end
 
           it 'return immediately with the broker response' do
@@ -628,37 +523,13 @@ module VCAP::Services::ServiceBrokers::V2
 
             expect(attributes[:last_operation][:type]).to eq('update')
             expect(attributes[:last_operation][:state]).to eq('in progress')
-            expect(attributes[:last_operation][:description]).to eq('10% done')
+            expect(attributes[:last_operation][:description]).to eq('')
             expect(error).to be_nil
           end
 
-          it 'does not enqueue a job to fetch operation state' do
-            expect {
-              client.update_service_plan(instance, new_plan, accepts_incomplete: true)
-            }.not_to change { Delayed::Job.count }
-          end
-
-          it 'returns an interval for polling the operation state' do
+          it 'sets an interval for polling the operation state' do
             _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
             expect(polling_interval).to eq(60)
-          end
-
-          context 'and async_poll_interval_seconds is set by the broker' do
-            let(:broker_polling_interval) { '120' }
-            let(:response_data) do
-              {
-                last_operation: {
-                  state: 'in progress',
-                  description: '10% done',
-                  async_poll_interval_seconds: broker_polling_interval
-                },
-              }
-            end
-
-            it 'parses the value as an integer' do
-              _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
-              expect(polling_interval).to eq 120
-            end
           end
         end
       end
@@ -1016,12 +887,12 @@ module VCAP::Services::ServiceBrokers::V2
         client.unbind(binding)
 
         expect(http_client).to have_received(:delete).
-          with(anything,
-               {
-            plan_id:    binding.service_plan.broker_provided_id,
-            service_id: binding.service.broker_provided_id,
-          }
-              )
+            with(anything,
+              {
+                plan_id: binding.service_plan.broker_provided_id,
+                service_id: binding.service.broker_provided_id,
+              }
+            )
       end
     end
 
@@ -1070,27 +941,9 @@ module VCAP::Services::ServiceBrokers::V2
             }
           })
         end
-
-        it 'does not enqueue a job to fetch the state of the instance' do
-          expect {
-            client.deprovision(instance)
-          }.not_to change {
-            Delayed::Job.count
-          }
-        end
       end
 
       context 'when the caller passes the accepts_incomplete flag' do
-        let(:state) { 'succeeded' }
-        let(:response_data) do
-          {
-            last_operation: {
-              state: state,
-              description: 'working on it'
-            }
-          }
-        end
-
         it 'adds the flag to the path of the service broker request' do
           client.deprovision(instance, accepts_incomplete: true)
 
@@ -1098,80 +951,25 @@ module VCAP::Services::ServiceBrokers::V2
             with(path, hash_including(accepts_incomplete: true))
         end
 
-        context 'when the last_operation state is `in progress`' do
+        context 'when the broker returns a 202' do
           let(:code) { 202 }
-          let(:state) { 'in progress' }
 
           it 'returns the last_operation hash' do
             attrs, _ = client.deprovision(instance, accepts_incomplete: true)
             expect(attrs).to eq({
               last_operation: {
                 type: 'delete',
-                state: state,
-                description: 'working on it'
+                state: 'in progress',
+                description: ''
               }
             })
           end
-
-          it 'does not enqueue a job to fetch operation state' do
-            expect {
-              client.deprovision(instance, accepts_incomplete: true)
-            }.not_to change { Delayed::Job.count }
-          end
-
-          context 'and async_poll_interval_seconds is set by the broker' do
-            let(:poll_interval) { '500' }
-            let(:response_data) do
-              {
-                last_operation: {
-                  state: 'in progress',
-                  description: '10% done',
-                  async_poll_interval_seconds: poll_interval
-                },
-              }
-            end
-
-            it 'parses the value as an integer' do
-              _, polling_interval = client.deprovision(instance, accepts_incomplete: true)
-              expect(polling_interval).to eq 500
-            end
-          end
         end
 
-        context 'when the last_operation state is `succeeded`' do
+        context 'when the broker returns a 200' do
           let(:code) { 200 }
-          let(:state) { 'succeeded' }
 
           it 'returns the last_operation hash' do
-            attrs, _ = client.deprovision(instance, accepts_incomplete: true)
-            expect(attrs).to eq({
-              last_operation: {
-                type: 'delete',
-                state: 'succeeded',
-                description: 'working on it'
-              }
-            })
-          end
-
-          it 'does not enqueue a job to fetch the state of the instance' do
-            expect {
-              client.deprovision(instance, accepts_incomplete: true)
-            }.not_to change {
-              Delayed::Job.count
-            }
-          end
-
-          it 'returns no polling_interval' do
-            _, polling_interval, _ = client.deprovision(instance, accepts_incomplete: true)
-            expect(polling_interval).to be_nil
-          end
-        end
-
-        context 'when the last_operation is not included' do
-          let(:code) { 200 }
-          let(:response_data) { {} }
-
-          it 'returns a last_operation hash that has state defaulted to `succeeded`' do
             attrs, _ = client.deprovision(instance, accepts_incomplete: true)
             expect(attrs).to eq({
               last_operation: {
@@ -1180,14 +978,6 @@ module VCAP::Services::ServiceBrokers::V2
                 description: ''
               }
             })
-          end
-
-          it 'does not enqueue a job to fetch the state of the instance' do
-            expect {
-              client.deprovision(instance, accepts_incomplete: true)
-            }.not_to change {
-              Delayed::Job.count
-            }
           end
 
           it 'returns no polling_interval' do
