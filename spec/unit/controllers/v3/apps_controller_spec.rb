@@ -850,10 +850,10 @@ module VCAP::CloudController
       end
 
       context 'bad json' do
-        let(:req_body) { "{___O___O___}" }
+        let(:req_body) { '{___O___O___}' }
         it 'returns 400 for bad json' do
           expect {
-            response_code, _ = apps_controller.assign_current_droplet(guid)
+            apps_controller.assign_current_droplet(guid)
           }.to raise_error do |error|
             expect(error.name).to eq 'MessageParseError'
             expect(error.response_code).to eq 400
