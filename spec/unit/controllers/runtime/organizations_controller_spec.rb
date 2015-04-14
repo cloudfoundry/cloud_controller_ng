@@ -554,6 +554,32 @@ module VCAP::CloudController
             expect(last_response).to have_status_code 204
             expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
+
+          context 'and one of the instances fails to delete' do
+            let!(:service_instance_2) { ManagedServiceInstance.make(space: space) }
+            let!(:service_instance_3) { ManagedServiceInstance.make(space: space) }
+            let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+
+            before do
+              stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
+              stub_deprovision(service_instance_3, status: 200, accepts_incomplete: true)
+              stub_unbind(service_binding)
+            end
+
+            it 'does not delete the org or the space' do
+              delete "/v2/organizations/#{org.guid}?recursive=true", '', admin_headers
+              expect(last_response).to have_status_code 502
+              expect{ org.refresh }.not_to raise_error
+              expect{ space.refresh }.not_to raise_error
+            end
+
+            it 'does not rollback deletion of other instances or bindings' do
+              delete "/v2/organizations/#{org.guid}?recursive=true", '', admin_headers
+              expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
+              expect { service_instance_3.refresh }.to raise_error Sequel::Error, 'Record not found'
+              expect { service_binding.refresh }.to raise_error Sequel::Error, 'Record not found'
+            end
+          end
         end
 
         context 'and async=true' do
