@@ -14,7 +14,7 @@ module VCAP::CloudController
         service_instance.last_operation.lock! if service_instance.last_operation
 
         if service_instance.operation_in_progress?
-          raise Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress')
+          raise Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
         end
 
         service_instance.save_with_operation(

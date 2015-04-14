@@ -763,7 +763,7 @@ The service broker returned an invalid response for the request to #{instance_ur
               delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
               expect(last_response).to have_status_code 502
               expect(decoded_response['error_code']).to eq 'CF-SpaceDeletionFailed'
-              expect(last_response.body).to match /Another operation for this service instance is in progress/
+              expect(last_response.body).to match /An operation for service instance #{service_instance_1.name} is in progress./
             end
 
             it 'does not delete that instance' do
@@ -793,7 +793,7 @@ The service broker returned an invalid response for the request to #{instance_ur
                 get job_url, {}, json_headers(admin_headers)
                 expect(last_response).to have_status_code 200
                 expect(decoded_response['entity']['error_details']['error_code']).to eq 'CF-SpaceDeletionFailed'
-                expect(decoded_response['entity']['error_details']['description']).to match /Another operation for this service instance is in progress/
+                expect(decoded_response['entity']['error_details']['description']).to match /An operation for service instance #{service_instance_1.name} is in progress./
               end
 
               it 'does not delete that instance' do

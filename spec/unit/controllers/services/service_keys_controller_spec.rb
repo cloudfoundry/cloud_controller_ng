@@ -266,7 +266,7 @@ module VCAP::CloudController
             it 'should show an error message for create key operation' do
               post '/v2/service_keys', req, json_headers(headers_for(developer))
               expect(last_response).to have_status_code 400
-              expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+              expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
             end
           end
 

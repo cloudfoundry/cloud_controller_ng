@@ -417,7 +417,7 @@ module VCAP::CloudController
           it 'should show an error message for create bind operation' do
             post '/v2/service_bindings', request_body, json_headers(headers_for(developer))
             expect(last_response).to have_status_code 400
-            expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+            expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
           end
         end
 
@@ -628,7 +628,7 @@ module VCAP::CloudController
         stub_request(:delete, service_instance_unbind_url(service_binding)).to_return do |_|
           put "/v2/service_instances/#{service_binding.service_instance.guid}", { plan_id: 34 }.to_json, admin_headers
           expect(last_response).to have_status_code 400
-          expect(last_response.body).to match /ServiceInstanceOperationInProgress/
+          expect(last_response.body).to match /AsyncServiceInstanceOperationInProgress/
 
           { status: 200, body: {}.to_json }
         end
@@ -705,7 +705,7 @@ module VCAP::CloudController
           stub_request(:delete, service_instance_unbind_url(service_binding)).to_return do |_|
             put "/v2/service_instances/#{service_binding.service_instance.guid}", { plan_id: 34 }.to_json, admin_headers
             expect(last_response).to have_status_code 400
-            expect(last_response.body).to match /ServiceInstanceOperationInProgress/
+            expect(last_response.body).to match /AsyncServiceInstanceOperationInProgress/
 
             { status: 200, body: {}.to_json }
           end
@@ -728,7 +728,7 @@ module VCAP::CloudController
         it 'should show an error message for unbind operation' do
           delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer))
           expect(last_response).to have_status_code 400
-          expect(last_response.body).to match 'ServiceInstanceOperationInProgress'
+          expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
           expect(ServiceBinding.find(guid: service_binding.guid)).not_to be_nil
         end
       end
