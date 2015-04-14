@@ -70,7 +70,6 @@ module VCAP::CloudController
       context 'when accepts_incomplete is true' do
         let(:service_instance) { ManagedServiceInstance.make }
         let(:event_repository_opts) { { some_opt: 'some value' } }
-        let(:polling_interval) { 60 }
         let(:error_when_in_progress) { false }
 
         subject(:service_instance_delete) do
@@ -108,7 +107,7 @@ module VCAP::CloudController
           expect(inner_job.service_instance_guid).to eq service_instance.guid
           expect(inner_job.services_event_repository_opts).to eq event_repository_opts
           expect(inner_job.request_attrs).to eq({})
-          expect(inner_job.poll_interval).to eq(polling_interval)
+          expect(inner_job.poll_interval).to eq(60)
         end
 
         context 'and the caller wants to treat accepts_incomplete deprovisioning as a failure' do

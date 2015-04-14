@@ -36,7 +36,7 @@ module VCAP::CloudController
         lock = DeleterLock.new(service_instance)
         lock.lock!
 
-        attributes_to_update, poll_interval = service_instance.client.deprovision(
+        attributes_to_update = service_instance.client.deprovision(
           service_instance,
           accepts_incomplete: @accepts_incomplete
         )
@@ -44,7 +44,7 @@ module VCAP::CloudController
         if attributes_to_update[:last_operation][:state] == 'succeeded'
           lock.unlock_and_destroy!
         else
-          lock.enqueue_unlock!(attributes_to_update, build_fetch_job(poll_interval, service_instance))
+          lock.enqueue_unlock!(attributes_to_update, build_fetch_job(service_instance))
         end
       rescue => e
         errors << e
@@ -59,14 +59,13 @@ module VCAP::CloudController
       ServiceBindingDelete.new.delete(service_instance.service_bindings_dataset)
     end
 
-    def build_fetch_job(poll_interval, service_instance)
+    def build_fetch_job(service_instance)
       VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
         'service-instance-state-fetch',
         service_instance.client.attrs,
         service_instance.guid,
         @event_repository_opts,
         {},
-        poll_interval,
       )
     end
   end

@@ -6,7 +6,7 @@ module VCAP::CloudController
       class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
         attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository_opts, :request_attrs, :poll_interval, :attempts_remaining
 
-        def initialize(name, client_attrs, service_instance_guid, services_event_repository_opts, request_attrs, poll_interval=nil, attempts_remaining=nil)
+        def initialize(name, client_attrs, service_instance_guid, services_event_repository_opts, request_attrs, attempts_remaining=nil)
           @name = name
           @client_attrs = client_attrs
           @service_instance_guid = service_instance_guid
@@ -16,8 +16,7 @@ module VCAP::CloudController
           @attempts_remaining = attempts_remaining || VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes]
 
           default_poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds]
-          poll_interval ||= default_poll_interval
-          poll_interval = [[default_poll_interval, poll_interval].max, 24.hours].min
+          poll_interval = [default_poll_interval, 24.hours].min
           @poll_interval = poll_interval
         end
 

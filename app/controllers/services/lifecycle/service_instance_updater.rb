@@ -26,10 +26,10 @@ module VCAP::CloudController
       lock.lock!
 
       begin
-        attributes_to_update, poll_interval_seconds, err = get_attributes_to_update(params, request_attrs, service_instance)
+        attributes_to_update, err = get_attributes_to_update(params, request_attrs, service_instance)
 
         if attributes_to_update[:last_operation][:state] == 'in progress'
-          job = build_fetch_job(poll_interval_seconds, request_attrs, service_instance)
+          job = build_fetch_job(request_attrs, service_instance)
           lock.enqueue_unlock!(attributes_to_update, job)
         else
           lock.synchronous_unlock!(attributes_to_update)
@@ -46,14 +46,13 @@ module VCAP::CloudController
       end
     end
 
-    def build_fetch_job(poll_interval_seconds, request_attrs, service_instance)
+    def build_fetch_job(request_attrs, service_instance)
       VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
         'service-instance-state-fetch',
         service_instance.client.attrs,
         service_instance.guid,
         event_repository_opts,
-        request_attrs,
-        poll_interval_seconds,
+        request_attrs
       )
     end
 

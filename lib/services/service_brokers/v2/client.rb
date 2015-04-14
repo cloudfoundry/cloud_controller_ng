@@ -35,7 +35,6 @@ module VCAP::Services::ServiceBrokers::V2
 
       parsed_response = @response_parser.parse_provision_or_bind(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
-      poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i) || 60
       attributes = {
         # DEPRECATED, but needed because of not null constraint
         credentials: {},
@@ -53,7 +52,7 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:last_operation][:state] = 'succeeded'
       end
 
-      [attributes, poll_interval_seconds]
+      attributes
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
       @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       raise e
@@ -138,18 +137,15 @@ module VCAP::Services::ServiceBrokers::V2
 
       parsed_response = @response_parser.parse_deprovision_or_unbind(path, response) || {}
       last_operation_hash = parsed_response['last_operation'] || {}
-      poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i)
       state = last_operation_hash['state']
 
-      attributes_to_update = {
+      {
         last_operation: {
           type: 'delete',
           description: last_operation_hash['description'] || '',
           state: state || 'succeeded'
         }
       }
-
-      [attributes_to_update, poll_interval_seconds]
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
@@ -171,7 +167,6 @@ module VCAP::Services::ServiceBrokers::V2
 
       parsed_response = @response_parser.parse_update(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
-      poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i) || 60
       state = last_operation_hash['state'] || 'succeeded'
 
       attributes = {
@@ -188,7 +183,7 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
       end
 
-      return attributes, poll_interval_seconds, nil
+      return attributes, nil
     rescue Errors::ServiceBrokerBadResponse,
            Errors::ServiceBrokerApiTimeout,
            Errors::ServiceBrokerResponseMalformed,
@@ -202,7 +197,7 @@ module VCAP::Services::ServiceBrokers::V2
           description: e.message
         }
       }
-      return attributes, nil, e
+      return attributes, e
     end
 
     private

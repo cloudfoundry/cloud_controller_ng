@@ -202,11 +202,6 @@ module VCAP::Services::ServiceBrokers::V2
           expect(attributes[:last_operation][:type]).to eq('create')
           expect(attributes[:last_operation][:state]).to eq('in progress')
         end
-
-        it 'returns the interval for polling the operation state' do
-          _, polling_interval = client.provision(instance)
-          expect(polling_interval).to eq 60
-        end
       end
 
       context 'when the broker returns the state as failed' do
@@ -526,11 +521,6 @@ module VCAP::Services::ServiceBrokers::V2
             expect(attributes[:last_operation][:description]).to eq('')
             expect(error).to be_nil
           end
-
-          it 'sets an interval for polling the operation state' do
-            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
-            expect(polling_interval).to eq(60)
-          end
         end
       end
 
@@ -546,13 +536,8 @@ module VCAP::Services::ServiceBrokers::V2
             allow(http_client).to receive(:patch).and_raise(error)
           end
 
-          it 'returns no polling_interval' do
-            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
-            expect(polling_interval).to be_nil
-          end
-
           it 'returns an array containing the update attributes and the error' do
-            attrs, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+            attrs, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -572,13 +557,8 @@ module VCAP::Services::ServiceBrokers::V2
             allow(response_parser).to receive(:parse_update).and_raise(error)
           end
 
-          it 'returns no polling_interval' do
-            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
-            expect(polling_interval).to be_nil
-          end
-
           it 'returns an array containing the update attributes and the error' do
-            attrs, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+            attrs, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -598,13 +578,8 @@ module VCAP::Services::ServiceBrokers::V2
             allow(response_parser).to receive(:parse_update).and_raise(error)
           end
 
-          it 'returns no polling_interval' do
-            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
-            expect(polling_interval).to be_nil
-          end
-
           it 'returns an array containing the update attributes and the error' do
-            attrs, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
+            attrs, err = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -624,13 +599,8 @@ module VCAP::Services::ServiceBrokers::V2
             allow(response_parser).to receive(:parse_update).and_raise(error)
           end
 
-          it 'returns no polling_interval' do
-            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
-            expect(polling_interval).to be_nil
-          end
-
           it 'returns an array containing the update attributes and the error' do
-            attrs, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: 'true')
+            attrs, err = client.update_service_plan(instance, new_plan, accepts_incomplete: 'true')
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -650,13 +620,8 @@ module VCAP::Services::ServiceBrokers::V2
             allow(response_parser).to receive(:parse_update).and_raise(error)
           end
 
-          it 'returns no polling_interval' do
-            _, polling_interval, _ = client.update_service_plan(instance, new_plan, accepts_incomplete: true)
-            expect(polling_interval).to be_nil
-          end
-
           it 'returns an array containing the update attributes and the error' do
-            attrs, _, err = client.update_service_plan(instance, new_plan, accepts_incomplete: 'true')
+            attrs, err = client.update_service_plan(instance, new_plan, accepts_incomplete: 'true')
 
             expect(err).to eq error
             expect(attrs).to eq({
@@ -978,11 +943,6 @@ module VCAP::Services::ServiceBrokers::V2
                 description: ''
               }
             })
-          end
-
-          it 'returns no polling_interval' do
-            _, polling_interval, _ = client.deprovision(instance, accepts_incomplete: true)
-            expect(polling_interval).to be_nil
           end
         end
       end

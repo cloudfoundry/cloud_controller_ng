@@ -19,7 +19,7 @@ module VCAP::CloudController
       validate_create_action(request_attrs, params)
 
       service_instance = ManagedServiceInstance.new(request_attrs.except('parameters'))
-      attributes_to_update, poll_interval_seconds = service_instance.client.provision(
+      attributes_to_update = service_instance.client.provision(
         service_instance,
         accepts_incomplete: accepts_incomplete?(params),
         request_attrs: request_attrs,
@@ -38,8 +38,7 @@ module VCAP::CloudController
           service_instance.client.attrs,
           service_instance.guid,
           event_repository_opts,
-          request_attrs,
-          poll_interval_seconds,
+          request_attrs
         )
         job.enqueue
       end
