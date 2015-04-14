@@ -199,7 +199,6 @@ module VCAP::CloudController
           expect(event.actee_type).to eq('service_key')
           expect(event.actee_name).to eq('fake-service-key')
           expect(event.space_guid).to eq(space.guid)
-          expect(event.space_id).to eq(space.id)
           expect(event.organization_guid).to eq(space.organization.guid)
 
           expect(event.metadata).to include({

@@ -53,6 +53,10 @@ module VCAP::CloudController
       describe '#record_space_delete' do
         let(:recursive) { true }
 
+        before do
+          space.destroy
+        end
+
         it 'records event correctly' do
           event = space_event_repository.record_space_delete_request(space, user, user_email, recursive)
           event.reload
