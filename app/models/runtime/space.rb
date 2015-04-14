@@ -16,7 +16,7 @@ module VCAP::CloudController
     many_to_one :organization, before_set: :validate_change_organization
     one_to_many :apps
     one_to_many :app_models, primary_key: :guid, key: :space_guid
-    one_to_many :events
+    one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances
     one_to_many :managed_service_instances
     one_to_many :routes
@@ -78,7 +78,6 @@ module VCAP::CloudController
       default_users: :nullify,
       apps: :destroy,
       routes: :destroy,
-      events: :nullify,
       security_groups: :nullify,
     )
 
