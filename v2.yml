@@ -213,11 +213,6 @@
   http_code: 400
   message: "Cannot update space for service instance."
 
-60015:
-  name: ServiceInstanceOperationInProgress
-  http_code: 400
-  message: "Another operation for this service instance is in progress."
-
 60016:
   name: AsyncServiceInstanceOperationInProgress
   http_code: 400
