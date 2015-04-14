@@ -569,8 +569,8 @@ module VCAP::CloudController
             it 'does not delete the org or the space' do
               delete "/v2/organizations/#{org.guid}?recursive=true", '', admin_headers
               expect(last_response).to have_status_code 502
-              expect{ org.refresh }.not_to raise_error
-              expect{ space.refresh }.not_to raise_error
+              expect { org.refresh }.not_to raise_error
+              expect { space.refresh }.not_to raise_error
             end
 
             it 'does not rollback deletion of other instances or bindings' do
