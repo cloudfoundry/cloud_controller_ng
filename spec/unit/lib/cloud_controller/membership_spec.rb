@@ -465,11 +465,11 @@ module VCAP::CloudController
 
       context 'mix of org and space roles' do
         let(:org_managed) { Organization.make }
-        let(:space1_in_managed_org) { Space.make(organization: org_managed) }
-        let(:space2_in_managed_org) { Space.make(organization: org_managed) }
         let(:org_audited) { Organization.make }
-        let(:space_in_audited_org) { Space.make(organization: org_audited) }
-        let(:some_other_space) { Space.make }
+        let!(:space1_in_managed_org) { Space.make(organization: org_managed) }
+        let!(:space2_in_managed_org) { Space.make(organization: org_managed) }
+        let!(:space_in_audited_org) { Space.make(organization: org_audited) }
+        let!(:some_other_space) { Space.make }
 
         before do
           org_managed.add_manager(user)
@@ -478,13 +478,10 @@ module VCAP::CloudController
         end
 
         it 'returns the correct spaces' do
-          expected = [space1_in_managed_org.guid, space2_in_managed_org.guid, space.guid]
-          not_included  = [space_in_audited_org.guid, some_other_space.guid]
-
           guids = membership.space_guids_for_roles([Membership::ORG_MANAGER, Membership::SPACE_DEVELOPER])
 
-          expect(guids).to eq(expected)
-          expect(guids).not_to include(not_included)
+          expect(guids).to include(space1_in_managed_org.guid, space2_in_managed_org.guid, space.guid)
+          expect(guids).not_to include(space_in_audited_org.guid, some_other_space.guid)
         end
       end
     end
