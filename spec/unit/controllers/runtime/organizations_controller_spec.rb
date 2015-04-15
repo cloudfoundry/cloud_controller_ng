@@ -663,7 +663,7 @@ module VCAP::CloudController
               expect(decoded_response['entity']['error_details']['error_code']).to eq 'CF-OrganizationDeletionFailed'
               expect(decoded_response['entity']['error_details']['description']).to include "Deletion of organization #{org.name}"
               expect(decoded_response['entity']['error_details']['description']).to include "Deletion of space #{space.name}"
-              expect(decoded_response['entity']['error_details']['description']).to include "The service broker returned an invalid response for the request"
+              expect(decoded_response['entity']['error_details']['description']).to include 'The service broker returned an invalid response for the request'
             end
           end
         end

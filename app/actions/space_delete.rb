@@ -17,7 +17,7 @@ module VCAP::CloudController
         )
         instance_delete_errors = service_instance_deleter.delete(space_model.service_instances_dataset)
         unless instance_delete_errors.empty?
-          error_message = instance_delete_errors.map{ |error| "\t#{error.message}" }.join("\n\n")
+          error_message = instance_delete_errors.map { |error| "\t#{error.message}" }.join("\n\n")
           errors.push VCAP::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
         end
 
