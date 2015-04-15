@@ -663,6 +663,11 @@
   http_code: 502
   message: "Deletion of space %s failed because one or more resources within could not be deleted.\n\n%s"
 
+290009:
+  name: OrganizationDeleteTimeout
+  http_code: 524
+  message: "Delete of organization %s timed out before all resources within could be deleted"
+
 300001:
   name: SecurityGroupInvalid
   http_code: 400
