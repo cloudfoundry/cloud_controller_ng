@@ -11,8 +11,10 @@ module VCAP::CloudController
       let!(:org_1) { Organization.make }
       let!(:org_2) { Organization.make }
       let!(:space) { Space.make(organization: org_1) }
+      let!(:space_2) { Space.make(organization: org_1)}
       let!(:app) { AppModel.make(space_guid: space.guid) }
       let!(:service_instance) { ManagedServiceInstance.make(space: space) }
+      let!(:service_instance_2) { ManagedServiceInstance.make(space: space_2) }
 
       let!(:org_dataset) { Organization.where(guid: [org_1.guid, org_2.guid]) }
       let(:user) { User.make }
@@ -67,6 +69,7 @@ module VCAP::CloudController
         context 'when the space deleter returns errors' do
           before do
             stub_deprovision(service_instance, status: 500, accepts_incomplete: true)
+            stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
           end
           it 'returns an OrganizationDeletionFailed error' do
             errors = org_delete.delete(org_dataset)
@@ -79,6 +82,10 @@ module VCAP::CloudController
             expect(errors.first.message).to include "Deletion of organization #{org_1.name} failed because one or more resources within could not be deleted.
 
 Deletion of space #{space.name} failed because one or more resources within could not be deleted.
+
+The service broker returned an invalid response for the request"
+
+            expect(errors.first.message).to include "Deletion of space #{space_2.name} failed because one or more resources within could not be deleted.
 
 The service broker returned an invalid response for the request"
           end

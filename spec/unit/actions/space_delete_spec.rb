@@ -96,11 +96,13 @@ module VCAP::CloudController
           let!(:service_instance_1) { ManagedServiceInstance.make(space: space_3) } # deletion fail
           let!(:service_instance_2) { ManagedServiceInstance.make(space: space_3) } # deletion fail
           let!(:service_instance_3) { ManagedServiceInstance.make(space: space_3) } # deletion succeeds
+          let!(:service_instance_4) { ManagedServiceInstance.make(space: space_4) } # deletion fail
 
           before do
             stub_deprovision(service_instance_1, accepts_incomplete: true, status: 500)
             stub_deprovision(service_instance_2, accepts_incomplete: true, status: 500)
             stub_deprovision(service_instance_3, accepts_incomplete: true)
+            stub_deprovision(service_instance_4, accepts_incomplete: true, status: 500)
           end
 
           it 'deletes other spaces' do
@@ -122,16 +124,20 @@ module VCAP::CloudController
 
           it 'returns a service broker bad response error' do
             results = space_delete.delete(space_dataset)
-            expect(results.length).to be(1)
-            result = results.first
-            expect(result).to be_instance_of(VCAP::Errors::ApiError)
+            expect(results.length).to eq(2)
+            expect(results.first).to be_instance_of(VCAP::Errors::ApiError)
+            expect(results.second).to be_instance_of(VCAP::Errors::ApiError)
 
             instance_1_url = remove_basic_auth(service_instance_deprovision_url(service_instance_1))
             instance_2_url = remove_basic_auth(service_instance_deprovision_url(service_instance_2))
+            instance_4_url = remove_basic_auth(service_instance_deprovision_url(service_instance_4))
 
-            expect(result.message).to include("Deletion of space #{space_3.name} failed because one or more resources within could not be deleted.")
-            expect(result.message).to include("The service broker returned an invalid response for the request to #{instance_1_url}")
-            expect(result.message).to include("The service broker returned an invalid response for the request to #{instance_2_url}")
+            expect(results.first.message).to include("Deletion of space #{space_3.name} failed because one or more resources within could not be deleted.")
+            expect(results.first.message).to include("The service broker returned an invalid response for the request to #{instance_1_url}")
+            expect(results.first.message).to include("The service broker returned an invalid response for the request to #{instance_2_url}")
+
+            expect(results.second.message).to include("Deletion of space #{space_4.name} failed because one or more resources within could not be deleted.")
+            expect(results.second.message).to include("The service broker returned an invalid response for the request to #{instance_4_url}")
           end
         end
       end
