@@ -583,10 +583,17 @@ module VCAP::CloudController
         end
 
         context 'and async=true' do
+          let(:space) { Space.make(organization: org) }
+          let(:service_instance) { ManagedServiceInstance.make(space: space) }
+
+          before do
+            stub_deprovision(service_instance, accepts_incomplete: true)
+          end
+
           it 'successfully deletes the space in a background job' do
-            space_guid = Space.make(organization: org).guid
+            space_guid = space.guid
             app_guid = AppModel.make(space_guid: space_guid).guid
-            service_instance_guid = ServiceInstance.make(space_guid: space_guid).guid
+            service_instance_guid = service_instance.guid
             route_guid = Route.make(space_guid: space_guid).guid
 
             delete "/v2/organizations/#{org.guid}?recursive=true&async=true", '', json_headers(admin_headers)
@@ -606,6 +613,35 @@ module VCAP::CloudController
             expect(AppModel.find(guid: app_guid)).to be_nil
             expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
             expect(Route.find(guid: route_guid)).to be_nil
+          end
+
+          context 'and the job times out' do
+            before do
+              fake_config = {
+                  jobs: {
+                      global: {
+                          timeout_in_seconds: 0.001
+                      }
+                  }
+              }
+              allow(VCAP::CloudController::Config).to receive(:config).and_return(fake_config)
+              stub_deprovision(service_instance, accepts_incomplete: true) do
+                sleep 0.1
+                { status: 200, body: {}.to_json }
+              end
+            end
+
+            it 'fails the job with a OrganizationDeleteTimeout error' do
+              delete "/v2/organizations/#{org.guid}?recursive=true&async=true", '', json_headers(admin_headers)
+              expect(last_response).to have_status_code(202)
+              job_guid = decoded_response['metadata']['guid']
+
+              expect(Delayed::Worker.new.work_off).to eq([0, 1])
+
+              get "/v2/jobs/#{job_guid}", {}, json_headers(admin_headers)
+              expect(decoded_response['entity']['status']).to eq 'failed'
+              expect(decoded_response['entity']['error_details']['error_code']).to eq 'CF-OrganizationDeleteTimeout'
+            end
           end
         end
       end

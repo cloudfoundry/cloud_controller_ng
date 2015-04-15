@@ -14,5 +14,10 @@ module VCAP::CloudController
         []
       end
     end
+
+    def timeout_error(dataset)
+      org_name = dataset.first.name
+      VCAP::Errors::ApiError.new_from_details('OrganizationDeleteTimeout', org_name)
+    end
   end
 end
