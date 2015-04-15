@@ -643,6 +643,29 @@ module VCAP::CloudController
               expect(decoded_response['entity']['error_details']['error_code']).to eq 'CF-OrganizationDeleteTimeout'
             end
           end
+
+          context 'and a resource fails to delete' do
+            before do
+              stub_deprovision(service_instance, accepts_incomplete: true) do
+                { status: 500, body: {}.to_json }
+              end
+            end
+
+            it 'fails the job with a OrganizationDeleteTimeout error' do
+              delete "/v2/organizations/#{org.guid}?recursive=true&async=true", '', json_headers(admin_headers)
+              expect(last_response).to have_status_code(202)
+              job_guid = decoded_response['metadata']['guid']
+
+              expect(Delayed::Worker.new.work_off).to eq([0, 1])
+
+              get "/v2/jobs/#{job_guid}", {}, json_headers(admin_headers)
+              expect(decoded_response['entity']['status']).to eq 'failed'
+              expect(decoded_response['entity']['error_details']['error_code']).to eq 'CF-OrganizationDeletionFailed'
+              expect(decoded_response['entity']['error_details']['description']).to include "Deletion of organization #{org.name}"
+              expect(decoded_response['entity']['error_details']['description']).to include "Deletion of space #{space.name}"
+              expect(decoded_response['entity']['error_details']['description']).to include "The service broker returned an invalid response for the request"
+            end
+          end
         end
       end
 

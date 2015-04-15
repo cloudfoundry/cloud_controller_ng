@@ -9,7 +9,10 @@ module VCAP::CloudController
     def delete(org_dataset)
       org_dataset.each do |org|
         errs = @space_deleter.delete(org.spaces_dataset)
-        return errs unless errs.empty?
+        unless errs.empty?
+          error_message = errs.map(&:message).join("\n\n")
+          return [VCAP::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, error_message)]
+        end
         org.destroy
         []
       end

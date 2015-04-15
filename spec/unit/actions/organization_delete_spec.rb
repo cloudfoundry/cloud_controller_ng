@@ -65,10 +65,22 @@ module VCAP::CloudController
         end
 
         context 'when the space deleter returns errors' do
-          it 'returns any errors that it received' do
+          before do
             stub_deprovision(service_instance, status: 500, accepts_incomplete: true)
+          end
+          it 'returns an OrganizationDeletionFailed error' do
             errors = org_delete.delete(org_dataset)
             expect(errors.first).to be_instance_of(VCAP::Errors::ApiError)
+            expect(errors.first.name).to eq 'OrganizationDeletionFailed'
+          end
+
+          it 'rolls up the error messages of its child deletions' do
+            errors = org_delete.delete(org_dataset)
+            expect(errors.first.message).to include "Deletion of organization #{org_1.name} failed because one or more resources within could not be deleted.
+
+Deletion of space #{space.name} failed because one or more resources within could not be deleted.
+
+The service broker returned an invalid response for the request"
           end
         end
       end
