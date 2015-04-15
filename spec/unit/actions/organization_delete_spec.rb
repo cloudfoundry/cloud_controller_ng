@@ -83,11 +83,11 @@ module VCAP::CloudController
 
 Deletion of space #{space.name} failed because one or more resources within could not be deleted.
 
-The service broker returned an invalid response for the request"
+\tThe service broker returned an invalid response for the request"
 
             expect(errors.first.message).to include "Deletion of space #{space_2.name} failed because one or more resources within could not be deleted.
 
-The service broker returned an invalid response for the request"
+\tThe service broker returned an invalid response for the request"
           end
         end
       end

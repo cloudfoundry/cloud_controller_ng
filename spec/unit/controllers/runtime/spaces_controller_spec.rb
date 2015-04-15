@@ -737,7 +737,7 @@ module VCAP::CloudController
 
               @expected_description = "Deletion of space #{space.name} failed because one or more resources within could not be deleted.
 
-The service broker returned an invalid response for the request to #{instance_url}. Status Code: 500 Internal Server Error, Body: {}"
+\tThe service broker returned an invalid response for the request to #{instance_url}. Status Code: 500 Internal Server Error, Body: {}"
             end
 
             context 'synchronous' do
