@@ -370,6 +370,15 @@ module VCAP::CloudController
             expect(service_instance.last_operation.state).to eq('in progress')
           end
 
+          it 'immediately enqueues a fetch job' do
+            Timecop.freeze do
+              create_managed_service_instance
+              job = Delayed::Job.last
+              poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds].seconds
+              expect(job.run_at).to be < Time.now.utc + poll_interval
+            end
+          end
+
           context 'and the broker provisions the instance synchronously' do
             let(:response_code) { 201 }
 
@@ -1050,10 +1059,16 @@ module VCAP::CloudController
             expect(last_response).to have_status_code 202
           end
 
-          it 'enqueues a job to fetch the state' do
-            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user)
-            expect(Delayed::Job.count).to eq 1
-            expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
+          it 'immediately enqueues a job to fetch the state' do
+            Timecop.freeze do
+              put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user)
+
+              job = Delayed::Job.first
+              expect(job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
+
+              poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds].seconds
+              expect(job.run_at).to be < Time.now.utc + poll_interval
+            end
           end
 
           context 'when the broker returns 410 for a service instance fetch request' do

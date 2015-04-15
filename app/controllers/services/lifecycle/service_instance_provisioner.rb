@@ -40,7 +40,8 @@ module VCAP::CloudController
           event_repository_opts,
           request_attrs
         )
-        job.enqueue
+        enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
+        enqueuer.enqueue
       end
 
       if (!accepts_incomplete?(params)) || service_instance.last_operation.state != 'in progress'

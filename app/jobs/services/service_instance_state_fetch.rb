@@ -20,11 +20,6 @@ module VCAP::CloudController
           @poll_interval = poll_interval
         end
 
-        def enqueue
-          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now + @poll_interval }
-          VCAP::CloudController::Jobs::Enqueuer.new(self, opts).enqueue
-        end
-
         def perform
           client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
           service_instance = ManagedServiceInstance.first(guid: service_instance_guid)
@@ -32,19 +27,6 @@ module VCAP::CloudController
 
           updater = ServiceInstanceStateUpdater.new(client, services_event_repository, self)
           updater.update_instance_state(service_instance, @request_attrs)
-        end
-
-        def retry_state_updater
-          if Time.now + @poll_interval > end_timestamp
-            ManagedServiceInstance.first(guid: service_instance_guid).save_with_operation(
-              last_operation: {
-                state: 'failed',
-                description: 'Service Broker failed to provision within the required time.',
-              }
-            )
-          else
-            enqueue
-          end
         end
 
         def job_name_in_configuration
@@ -57,6 +39,26 @@ module VCAP::CloudController
 
         def end_timestamp
           @end_timestamp ||= Time.now + VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes].minutes
+        end
+
+        def retry_state_updater
+          if Time.now + @poll_interval > end_timestamp
+            ManagedServiceInstance.first(guid: service_instance_guid).save_with_operation(
+              last_operation: {
+                state: 'failed',
+                description: 'Service Broker failed to provision within the required time.',
+              }
+            )
+          else
+            enqueue_again
+          end
+        end
+
+        private
+
+        def enqueue_again
+          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now + @poll_interval }
+          VCAP::CloudController::Jobs::Enqueuer.new(self, opts).enqueue
         end
       end
     end

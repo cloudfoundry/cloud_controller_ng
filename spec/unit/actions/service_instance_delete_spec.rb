@@ -110,6 +110,18 @@ module VCAP::CloudController
           expect(inner_job.poll_interval).to eq(60)
         end
 
+        it 'sets the fetch job to run immediately' do
+          Timecop.freeze do
+            service_instance_delete.delete([service_instance])
+
+            expect(Delayed::Job.count).to eq 1
+            job = Delayed::Job.last
+
+            poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds].seconds
+            expect(job.run_at).to be < Time.now.utc + poll_interval
+          end
+        end
+
         context 'and the caller wants to treat accepts_incomplete deprovisioning as a failure' do
           let(:error_when_in_progress) { true }
 
