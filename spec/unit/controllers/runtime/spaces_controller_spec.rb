@@ -631,6 +631,35 @@ module VCAP::CloudController
           expect(Route.find(guid: route_guid)).to be_nil
         end
 
+        context 'when the async job times out' do
+          before do
+            fake_config = {
+              jobs: {
+                global: {
+                  timeout_in_seconds: 0.001
+                }
+              }
+            }
+            allow(VCAP::CloudController::Config).to receive(:config).and_return(fake_config)
+            stub_deprovision(service_instance, accepts_incomplete: true) do
+              sleep 0.1
+              { status: 200, body: {}.to_json }
+            end
+          end
+
+          it 'fails the job with a SpaceDeleteTimeout error' do
+            delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+            expect(last_response).to have_status_code(202)
+            job_guid = decoded_response['metadata']['guid']
+
+            expect(Delayed::Worker.new.work_off).to eq([0, 1])
+
+            get "/v2/jobs/#{job_guid}", {}, json_headers(admin_headers)
+            expect(decoded_response['entity']['status']).to eq 'failed'
+            expect(decoded_response['entity']['error_details']['error_code']).to eq 'CF-SpaceDeleteTimeout'
+          end
+        end
+
         describe 'deleting service instances' do
           let(:app_model) { AppFactory.make(space_guid: space_guid) }
 
