@@ -3,8 +3,9 @@ require 'models/v3/mappers/process_mapper'
 
 module VCAP::CloudController
   describe ProcessMapper do
+    let(:app_guid) { AppModel.make.guid }
     describe '.map_model_to_domain' do
-      let(:model) { AppFactory.make }
+      let(:model) { AppFactory.make(app_guid: app_guid) }
 
       it 'maps App to AppProcess' do
         process = ProcessMapper.map_model_to_domain(model)
@@ -16,6 +17,7 @@ module VCAP::CloudController
         expect(process.disk_quota).to eq(model.disk_quota)
         expect(process.space_guid).to eq(model.space.guid)
         expect(process.stack_guid).to eq(model.stack.guid)
+        expect(process.app_guid).to eq(model.app_guid)
         expect(process.state).to eq(model.state)
         expect(process.command).to eq(model.command)
         expect(process.buildpack).to be_nil
@@ -36,6 +38,7 @@ module VCAP::CloudController
           'name'                 => 'some-name',
           'space_guid'           => space.guid,
           'stack_guid'           => stack.guid,
+          'app_guid'             => app_guid,
           'disk_quota'           => 32,
           'memory'               => 456,
           'instances'            => 51,
@@ -62,6 +65,7 @@ module VCAP::CloudController
         expect(model.disk_quota).to eq(32)
         expect(model.space_guid).to eq(space.guid)
         expect(model.stack_guid).to eq(stack.guid)
+        expect(model.app_guid).to eq(app_guid)
         expect(model.state).to eq('STARTED')
         expect(model.command).to eq('start-command')
         expect(model.buildpack.url).to eq('buildpack')
@@ -84,6 +88,7 @@ module VCAP::CloudController
           expect(model.disk_quota).to eq(32)
           expect(model.space_guid).to eq(space.guid)
           expect(model.stack_guid).to eq(stack.guid)
+          expect(model.app_guid).to eq(app_guid)
           expect(model.state).to eq('STARTED')
           expect(model.command).to eq('start-command')
           expect(model.buildpack.url).to eq('buildpack')
@@ -103,7 +108,7 @@ module VCAP::CloudController
           }
         end
 
-        it 'defaults it to emtpy hash' do
+        it 'defaults it to empty hash' do
           model = ProcessMapper.map_domain_to_new_model(process)
           expect(model.metadata).to eq({})
         end
@@ -120,6 +125,7 @@ module VCAP::CloudController
           'name'                 => 'some-name',
           'space_guid'           => space.guid,
           'stack_guid'           => stack.guid,
+          'app_guid'             => app_guid,
           'disk_quota'           => 32,
           'memory'               => 456,
           'instances'            => 51,
@@ -145,6 +151,7 @@ module VCAP::CloudController
         expect(model.disk_quota).to eq(32)
         expect(model.space_guid).to eq(space.guid)
         expect(model.stack_guid).to eq(stack.guid)
+        expect(model.app_guid).to eq(app_guid)
         expect(model.state).to eq('STARTED')
         expect(model.command).to eq('start-command')
         expect(model.buildpack.url).to eq('buildpack')

@@ -24,10 +24,11 @@ resource 'Processes (Experimental)', type: :api do
     let(:name1) { 'my_process1' }
     let(:name2) { 'my_process2' }
     let(:name3) { 'my_process3' }
-    let!(:process1) { VCAP::CloudController::App.make(name: name1, space: space) }
-    let!(:process2) { VCAP::CloudController::App.make(name: name2, space: space) }
-    let!(:process3) { VCAP::CloudController::App.make(name: name3, space: space) }
-    let!(:process4) { VCAP::CloudController::App.make(space: VCAP::CloudController::Space.make) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let!(:process1) { VCAP::CloudController::AppFactory.make(name: name1, space: space, app_guid: app_model.guid) }
+    let!(:process2) { VCAP::CloudController::AppFactory.make(name: name2, space: space) }
+    let!(:process3) { VCAP::CloudController::AppFactory.make(name: name3, space: space) }
+    let!(:process4) { VCAP::CloudController::AppFactory.make(space: VCAP::CloudController::Space.make) }
     let(:space) { VCAP::CloudController::Space.make }
     let(:page) { 1 }
     let(:per_page) { 2 }
@@ -52,14 +53,24 @@ resource 'Processes (Experimental)', type: :api do
             'type'       => process1.type,
             'command'    => nil,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
+            '_links'     => {
+              'self'     => { 'href' => "/v3/processes/#{process1.guid}" },
+              'app'      => { 'href' => "/v3/apps/#{app_model.guid}" },
+              'space'    => { 'href' => "/v2/spaces/#{process1.space_guid}" },
+            },
           },
           {
             'guid'       => process2.guid,
             'type'       => process2.type,
             'command'    => nil,
             'created_at' => iso8601,
-            'updated_at' => nil,
+            'updated_at' => iso8601,
+            '_links'     => {
+              'self'     => { 'href' => "/v3/processes/#{process2.guid}" },
+              'app'      => { 'href' => "/v3/apps/#{process2.app_guid}" },
+              'space'    => { 'href' => "/v2/spaces/#{process2.space_guid}" },
+            },
           }
         ]
       }
@@ -89,6 +100,11 @@ resource 'Processes (Experimental)', type: :api do
         'command'    => nil,
         'created_at' => iso8601,
         'updated_at' => iso8601,
+        '_links'     => {
+          'self'     => { 'href' => "/v3/processes/#{process.guid}" },
+          'app'      => { 'href' => "/v3/apps/#{process.app_guid}" },
+          'space'    => { 'href' => "/v2/spaces/#{process.space_guid}" },
+        },
       }
 
       do_request_with_error_handling
@@ -149,6 +165,11 @@ resource 'Processes (Experimental)', type: :api do
         'command'    => 'X',
         'created_at' => iso8601,
         'updated_at' => iso8601,
+        '_links'     => {
+          'self'     => { 'href' => "/v3/processes/#{process.guid}" },
+          'app'      => { 'href' => "/v3/apps/#{process.app_guid}" },
+          'space'    => { 'href' => "/v2/spaces/#{process.space_guid}" },
+        },
       }
 
       parsed_response = JSON.parse(response_body)

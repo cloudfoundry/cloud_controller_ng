@@ -6,6 +6,7 @@ module VCAP::CloudController
         'name'                 => model.values[:name],
         'space_guid'           => model.space && model.space.guid,
         'stack_guid'           => model.stack && model.stack.guid,
+        'app_guid'             => model.values[:app_guid],
         'disk_quota'           => model.values[:disk_quota],
         'memory'               => model.values[:memory],
         'instances'            => model.values[:instances],
@@ -49,6 +50,7 @@ module VCAP::CloudController
       attrs[:health_check_timeout] = domain.health_check_timeout
       attrs[:space_guid]           = domain.space_guid if domain.space_guid
       attrs[:stack_guid]           = domain.stack_guid if domain.stack_guid && domain.stack_guid != app.stack_guid
+      attrs[:app_guid]             = domain.app_guid
       attrs[:environment_json]     = domain.environment_json
       attrs[:docker_image]         = domain.docker_image if domain.docker_image
       attrs[:type]                 = domain.type
