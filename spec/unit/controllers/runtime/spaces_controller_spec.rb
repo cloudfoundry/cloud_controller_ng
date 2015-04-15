@@ -863,20 +863,6 @@ The service broker returned an invalid response for the request to #{instance_ur
             }.to raise_error VCAP::CloudController::DeletionError, /user could not be found/
           end
         end
-
-        it 'does not rollback any changes if recursive deletion fails halfway through' do
-          service_instance_2 = ManagedServiceInstance.make(space_guid: space_guid)
-          stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
-
-          delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
-
-          expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
-          expect(ServiceInstance.find(guid: service_instance_2.guid)).not_to be_nil
-          expect(Space.find(guid: space_guid)).not_to be_nil
-
-          expect(last_response).to have_status_code 502
-          expect(decoded_response['error_code']).to eq 'CF-SpaceDeletionFailed'
-        end
       end
     end
 
