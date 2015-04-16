@@ -589,7 +589,7 @@ resource 'Apps (Experimental)', type: :api do
         space_id: space.id,
         organization_guid: space.organization.guid
       })
-      expect(event.metadata).to eq({"request"=>{"desired_droplet_guid"=>droplet.guid}})
+      expect(event.metadata).to eq({ 'request' => { 'desired_droplet_guid' => droplet.guid } })
       expect(app_model.reload.processes).not_to be_empty
     end
   end
