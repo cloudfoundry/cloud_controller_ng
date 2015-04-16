@@ -22,6 +22,7 @@ module VCAP::CloudController
 
       before do
         stub_deprovision(service_instance, accepts_incomplete: true)
+        stub_deprovision(service_instance_2, accepts_incomplete: true)
       end
 
       context 'when the org exists' do
@@ -48,7 +49,7 @@ module VCAP::CloudController
         it 'deletes any spaces in the org' do
           expect {
             org_delete.delete(org_dataset)
-          }.to change { Space.count }.by(-1)
+          }.to change { Space.count }.by(-2)
           expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
@@ -62,7 +63,7 @@ module VCAP::CloudController
         it 'deletes associated service instances' do
           expect {
             org_delete.delete(org_dataset)
-          }.to change { ServiceInstance.count }.by(-1)
+          }.to change { ServiceInstance.count }.by(-2)
           expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
