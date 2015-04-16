@@ -131,7 +131,7 @@ module VCAP::CloudController
         let(:user_email) { 'user email' }
 
         it 'creates a new audit.app.delete-request event' do
-          event = app_event_repository.record_app_set_current_droplet(app, space, user, user_email, {a: 1})
+          event = app_event_repository.record_app_set_current_droplet(app, space, user, user_email, { a: 1 })
           event.reload
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
@@ -140,7 +140,7 @@ module VCAP::CloudController
           expect(event.actee).to eq(app.guid)
           expect(event.actee_type).to eq('app')
           expect(event.actee_name).to eq(app.name)
-          expect(event.metadata).to eq({"request"=>{"a"=>1}})
+          expect(event.metadata).to eq({ 'request' => { 'a' => 1 } })
         end
       end
 
