@@ -1502,6 +1502,26 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the instance has service keys' do
+          let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
+
+          it 'does not delete the associated service keys' do
+            expect {
+              delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+            }.to change(ServiceKey, :count).by(0)
+            expect(ServiceInstance.find(guid: service_instance.guid)).to be
+            expect(ServiceKey.find(guid: service_key.guid)).to be
+          end
+
+          it 'should give the user an error' do
+            delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+
+            expect(last_response).to have_status_code 400
+            expect(last_response.body).to match /AssociationNotEmpty/
+            expect(last_response.body).to match /Please delete the service_keys associations for your service_instances/
+          end
+        end
+
         context 'with ?accepts_incomplete=true' do
           before do
             stub_deprovision(service_instance, body: body, status: status, accepts_incomplete: true)

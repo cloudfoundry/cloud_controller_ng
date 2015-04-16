@@ -183,6 +183,10 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', :service_bindings, :service_instances)
       end
 
+      unless service_instance.service_keys.empty?
+        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', :service_keys, :service_instances)
+      end
+
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
       service_instance, delete_job = deprovisioner.deprovision_service_instance(service_instance, params)
 
