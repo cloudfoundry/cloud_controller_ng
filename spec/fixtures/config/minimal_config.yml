@@ -1,6 +1,9 @@
 ---
 external_port: 8181
 
+index: 0
+name: api_z1
+
 info:
   name: "vcap"
   build: "2222"

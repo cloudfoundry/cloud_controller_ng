@@ -43,7 +43,9 @@ module VCAP::CloudController
             expect(steno_config.sinks).to include log_counter
           end
 
-          expect(VCAP::Component).to receive(:register).with(hash_including(log_counter: log_counter))
+          expect(VCAP::Component).to receive(:register).with(
+            hash_including(log_counter: log_counter, job_name: 'api_z1')
+          )
           subject.run!
         end
 
