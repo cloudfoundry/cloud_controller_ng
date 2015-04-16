@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'actions/space_delete'
-require 'actions/deletion_errors'
 
 module VCAP::CloudController
   describe SpaceDelete do

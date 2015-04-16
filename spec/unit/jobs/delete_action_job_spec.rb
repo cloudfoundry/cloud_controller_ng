@@ -55,11 +55,8 @@ module VCAP::CloudController
         context 'with multiple errors' do
           let(:errors) { [StandardError.new('foo'), StandardError.new('bar')] }
 
-          it 'raises a combined error' do
-            expect { job.perform }.to raise_error(DeletionError) do |error|
-              expect(error.message).to include('foo')
-              expect(error.message).to include('bar')
-            end
+          it 'raises the first error' do
+            expect { job.perform }.to raise_error(errors.first)
           end
         end
       end

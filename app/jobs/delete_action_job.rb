@@ -10,10 +10,7 @@ module VCAP::CloudController
       def perform
         dataset = @model_class.where(guid: @guid)
         errors = @delete_action.delete(dataset)
-        unless errors.empty?
-          raise errors.first if errors.count == 1
-          raise DeletionError.new(errors.map(&:message).join("\n\n"))
-        end
+        raise errors.first unless errors.empty?
       end
 
       def job_name_in_configuration

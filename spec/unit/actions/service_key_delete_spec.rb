@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'actions/service_key_delete'
-require 'actions/deletion_errors'
 
 module VCAP::CloudController
   describe ServiceKeyDelete do
