@@ -3,7 +3,7 @@ require 'actions/app_delete'
 
 module VCAP::CloudController
   describe AppDelete do
-    subject(:app_delete) { AppDelete.new(user, user_email) }
+    subject(:app_delete) { AppDelete.new(user.guid, user_email) }
 
     describe '#delete' do
       let!(:app_model) { AppModel.make }

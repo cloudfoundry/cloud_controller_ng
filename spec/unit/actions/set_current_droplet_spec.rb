@@ -16,7 +16,7 @@ module VCAP::CloudController
 
       before do
         app_model.add_droplet_by_guid(droplet_guid)
-        allow(set_current_droplet).to receive(:procfile_parse).and_return(procfile_parse)
+        allow(ProcfileParse).to receive(:new).with(user.guid, user_email).and_return(procfile_parse)
         allow(procfile_parse).to receive(:process_procfile).with(app_model)
       end
 

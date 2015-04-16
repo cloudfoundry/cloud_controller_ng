@@ -3,7 +3,7 @@ require 'actions/process_delete'
 
 module VCAP::CloudController
   describe ProcessDelete do
-    subject(:process_delete) { ProcessDelete.new(space, user, user_email) }
+    subject(:process_delete) { ProcessDelete.new }
 
     describe '#delete' do
       context 'when the process exists' do

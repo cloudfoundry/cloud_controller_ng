@@ -1,9 +1,9 @@
 module VCAP::CloudController
   class AppDelete
-    attr_reader :user, :user_email
+    attr_reader :user_guid, :user_email
 
-    def initialize(user, user_email)
-      @user = user
+    def initialize(user_guid, user_email)
+      @user_guid = user_guid
       @user_email = user_email
       @logger = Steno.logger('cc.action.app_delete')
     end
@@ -14,13 +14,13 @@ module VCAP::CloudController
       apps.each do |app|
         PackageDelete.new.delete(packages_to_delete(app))
         DropletDelete.new.delete(droplets_to_delete(app))
-        ProcessDelete.new(app.space, user, user_email).delete(processes_to_delete(app))
+        ProcessDelete.new.delete(processes_to_delete(app))
         app.remove_all_routes
 
         Repositories::Runtime::AppEventRepository.new.record_app_delete_request(
           app,
           app.space,
-          @user.guid,
+          @user_guid,
           @user_email
         )
 

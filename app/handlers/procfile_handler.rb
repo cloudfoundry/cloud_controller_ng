@@ -22,8 +22,7 @@ module VCAP::CloudController
         end
 
         processes = @processes_handler.raw_list(access_context, filter: { app_guid: app.guid }, exclude: { type: types })
-        space = Space.find(guid: app.space_guid)
-        ProcessDelete.new(space, access_context.user, access_context.user_email).delete(processes.all)
+        ProcessDelete.new.delete(processes.all)
       end
     end
 

@@ -13,7 +13,7 @@ module VCAP::CloudController
       Repositories::Runtime::AppEventRepository.new.record_app_create(
         app,
         app.space,
-        @user,
+        @user.guid,
         @user_email,
         message.as_json)
       app

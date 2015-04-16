@@ -35,16 +35,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the user does not exist' do
-        before do
-          user.destroy
-        end
-
-        it 'returns a DeletionError' do
-          expect(org_delete.delete(org_dataset)[0]).to be_instance_of(UserNotFoundDeletionError)
-        end
-      end
-
       describe 'recursive deletion' do
         it 'deletes any spaces in the org' do
           expect {

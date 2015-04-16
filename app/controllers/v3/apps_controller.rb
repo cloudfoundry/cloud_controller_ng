@@ -99,7 +99,7 @@ module VCAP::CloudController
       app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
       unauthorized! unless can_delete?(space.guid)
 
-      AppDelete.new(current_user, current_user_email).delete(app)
+      AppDelete.new(current_user.guid, current_user_email).delete(app)
 
       [HTTP::NO_CONTENT]
     end

@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:user) { double(:user, guid: Sham.guid) }
     let(:droplet) { nil }
     let(:app) { AppModel.make(desired_droplet: droplet) }
-    subject(:procfile_parse) { ProcfileParse.new(user, Sham.email) }
+    subject(:procfile_parse) { ProcfileParse.new(user.guid, Sham.email) }
 
     describe '#process_procfile' do
       context 'when the apps droplet has a procfile' do

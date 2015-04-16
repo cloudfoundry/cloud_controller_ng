@@ -5,8 +5,8 @@ module VCAP::CloudController
     class DropletNotFound < StandardError; end
     class ProcfileNotFound < StandardError; end
 
-    def initialize(user, user_email)
-      @user = user
+    def initialize(user_guid, user_email)
+      @user_guid = user_guid
       @user_email = user_email
       @logger = Steno.logger('cc.action.procfile_parse')
     end
@@ -28,7 +28,7 @@ module VCAP::CloudController
 
     private
 
-    attr_reader :user, :user_email
+    attr_reader :user_guid, :user_email
 
     def converge_on_procfile(app, procfile_hash)
       types = []
@@ -38,7 +38,7 @@ module VCAP::CloudController
         process_procfile_line(app, type, command)
       end
       processes = app.processes_dataset.where(Sequel.~(type: types))
-      ProcessDelete.new(app.space, user, user_email).delete(processes.all)
+      ProcessDelete.new.delete(processes.all)
     end
 
     def process_procfile_line(app, type, command)
@@ -46,7 +46,7 @@ module VCAP::CloudController
       if existing_process
         message = { command: command }
         existing_process.update(message)
-        process_event_repository.record_app_update(existing_process, app.space, user.guid, user_email, message)
+        process_event_repository.record_app_update(existing_process, app.space, user_guid, user_email, message)
       else
         message = {
           command: command,

@@ -539,6 +539,15 @@ module VCAP::CloudController
             expect(last_response).to have_status_code 204
             expect { app_model.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
+
+          it 'records an audit event that the app was deleted' do
+            delete "/v2/organizations/#{org.guid}?recursive=true", '', admin_headers
+            expect(last_response).to have_status_code 204
+
+            event = Event.find(type: 'audit.app.delete-request', actee: app_model.guid)
+            expect(event).not_to be_nil
+            expect(event.actor).to eq admin_user.guid
+          end
         end
 
         context 'when one of the spaces has a service instance in it' do

@@ -29,16 +29,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the user does not exist' do
-        before do
-          user.destroy
-        end
-
-        it 'returns a DeletionError' do
-          expect(space_delete.delete(space_dataset)[0]).to be_instance_of(UserNotFoundDeletionError)
-        end
-      end
-
       describe 'recursive deletion' do
         it 'deletes associated apps' do
           expect {
@@ -110,7 +100,7 @@ module VCAP::CloudController
 
             expect(space.exists?).to be_falsey
             expect(space_2.exists?).to be_falsey
-            expect(space_4.exists?).to be_falsey
+            expect(space_4.exists?).to be_truthy
           end
 
           it 'deletes the other instances' do

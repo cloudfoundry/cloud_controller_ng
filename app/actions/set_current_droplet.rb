@@ -25,7 +25,7 @@ module VCAP::CloudController
     private
 
     def procfile_parse
-      ProcfileParse.new(@user, @user_email)
+      ProcfileParse.new(@user.guid, @user_email)
     end
 
     def update_app(app, fields)

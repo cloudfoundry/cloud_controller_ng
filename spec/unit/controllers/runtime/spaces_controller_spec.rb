@@ -599,6 +599,7 @@ module VCAP::CloudController
         let!(:route_guid) { Route.make(space_guid: space_guid).guid }
         let!(:service_instance) { ManagedServiceInstance.make(space_guid: space_guid) }
         let!(:service_instance_guid) { service_instance.guid }
+        let!(:user) { make_manager_for_org(org) }
 
         before do
           stub_deprovision(service_instance, accepts_incomplete: true)
@@ -629,6 +630,15 @@ module VCAP::CloudController
           expect(AppModel.find(guid: app_guid)).to be_nil
           expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
           expect(Route.find(guid: route_guid)).to be_nil
+        end
+
+        it 'records an audit event for the deletion of any nested resources' do
+          delete "/v2/spaces/#{space_guid}?recursive=true", '', headers_for(user, email: 'user@email.com')
+
+          event = Event.find(type: 'audit.app.delete-request', actee: app_guid)
+          expect(event).not_to be_nil
+          expect(event.actor).to eq user.guid
+          expect(event.actor_name).to eq 'user@email.com'
         end
 
         context 'when the async job times out' do
@@ -844,23 +854,6 @@ module VCAP::CloudController
                 expect(user_provided_service_instance.exists?).to be_falsey
               end
             end
-          end
-        end
-
-        context 'when the user does not exist when the job runs' do
-          it 'returns an UserNotFound error' do
-            user = User.make
-            org.add_user(user)
-            org.add_manager(user)
-            space.add_manager(user)
-
-            delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(headers_for(user))
-            user.destroy
-
-            job = Delayed::Job.first
-            expect {
-              job.invoke_job
-            }.to raise_error VCAP::CloudController::DeletionError, /user could not be found/
           end
         end
       end

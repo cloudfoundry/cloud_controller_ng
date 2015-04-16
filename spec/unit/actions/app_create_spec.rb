@@ -31,7 +31,7 @@ module VCAP::CloudController
         expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_create).with(
             instance_of(AppModel),
             space,
-            user,
+            user.guid,
             user_email,
             message.as_json
           )
