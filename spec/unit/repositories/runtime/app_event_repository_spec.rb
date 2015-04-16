@@ -34,7 +34,7 @@ module VCAP::CloudController
 
           expect(Loggregator).to receive(:emit).with(app.guid, "Updated app with guid #{app.guid} (#{expected_request_field})")
 
-          event = app_event_repository.record_app_update(app, space, user, user_email, attrs).reload
+          event = app_event_repository.record_app_update(app, space, user.guid, user_email, attrs).reload
 
           expect(event.space).to eq space
           expect(event.type).to eq 'audit.app.update'
@@ -66,7 +66,7 @@ module VCAP::CloudController
         let(:user_email) { 'user email' }
 
         it 'records the event fields and metadata' do
-          event = app_event_repository.record_app_create(app, app.space, user, user_email, request_attrs)
+          event = app_event_repository.record_app_create(app, app.space, user.guid, user_email, request_attrs)
           event.reload
           expect(event.type).to eq('audit.app.create')
           expect(event.actee).to eq(app.guid)
@@ -88,7 +88,7 @@ module VCAP::CloudController
         it 'logs the event' do
           expect(Loggregator).to receive(:emit).with(app.guid, "Created app with guid #{app.guid}")
 
-          app_event_repository.record_app_create(app, app.space, user, user_email, request_attrs)
+          app_event_repository.record_app_create(app, app.space, user.guid, user_email, request_attrs)
         end
       end
 
@@ -99,7 +99,7 @@ module VCAP::CloudController
         let(:user_email) { 'user email' }
 
         it 'creates a new audit.app.delete-request event' do
-          event = app_event_repository.record_app_delete_request(app, space, user, user_email, false)
+          event = app_event_repository.record_app_delete_request(app, space, user.guid, user_email, false)
           event.reload
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
@@ -112,7 +112,7 @@ module VCAP::CloudController
         end
 
         it 'does not record metadata when recursive is not passed' do
-          event = app_event_repository.record_app_delete_request(app, space, user, user_email)
+          event = app_event_repository.record_app_delete_request(app, space, user.guid, user_email)
           event.reload
           expect(event.metadata).to be_empty
         end
@@ -120,7 +120,7 @@ module VCAP::CloudController
         it 'logs the event' do
           expect(Loggregator).to receive(:emit).with(app.guid, "Deleted app with guid #{app.guid}")
 
-          app_event_repository.record_app_delete_request(app, space, user, user_email, false)
+          app_event_repository.record_app_delete_request(app, space, user.guid, user_email, false)
         end
       end
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
         let(:user_email) { 'user email' }
 
         it 'creates a new audit.app.delete-request event' do
-          event = app_event_repository.record_app_set_current_droplet(app, space, user, user_email, { a: 1 })
+          event = app_event_repository.record_app_set_current_droplet(app, space, user.guid, user_email, { a: 1 })
           event.reload
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
@@ -190,7 +190,7 @@ module VCAP::CloudController
           let(:user_email) { 'foo@example.com' }
 
           it 'creates a new app.map_route audit event' do
-            event = app_event_repository.record_map_route(app, route, user, user_email)
+            event = app_event_repository.record_map_route(app, route, user.guid, user_email)
             expect(event.type).to eq('audit.app.map-route')
             expect(event.actor).to eq(user.guid)
             expect(event.actor_type).to eq('user')
@@ -201,11 +201,10 @@ module VCAP::CloudController
         end
 
         context 'and the actor is nil' do
-          let(:user) { nil }
           let(:user_email) { '' }
 
           it 'creates a new app.map_route audit event with system as the actor' do
-            event = app_event_repository.record_map_route(app, route, user, user_email)
+            event = app_event_repository.record_map_route(app, route, nil, user_email)
             expect(event.type).to eq('audit.app.map-route')
             expect(event.actor).to eq('system')
             expect(event.actor_type).to eq('system')
@@ -226,7 +225,7 @@ module VCAP::CloudController
           let(:user_email) { 'foo@example.com' }
 
           it 'creates a new app.unmap_route audit event' do
-            event = app_event_repository.record_unmap_route(app, route, user, user_email)
+            event = app_event_repository.record_unmap_route(app, route, user.guid, user_email)
             expect(event.type).to eq('audit.app.unmap-route')
             expect(event.actor).to eq(user.guid)
             expect(event.actor_type).to eq('user')
@@ -237,11 +236,10 @@ module VCAP::CloudController
         end
 
         context 'and the actor is nil' do
-          let(:user) { nil }
           let(:user_email) { '' }
 
           it 'creates a new app.unmap_route audit event with system as the actor' do
-            event = app_event_repository.record_unmap_route(app, route, user, user_email)
+            event = app_event_repository.record_unmap_route(app, route, nil, user_email)
             expect(event.type).to eq('audit.app.unmap-route')
             expect(event.actor).to eq('system')
             expect(event.actor_type).to eq('system')
@@ -259,7 +257,7 @@ module VCAP::CloudController
         let(:user_email) { 'user@example.com' }
 
         it 'creates a new app.restage event' do
-          event = app_event_repository.record_app_restage(app, user, user_email)
+          event = app_event_repository.record_app_restage(app, user.guid, user_email)
           expect(event.type).to eq('audit.app.restage')
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
@@ -276,7 +274,7 @@ module VCAP::CloudController
         let(:user_email) { 'user@example.com' }
 
         it 'creates a new app.copy_bits event for the source app' do
-          event = app_event_repository.record_src_copy_bits(dest_app, src_app, user, user_email)
+          event = app_event_repository.record_src_copy_bits(dest_app, src_app, user.guid, user_email)
 
           expect(event.type).to eq('audit.app.copy-bits')
           expect(event.actor).to eq(user.guid)
@@ -295,7 +293,7 @@ module VCAP::CloudController
         let(:user_email) { 'user@example.com' }
 
         it 'creates a new app.copy_bits event for the destination app' do
-          event = app_event_repository.record_dest_copy_bits(dest_app, src_app, user, user_email)
+          event = app_event_repository.record_dest_copy_bits(dest_app, src_app, user.guid, user_email)
 
           expect(event.type).to eq('audit.app.copy-bits')
           expect(event.actor).to eq(user.guid)
@@ -340,7 +338,7 @@ module VCAP::CloudController
           let(:email) { 'user-email' }
 
           it 'creates a new audit.app.start event' do
-            event = app_event_repository.record_app_start(app, user, email)
+            event = app_event_repository.record_app_start(app, user.guid, email)
 
             expect(event.type).to eq('audit.app.start')
 
@@ -362,7 +360,7 @@ module VCAP::CloudController
           let(:email) { 'user-email' }
 
           it 'creates a new audit.app.stop event' do
-            event = app_event_repository.record_app_stop(app, user, email)
+            event = app_event_repository.record_app_stop(app, user.guid, email)
 
             expect(event.type).to eq('audit.app.stop')
 

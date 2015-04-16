@@ -27,7 +27,7 @@ module VCAP::CloudController
         app.restage!
       end
 
-      @app_event_repository.record_app_restage(app, SecurityContext.current_user, SecurityContext.current_user_email)
+      @app_event_repository.record_app_restage(app, SecurityContext.current_user.guid, SecurityContext.current_user_email)
 
       [
         HTTP::CREATED,

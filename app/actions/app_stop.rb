@@ -12,7 +12,7 @@ module VCAP::CloudController
 
         Repositories::Runtime::AppEventRepository.new.record_app_stop(
           app,
-          @user,
+          @user.guid,
           @user_email
         )
 

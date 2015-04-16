@@ -33,7 +33,7 @@ module VCAP::CloudController
       Repositories::Runtime::AppEventRepository.new.record_app_set_current_droplet(
           app,
           app.space,
-          @user,
+          @user.guid,
           @user_email,
           fields
       )

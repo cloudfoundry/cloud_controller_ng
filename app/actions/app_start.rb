@@ -22,7 +22,7 @@ module VCAP::CloudController
 
         Repositories::Runtime::AppEventRepository.new.record_app_start(
           app,
-          @user,
+          @user.guid,
           @user_email
         )
 

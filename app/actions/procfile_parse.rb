@@ -46,7 +46,7 @@ module VCAP::CloudController
       if existing_process
         message = { command: command }
         existing_process.update(message)
-        process_event_repository.record_app_update(existing_process, app.space, user, user_email, message)
+        process_event_repository.record_app_update(existing_process, app.space, user.guid, user_email, message)
       else
         message = {
           command: command,

@@ -68,7 +68,7 @@ module VCAP::CloudController
             expect(event_repository).to receive(:record_map_route).with(
               app,
               route,
-              user,
+              user.guid,
               user_email,
             )
 

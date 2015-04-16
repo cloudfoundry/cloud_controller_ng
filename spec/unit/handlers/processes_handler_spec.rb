@@ -243,7 +243,7 @@ module VCAP::CloudController
         expect(process_repo).to have_received(:find_for_update).with(process.guid)
         expect(process_repo).to have_received(:update!).with(updated_process)
         expect(process_event_repo).to have_received(:record_app_update).
-          with(updated_process, space, ac.user, ac.user_email, update_opts)
+          with(updated_process, space, ac.user.guid, ac.user_email, update_opts)
       end
     end
 
@@ -268,7 +268,7 @@ module VCAP::CloudController
         end
         expect(process_repo).to have_received(:create!).with(process)
         expect(process_event_repo).to have_received(:record_app_create).
-          with(process, space, ac.user, ac.user_email, creation_opts)
+          with(process, space, ac.user.guid, ac.user_email, creation_opts)
 
         expect(result).to eq(process)
       end

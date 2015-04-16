@@ -20,7 +20,7 @@ module VCAP::CloudController
         Repositories::Runtime::AppEventRepository.new.record_app_delete_request(
           app,
           app.space,
-          @user,
+          @user.guid,
           @user_email
         )
 

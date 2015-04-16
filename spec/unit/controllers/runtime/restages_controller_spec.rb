@@ -64,7 +64,7 @@ module VCAP::CloudController
               restage_request
 
               expect(last_response.status).to eq(201)
-              expect(app_event_repository).to have_received(:record_app_restage).with(application, account, SecurityContext.current_user_email)
+              expect(app_event_repository).to have_received(:record_app_restage).with(application, account.guid, SecurityContext.current_user_email)
             end
           end
 

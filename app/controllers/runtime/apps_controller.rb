@@ -94,7 +94,7 @@ module VCAP::CloudController
       @app_event_repository.record_app_delete_request(
           app,
           app.space,
-          SecurityContext.current_user,
+          SecurityContext.current_user.guid,
           SecurityContext.current_user_email,
           recursive?)
 
@@ -107,7 +107,7 @@ module VCAP::CloudController
       record_app_create_value = @app_event_repository.record_app_create(
           app,
           app.space,
-          SecurityContext.current_user,
+          SecurityContext.current_user.guid,
           SecurityContext.current_user_email,
           request_attrs)
       record_app_create_value if request_attrs
@@ -123,7 +123,7 @@ module VCAP::CloudController
         Dea::Client.update_uris(app)
       end
 
-      @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+      @app_event_repository.record_app_update(app, app.space, SecurityContext.current_user.guid, SecurityContext.current_user_email, request_attrs)
     end
 
     define_messages

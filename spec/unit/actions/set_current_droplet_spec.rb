@@ -30,7 +30,7 @@ module VCAP::CloudController
         expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_set_current_droplet).with(
                                                                                  app_model,
                                                                                  app_model.space,
-                                                                                 user,
+                                                                                 user.guid,
                                                                                  user_email,
                                                                                  { desired_droplet_guid: droplet.guid }
                                                                              )

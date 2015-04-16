@@ -117,10 +117,10 @@ module VCAP::CloudController
 
       process = @process_repository.create!(desired_process)
 
-      user = access_context.user
+      user_guid = access_context.user.guid
       email = access_context.user_email
 
-      @process_event_repository.record_app_create(process, space, user, email, create_message.opts)
+      @process_event_repository.record_app_create(process, space, user_guid, email, create_message.opts)
 
       process
     rescue ProcessRepository::InvalidProcess => e
@@ -145,10 +145,10 @@ module VCAP::CloudController
 
         process = @process_repository.update!(desired_process)
 
-        user = access_context.user
+        user_guid = access_context.user.guid
         email = access_context.user_email
 
-        @process_event_repository.record_app_update(process, desired_space, user, email, update_message.opts)
+        @process_event_repository.record_app_update(process, desired_space, user_guid, email, update_message.opts)
 
         process
       end

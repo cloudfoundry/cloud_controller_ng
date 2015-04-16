@@ -556,14 +556,14 @@ module VCAP::CloudController
     def handle_add_route(route)
       mark_routes_changed(route)
       if is_v2?
-        Repositories::Runtime::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user, SecurityContext.current_user_email)
+        Repositories::Runtime::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
       end
     end
 
     def handle_remove_route(route)
       mark_routes_changed(route)
       if is_v2?
-        Repositories::Runtime::AppEventRepository.new.record_unmap_route(self, route, SecurityContext.current_user, SecurityContext.current_user_email)
+        Repositories::Runtime::AppEventRepository.new.record_unmap_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
       end
     end
 
