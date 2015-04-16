@@ -395,6 +395,30 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET', '/v2/service_keys/:service_key_guid' do
+      let(:space)   { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:instance)  { ManagedServiceInstance.make(space: space) }
+      let(:service_key) { ServiceKey.make(name: 'fake-key', service_instance: instance) }
+
+      before do
+        service_key.save
+      end
+
+      it 'returns the specific service key' do
+        get "/v2/service_keys/#{service_key.guid}", {}, json_headers(headers_for(developer))
+        expect(last_response.status).to eql(200)
+        expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_key.guid)
+      end
+
+      it 'returns empty result if no service key found' do
+        get '/v2/service_keys/non-exist-service-key-guid', {}, json_headers(headers_for(developer))
+        expect(last_response.status).to eql(404)
+        expect(decoded_response.fetch('error_code')).to eq('CF-ServiceKeyNotFound')
+        expect(decoded_response.fetch('description')).to eq('The service key could not be found: non-exist-service-key-guid')
+      end
+    end
+
     describe 'DELETE', '/v2/service_keys/:service_key_guid' do
       let(:service_key) { ServiceKey.make }
       let(:developer) { make_developer_for_space(service_key.service_instance.space) }
@@ -405,8 +429,9 @@ module VCAP::CloudController
 
       it 'returns ServiceKeyNotFound error if there is no such key' do
         delete '/v2/service_keys/non-exist-service-key', '', json_headers(headers_for(developer))
-        expect(last_response).to have_status_code 500
-        expect(decoded_response.fetch('code')).to eq(10001)
+        expect(last_response).to have_status_code 404
+        expect(decoded_response.fetch('error_code')).to eq('CF-ServiceKeyNotFound')
+        expect(decoded_response.fetch('description')).to eq('The service key could not be found: non-exist-service-key')
       end
 
       it 'deletes the service key' do

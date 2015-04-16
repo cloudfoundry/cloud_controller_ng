@@ -8,7 +8,13 @@ module VCAP::CloudController
     end
 
     get path,      :enumerate
+    get path_guid, :read
+
     query_parameters :name, :service_instance_guid
+
+    def self.not_found_exception(guid)
+      Errors::ApiError.new_from_details('ServiceKeyNotFound', guid)
+    end
 
     def self.dependencies
       [:services_event_repository]
