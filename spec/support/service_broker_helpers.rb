@@ -49,6 +49,10 @@ module ServiceBrokerHelpers
     service_instance_url(service_instance, query)
   end
 
+  def service_instance_fetch_url(service_instance)
+    "#{service_instance_url(service_instance)}/last_operation"
+  end
+
   def remove_basic_auth(url)
     uri = URI(url)
     uri.user = nil

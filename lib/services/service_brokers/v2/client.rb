@@ -62,7 +62,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def fetch_service_instance_state(instance)
-      path = service_instance_resource_path(instance)
+      path = service_instance_last_operation_path(instance)
       response = @http_client.get(path)
       parsed_response = @response_parser.parse_fetch_state(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
@@ -201,6 +201,10 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
+
+    def service_instance_last_operation_path(instance)
+      "#{service_instance_resource_path(instance)}/last_operation"
+    end
 
     def service_binding_resource_path(binding)
       "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}"

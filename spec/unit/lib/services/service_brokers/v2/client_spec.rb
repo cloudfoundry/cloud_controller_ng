@@ -338,7 +338,7 @@ module VCAP::Services::ServiceBrokers::V2
         client.fetch_service_instance_state(instance)
 
         expect(http_client).to have_received(:get).
-          with("/v2/service_instances/#{instance.guid}")
+          with("/v2/service_instances/#{instance.guid}/last_operation")
       end
 
       it 'returns the attributes to update the service instance model' do
