@@ -4,23 +4,32 @@ module VCAP::CloudController
   module Diego
     describe InstancesReporter do
       subject { described_class.new(tps_client) }
-      let(:app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED', instances: desired_instances) }
+      let(:app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED', instances: desired_instances, memory: 128, disk_quota: 2048) }
       let(:tps_client) { double(:tps_client) }
       let(:desired_instances) { 3 }
       let(:instances_to_return) {
         [
-          { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', details: 'some-details', since: 1 },
-          { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', since: 2 },
-          { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', since: 3 },
-          { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'RUNNING', since: 4 },
-          { process_guid: 'process-guid', instance_guid: 'instance-E', index: 2, state: 'STARTING', since: 5 },
-          { process_guid: 'process-guid', instance_guid: 'instance-F', index: 3, state: 'STARTING', since: 6 },
-          { process_guid: 'process-guid', instance_guid: 'instance-G', index: 4, state: 'CRASHED', since: 7 },
+          {
+            process_guid: 'process-guid',
+            instance_guid: 'instance-A',
+            index: 0,
+            state: 'RUNNING',
+            details: 'some-details',
+            since: 1,
+            stats: { 'cpu' => 80, 'mem' => 128, 'disk' => 1024 }
+          },
+          { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', since: 2, stats: { 'cpu' => 70, 'mem' => 128, 'disk' => 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', since: 3, stats: { 'cpu' => 70, 'mem' => 128, 'disk' => 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'RUNNING', since: 4, stats: { 'cpu' => 80, 'mem' => 256, 'disk' => 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-E', index: 2, state: 'STARTING', since: 5, stats: { 'cpu' => 80, 'mem' => 256, 'disk' => 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-F', index: 3, state: 'STARTING', since: 6, stats: { 'cpu' => 80, 'mem' => 128, 'disk' => 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-G', index: 4, state: 'CRASHED', since: 7, stats: { 'cpu' => 80, 'mem' => 128, 'disk' => 1024 } },
         ]
       }
 
       before do
         allow(tps_client).to receive(:lrp_instances).and_return(instances_to_return)
+        allow(tps_client).to receive(:lrp_instances_stats).and_return(instances_to_return)
       end
 
       describe '#all_instances_for_app' do
@@ -234,45 +243,45 @@ module VCAP::CloudController
           result = subject.stats_for_app(app)
 
           expect(result).to eq(
-                                {
-                                    0 => {
-                                        'state' => 'RUNNING',
-                                        'details' => 'some-details',
-                                        'stats' => {
-                                            'mem_quota'  => 0,
-                                            'disk_quota' => 0,
-                                            'usage'      => {
-                                                'cpu'  => 0,
-                                                'mem'  => 0,
-                                                'disk' => 0,
-                                            }
-                                        }
-                                    },
-                                    1 => {
-                                        'state' => 'CRASHED',
-                                        'stats' => {
-                                            'mem_quota'  => 0,
-                                            'disk_quota' => 0,
-                                            'usage'      => {
-                                                'cpu'  => 0,
-                                                'mem'  => 0,
-                                                'disk' => 0,
-                                            }
-                                        }
-                                    },
-                                    2 => {
-                                        'state' => 'STARTING',
-                                        'stats' => {
-                                            'mem_quota'  => 0,
-                                            'disk_quota' => 0,
-                                            'usage'      => {
-                                                'cpu'  => 0,
-                                                'mem'  => 0,
-                                                'disk' => 0,
-                                            }
-                                        }
-                                    }
-                                })
+            {
+              0 => {
+                'state' => 'RUNNING',
+                'details' => 'some-details',
+                'stats' => {
+                  'mem_quota'  => app[:memory] * 1024 * 1024,
+                  'disk_quota' => app[:disk_quota] * 1024 * 1024,
+                  'usage'      => {
+                    'cpu'  => 80,
+                    'mem'  => 128,
+                    'disk' => 1024,
+                  }
+                }
+              },
+              1 => {
+                'state' => 'CRASHED',
+                'stats' => {
+                  'mem_quota'  => app[:memory] * 1024 * 1024,
+                  'disk_quota' => app[:disk_quota] * 1024 * 1024,
+                  'usage'      => {
+                    'cpu'  => 70,
+                    'mem'  => 128,
+                    'disk' => 1024,
+                  }
+                }
+              },
+              2 => {
+                'state' => 'STARTING',
+                'stats' => {
+                  'mem_quota'  => app[:memory] * 1024 * 1024,
+                  'disk_quota' => app[:disk_quota] * 1024 * 1024,
+                  'usage'      => {
+                    'cpu'  => 80,
+                    'mem'  => 256,
+                    'disk' => 1024,
+                  }
+                }
+              }
+            })
         end
 
         it 'returns DOWN instances for instances that tps does not report within range of app.instances' do
@@ -280,7 +289,7 @@ module VCAP::CloudController
 
           result = subject.stats_for_app(app)
 
-          expect(tps_client).to have_received(:lrp_instances).with(app)
+          expect(tps_client).to have_received(:lrp_instances_stats).with(app)
           expect(result.length).to eq(app.instances)
           expect(result[5][:state]).to eq('DOWN')
           expect(result[6][:state]).to eq('DOWN')
@@ -288,7 +297,7 @@ module VCAP::CloudController
 
         context 'when diego is unavailable' do
           before do
-            allow(tps_client).to receive(:lrp_instances).and_raise(StandardError.new('oh no'))
+            allow(tps_client).to receive(:lrp_instances_stats).and_raise(StandardError.new('oh no'))
           end
 
           it 'raises an InstancesUnavailable exception' do
@@ -300,7 +309,7 @@ module VCAP::CloudController
           context 'when its an InstancesUnavailable' do
             let(:error) { Errors::InstancesUnavailable.new('oh my') }
             before do
-              allow(tps_client).to receive(:lrp_instances).and_raise(error)
+              allow(tps_client).to receive(:lrp_instances_stats).and_raise(error)
             end
 
             it 're-raises' do

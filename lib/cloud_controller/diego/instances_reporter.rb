@@ -72,21 +72,20 @@ module VCAP::CloudController
         raise Errors::InstancesUnavailable.new(e)
       end
 
-      # TODO: this is only a stub. stats are not yet available from diego.
       def stats_for_app(app)
         result    = {}
-        instances = tps_client.lrp_instances(app)
+        instances = tps_client.lrp_instances_stats(app)
 
         for_each_desired_instance(instances, app) do |instance|
           info = {
             'state' => instance[:state],
             'stats' => {
-              'mem_quota'  => 0,
-              'disk_quota' => 0,
+              'mem_quota'  => app[:memory] * 1024 * 1024,
+              'disk_quota' => app[:disk_quota] * 1024 * 1024,
               'usage'      => {
-                  'cpu'  => 0,
-                  'mem'  => 0,
-                  'disk' => 0,
+                  'cpu'  => instance[:stats]['cpu'],
+                  'mem'  => instance[:stats]['mem'],
+                  'disk' => instance[:stats]['disk'],
               }
             }
           }
