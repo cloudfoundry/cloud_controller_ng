@@ -123,6 +123,18 @@ module VCAP::CloudController
                 expect(service_instance.last_operation.reload.description).to eq description
               end
             end
+
+            context 'when the broker does not return a description' do
+              let(:response) do
+                {
+                  state: 'in progress'
+                }
+              end
+
+              it 'does not update the field' do
+                expect { run_job(job) }.not_to change { service_instance.last_operation.reload.description }.from('description goes here')
+              end
+            end
           end
 
           context 'when all operations succeed and the state is `succeeded`' do

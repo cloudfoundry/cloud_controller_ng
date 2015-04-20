@@ -65,24 +65,19 @@ module VCAP::Services::ServiceBrokers::V2
       path = service_instance_last_operation_path(instance)
       response = @http_client.get(path)
       parsed_response = @response_parser.parse_fetch_state(path, response)
-      last_operation_hash = parsed_response['last_operation'] || {}
+      last_operation_hash = parsed_response.delete('last_operation') || {}
 
-      if parsed_response.empty?
-        state = (instance.last_operation.type == 'delete' ? 'succeeded' : 'failed')
-        {
-          last_operation: {
-            state: state,
-            description: ''
+      state = extract_state(instance, last_operation_hash)
+
+      result = {
+        last_operation:
+          {
+            state: state
           }
-        }
-      else
-        {
-          last_operation: {
-            state:        last_operation_hash['state'],
-            description:  last_operation_hash['description'],
-          }
-        }
-      end
+      }
+
+      result[:last_operation][:description] = last_operation_hash['description'] if last_operation_hash['description']
+      result.merge(parsed_response.symbolize_keys)
     end
 
     def bind(binding, request_attrs: {})
@@ -200,6 +195,16 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
+
+    def extract_state(instance, last_operation_hash)
+      return last_operation_hash['state'] unless last_operation_hash.empty?
+
+      if instance.last_operation.type == 'delete'
+        'succeeded'
+      else
+        'failed'
+      end
+    end
 
     def service_instance_last_operation_path(instance)
       "#{service_instance_resource_path(instance)}/last_operation"

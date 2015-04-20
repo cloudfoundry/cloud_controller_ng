@@ -344,6 +344,22 @@ module VCAP::Services::ServiceBrokers::V2
         expect(attrs).to eq(expected_attrs)
       end
 
+      context 'when the broker provides other fields' do
+        let(:response_data) do
+          {
+            'state' => 'succeeded',
+            'description' => '100% created',
+            'foo' => 'bar'
+          }
+        end
+
+        it 'passes through the extra fields' do
+          attrs = client.fetch_service_instance_state(instance)
+          expect(attrs[:foo]).to eq 'bar'
+          expect(attrs[:last_operation]).to eq({ state: 'succeeded', description: '100% created' })
+        end
+      end
+
       context 'when the broker returns 410' do
         let(:code) { '410' }
         let(:message) { 'GONE' }
@@ -364,8 +380,7 @@ module VCAP::Services::ServiceBrokers::V2
             attrs = client.fetch_service_instance_state(instance)
             expect(attrs).to include(
               last_operation: {
-                state: 'succeeded',
-                description: ''
+                state: 'succeeded'
               }
             )
           end
@@ -384,11 +399,23 @@ module VCAP::Services::ServiceBrokers::V2
             attrs = client.fetch_service_instance_state(instance)
             expect(attrs).to include(
               last_operation: {
-                state: 'failed',
-                description: ''
+                state: 'failed'
               }
             )
           end
+        end
+      end
+
+      context 'when the broker does not provide a description' do
+        let(:response_data) do
+          {
+            'state' => 'succeeded'
+          }
+        end
+
+        it 'does not return a description field' do
+          attrs = client.fetch_service_instance_state(instance)
+          expect(attrs).to eq({ last_operation: { state: 'succeeded' } })
         end
       end
     end
