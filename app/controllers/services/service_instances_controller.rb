@@ -183,7 +183,7 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', :service_bindings, :service_instances)
       end
 
-      unless service_instance.service_keys.empty?
+      unless service_instance.service_keys.empty? || recursive?
         raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', :service_keys, :service_instances)
       end
 
