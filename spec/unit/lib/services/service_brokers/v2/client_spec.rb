@@ -313,11 +313,8 @@ module VCAP::Services::ServiceBrokers::V2
 
       let(:response_data) do
         {
-          'dashboard_url' => 'bar',
-          'last_operation' => {
-            'state' => 'succeeded',
-            'description' => '100% created'
-          }
+          'state' => 'succeeded',
+          'description' => '100% created'
         }
       end
 
@@ -343,8 +340,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'returns the attributes to update the service instance model' do
         attrs = client.fetch_service_instance_state(instance)
-        expected_attrs = response_data.symbolize_keys
-        expected_attrs[:last_operation] = response_data['last_operation'].symbolize_keys
+        expected_attrs = { last_operation: response_data.symbolize_keys }
         expect(attrs).to eq(expected_attrs)
       end
 

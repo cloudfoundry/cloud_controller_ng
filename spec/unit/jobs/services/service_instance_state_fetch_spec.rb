@@ -42,12 +42,9 @@ module VCAP::CloudController
         let(:description) { 'description' }
         let(:response) do
           {
-            dashboard_url: 'url.com/dashboard',
-            last_operation: {
-              type: 'should-not-change',
-              state: state,
-              description: description
-            },
+            type: 'should-not-change',
+            state: state,
+            description: description
           }
         end
         let(:max_duration) { 10088 }
@@ -173,7 +170,6 @@ module VCAP::CloudController
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
               expect(db_service_instance.last_operation.state).to eq('succeeded')
-              expect(db_service_instance.dashboard_url).to eq('url.com/dashboard')
             end
 
             it 'applies the instance attributes that were proposed in the operation' do

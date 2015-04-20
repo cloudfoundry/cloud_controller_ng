@@ -395,10 +395,8 @@ module VCAP::CloudController
               stub_request(:get, service_broker_url_regex).
                 with(headers: { 'Accept' => 'application/json' }).
                 to_return(status: 200, body: {
-                  last_operation: {
-                    state: 'succeeded',
-                    description: 'new description'
-                  }
+                  state: 'succeeded',
+                  description: 'new description'
                 }.to_json)
             end
 
@@ -1095,10 +1093,8 @@ module VCAP::CloudController
 
               stub_request(:get, service_instance_fetch_url(service_instance)).
                 to_return(status: 200, body: {
-                    last_operation: {
-                      state: 'succeeded',
-                      description: 'Phew, all done'
-                    }
+                    state: 'succeeded',
+                    description: 'Phew, all done'
                   }.to_json)
             end
 
@@ -1545,10 +1541,8 @@ module VCAP::CloudController
               broker_uri.password = broker.auth_password
               stub_request(:get, service_instance_fetch_url(service_instance)).
                 to_return(status: 200, body: {
-                  last_operation: {
-                    state: 'succeeded',
-                    description: 'Done!'
-                  }
+                  state: 'succeeded',
+                  description: 'Done!'
                 }.to_json)
 
               Timecop.freeze Time.now + 2.minute do
@@ -1593,10 +1587,8 @@ module VCAP::CloudController
                 delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
                 stub_request(:get, service_instance_fetch_url(service_instance)).
                   to_return(status: 200, body: {
-                      last_operation: {
-                        state: 'in progress',
-                        description: 'still going'
-                      }
+                      state: 'in progress',
+                      description: 'still going'
                     }.to_json)
               end
 

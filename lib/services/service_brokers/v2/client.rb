@@ -77,7 +77,6 @@ module VCAP::Services::ServiceBrokers::V2
         }
       else
         {
-          dashboard_url:  parsed_response['dashboard_url'],
           last_operation: {
             state:        last_operation_hash['state'],
             description:  last_operation_hash['description'],

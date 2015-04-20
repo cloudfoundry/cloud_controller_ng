@@ -206,16 +206,18 @@ module VCAP::Services
             else
               @processor = ->(response) do
                 broker_response = MultiJson.load(response.body)
+                state ||= broker_response.delete('state')
+                return broker_response unless state
+
                 base_body = {
                   'last_operation' => {
                     'state' => state
                   }
                 }
-                if state
-                  broker_response.merge(base_body)
-                else
-                  broker_response
-                end
+                description = broker_response.delete('description')
+                base_body['last_operation']['description'] = description if description
+
+                broker_response.merge(base_body)
               end
             end
           end
@@ -292,8 +294,7 @@ module VCAP::Services
 
           def state_from_parsed_response(parsed_response)
             parsed_response ||= {}
-            last_operation = parsed_response['last_operation'] || {}
-            last_operation['state']
+            parsed_response['state']
           end
 
           def error_description(actual)
