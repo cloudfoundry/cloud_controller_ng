@@ -178,6 +178,7 @@ module VCAP::CloudController
               version: 'version-guid',
               updated_at: Time.at(12345.6789),
               uris: ['fake-uris'],
+              allow_ssh: true,
             )
           end
 
@@ -205,7 +206,8 @@ module VCAP::CloudController
               'execution_metadata' => 'staging-metadata',
               'routes' => ['fake-uris'],
               'egress_rules' => ['running_egress_rule'],
-              'etag' => '12345.6789'
+              'etag' => '12345.6789',
+              'allow_ssh' => true,
             })
           end
 

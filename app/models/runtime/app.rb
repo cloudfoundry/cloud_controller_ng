@@ -46,13 +46,13 @@ module VCAP::CloudController
                       :state, :version, :command, :console, :debug, :staging_task_id,
                       :package_state, :health_check_type, :health_check_timeout,
                       :staging_failed_reason, :diego, :docker_image, :package_updated_at,
-                      :detected_start_command
+                      :detected_start_command, :allow_ssh
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
                       :state, :command, :console, :debug, :staging_task_id,
                       :service_binding_guids, :route_guids, :health_check_type,
-                      :health_check_timeout, :diego, :docker_image, :app_guid
+                      :health_check_timeout, :diego, :docker_image, :app_guid, :allow_ssh
 
     strip_attributes :name
 

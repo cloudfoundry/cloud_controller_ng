@@ -12,7 +12,14 @@ module VCAP::CloudController
         let(:default_health_check_timeout) { 9999 }
         let(:staging_config) { TestConfig.config[:staging] }
         let(:common_protocol) { double(:common_protocol) }
-        let(:app) { AppFactory.make(docker_image: 'fake/docker_image', health_check_timeout: 120) }
+
+        let(:app) do
+          AppFactory.make(
+            docker_image: 'fake/docker_image',
+            health_check_timeout: 120,
+            allow_ssh: true,
+          )
+        end
 
         subject(:protocol) do
           Protocol.new(common_protocol)
@@ -134,6 +141,7 @@ module VCAP::CloudController
               'health_check_timeout_in_seconds' => app.health_check_timeout,
               'egress_rules' => ['running_egress_rule'],
               'etag' => app.updated_at.to_f.to_s,
+              'allow_ssh' => true,
             })
           end
 

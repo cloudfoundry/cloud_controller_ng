@@ -409,6 +409,7 @@ module VCAP::CloudController
     describe 'Serialization' do
       it {
         is_expected.to export_attributes(
+          :allow_ssh,
           :buildpack,
           :command,
           :console,
@@ -438,6 +439,7 @@ module VCAP::CloudController
 
       it {
         is_expected.to import_attributes(
+          :allow_ssh,
           :app_guid,
           :buildpack,
           :command,
