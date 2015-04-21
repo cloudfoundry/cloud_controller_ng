@@ -15,6 +15,7 @@ resource 'Service Keys', type: [:api, :legacy_api] do
   end
 
   standard_model_list :service_key, VCAP::CloudController::ServiceKeysController
+  standard_model_get :service_key, nested_associations: [:service_instance]
   standard_model_delete :service_key, async: false
 
   post '/v2/service_keys' do
