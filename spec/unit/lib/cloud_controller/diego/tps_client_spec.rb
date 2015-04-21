@@ -3,38 +3,75 @@ require 'spec_helper'
 module VCAP::CloudController::Diego
   describe TPSClient do
     let(:app) { VCAP::CloudController::AppFactory.make }
-    let(:tps_url) { "#{TestConfig.config[:diego_tps_url]}/v1/actual_lrps/#{app.guid}-#{app.version}" }
-    let(:tps_url_stats) { "#{TestConfig.config[:diego_tps_url]}/v1/actual_lrps/#{app.guid}-#{app.version}/stats" }
+    let(:tps_status_url) { "#{TestConfig.config[:diego_tps_url]}/v1/actual_lrps/#{app.guid}-#{app.version}" }
+    let(:tps_stats_url) { "#{TestConfig.config[:diego_tps_url]}/v1/actual_lrps/#{app.guid}-#{app.version}/stats" }
 
     subject(:client) { TPSClient.new(TestConfig.config) }
 
-    before do
-      allow(VCAP::CloudController::SecurityContext).to receive(:auth_token).and_return('my-token')
-    end
-
-    describe 'getting app instance information' do
+    describe 'fetching lrp status' do
       context 'when there is a tps url configured' do
-        context 'and the first endpoint returns instance info' do
+        context 'and the first attempt returns lrp status' do
           before do
-            stub_request(:get, "#{tps_url}").to_return(
+            stub_request(:get, "#{tps_status_url}").to_return(
               status: 200,
-              body: [{ process_guid: 'abc', instance_guid: '123', index: 0, state: 'running', since_in_ns: '1257894000000000001' },
-                     { process_guid: 'abc', instance_guid: '456', index: 1, state: 'starting', since_in_ns: '1257895000000000001' },
-                     { process_guid: 'abc', instance_guid: '789', index: 1, state: 'crashed', details: 'down-hard', since_in_ns: '1257896000000000001' }].to_json)
+              body: [
+                {
+                  process_guid: 'abc',
+                  instance_guid: '123',
+                  index: 0,
+                  state: 'running',
+                  since_in_ns: '1257894000000000001'
+                },
+                { process_guid: 'abc',
+                  instance_guid: '456',
+                  index: 1,
+                  state: 'starting',
+                  since_in_ns: '1257895000000000001'
+                },
+                {
+                  process_guid: 'abc',
+                  instance_guid: '789',
+                  index: 1,
+                  state: 'crashed',
+                  details: 'down-hard',
+                  since_in_ns: '1257896000000000001'
+                }
+              ].to_json)
           end
 
-          it "reports each instance's index, state, since, process_guid, instance_guid" do
-            expect(client.lrp_instances(app)).to eq([
-              { process_guid: 'abc', instance_guid: '123', index: 0, state: 'RUNNING', since: 1257894000, stats: {}  },
-              { process_guid: 'abc', instance_guid: '456', index: 1, state: 'STARTING', since: 1257895000, stats: {}  },
-              { process_guid: 'abc', instance_guid: '789', index: 1, state: 'CRASHED', details: 'down-hard', since: 1257896000, stats: {}  }
-            ])
+          it "reports each instance's index, state, since, process_guid, instance_guid, and details" do
+            expected_lrp_instances = [
+              {
+                process_guid: 'abc',
+                instance_guid: '123',
+                index: 0,
+                state: 'RUNNING',
+                since: 1257894000
+              },
+              {
+                process_guid: 'abc',
+                instance_guid: '456',
+                index: 1,
+                state: 'STARTING',
+                since: 1257895000
+              },
+              {
+                process_guid: 'abc',
+                instance_guid: '789',
+                index: 1,
+                state: 'CRASHED',
+                details: 'down-hard',
+                since: 1257896000
+              }
+            ]
+
+            expect(client.lrp_instances(app)).to eq(expected_lrp_instances)
           end
         end
 
         context 'when the TPS endpoint is unavailable' do
           it 'retries and eventually raises InstancesUnavailable' do
-            stub = stub_request(:get, "#{tps_url}").to_raise(Errno::ECONNREFUSED)
+            stub = stub_request(:get, "#{tps_status_url}").to_raise(Errno::ECONNREFUSED)
 
             expect { client.lrp_instances(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
@@ -43,11 +80,13 @@ module VCAP::CloudController::Diego
 
         context 'when the TPS endpoint fails' do
           before do
-            stub_request(:get, "#{tps_url}").to_return(status: 500, body: ' ')
+            stub_request(:get, "#{tps_status_url}").to_return(status: 500, body: 'This Broke')
           end
 
           it 'raises InstancesUnavailable' do
-            expect { client.lrp_instances(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, /response code: 500/i)
+            expect {
+              client.lrp_instances(app)
+            }.to raise_error(VCAP::Errors::InstancesUnavailable, /response code: 500, response body: This Broke/i)
           end
         end
 
@@ -80,51 +119,107 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises InstancesUnavailable' do
-          expect { client.lrp_instances(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, 'invalid config')
+          expect {
+            client.lrp_instances(app)
+          }.to raise_error(VCAP::Errors::InstancesUnavailable, 'TPS URL not configured')
         end
       end
     end
 
-    describe 'getting app instance information with stats' do
-      context 'when there is a tps stats url configured' do
-        context 'and the first endpoint returns instance info with stats' do
+    describe 'fetching lrp stats' do
+      context 'when there is a tps stats url is configured' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:auth_token).and_return('my-token')
+        end
+
+        context 'and the first attempt returns instance info with stats' do
           before do
-            stub_request(:get, "#{tps_url_stats}").with(
+            stub_request(:get, "#{tps_stats_url}").with(
               headers: { 'Authorization' => 'my-token' }
             ).to_return(
               status: 200,
-              body: [{ process_guid: 'abc', instance_guid: '123', index: 0, state: 'running', since_in_ns: '1257894000000000001', stats: { cpu: 80, mem: 128, disk: 1024 } },
-                     { process_guid: 'abc', instance_guid: '456', index: 1, state: 'starting', since_in_ns: '1257895000000000001', stats: { cpu: 70, mem: 256, disk: 1024 } },
-                     { process_guid: 'abc', instance_guid: '789', index: 1, state: 'crashed', since_in_ns: '1257896000000000001', details: 'down-hard',
-                       stats: { cpu: 50, mem: 512, disk: 2048 } }].to_json)
+              body: [
+                {
+                  process_guid: 'abc',
+                  instance_guid: '123',
+                  index: 0,
+                  state: 'running',
+                  since_in_ns: '1257894000000000001',
+                  stats: { cpu: 80, mem: 128, disk: 1024 }
+                },
+                {
+                  process_guid: 'abc',
+                  instance_guid: '456',
+                  index: 1,
+                  state: 'starting',
+                  since_in_ns: '1257895000000000001',
+                  stats: { cpu: 70, mem: 256, disk: 1024 }
+                },
+                {
+                  process_guid: 'abc',
+                  instance_guid: '789',
+                  index: 1,
+                  state: 'crashed',
+                  since_in_ns: '1257896000000000001',
+                  details: 'down-hard',
+                  stats: { cpu: 50, mem: 512, disk: 2048 }
+                }
+              ].to_json)
           end
 
-          it "reports each instance's index, state, since, process_guid, instance_guid" do
-            expect(client.lrp_instances_stats(app)).to eq([
-              { process_guid: 'abc', instance_guid: '123', index: 0, state: 'RUNNING', since: 1257894000, stats: { 'cpu' => 80, 'mem' => 128, 'disk' => 1024 } },
-              { process_guid: 'abc', instance_guid: '456', index: 1, state: 'STARTING', since: 1257895000, stats: { 'cpu' => 70, 'mem' => 256, 'disk' => 1024 } },
-              { process_guid: 'abc', instance_guid: '789', index: 1, state: 'CRASHED', details: 'down-hard', since: 1257896000,
-                stats: { 'cpu' => 50, 'mem' => 512, 'disk' => 2048 } }
-            ])
+          it "reports each instance's index, state, since, process_guid, instance_guid, details, and stats" do
+            expected_instance_stats = [
+              {
+                process_guid: 'abc',
+                instance_guid: '123',
+                index: 0,
+                state: 'RUNNING',
+                since: 1257894000,
+                stats: { 'cpu' => 80, 'mem' => 128, 'disk' => 1024 }
+              },
+              {
+                process_guid: 'abc',
+                instance_guid: '456',
+                index: 1,
+                state: 'STARTING',
+                since: 1257895000,
+                stats: { 'cpu' => 70, 'mem' => 256, 'disk' => 1024 }
+              },
+              {
+                process_guid: 'abc',
+                instance_guid: '789',
+                index: 1,
+                state: 'CRASHED',
+                details: 'down-hard',
+                since: 1257896000,
+                stats: { 'cpu' => 50, 'mem' => 512, 'disk' => 2048 }
+              }
+            ]
+
+            expect(client.lrp_instances_stats(app)).to eq(expected_instance_stats)
           end
         end
 
         context 'when the TPS endpoint is unavailable' do
           it 'retries and eventually raises InstancesUnavailable' do
-            stub = stub_request(:get, "#{tps_url_stats}").to_raise(Errno::ECONNREFUSED)
+            stub = stub_request(:get, "#{tps_stats_url}").to_raise(Errno::ECONNREFUSED)
 
-            expect { client.lrp_instances_stats(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
+            expect {
+              client.lrp_instances_stats(app)
+            }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
 
         context 'when the TPS endpoint fails' do
           before do
-            stub_request(:get, "#{tps_url_stats}").to_return(status: 500, body: ' ')
+            stub_request(:get, "#{tps_stats_url}").to_return(status: 500, body: ' ')
           end
 
           it 'raises InstancesUnavailable' do
-            expect { client.lrp_instances_stats(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, /response code: 500/i)
+            expect {
+              client.lrp_instances_stats(app)
+            }.to raise_error(VCAP::Errors::InstancesUnavailable, /response code: 500/i)
           end
         end
 
@@ -157,7 +252,9 @@ module VCAP::CloudController::Diego
         end
 
         it 'raises InstancesUnavailable' do
-          expect { client.lrp_instances_stats(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, 'invalid config')
+          expect {
+            client.lrp_instances_stats(app)
+          }.to raise_error(VCAP::Errors::InstancesUnavailable, 'TPS URL not configured')
         end
       end
     end
