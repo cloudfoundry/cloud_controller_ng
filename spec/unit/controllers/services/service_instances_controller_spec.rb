@@ -1498,6 +1498,56 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the instance has service keys' do
+          let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
+
+          context 'does not provide the recursive parameter' do
+            it 'does not delete the associated service keys' do
+              expect {
+                delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+              }.to change(ServiceKey, :count).by(0)
+              expect(ServiceInstance.find(guid: service_instance.guid)).to be
+              expect(ServiceKey.find(guid: service_key.guid)).to be
+            end
+
+            it 'should give the user an error' do
+              delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
+
+              expect(last_response).to have_status_code 400
+              expect(last_response.body).to match /AssociationNotEmpty/
+              expect(last_response.body).to match /Please delete the service_keys associations for your service_instances/
+            end
+          end
+
+          context 'the recursive parameter is true' do
+            before do
+              stub_unbind(service_key)
+            end
+
+            it 'deletes the associated service keys' do
+              expect {
+                delete "/v2/service_instances/#{service_instance.guid}?recursive=true", {}, admin_headers
+              }.to change(ServiceKey, :count).by(-1)
+              expect(last_response.status).to eq(204)
+
+              expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+              expect(ServiceKey.find(guid: service_key.guid)).to be_nil
+            end
+
+            it 'does not delete the service instance if failed to delete the service key' do
+              service_key_1 = ServiceKey.make(service_instance: service_instance)
+              stub_unbind(service_key_1, status: 500)
+
+              expect {
+                delete "/v2/service_instances/#{service_instance.guid}?recursive=true", {}, admin_headers
+              }.to change(ServiceKey, :count).by(-1)
+              expect(ServiceInstance.find(guid: service_instance.guid)).to be
+              expect(ServiceKey.find(guid: service_key.guid)).to be_nil
+              expect(ServiceKey.find(guid: service_key_1.guid)).to be
+            end
+          end
+        end
+
         context 'with ?accepts_incomplete=true' do
           before do
             stub_deprovision(service_instance, body: body, status: status, accepts_incomplete: true)

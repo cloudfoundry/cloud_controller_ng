@@ -14,7 +14,10 @@ module VCAP::CloudController
         binding_errors = delete_service_bindings(service_instance)
         errors_accumulator.concat binding_errors
 
-        if binding_errors.empty?
+        key_errors = delete_service_keys(service_instance)
+        errors_accumulator.concat key_errors
+
+        if binding_errors.empty? && key_errors.empty?
           instance_errors = delete_service_instance(service_instance)
 
           if service_instance.operation_in_progress? && @error_when_in_progress && instance_errors.empty?
@@ -56,6 +59,10 @@ module VCAP::CloudController
 
     def delete_service_bindings(service_instance)
       ServiceBindingDelete.new.delete(service_instance.service_bindings_dataset)
+    end
+
+    def delete_service_keys(service_instance)
+      ServiceKeyDelete.new.delete(service_instance.service_keys_dataset)
     end
 
     def build_fetch_job(service_instance)
