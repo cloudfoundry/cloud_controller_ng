@@ -6,7 +6,7 @@ resource 'Routes', type: [:api, :legacy_api] do
   let(:organization) { VCAP::CloudController::Organization.make }
   let(:space) { VCAP::CloudController::Space.make(organization: organization) }
   let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: organization) }
-  let(:path) { '/apps/v1/path' }
+  let(:route_path) { '/apps/v1/path' }
   let!(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
   let(:guid) { route.guid }
 
@@ -18,7 +18,7 @@ resource 'Routes', type: [:api, :legacy_api] do
       field :domain_guid, 'The guid of the associated domain', required: opts[:required], example_values: [Sham.guid]
       field :space_guid, 'The guid of the associated space', required: opts[:required], example_values: [Sham.guid]
       field :host, 'The host portion of the route'
-      field :path, 'The path of a route', required: false, example_values: ['/apps/v1/path', '/apps/v2/path'], experimental: true 
+      field :path, 'The path of a route', required: false, example_values: ['/apps/v1/path', '/apps/v2/path'], experimental: true
     end
 
     standard_model_list :route, VCAP::CloudController::RoutesController
@@ -29,10 +29,11 @@ resource 'Routes', type: [:api, :legacy_api] do
       include_context 'updatable_fields', required: true
 
       example 'Creating a Route' do
-        client.post '/v2/routes', MultiJson.dump(required_fields.merge(domain_guid: domain.guid, space_guid: space.guid, path: path), pretty: true), headers
+        client.post '/v2/routes', MultiJson.dump(required_fields.merge(domain_guid: domain.guid, space_guid: space.guid, path: route_path), pretty: true), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :route
+        expect(parsed_response['entity']['path']).to eq(route_path)
       end
     end
 
@@ -42,9 +43,10 @@ resource 'Routes', type: [:api, :legacy_api] do
       let(:new_host) { 'new_host' }
 
       example 'Update a Route' do
-        client.put "/v2/routes/#{guid}", MultiJson.dump({ host: new_host, path: path }, pretty: true), headers
+        client.put "/v2/routes/#{guid}", MultiJson.dump({ host: new_host, path: route_path }, pretty: true), headers
         expect(status).to eq 201
         standard_entity_response parsed_response, :route, host: new_host
+        expect(parsed_response['entity']['path']).to eq(route_path)
       end
     end
   end

@@ -2,6 +2,7 @@ module VCAP::CloudController
   class RoutesController < RestController::ModelController
     define_attributes do
       attribute :host, String, default: ''
+      attribute :path, String, default: nil
       to_one :domain
       to_one :space
       to_many :apps

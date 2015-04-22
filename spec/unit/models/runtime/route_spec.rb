@@ -270,8 +270,8 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :host, :domain_guid, :space_guid }
-      it { is_expected.to import_attributes :host, :domain_guid, :space_guid, :app_guids }
+      it { is_expected.to export_attributes :host, :domain_guid, :space_guid, :path }
+      it { is_expected.to import_attributes :host, :domain_guid, :space_guid, :app_guids, :path }
     end
 
     describe 'instance methods' do

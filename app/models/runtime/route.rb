@@ -18,8 +18,8 @@ module VCAP::CloudController
 
     add_association_dependencies apps: :nullify
 
-    export_attributes :host, :domain_guid, :space_guid
-    import_attributes :host, :domain_guid, :space_guid, :app_guids
+    export_attributes :host, :domain_guid, :space_guid, :path
+    import_attributes :host, :domain_guid, :space_guid, :app_guids, :path
 
     def fqdn
       host.empty? ? domain.name : "#{host}.#{domain.name}"

@@ -14,7 +14,8 @@ module VCAP::CloudController
           host:        { type: 'string', default: '' },
           domain_guid: { type: 'string', required: true },
           space_guid:  { type: 'string', required: true },
-          app_guids:   { type: '[string]' }
+          app_guids:   { type: '[string]' },
+          path:        { type: 'string' }
         })
       end
 
@@ -23,7 +24,8 @@ module VCAP::CloudController
           host:        { type: 'string' },
           domain_guid: { type: 'string' },
           space_guid:  { type: 'string' },
-          app_guids:   { type: '[string]' }
+          app_guids:   { type: '[string]' },
+          path:        { type: 'string' }
         })
       end
     end
