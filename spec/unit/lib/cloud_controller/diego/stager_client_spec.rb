@@ -33,12 +33,52 @@ module VCAP::CloudController::Diego
           end
         end
 
-        context 'when the stager endpoint fails' do
+        context 'when the stager endpoint fails with no error data' do
           before do
             stub_request(:put, staging_url).to_return(status: 500, body: '')
           end
 
           it 'raises StagerUnavailable' do
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: 500/i)
+          end
+        end
+
+        context 'when the stager endpoint fails with error message' do
+          before do
+            stub_request(:put, staging_url).to_return(status: 500, body: '{"error":{"message":"missing docker registry"}}')
+          end
+
+          it 'raises Stager failed with message' do
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: missing docker registry/i)
+          end
+        end
+
+        context 'when the stager endpoint fails with missing error message' do
+          before do
+            stub_request(:put, staging_url).to_return(status: 500, body: '{"detected_start_command":null, "error":{"id":"StagingError"}}')
+          end
+
+          it 'raises Stager failed with code' do
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: 500/i)
+          end
+        end
+
+        context 'when the stager endpoint fails with missing error' do
+          before do
+            stub_request(:put, staging_url).to_return(status: 500, body: '{"detected_start_command":null}')
+          end
+
+          it 'raises Stager failed with code' do
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: 500/i)
+          end
+        end
+
+        context 'when the stager endpoint fails with invalid JSON body' do
+          before do
+            stub_request(:put, staging_url).to_return(status: 500, body: 'invalid json')
+          end
+
+          it 'raises Stager failed with code' do
             expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: 500/i)
           end
         end

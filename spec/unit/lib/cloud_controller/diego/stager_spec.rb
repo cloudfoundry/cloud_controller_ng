@@ -55,11 +55,11 @@ module VCAP::CloudController
 
         context 'when the stage fails' do
           let(:error) do
-            { error: { id: 'StagingError', message: 'staging failed' } }
+            { error: { id: 'StagingError', message: 'Stager error: staging failed' } }
           end
 
           before do
-            allow(messenger).to receive(:send_stage_request).and_raise Errors::ApiError.new_from_details('StagerError')
+            allow(messenger).to receive(:send_stage_request).and_raise Errors::ApiError.new_from_details('StagerError', 'staging failed')
             allow(stager).to receive(:staging_complete)
           end
 

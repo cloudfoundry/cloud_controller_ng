@@ -29,7 +29,7 @@ module VCAP::CloudController
         end
       rescue Errors::ApiError => e
         logger.error('stage.app', staging_guid: StagingGuid.from_app(@app), error: e)
-        staging_complete(StagingGuid.from_app(@app), { error: { id: 'StagingError', message: 'staging failed' } })
+        staging_complete(StagingGuid.from_app(@app), { error: { id: 'StagingError', message: e.message } })
         raise e
       end
 
