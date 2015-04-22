@@ -48,7 +48,6 @@ module VCAP::CloudController
           }
         end
         let(:max_duration) { 10088 }
-        let(:deprecated_attempts_remaining) { nil }
         let(:request_attrs) do
           {
             dummy_data: 'dummy_data'
@@ -62,7 +61,6 @@ module VCAP::CloudController
             service_instance.guid,
             service_event_repository_opts,
             request_attrs,
-            deprecated_attempts_remaining,
           )
         end
 
