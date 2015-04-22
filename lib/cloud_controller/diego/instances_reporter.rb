@@ -77,15 +77,16 @@ module VCAP::CloudController
         instances = tps_client.lrp_instances_stats(app)
 
         for_each_desired_instance(instances, app) do |instance|
+          usage = instance[:stats] || {}
           info = {
             'state' => instance[:state],
             'stats' => {
               'mem_quota'  => app[:memory] * 1024 * 1024,
               'disk_quota' => app[:disk_quota] * 1024 * 1024,
               'usage'      => {
-                  'cpu'  => instance[:stats]['cpu'],
-                  'mem'  => instance[:stats]['mem'],
-                  'disk' => instance[:stats]['disk'],
+                  'cpu'  => usage['cpu'] || 0,
+                  'mem'  => usage['mem'] || 0,
+                  'disk' => usage['disk'] || 0,
               }
             }
           }

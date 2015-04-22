@@ -295,6 +295,26 @@ module VCAP::CloudController
           expect(result[6][:state]).to eq('DOWN')
         end
 
+        context 'when no stats are returned for an instance' do
+          before do
+            instances_to_return[0].delete(:stats)
+          end
+
+          it 'creates zero usage for the instance' do
+            result = subject.stats_for_app(app)
+
+            expect(result[0]['stats']).to eq({
+              'mem_quota'  => app[:memory] * 1024 * 1024,
+              'disk_quota' => app[:disk_quota] * 1024 * 1024,
+              'usage'      => {
+                'cpu'  => 0,
+                'mem'  => 0,
+                'disk' => 0,
+              }
+            })
+          end
+        end
+
         context 'when diego is unavailable' do
           before do
             allow(tps_client).to receive(:lrp_instances_stats).and_raise(StandardError.new('oh no'))
