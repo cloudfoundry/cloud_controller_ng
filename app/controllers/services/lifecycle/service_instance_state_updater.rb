@@ -12,8 +12,7 @@ module VCAP::CloudController
       ServiceInstance.db.transaction do
         service_instance.lock!
         service_instance.save_with_operation(
-          last_operation: attrs_to_update[:last_operation].slice(:state, :description),
-          dashboard_url: attrs_to_update[:dashboard_url],
+          last_operation: attrs_to_update[:last_operation].slice(:state, :description)
         )
 
         if last_operation_succeeded?(service_instance)
