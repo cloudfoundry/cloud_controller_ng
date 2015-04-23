@@ -11,8 +11,9 @@ module VCAP
 
       def self.setup_i18n(load_path, default_locale)
         I18n.enforce_available_locales = false
-        I18n.load_path = load_path
+        I18n.load_path.concat(load_path).uniq!
         I18n.default_locale = default_locale
+        I18n.fallbacks[default_locale.to_sym] = [default_locale.to_sym, :en_US, :en]
         I18n::Backend::Simple.send(:include, I18n::Backend::Fallbacks)
         I18n.backend.reload!
       end

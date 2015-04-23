@@ -184,6 +184,18 @@ module VCAP::CloudController::RestController
       SecurityContext.current_user_email
     end
 
+    def parse_and_validate_json(body)
+      parsed = body && MultiJson.load(body)
+      raise MultiJson::ParseError.new('invalid request body') unless parsed.is_a?(Hash)
+      parsed
+    rescue MultiJson::ParseError => e
+      bad_request!(e.message)
+    end
+
+    def bad_request!(message)
+      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', message)
+    end
+
     attr_reader :config, :logger, :env, :params, :body, :request_attrs
 
     class << self

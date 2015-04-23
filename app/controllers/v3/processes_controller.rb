@@ -2,6 +2,9 @@ require 'presenters/v3/process_presenter'
 require 'handlers/processes_handler'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
+require 'queries/process_scale_fetcher'
+require 'messages/process_scale_message'
+require 'actions/process_scale'
 
 module VCAP::CloudController
   # TODO: would be nice not needing to use this BaseController
@@ -48,6 +51,27 @@ module VCAP::CloudController
       unauthorized!
     end
 
+    put '/v3/processes/:guid/scale', :scale
+    def scale(guid)
+      check_write_permissions!
+
+      FeatureFlag.raise_unless_enabled!('app_scaling')
+
+      req_hash = parse_and_validate_json(body)
+      message = ProcessScaleMessage.new(req_hash)
+      unprocessable!(message.errors.full_messages) if message.invalid?
+
+      process, space, org = ProcessScaleFetcher.new.fetch(guid)
+      not_found! if process.nil? || !can_read?(space.guid, org.guid)
+      unauthorized! if !can_scale?(space.guid)
+
+      ProcessScale.new(current_user, current_user_email).scale(process, message)
+
+      [HTTP::OK, @process_presenter.present_json(process)]
+    rescue ProcessScale::InvalidProcess => e
+      unprocessable!(e.message)
+    end
+
     private
 
     def membership
@@ -61,12 +85,12 @@ module VCAP::CloudController
                                  Membership::ORG_MANAGER], space_guid, org_guid)
     end
 
-    def not_found!
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
+    def can_scale?(space_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 
-    def bad_request!(message)
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', message)
+    def not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
     end
 
     def unauthorized!

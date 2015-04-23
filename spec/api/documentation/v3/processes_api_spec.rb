@@ -52,6 +52,7 @@ resource 'Processes (Experimental)', type: :api do
             'guid'       => process1.guid,
             'type'       => process1.type,
             'command'    => nil,
+            'instances'  => 1,
             'created_at' => iso8601,
             'updated_at' => iso8601,
             '_links'     => {
@@ -64,6 +65,7 @@ resource 'Processes (Experimental)', type: :api do
             'guid'       => process2.guid,
             'type'       => process2.type,
             'command'    => nil,
+            'instances'  => 1,
             'created_at' => iso8601,
             'updated_at' => iso8601,
             '_links'     => {
@@ -98,6 +100,7 @@ resource 'Processes (Experimental)', type: :api do
         'guid'       => guid,
         'type'       => type,
         'command'    => nil,
+        'instances'  => 1,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         '_links'     => {
@@ -163,6 +166,7 @@ resource 'Processes (Experimental)', type: :api do
         'guid'       => guid,
         'type'       => type,
         'command'    => 'X',
+        'instances'  => instances,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         '_links'     => {
@@ -185,6 +189,49 @@ resource 'Processes (Experimental)', type: :api do
       expect(process.health_check_timeout).to eq(health_check_timeout)
       expect(process.environment_json).to eq(environment_json)
       expect(process.type).to eq(type)
+    end
+  end
+
+  put '/v3/processes/:guid/scale' do
+    parameter :instances, 'Number of instances'
+
+    let(:instances) { 3 }
+    let(:guid) { process.guid }
+    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+
+    let(:process) { VCAP::CloudController::AppFactory.make }
+
+    before do
+      app = VCAP::CloudController::AppModel.make
+      process.app_guid = app.guid
+      process.save
+      process.space.organization.add_user user
+      process.space.add_developer user
+    end
+
+    example 'Scaling a Process' do
+      expect {
+        do_request_with_error_handling
+      }.to change { VCAP::CloudController::Event.count }.by(1)
+      process.reload
+
+      expected_response = {
+        'guid'       => process.guid,
+        'type'       => process.type,
+        'command'    => process.command,
+        'instances'  => instances,
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        '_links'     => {
+          'self'     => { 'href' => "/v3/processes/#{process.guid}" },
+          'app'      => { 'href' => "/v3/apps/#{process.app_guid}" },
+          'space'    => { 'href' => "/v2/spaces/#{process.space_guid}" },
+        },
+      }
+
+      parsed_response = JSON.parse(response_body)
+      expect(response_status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 end

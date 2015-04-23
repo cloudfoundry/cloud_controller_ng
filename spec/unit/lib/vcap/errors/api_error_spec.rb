@@ -24,10 +24,10 @@ module VCAP::Errors
     let(:translations) { Dir[File.expand_path('../../../../../fixtures/i18n/*.yml', __FILE__)] }
 
     before do
+      @original_load_paths = I18n.load_path.dup
       I18n.enforce_available_locales = true # this will be the default in a future version, so test that we cope with it
       ApiError.setup_i18n(translations, 'en_US')
 
-      expect(I18n.load_path).to have(2).items
       expect(I18n.default_locale).to eq(:en_US)
 
       allow(Details).to receive('new').with(messageServiceInvalid).and_return(messageServiceInvalidDetails)
@@ -37,7 +37,7 @@ module VCAP::Errors
 
     after do
       I18n.locale = 'en'
-      I18n.load_path = []
+      I18n.load_path = @original_load_paths
       I18n.backend.reload!
     end
 

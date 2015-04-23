@@ -21,6 +21,7 @@ require 'active_support/core_ext/object/to_query'
 require 'active_support/json/encoding'
 
 Sequel.default_timezone = :utc
+ActiveSupport::JSON::Encoding.time_precision = 0
 
 module VCAP::CloudController; end
 

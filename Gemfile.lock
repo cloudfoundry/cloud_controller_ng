@@ -46,9 +46,15 @@ GEM
   remote: http://rubygems.org/
   specs:
     CFPropertyList (2.3.0)
-    activesupport (3.2.21)
-      i18n (~> 0.6, >= 0.6.4)
-      multi_json (~> 1.0)
+    activemodel (4.1.10)
+      activesupport (= 4.1.10)
+      builder (~> 3.1)
+    activesupport (4.1.10)
+      i18n (~> 0.6, >= 0.6.9)
+      json (~> 1.7, >= 1.7.7)
+      minitest (~> 5.1)
+      thread_safe (~> 0.1)
+      tzinfo (~> 1.1)
     addressable (2.3.6)
     allowy (1.0.0)
       activesupport (>= 3.2)
@@ -60,6 +66,8 @@ GEM
     backports (3.6.4)
     beefcake (1.0.0)
     builder (3.2.2)
+    byebug (4.0.5)
+      columnize (= 0.9.0)
     cf-message-bus (0.3.3)
       eventmachine (~> 1.0.0)
       nats (>= 0.5.0.beta.16, < 0.6)
@@ -72,6 +80,7 @@ GEM
     codeclimate-test-reporter (0.4.2)
       simplecov (>= 0.7.1, < 1.0.0)
     coderay (1.1.0)
+    columnize (0.9.0)
     cookiejar (0.3.0)
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
@@ -174,7 +183,7 @@ GEM
     formatador (0.2.5)
     http_parser.rb (0.6.0)
     httpclient (2.5.3.3)
-    i18n (0.6.11)
+    i18n (0.7.0)
     inflecto (0.0.2)
     ipaddress (0.8.0)
     json (1.8.2)
@@ -186,8 +195,9 @@ GEM
     method_source (0.8.2)
     mime-types (2.4.3)
     mini_portile (0.6.2)
+    minitest (5.6.0)
     msgpack (0.5.9)
-    multi_json (1.10.1)
+    multi_json (1.11.0)
     multipart-post (2.0.0)
     mustache (0.99.8)
     mysql2 (0.3.13)
@@ -216,6 +226,9 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
+    pry-byebug (3.1.0)
+      byebug (~> 4.0)
+      pry (~> 0.10)
     rack (1.5.2)
     rack-protection (1.5.3)
       rack
@@ -319,7 +332,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activesupport (~> 3.0)
+  activemodel
+  activesupport
   addressable
   allowy
   astrolabe
@@ -346,7 +360,7 @@ DEPENDENCIES
   nokogiri (~> 1.6.2)
   parallel_tests
   pg (= 0.16.0)
-  pry
+  pry-byebug
   rack-test
   rake
   rfc822

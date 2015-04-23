@@ -218,14 +218,6 @@ module VCAP::CloudController
       can_update?(space_guid)
     end
 
-    def parse_and_validate_json(body)
-      parsed = body && MultiJson.load(body)
-      raise MultiJson::ParseError.new('invalid request body') unless parsed.is_a?(Hash)
-      parsed
-    rescue MultiJson::ParseError => e
-      bad_request!(e.message)
-    end
-
     def validate_allowed_params(params)
       schema = {
         'names' => ->(v) { v.is_a? Array },
@@ -258,10 +250,6 @@ module VCAP::CloudController
 
     def app_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
-    end
-
-    def bad_request!(message)
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', message)
     end
 
     def unauthorized!

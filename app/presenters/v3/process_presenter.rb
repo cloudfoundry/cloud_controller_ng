@@ -37,6 +37,7 @@ module VCAP::CloudController
         guid: process.guid,
         type: process.type,
         command: process.command,
+        instances: process.instances,
         created_at: process.created_at,
         updated_at: process.updated_at,
         _links: build_links(process),
