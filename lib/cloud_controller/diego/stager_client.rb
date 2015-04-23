@@ -78,8 +78,8 @@ module VCAP::CloudController
       end
 
       def error_message(response)
-        JSON.parse(response.body)['error']['message'] || response.code
-      rescue JSON::ParserError, NoMethodError
+        JSON.parse(response.body).fetch('error', {})['message'] || response.code
+      rescue JSON::ParserError
         response.code
       end
     end
