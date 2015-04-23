@@ -6,6 +6,8 @@ module VCAP::CloudController
     class InvalidAppRelation < VCAP::Errors::InvalidRelation; end
     class InvalidOrganizationRelation < VCAP::Errors::InvalidRelation; end
 
+    ROUTE_REGEX = /\A#{URI.regexp}\Z/.freeze
+
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
 
@@ -52,6 +54,8 @@ module VCAP::CloudController
       validate_domain
       validate_total_routes
       errors.add(:host, :domain_conflict) if domains_match?
+
+      validate_path
     end
 
     def domains_match?
@@ -150,6 +154,12 @@ module VCAP::CloudController
       if !org_routes_policy.allow_more_routes?(1)
         errors.add(:organization, :total_routes_exceeded)
       end
+    end
+
+    def validate_path
+      return if path.nil?
+      errors.add(:path, :invalid_path) if path.empty? || '/' == path || '/' != path[0] || path =~ /\?/
+      errors.add(:path, :invalid_path) unless ROUTE_REGEX.match("pathcheck://#{host}#{path}")
     end
   end
 end

@@ -98,6 +98,58 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :host }
       it { is_expected.to validate_uniqueness [:host, :domain_id] }
 
+      describe 'path' do
+        it 'should not allow a path of just slash' do
+          route.path = '/'
+          expect(route).not_to be_valid
+        end
+
+        it 'should not allow a blank path' do
+          route.path = ''
+          expect(route).not_to be_valid
+        end
+
+        it 'should not allow path that does not start with a slash' do
+          route.path = 'bar'
+          expect(route).not_to be_valid
+        end
+
+        it 'should allow a path starting with a slash' do
+          route.path = '/foo'
+          expect(route).to be_valid
+        end
+
+        it 'should allow a multi-part path' do
+          route.path = '/foo/bar'
+          expect(route).to be_valid
+        end
+
+        it 'should allow a multi-part path ending with a slash' do
+          route.path = '/foo/bar/'
+          expect(route).to be_valid
+        end
+
+        it 'should allow equal sign as part of the path' do
+          route.path = '/foo=bar'
+          expect(route).to be_valid
+        end
+
+        it 'should not allow question mark' do
+          route.path = '/foo?a=b'
+          expect(route).not_to be_valid
+        end
+
+        it 'should not allow trailing question mark' do
+          route.path = '/foo?'
+          expect(route).not_to be_valid
+        end
+
+        it 'should not allow non-ASCII characters in the path' do
+          route.path = '/barΩ'
+          expect(route).not_to be_valid
+        end
+      end
+
       describe 'host' do
         let(:space) { Space.make }
         let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
