@@ -222,9 +222,9 @@ module VCAP::CloudController
             post '/v2/service_keys', req, json_headers(headers_for(developer))
           end
 
-          it 'raises UnbindableService error' do
+          it 'raises ServiceKeyNotSupported error' do
             hash_body = JSON.parse(last_response.body)
-            expect(hash_body['error_code']).to eq('CF-UnbindableService')
+            expect(hash_body['error_code']).to eq('CF-ServiceKeyNotSupported')
             expect(last_response).to have_status_code(400)
           end
 
