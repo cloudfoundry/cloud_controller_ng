@@ -6,6 +6,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:host) }
       it { expect(described_class).to be_queryable_by(:domain_guid) }
       it { expect(described_class).to be_queryable_by(:organization_guid) }
+      it { expect(described_class).to be_queryable_by(:path) }
     end
 
     describe 'Attributes' do
@@ -159,6 +160,13 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(210001)
+      end
+
+      it 'returns the PathInvalid message' do
+        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid, path: '/v2/zak?'), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(130004)
       end
     end
 

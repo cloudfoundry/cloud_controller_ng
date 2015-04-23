@@ -8,7 +8,7 @@ module VCAP::CloudController
       to_many :apps
     end
 
-    query_parameters :host, :domain_guid, :organization_guid
+    query_parameters :host, :domain_guid, :organization_guid, :path
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:host, :domain_id])
@@ -24,6 +24,11 @@ module VCAP::CloudController
       org_errors = e.errors.on(:organization)
       if org_errors && org_errors.include?(:total_routes_exceeded)
         return Errors::ApiError.new_from_details('OrgQuotaTotalRoutesExceeded')
+      end
+
+      path_errors = e.errors.on(:path)
+      if path_errors && path_errors.include?(:invalid_path)
+        return Errors::ApiError.new_from_details('PathInvalid', attributes['path'])
       end
 
       Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
