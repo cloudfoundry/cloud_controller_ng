@@ -239,53 +239,6 @@ module VCAP::CloudController
           })
         end
 
-        describe 'orphan mitigation' do
-          context 'when saving to the DB fails' do
-            before do
-              @req = MultiJson.dump(
-                  app_guid: app_obj.guid,
-                  service_instance_guid: instance.guid
-              )
-
-              allow_any_instance_of(ServiceBinding).to receive(:save).and_raise
-            end
-
-            it 'unbinds the service instance' do
-              post '/v2/service_bindings', @req, json_headers(headers_for(developer))
-              expect(a_request(:put, bind_url_regex(service_instance: instance))).to have_been_made.times(1)
-              expect(a_request(:delete, bind_url_regex(service_instance: instance))).to have_been_made.times(1)
-
-              orphan_mitigating_job = Delayed::Job.first
-              expect(orphan_mitigating_job).to be_nil
-            end
-          end
-
-          context 'when the broker returns an error' do
-            let(:bind_status) { 500 }
-            let(:bind_body) { {} }
-
-            it 'enqueues a ServiceInstanceUnbind job' do
-              req = MultiJson.dump(
-                app_guid: app_obj.guid,
-                service_instance_guid: instance.guid
-              )
-
-              post '/v2/service_bindings', req, json_headers(headers_for(developer))
-              expect(last_response).to have_status_code 502
-
-              expect(ServiceBinding.count).to eq 0
-
-              expect(Delayed::Job.count).to eq 1
-
-              orphan_mitigating_job = Delayed::Job.first
-              expect(orphan_mitigating_job).not_to be_nil
-              expect(orphan_mitigating_job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceUnbind
-
-              expect(a_request(:delete, bind_url_regex(service_instance: instance))).to_not have_been_made
-            end
-          end
-        end
-
         context 'when the client provides arbitrary parameters' do
           let(:parameters) { { 'key' => 'value' } }
           let(:req) do
