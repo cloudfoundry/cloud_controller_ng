@@ -28,8 +28,13 @@ module VCAP::Services
           when 409
             FailingValidator.new(Errors::ServiceBrokerConflict)
           when 422
-            FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
-              FailingValidator.new(Errors::ServiceBrokerBadResponse))
+            IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
+                FailWhenValidator.new('error',
+                                      { 'RequiresApp' => Errors::AppRequired, 'AsyncRequired' => Errors::AsyncRequired },
+                                      FailingValidator.new(Errors::ServiceBrokerBadResponse)),
+                FailWhenValidator.new('error',
+                                      { 'AsyncRequired' => Errors::AsyncRequired },
+                                      FailingValidator.new(Errors::ServiceBrokerBadResponse)))
           else
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
           end
@@ -59,7 +64,7 @@ module VCAP::Services
             @logger.warn("Already deleted: #{unvalidated_response.uri}")
             SuccessValidator.new { |res| {} }
           when 422
-            FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
+            FailWhenValidator.new('error', { 'AsyncRequired' => Errors::AsyncRequired },
               FailingValidator.new(Errors::ServiceBrokerBadResponse))
           else
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
@@ -101,7 +106,7 @@ module VCAP::Services
             JsonObjectValidator.new(@logger,
                 SuccessValidator.new(state: 'in progress'))
           when 422
-            FailWhenValidator.new('error', ['AsyncRequired'], Errors::AsyncRequired,
+            FailWhenValidator.new('error', { 'AsyncRequired' => Errors::AsyncRequired },
               FailingValidator.new(Errors::ServiceBrokerRequestRejected))
           else
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
@@ -176,10 +181,9 @@ module VCAP::Services
         end
 
         class FailWhenValidator
-          def initialize(key, values, error_class, validator)
+          def initialize(key, error_class_map, validator)
             @key = key
-            @values = values
-            @error_class = error_class
+            @error_class_map = error_class_map
             @validator = validator
           end
 
@@ -191,8 +195,9 @@ module VCAP::Services
               return
             end
 
-            if @values.include?(parsed_response[@key])
-              raise @error_class.new(uri.to_s, method, response)
+            if @error_class_map.include?(parsed_response[@key])
+              error_class = @error_class_map[parsed_response[@key].to_s]
+              raise error_class.new(uri.to_s, method, response)
             else
               @validator.validate(method: method, uri: uri, code: code, response: response)
             end

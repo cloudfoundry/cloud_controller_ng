@@ -203,7 +203,10 @@ module VCAP::Services
         test_case(:provision, 422, broker_partial_json,                              error: Errors::ServiceBrokerBadResponse)
         test_case(:provision, 422, broker_malformed_json,                            error: Errors::ServiceBrokerBadResponse)
         test_case(:provision, 422, broker_empty_json,                                error: Errors::ServiceBrokerBadResponse)
-        test_case(:provision, 422, { error: 'AsyncRequired' }.to_json,        error: Errors::AsyncRequired)
+        test_case(:provision, 422, { error: 'AsyncRequired' }.to_json,               error: Errors::AsyncRequired)
+        test_case(:bind,      422, { error: 'AsyncRequired' }.to_json,               error: Errors::AsyncRequired)
+        test_case(:provision, 422, { error: 'RequiresApp' }.to_json,                 error: Errors::ServiceBrokerBadResponse)
+        test_case(:bind,      422, { error: 'RequiresApp' }.to_json,                 error: Errors::AppRequired)
         test_common_error_cases(:provision)
 
         test_case(:fetch_state, 200, broker_partial_json,                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json))
