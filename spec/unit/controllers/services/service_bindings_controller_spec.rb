@@ -241,15 +241,17 @@ module VCAP::CloudController
 
         describe 'orphan mitigation' do
           context 'when saving to the DB fails' do
-            it 'unbinds the service instance' do
-              req = MultiJson.dump(
-                app_guid: app_obj.guid,
-                service_instance_guid: instance.guid
+            before do
+              @req = MultiJson.dump(
+                  app_guid: app_obj.guid,
+                  service_instance_guid: instance.guid
               )
 
               allow_any_instance_of(ServiceBinding).to receive(:save).and_raise
+            end
 
-              post '/v2/service_bindings', req, json_headers(headers_for(developer))
+            it 'unbinds the service instance' do
+              post '/v2/service_bindings', @req, json_headers(headers_for(developer))
               expect(a_request(:put, bind_url_regex(service_instance: instance))).to have_been_made.times(1)
               expect(a_request(:delete, bind_url_regex(service_instance: instance))).to have_been_made.times(1)
 

@@ -80,7 +80,7 @@ module VCAP::Services::ServiceBrokers::V2
       result.merge(parsed_response.symbolize_keys)
     end
 
-    def bind(binding, request_attrs: {})
+    def bind(binding, request_params: {})
       path = service_binding_resource_path(binding)
       attr = {
           service_id:  binding.service.broker_provided_id,
@@ -90,7 +90,7 @@ module VCAP::Services::ServiceBrokers::V2
         attr[:app_guid] = binding.app_guid
       end
 
-      attr[:parameters] = request_attrs['parameters'] if request_attrs['parameters']
+      attr[:parameters] = request_params if request_params.present?
 
       response = @http_client.put(path, attr)
       parsed_response = @response_parser.parse_provision_or_bind(path, response)

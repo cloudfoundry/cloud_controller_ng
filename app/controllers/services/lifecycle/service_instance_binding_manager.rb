@@ -1,4 +1,5 @@
 require 'actions/service_binding_delete'
+require 'actions/service_binding_create'
 
 module VCAP::CloudController
   class ServiceInstanceBindingManager
@@ -18,19 +19,16 @@ module VCAP::CloudController
       raise ServiceInstanceNotBindable unless service_instance.bindable?
       raise AppNotFound unless App.first(guid: request_attrs['app_guid'])
 
-      service_binding = ServiceBinding.new(request_attrs.except('parameters'))
-      @access_validator.validate_access(:create, service_binding)
-      raise Sequel::ValidationFailed.new(service_binding) unless service_binding.valid?
+      validate_create_action(request_attrs)
 
-      lock_service_instance_by_blocking(service_instance) do
-        attributes_to_update = service_binding.client.bind(service_binding, request_attrs: request_attrs)
-        begin
-          service_binding.set_all(attributes_to_update)
-          service_binding.save
-        rescue
-          safe_unbind_instance(service_binding)
-          raise
-        end
+      service_binding, errors = ServiceBindingCreate.new(@logger).bind(
+          service_instance,
+          request_attrs.except('parameters'),
+          request_attrs['parameters']
+      )
+
+      if errors.present?
+        raise errors.first
       end
 
       service_binding
@@ -53,12 +51,6 @@ module VCAP::CloudController
 
     private
 
-    def safe_unbind_instance(service_binding)
-      service_binding.client.unbind(service_binding)
-    rescue => e
-      @logger.error "Unable to unbind #{service_binding}: #{e}"
-    end
-
     def async?(params)
       params['async'] == 'true'
     end
@@ -72,23 +64,10 @@ module VCAP::CloudController
       end
     end
 
-    def lock_service_instance_by_blocking(service_instance, &block)
-      return block.call unless service_instance.managed_instance?
-
-      original_attributes = service_instance.last_operation.try(:to_hash)
-      begin
-        service_instance.lock_by_failing_other_operations('update') do
-          block.call
-        end
-      ensure
-        if original_attributes
-          service_instance.last_operation.set_all(original_attributes)
-          service_instance.last_operation.save
-        else
-          service_instance.service_instance_operation.destroy
-          service_instance.save
-        end
-      end
+    def validate_create_action(request_attrs)
+      service_binding = ServiceBinding.new(request_attrs.except('parameters'))
+      @access_validator.validate_access(:create, service_binding)
+      raise Sequel::ValidationFailed.new(service_binding) unless service_binding.valid?
     end
   end
 end

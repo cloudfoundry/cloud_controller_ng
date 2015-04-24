@@ -737,14 +737,14 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the caller provides an arbitrary parameters in an optional request_attrs hash' do
         it 'make a put request with correct message and arbitrary parameters' do
-          request_attrs = { 'parameters' => { 'name' => 'value' } }
-          client.bind(binding, request_attrs: request_attrs)
+          request_params = { 'name' => 'value' }
+          client.bind(binding, request_params: request_params)
           expect(http_client).to have_received(:put).
             with(anything,
                  plan_id:    binding.service_plan.broker_provided_id,
                  service_id: binding.service.broker_provided_id,
                  app_guid:   binding.app_guid,
-                 parameters: request_attrs['parameters']
+                 parameters: request_params
             )
         end
       end
