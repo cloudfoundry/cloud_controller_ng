@@ -1,3 +1,5 @@
+require 'actions/synchronous_orphan_mitigate'
+
 module VCAP::CloudController
   class ServiceInstanceProvisioner
     class Unauthorized < StandardError; end
@@ -28,7 +30,8 @@ module VCAP::CloudController
       begin
         service_instance.save_with_operation(attributes_to_update)
       rescue => e
-        safe_deprovision_instance(service_instance)
+        orphan_mitigator = SynchronousOrphanMitigate.new(@logger)
+        orphan_mitigator.attempt_deprovision_instance(service_instance)
         raise e
       end
 
@@ -52,12 +55,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def safe_deprovision_instance(service_instance)
-      service_instance.client.deprovision(service_instance)
-    rescue => e
-      @logger.error "Unable to deprovision #{service_instance}: #{e}"
-    end
 
     def accepts_incomplete?(params)
       params['accepts_incomplete'] == 'true'

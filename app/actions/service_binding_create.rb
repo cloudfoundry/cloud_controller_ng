@@ -1,3 +1,5 @@
+require 'actions/synchronous_orphan_mitigate'
+
 module VCAP::CloudController
   class ServiceBindingCreate
     def initialize(logger)
@@ -18,7 +20,8 @@ module VCAP::CloudController
           service_binding.set_all(attributes_to_update)
           service_binding.save
         rescue
-          safe_unbind_instance(service_binding)
+          orphan_mitigator = SynchronousOrphanMitigate.new(@logger)
+          orphan_mitigator.attempt_unbind(service_binding)
           raise
         end
 
@@ -29,14 +32,6 @@ module VCAP::CloudController
       end
 
       [service_binding, errors]
-    end
-
-    private
-
-    def safe_unbind_instance(service_binding)
-      service_binding.client.unbind(service_binding)
-    rescue => e
-      @logger.error "Unable to unbind #{service_binding}: #{e}"
     end
   end
 end

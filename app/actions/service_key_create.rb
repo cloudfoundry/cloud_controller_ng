@@ -1,3 +1,5 @@
+require 'actions/synchronous_orphan_mitigate'
+
 module VCAP::CloudController
   class ServiceKeyCreate
     def initialize(logger)
@@ -18,7 +20,8 @@ module VCAP::CloudController
           service_key.set_all(attributes_to_update)
           service_key.save
         rescue
-          safe_delete_key(service_key)
+          orphan_mitigator = SynchronousOrphanMitigate.new(@logger)
+          orphan_mitigator.attempt_delete_key(service_key)
           raise
         end
 
@@ -29,14 +32,6 @@ module VCAP::CloudController
       end
 
       [service_key, errors]
-    end
-
-    private
-
-    def safe_delete_key(service_key)
-      service_key.client.unbind(service_key)
-    rescue => e
-      @logger.error "Unable to delete key #{service_key}: #{e}"
     end
   end
 end

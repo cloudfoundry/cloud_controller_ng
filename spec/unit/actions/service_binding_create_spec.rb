@@ -71,7 +71,7 @@ module VCAP::CloudController
             end
 
             it 'logs that the unbind failed' do
-              expect(logger).to have_received(:error).with /Unable to unbind/
+              expect(logger).to have_received(:error).with /Unable to delete orphaned binding/
             end
           end
         end
