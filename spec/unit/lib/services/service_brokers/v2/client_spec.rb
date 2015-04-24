@@ -165,14 +165,12 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'passes arbitrary params in the broker request' do
-        request_attrs = {
-          'parameters' => {
+        arbitrary_parameters = {
             'some_param' => 'some-value'
-          }
         }
 
-        client.provision(instance, request_attrs: request_attrs)
-        expect(http_client).to have_received(:put).with(path, hash_including(parameters: request_attrs['parameters']))
+        client.provision(instance, arbitrary_parameters: arbitrary_parameters)
+        expect(http_client).to have_received(:put).with(path, hash_including(parameters: arbitrary_parameters))
       end
 
       context 'when the broker returns 204 (No Content)' do
@@ -737,14 +735,14 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the caller provides an arbitrary parameters in an optional request_attrs hash' do
         it 'make a put request with correct message and arbitrary parameters' do
-          request_params = { 'name' => 'value' }
-          client.bind(binding, request_params: request_params)
+          arbitrary_parameters = { 'name' => 'value' }
+          client.bind(binding, arbitrary_parameters: arbitrary_parameters)
           expect(http_client).to have_received(:put).
             with(anything,
                  plan_id:    binding.service_plan.broker_provided_id,
                  service_id: binding.service.broker_provided_id,
                  app_guid:   binding.app_guid,
-                 parameters: request_params
+                 parameters: arbitrary_parameters
             )
         end
       end

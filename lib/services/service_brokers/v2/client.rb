@@ -19,9 +19,7 @@ module VCAP::Services::ServiceBrokers::V2
       @response_parser.parse_catalog(CATALOG_PATH, response)
     end
 
-    # The broker is expected to guarantee uniqueness of instance_id.
-    # raises ServiceBrokerConflict if the id is already in use
-    def provision(instance, request_attrs: {}, accepts_incomplete: false)
+    def provision(instance, arbitrary_parameters: {}, accepts_incomplete: false)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body_parameters = {
@@ -30,7 +28,8 @@ module VCAP::Services::ServiceBrokers::V2
         organization_guid: instance.organization.guid,
         space_guid: instance.space.guid,
       }
-      body_parameters[:parameters] = request_attrs['parameters'] if request_attrs['parameters']
+
+      body_parameters[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
       response = @http_client.put(path, body_parameters)
 
       parsed_response = @response_parser.parse_provision_or_bind(path, response)
@@ -80,7 +79,7 @@ module VCAP::Services::ServiceBrokers::V2
       result.merge(parsed_response.symbolize_keys)
     end
 
-    def bind(binding, request_params: {})
+    def bind(binding, arbitrary_parameters: {})
       path = service_binding_resource_path(binding)
       attr = {
           service_id:  binding.service.broker_provided_id,
@@ -90,7 +89,7 @@ module VCAP::Services::ServiceBrokers::V2
         attr[:app_guid] = binding.app_guid
       end
 
-      attr[:parameters] = request_params if request_params.present?
+      attr[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       response = @http_client.put(path, attr)
       parsed_response = @response_parser.parse_provision_or_bind(path, response)

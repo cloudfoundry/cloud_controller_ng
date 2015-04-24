@@ -3,7 +3,7 @@ module VCAP::Services
     def provision(_)
     end
 
-    def bind(binding, request_params: {})
+    def bind(binding, arbitrary_parameters: {})
       {
         credentials: binding.service_instance.credentials,
         syslog_drain_url: binding.service_instance.syslog_drain_url

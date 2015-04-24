@@ -6,7 +6,7 @@ module VCAP::CloudController
       @logger = logger
     end
 
-    def create(service_instance, key_attrs, request_params)
+    def create(service_instance, key_attrs, arbitrary_parameters)
       errors = []
 
       begin
@@ -14,7 +14,7 @@ module VCAP::CloudController
         lock.lock!
 
         service_key = ServiceKey.new(key_attrs)
-        attributes_to_update = service_key.client.bind(service_key, request_params: request_params)
+        attributes_to_update = service_key.client.bind(service_key, arbitrary_parameters: arbitrary_parameters)
 
         begin
           service_key.set_all(attributes_to_update)

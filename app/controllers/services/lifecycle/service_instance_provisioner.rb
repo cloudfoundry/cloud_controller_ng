@@ -20,11 +20,14 @@ module VCAP::CloudController
 
       validate_create_action(request_attrs, params)
 
-      service_instance = ManagedServiceInstance.new(request_attrs.except('parameters'))
+      request_params = request_attrs.except('parameters')
+      arbitrary_params = request_attrs['parameters']
+
+      service_instance = ManagedServiceInstance.new(request_params)
       attributes_to_update = service_instance.client.provision(
         service_instance,
         accepts_incomplete: accepts_incomplete?(params),
-        request_attrs: request_attrs,
+        arbitrary_parameters: arbitrary_params,
       )
 
       begin
