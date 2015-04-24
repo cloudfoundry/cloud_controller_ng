@@ -5,6 +5,7 @@ module VCAP::CloudController
     define_attributes do
       to_one :service_instance
       attribute :name, String
+      attribute :parameters, Hash, default: nil
     end
 
     get path,      :enumerate

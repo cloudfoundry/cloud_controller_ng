@@ -6,7 +6,8 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_creatable_attributes({
                                                                  name: { type: 'string', required: true },
-                                                                 service_instance_guid: { type: 'string', required: true }
+                                                                 service_instance_guid: { type: 'string', required: true },
+                                                                 parameters: { type: 'hash', required: false }
                                                              })
       end
     end
@@ -160,12 +161,12 @@ module VCAP::CloudController
         let(:developer) { make_developer_for_space(space) }
         let(:name) { 'fake-service-key' }
         let(:service_instance_guid) { instance.guid }
-        let(:req) {
+        let(:req) do
           {
-              name: name,
-              service_instance_guid: service_instance_guid
+            name: name,
+            service_instance_guid: service_instance_guid
           }.to_json
-        }
+        end
 
         before do
           stub_requests(service.service_broker)
@@ -350,6 +351,27 @@ module VCAP::CloudController
                 end
               end
             end
+          end
+        end
+
+        context 'when the request includes arbitrary parameters' do
+          let(:parameters) { { foo: 'bar' } }
+          let(:req) do
+            {
+              name: name,
+              service_instance_guid: service_instance_guid,
+              parameters: parameters
+            }.to_json
+          end
+
+          it 'forwards the parameters in the bind request' do
+            post '/v2/service_keys', req, json_headers(headers_for(developer))
+            expect(last_response).to have_status_code 201
+
+            url_regex = %r{#{broker_url(service.service_broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
+            expected_body = { service_id: service.broker_provided_id, plan_id: instance.service_plan.broker_provided_id, parameters: parameters }.to_json
+
+            expect(a_request(:put, url_regex).with(body: expected_body)).to have_been_made
           end
         end
       end

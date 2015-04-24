@@ -56,7 +56,7 @@ module VCAP::CloudController
     end
 
     def validate_create_action(request_attrs)
-      service_key = ServiceKey.new(request_attrs)
+      service_key = ServiceKey.new(request_attrs.except('parameters'))
       @access_validator.validate_access(:create, service_key)
       raise Sequel::ValidationFailed.new(service_key) unless service_key.valid?
     end
