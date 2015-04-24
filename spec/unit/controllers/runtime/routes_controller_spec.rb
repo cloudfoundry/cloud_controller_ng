@@ -123,7 +123,7 @@ module VCAP::CloudController
       let(:domain) { SharedDomain.make }
       let(:space) { Space.make }
 
-      it 'returns the RouteHostTaken message' do
+      it 'returns the RouteHostTaken message when no paths are used' do
         taken_host = 'someroute'
         Route.make(host: taken_host, domain: domain)
 
@@ -131,6 +131,17 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(210003)
+      end
+
+      it 'returns the RouteHostTaken message when paths conflict' do
+        taken_host = 'someroute'
+        path = '%2Fsome%20path'
+        post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: domain.guid, space_guid: space.guid, path: path), json_headers(admin_headers)
+
+        post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: domain.guid, space_guid: space.guid, path: path), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(130004)
       end
 
       it 'returns the SpaceQuotaTotalRoutesExceeded message' do
@@ -301,6 +312,38 @@ module VCAP::CloudController
           it 'returns a NO_CONTENT (204)' do
             get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}", nil, headers_for(user)
             expect(last_response.status).to eq(204)
+          end
+        end
+
+        context 'when a path is provided as a param' do
+          context 'when the path does not exist' do
+            it 'returns a NOT_FOUND (404)' do
+              get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}?path=not_mypath", nil, headers_for(user)
+              expect(last_response.status).to eq(404)
+            end
+          end
+
+          context ' when the path does exist' do
+            context 'when the path does not contain url encoding' do
+              let(:path) { '/my_path' }
+              let(:route) { Route.make(path: path) }
+
+              it 'returns a NO_CONTENT (204)' do
+                get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}?path=#{path}", nil, headers_for(user)
+                expect(last_response.status).to eq(204)
+              end
+            end
+
+            context 'when the path is url encoded' do
+              let(:path) { '/my%20path' }
+              let(:route) { Route.make(path: path) }
+
+              it 'returns a NO_CONTENT' do
+                uri_encoded_path = '%2Fmy%2520path'
+                get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}?path=#{uri_encoded_path}", nil, headers_for(user)
+                expect(last_response.status).to eq(204)
+              end
+            end
           end
         end
       end

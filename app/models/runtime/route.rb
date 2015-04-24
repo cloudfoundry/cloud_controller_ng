@@ -2,11 +2,11 @@ require 'cloud_controller/dea/client'
 
 module VCAP::CloudController
   class Route < Sequel::Model
+    ROUTE_REGEX = /\A#{URI.regexp}\Z/.freeze
+
     class InvalidDomainRelation < VCAP::Errors::InvalidRelation; end
     class InvalidAppRelation < VCAP::Errors::InvalidRelation; end
     class InvalidOrganizationRelation < VCAP::Errors::InvalidRelation; end
-
-    ROUTE_REGEX = /\A#{URI.regexp}\Z/.freeze
 
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
@@ -38,6 +38,11 @@ module VCAP::CloudController
       }
     end
 
+    alias_method :old_path, :path
+    def path
+      old_path.nil? ? '' : old_path
+    end
+
     def organization
       space.organization if space
     end
@@ -49,13 +54,21 @@ module VCAP::CloudController
       errors.add(:host, :presence) if host.nil?
 
       validates_format /^([\w\-]+|\*)$/, :host if host && !host.empty?
-      validates_unique [:host, :domain_id]
+
+      validates_unique [:host, :domain_id, :path]
+      validate_path
 
       validate_domain
       validate_total_routes
       errors.add(:host, :domain_conflict) if domains_match?
+    end
 
-      validate_path
+    def validate_path
+      return if path == ''
+
+      if !ROUTE_REGEX.match("pathcheck://#{host}#{path}") || path == '/' || path[0] != '/' || path =~ /\?/
+        errors.add(:path, :invalid_path)
+      end
     end
 
     def domains_match?
@@ -154,12 +167,6 @@ module VCAP::CloudController
       if !org_routes_policy.allow_more_routes?(1)
         errors.add(:organization, :total_routes_exceeded)
       end
-    end
-
-    def validate_path
-      return if path.nil?
-      errors.add(:path, :invalid_path) if path.empty? || '/' == path || '/' != path[0] || path =~ /\?/
-      errors.add(:path, :invalid_path) unless ROUTE_REGEX.match("pathcheck://#{host}#{path}")
     end
   end
 end

@@ -1636,10 +1636,12 @@ module VCAP::CloudController
     end
 
     describe 'uris' do
-      it 'should return the uris on the app' do
+      it 'should return the fqdns and paths on the app' do
         app = AppFactory.make(space: space)
+        domain = PrivateDomain.make(name: 'mydomain.com', owning_organization: org)
+        route = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
         app.add_route(route)
-        expect(app.uris).to eq([route.fqdn])
+        expect(app.uris).to eq(['myhost.mydomain.com/my%20path'])
       end
     end
 
