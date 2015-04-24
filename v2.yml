@@ -807,3 +807,8 @@
   name: ServiceKeyNotSupported
   http_code: 400
   message: "This service doesn't support creation of keys."
+
+360005:
+  name: ServiceKeyNotCreatable
+  http_code: 400
+  message: "This service supports generation of credentials through binding an application only."
