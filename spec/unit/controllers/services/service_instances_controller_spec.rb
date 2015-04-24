@@ -883,7 +883,7 @@ module VCAP::CloudController
 
             it 'should show an error message for update operation' do
               put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
-              expect(last_response).to have_status_code 400
+              expect(last_response).to have_status_code 409
               expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
             end
           end
@@ -1212,7 +1212,7 @@ module VCAP::CloudController
 
             it 'should show an error message for update operation' do
               put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
-              expect(last_response).to have_status_code 400
+              expect(last_response).to have_status_code 409
               expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
             end
           end
@@ -1221,7 +1221,7 @@ module VCAP::CloudController
             it 'succeeds for exactly one request' do
               stub_request(:patch, "#{service_broker_url}?accepts_incomplete=true").to_return do |_|
                 put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
-                expect(last_response).to have_status_code 400
+                expect(last_response).to have_status_code 409
                 expect(last_response.body).to match /AsyncServiceInstanceOperationInProgress/
 
                 { status: 202, body: {}.to_json }
@@ -1557,7 +1557,7 @@ module VCAP::CloudController
             it 'succeeds for exactly one of the requests' do
               stub_deprovision(service_instance, accepts_incomplete: true) do |req|
                 delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, admin_headers
-                expect(last_response).to have_status_code 400
+                expect(last_response).to have_status_code 409
                 expect(last_response.body).to match /AsyncServiceInstanceOperationInProgress/
 
                 { status: 202, body: {}.to_json }
@@ -1850,7 +1850,7 @@ module VCAP::CloudController
 
           it 'should show an error message for delete operation' do
             delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
-            expect(last_response.status).to eq 400
+            expect(last_response.status).to eq 409
             expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
           end
         end
