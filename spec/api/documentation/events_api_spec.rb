@@ -5,6 +5,8 @@ require 'cgi'
 resource 'Events', type: [:api, :legacy_api] do
   DOCUMENTED_EVENT_TYPES = %w(
     app.crash
+    audit.app.start
+    audit.app.stop
     audit.app.update
     audit.app.create
     audit.app.delete-request
@@ -66,7 +68,7 @@ resource 'Events', type: [:api, :legacy_api] do
 
     let(:test_app) { VCAP::CloudController::App.make }
     let(:test_user) { VCAP::CloudController::User.make }
-    let(:test_user_email) { 'user@email.com' }
+    let(:test_user_email) { 'user@example.com' }
     let(:test_space) { VCAP::CloudController::Space.make }
     let(:test_organization) { VCAP::CloudController::Organization.make }
 
@@ -132,6 +134,38 @@ resource 'Events', type: [:api, :legacy_api] do
                                actee_name: test_app.name,
                                space_guid: test_app.space.guid,
                                metadata: { 'request' => expected_app_request }
+    end
+
+    example 'List App Start Events' do
+      app_event_repository.record_app_start(test_app, test_user.guid, test_user_email)
+
+      client.get '/v2/events?q=type:audit.app.start', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'app',
+                               actee: test_app.guid,
+                               actee_name: test_app.name,
+                               space_guid: test_app.space.guid,
+                               metadata: {}
+    end
+
+    example 'List App Stop Events' do
+      app_event_repository.record_app_stop(test_app, test_user.guid, test_user_email)
+
+      client.get '/v2/events?q=type:audit.app.stop', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                              actor_type: 'user',
+                              actor: test_user.guid,
+                              actor_name: test_user_email,
+                              actee_type: 'app',
+                              actee: test_app.guid,
+                              actee_name: test_app.name,
+                              space_guid: test_app.space.guid,
+                              metadata: {}
     end
 
     example 'List App Exited Events' do
