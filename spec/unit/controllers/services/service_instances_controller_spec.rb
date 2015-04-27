@@ -1783,22 +1783,17 @@ module VCAP::CloudController
             expect(decoded_response['entity']['status']).to eq 'finished'
           end
 
-          context 'when the instance has an operation in progress' do
-            it 'succeeds for exactly one of the requests' do
+          context 'when a synchronous request is made before the enqueued job can run' do
+            it 'succeeds the synchronous request and assumes the job will properly handle the missing resource when it eventually runs' do
               delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
               expect(last_response).to have_status_code 202
-
-              stub_deprovision(service_instance) do |_|
-                job = Delayed::Job.first
-                expect { job.invoke_job }.to raise_error(VCAP::Errors::ApiError)
-
-                { status: 202, body: {}.to_json }
-              end.times(1).then.to_return do |_|
-                { status: 202, body: {}.to_json }
-              end
+              expect(service_instance.exists?).to be_truthy
 
               delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
               expect(last_response).to have_status_code 204
+              expect(service_instance.exists?).to be_falsey
+
+              expect(Delayed::Worker.new.work_off).to eq([1, 0])
             end
           end
 
