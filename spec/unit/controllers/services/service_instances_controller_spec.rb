@@ -633,7 +633,7 @@ module VCAP::CloudController
 
               orphan_mitigation_job = Delayed::Job.first
               expect(orphan_mitigation_job).not_to be_nil
-              expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceDeprovision
+              expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedInstance
             end
           end
 

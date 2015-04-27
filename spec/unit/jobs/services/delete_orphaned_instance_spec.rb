@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Services
-    describe ServiceInstanceDeprovision do
+    describe DeleteOrphanedInstance do
       let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
 
       let(:plan) { VCAP::CloudController::ServicePlan.make }
@@ -12,7 +12,7 @@ module VCAP::CloudController
       let(:name) { 'fake-name' }
 
       subject(:job) do
-        VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision.new(name, {},
+        VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance.new(name, {},
           service_instance.guid, service_instance.service_plan.guid)
       end
 
@@ -35,7 +35,7 @@ module VCAP::CloudController
 
       describe '#job_name_in_configuration' do
         it 'returns the name of the job' do
-          expect(job.job_name_in_configuration).to eq(:service_instance_deprovision)
+          expect(job.job_name_in_configuration).to eq(:delete_orphaned_instance)
         end
       end
 

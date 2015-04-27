@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Services
-      class ServiceInstanceUnbind < VCAP::CloudController::Jobs::CCJob
+      class DeleteOrphanedBinding < VCAP::CloudController::Jobs::CCJob
         attr_accessor :name, :client_attrs, :binding_guid, :service_instance_guid, :app_guid
 
         def initialize(name, client_attrs, binding_guid, service_instance_guid, app_guid)
@@ -25,7 +25,7 @@ module VCAP::CloudController
         end
 
         def job_name_in_configuration
-          :service_instance_unbind
+          :delete_orphaned_binding
         end
 
         def max_attempts
@@ -36,6 +36,9 @@ module VCAP::CloudController
           time + (2**attempts).minutes
         end
       end
+
+      # Keep the legacy name for backwards compatibility
+      ServiceInstanceUnbind = DeleteOrphanedBinding
     end
   end
 end

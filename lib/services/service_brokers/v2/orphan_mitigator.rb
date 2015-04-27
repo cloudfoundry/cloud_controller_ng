@@ -1,12 +1,12 @@
-require 'jobs/services/service_instance_deprovision'
-require 'jobs/services/service_instance_unbind'
+require 'jobs/services/delete_orphaned_binding'
+require 'jobs/services/delete_orphaned_instance'
 
 module VCAP::Services
   module ServiceBrokers
     module V2
       class OrphanMitigator
         def cleanup_failed_provision(client_attrs, service_instance)
-          deprovision_job = VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision.new(
+          deprovision_job = VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance.new(
             'service-instance-deprovision',
             client_attrs,
             service_instance.guid,
@@ -18,7 +18,7 @@ module VCAP::Services
         end
 
         def cleanup_failed_bind(client_attrs, service_binding)
-          unbind_job = VCAP::CloudController::Jobs::Services::ServiceInstanceUnbind.new(
+          unbind_job = VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding.new(
             'service-instance-unbind',
             client_attrs,
             service_binding.guid,

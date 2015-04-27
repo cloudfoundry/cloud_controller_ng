@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Jobs
     module Services
-      class ServiceInstanceDeprovision < VCAP::CloudController::Jobs::CCJob
+      class DeleteOrphanedInstance < VCAP::CloudController::Jobs::CCJob
         attr_accessor :name, :client_attrs, :service_instance_guid, :service_plan_guid
 
         def initialize(name, client_attrs, service_instance_guid, service_plan_guid)
@@ -22,7 +22,7 @@ module VCAP::CloudController
         end
 
         def job_name_in_configuration
-          :service_instance_deprovision
+          :delete_orphaned_instance
         end
 
         def max_attempts
@@ -33,6 +33,9 @@ module VCAP::CloudController
           time + (2**attempts).minutes
         end
       end
+
+      # Keep the legacy name for backwards compatibility
+      ServiceInstanceDeprovision = DeleteOrphanedInstance
     end
   end
 end

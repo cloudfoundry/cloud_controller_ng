@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Services
-    describe ServiceInstanceUnbind do
+    describe DeleteOrphanedBinding do
       let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
       let(:service_instance_guid) { 'fake-instance-guid' }
       let(:app_guid) { 'fake-app-guid' }
@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       let(:name) { 'fake-name' }
-      subject(:job) { VCAP::CloudController::Jobs::Services::ServiceInstanceUnbind.new(name, {}, binding_guid, service_instance_guid, app_guid) }
+      subject(:job) { VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding.new(name, {}, binding_guid, service_instance_guid, app_guid) }
 
       describe '#perform' do
         before do
@@ -32,7 +32,7 @@ module VCAP::CloudController
 
       describe '#job_name_in_configuration' do
         it 'returns the name of the job' do
-          expect(job.job_name_in_configuration).to eq(:service_instance_unbind)
+          expect(job.job_name_in_configuration).to eq(:delete_orphaned_binding)
         end
       end
 

@@ -25,7 +25,7 @@ module VCAP::Services
           expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
             expect(opts[:queue]).to eq 'cc-generic'
 
-            expect(job).to be_a VCAP::CloudController::Jobs::Services::ServiceInstanceDeprovision
+            expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance
             expect(job.name).to eq 'service-instance-deprovision'
             expect(job.client_attrs).to eq client_attrs
             expect(job.service_instance_guid).to eq service_instance.guid
@@ -58,7 +58,7 @@ module VCAP::Services
           expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
             expect(opts[:queue]).to eq 'cc-generic'
 
-            expect(job).to be_a VCAP::CloudController::Jobs::Services::ServiceInstanceUnbind
+            expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding
             expect(job.name).to eq 'service-instance-unbind'
             expect(job.client_attrs).to eq client_attrs
             expect(job.binding_guid).to eq service_binding.guid

@@ -36,7 +36,7 @@ module VCAP::CloudController
 
             orphan_mitigating_job = Delayed::Job.first
             expect(orphan_mitigating_job).not_to be_nil
-            expect(orphan_mitigating_job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceUnbind
+            expect(orphan_mitigating_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedBinding
 
             expect(a_request(:delete, service_binding_url_pattern)).to_not have_been_made
           end
