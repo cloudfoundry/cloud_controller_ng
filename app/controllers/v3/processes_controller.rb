@@ -7,7 +7,6 @@ require 'messages/process_scale_message'
 require 'actions/process_scale'
 
 module VCAP::CloudController
-  # TODO: would be nice not needing to use this BaseController
   class ProcessesController < RestController::BaseController
     def self.dependencies
       [:process_repository, :processes_handler, :process_presenter]
@@ -19,16 +18,30 @@ module VCAP::CloudController
 
     get '/v3/processes', :list
     def list
+      check_read_permissions!
+
       pagination_options = PaginationOptions.from_params(params)
-      paginated_result   = @processes_handler.list(pagination_options, @access_context)
+      invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
+      invalid_param!("Unknown query param(s) '#{params.keys.join("', '")}'") if params.any?
+
+      paginated_result = []
+      if membership.admin?
+        paginated_result = ProcessListFetcher.new.fetch_all(pagination_options)
+      else
+        space_guids = membership.space_guids_for_roles([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
+        paginated_result = ProcessListFetcher.new.fetch(pagination_options, space_guids)
+      end
 
       [HTTP::OK, @process_presenter.present_json_list(paginated_result, '/v3/processes')]
     end
 
     get '/v3/processes/:guid', :show
     def show(guid)
-      process = @processes_handler.show(guid, @access_context)
-      not_found! if process.nil?
+      check_read_permissions!
+
+      process = App.where(guid: guid).eager(:space, :organization).all.first
+
+      not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
 
       [HTTP::OK, @process_presenter.present_json(process)]
     end
@@ -99,6 +112,10 @@ module VCAP::CloudController
 
     def unprocessable!(message)
       raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+    end
+
+    def invalid_param!(message)
+      raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', message)
     end
   end
 end

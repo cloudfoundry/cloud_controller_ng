@@ -6,20 +6,23 @@ module VCAP::CloudController
     let(:logger) { instance_double(Steno::Logger) }
     let(:processes_handler) { instance_double(ProcessesHandler) }
     let(:process_presenter) { double(:process_presenter) }
+    let(:user) { User.make }
+    let(:space) { Space.make }
+    let(:app_model) { AppModel.make(space: space) }
     let(:process_model) { AppFactory.make(app_guid: app_model.guid) }
-    let(:app_model) { AppModel.make }
     let(:process) { ProcessMapper.map_model_to_domain(process_model) }
     let(:guid) { process.guid }
     let(:membership) { double(:membership) }
     let(:req_body) { '' }
     let(:expected_response) { 'process_response_body' }
+    let(:params) { {} }
 
     let(:processes_controller) do
       ProcessesController.new(
         {},
         logger,
         {},
-        {},
+        params,
         req_body,
         nil,
         {
@@ -33,42 +36,94 @@ module VCAP::CloudController
       allow(logger).to receive(:debug)
       allow(process_presenter).to receive(:present_json).and_return(expected_response)
       allow(membership).to receive(:has_any_roles?).and_return(true)
-      allow(processes_controller).to receive(:current_user).and_return(User.make)
+      allow(membership).to receive(:admin?).and_return(false)
+      allow(processes_controller).to receive(:current_user).and_return(user)
       allow(processes_controller).to receive(:membership).and_return(membership)
       allow(processes_controller).to receive(:check_write_permissions!).and_return(nil)
+      allow(processes_controller).to receive(:check_read_permissions!).and_return(nil)
     end
 
     describe '#list' do
       let(:page) { 1 }
       let(:per_page) { 2 }
-      let(:params) { { 'page' => page, 'per_page' => per_page } }
       let(:list_response) { 'list_response' }
 
       before do
         allow(process_presenter).to receive(:present_json_list).and_return(expected_response)
-        allow(processes_handler).to receive(:list).and_return(list_response)
+        allow(membership).to receive(:space_guids_for_roles).and_return([space.guid])
+        allow_any_instance_of(ProcessListFetcher).to receive(:fetch).and_call_original
       end
 
       it 'returns 200 and lists the apps' do
         response_code, response_body = processes_controller.list
 
-        expect(processes_handler).to have_received(:list)
-        expect(process_presenter).to have_received(:present_json_list).with(list_response, '/v3/processes')
+        expect(process_presenter).to have_received(:present_json_list).with(instance_of(PaginatedResult), '/v3/processes')
         expect(response_code).to eq(200)
         expect(response_body).to eq(expected_response)
+      end
+
+      it 'fetches processes for the users SpaceDeveloper, SpaceManager, SpaceAuditor, OrgManager space guids' do
+        expect_any_instance_of(ProcessListFetcher).to receive(:fetch).with(instance_of(PaginationOptions), [space.guid]).and_call_original
+        expect_any_instance_of(ProcessListFetcher).to_not receive(:fetch_all)
+
+        processes_controller.list
+
+        expect(membership).to have_received(:space_guids_for_roles).with(
+            [Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
+      end
+
+      it 'checks for read permissions' do
+        processes_controller.list
+
+        expect(processes_controller).to have_received(:check_read_permissions!)
+      end
+
+      context 'when user is an admin' do
+        before do
+          allow(membership).to receive(:admin?).and_return(true)
+        end
+
+        it 'fetches all of the results' do
+          expect_any_instance_of(ProcessListFetcher).to receive(:fetch_all).with(instance_of(PaginationOptions)).and_call_original
+
+          processes_controller.list
+        end
+      end
+
+      context 'when the request parameters are invalid' do
+        context 'because there are unknown parameters' do
+          let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
+
+          it 'returns an 400 Bad Request' do
+            expect {
+              processes_controller.list
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include("Unknown query param(s) 'invalid', 'bad'")
+            end
+          end
+        end
+
+        context 'because there are invalid values in parameters' do
+          let(:params) { { 'per_page' => 'foo' } }
+
+          it 'returns an 400 Bad Request' do
+            expect {
+              processes_controller.list
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include('Per page must be between 1 and 5000')
+            end
+          end
+        end
       end
     end
 
     describe '#show' do
-      before do
-        allow(processes_handler).to receive(:show).and_return(process)
-      end
-
       context 'when the process does not exist' do
         let(:guid) { 'ABC123' }
-        before do
-          allow(processes_handler).to receive(:show).and_return(nil)
-        end
 
         it 'raises an ApiError with a 404 code' do
           expect {

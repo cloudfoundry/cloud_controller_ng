@@ -72,7 +72,7 @@ module VCAP::CloudController
       end
 
       context 'query params' do
-        context('invalid param format') do
+        context 'invalid param format' do
           let(:names) { 'foo' }
           let(:params) { { 'names' => names } }
 
@@ -87,7 +87,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'unknow query param' do
+        context 'unknown query param' do
           let(:bad_param) { 'foo' }
           let(:params) { { 'bad_param' => bad_param } }
 
@@ -97,7 +97,7 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'BadQueryParameter'
               expect(error.response_code).to eq 400
-              expect(error.message).to match('Unknow query param')
+              expect(error.message).to match('Unknown query param')
             end
           end
         end

@@ -3,6 +3,7 @@ require 'cloud_controller/paging/pagination_options'
 require 'queries/app_delete_fetcher'
 require 'queries/app_fetcher'
 require 'queries/app_list_fetcher'
+require 'queries/process_list_fetcher'
 require 'actions/app_delete'
 require 'actions/app_update'
 require 'actions/app_start'
@@ -231,7 +232,7 @@ module VCAP::CloudController
       }
       params.each do |key, value|
         validator = schema[key]
-        raise InvalidParam.new("Unknow query param #{key}") if validator.nil?
+        raise InvalidParam.new("Unknown query param #{key}") if validator.nil?
         raise InvalidParam.new("Invalid type for param #{key}") if !validator.call(value)
       end
     end

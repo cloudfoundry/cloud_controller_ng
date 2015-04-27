@@ -7,7 +7,6 @@ module VCAP::CloudController
       let(:app) { AppModel.make(space_guid: space.guid) }
       let(:sad_app) { AppModel.make(space_guid: space.guid) }
       let(:org) { space.organization }
-      let(:user) { User.make }
       let(:fetcher) { described_class.new }
       let(:space_guids) { [space.guid] }
       let(:pagination_options) { PaginationOptions.new({}) }
