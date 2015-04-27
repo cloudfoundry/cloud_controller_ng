@@ -14,7 +14,8 @@ module VCAP::CloudController
         lock.lock!
 
         service_key = ServiceKey.new(key_attrs)
-        attributes_to_update = service_key.client.bind(service_key, arbitrary_parameters: arbitrary_parameters)
+
+        attributes_to_update = service_key.client.create_service_key(service_key, arbitrary_parameters: arbitrary_parameters)
 
         begin
           service_key.set_all(attributes_to_update)

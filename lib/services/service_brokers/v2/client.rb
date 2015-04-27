@@ -79,15 +79,35 @@ module VCAP::Services::ServiceBrokers::V2
       result.merge(parsed_response.symbolize_keys)
     end
 
+    def create_service_key(key, arbitrary_parameters: {})
+      path = service_binding_resource_path(key)
+      attr = {
+          service_id:  key.service.broker_provided_id,
+          plan_id:     key.service_plan.broker_provided_id
+      }
+
+      attr[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
+
+      response = @http_client.put(path, attr)
+      parsed_response = @response_parser.parse_provision_or_bind(path, response)
+
+      attributes = {
+          credentials: parsed_response['credentials']
+      }
+
+      attributes
+    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
+      @orphan_mitigator.cleanup_failed_key(@attrs, key)
+      raise e
+    end
+
     def bind(binding, arbitrary_parameters: {})
       path = service_binding_resource_path(binding)
       attr = {
           service_id:  binding.service.broker_provided_id,
-          plan_id:     binding.service_plan.broker_provided_id
+          plan_id:     binding.service_plan.broker_provided_id,
+          app_guid:    binding.app_guid
       }
-      if binding.respond_to? 'app_guid'
-        attr[:app_guid] = binding.app_guid
-      end
 
       attr[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
