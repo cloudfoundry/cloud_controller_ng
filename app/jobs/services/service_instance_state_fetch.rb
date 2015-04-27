@@ -1,5 +1,3 @@
-require 'controllers/services/lifecycle/service_instance_state_updater'
-
 module VCAP::CloudController
   module Jobs
     module Services
@@ -21,10 +19,15 @@ module VCAP::CloudController
         def perform
           client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
           service_instance = ManagedServiceInstance.first(guid: service_instance_guid)
-          services_event_repository = Repositories::Services::EventRepository.new(@services_event_repository_opts) if @services_event_repository_opts
 
-          updater = ServiceInstanceStateUpdater.new(client, services_event_repository, self)
-          updater.update_instance_state(service_instance, @request_attrs)
+          attrs_to_update = client.fetch_service_instance_state(service_instance)
+          update_with_attributes(attrs_to_update, service_instance)
+
+          retry_state_updater unless service_instance.terminal_state?
+        rescue HttpRequestError, HttpResponseError, Sequel::Error => e
+          logger = Steno.logger('cc-background')
+          logger.error("There was an error while fetching the service instance operation state: #{e}")
+          retry_state_updater
         end
 
         def job_name_in_configuration
@@ -39,20 +42,51 @@ module VCAP::CloudController
           @end_timestamp ||= Time.now + VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes].minutes
         end
 
+        private
+
+        def update_with_attributes(attrs_to_update, service_instance)
+          ServiceInstance.db.transaction do
+            service_instance.lock!
+            service_instance.save_with_operation(
+                last_operation: attrs_to_update[:last_operation].slice(:state, :description)
+            )
+
+            if service_instance.last_operation.state == 'succeeded'
+              apply_proposed_changes(service_instance)
+              if @services_event_repository_opts
+                services_event_repository = Repositories::Services::EventRepository.new(@services_event_repository_opts)
+                record_event(services_event_repository, service_instance, @request_attrs)
+              end
+            end
+          end
+        end
+
         def retry_state_updater
           if Time.now + @poll_interval > end_timestamp
             ManagedServiceInstance.first(guid: service_instance_guid).save_with_operation(
-              last_operation: {
-                state: 'failed',
-                description: 'Service Broker failed to provision within the required time.',
-              }
+                last_operation: {
+                    state: 'failed',
+                    description: 'Service Broker failed to provision within the required time.',
+                }
             )
           else
             enqueue_again
           end
         end
 
-        private
+        def record_event(services_event_repository, service_instance, request_attrs)
+          type = service_instance.last_operation.type.to_sym
+          services_event_repository.record_service_instance_event(type, service_instance, request_attrs)
+        end
+
+        def apply_proposed_changes(service_instance)
+          if service_instance.last_operation.type == 'delete'
+            service_instance.last_operation.destroy
+            service_instance.destroy
+          else
+            service_instance.save_with_operation(service_instance.last_operation.proposed_changes)
+          end
+        end
 
         def enqueue_again
           opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now + @poll_interval }
