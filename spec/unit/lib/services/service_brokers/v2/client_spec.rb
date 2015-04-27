@@ -15,7 +15,7 @@ module VCAP::Services::ServiceBrokers::V2
     subject(:client) { Client.new(client_attrs) }
 
     let(:http_client) { instance_double(HttpClient) }
-    let(:orphan_mitigator) { instance_double(OrphanMitigator, cleanup_failed_provision: nil, cleanup_failed_bind: nil) }
+    let(:orphan_mitigator) { instance_double(OrphanMitigator, cleanup_failed_provision: nil, cleanup_failed_bind: nil, cleanup_failed_key: nil) }
 
     before do
       allow(HttpClient).to receive(:new).
@@ -657,6 +657,131 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    describe '#create_service_key' do
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:key) do
+        VCAP::CloudController::ServiceKey.new(
+            name: 'fake-service_key',
+            service_instance: instance
+        )
+      end
+
+      let(:response_data) do
+        {
+            'credentials' => {
+                'username' => 'admin',
+                'password' => 'secret'
+            }
+        }
+      end
+
+      let(:path) { "/v2/service_instances/#{instance.guid}/service_bindings/#{key.guid}" }
+      let(:response) { HttpResponse.new(body: response_body, code: code, message: message) }
+      let(:response_body) { response_data.to_json }
+      let(:code) { '201' }
+      let(:message) { 'Created' }
+
+      before do
+        allow(http_client).to receive(:put).and_return(response)
+      end
+
+      it 'makes a put request with correct path' do
+        client.create_service_key(key)
+
+        expect(http_client).to have_received(:put).with("/v2/service_instances/#{instance.guid}/service_bindings/#{key.guid}", anything)
+      end
+
+      it 'makes a put request with correct message' do
+        client.create_service_key(key)
+
+        expect(http_client).to have_received(:put).
+                                   with(anything,
+                                        plan_id:    key.service_plan.broker_provided_id,
+                                        service_id: key.service.broker_provided_id
+                               )
+      end
+
+      it 'sets the credentials on the key' do
+        attributes = client.create_service_key(key)
+        key.set_all(attributes)
+        key.save
+
+        expect(key.credentials).to eq({
+                                          'username' => 'admin',
+                                          'password' => 'secret'
+                                      })
+      end
+
+      context 'when the caller provides an arbitrary parameters in an optional request_attrs hash' do
+        it 'make a put request with correct message and arbitrary parameters' do
+          arbitrary_parameters = { 'name' => 'value' }
+          client.create_service_key(key, arbitrary_parameters: arbitrary_parameters)
+          expect(http_client).to have_received(:put).
+                                     with(anything,
+                                          plan_id:    key.service_plan.broker_provided_id,
+                                          service_id: key.service.broker_provided_id,
+                                          parameters: arbitrary_parameters
+                                 )
+        end
+      end
+
+      context 'when creating service key fails' do
+        let(:uri) { 'some-uri.com/v2/service_instances/instance-guid/service_bindings/key-guid' }
+
+        context 'due to an http client error' do
+          before do
+            allow(http_client).to receive(:put).and_raise(error)
+          end
+
+          context 'Errors::ServiceBrokerApiTimeout error' do
+            let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.create_service_key(key)
+              }.to raise_error(Errors::ServiceBrokerApiTimeout)
+
+              expect(orphan_mitigator).to have_received(:cleanup_failed_key).
+                                              with(client_attrs, key)
+            end
+          end
+        end
+
+        context 'due to a response parser error' do
+          let(:response_parser) { instance_double(ResponseParser) }
+
+          before do
+            allow(response_parser).to receive(:parse_provision_or_bind).and_raise(error)
+            allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
+          end
+
+          context 'Errors::ServiceBrokerApiTimeout error' do
+            let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.create_service_key(key)
+              }.to raise_error(Errors::ServiceBrokerApiTimeout)
+
+              expect(orphan_mitigator).to have_received(:cleanup_failed_key).with(client_attrs, key)
+            end
+          end
+
+          context 'ServiceBrokerBadResponse error' do
+            let(:error) { Errors::ServiceBrokerBadResponse.new(uri, :put, response) }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.create_service_key(key)
+              }.to raise_error(Errors::ServiceBrokerBadResponse)
+
+              expect(orphan_mitigator).to have_received(:cleanup_failed_key).with(client_attrs, key)
+            end
+          end
+        end
+      end
+    end
+
     describe '#bind' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
       let(:app) { VCAP::CloudController::App.make(space: instance.space) }
@@ -664,12 +789,6 @@ module VCAP::Services::ServiceBrokers::V2
         VCAP::CloudController::ServiceBinding.new(
           service_instance: instance,
           app: app
-        )
-      end
-      let(:service_key) do
-        VCAP::CloudController::ServiceKey.new(
-            name: 'fake-service_key',
-            service_instance: instance
         )
       end
 
@@ -708,16 +827,6 @@ module VCAP::Services::ServiceBrokers::V2
              plan_id:    binding.service_plan.broker_provided_id,
              service_id: binding.service.broker_provided_id,
              app_guid:   binding.app_guid
-        )
-      end
-
-      it 'makes a put request to create a service key with correct message' do
-        client.bind(service_key)
-
-        expect(http_client).to have_received(:put).
-          with(anything,
-              plan_id:    binding.service_plan.broker_provided_id,
-              service_id: binding.service.broker_provided_id
         )
       end
 
