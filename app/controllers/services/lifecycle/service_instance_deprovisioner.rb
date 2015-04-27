@@ -18,21 +18,16 @@ module VCAP::CloudController
 
       if accepts_incomplete?(params)
         delete_job.perform
-        if service_instance.exists?
-          return instance_remains_response(service_instance)
-        else
-          return delete_complete_response
-        end
+        return nil
       end
 
       delete_and_audit_job = build_audit_job(service_instance, delete_job)
 
       if async?(params)
-        enqueued_job = Jobs::Enqueuer.new(delete_and_audit_job, queue: 'cc-generic').enqueue
-        enqueued_delete_response(enqueued_job)
+        Jobs::Enqueuer.new(delete_and_audit_job, queue: 'cc-generic').enqueue
       else
         delete_and_audit_job.perform
-        delete_complete_response
+        nil
       end
     end
 
@@ -44,18 +39,6 @@ module VCAP::CloudController
 
     def async?(params)
       params['async'] == 'true'
-    end
-
-    def instance_remains_response(service_instance)
-      [service_instance, nil]
-    end
-
-    def delete_complete_response
-      nil
-    end
-
-    def enqueued_delete_response(enqueued_job)
-      [nil, enqueued_job]
     end
 
     def build_delete_job(service_instance, delete_action)

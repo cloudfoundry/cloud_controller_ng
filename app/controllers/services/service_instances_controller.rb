@@ -188,12 +188,12 @@ module VCAP::CloudController
       end
 
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
-      service_instance, delete_job = deprovisioner.deprovision_service_instance(service_instance, params)
+      delete_job = deprovisioner.deprovision_service_instance(service_instance, params)
 
-      if service_instance
-        [HTTP::ACCEPTED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
-      elsif delete_job
+      if delete_job
         [HTTP::ACCEPTED, JobPresenter.new(delete_job).to_json]
+      elsif service_instance.exists?
+        [HTTP::ACCEPTED, {}, object_renderer.render_json(self.class, service_instance.refresh, @opts)]
       else
         [HTTP::NO_CONTENT, nil]
       end
