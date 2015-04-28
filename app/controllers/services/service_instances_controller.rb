@@ -75,7 +75,8 @@ module VCAP::CloudController
         logger,
         @access_context
       )
-      service_instance = provisioner.create_service_instance(@request_attrs, params)
+      accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
+      service_instance = provisioner.create_service_instance(@request_attrs, accepts_incomplete)
 
       if service_instance.last_operation.state == 'in progress'
         state = HTTP::ACCEPTED
@@ -105,7 +106,8 @@ module VCAP::CloudController
 
       service_instance = find_guid(guid)
       updater = ServiceInstanceUpdater.new(@services_event_repository, self, logger, @access_context)
-      updater.update_service_instance(service_instance, @request_attrs, params)
+      accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
+      updater.update_service_instance(service_instance, @request_attrs, accepts_incomplete)
 
       if service_instance.last_operation.state == 'in progress'
         state = HTTP::ACCEPTED
@@ -188,7 +190,9 @@ module VCAP::CloudController
       end
 
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
-      delete_job = deprovisioner.deprovision_service_instance(service_instance, params)
+      accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
+      async = convert_flag_to_bool(params['async'])
+      delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
 
       if delete_job
         [HTTP::ACCEPTED, JobPresenter.new(delete_job).to_json]
@@ -220,6 +224,11 @@ module VCAP::CloudController
     define_routes
 
     private
+
+    def convert_flag_to_bool(flag)
+      raise Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
+      flag == 'true'
+    end
 
     def raise_if_has_associations!(obj)
       associations = obj.class.associations.select do |association|

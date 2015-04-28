@@ -15,10 +15,10 @@ module VCAP::CloudController
       @access_context = access_context
     end
 
-    def create_service_instance(request_attrs, params)
+    def create_service_instance(request_attrs, accepts_incomplete)
       raise InvalidRequest unless request_attrs
 
-      validate_create_action(request_attrs, params)
+      validate_create_action(request_attrs, accepts_incomplete)
 
       request_params = request_attrs.except('parameters')
       arbitrary_params = request_attrs['parameters']
@@ -26,7 +26,7 @@ module VCAP::CloudController
       service_instance = ManagedServiceInstance.new(request_params)
       attributes_to_update = service_instance.client.provision(
         service_instance,
-        accepts_incomplete: accepts_incomplete?(params),
+        accepts_incomplete: accepts_incomplete,
         arbitrary_parameters: arbitrary_params,
       )
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
         enqueuer.enqueue
       end
 
-      if (!accepts_incomplete?(params)) || service_instance.last_operation.state != 'in progress'
+      if !accepts_incomplete || service_instance.last_operation.state != 'in progress'
         @services_event_repository.record_service_instance_event(:create, service_instance, request_attrs)
       end
 
@@ -59,8 +59,8 @@ module VCAP::CloudController
 
     private
 
-    def accepts_incomplete?(params)
-      params['accepts_incomplete'] == 'true'
+    def convert_to_bool(flag)
+      flag == 'true'
     end
 
     def current_user_can_manage_plan(plan_guid)
@@ -80,7 +80,7 @@ module VCAP::CloudController
       }
     end
 
-    def validate_create_action(request_attrs, params)
+    def validate_create_action(request_attrs, accepts_incomplete)
       service_plan_guid = request_attrs['service_plan_guid']
       organization = requested_space(request_attrs).organization
 
@@ -95,8 +95,6 @@ module VCAP::CloudController
       @access_validator.validate_access(:create, service_instance)
 
       raise Sequel::ValidationFailed.new(service_instance) unless service_instance.valid?
-
-      raise InvalidRequest unless ['true', 'false', nil].include? params['accepts_incomplete']
     end
   end
 end

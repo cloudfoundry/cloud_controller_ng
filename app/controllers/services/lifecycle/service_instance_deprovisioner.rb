@@ -6,24 +6,24 @@ module VCAP::CloudController
       @logger = logger
     end
 
-    def deprovision_service_instance(service_instance, params)
+    def deprovision_service_instance(service_instance, accepts_incomplete, async)
       @access_validator.validate_access(:delete, service_instance)
 
       delete_action = ServiceInstanceDelete.new(
-        accepts_incomplete: accepts_incomplete?(params),
+        accepts_incomplete: accepts_incomplete,
         event_repository_opts: event_repository_opts
       )
 
       delete_job = build_delete_job(service_instance, delete_action)
 
-      if accepts_incomplete?(params)
+      if accepts_incomplete
         delete_job.perform
         return nil
       end
 
       delete_and_audit_job = build_audit_job(service_instance, delete_job)
 
-      if async?(params)
+      if async
         Jobs::Enqueuer.new(delete_and_audit_job, queue: 'cc-generic').enqueue
       else
         delete_and_audit_job.perform
@@ -32,14 +32,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def accepts_incomplete?(params)
-      params['accepts_incomplete'] == 'true'
-    end
-
-    def async?(params)
-      params['async'] == 'true'
-    end
 
     def build_delete_job(service_instance, delete_action)
       Jobs::DeleteActionJob.new(VCAP::CloudController::ServiceInstance, service_instance.guid, delete_action)

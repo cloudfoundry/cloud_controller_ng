@@ -14,11 +14,11 @@ module VCAP::CloudController
       @access_context = access_context
     end
 
-    def update_service_instance(service_instance, request_attrs, params)
+    def update_service_instance(service_instance, request_attrs, accepts_incomplete)
       raise InvalidRequest unless request_attrs
       @access_validator.validate_access(:read_for_update, service_instance)
       @access_validator.validate_access(:update, service_instance)
-      validate_update_request(service_instance, request_attrs, params)
+      validate_update_request(service_instance, request_attrs)
 
       err = nil
 
@@ -26,10 +26,10 @@ module VCAP::CloudController
       lock.lock!
 
       begin
-        attributes_to_update, err = get_attributes_to_update(params, request_attrs, service_instance)
+        attributes_to_update, err = get_attributes_to_update(service_instance, request_attrs, accepts_incomplete)
 
         if attributes_to_update[:last_operation][:state] == 'in progress'
-          job = build_fetch_job(request_attrs, service_instance)
+          job = build_fetch_job(service_instance, request_attrs)
           lock.enqueue_unlock!(attributes_to_update, job)
         else
           lock.synchronous_unlock!(attributes_to_update)
@@ -41,12 +41,12 @@ module VCAP::CloudController
 
       raise err if err
 
-      if !accepts_incomplete?(params) || !service_instance.operation_in_progress?
+      if !accepts_incomplete || !service_instance.operation_in_progress?
         @services_event_repository.record_service_instance_event(:update, service_instance, request_attrs)
       end
     end
 
-    def build_fetch_job(request_attrs, service_instance)
+    def build_fetch_job(service_instance, request_attrs)
       VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
         'service-instance-state-fetch',
         service_instance.client.attrs,
@@ -58,7 +58,7 @@ module VCAP::CloudController
 
     private
 
-    def get_attributes_to_update(params, request_attrs, service_instance)
+    def get_attributes_to_update(service_instance, request_attrs, accepts_incomplete)
       return successful_sync_operation, nil if request_attrs.empty?
 
       new_name = request_attrs['name']
@@ -73,7 +73,7 @@ module VCAP::CloudController
       service_instance.client.update_service_plan(
         service_instance,
         new_plan,
-        accepts_incomplete: accepts_incomplete?(params),
+        accepts_incomplete: accepts_incomplete,
         parameters: request_attrs['parameters']
       )
     end
@@ -94,7 +94,7 @@ module VCAP::CloudController
       }
     end
 
-    def validate_update_request(service_instance, request_attrs, params)
+    def validate_update_request(service_instance, request_attrs)
       if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
         raise ServiceInstanceSpaceChangeNotAllowed
       end
@@ -106,14 +106,6 @@ module VCAP::CloudController
         new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
         raise InvalidServicePlan unless new_plan
       end
-
-      unless ['true', 'false', nil].include? params['accepts_incomplete']
-        raise InvalidRequest
-      end
-    end
-
-    def accepts_incomplete?(params)
-      params['accepts_incomplete'] == 'true'
     end
   end
 end
