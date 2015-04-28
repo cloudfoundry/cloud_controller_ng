@@ -981,10 +981,13 @@ module VCAP::CloudController
       it 'stores the command in its own column, not metadata' do
         app = AppFactory.make(command: 'foobar')
         expect(app.metadata).to eq('command' => 'foobar')
+        expect(app.metadata_without_command).to_not eq('command' => 'foobar')
         app.save
         expect(app.metadata).to eq('command' => 'foobar')
+        expect(app.metadata_without_command).to_not eq('command' => 'foobar')
         app.refresh
         expect(app.metadata).to eq('command' => 'foobar')
+        expect(app.metadata_without_command).to_not eq('command' => 'foobar')
         expect(app.command).to eq('foobar')
       end
 
