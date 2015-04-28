@@ -143,7 +143,7 @@ module VCAP::Services::ServiceBrokers::V2
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
 
-    def update_service_plan(instance, plan, accepts_incomplete: false, parameters: nil)
+    def update_service_plan(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body_hash = {
@@ -155,7 +155,7 @@ module VCAP::Services::ServiceBrokers::V2
           space_id: instance.space.guid
         }
       }
-      body_hash[:parameters] = parameters if parameters
+      body_hash[:parameters] = arbitrary_parameters if arbitrary_parameters
       response = @http_client.patch(path, body_hash)
 
       parsed_response = @response_parser.parse_update(path, response)

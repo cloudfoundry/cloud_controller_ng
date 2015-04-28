@@ -476,7 +476,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the caller passes arbitrary parameters' do
         it 'includes the parameters in the request to the broker' do
-          client.update_service_plan(instance, new_plan, parameters: { myParam: 'some-value' })
+          client.update_service_plan(instance, new_plan, arbitrary_parameters: { myParam: 'some-value' })
 
           expect(http_client).to have_received(:patch).with(
             anything,
