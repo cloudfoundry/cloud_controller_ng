@@ -43,8 +43,8 @@ module VCAP::CloudController
           'service-instance-state-fetch',
           service_instance.client.attrs,
           service_instance.guid,
-          event_repository_opts,
-          request_attrs
+          @services_event_repository,
+          request_attrs,
         )
         enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
         enqueuer.enqueue
@@ -71,13 +71,6 @@ module VCAP::CloudController
       space = Space.filter(guid: request_attrs['space_guid']).first
       raise InvalidSpace unless space
       space
-    end
-
-    def event_repository_opts
-      {
-        user: @access_context.user,
-        user_email: @access_context.user_email
-      }
     end
 
     def validate_create_action(request_attrs, accepts_incomplete)

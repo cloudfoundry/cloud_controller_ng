@@ -9,7 +9,7 @@ module VCAP::CloudController
     def deprovision_service_instance(service_instance, accepts_incomplete, async)
       delete_action = ServiceInstanceDelete.new(
         accepts_incomplete: accepts_incomplete,
-        event_repository_opts: event_repository_opts
+        event_repository: @services_event_repository
       )
 
       delete_job = build_delete_job(service_instance, delete_action)
@@ -38,13 +38,6 @@ module VCAP::CloudController
     def build_audit_job(service_instance, deletion_job)
       event_method = service_instance.managed_instance? ? :record_service_instance_event : :record_user_provided_service_instance_event
       Jobs::AuditEventJob.new(deletion_job, @services_event_repository, event_method, :delete, service_instance.class, service_instance.guid, {})
-    end
-
-    def event_repository_opts
-      {
-        user: SecurityContext.current_user,
-        user_email: SecurityContext.current_user_email
-      }
     end
   end
 end

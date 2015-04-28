@@ -69,13 +69,13 @@ module VCAP::CloudController
 
       context 'when accepts_incomplete is true' do
         let(:service_instance) { ManagedServiceInstance.make }
-        let(:event_repository_opts) { { some_opt: 'some value' } }
+        let(:event_repository) { Repositories::Services::EventRepository.new(user: user, user_email: user_email) }
         let(:multipart_delete) { false }
 
         subject(:service_instance_delete) do
           ServiceInstanceDelete.new(
             accepts_incomplete: true,
-            event_repository_opts: event_repository_opts,
+            event_repository: event_repository,
             multipart_delete: multipart_delete,
           )
         end
@@ -105,7 +105,6 @@ module VCAP::CloudController
           expect(inner_job.name).to eq 'service-instance-state-fetch'
           expect(inner_job.client_attrs).to eq service_instance.client.attrs
           expect(inner_job.service_instance_guid).to eq service_instance.guid
-          expect(inner_job.services_event_repository_opts).to eq event_repository_opts
           expect(inner_job.request_attrs).to eq({})
           expect(inner_job.poll_interval).to eq(60)
         end

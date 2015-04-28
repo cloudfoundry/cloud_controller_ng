@@ -3,9 +3,9 @@ require 'actions/locks/deleter_lock'
 
 module VCAP::CloudController
   class ServiceInstanceDelete
-    def initialize(accepts_incomplete: false, event_repository_opts: nil, multipart_delete: false)
+    def initialize(accepts_incomplete: false, event_repository: nil, multipart_delete: false)
       @accepts_incomplete = accepts_incomplete
-      @event_repository_opts = event_repository_opts
+      @event_repository = event_repository
       @multipart_delete = multipart_delete
     end
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
         'service-instance-state-fetch',
         service_instance.client.attrs,
         service_instance.guid,
-        @event_repository_opts,
+        @event_repository,
         {},
       )
     end

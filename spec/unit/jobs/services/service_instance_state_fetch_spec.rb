@@ -30,6 +30,10 @@ module VCAP::CloudController
 
         let(:name) { 'fake-name' }
 
+        let(:service_event_repository) do
+          Repositories::Services::EventRepository.new(service_event_repository_opts)
+        end
+
         let(:service_event_repository_opts) do
           {
             user_email: 'fake@mail.foo',
@@ -59,7 +63,7 @@ module VCAP::CloudController
             name,
             client_attrs,
             service_instance.guid,
-            service_event_repository_opts,
+            service_event_repository,
             request_attrs,
           )
         end
@@ -92,6 +96,20 @@ module VCAP::CloudController
 
             it 'enqueues the job using the maximum polling interval' do
               expect(job.poll_interval).to eq 24.hours
+            end
+          end
+
+          context 'when the caller provides repository_opts instead of a repository' do
+            it 'uses the opts to construct a repository' do
+              job =  VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
+                  name,
+                  client_attrs,
+                  service_instance.guid,
+                  nil,
+                  request_attrs,
+                  service_event_repository_opts
+              )
+              expect(job.services_event_repository).to be_a Repositories::Services::EventRepository
             end
           end
         end
@@ -203,16 +221,6 @@ module VCAP::CloudController
               expect(Delayed::Job.count).to eq 0
             end
 
-            context 'when no user information is provided' do
-              let(:service_event_repository_opts) { nil }
-
-              it 'should not create an audit event' do
-                run_job(job)
-
-                expect(Event.find(type: 'audit.service_instance.create')).to be_nil
-              end
-            end
-
             context 'when user information is provided' do
               context 'and the last operation type is create' do
                 it 'should create audit event' do
@@ -223,6 +231,16 @@ module VCAP::CloudController
                   expect(event.actee).to eq(service_instance.guid)
                   expect(event.metadata['request']).to eq({ 'dummy_data' => 'dummy_data' })
                 end
+              end
+            end
+
+            context 'when there is no repository' do
+              let(:service_event_repository) { nil }
+
+              it 'should not create an audit event' do
+                run_job(job)
+
+                expect(Event.find(type: 'audit.service_instance.create')).to be_nil
               end
             end
           end

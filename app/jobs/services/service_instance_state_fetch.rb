@@ -2,13 +2,13 @@ module VCAP::CloudController
   module Jobs
     module Services
       class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository_opts, :request_attrs, :poll_interval
+        attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository, :request_attrs, :poll_interval
 
-        def initialize(name, client_attrs, service_instance_guid, services_event_repository_opts, request_attrs)
+        def initialize(name, client_attrs, service_instance_guid, services_event_repository, request_attrs, services_event_repository_opts=nil)
           @name = name
           @client_attrs = client_attrs
           @service_instance_guid = service_instance_guid
-          @services_event_repository_opts = services_event_repository_opts
+          get_repository(services_event_repository, services_event_repository_opts)
           @request_attrs = request_attrs
 
           default_poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds]
@@ -44,6 +44,13 @@ module VCAP::CloudController
 
         private
 
+        def get_repository(services_event_repository, services_event_repository_opts)
+          @services_event_repository = services_event_repository
+          if services_event_repository_opts && !@services_event_repository
+            @services_event_repository = Repositories::Services::EventRepository.new(services_event_repository_opts)
+          end
+        end
+
         def update_with_attributes(attrs_to_update, service_instance)
           ServiceInstance.db.transaction do
             service_instance.lock!
@@ -53,10 +60,7 @@ module VCAP::CloudController
 
             if service_instance.last_operation.state == 'succeeded'
               apply_proposed_changes(service_instance)
-              if @services_event_repository_opts
-                services_event_repository = Repositories::Services::EventRepository.new(@services_event_repository_opts)
-                record_event(services_event_repository, service_instance, @request_attrs)
-              end
+              record_event(@services_event_repository, service_instance, @request_attrs)
             end
           end
         end
@@ -75,6 +79,7 @@ module VCAP::CloudController
         end
 
         def record_event(services_event_repository, service_instance, request_attrs)
+          return unless services_event_repository
           type = service_instance.last_operation.type.to_sym
           services_event_repository.record_service_instance_event(type, service_instance, request_attrs)
         end

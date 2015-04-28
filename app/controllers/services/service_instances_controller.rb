@@ -127,12 +127,7 @@ module VCAP::CloudController
         invalid_relation! if invalid_plan?(requested_plan, service)
       end
 
-      event_repository_opts = {
-          user: SecurityContext.current_user,
-          user_email: SecurityContext.current_user_email
-      }
       update = ServiceInstanceUpdate.new(accepts_incomplete: accepts_incomplete,
-                                         event_repository_opts: event_repository_opts,
                                          services_event_repository: @services_event_repository)
       update.update_service_instance(service_instance, request_attrs)
 

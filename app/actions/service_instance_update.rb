@@ -2,9 +2,8 @@ require 'actions/locks/updater_lock'
 
 module VCAP::CloudController
   class ServiceInstanceUpdate
-    def initialize(accepts_incomplete: false, event_repository_opts: nil, services_event_repository: nil)
+    def initialize(accepts_incomplete: false, services_event_repository: nil)
       @accepts_incomplete = accepts_incomplete
-      @event_repository_opts = event_repository_opts
       @services_event_repository = services_event_repository
     end
 
@@ -40,8 +39,8 @@ module VCAP::CloudController
           'service-instance-state-fetch',
           service_instance.client.attrs,
           service_instance.guid,
-          @event_repository_opts,
-          request_attrs
+          @services_event_repository,
+          request_attrs,
       )
     end
 
