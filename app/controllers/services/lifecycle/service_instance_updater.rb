@@ -103,7 +103,7 @@ module VCAP::CloudController
         old_plan = service_instance.service_plan
         raise ServicePlanNotUpdatable unless old_plan.service.plan_updateable
 
-        new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
+        new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'], service: old_plan.service)
         raise InvalidServicePlan unless new_plan
       end
     end

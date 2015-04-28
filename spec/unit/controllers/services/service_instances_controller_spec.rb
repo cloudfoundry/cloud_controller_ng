@@ -937,6 +937,25 @@ module VCAP::CloudController
             end
           end
 
+          context 'when the requested plan belongs to a different service' do
+            let(:other_broker) { ServiceBroker.make }
+            let(:other_service) { Service.make(plan_updateable: true, service_broker: other_broker) }
+            let(:other_plan) { ServicePlan.make(service: other_service) }
+
+            let(:body) do
+              MultiJson.dump(
+                  service_plan_guid: other_plan.guid
+              )
+            end
+
+            it 'rejects the request' do
+              put "/v2/service_instances/#{service_instance.guid}", body, headers_for(admin_user)
+              expect(last_response).to have_status_code 400
+              expect(decoded_response['error_code']).to match 'InvalidRelation'
+              expect(service_instance.reload.service_plan.guid).not_to eq other_plan.guid
+            end
+          end
+
           context 'when the broker client returns an error as its second return value' do
             let(:response_body) { '{"description": "error message"}' }
 
