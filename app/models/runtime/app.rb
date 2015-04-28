@@ -262,8 +262,7 @@ module VCAP::CloudController
 
     def metadata_with_command
       result = metadata_without_command || self.metadata = {}
-      result.merge!('command' => command) if command
-      result
+      command ? result.merge('command' => command) : result
     end
     alias_method_chain :metadata, :command
 
