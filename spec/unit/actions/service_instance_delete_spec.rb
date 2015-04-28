@@ -70,13 +70,13 @@ module VCAP::CloudController
       context 'when accepts_incomplete is true' do
         let(:service_instance) { ManagedServiceInstance.make }
         let(:event_repository_opts) { { some_opt: 'some value' } }
-        let(:error_when_in_progress) { false }
+        let(:multipart_delete) { false }
 
         subject(:service_instance_delete) do
           ServiceInstanceDelete.new(
             accepts_incomplete: true,
             event_repository_opts: event_repository_opts,
-            error_when_in_progress: error_when_in_progress,
+            multipart_delete: multipart_delete,
           )
         end
 
@@ -122,8 +122,8 @@ module VCAP::CloudController
           end
         end
 
-        context 'and the caller wants to treat accepts_incomplete deprovisioning as a failure' do
-          let(:error_when_in_progress) { true }
+        context 'and the caller wants to treat accepts_incomplete deprovisioning as a failure during a multipart deletion' do
+          let(:multipart_delete) { true }
 
           it 'should return an error if there is an operation in progress' do
             result = service_instance_delete.delete([service_instance])

@@ -11,7 +11,7 @@ module VCAP::CloudController
       dataset.inject([]) do |errors, space_model|
         service_instance_deleter = ServiceInstanceDelete.new(
             accepts_incomplete: true,
-            error_when_in_progress: true
+            multipart_delete: true
         )
         instance_delete_errors = service_instance_deleter.delete(space_model.service_instances_dataset)
         unless instance_delete_errors.empty?

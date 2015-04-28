@@ -102,7 +102,7 @@ module VCAP::CloudController
     end
 
     def update(guid)
-      #User input validation
+      # User input validation
       @request_attrs = self.class::UpdateMessage.decode(body).extract(stringify_keys: true)
       logger.debug 'cc.update', guid: guid, attributes: request_attrs
       invalid_request! unless request_attrs
@@ -131,7 +131,9 @@ module VCAP::CloudController
           user: SecurityContext.current_user,
           user_email: SecurityContext.current_user_email
       }
-      update = ServiceInstanceUpdate.new(accepts_incomplete: accepts_incomplete, event_repository_opts: event_repository_opts, services_event_repository: @services_event_repository)
+      update = ServiceInstanceUpdate.new(accepts_incomplete: accepts_incomplete,
+                                         event_repository_opts: event_repository_opts,
+                                         services_event_repository: @services_event_repository)
       update.update_service_instance(service_instance, request_attrs)
 
       if service_instance.last_operation.state == 'in progress'
