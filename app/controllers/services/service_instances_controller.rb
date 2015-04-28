@@ -1,7 +1,8 @@
 require 'services/api'
 require 'jobs/audit_event_job'
 require 'controllers/services/lifecycle/service_instance_provisioner'
-require 'controllers/services/lifecycle/service_instance_updater'
+# require 'controllers/services/lifecycle/service_instance_updater'
+require 'actions/service_instance_update'
 require 'controllers/services/lifecycle/service_instance_deprovisioner'
 
 module VCAP::CloudController
@@ -101,13 +102,37 @@ module VCAP::CloudController
     end
 
     def update(guid)
+      #User input validation
       @request_attrs = self.class::UpdateMessage.decode(body).extract(stringify_keys: true)
       logger.debug 'cc.update', guid: guid, attributes: request_attrs
-
-      service_instance = find_guid(guid)
-      updater = ServiceInstanceUpdater.new(@services_event_repository, self, logger, @access_context)
+      invalid_request! unless request_attrs
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
-      updater.update_service_instance(service_instance, @request_attrs, accepts_incomplete)
+      requested_plan_guid = request_attrs['service_plan_guid']
+
+      # Fetcher
+      service_instance = find_guid(guid)
+      current_plan = service_instance.service_plan
+      service = current_plan.service
+      space = service_instance.space
+      requested_plan = ServicePlan.find(guid: requested_plan_guid)
+
+      # Permission Validation
+      validate_access(:read_for_update, service_instance)
+      validate_access(:update, service_instance)
+
+      # Business Validation
+      space_change_not_allowed! if space_change_requested?(request_attrs['space_guid'], space)
+      if plan_update_requested?(requested_plan_guid, current_plan)
+        plan_not_updateable! if service_disallows_plan_update?(service)
+        invalid_relation! if invalid_plan?(requested_plan, service)
+      end
+
+      event_repository_opts = {
+          user: SecurityContext.current_user,
+          user_email: SecurityContext.current_user_email
+      }
+      update = ServiceInstanceUpdate.new(accepts_incomplete: accepts_incomplete, event_repository_opts: event_repository_opts, services_event_repository: @services_event_repository)
+      update.update_service_instance(service_instance, request_attrs)
 
       if service_instance.last_operation.state == 'in progress'
         state = HTTP::ACCEPTED
@@ -116,14 +141,6 @@ module VCAP::CloudController
       end
 
       [state, {}, object_renderer.render_json(self.class, service_instance, @opts)]
-    rescue ServiceInstanceUpdater::InvalidRequest
-      raise Errors::ApiError.new_from_details('InvalidRequest')
-    rescue ServiceInstanceUpdater::ServicePlanNotUpdatable
-      raise Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
-    rescue ServiceInstanceUpdater::InvalidServicePlan
-      raise Errors::ApiError.new_from_details('InvalidRelation', 'Plan')
-    rescue ServiceInstanceUpdater::ServiceInstanceSpaceChangeNotAllowed
-      raise Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
     end
 
     class BulkUpdateMessage < VCAP::RestAPI::Message
@@ -178,20 +195,22 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      service_instance = find_guid(guid, ServiceInstance)
-      raise_if_has_associations!(service_instance) if v2_api? && !recursive?
-
-      unless service_instance.service_bindings.empty? || recursive?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', :service_bindings, :service_instances)
-      end
-
-      unless service_instance.service_keys.empty? || recursive?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', :service_keys, :service_instances)
-      end
-
-      deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
+      # Input validation
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
       async = convert_flag_to_bool(params['async'])
+
+      # Fetcher
+      service_instance = find_guid(guid, ServiceInstance)
+
+      # Permission validation
+      validate_access(:delete, service_instance)
+
+      # Business validation
+      raise_if_has_associations!(service_instance) if v2_api? && !recursive?
+      association_not_empty!(:service_bindings) if has_bindings?(service_instance) && !recursive?
+      association_not_empty!(:service_keys) if has_keys?(service_instance) && !recursive?
+
+      deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
       delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
 
       if delete_job
@@ -224,6 +243,58 @@ module VCAP::CloudController
     define_routes
 
     private
+
+    def invalid_plan?(requested_plan, service)
+      plan_not_found?(requested_plan) || plan_in_different_service?(requested_plan, service)
+    end
+
+    def plan_update_requested?(requested_plan_guid, old_plan)
+      requested_plan_guid && requested_plan_guid != old_plan.guid
+    end
+
+    def has_bindings?(service_instance)
+      !service_instance.service_bindings.empty?
+    end
+
+    def has_keys?(service_instance)
+      !service_instance.service_keys.empty?
+    end
+
+    def space_change_requested?(requested_space_guid, current_space)
+      requested_space_guid && requested_space_guid != current_space.guid
+    end
+
+    def plan_not_found?(service_plan)
+      !service_plan
+    end
+
+    def plan_in_different_service?(service_plan, service)
+      service_plan.service.guid != service.guid
+    end
+
+    def service_disallows_plan_update?(service)
+      !service.plan_updateable
+    end
+
+    def plan_not_updateable!
+      raise Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
+    end
+
+    def invalid_relation!
+      raise Errors::ApiError.new_from_details('InvalidRelation', 'Plan')
+    end
+
+    def invalid_request!
+      raise Errors::ApiError.new_from_details('InvalidRequest')
+    end
+
+    def association_not_empty!(association)
+      raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', association, :service_instances)
+    end
+
+    def space_change_not_allowed!
+      raise Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
+    end
 
     def convert_flag_to_bool(flag)
       raise Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag

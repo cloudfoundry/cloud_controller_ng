@@ -7,8 +7,6 @@ module VCAP::CloudController
     end
 
     def deprovision_service_instance(service_instance, accepts_incomplete, async)
-      @access_validator.validate_access(:delete, service_instance)
-
       delete_action = ServiceInstanceDelete.new(
         accepts_incomplete: accepts_incomplete,
         event_repository_opts: event_repository_opts

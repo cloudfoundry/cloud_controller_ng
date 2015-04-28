@@ -1296,7 +1296,7 @@ module VCAP::CloudController
 
             it 'returns an InvalidRelationError' do
               put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, admin_headers
-              expect(last_response.status).to eq 400
+              expect(last_response).to have_status_code 400
               expect(last_response.body).to match 'InvalidRelation'
               expect(service_instance.reload.service_plan).to eq(old_service_plan)
             end
