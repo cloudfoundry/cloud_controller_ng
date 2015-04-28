@@ -162,11 +162,15 @@ module VCAP::CloudController
       #
       # * transitioning to STARTED
       # * memory is changed
-      # * routes are changed
+      # * health check type is changed
+      # * allow_ssh is changed
       #
       # this is to indicate that the running state of an application has changed,
       # and that the system should converge on this new version.
-      (column_changed?(:state) || column_changed?(:memory) || column_changed?(:health_check_type)) && started?
+      (column_changed?(:state) ||
+       column_changed?(:memory) ||
+       column_changed?(:health_check_type) ||
+       column_changed?(:allow_ssh)) && started?
     end
 
     def set_new_version

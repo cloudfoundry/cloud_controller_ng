@@ -1440,6 +1440,12 @@ module VCAP::CloudController
             end
           end
         end
+
+        it 'should update the version when changing allow_ssh' do
+          expect {
+            app.update(allow_ssh: true)
+          }.to change { app.version }
+        end
       end
     end
 
