@@ -43,7 +43,7 @@ module VCAP::CloudController
     rescue ServiceKeyManager::ServiceInstanceNotFound
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid'])
     rescue ServiceKeyManager::ServiceInstanceNotBindable
-      raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
+      raise VCAP::Errors::ApiError.new_from_details('ServiceKeyNotSupported')
     end
 
     delete path_guid, :delete
