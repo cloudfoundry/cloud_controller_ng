@@ -1,18 +1,18 @@
 require 'presenters/v3/process_presenter'
-require 'handlers/processes_handler'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
 require 'queries/process_scale_fetcher'
 require 'messages/process_scale_message'
 require 'actions/process_scale'
+require 'actions/process_update'
+require 'messages/process_update_message'
 
 module VCAP::CloudController
   class ProcessesController < RestController::BaseController
     def self.dependencies
-      [:process_repository, :processes_handler, :process_presenter]
+      [:process_presenter]
     end
     def inject_dependencies(dependencies)
-      @processes_handler = dependencies[:processes_handler]
       @process_presenter = dependencies[:process_presenter]
     end
 
@@ -48,20 +48,21 @@ module VCAP::CloudController
 
     patch '/v3/processes/:guid', :update
     def update(guid)
-      update_message = ProcessUpdateMessage.create_from_http_request(guid, body)
-      bad_request!('Invalid JSON') if update_message.nil?
+      check_write_permissions!
 
-      errors = update_message.validate
-      unprocessable!(errors.first) if errors.length > 0
+      request = parse_and_validate_json(body)
+      message = ProcessUpdateMessage.create_from_http_request(guid, request)
+      unprocessable!(message.errors.full_messages) unless message.valid?
 
-      process = @processes_handler.update(update_message, @access_context)
-      not_found! if process.nil?
+      process = App.where(guid: guid).eager(:space, :organization).all.first
+      not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
+      unauthorized! if !can_update?(process.space.guid)
+
+      ProcessUpdate.new(current_user, current_user_email).update(process, message)
 
       [HTTP::OK, @process_presenter.present_json(process)]
-    rescue ProcessesHandler::InvalidProcess => e
+    rescue ProcessUpdate::InvalidProcess => e
       unprocessable!(e.message)
-    rescue ProcessesHandler::Unauthorized
-      unauthorized!
     end
 
     put '/v3/processes/:guid/scale', :scale
@@ -98,8 +99,12 @@ module VCAP::CloudController
                                  Membership::ORG_MANAGER], space_guid, org_guid)
     end
 
-    def can_scale?(space_guid)
+    def can_update?(space_guid)
       membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+    end
+
+    def can_scale?(space_guid)
+      can_update?(space_guid)
     end
 
     def not_found!
@@ -112,10 +117,6 @@ module VCAP::CloudController
 
     def unprocessable!(message)
       raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
-    end
-
-    def invalid_param!(message)
-      raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', message)
     end
   end
 end

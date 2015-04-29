@@ -4,8 +4,7 @@ module VCAP::CloudController
   describe AppsHandler do
     let(:packages_handler) { double(:packages_handler) }
     let(:droplets_handler) { double(:droplets_handler) }
-    let(:processes_handler) { double(:processes_handler) }
-    let(:apps_handler) { described_class.new(packages_handler, droplets_handler, processes_handler) }
+    let(:apps_handler) { described_class.new(packages_handler, droplets_handler) }
     let(:access_context) { double(:access_context, user: User.make, user_email: 'jim@jim.com') }
 
     before do

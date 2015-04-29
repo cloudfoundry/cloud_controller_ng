@@ -294,12 +294,6 @@ describe CloudController::DependencyLocator do
     it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::SpaceEventRepository) }
   end
 
-  describe '#process_repository' do
-    subject { locator.process_repository }
-
-    it { is_expected.to be_a(VCAP::CloudController::ProcessRepository) }
-  end
-
   describe '#object_renderer' do
     it 'returns paginated collection renderer configured via config' do
       eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)

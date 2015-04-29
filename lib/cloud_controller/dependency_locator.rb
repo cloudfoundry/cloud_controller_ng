@@ -168,20 +168,8 @@ module CloudController
       VCAP::Services::ServiceBrokers::ServiceManager.new(services_event_repository)
     end
 
-    def process_repository
-      ProcessRepository.new
-    end
-
     def app_repository
       AppRepository.new
-    end
-
-    def processes_handler
-      ProcessesHandler.new(process_repository, app_event_repository)
-    end
-
-    def procfile_handler
-      ProcfileHandler.new(apps_handler, processes_handler)
     end
 
     def process_presenter
@@ -189,7 +177,7 @@ module CloudController
     end
 
     def apps_handler
-      AppsHandler.new(packages_handler, droplets_handler, processes_handler)
+      AppsHandler.new(packages_handler, droplets_handler)
     end
 
     def app_presenter

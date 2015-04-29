@@ -196,6 +196,10 @@ module VCAP::CloudController::RestController
       raise VCAP::Errors::ApiError.new_from_details('MessageParseError', message)
     end
 
+    def invalid_param!(message)
+      raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', message)
+    end
+
     attr_reader :config, :logger, :env, :params, :body, :request_attrs
 
     class << self

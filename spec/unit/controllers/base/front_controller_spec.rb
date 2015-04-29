@@ -15,8 +15,16 @@ module VCAP::CloudController
 
     describe 'setting the locale' do
       before do
+        @original_default_locale = I18n.default_locale
+        @original_locale         = I18n.locale
+
         I18n.default_locale = :metropolis
-        I18n.locale = :metropolis
+        I18n.locale         = :metropolis
+      end
+
+      after do
+        I18n.default_locale = @original_default_locale
+        I18n.locale         = @original_locale
       end
 
       context 'When the Accept-Language header is set' do

@@ -32,10 +32,9 @@ module VCAP::CloudController
     class IncorrectProcessSpace < StandardError; end
     class IncorrectPackageSpace < StandardError; end
 
-    def initialize(packages_handler, droplets_handler, processes_handler, paginator=SequelPaginator.new)
+    def initialize(packages_handler, droplets_handler, paginator=SequelPaginator.new)
       @packages_handler  = packages_handler
       @droplets_handler  = droplets_handler
-      @processes_handler = processes_handler
       @paginator         = paginator
     end
 
@@ -77,12 +76,6 @@ module VCAP::CloudController
           real_process.add_route(route)
         end
       end
-    end
-
-    def update_web_process_name(process, name, access_context)
-      opts = { 'name' => name }
-      msg  = ProcessUpdateMessage.new(process.guid, opts)
-      @processes_handler.update(msg, access_context)
     end
 
     def remove_process(app, process, access_context)

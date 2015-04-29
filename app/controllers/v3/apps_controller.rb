@@ -260,9 +260,5 @@ module VCAP::CloudController
     def unprocessable!(message)
       raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
     end
-
-    def invalid_param!(message)
-      raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', message)
-    end
   end
 end

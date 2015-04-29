@@ -127,12 +127,6 @@ module VCAP::CloudController
         allow(apps_controller).to receive(:check_read_permissions!)
       end
 
-      it 'checks for read permissions' do
-        apps_controller.show(guid)
-
-        expect(apps_controller).to have_received(:check_read_permissions!)
-      end
-
       it 'returns a 200' do
         response_code, _ = apps_controller.show(guid)
         expect(response_code).to eq 200

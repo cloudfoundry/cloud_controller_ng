@@ -6,11 +6,9 @@ module VCAP::CloudController
     let(:user) { User.make }
     let(:req_body) { '' }
     let(:params) { {} }
-    let(:processes_handler) { double(:processes_handler) }
-    let(:procfile_handler) { double(:procfile_handler) }
     let(:process_presenter) { double(:process_presenter) }
-    let(:apps_handler) { double(:apps_handler) }
     let(:app_model) { nil }
+    let(:membership) { double(:membership) }
     let(:controller) do
       AppsProcessesController.new(
         {},
@@ -20,10 +18,7 @@ module VCAP::CloudController
         req_body,
         nil,
         {
-          apps_handler:      apps_handler,
-          processes_handler: processes_handler,
           process_presenter: process_presenter,
-          procfile_handler: procfile_handler,
         },
       )
     end
@@ -31,197 +26,48 @@ module VCAP::CloudController
 
     before do
       allow(logger).to receive(:debug)
-      allow(apps_handler).to receive(:show).and_return(app_model)
       allow(process_presenter).to receive(:present_json_list).and_return(process_response)
-    end
-
-    describe '#add_process' do
-      let(:app_model) { AppModel.make }
-      let(:guid) { app_model.guid }
-      let(:process) { AppFactory.make(type: 'special') }
-      let(:process_guid) { process.guid }
-      let(:req_body) do
-        MultiJson.dump({ process_guid: process_guid })
-      end
-
-      before do
-        allow(processes_handler).to receive(:show).and_return(process)
-        allow(apps_handler).to receive(:show).and_return(app_model)
-        allow(apps_handler).to receive(:add_process).and_return(true)
-      end
-
-      context 'when the app does not exist' do
-        before do
-          allow(apps_handler).to receive(:show).and_return(nil)
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          expect {
-            controller.add_process(guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the user cannot update the app' do
-        before do
-          allow(apps_handler).to receive(:add_process).and_raise(AppsHandler::Unauthorized)
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          expect {
-            controller.add_process(guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the request body is invalid JSON' do
-        let(:req_body) { '{ invalid_json }' }
-
-        it 'returns an 400 Bad Request' do
-          expect {
-            controller.add_process(guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'MessageParseError'
-            expect(error.response_code).to eq 400
-          end
-        end
-      end
-
-      context 'when the process does not exist' do
-        let(:process) { nil }
-        let(:process_guid) { 'non-existant-guid' }
-
-        it 'returns a 404 Not Found' do
-          expect {
-            controller.add_process(guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the app already has a process with the same type' do
-        let(:req_body) do
-          MultiJson.dump({ process_guid: process_guid })
-        end
-        before do
-          allow(apps_handler).to receive(:add_process).and_raise(AppsHandler::DuplicateProcessType)
-        end
-
-        it 'returns a 400 Invalid' do
-          expect {
-            controller.add_process(guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ProcessInvalid'
-            expect(error.response_code).to eq 400
-          end
-        end
-      end
-
-      context 'when the process is in a different space' do
-        before do
-          allow(apps_handler).to receive(:add_process).and_raise(AppsHandler::IncorrectProcessSpace)
-        end
-
-        it 'returns an UnableToPerform error' do
-          expect {
-            _, _ = controller.add_process(guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'UnableToPerform'
-            expect(error.response_code).to eq 400
-          end
-        end
-      end
-
-      context 'when the process is added to the app' do
-        it 'returns a 204 No Content response' do
-          response_code, _ = controller.add_process(guid)
-          expect(response_code).to eq(204)
-        end
-      end
-    end
-
-    describe '#remove_process' do
-      let(:app_model) { AppModel.make }
-      let(:guid) { app_model.guid }
-      let(:process) { AppFactory.make }
-      let(:process_guid) { process.guid }
-      let(:req_body) do
-        MultiJson.dump({ process_guid: process_guid })
-      end
-
-      before do
-        allow(apps_handler).to receive(:show).and_return(app_model)
-        allow(processes_handler).to receive(:show).and_return(process)
-      end
-
-      context 'when the process is added to the app' do
-        before do
-          allow(apps_handler).to receive(:remove_process)
-        end
-
-        it 'returns a 204 No Content response' do
-          response_code, _ = controller.remove_process(guid)
-          expect(response_code).to eq(204)
-        end
-      end
-
-      context 'when the user cannot update the app' do
-        before do
-          allow(apps_handler).to receive(:remove_process).and_raise(AppsHandler::Unauthorized)
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          expect {
-            controller.remove_process(guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the request body is invalid JSON' do
-        before do
-          SecurityContext.set(user, { 'scope' => [Roles::CLOUD_CONTROLLER_ADMIN_SCOPE] })
-        end
-
-        let(:req_body) { '{ invalid_json }' }
-
-        it 'returns an 400 Bad Request' do
-          expect {
-            controller.remove_process(guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'MessageParseError'
-            expect(error.response_code).to eq 400
-          end
-        end
-      end
-
-      context 'when the process does not exist' do
-        before do
-          allow(processes_handler).to receive(:show).and_return(nil)
-        end
-
-        it 'returns a 404 Not Found' do
-          expect {
-            controller.remove_process(guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow(controller).to receive(:membership).and_return(membership)
+      allow(controller).to receive(:check_read_permissions!).and_return(nil)
     end
 
     describe '#list_processes' do
+      let(:app_model) { AppModel.make }
+      let(:space) { app_model.space }
+      let(:org) { space.organization }
+      let(:guid) { app_model.guid }
+      let(:list_response) { 'list_response' }
+
+      it 'returns a 200 and presents the response' do
+        app_model.add_process(App.make(space: space))
+        app_model.add_process(App.make(space: space))
+        App.make
+        App.make
+
+        response_code, response = controller.list_processes(guid)
+        expect(response_code).to eq 200
+
+        expect(response).to eq(process_response)
+        expect(process_presenter).to have_received(:present_json_list).
+            with(an_instance_of(PaginatedResult), "/v3/apps/#{guid}/processes") do |result|
+              expect(result.total).to eq(2)
+            end
+      end
+
+      context 'when the user does not have read permissions' do
+        it 'raises an ApiError with a 403 code' do
+          expect(controller).to receive(:check_read_permissions!).
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+          expect {
+            controller.list_processes(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+        end
+      end
+
       context 'when the app does not exist' do
         let(:guid) { 'ABC123' }
 
@@ -235,24 +81,53 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app does exist' do
-        let(:app_model) { AppModel.make }
-        let(:guid) { app_model.guid }
-        let(:list_response) { 'list_response' }
-
+      context 'when the user cannot read the app' do
         before do
-          allow(process_presenter).to receive(:present_json_list).and_return(process_response)
-          allow(processes_handler).to receive(:list).and_return(list_response)
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
         end
 
-        it 'returns a 200' do
-          response_code, _ = controller.list_processes(guid)
-          expect(response_code).to eq 200
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            controller.list_processes(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the request parameters are invalid' do
+        context 'because there are unknown parameters' do
+          let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
+
+          it 'returns an 400 Bad Request' do
+            expect {
+              controller.list_processes(guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include("Unknown query param(s) 'invalid', 'bad'")
+            end
+          end
         end
 
-        it 'returns the processes' do
-          _, response = controller.list_processes(guid)
-          expect(response).to eq(process_response)
+        context 'because there are invalid values in parameters' do
+          let(:params) { { 'per_page' => 'foo' } }
+
+          it 'returns an 400 Bad Request' do
+            expect {
+              controller.list_processes(guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include('Per page must be between 1 and 5000')
+            end
+          end
         end
       end
     end

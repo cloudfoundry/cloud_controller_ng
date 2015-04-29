@@ -20,13 +20,10 @@ resource 'Apps (Experimental)', type: :api do
   get '/v3/apps/:guid/processes' do
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
-    parameter :process_guid, 'GUID of process', required: false
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:stack) { VCAP::CloudController::Stack.make }
     let!(:process) { VCAP::CloudController::AppFactory.make(space_guid: space.guid) }
-    let(:process_guid) { process.guid }
-    let(:process_type) { process.type }
 
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { app_model.guid }
@@ -34,7 +31,7 @@ resource 'Apps (Experimental)', type: :api do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      app_model.add_process_by_guid(process_guid)
+      app_model.add_process_by_guid(process.guid)
     end
 
     example 'List associated processes' do
@@ -48,8 +45,8 @@ resource 'Apps (Experimental)', type: :api do
         },
         'resources'  => [
           {
-            'guid'    => process_guid,
-            'type'    => process_type,
+            'guid'    => process.guid,
+            'type'    => process.type,
             'command' => nil,
             'created_at' => iso8601,
             'updated_at' => iso8601,
@@ -63,90 +60,6 @@ resource 'Apps (Experimental)', type: :api do
 
       expect(response_status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
-    end
-  end
-
-  put '/v3/apps/:guid/processes' do
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:stack) { VCAP::CloudController::Stack.make }
-
-    parameter :process_guid, 'GUID of process', required: true
-
-    let!(:process) { VCAP::CloudController::AppFactory.make(space_guid: space.guid) }
-    let(:process_guid) { process.guid }
-
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-    let(:guid) { app_model.guid }
-
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
-
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-    end
-
-    example 'Add a Process' do
-      expect {
-        do_request_with_error_handling
-      }.not_to change { VCAP::CloudController::App.count }
-
-      expect(response_status).to eq(204)
-      expect(app_model.reload.processes.first).to eq(process.reload)
-
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include({
-        type: 'audit.app.add_process',
-        actee: guid,
-        actee_type: 'v3-app',
-        actee_name: app_model.name,
-        actor: user.guid,
-        actor_type: 'user',
-        space_guid: space.guid,
-        organization_guid: space.organization.guid,
-      })
-    end
-  end
-
-  delete '/v3/apps/:guid/processes' do
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:stack) { VCAP::CloudController::Stack.make }
-
-    parameter :process_guid, 'GUID of process', required: true
-
-    let!(:process) { VCAP::CloudController::AppFactory.make(space_guid: space.guid) }
-    let(:process_guid) { process.guid }
-
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-    let(:guid) { app_model.guid }
-
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
-
-    before do
-      space.organization.add_user(user)
-      space.add_developer(user)
-
-      app_model.add_process_by_guid(process_guid)
-    end
-
-    example 'Remove a Process' do
-      expect {
-        do_request_with_error_handling
-      }.not_to change { VCAP::CloudController::App.count }
-
-      expect(response_status).to eq(204)
-      expect(app_model.reload.processes).to eq([])
-
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include({
-        type: 'audit.app.remove_process',
-        actee: guid,
-        actee_type: 'v3-app',
-        actee_name: app_model.name,
-        actor: user.guid,
-        actor_type: 'user',
-        space_guid: space.guid,
-        organization_guid: space.organization.guid,
-      })
     end
   end
 end

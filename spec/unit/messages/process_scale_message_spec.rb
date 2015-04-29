@@ -3,8 +3,6 @@ require 'messages/process_scale_message'
 
 module VCAP::CloudController
   describe ProcessScaleMessage do
-    let(:instances) { 3 }
-
     context 'when instances is not an number' do
       let(:params) { { instances: 'silly string thing' } }
 

@@ -119,7 +119,6 @@ resource 'Processes (Experimental)', type: :api do
   end
 
   patch '/v3/processes/:guid' do
-    let(:buildpack_model) { VCAP::CloudController::Buildpack.make(name: 'another-buildpack') }
     let(:process) { VCAP::CloudController::AppFactory.make }
 
     before do
@@ -127,30 +126,9 @@ resource 'Processes (Experimental)', type: :api do
       process.space.add_developer user
     end
 
-    parameter :memory, 'Amount of memory (MB) allocated to each instance'
-    parameter :instances, 'Number of instances'
-    parameter :disk_quota, 'Amount of disk space (MB) allocated to each instance'
-    parameter :space_guid, 'Guid of associated Space'
-    parameter :stack_guid, 'Guid of associated Stack'
-    parameter :state, 'Desired state of process'
     parameter :command, 'Start command for process'
-    parameter :buildpack, 'Buildpack used to stage process'
-    parameter :health_check_timeout, 'Health check timeout for process'
-    parameter :docker_image, 'Name of docker image containing process'
-    parameter :environment_json, 'JSON key-value pairs for ENV variables'
-    parameter :type, 'Type of the process'
 
-    let(:memory) { 2555 }
-    let(:instances) { 2 }
-    let(:disk_quota) { 2048 }
-    let(:space_guid) { process.space.guid }
-    let(:stack_guid) { process.stack.guid }
     let(:command) { 'X' }
-    let(:state) { 'STARTED' }
-    let(:buildpack) { buildpack_model.name }
-    let(:health_check_timeout) { 70 }
-    let(:environment_json) { { 'foo' => 'bar' } }
-    let(:type) { 'worker' }
 
     let(:guid) { process.guid }
 
@@ -164,9 +142,9 @@ resource 'Processes (Experimental)', type: :api do
 
       expected_response = {
         'guid'       => guid,
-        'type'       => type,
+        'type'       => process.type,
         'command'    => 'X',
-        'instances'  => instances,
+        'instances'  => process.instances,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         '_links'     => {
@@ -179,16 +157,6 @@ resource 'Processes (Experimental)', type: :api do
       parsed_response = JSON.parse(response_body)
       expect(response_status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
-
-      expect(process.state).to eq(state)
-      expect(process.command).to eq(command)
-      expect(process.memory).to eq(memory)
-      expect(process.instances).to eq(instances)
-      expect(process.disk_quota).to eq(disk_quota)
-      expect(process.buildpack).to eq(buildpack_model)
-      expect(process.health_check_timeout).to eq(health_check_timeout)
-      expect(process.environment_json).to eq(environment_json)
-      expect(process.type).to eq(type)
     end
   end
 
