@@ -1,4 +1,15 @@
 module ServiceBrokerHelpers
+  def stub_provision(broker, opts={}, &block)
+    url = service_instance_provision_url(broker, accepts_incomplete: opts[:accepts_incomplete])
+    status = opts[:status] || 201
+    body = opts[:body] || '{}'
+    if block
+      stub_request(:put, url).to_return(&block)
+    else
+      stub_request(:put, url).to_return(status: status, body: body)
+    end
+  end
+
   def stub_deprovision(service_instance, opts={}, &block)
     status = opts[:status] || 200
     body = opts[:body] || '{}'
@@ -30,6 +41,14 @@ module ServiceBrokerHelpers
 
     stub_request(:delete, service_instance_unbind_url(service_binding)).
       to_return(status: status, body: body)
+  end
+
+  def service_instance_provision_url(broker, accepts_incomplete: nil)
+    guid_pattern = '[[:alnum:]-]+'
+    query = "accepts_incomplete=#{accepts_incomplete}" if accepts_incomplete
+    path = "/v2/service_instances/#{guid_pattern}"
+
+    /#{build_broker_url(broker.client.attrs)}#{path}(\?#{query})?/
   end
 
   def service_instance_unbind_url(service_binding)

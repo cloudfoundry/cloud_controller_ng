@@ -222,7 +222,7 @@ module VCAP::CloudController
         it 'provisions a service instance' do
           instance = create_managed_service_instance(accepts_incomplete: 'false')
 
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_status_code(201)
 
           expect(instance.credentials).to eq({})
           expect(instance.dashboard_url).to eq('the dashboard_url')
@@ -607,10 +607,10 @@ module VCAP::CloudController
             post '/v2/service_instances', req, headers
           end
 
-          it 'returns a 404' do
+          it 'returns a 400' do
             expect(last_response).to have_status_code(400)
-            expect(decoded_response['code']).to eq(60003)
             expect(decoded_response['description']).to include('not a valid service plan')
+            expect(decoded_response['code']).to eq(60003)
           end
         end
 
@@ -2182,8 +2182,8 @@ module VCAP::CloudController
           }
 
           post '/v2/service_instances', MultiJson.dump(body), json_headers(headers_for(make_developer_for_space(space)))
+          expect(last_response).to have_status_code 400
           expect(decoded_response['description']).to match(/invalid.*space.*/)
-          expect(last_response.status).to eq(400)
         end
       end
     end
