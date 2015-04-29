@@ -1,7 +1,8 @@
-require 'controllers/services/lifecycle/broker_instance_helper'
-
+require 'actions/mixins/service_broker_registration_error_parser'
 module VCAP::CloudController
   class ServiceBrokerUpdate
+    include ServiceBrokerRegistrationErrorParser
+
     def initialize(service_manager, services_event_repository, warning_observer)
       @service_manager = service_manager
       @services_event_repository = services_event_repository
@@ -18,7 +19,7 @@ module VCAP::CloudController
         registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager, @services_event_repository)
 
         unless registration.update
-          raise BrokerInstanceHelper.get_exception_from_errors(registration)
+          raise get_exception_from_errors(registration)
         end
 
         @services_event_repository.record_broker_event(:update, old_broker, params)

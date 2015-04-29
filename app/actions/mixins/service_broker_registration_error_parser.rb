@@ -1,6 +1,6 @@
 module VCAP::CloudController
-  class BrokerInstanceHelper
-    def self.get_exception_from_errors(registration)
+  module ServiceBrokerRegistrationErrorParser
+    def get_exception_from_errors(registration)
       errors = registration.errors
       broker = registration.broker
 
