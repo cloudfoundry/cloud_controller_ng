@@ -3,13 +3,11 @@ require 'spec_helper'
 module VCAP::CloudController
   describe AppsPackagesController do
     let(:logger) { instance_double(Steno::Logger) }
-    let(:user) { User.make }
     let(:req_body) { '' }
     let(:params) { {} }
-    let(:package_handler) { double(:package_handler) }
     let(:package_presenter) { double(:package_presenter) }
-    let(:apps_handler) { double(:apps_handler) }
-    let(:app_model) { nil }
+    let(:app) { nil }
+    let(:membership) { double(:membership) }
     let(:controller) do
       AppsPackagesController.new(
         {},
@@ -19,8 +17,6 @@ module VCAP::CloudController
         req_body,
         nil,
         {
-          apps_handler:      apps_handler,
-          packages_handler:  package_handler,
           package_presenter: package_presenter
         },
       )
@@ -28,15 +24,16 @@ module VCAP::CloudController
 
     before do
       allow(logger).to receive(:debug)
-      allow(apps_handler).to receive(:show).and_return(app_model)
+      allow(controller).to receive(:current_user).and_return(User.make)
+      allow(controller).to receive(:membership).and_return(membership)
     end
 
     describe '#create' do
       let(:tmpdir) { Dir.mktmpdir }
-      let(:app_model) { AppModel.make }
-      let(:app_guid) { app_model.guid }
-      let(:space_guid) { app_model.space_guid }
-      let(:package) { PackageModel.make(app_guid: app_model.guid) }
+      let(:app) { AppModel.make }
+      let(:app_guid) { app.guid }
+      let(:space) { app.space }
+      let(:org) { space.organization }
       let(:req_body) { '{"type":"bits"}' }
 
       let(:valid_zip) do
@@ -49,80 +46,73 @@ module VCAP::CloudController
       let(:package_response) { 'foobar' }
 
       before do
-        allow(package_presenter).to receive(:present_json).and_return(MultiJson.dump(package_response, pretty: true))
-        allow(package_handler).to receive(:create).and_return(package)
-        allow(apps_handler).to receive(:show).and_return(app_model)
+        allow(package_presenter).to receive(:present_json).and_return(package_response)
+        allow(controller).to receive(:check_write_permissions!).and_return(nil)
+        allow(membership).to receive(:has_any_roles?).and_return(true)
       end
 
       after do
         FileUtils.rm_rf(tmpdir)
       end
 
-      context 'when the app exists' do
-        context 'when a user can create a package' do
-          it 'returns a 201 Created response' do
-            response_code, _ = controller.create(app_guid)
-            expect(response_code).to eq 201
-          end
+      it 'returns a 201 and the response' do
+        expect(app.packages.count).to eq(0)
 
-          it 'returns the package' do
-            _, response = controller.create(app_guid)
-            expect(package_presenter).to have_received(:present_json).with(package)
-            expect(MultiJson.load(response, symbolize_keys: true)).to eq(package_response)
-          end
-        end
+        response_code, response = controller.create(app_guid)
 
-        context 'as a developer' do
-          let(:user) { make_developer_for_space(app_model.space) }
+        expect(response_code).to eq 201
+        expect(package_presenter).to have_received(:present_json).with(an_instance_of(PackageModel))
+        expect(response).to eq(package_response)
 
-          context 'with an invalid package' do
-            let(:req_body) { 'all sorts of invalid' }
+        app.reload
+        package = app.packages.first
+        expect(package.type).to eq('bits')
+      end
 
-            it 'returns an UnprocessableEntity error' do
-              expect {
-                controller.create(app_guid)
-              }.to raise_error do |error|
-                expect(error.name).to eq 'UnprocessableEntity'
-                expect(error.response_code).to eq 422
-              end
-            end
-          end
+      context 'with invalid json' do
+        let(:req_body) { '{{' }
 
-          context 'with an invalid type field' do
-            let(:req_body) { '{ "type": "ninja" }' }
-
-            it 'returns an UnprocessableEntity error' do
-              expect {
-                controller.create(app_guid)
-              }.to raise_error do |error|
-                expect(error.name).to eq 'UnprocessableEntity'
-                expect(error.response_code).to eq 422
-              end
-            end
+        it 'returns an UnprocessableEntity error' do
+          expect {
+            controller.create(app_guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'MessageParseError'
+            expect(error.response_code).to eq 400
           end
         end
+      end
 
-        context 'when the user cannot create a package' do
-          before do
-            allow(package_handler).to receive(:create).and_raise(PackagesHandler::Unauthorized)
+      context 'with an invalid type field' do
+        let(:req_body) { '{ "type": "ninja" }' }
+
+        it 'returns an UnprocessableEntity error' do
+          expect {
+            controller.create(app_guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq 422
           end
+        end
+      end
 
-          it 'returns a 403 NotAuthorized error' do
-            expect {
-              controller.create(app_guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'NotAuthorized'
-              expect(error.response_code).to eq 403
-            end
+      context 'when the user does not have write scope' do
+        before do
+          allow(controller).to receive(:check_write_permissions!).and_raise(
+            VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+          )
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          expect {
+            controller.create(app_guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
           end
         end
       end
 
       context 'when the app does not exist' do
-        before do
-          allow(apps_handler).to receive(:show).and_return(nil)
-        end
-
         it 'returns a 404 ResourceNotFound error' do
           expect {
             controller.create('bogus')
@@ -132,9 +122,110 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the user cannot read the app' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            controller.create(app_guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the user cannot create the package' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+          allow(membership).to receive(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          expect {
+            controller.create(app_guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+
+          expect(membership).to have_received(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER], space.guid)
+        end
+      end
+
+      context 'when the package is invalid' do
+        before do
+          allow_any_instance_of(PackageCreate).to receive(:create).and_raise(PackageCreate::InvalidPackage.new('err'))
+        end
+
+        it 'returns 422' do
+          expect {
+            controller.create(app_guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq 422
+          end
+        end
+      end
     end
 
     describe '#list_packages' do
+      let(:app) { AppModel.make }
+      let(:space) { app.space }
+      let(:org) { space.organization }
+      let(:guid) { app.guid }
+      let(:list_response) { 'list_response' }
+
+      before do
+        allow(membership).to receive(:has_any_roles?).and_return(true)
+        allow(package_presenter).to receive(:present_json_list).and_return(list_response)
+        allow(controller).to receive(:check_read_permissions!).and_return(nil)
+      end
+
+      it 'returns a 200 and presents the response' do
+        app.add_package(PackageModel.make)
+        app.add_package(PackageModel.make)
+        PackageModel.make
+        PackageModel.make
+
+        response_code, response = controller.list_packages(guid)
+        expect(response_code).to eq 200
+
+        expect(response).to eq(list_response)
+        expect(package_presenter).to have_received(:present_json_list).
+            with(an_instance_of(PaginatedResult), "/v3/apps/#{guid}/packages") do |result|
+          expect(result.total).to eq(2)
+        end
+      end
+
+      context 'when the user does not have read permissions' do
+        it 'raises an ApiError with a 403 code' do
+          expect(controller).to receive(:check_read_permissions!).
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+          expect {
+            controller.list_packages(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+        end
+      end
+
       context 'when the app does not exist' do
         let(:guid) { 'ABC123' }
 
@@ -148,25 +239,53 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app does exist' do
-        let(:app_model) { AppModel.make }
-        let(:guid) { app_model.guid }
-        let(:list_response) { 'list_response' }
-        let(:package_response) { 'package_response' }
-
+      context 'when the user cannot read the app' do
         before do
-          allow(package_presenter).to receive(:present_json_list).and_return(package_response)
-          allow(package_handler).to receive(:list).and_return(list_response)
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
         end
 
-        it 'returns a 200' do
-          response_code, _ = controller.list_packages(guid)
-          expect(response_code).to eq 200
+        it 'returns a 404 ResourceNotFound error' do
+          expect {
+            controller.list_packages(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the request parameters are invalid' do
+        context 'because there are unknown parameters' do
+          let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
+
+          it 'returns an 400 Bad Request' do
+            expect {
+              controller.list_packages(guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include("Unknown query param(s) 'invalid', 'bad'")
+            end
+          end
         end
 
-        it 'returns the packages' do
-          _, response = controller.list_packages(guid)
-          expect(response).to eq(package_response)
+        context 'because there are invalid values in parameters' do
+          let(:params) { { 'per_page' => 'foo' } }
+
+          it 'returns an 400 Bad Request' do
+            expect {
+              controller.list_packages(guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include('Per page must be between 1 and 5000')
+            end
+          end
         end
       end
     end

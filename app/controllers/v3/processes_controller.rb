@@ -24,7 +24,6 @@ module VCAP::CloudController
       invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
       invalid_param!("Unknown query param(s) '#{params.keys.join("', '")}'") if params.any?
 
-      paginated_result = []
       if membership.admin?
         paginated_result = ProcessListFetcher.new.fetch_all(pagination_options)
       else
@@ -71,8 +70,8 @@ module VCAP::CloudController
 
       FeatureFlag.raise_unless_enabled!('app_scaling')
 
-      req_hash = parse_and_validate_json(body)
-      message = ProcessScaleMessage.new(req_hash)
+      request = parse_and_validate_json(body)
+      message = ProcessScaleMessage.create_from_http_request(request)
       unprocessable!(message.errors.full_messages) if message.invalid?
 
       process, space, org = ProcessScaleFetcher.new.fetch(guid)

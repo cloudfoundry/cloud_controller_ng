@@ -5,10 +5,7 @@ require 'actions/package_stage_action'
 module VCAP::CloudController
   describe PackagesController do
     let(:logger) { instance_double(Steno::Logger) }
-    let(:user) { User.make }
     let(:params) { {} }
-    let(:packages_handler) { double(:packages_handler) }
-    let(:apps_handler) { double(:apps_handler) }
     let(:package_presenter) { double(:package_presenter) }
     let(:droplet_presenter) { double(:droplet_presenter) }
     let(:membership) { double(:membership) }
@@ -24,10 +21,8 @@ module VCAP::CloudController
         req_body,
         nil,
         {
-          packages_handler: packages_handler,
           package_presenter: package_presenter,
           droplet_presenter: droplet_presenter,
-          apps_handler: apps_handler,
           stagers: stagers,
         },
       )
@@ -41,31 +36,46 @@ module VCAP::CloudController
 
     describe '#upload' do
       let(:package) { PackageModel.make }
+      let(:space) { package.space }
+      let(:org) { space.organization }
       let(:params) { { 'bits_path' => 'path/to/bits' } }
+      let(:expected_response) { 'response stuff' }
+
+      before do
+        allow(package_presenter).to receive(:present_json).and_return(expected_response)
+        allow(packages_controller).to receive(:check_write_permissions!)
+      end
+
+      it 'returns 200 and updates the package state' do
+        code, response = packages_controller.upload(package.guid)
+
+        expect(code).to eq(HTTP::OK)
+        expect(response).to eq(expected_response)
+        expect(package_presenter).to have_received(:present_json).with(an_instance_of(PackageModel))
+        expect(package.reload.state).to eq(PackageModel::PENDING_STATE)
+      end
 
       context 'when the package type is not bits' do
         before do
-          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::InvalidPackageType)
+          package.type = 'docker'
+          package.save
         end
 
-        it 'returns a 400 InvalidRequest' do
+        it 'returns a 422 Unprocessable' do
           expect {
             packages_controller.upload(package.guid)
           }.to raise_error do |error|
-            expect(error.name).to eq 'InvalidRequest'
-            expect(error.response_code).to eq 400
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq 422
+            expect(error.message).to include('Package type must be bits.')
           end
         end
       end
 
       context 'when the package does not exist' do
-        before do
-          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::PackageNotFound)
-        end
-
         it 'returns a 404 ResourceNotFound error' do
           expect {
-            packages_controller.upload(package.guid)
+            packages_controller.upload('not-real')
           }.to raise_error do |error|
             expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
@@ -86,9 +96,10 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the user cannot access the package' do
+      context 'when the user does not have write scope' do
         before do
-          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::Unauthorized)
+          allow(packages_controller).to receive(:check_write_permissions!).
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
         end
 
         it 'returns an Unauthorized error' do
@@ -101,10 +112,56 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the user cannot read the package' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        end
+
+        it 'returns a 404' do
+          expect {
+            packages_controller.upload(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the user does not have correct roles to upload' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+          allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER], space.guid).and_return(false)
+        end
+
+        it 'returns a 403' do
+          expect {
+            packages_controller.upload(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+
+          expect(membership).to have_received(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space.guid)
+        end
+      end
+
       context 'when the bits have already been uploaded' do
         before do
-          allow(packages_handler).to receive(:upload).and_raise(PackagesHandler::BitsAlreadyUploaded)
+          package.state = PackageModel::READY_STATE
+          package.save
         end
+
         it 'returns a 400 PackageBitsAlreadyUploaded error' do
           expect {
             packages_controller.upload(package.guid)
@@ -114,55 +171,93 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the package is invalid' do
+        before do
+          allow_any_instance_of(PackageUpload).to receive(:upload).and_raise(PackageUpload::InvalidPackage.new('err'))
+        end
+
+        it 'returns 422' do
+          expect {
+            packages_controller.upload(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq 422
+          end
+        end
+      end
     end
 
     describe '#show' do
-      context 'when the package does not exist' do
+      let(:package) { PackageModel.make }
+      let(:space) { package.space }
+      let(:org) { space.organization }
+      let(:package_guid) { package.guid }
+
+      let(:expected_response) { 'im a response' }
+
+      before do
+        allow(package_presenter).to receive(:present_json).and_return(expected_response)
+        allow(packages_controller).to receive(:check_read_permissions!).and_return(nil)
+      end
+
+      it 'returns a 200 OK and the package' do
+        response_code, response = packages_controller.show(package.guid)
+        expect(response_code).to eq 200
+        expect(response).to eq(expected_response)
+        expect(package_presenter).to have_received(:present_json).with(package)
+      end
+
+      context 'when the user has the incorrect scope' do
         before do
-          allow(packages_handler).to receive(:show).and_return(nil)
+          allow(packages_controller).to receive(:check_read_permissions!).
+            and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
         end
 
+        it 'returns a 403 NotAuthorized error' do
+          expect {
+            packages_controller.show(package_guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+
+          expect(packages_controller).to have_received(:check_read_permissions!)
+        end
+      end
+
+      context 'when the user has incorrect roles' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+          allow(membership).to receive(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER,
+             Membership::SPACE_MANAGER,
+             Membership::SPACE_AUDITOR,
+             Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        end
+
+        it 'returns a 404 not found' do
+          expect {
+            packages_controller.show(package_guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+          expect(membership).to have_received(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER,
+             Membership::SPACE_MANAGER,
+             Membership::SPACE_AUDITOR,
+             Membership::ORG_MANAGER], space.guid, org.guid)
+        end
+      end
+
+      context 'when the package does not exist' do
         it 'returns a 404 Not Found' do
           expect {
             packages_controller.show('non-existant')
           }.to raise_error do |error|
             expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the package exists' do
-        let(:package) { PackageModel.make }
-        let(:package_guid) { package.guid }
-
-        context 'when a user can access a package' do
-          let(:expected_response) { 'im a response' }
-
-          before do
-            allow(packages_handler).to receive(:show).and_return(package)
-            allow(package_presenter).to receive(:present_json).and_return(expected_response)
-          end
-
-          it 'returns a 200 OK and the package' do
-            response_code, response = packages_controller.show(package.guid)
-            expect(response_code).to eq 200
-            expect(response).to eq(expected_response)
-          end
-        end
-
-        context 'when the user cannot access the package' do
-          before do
-            allow(packages_handler).to receive(:show).and_raise(PackagesHandler::Unauthorized)
-          end
-
-          it 'returns a 403 NotAuthorized error' do
-            expect {
-              packages_controller.show(package_guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'NotAuthorized'
-              expect(error.response_code).to eq 403
-            end
           end
         end
       end
@@ -255,21 +350,119 @@ module VCAP::CloudController
       let(:page) { 1 }
       let(:per_page) { 2 }
       let(:params) { { 'page' => page, 'per_page' => per_page } }
-      let(:list_response) { 'list_response' }
       let(:expected_response) { 'im a response' }
 
       before do
         allow(package_presenter).to receive(:present_json_list).and_return(expected_response)
-        allow(packages_handler).to receive(:list).and_return(list_response)
+        allow(packages_controller).to receive(:check_read_permissions!).and_return(nil)
+        allow(membership).to receive(:admin?)
+        allow(membership).to receive(:space_guids_for_roles)
       end
 
-      it 'returns 200 and lists the apps' do
+      it 'returns 200 and lists the packages' do
         response_code, response_body = packages_controller.list
 
-        expect(packages_handler).to have_received(:list)
-        expect(package_presenter).to have_received(:present_json_list).with(list_response, '/v3/packages')
+        expect(package_presenter).to have_received(:present_json_list).with(an_instance_of(PaginatedResult), '/v3/packages')
         expect(response_code).to eq(200)
         expect(response_body).to eq(expected_response)
+      end
+
+      context 'when the user has the incorrect scope' do
+        before do
+          allow(packages_controller).to receive(:check_read_permissions!).
+            and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          expect {
+            packages_controller.list
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+
+          expect(packages_controller).to have_received(:check_read_permissions!)
+        end
+      end
+
+      context 'when the user is an admin' do
+        before do
+          allow(membership).to receive(:admin?).and_return(true)
+        end
+
+        it 'returns all packages' do
+          PackageModel.make
+          PackageModel.make
+          PackageModel.make
+
+          response_code, response_body = packages_controller.list
+
+          expect(package_presenter).to have_received(:present_json_list).
+            with(an_instance_of(PaginatedResult), '/v3/packages') do |result|
+              expect(result.total).to eq(PackageModel.count)
+            end
+          expect(response_code).to eq(200)
+          expect(response_body).to eq(expected_response)
+        end
+      end
+
+      context 'when the user is not an admin' do
+        let(:viewable_package) { PackageModel.make }
+
+        before do
+          allow(membership).to receive(:admin?).and_return(false)
+          allow(membership).to receive(:space_guids_for_roles).and_return([viewable_package.app.space.guid])
+        end
+
+        it 'returns packages the user has roles to see' do
+          PackageModel.make
+          PackageModel.make
+
+          response_code, response_body = packages_controller.list
+
+          expect(package_presenter).to have_received(:present_json_list).
+            with(an_instance_of(PaginatedResult), '/v3/packages') do |result|
+              expect(result.total).to be < PackageModel.count
+              expect(result.total).to eq(1)
+            end
+          expect(response_code).to eq(200)
+          expect(response_body).to eq(expected_response)
+          expect(membership).to have_received(:space_guids_for_roles).
+            with([Membership::SPACE_DEVELOPER,
+                  Membership::SPACE_MANAGER,
+                  Membership::SPACE_AUDITOR,
+                  Membership::ORG_MANAGER])
+        end
+      end
+
+      context 'when parameters are invalid' do
+        context 'because there are unknown parameters' do
+          let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
+
+          it 'returns an 400 Bad Request' do
+            expect {
+              packages_controller.list
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include("Unknown query param(s) 'invalid', 'bad'")
+            end
+          end
+        end
+
+        context 'because there are invalid values in parameters' do
+          let(:params) { { 'per_page' => 'foo' } }
+
+          it 'returns an 400 Bad Request' do
+            expect {
+              packages_controller.list
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include('Per page must be between 1 and 5000')
+            end
+          end
+        end
       end
     end
 
@@ -523,7 +716,7 @@ module VCAP::CloudController
              Membership::SPACE_MANAGER,
              Membership::SPACE_AUDITOR,
              Membership::ORG_MANAGER], space.guid, org.guid).
-            and_return(true)
+             and_return(true)
           allow(membership).to receive(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space.guid).
             and_return(false)
         end

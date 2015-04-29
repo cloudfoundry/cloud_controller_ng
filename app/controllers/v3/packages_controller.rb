@@ -1,62 +1,75 @@
 require 'presenters/v3/package_presenter'
 require 'presenters/v3/droplet_presenter'
-require 'handlers/packages_handler'
+require 'queries/package_list_fetcher'
 require 'queries/package_delete_fetcher'
 require 'queries/package_stage_fetcher'
 require 'actions/package_stage_action'
 require 'actions/package_delete'
+require 'actions/package_upload'
+require 'messages/package_upload_message'
 
 module VCAP::CloudController
   class PackagesController < RestController::BaseController
     def self.dependencies
-      [:packages_handler, :package_presenter, :droplet_presenter, :apps_handler, :stagers]
+      [:package_presenter, :droplet_presenter, :stagers]
     end
 
     def inject_dependencies(dependencies)
-      @packages_handler  = dependencies[:packages_handler]
       @package_presenter = dependencies[:package_presenter]
       @stagers  = dependencies[:stagers]
       @droplet_presenter = dependencies[:droplet_presenter]
-      @apps_handler      = dependencies[:apps_handler]
     end
 
     get '/v3/packages', :list
     def list
+      check_read_permissions!
+
       pagination_options = PaginationOptions.from_params(params)
-      paginated_result   = @packages_handler.list(pagination_options, @access_context)
-      packages_json      = @package_presenter.present_json_list(paginated_result, '/v3/packages')
-      [HTTP::OK, packages_json]
+      invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
+      invalid_param!("Unknown query param(s) '#{params.keys.join("', '")}'") if params.any?
+
+      if membership.admin?
+        paginated_result = PackageListFetcher.new.fetch_all(pagination_options)
+      else
+        space_guids = membership.space_guids_for_roles(
+          [Membership::SPACE_DEVELOPER,
+           Membership::SPACE_MANAGER,
+           Membership::SPACE_AUDITOR,
+           Membership::ORG_MANAGER])
+        paginated_result = PackageListFetcher.new.fetch(pagination_options, space_guids)
+      end
+
+      [HTTP::OK, @package_presenter.present_json_list(paginated_result, '/v3/packages')]
     end
 
     post '/v3/packages/:guid/upload', :upload
     def upload(package_guid)
-      message      = PackageUploadMessage.new(package_guid, params)
-      valid, error = message.validate
-      unprocessable!(error) if !valid
+      check_write_permissions!
 
-      package      = @packages_handler.upload(message, @access_context)
-      package_json = @package_presenter.present_json(package)
+      message = PackageUploadMessage.create_from_params(params)
+      unprocessable!(message.errors.full_messages) unless message.valid?
 
-      [HTTP::CREATED, package_json]
-    rescue PackagesHandler::InvalidPackageType => e
-      invalid_request!(e.message)
-    rescue PackagesHandler::PackageNotFound
-      package_not_found!
-    rescue PackagesHandler::Unauthorized
-      unauthorized!
-    rescue PackagesHandler::BitsAlreadyUploaded
-      bits_already_uploaded!
+      package = PackageModel.where(guid: package_guid).eager(:space, space: :organization).all.first
+      package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+      unauthorized! unless can_upload?(package.space.guid)
+
+      unprocessable!('Package type must be bits.') unless package.type == 'bits'
+      bits_already_uploaded! if package.state != PackageModel::CREATED_STATE
+
+      PackageUpload.new.upload(message, package, config)
+
+      [HTTP::OK, @package_presenter.present_json(package)]
+    rescue PackageUpload::InvalidPackage => e
+      unprocessable!(e.message)
     end
 
     get '/v3/packages/:guid', :show
     def show(guid)
-      package = @packages_handler.show(guid, @access_context)
-      package_not_found! if package.nil?
+      check_read_permissions!
+      package = PackageModel.where(guid: guid).eager(:space, space: :organization).all.first
+      package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
 
-      package_json = @package_presenter.present_json(package)
-      [HTTP::OK, package_json]
-    rescue PackagesHandler::Unauthorized
-      unauthorized!
+      [HTTP::OK, @package_presenter.present_json(package)]
     end
 
     delete '/v3/packages/:guid', :delete
@@ -129,6 +142,10 @@ module VCAP::CloudController
     end
 
     def can_delete?(space_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+    end
+
+    def can_upload?(space_guid)
       membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 

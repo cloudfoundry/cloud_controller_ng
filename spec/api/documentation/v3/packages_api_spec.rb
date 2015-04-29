@@ -272,7 +272,7 @@ resource 'Packages (Experimental)', type: :api do
       }
 
       parsed_response = MultiJson.load(response_body)
-      expect(response_status).to eq(201)
+      expect(response_status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
   end

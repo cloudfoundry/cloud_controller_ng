@@ -88,47 +88,14 @@ module VCAP::CloudController
         end
       end
 
-      context 'when guid is not a string' do
-        let(:params) { { guid: 4 } }
+      context 'when guid is invalid' do
+        let(:params) { { guid: nil } }
 
         it 'is not valid' do
           message = ProcessUpdateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be a string')
-        end
-      end
-
-      context 'when guid is nil' do
-        let(:params) { { guid: 4 } }
-
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be a string')
-        end
-      end
-
-      context 'when guid is too long' do
-        let(:params) { { guid: 'a' * 201 } }
-
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be between 1 and 200 characters')
-        end
-      end
-
-      context 'when guid is empty' do
-        let(:params) { { guid: '' } }
-
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be between 1 and 200 characters')
+          expect(message.errors_on(:guid)).to_not be_empty
         end
       end
     end

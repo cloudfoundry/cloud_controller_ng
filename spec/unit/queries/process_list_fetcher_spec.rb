@@ -5,7 +5,6 @@ module VCAP::CloudController
   describe ProcessListFetcher do
     describe '#fetch' do
       let(:space) { Space.make }
-      let(:user) { User.make }
       let(:space_guids) { [space.guid] }
       let!(:process) { App.make(space: space) }
       let(:pagination_options) { PaginationOptions.new({}) }

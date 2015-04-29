@@ -11,7 +11,7 @@ module VCAP::CloudController
       process.db.transaction do
         process.lock!
 
-        process.instances = message.instances if message.instances
+        process.instances = message.instances if message.requested?(:instances)
 
         process.save
 
@@ -20,7 +20,7 @@ module VCAP::CloudController
           process.space,
           @user.guid,
           @user_email,
-          message.as_json
+          message.as_json({ only: message.requested_keys.map(&:to_s) })
         )
       end
     rescue Sequel::ValidationFailed => e

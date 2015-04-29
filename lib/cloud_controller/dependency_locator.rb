@@ -177,15 +177,11 @@ module CloudController
     end
 
     def apps_handler
-      AppsHandler.new(packages_handler, droplets_handler)
+      AppsHandler.new(droplets_handler)
     end
 
     def app_presenter
       AppPresenter.new
-    end
-
-    def packages_handler
-      PackagesHandler.new(@config)
     end
 
     def package_presenter
