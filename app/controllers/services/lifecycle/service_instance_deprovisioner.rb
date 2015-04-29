@@ -14,19 +14,16 @@ module VCAP::CloudController
 
       delete_job = build_delete_job(service_instance, delete_action)
 
-      if accepts_incomplete
-        delete_job.perform
-        return nil
-      end
+      enqueued_job = nil
 
-      delete_and_audit_job = build_audit_job(service_instance, delete_job)
-
-      if async
-        Jobs::Enqueuer.new(delete_and_audit_job, queue: 'cc-generic').enqueue
+      if async && !accepts_incomplete
+        enqueued_job = Jobs::Enqueuer.new(build_audit_job(service_instance, delete_job), queue: 'cc-generic').enqueue
       else
-        delete_and_audit_job.perform
-        nil
+        delete_job.perform
+        log_audit_event(service_instance) unless service_instance.exists?
       end
+
+      enqueued_job
     end
 
     private
@@ -38,6 +35,11 @@ module VCAP::CloudController
     def build_audit_job(service_instance, deletion_job)
       event_method = service_instance.managed_instance? ? :record_service_instance_event : :record_user_provided_service_instance_event
       Jobs::AuditEventJob.new(deletion_job, @services_event_repository, event_method, :delete, service_instance.class, service_instance.guid, {})
+    end
+
+    def log_audit_event(service_instance)
+      event_method = service_instance.managed_instance? ? :record_service_instance_event : :record_user_provided_service_instance_event
+      @services_event_repository.send(event_method, :delete, service_instance, {})
     end
   end
 end

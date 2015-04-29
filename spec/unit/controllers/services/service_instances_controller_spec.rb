@@ -1684,6 +1684,26 @@ module VCAP::CloudController
               expect(ManagedServiceInstance.find(guid: service_instance_guid)).to be_nil
             end
 
+            it 'logs an audit event' do
+              delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
+
+              expect(last_response).to have_status_code 204
+
+              event = VCAP::CloudController::Event.first(type: 'audit.service_instance.delete')
+              expect(event.type).to eq('audit.service_instance.delete')
+              expect(event.actor_type).to eq('user')
+              expect(event.actor).to eq(admin_user.guid)
+              expect(event.actor_name).to eq('admin@example.com')
+              expect(event.timestamp).to be
+              expect(event.actee).to eq(service_instance.guid)
+              expect(event.actee_type).to eq('service_instance')
+              expect(event.actee_name).to eq(service_instance.name)
+              expect(event.space_guid).to eq(service_instance.space.guid)
+              expect(event.space_id).to eq(service_instance.space.id)
+              expect(event.organization_guid).to eq(service_instance.space.organization.guid)
+              expect(event.metadata).to eq({ 'request' => {} })
+            end
+
             context 'and with ?async=true' do
               it 'gives accepts_incomplete precedence and deletes the instance synchronously', isolation: :truncation do
                 service_instance_guid = service_instance.guid
