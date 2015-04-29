@@ -305,6 +305,40 @@ module VCAP::CloudController
         end
       end
 
+      describe '#record_app_ssh_unauthorized' do
+        let(:app) { AppFactory.make }
+        let(:user) { User.make }
+        let(:user_email) { 'user@example.com' }
+
+        it 'creates a new app.ssh-unauthorized event for the app' do
+          event = app_event_repository.record_app_ssh_unauthorized(app, user.guid, user_email)
+
+          expect(event.type).to eq('audit.app.ssh-unauthorized')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actor_name).to eq('user@example.com')
+          expect(event.actee_type).to eq('app')
+        end
+      end
+
+      describe '#record_app_ssh_authorized' do
+        let(:app) { AppFactory.make }
+        let(:user) { User.make }
+        let(:user_email) { 'user@example.com' }
+
+        it 'creates a new app.ssh-authorized event for the app' do
+          event = app_event_repository.record_app_ssh_authorized(app, user.guid, user_email)
+
+          expect(event.type).to eq('audit.app.ssh-authorized')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actor_name).to eq('user@example.com')
+          expect(event.actee_type).to eq('app')
+        end
+      end
+
       context 'with a v3 app' do
         describe '#record_app_create' do
           let(:app) { AppModel.make }

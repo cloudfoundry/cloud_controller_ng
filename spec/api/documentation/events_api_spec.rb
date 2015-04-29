@@ -10,6 +10,8 @@ resource 'Events', type: [:api, :legacy_api] do
     audit.app.update
     audit.app.create
     audit.app.delete-request
+    audit.app.ssh-authorized
+    audit.app.ssh-unauthorized
     audit.space.create
     audit.space.update
     audit.space.delete-request
