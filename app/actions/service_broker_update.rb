@@ -1,17 +1,14 @@
 require 'controllers/services/lifecycle/broker_instance_helper'
 
 module VCAP::CloudController
-  class BrokerInstanceUpdater
-    def initialize(service_manager, services_event_repository, access_validator, warning_observer)
+  class ServiceBrokerUpdate
+    def initialize(service_manager, services_event_repository, warning_observer)
       @service_manager = service_manager
       @services_event_repository = services_event_repository
-      @access_validator = access_validator
       @warning_observer = warning_observer
     end
 
-    def update_broker_instance(guid, params)
-      @access_validator.validate_access(:update, ServiceBroker)
-
+    def update(guid, params)
       broker = ServiceBroker.find(guid: guid)
       return nil unless broker
 

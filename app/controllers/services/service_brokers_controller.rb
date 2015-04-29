@@ -1,6 +1,6 @@
 require 'presenters/api/service_broker_presenter'
-require 'controllers/services/lifecycle/broker_instance_provisioner'
-require 'controllers/services/lifecycle/broker_instance_updater'
+require 'actions/service_broker_create'
+require 'actions/service_broker_update'
 
 module VCAP::CloudController
   # This controller is an experiment breaking away from the old
@@ -27,15 +27,15 @@ module VCAP::CloudController
     end
 
     def create
-      provisioner = BrokerInstanceProvisioner.new(
+      validate_access(:create, ServiceBroker)
+      create_action = ServiceBrokerCreate.new(
         @service_manager,
         @services_event_repository,
-        self,
         self
       )
       params = CreateMessage.decode(body).extract
 
-      broker = provisioner.create_broker_instance(params)
+      broker = create_action.create(params)
 
       headers = { 'Location' => url_of(broker) }
       body = ServiceBrokerPresenter.new(broker).to_json
@@ -44,14 +44,14 @@ module VCAP::CloudController
     end
 
     def update(guid)
-      updater = BrokerInstanceUpdater.new(
+      validate_access(:update, ServiceBroker)
+      update_action = ServiceBrokerUpdate.new(
         @service_manager,
         @services_event_repository,
-        self,
         self
       )
       params = UpdateMessage.decode(body).extract
-      broker = updater.update_broker_instance(guid, params)
+      broker = update_action.update(guid, params)
       return HTTP::NOT_FOUND unless broker
       body = ServiceBrokerPresenter.new(broker).to_json
       [HTTP::OK, {}, body]
