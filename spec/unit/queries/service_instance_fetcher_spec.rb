@@ -12,7 +12,7 @@ module VCAP::CloudController
 
       it 'should return the instance, the space, the plan, and the service' do
         fetcher = ServiceInstanceFetcher.new
-        expect(fetcher.fetch(service_instance.guid)).to eq([service_instance, space, plan, service])
+        expect(fetcher.fetch(service_instance.guid)).to eq([service_instance, { space: space, plan: plan, service: service }])
       end
 
       context 'when the instance is user-provided' do
@@ -20,7 +20,7 @@ module VCAP::CloudController
 
         it 'should return just the instance and the space' do
           fetcher = ServiceInstanceFetcher.new
-          expect(fetcher.fetch(service_instance.guid)).to eq([service_instance, space, nil, nil])
+          expect(fetcher.fetch(service_instance.guid)).to eq([service_instance, { space: space, plan: nil, service: nil }])
         end
       end
     end

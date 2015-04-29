@@ -8,7 +8,11 @@ module VCAP::CloudController
         service = plan.service
       end
 
-      [instance, instance.space, plan, service]
+      [instance, {
+          space: instance.space,
+          plan: plan,
+          service: service
+      }]
     end
   end
 end

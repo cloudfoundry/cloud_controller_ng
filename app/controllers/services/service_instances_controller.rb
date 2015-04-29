@@ -99,13 +99,12 @@ module VCAP::CloudController
       @request_attrs = validate_user_input(guid)
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
 
-      service_instance, space, current_plan, service = ServiceInstanceFetcher.new.fetch(guid)
-
+      service_instance, related_objects = ServiceInstanceFetcher.new.fetch(guid)
       validate_access(:read_for_update, service_instance)
       validate_access(:update, service_instance)
 
-      validate_space(space)
-      validate_plan(current_plan, service)
+      validate_space(related_objects[:space])
+      validate_plan(related_objects[:plan], related_objects[:service])
 
       update = ServiceInstanceUpdate.new(accepts_incomplete: accepts_incomplete, services_event_repository: @services_event_repository)
       update.update_service_instance(service_instance, request_attrs)
