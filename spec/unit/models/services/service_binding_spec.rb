@@ -53,7 +53,7 @@ module VCAP::CloudController
       }
     end
 
-    describe '#create' do
+    describe '#new' do
       it 'has a guid when constructed' do
         binding = described_class.new
         expect(binding.guid).to be
@@ -157,6 +157,45 @@ module VCAP::CloudController
             service_binding.save
           }.not_to raise_error
         end
+
+        context 'v1 service instance' do
+          let(:service) { Service.make(:v1, requires: []) }
+          let(:service_plan) { ServicePlan.make(:v1, service: service) }
+          let(:service_instance) do
+            ManagedServiceInstance.make(
+              :v1,
+              service_plan: service_plan,
+              name: 'not a syslog drain instance'
+            )
+          end
+
+          it 'should not allow a non syslog_drain with a syslog drain url' do
+            expect {
+              service_binding = ServiceBinding.make(service_instance: service_instance)
+              service_binding.syslog_drain_url = 'http://this.is.a.mean.url.com'
+              service_binding.save
+            }.to raise_error { |error|
+                expect(error).to be_a(VCAP::Errors::ApiError)
+                expect(error.code).to eq(90006)
+              }
+          end
+
+          it 'should allow a non syslog_drain with a nil syslog drain url' do
+            expect {
+              service_binding = ServiceBinding.make(service_instance: service_instance)
+              service_binding.syslog_drain_url = nil
+              service_binding.save
+            }.not_to raise_error
+          end
+
+          it 'should allow a non syslog_drain with an empty syslog drain url' do
+            expect {
+              service_binding = ServiceBinding.make(service_instance: service_instance)
+              service_binding.syslog_drain_url = ''
+              service_binding.save
+            }.not_to raise_error
+          end
+        end
       end
 
       context 'service that does require a syslog_drain' do
@@ -168,6 +207,26 @@ module VCAP::CloudController
             service_binding.syslog_drain_url = 'http://syslogurl.com'
             service_binding.save
           }.not_to raise_error
+        end
+
+        context 'v1 service instance' do
+          let(:service) { Service.make(:v1, requires: ['syslog_drain']) }
+          let(:service_plan) { ServicePlan.make(:v1, service: service) }
+          let(:service_instance) do
+            ManagedServiceInstance.make(
+              :v1,
+              service_plan: service_plan,
+              name: 'a syslog drain instance'
+            )
+          end
+
+          it 'should allow a syslog_drain with a syslog drain url' do
+            expect {
+              service_binding = ServiceBinding.make(service_instance: service_instance)
+              service_binding.syslog_drain_url = 'http://syslogurl.com'
+              service_binding.save
+            }.not_to raise_error
+          end
         end
       end
     end
@@ -229,73 +288,6 @@ module VCAP::CloudController
           expect {
             app.remove_service_binding(binding)
           }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
-        end
-      end
-    end
-
-    describe '#bind!' do
-      let(:binding) { ServiceBinding.make }
-
-      before do
-        stub_bind(binding.service_instance)
-        allow(binding).to receive(:save)
-      end
-
-      it 'sends a bind request to the broker' do
-        binding.bind!
-
-        expect(a_request(:put, service_binding_url(binding))).to have_been_made.times(1)
-      end
-
-      it 'saves the binding to the database' do
-        binding.bind!
-
-        expect(binding).to have_received(:save)
-      end
-
-      context 'when sending a bind request to the broker raises an error' do
-        before do
-          stub_bind(binding.service_instance, status: 500)
-        end
-
-        it 'raises the bind error' do
-          expect { binding.bind! }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
-        end
-      end
-
-      context 'when the model save raises an error' do
-        before do
-          allow(binding).to receive(:save).and_raise(StandardError.new('save'))
-          stub_unbind(binding)
-        end
-
-        it 'sends an unbind request to the broker' do
-          query = "plan_id=#{binding.service_plan.broker_provided_id}&service_id=#{binding.service.broker_provided_id}"
-          binding.bind! rescue nil
-          expect(a_request(:delete, service_binding_url(binding, query))).to have_been_made.times(1)
-        end
-
-        it 'raises the save error' do
-          expect { binding.bind! }.to raise_error(/save/)
-        end
-
-        context 'and the unbind also raises an error' do
-          let(:logger) { double('logger') }
-
-          before do
-            stub_unbind(binding, status: 500)
-            allow(binding).to receive(:logger).and_return(logger)
-            allow(logger).to receive(:error)
-          end
-
-          it 'logs the unbind error' do
-            binding.bind! rescue nil
-            expect(logger).to have_received(:error).with(/Unable to unbind.*/)
-          end
-
-          it 'raises the save error' do
-            expect { binding.bind! }.to raise_error(/save/)
-          end
         end
       end
     end

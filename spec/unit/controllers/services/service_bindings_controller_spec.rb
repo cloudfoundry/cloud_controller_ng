@@ -317,23 +317,6 @@ module VCAP::CloudController
               expect(last_response.status).to eq(404)
             end
           end
-
-          context 'because the service instance is destroyed after controller validation and before binding save' do
-            let(:req) do
-              {
-                app_guid: app_obj.guid,
-                service_instance_guid: 'THISISWRONG'
-              }.to_json
-            end
-
-            it 'returns CF-ServiceInstanceNotFound error' do
-              post '/v2/service_bindings', req, json_headers(headers_for(developer))
-
-              expect(last_response).to have_status_code(404)
-              hash_body = JSON.parse(last_response.body)
-              expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
-            end
-          end
         end
 
         context 'when the instance operation is in progress' do

@@ -64,17 +64,6 @@ module VCAP::CloudController
       super(opts)
     end
 
-    def bind!
-      client.bind(self)
-
-      begin
-        save
-      rescue => e
-        safe_unbind
-        raise e
-      end
-    end
-
     def in_suspended_org?
       app.in_suspended_org?
     end

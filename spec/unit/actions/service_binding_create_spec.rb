@@ -3,7 +3,8 @@ require 'actions/service_binding_create'
 
 module VCAP::CloudController
   describe ServiceBindingCreate do
-    let(:service_instance) { ManagedServiceInstance.make }
+    let(:space) { Space.make }
+    let(:service_instance) { ManagedServiceInstance.make(space: space) }
     let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
 
     describe 'creating a service binding' do
@@ -11,8 +12,20 @@ module VCAP::CloudController
       let(:binding_attrs) do
         {
           'service_instance_guid' => service_instance.guid,
-          'app_guid' => App.make.guid,
+          'app_guid' => App.make(space: space).guid,
         }
+      end
+
+      before do
+        stub_v1_broker
+        credentials = { 'credentials' => '{}' }
+        stub_bind(service_instance, body: credentials.to_json)
+      end
+
+      it 'creates a binding' do
+        ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+
+        expect(ServiceBinding.count).to eq(1)
       end
 
       describe 'orphan mitigation situations' do
@@ -47,7 +60,7 @@ module VCAP::CloudController
             stub_bind(service_instance)
             stub_request(:delete, service_binding_url_pattern)
 
-            allow_any_instance_of(ServiceBinding).to receive(:save).and_raise
+            allow_any_instance_of(ServiceBinding).to receive(:save).and_raise('meow')
 
             allow(logger).to receive :error
 
@@ -59,9 +72,15 @@ module VCAP::CloudController
             expect(a_request(:delete, service_binding_url_pattern)).to have_been_made.times(1)
           end
 
-          it 'does not try to enqueue an orphan mitigation job' do
+          it 'does not try to enqueue a delayed job for orphan mitigation' do
             orphan_mitigating_job = Delayed::Job.first
             expect(orphan_mitigating_job).to be_nil
+          end
+
+          it 'returns the appropriate error' do
+            _, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+            expect(errors.length).to eq(1)
+            expect(errors.first.message).to match('meow')
           end
 
           context 'when the orphan mitigation unbind fails' do
