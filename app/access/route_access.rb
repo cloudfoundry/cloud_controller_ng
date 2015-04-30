@@ -3,7 +3,7 @@ module VCAP::CloudController
     def create?(route, params=nil)
       return true if admin_user?
       return false if route.in_suspended_org?
-      return false if route.host == '*'
+      return false if route.host == '*' && route.domain.shared?
       FeatureFlag.raise_unless_enabled!('route_creation')
       route.space.developers.include?(context.user)
     end
@@ -15,7 +15,7 @@ module VCAP::CloudController
     def update?(route, params=nil)
       return true if admin_user?
       return false if route.in_suspended_org?
-      return false if route.host == '*'
+      return false if route.host == '*' && route.domain.shared?
       route.space.developers.include?(context.user)
     end
 

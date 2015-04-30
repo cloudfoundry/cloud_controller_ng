@@ -75,6 +75,16 @@ module VCAP::CloudController
       end
 
       it_behaves_like :read_only
+
+      it 'cant create wildcard routes' do
+        object.host = '*'
+        expect(subject.create?(object)).to be_falsey
+      end
+
+      it 'cant update wildcard routes' do
+        object.host = '*'
+        expect(subject.update?(object)).to be_falsey
+      end
     end
 
     context 'space developer' do
@@ -87,12 +97,28 @@ module VCAP::CloudController
 
       it 'can create wildcard routes' do
         object.host = '*'
-        expect(subject.create?(object)).to be_falsey
+        expect(subject.create?(object)).to be_truthy
       end
 
       it 'can update wildcard routes' do
         object.host = '*'
-        expect(subject.update?(object)).to be_falsey
+        expect(subject.update?(object)).to be_truthy
+      end
+
+      context 'in a shared domain' do
+        before do
+          object.domain = SharedDomain.make
+        end
+
+        it 'cant create wildcard routes for shared domain' do
+          object.host = '*'
+          expect(subject.create?(object)).to be_falsey
+        end
+
+        it 'cant update wildcard routes for shared domain' do
+          object.host = '*'
+          expect(subject.update?(object)).to be_falsey
+        end
       end
 
       context 'changing the space' do
