@@ -235,57 +235,71 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/services/:guid' do
-      context 'when the purge parameter is "true"'
+      let(:email) { 'admin@example.com' }
+
       let!(:service) { Service.make(:v2) }
       let!(:service_plan) { ServicePlan.make(service: service) }
       let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
       let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+      let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
 
-      before do
-        stub_request(:delete, /#{service.service_broker.broker_url}.*/).to_return(body: '', status: 200)
+      context 'when no purge parameter is given' do
+        it 'gives error info to user' do
+          delete "/v2/services/#{service.guid}", '{}', headers_for(admin_user, email: email)
+
+          expect(last_response).to have_status_code 400
+          expect(last_response.body).to match /AssociationNotEmpty/
+        end
       end
 
-      it 'creates a service delete event' do
-        email = 'admin@example.com'
-        delete "/v2/services/#{service.guid}?purge=true", '{}', headers_for(admin_user, email: email)
-        expect(last_response.status).to eq(204)
+      context 'when the purge parameter is "true"' do
+        before do
+          stub_request(:delete, /#{service.service_broker.broker_url}.*/).to_return(body: '', status: 200)
+        end
 
-        event = Event.all.last
-        expect(event.type).to eq('audit.service.delete')
-        expect(event.actor_type).to eq('user')
-        expect(event.timestamp).to be
-        expect(event.actor).to eq(admin_user.guid)
-        expect(event.actor_name).to eq(email)
-        expect(event.actee).to eq(service.guid)
-        expect(event.actee_type).to eq('service')
-        expect(event.actee_name).to eq(service.label)
-        expect(event.space_guid).to be_empty
-        expect(event.organization_guid).to be_empty
-        expect(event.metadata).to include({
-          'request' => {
-            'purge' => true,
-          }
-        })
-      end
+        it 'creates a service delete event' do
+          delete "/v2/services/#{service.guid}?purge=true", '{}', headers_for(admin_user, email: email)
+          expect(last_response.status).to eq(204)
 
-      it 'requires authentication' do
-        delete "/v2/services/#{service.guid}", '{}', headers_for(nil)
-        expect(last_response.status).to eq 401
-      end
+          event = Event.all.last
+          expect(event.type).to eq('audit.service.delete')
+          expect(event.actor_type).to eq('user')
+          expect(event.timestamp).to be
+          expect(event.actor).to eq(admin_user.guid)
+          expect(event.actor_name).to eq(email)
+          expect(event.actee).to eq(service.guid)
+          expect(event.actee_type).to eq('service')
+          expect(event.actee_name).to eq(service.label)
+          expect(event.space_guid).to be_empty
+          expect(event.organization_guid).to be_empty
+          expect(event.metadata).to include({
+            'request' => {
+              'purge' => true,
+            }
+          })
+        end
 
-      it 'deletes the service and its dependent models' do
-        delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
+        it 'requires authentication' do
+          delete "/v2/services/#{service.guid}", '{}', headers_for(nil)
+          expect(last_response.status).to eq 401
+        end
 
-        expect(last_response).to have_status_code(204)
-        expect(Service.first(guid: service.guid)).to be_nil
-        expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
-        expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil
-      end
+        it 'deletes the service and its dependent models' do
+          delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
 
-      it 'does not contact the broker' do
-        delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
+          expect(last_response).to have_status_code(204)
+          expect(Service.first(guid: service.guid)).to be_nil
+          expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
+          expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil
+          expect(ServiceBinding.first(guid: service_binding.guid)).to be_nil
+          expect(ServiceKey.first(guid: service_key.guid)).to be_nil
+        end
 
-        expect(a_request(:delete, /#{service.service_broker.broker_url}.*/)).not_to have_been_made
+        it 'does not contact the broker' do
+          delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
+
+          expect(a_request(:delete, /#{service.service_broker.broker_url}.*/)).not_to have_been_made
+        end
       end
     end
   end
