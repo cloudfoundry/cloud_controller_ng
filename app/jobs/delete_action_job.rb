@@ -8,6 +8,9 @@ module VCAP::CloudController
       end
 
       def perform
+        logger = Steno.logger('cc.background')
+        logger.info("Deleting model class '#{@model_class}' with guid '#{@guid}'")
+
         dataset = @model_class.where(guid: @guid)
         errors = @delete_action.delete(dataset)
         raise errors.first unless errors.empty?
