@@ -75,5 +75,24 @@ module VCAP::CloudController
         expect(service_key.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
       end
     end
+
+    describe 'user_visibility_filter' do
+      let!(:service_instance) { ManagedServiceInstance.make }
+      let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
+      let!(:other_key) { ServiceKey.make }
+      let(:developer) { make_developer_for_space(service_instance.space) }
+      let(:auditor) { make_auditor_for_space(service_instance.space) }
+      let(:other_user) { User.make }
+
+      it 'has the same rules as ServiceInstances' do
+        visible_to_developer = ServiceKey.user_visible(developer)
+        visible_to_auditor = ServiceKey.user_visible(auditor)
+        visible_to_other_user = ServiceKey.user_visible(other_user)
+
+        expect(visible_to_developer.all).to eq [service_key]
+        expect(visible_to_auditor.all).to eq [service_key]
+        expect(visible_to_other_user.all).to be_empty
+      end
+    end
   end
 end
