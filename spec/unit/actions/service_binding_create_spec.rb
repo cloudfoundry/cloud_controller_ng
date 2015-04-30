@@ -16,16 +16,111 @@ module VCAP::CloudController
         }
       end
 
-      before do
-        stub_v1_broker
-        credentials = { 'credentials' => '{}' }
-        stub_bind(service_instance, body: credentials.to_json)
+      context 'v2 service' do
+        before do
+          credentials = { 'credentials' => '{}' }
+          stub_bind(service_instance, body: credentials.to_json)
+        end
+
+        it 'creates a binding' do
+          ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+
+          expect(ServiceBinding.count).to eq(1)
+        end
+
+        it 'locks the instance by setting its state to `in progress` while the request is being processed' do
+          operation_state_during_request = nil
+          stub_bind(service_instance) do |req|
+            operation_state_during_request = service_instance.reload.last_operation.state
+            { status: 200, body: {}.to_json }
+          end
+
+          ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+          expect(operation_state_during_request).to eq 'in progress'
+          expect(service_instance.reload.last_operation).to be_nil
+        end
+
+        context 'and the bind request returns a syslog drain url' do
+          let(:syslog_service_instance) { ManagedServiceInstance.make(space: space, service_plan: syslog_service_plan )}
+          let(:syslog_service_plan) { ServicePlan.make(service: syslog_service) }
+          let(:syslog_service) { Service.make(:v2, requires: ['syslog_drain']) }
+          let(:syslog_binding_attrs) do
+            {
+              'service_instance_guid' => syslog_service_instance.guid,
+              'app_guid' => App.make(space: space).guid,
+            }
+          end
+
+          before do
+            stub_bind(service_instance, body: { syslog_drain_url: 'syslog.com/drain' }.to_json)
+            stub_bind(syslog_service_instance, body: { syslog_drain_url: 'syslog.com/drain' }.to_json)
+            stub_unbind_for_instance(service_instance)
+          end
+
+          it 'does not create a binding and raises an error for services that do not require syslog_drain' do
+            binding, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+
+            expect(errors.length).to eq 1
+            expect(errors.first.message).to match /not registered as a logging service/
+            expect(ServiceBinding.count).to eq(0)
+          end
+
+          it 'creates a binding for services that require syslog_drain' do
+            binding, errors = ServiceBindingCreate.new(logger).bind(syslog_service_instance, syslog_binding_attrs, {})
+
+            expect(errors).to be_empty
+            expect(binding).not_to be_nil
+            expect(ServiceBinding.count).to eq(1)
+          end
+        end
       end
 
-      it 'creates a binding' do
-        ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+      context 'v1 service' do
+        let(:service_instance) { ManagedServiceInstance.make(:v1, space: space)}
 
-        expect(ServiceBinding.count).to eq(1)
+        before do
+          stub_v1_broker
+        end
+
+        it 'creates a binding' do
+          binding, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+
+          expect(errors).to be_empty
+          expect(binding).not_to be_nil
+          expect(ServiceBinding.count).to eq(1)
+        end
+
+        context 'and the bind request returns a syslog drain url' do
+          let(:syslog_service_instance) { ManagedServiceInstance.make(space: space, service_plan: syslog_service_plan )}
+          let(:syslog_service_plan) { ServicePlan.make(service: syslog_service) }
+          let(:syslog_service) { Service.make(:v1, requires: ['syslog_drain']) }
+          let(:syslog_binding_attrs) do
+            {
+              'service_instance_guid' => syslog_service_instance.guid,
+              'app_guid' => App.make(space: space).guid,
+            }
+          end
+
+          before do
+            stub_v1_broker(syslog_drain_url: 'http://syslog.com/drain')
+          end
+
+          it 'does not create a binding and raises an error for services that do not require syslog_drain' do
+            binding, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+
+            expect(errors.length).to eq 1
+            expect(errors.first.message).to match /not registered as a logging service/
+            expect(ServiceBinding.count).to eq(0)
+          end
+
+          it 'creates a binding for services that require syslog_drain' do
+            binding, errors = ServiceBindingCreate.new(logger).bind(syslog_service_instance, syslog_binding_attrs, {})
+
+            expect(errors).to be_empty
+            expect(binding).not_to be_nil
+            expect(ServiceBinding.count).to eq(1)
+          end
+        end
       end
 
       describe 'orphan mitigation situations' do

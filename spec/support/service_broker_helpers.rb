@@ -25,14 +25,19 @@ module ServiceBrokerHelpers
     end
   end
 
-  def stub_bind(service_instance, opts={})
+  def stub_bind(service_instance, opts={}, &block)
     status = opts[:status] || 200
     body = opts[:body] || '{}'
 
     fake_service_binding = VCAP::CloudController::ServiceBinding.new(service_instance: service_instance, guid: '')
 
-    stub_request(:put, /#{service_binding_url(fake_service_binding)}[A-Za-z0-9-]+/).
-      to_return(status: status, body: body)
+    if block
+      stub_request(:put, /#{service_binding_url(fake_service_binding)}[A-Za-z0-9-]+/).
+        to_return(&block)
+    else
+      stub_request(:put, /#{service_binding_url(fake_service_binding)}[A-Za-z0-9-]+/).
+        to_return(status: status, body: body)
+    end
   end
 
   def stub_unbind(service_binding, opts={})
@@ -43,8 +48,17 @@ module ServiceBrokerHelpers
       to_return(status: status, body: body)
   end
 
+  def stub_unbind_for_instance(service_instance, opts={})
+    status = opts[:status] || 200
+    body = opts[:body] || '{}'
+
+    fake_service_binding = VCAP::CloudController::ServiceBinding.new(service_instance: service_instance, guid: '')
+
+    stub_request(:delete, /#{service_binding_url(fake_service_binding)}[A-Za-z0-9-]+/).
+      to_return(status: status, body: body)
+  end
+
   def provision_url_for_broker(broker, accepts_incomplete: nil)
-    guid_pattern = '[[:alnum:]-]+'
     query = "accepts_incomplete=#{accepts_incomplete}" if accepts_incomplete
     path = "/v2/service_instances/#{guid_pattern}"
 
@@ -92,6 +106,10 @@ module ServiceBrokerHelpers
     uri.to_s
   end
 
+  def guid_pattern
+    '[[:alnum:]-]+'
+  end
+
   def build_broker_url(client_attrs, relative_path=nil, query=nil)
     uri = URI(client_attrs.fetch(:url))
     uri.user = client_attrs.fetch(:auth_username)
@@ -101,7 +119,7 @@ module ServiceBrokerHelpers
     uri.to_s
   end
 
-  def stub_v1_broker
+  def stub_v1_broker(opts={})
     fake = double('HttpClient')
 
     allow(fake).to receive(:provision).and_return({
@@ -111,12 +129,13 @@ module ServiceBrokerHelpers
       'dashboard_url' => 'http://dashboard.example.com'
     })
 
-    allow(fake).to receive(:bind).and_return({
+    binding_response = {
       'service_id' => Sham.guid,
       'configuration' => 'CONFIGURATION',
-      'credentials' => Sham.service_credentials,
-      'syslog_drain_url' => 'http://syslog.example.com'
-    })
+      'credentials' => Sham.service_credentials
+    }
+    binding_response.merge!('syslog_drain_url' => opts[:syslog_drain_url]) if opts[:syslog_drain_url]
+    allow(fake).to receive(:bind).and_return(binding_response)
 
     allow(fake).to receive(:unbind)
     allow(fake).to receive(:deprovision)
