@@ -164,6 +164,10 @@ module VCAP::CloudController
             expect(config[:default_to_diego_backend]).to eq(true)
           end
 
+          it 'preserves the enable allow ssh configuration from the file' do
+            expect(config[:enable_allow_ssh]).to eq(true)
+          end
+
           it 'preserves the default_health_check_timeout value from the file' do
             expect(config[:default_health_check_timeout]).to eq(30)
           end

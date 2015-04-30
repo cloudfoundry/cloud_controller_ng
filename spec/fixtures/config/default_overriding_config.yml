@@ -149,6 +149,7 @@ allowed_cors_domains:
 users_can_select_backend: false
 diego_docker: true
 default_to_diego_backend: true
+enable_allow_ssh: true
 
 broker_client_timeout_seconds: 120
 broker_client_default_async_poll_interval_seconds: 120

@@ -152,6 +152,40 @@ module VCAP::CloudController
           expect(last_response.status).to eq(403)
         end
       end
+
+      context 'when allow_ssh is enabled globally' do
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return true
+        end
+
+        it 'allows allow_ssh to be set to true' do
+          post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: true)), json_headers(admin_headers)
+          expect(last_response.status).to eq(201)
+        end
+
+        it 'allows allow_ssh to be set to false' do
+          post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: false)), json_headers(admin_headers)
+          expect(last_response.status).to eq(201)
+        end
+      end
+
+      context 'when allow_ssh is disabled globally' do
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return false
+        end
+
+        it 'errors when attempting to set allow_ssh to true' do
+          post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: true)), json_headers(admin_headers)
+          expect(last_response.status).to eq(400)
+        end
+
+        it 'allows allow_ssh to be set to false' do
+          post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: false)), json_headers(admin_headers)
+          expect(last_response.status).to eq(201)
+        end
+      end
     end
 
     describe 'update app' do
@@ -184,6 +218,40 @@ module VCAP::CloudController
             expect(decoded_response['error_code']).to match(/FeatureDisabled/)
             expect(decoded_response['description']).to match(/app_scaling/)
           end
+        end
+      end
+
+      context 'when allow_ssh is enabled globally' do
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return true
+        end
+
+        it 'allows allow_ssh to be set to true' do
+          put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+          expect(last_response.status).to eq(201)
+        end
+
+        it 'allows allow_ssh to be set to false' do
+          put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+          expect(last_response.status).to eq(201)
+        end
+      end
+
+      context 'when allow_ssh is disabled globally' do
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return false
+        end
+
+        it 'errors when attempting to set allow_ssh to true' do
+          put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+          expect(last_response.status).to eq(400)
+        end
+
+        it 'allows allow_ssh to be set to false' do
+          put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+          expect(last_response.status).to eq(201)
         end
       end
 

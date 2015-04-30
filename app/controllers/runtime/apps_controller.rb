@@ -104,6 +104,26 @@ module VCAP::CloudController
 
     private
 
+    def before_create
+      verify_allow_ssh
+    end
+
+    def before_update(app)
+      verify_allow_ssh
+    end
+
+    def verify_allow_ssh
+      global_enable_allow_ssh = VCAP::CloudController::Config.config[:enable_allow_ssh]
+      app_allow_ssh = request_attrs['allow_ssh']
+
+      if !global_enable_allow_ssh && app_allow_ssh
+        raise VCAP::Errors::ApiError.new_from_details(
+          'InvalidRequest',
+          'allow_ssh must be false due to global allow_ssh setting',
+        )
+      end
+    end
+
     def after_create(app)
       record_app_create_value = @app_event_repository.record_app_create(
           app,
