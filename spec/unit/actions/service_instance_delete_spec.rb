@@ -54,7 +54,7 @@ module VCAP::CloudController
 
       it 'defaults accepts_incomplete to false' do
         service_instance_delete.delete([service_instance_1])
-        broker_url = service_instance_deprovision_url(service_instance_1)
+        broker_url = deprovision_url(service_instance_1)
         expect(a_request(:delete, broker_url)).to have_been_made
       end
 
@@ -86,7 +86,7 @@ module VCAP::CloudController
 
         it 'passes the accepts_incomplete flag to the client call' do
           service_instance_delete.delete([service_instance])
-          broker_url = service_instance_deprovision_url(service_instance, accepts_incomplete: true)
+          broker_url = deprovision_url(service_instance, accepts_incomplete: true)
           expect(a_request(:delete, broker_url)).to have_been_made
         end
 
@@ -151,7 +151,7 @@ module VCAP::CloudController
 
           service_binding_1.reload
 
-          expect(a_request(:delete, service_instance_unbind_url(service_binding_1))).
+          expect(a_request(:delete, unbind_url(service_binding_1))).
             to have_been_made.times(1)
           expect(service_binding_1.as_json).to eq(original_attrs)
 
@@ -176,7 +176,7 @@ module VCAP::CloudController
 
           service_instance_1.reload
 
-          expect(a_request(:delete, service_instance_deprovision_url(service_instance_1))).
+          expect(a_request(:delete, deprovision_url(service_instance_1))).
             to have_been_made.times(1)
           expect(service_instance_1.last_operation.type).to eq('delete')
           expect(service_instance_1.last_operation.state).to eq('failed')
@@ -245,8 +245,8 @@ module VCAP::CloudController
           expect(service_instance_1.exists?).to be_falsey
           expect(service_instance_2.exists?).to be_truthy
 
-          broker_url_1 = service_instance_deprovision_url(service_instance_1, accepts_incomplete: nil)
-          broker_url_2 = service_instance_deprovision_url(service_instance_2, accepts_incomplete: nil)
+          broker_url_1 = deprovision_url(service_instance_1, accepts_incomplete: nil)
+          broker_url_2 = deprovision_url(service_instance_2, accepts_incomplete: nil)
           expect(a_request(:delete, broker_url_1)).to have_been_made
           expect(a_request(:delete, broker_url_2)).not_to have_been_made
         end

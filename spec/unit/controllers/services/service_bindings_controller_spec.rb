@@ -564,7 +564,7 @@ module VCAP::CloudController
       end
 
       it 'disallows other operations on the service instance while unbinding is in progress' do
-        stub_request(:delete, service_instance_unbind_url(service_binding)).to_return do |_|
+        stub_request(:delete, unbind_url(service_binding)).to_return do |_|
           put "/v2/service_instances/#{service_binding.service_instance.guid}", { plan_id: 34 }.to_json, admin_headers
           expect(last_response).to have_status_code 409
           expect(last_response.body).to match /AsyncServiceInstanceOperationInProgress/
@@ -641,7 +641,7 @@ module VCAP::CloudController
         end
 
         it 'disallows other operations on the service instance while unbinding is in progress' do
-          stub_request(:delete, service_instance_unbind_url(service_binding)).to_return do |_|
+          stub_request(:delete, unbind_url(service_binding)).to_return do |_|
             put "/v2/service_instances/#{service_binding.service_instance.guid}", { plan_id: 34 }.to_json, admin_headers
             expect(last_response).to have_status_code 409
             expect(last_response.body).to match /AsyncServiceInstanceOperationInProgress/

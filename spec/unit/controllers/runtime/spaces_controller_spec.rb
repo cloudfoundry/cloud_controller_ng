@@ -743,7 +743,7 @@ module VCAP::CloudController
             before do
               stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
 
-              instance_url = remove_basic_auth(service_instance_deprovision_url(service_instance_2))
+              instance_url = remove_basic_auth(deprovision_url(service_instance_2))
 
               @expected_description = "Deletion of space #{space.name} failed because one or more resources within could not be deleted.
 

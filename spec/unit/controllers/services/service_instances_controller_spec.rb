@@ -1092,7 +1092,7 @@ module VCAP::CloudController
             before do
               put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
 
-              stub_request(:get, service_instance_fetch_url(service_instance)).
+              stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 410, body: {}.to_json)
             end
 
@@ -1110,7 +1110,7 @@ module VCAP::CloudController
             before do
               put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
 
-              stub_request(:get, service_instance_fetch_url(service_instance)).
+              stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
                     state: 'succeeded',
                     description: 'Phew, all done'
@@ -1608,7 +1608,7 @@ module VCAP::CloudController
               broker_uri = URI.parse(broker.broker_url)
               broker_uri.user = broker.auth_username
               broker_uri.password = broker.auth_password
-              stub_request(:get, service_instance_fetch_url(service_instance)).
+              stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
                   state: 'succeeded',
                   description: 'Done!'
@@ -1637,7 +1637,7 @@ module VCAP::CloudController
             it 'enqueues a polling job to fetch state from the broker' do
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
-              stub_request(:get, service_instance_fetch_url(service_instance)).
+              stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
                   last_operation: {
                     state: 'in progress',
@@ -1654,7 +1654,7 @@ module VCAP::CloudController
             context 'when the broker successfully fetches updated information about the instance' do
               before do
                 delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
-                stub_request(:get, service_instance_fetch_url(service_instance)).
+                stub_request(:get, last_operation_state_url(service_instance)).
                   to_return(status: 200, body: {
                       state: 'in progress',
                       description: 'still going'

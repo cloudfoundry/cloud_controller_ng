@@ -1,6 +1,6 @@
 module ServiceBrokerHelpers
   def stub_provision(broker, opts={}, &block)
-    url = service_instance_provision_url(broker, accepts_incomplete: opts[:accepts_incomplete])
+    url = provision_url_for_broker(broker, accepts_incomplete: opts[:accepts_incomplete])
     status = opts[:status] || 201
     body = opts[:body] || '{}'
     if block
@@ -15,7 +15,7 @@ module ServiceBrokerHelpers
     body = opts[:body] || '{}'
     accepts_incomplete = opts[:accepts_incomplete]
 
-    url = service_instance_deprovision_url(service_instance, accepts_incomplete: accepts_incomplete)
+    url = deprovision_url(service_instance, accepts_incomplete: accepts_incomplete)
 
     if block
       stub_request(:delete, url).to_return(&block)
@@ -39,11 +39,11 @@ module ServiceBrokerHelpers
     status = opts[:status] || 200
     body = opts[:body] || '{}'
 
-    stub_request(:delete, service_instance_unbind_url(service_binding)).
+    stub_request(:delete, unbind_url(service_binding)).
       to_return(status: status, body: body)
   end
 
-  def service_instance_provision_url(broker, accepts_incomplete: nil)
+  def provision_url_for_broker(broker, accepts_incomplete: nil)
     guid_pattern = '[[:alnum:]-]+'
     query = "accepts_incomplete=#{accepts_incomplete}" if accepts_incomplete
     path = "/v2/service_instances/#{guid_pattern}"
@@ -51,14 +51,14 @@ module ServiceBrokerHelpers
     /#{build_broker_url(broker.client.attrs)}#{path}(\?#{query})?/
   end
 
-  def service_instance_unbind_url(service_binding)
+  def unbind_url(service_binding)
     plan = service_binding.service_instance.service_plan
     service = plan.service
     query = "plan_id=#{plan.unique_id}&service_id=#{service.unique_id}"
     service_binding_url(service_binding, query)
   end
 
-  def service_instance_deprovision_url(service_instance, accepts_incomplete: nil)
+  def deprovision_url(service_instance, accepts_incomplete: nil)
     plan = service_instance.service_plan
     service = plan.service
 
@@ -68,16 +68,8 @@ module ServiceBrokerHelpers
     service_instance_url(service_instance, query)
   end
 
-  def service_instance_fetch_url(service_instance)
+  def last_operation_state_url(service_instance)
     "#{service_instance_url(service_instance)}/last_operation"
-  end
-
-  def remove_basic_auth(url)
-    uri = URI(url)
-    uri.user = nil
-    uri.password = nil
-    uri.query = nil
-    uri.to_s
   end
 
   def service_instance_url(service_instance, query=nil)
@@ -90,6 +82,14 @@ module ServiceBrokerHelpers
     path = "/v2/service_instances/#{service_instance.guid}"
     path += "/service_bindings/#{service_binding.guid}"
     build_broker_url(service_instance.client.attrs, path, query)
+  end
+
+  def remove_basic_auth(url)
+    uri = URI(url)
+    uri.user = nil
+    uri.password = nil
+    uri.query = nil
+    uri.to_s
   end
 
   def build_broker_url(client_attrs, relative_path=nil, query=nil)
