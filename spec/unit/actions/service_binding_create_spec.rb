@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         context 'and the bind request returns a syslog drain url' do
-          let(:syslog_service_instance) { ManagedServiceInstance.make(space: space, service_plan: syslog_service_plan )}
+          let(:syslog_service_instance) { ManagedServiceInstance.make(space: space, service_plan: syslog_service_plan) }
           let(:syslog_service_plan) { ServicePlan.make(service: syslog_service) }
           let(:syslog_service) { Service.make(:v2, requires: ['syslog_drain']) }
           let(:syslog_binding_attrs) do
@@ -58,7 +58,7 @@ module VCAP::CloudController
           end
 
           it 'does not create a binding and raises an error for services that do not require syslog_drain' do
-            binding, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+            _, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
 
             expect(errors.length).to eq 1
             expect(errors.first.message).to match /not registered as a logging service/
@@ -76,7 +76,7 @@ module VCAP::CloudController
       end
 
       context 'v1 service' do
-        let(:service_instance) { ManagedServiceInstance.make(:v1, space: space)}
+        let(:service_instance) { ManagedServiceInstance.make(:v1, space: space) }
 
         before do
           stub_v1_broker
@@ -91,7 +91,7 @@ module VCAP::CloudController
         end
 
         context 'and the bind request returns a syslog drain url' do
-          let(:syslog_service_instance) { ManagedServiceInstance.make(space: space, service_plan: syslog_service_plan )}
+          let(:syslog_service_instance) { ManagedServiceInstance.make(space: space, service_plan: syslog_service_plan) }
           let(:syslog_service_plan) { ServicePlan.make(service: syslog_service) }
           let(:syslog_service) { Service.make(:v1, requires: ['syslog_drain']) }
           let(:syslog_binding_attrs) do
@@ -106,7 +106,7 @@ module VCAP::CloudController
           end
 
           it 'does not create a binding and raises an error for services that do not require syslog_drain' do
-            binding, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+            _, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
 
             expect(errors.length).to eq 1
             expect(errors.first.message).to match /not registered as a logging service/
