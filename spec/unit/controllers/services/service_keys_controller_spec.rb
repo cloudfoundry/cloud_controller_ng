@@ -12,11 +12,11 @@ module VCAP::CloudController
       end
     end
 
-    CREDENTIALS = { 'foo' => 'bar' }
+    let(:credentials) { { 'foo' => 'bar' } }
 
     let(:guid_pattern) { '[[:alnum:]-]+' }
     let(:bind_status) { 200 }
-    let(:bind_body) { { credentials: CREDENTIALS } }
+    let(:bind_body) { { credentials: credentials } }
     let(:unbind_status) { 200 }
     let(:unbind_body) { {} }
 
@@ -176,7 +176,7 @@ module VCAP::CloudController
           post '/v2/service_keys', req, json_headers(headers_for(developer))
           expect(last_response).to have_status_code(201)
           service_key = ServiceKey.last
-          expect(service_key.credentials).to eq(CREDENTIALS)
+          expect(service_key.credentials).to eq(credentials)
         end
 
         it 'creates an audit event after a service key created' do

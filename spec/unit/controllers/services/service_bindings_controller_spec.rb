@@ -27,8 +27,6 @@ module VCAP::CloudController
       end
     end
 
-    CREDENTIALS = { 'foo' => 'bar' }
-
     def fake_app_staging(app)
       app.package_hash = 'abc'
       app.droplet_hash = 'def'
@@ -38,9 +36,12 @@ module VCAP::CloudController
 
     let(:guid_pattern) { '[[:alnum:]-]+' }
     let(:bind_status) { 200 }
-    let(:bind_body) { { credentials: CREDENTIALS } }
+    let(:bind_body) { { credentials: credentials } }
     let(:unbind_status) { 200 }
     let(:unbind_body) { {} }
+    let(:credentials) do
+      { 'foo' => 'bar' }
+    end
 
     def broker_url(broker)
       base_broker_uri = URI.parse(broker.broker_url)
@@ -210,7 +211,7 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(201)
 
           binding = ServiceBinding.last
-          expect(binding.credentials).to eq(CREDENTIALS)
+          expect(binding.credentials).to eq(credentials)
         end
 
         it 'creates an audit event upon binding' do
@@ -470,7 +471,7 @@ module VCAP::CloudController
             {
                'service_id' => Sham.guid,
                'configuration' => 'CONFIGURATION',
-               'credentials' => CREDENTIALS,
+               'credentials' => credentials,
              }
           )
           allow(VCAP::Services::ServiceBrokers::V1::HttpClient).to receive(:new).and_return(fake_client)
@@ -489,7 +490,7 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(201)
 
           binding = ServiceBinding.last
-          expect(binding.credentials).to eq(CREDENTIALS)
+          expect(binding.credentials).to eq(credentials)
         end
 
         context 'and the client provides arbitrary params' do
