@@ -6,7 +6,6 @@ module VCAP::CloudController
     let(:req_body) { '' }
     let(:params) { {} }
     let(:process_presenter) { double(:process_presenter) }
-    let(:app_model) { nil }
     let(:membership) { double(:membership) }
     let(:controller) do
       AppsProcessesController.new(
@@ -21,14 +20,11 @@ module VCAP::CloudController
         },
       )
     end
-    let(:process_response) { 'process_response_body' }
 
     before do
       allow(logger).to receive(:debug)
-      allow(process_presenter).to receive(:present_json_list).and_return(process_response)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       allow(controller).to receive(:membership).and_return(membership)
-      allow(controller).to receive(:check_read_permissions!).and_return(nil)
       allow(controller).to receive(:current_user).and_return(User.make)
     end
 
@@ -39,6 +35,11 @@ module VCAP::CloudController
       let(:guid) { app_model.guid }
       let(:list_response) { 'list_response' }
 
+      before do
+        allow(process_presenter).to receive(:present_json_list).and_return(list_response)
+        allow(controller).to receive(:check_read_permissions!)
+      end
+
       it 'returns a 200 and presents the response' do
         app_model.add_process(App.make(space: space))
         app_model.add_process(App.make(space: space))
@@ -48,7 +49,7 @@ module VCAP::CloudController
         response_code, response = controller.list_processes(guid)
         expect(response_code).to eq 200
 
-        expect(response).to eq(process_response)
+        expect(response).to eq(list_response)
         expect(process_presenter).to have_received(:present_json_list).
             with(an_instance_of(PaginatedResult), "/v3/apps/#{guid}/processes") do |result|
               expect(result.total).to eq(2)
@@ -285,6 +286,86 @@ module VCAP::CloudController
 
           expect(membership).to have_received(:has_any_roles?).with(
               [Membership::SPACE_DEVELOPER], process.space.guid)
+        end
+      end
+    end
+
+    describe '#show' do
+      let(:app) { AppModel.make }
+      let(:space) { app.space }
+      let(:org) { space.organization }
+      let(:process) { App.make(app_guid: app.guid, space_guid: space.guid) }
+      let(:expected_response) { 'some response' }
+
+      before do
+        allow(controller).to receive(:check_read_permissions!)
+        allow(process_presenter).to receive(:present_json).and_return(expected_response)
+      end
+
+      it 'returns 200 OK and the process' do
+        code, response = controller.show(app.guid, process.type)
+
+        expect(code).to eq(HTTP::OK)
+        expect(response).to eq(expected_response)
+        expect(process_presenter).to have_received(:present_json).with(process)
+      end
+
+      context 'when the user does not have read permissions' do
+        it 'raises an ApiError with a 403 code' do
+          expect(controller).to receive(:check_read_permissions!).
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+          expect {
+            controller.show(app.guid, process.type)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+        end
+      end
+
+      context 'when the app does not exist' do
+        it 'raises an ApiError with a 404 code' do
+          expect {
+            controller.show('not-real', process.type)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.message).to eq 'App not found'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the process does not exist' do
+        it 'raises an ApiError with a 404 code' do
+          expect {
+            controller.show(app.guid, 'not-real')
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.message).to eq 'Process not found'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the user cannot read the process due to roles' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'raises 404' do
+          expect {
+            controller.show(app.guid, process.type)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq(404)
+            expect(error.message).to eq 'App not found'
+          end
+
+          expect(membership).to have_received(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], process.space.guid, process.space.organization.guid)
         end
       end
     end

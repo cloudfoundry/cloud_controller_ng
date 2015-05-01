@@ -154,6 +154,28 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the user cannot read the process due to roles' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'raises 404' do
+          expect {
+            processes_controller.show(guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq(404)
+            expect(error.message).to eq 'Process not found'
+          end
+
+          expect(membership).to have_received(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], process.space.guid, process.space.organization.guid)
+        end
+      end
     end
 
     describe '#update' do

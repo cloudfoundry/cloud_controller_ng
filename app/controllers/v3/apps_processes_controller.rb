@@ -27,6 +27,19 @@ module VCAP::CloudController
       [HTTP::OK, @process_presenter.present_json_list(paginated_result, "/v3/apps/#{guid}/processes")]
     end
 
+    get '/v3/apps/:guid/processes/:type', :show
+    def show(app_guid, type)
+      check_read_permissions!
+
+      app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
+      app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
+
+      process = app.processes_dataset.where(type: type).first
+      process_not_found! if process.nil?
+
+      [HTTP::OK, @process_presenter.present_json(process)]
+    end
+
     put '/v3/apps/:guid/processes/:type/scale', :scale
     def scale(app_guid, type)
       check_write_permissions!
@@ -39,6 +52,7 @@ module VCAP::CloudController
 
       app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
       app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
+
       process = app.processes_dataset.where(type: type).first
       process_not_found! if process.nil?
       unauthorized! if !can_scale?(app.space.guid)
