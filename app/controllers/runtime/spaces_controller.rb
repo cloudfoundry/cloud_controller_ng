@@ -9,6 +9,7 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :name, String
+      attribute :allow_ssh, Message::Boolean, default: true
 
       to_one :organization
       to_many :developers

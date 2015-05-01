@@ -16,6 +16,7 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_creatable_attributes({
           name:                   { type: 'string', required: true },
+          allow_ssh:              { type: 'bool', default: true },
           organization_guid:      { type: 'string', required: true },
           developer_guids:        { type: '[string]' },
           manager_guids:          { type: '[string]' },
@@ -30,6 +31,7 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_updatable_attributes({
           name:                   { type: 'string' },
+          allow_ssh:              { type: 'bool' },
           organization_guid:      { type: 'string' },
           developer_guids:        { type: '[string]' },
           manager_guids:          { type: '[string]' },
@@ -537,7 +539,7 @@ module VCAP::CloudController
         event = Event.find(type: 'audit.space.create', actee: new_space_guid)
         expect(event).not_to be_nil
         expect(event.actor_name).to eq(SecurityContext.current_user_email)
-        expect(event.metadata['request']).to eq('organization_guid' => organization.guid, 'name' => 'space_name')
+        expect(event.metadata['request']).to include('organization_guid' => organization.guid, 'name' => 'space_name')
       end
 
       it 'logs audit.space.update when updating a space' do

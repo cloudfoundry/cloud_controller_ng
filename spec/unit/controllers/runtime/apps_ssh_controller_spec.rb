@@ -138,6 +138,27 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the space allow_ssh is set to false' do
+        before do
+          space.allow_ssh = false
+          space.save
+        end
+
+        it 'returns a 400' do
+          get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+          expect(last_response.status).to eq(400)
+        end
+
+        it 'creates an audit event recording this ssh failure' do
+          expect {
+            get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+          }.to change { Event.count }.by(1)
+          event = Event.last
+          expect(event.type).to eq('audit.app.ssh-unauthorized')
+          expect(event.actor).to eq(user.guid)
+        end
+      end
+
       context 'when the global enable_allow_ssh is set to false' do
         before do
           allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return false
