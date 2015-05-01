@@ -165,7 +165,7 @@ module VCAP::CloudController
           end
 
           it 'preserves the enable allow ssh configuration from the file' do
-            expect(config[:enable_allow_ssh]).to eq(true)
+            expect(config[:allow_app_ssh_access]).to eq(true)
           end
 
           it 'preserves the default_health_check_timeout value from the file' do

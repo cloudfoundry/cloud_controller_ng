@@ -115,7 +115,7 @@ module VCAP::CloudController
 
     def verify_enable_ssh(space)
       app_enable_ssh = request_attrs['enable_ssh']
-      global_allow_ssh = VCAP::CloudController::Config.config[:enable_allow_ssh]
+      global_allow_ssh = VCAP::CloudController::Config.config[:allow_app_ssh_access]
       ssh_allowed = global_allow_ssh && space.allow_ssh
 
       if app_enable_ssh && !ssh_allowed

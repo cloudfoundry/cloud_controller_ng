@@ -13,7 +13,7 @@ module VCAP::CloudController
       space.organization.add_user(user)
       space.add_developer(user)
       allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-      allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return true
+      allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return true
     end
 
     describe 'GET /internal/apps/:guid/ssh_access' do
@@ -159,9 +159,9 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the global enable_allow_ssh is set to false' do
+      context 'when the global allow_app_ssh_access is set to false' do
         before do
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return false
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return false
         end
 
         it 'returns a 400' do

@@ -156,7 +156,7 @@ module VCAP::CloudController
       context 'when allow_ssh is enabled globally' do
         before do
           allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return true
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return true
         end
 
         context 'when allow_ssh is enabled on the space' do
@@ -197,7 +197,7 @@ module VCAP::CloudController
       context 'when allow_ssh is disabled globally' do
         before do
           allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return false
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return false
         end
 
         context 'when allow_ssh is enabled on the space' do
@@ -272,7 +272,7 @@ module VCAP::CloudController
       context 'when allow_ssh is enabled globally' do
         before do
           allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return true
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return true
         end
 
         context 'when allow_ssh is enabled on the space' do
@@ -313,7 +313,7 @@ module VCAP::CloudController
       context 'when allow_ssh is disabled globally' do
         before do
           allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:enable_allow_ssh).and_return false
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return false
         end
 
         context 'when allow_ssh is enabled on the space' do

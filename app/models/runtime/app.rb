@@ -140,7 +140,7 @@ module VCAP::CloudController
       self.stack ||= Stack.default
       self.memory ||= Config.config[:default_app_memory]
       self.disk_quota ||= Config.config[:default_app_disk_in_mb]
-      self.enable_ssh = Config.config[:enable_allow_ssh] && space.allow_ssh if enable_ssh.nil?
+      self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
 
       if Config.config[:instance_file_descriptor_limit]
         self.file_descriptors ||= Config.config[:instance_file_descriptor_limit]

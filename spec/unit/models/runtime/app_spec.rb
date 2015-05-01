@@ -1688,7 +1688,7 @@ module VCAP::CloudController
 
         context 'when global allow_ssh config is true' do
           before do
-            TestConfig.override({ enable_allow_ssh: true })
+            TestConfig.override({ allow_app_ssh_access: true })
           end
 
           context 'when space allow_ssh config is true' do
@@ -1716,7 +1716,7 @@ module VCAP::CloudController
 
         context 'when global allow_ssh config is false' do
           before do
-            TestConfig.override({ enable_allow_ssh: false })
+            TestConfig.override({ allow_app_ssh_access: false })
           end
 
           it 'sets enable_ssh to false' do
