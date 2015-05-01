@@ -1446,7 +1446,7 @@ module VCAP::CloudController
 
         it 'should update the version when changing allow_ssh' do
           expect {
-            app.update(allow_ssh: true)
+            app.update(allow_ssh: !app.allow_ssh)
           }.to change { app.version }
         end
       end
@@ -1673,6 +1673,57 @@ module VCAP::CloudController
         expect {
           App.create_from_hash(name: 'awesome app', space_guid: space.guid)
         }.not_to change { AppUsageEvent.count }
+      end
+
+      describe 'default allow_ssh' do
+        context 'when allow_ssh is set explicitly' do
+          it 'does not overwrite it with the default' do
+            app1 = App.create_from_hash(name: 'awesome app 1', space_guid: space.guid, allow_ssh: true)
+            expect(app1.allow_ssh).to eq(true)
+
+            app2 = App.create_from_hash(name: 'awesome app 2', space_guid: space.guid, allow_ssh: false)
+            expect(app2.allow_ssh).to eq(false)
+          end
+        end
+
+        context 'when global allow_ssh config is true' do
+          before do
+            TestConfig.override({ enable_allow_ssh: true })
+          end
+
+          context 'when space allow_ssh config is true' do
+            before do
+              space.update(allow_ssh: true)
+            end
+
+            it 'sets allow_ssh to true' do
+              app = App.create_from_hash(name: 'awesome app', space_guid: space.guid)
+              expect(app.allow_ssh).to eq(true)
+            end
+          end
+
+          context 'when space allow_ssh config is false' do
+            before do
+              space.update(allow_ssh: false)
+            end
+
+            it 'sets allow_ssh to false' do
+              app = App.create_from_hash(name: 'awesome app', space_guid: space.guid)
+              expect(app.allow_ssh).to eq(false)
+            end
+          end
+        end
+
+        context 'when global allow_ssh config is false' do
+          before do
+            TestConfig.override({ enable_allow_ssh: false })
+          end
+
+          it 'sets allow_ssh to false' do
+            app = App.create_from_hash(name: 'awesome app', space_guid: space.guid)
+            expect(app.allow_ssh).to eq(false)
+          end
+        end
       end
 
       describe 'default_app_memory' do
