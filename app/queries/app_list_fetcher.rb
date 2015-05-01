@@ -1,3 +1,6 @@
+require 'cloud_controller/paging/sequel_paginator'
+require 'cloud_controller/paging/paginated_result'
+
 module VCAP::CloudController
   class AppListFetcher
     def fetch_all(pagination_options, facets)

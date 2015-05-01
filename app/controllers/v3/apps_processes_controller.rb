@@ -1,5 +1,4 @@
 require 'presenters/v3/process_presenter'
-require 'handlers/apps_handler'
 require 'cloud_controller/paging/pagination_options'
 
 module VCAP::CloudController

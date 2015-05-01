@@ -10,6 +10,12 @@ module VCAP::CloudController
       end
     end
 
+    class HashValidator < ActiveModel::EachValidator
+      def validate_each(record, attribute, value)
+        record.errors.add attribute, 'must be a hash' unless value.is_a?(Hash)
+      end
+    end
+
     class GuidValidator < ActiveModel::EachValidator
       def validate_each(record, attribute, value)
         record.errors.add attribute, 'must be a string' unless value.is_a?(String)

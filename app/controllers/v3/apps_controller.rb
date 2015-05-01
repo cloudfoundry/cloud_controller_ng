@@ -11,6 +11,7 @@ require 'actions/app_stop'
 require 'actions/app_create'
 require 'queries/assign_current_droplet_fetcher'
 require 'actions/set_current_droplet'
+require 'messages/app_create_message'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
@@ -21,7 +22,7 @@ module VCAP::CloudController
     end
 
     def inject_dependencies(dependencies)
-      @app_presenter     = dependencies[:app_presenter]
+      @app_presenter = dependencies[:app_presenter]
     end
 
     get '/v3/apps', :list
@@ -32,7 +33,6 @@ module VCAP::CloudController
       pagination_options = PaginationOptions.from_params(params)
       facets = params.slice('guids', 'space_guids', 'organization_guids', 'names')
 
-      paginated_apps = []
       if membership.admin?
         paginated_apps = AppListFetcher.new.fetch_all(pagination_options, facets)
       else
@@ -59,8 +59,10 @@ module VCAP::CloudController
     post '/v3/apps', :create
     def create
       check_write_permissions!
-      message = AppCreateMessage.create_from_http_request(body)
-      bad_request!(message.error) if message.error
+
+      request = parse_and_validate_json(body)
+      message = AppCreateMessage.create_from_http_request(request)
+      unprocessable!(message.errors.full_messages) unless message.valid?
 
       space_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], message.space_guid)
 

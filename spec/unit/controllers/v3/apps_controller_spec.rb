@@ -6,9 +6,6 @@ module VCAP::CloudController
     let(:user) { User.make }
     let(:req_body) { '' }
     let(:params) { {} }
-    let(:package_handler) { double(:package_handler) }
-    let(:package_presenter) { double(:package_presenter) }
-    let(:apps_handler) { double(:apps_handler) }
     let(:app_model) { nil }
     let(:app_presenter) { double(:app_presenter) }
     let(:membership) { double(:membership) }
@@ -21,10 +18,7 @@ module VCAP::CloudController
         req_body,
         nil,
         {
-          apps_handler:      apps_handler,
           app_presenter:     app_presenter,
-          packages_handler:  package_handler,
-          package_presenter: package_presenter
         },
       )
     end
@@ -35,7 +29,6 @@ module VCAP::CloudController
       allow(apps_controller).to receive(:membership).and_return(membership)
       allow(apps_controller).to receive(:current_user).and_return(User.make)
       allow(membership).to receive(:has_any_roles?).and_return(true)
-      allow(apps_handler).to receive(:show).and_return(app_model)
       allow(app_presenter).to receive(:present_json).and_return(app_response)
     end
 
@@ -230,6 +223,19 @@ module VCAP::CloudController
           }.to raise_error do |error|
             expect(error.name).to eq 'MessageParseError'
             expect(error.response_code).to eq 400
+          end
+        end
+      end
+
+      context 'when the request has invalid data' do
+        let(:req_body) { '{ "name": false }' }
+
+        it 'returns an UnprocessableEntity error' do
+          expect {
+            apps_controller.create
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq(422)
           end
         end
       end

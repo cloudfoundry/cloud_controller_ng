@@ -176,10 +176,6 @@ module CloudController
       ProcessPresenter.new
     end
 
-    def apps_handler
-      AppsHandler.new
-    end
-
     def app_presenter
       AppPresenter.new
     end

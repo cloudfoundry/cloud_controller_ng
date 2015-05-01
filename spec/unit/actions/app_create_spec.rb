@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'messages/app_create_message'
 
 module VCAP::CloudController
   describe AppCreate do
@@ -12,7 +13,7 @@ module VCAP::CloudController
       let(:environment_variables) { { 'BAKED' => 'POTATO' } }
 
       it 'create an app' do
-        message = AppCreateMessage.new('name' => 'my-app', 'space_guid' => space_guid, 'environment_variables' => environment_variables)
+        message = AppCreateMessage.new(name: 'my-app', space_guid: space_guid, environment_variables: environment_variables)
         app = app_create.create(message)
         expect(app.name).to eq('my-app')
         expect(app.space).to eq(space)
@@ -27,7 +28,7 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        message = AppCreateMessage.new('name' => 'my-app', 'space_guid' => space_guid, 'environment_variables' => environment_variables)
+        message = AppCreateMessage.new(name: 'my-app', space_guid: space_guid, environment_variables: environment_variables)
         expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_create).with(
             instance_of(AppModel),
             space,
