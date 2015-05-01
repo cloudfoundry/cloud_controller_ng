@@ -46,13 +46,13 @@ module VCAP::CloudController
                       :state, :version, :command, :console, :debug, :staging_task_id,
                       :package_state, :health_check_type, :health_check_timeout,
                       :staging_failed_reason, :diego, :docker_image, :package_updated_at,
-                      :detected_start_command, :allow_ssh
+                      :detected_start_command, :enable_ssh
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
                       :state, :command, :console, :debug, :staging_task_id,
                       :service_binding_guids, :route_guids, :health_check_type,
-                      :health_check_timeout, :diego, :docker_image, :app_guid, :allow_ssh
+                      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh
 
     strip_attributes :name
 
@@ -140,7 +140,7 @@ module VCAP::CloudController
       self.stack ||= Stack.default
       self.memory ||= Config.config[:default_app_memory]
       self.disk_quota ||= Config.config[:default_app_disk_in_mb]
-      self.allow_ssh = Config.config[:enable_allow_ssh] && space.allow_ssh if allow_ssh.nil?
+      self.enable_ssh = Config.config[:enable_allow_ssh] && space.allow_ssh if enable_ssh.nil?
 
       if Config.config[:instance_file_descriptor_limit]
         self.file_descriptors ||= Config.config[:instance_file_descriptor_limit]
@@ -164,14 +164,14 @@ module VCAP::CloudController
       # * transitioning to STARTED
       # * memory is changed
       # * health check type is changed
-      # * allow_ssh is changed
+      # * enable_ssh is changed
       #
       # this is to indicate that the running state of an application has changed,
       # and that the system should converge on this new version.
       (column_changed?(:state) ||
        column_changed?(:memory) ||
        column_changed?(:health_check_type) ||
-       column_changed?(:allow_ssh)) && started?
+       column_changed?(:enable_ssh)) && started?
     end
 
     def set_new_version

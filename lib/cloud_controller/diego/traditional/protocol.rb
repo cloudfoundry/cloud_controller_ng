@@ -64,7 +64,7 @@ module VCAP::CloudController
             'health_check_timeout_in_seconds' => app.health_check_timeout || default_health_check_timeout,
             'egress_rules' => @common_protocol.running_egress_rules(app),
             'etag' => app.updated_at.to_f.to_s,
-            'allow_ssh' => app.allow_ssh,
+            'allow_ssh' => app.enable_ssh,
           }
 
           message

@@ -158,8 +158,8 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the allow_ssh flag on the app has changed' do
-        let(:previous_changes) { { allow_ssh: true } }
+      context 'when the enable_ssh flag on the app has changed' do
+        let(:previous_changes) { { enable_ssh: true } }
 
         context 'if the app has not been started' do
           let(:app_started) { false }

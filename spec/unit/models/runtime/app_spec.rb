@@ -409,7 +409,7 @@ module VCAP::CloudController
     describe 'Serialization' do
       it {
         is_expected.to export_attributes(
-          :allow_ssh,
+          :enable_ssh,
           :buildpack,
           :command,
           :console,
@@ -439,7 +439,7 @@ module VCAP::CloudController
 
       it {
         is_expected.to import_attributes(
-          :allow_ssh,
+          :enable_ssh,
           :app_guid,
           :buildpack,
           :command,
@@ -1444,9 +1444,9 @@ module VCAP::CloudController
           end
         end
 
-        it 'should update the version when changing allow_ssh' do
+        it 'should update the version when changing enable_ssh' do
           expect {
-            app.update(allow_ssh: !app.allow_ssh)
+            app.update(enable_ssh: !app.enable_ssh)
           }.to change { app.version }
         end
       end
@@ -1675,14 +1675,14 @@ module VCAP::CloudController
         }.not_to change { AppUsageEvent.count }
       end
 
-      describe 'default allow_ssh' do
-        context 'when allow_ssh is set explicitly' do
+      describe 'default enable_ssh' do
+        context 'when enable_ssh is set explicitly' do
           it 'does not overwrite it with the default' do
-            app1 = App.create_from_hash(name: 'awesome app 1', space_guid: space.guid, allow_ssh: true)
-            expect(app1.allow_ssh).to eq(true)
+            app1 = App.create_from_hash(name: 'awesome app 1', space_guid: space.guid, enable_ssh: true)
+            expect(app1.enable_ssh).to eq(true)
 
-            app2 = App.create_from_hash(name: 'awesome app 2', space_guid: space.guid, allow_ssh: false)
-            expect(app2.allow_ssh).to eq(false)
+            app2 = App.create_from_hash(name: 'awesome app 2', space_guid: space.guid, enable_ssh: false)
+            expect(app2.enable_ssh).to eq(false)
           end
         end
 
@@ -1696,9 +1696,9 @@ module VCAP::CloudController
               space.update(allow_ssh: true)
             end
 
-            it 'sets allow_ssh to true' do
+            it 'sets enable_ssh to true' do
               app = App.create_from_hash(name: 'awesome app', space_guid: space.guid)
-              expect(app.allow_ssh).to eq(true)
+              expect(app.enable_ssh).to eq(true)
             end
           end
 
@@ -1707,9 +1707,9 @@ module VCAP::CloudController
               space.update(allow_ssh: false)
             end
 
-            it 'sets allow_ssh to false' do
+            it 'sets enable_ssh to false' do
               app = App.create_from_hash(name: 'awesome app', space_guid: space.guid)
-              expect(app.allow_ssh).to eq(false)
+              expect(app.enable_ssh).to eq(false)
             end
           end
         end
@@ -1719,9 +1719,9 @@ module VCAP::CloudController
             TestConfig.override({ enable_allow_ssh: false })
           end
 
-          it 'sets allow_ssh to false' do
+          it 'sets enable_ssh to false' do
             app = App.create_from_hash(name: 'awesome app', space_guid: space.guid)
-            expect(app.allow_ssh).to eq(false)
+            expect(app.enable_ssh).to eq(false)
           end
         end
       end

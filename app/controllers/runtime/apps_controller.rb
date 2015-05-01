@@ -5,7 +5,7 @@ module VCAP::CloudController
     end
 
     define_attributes do
-      attribute :allow_ssh,              Message::Boolean, default: false
+      attribute :enable_ssh,             Message::Boolean, default: false
       attribute :buildpack,              String,           default: nil
       attribute :command,                String,           default: nil
       attribute :console,                Message::Boolean, default: false
@@ -106,22 +106,22 @@ module VCAP::CloudController
 
     def before_create
       space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
-      verify_allow_ssh(space)
+      verify_enable_ssh(space)
     end
 
     def before_update(app)
-      verify_allow_ssh(app.space)
+      verify_enable_ssh(app.space)
     end
 
-    def verify_allow_ssh(space)
-      app_allow_ssh = request_attrs['allow_ssh']
+    def verify_enable_ssh(space)
+      app_enable_ssh = request_attrs['enable_ssh']
       global_allow_ssh = VCAP::CloudController::Config.config[:enable_allow_ssh]
-      allow_ssh_enabled = global_allow_ssh && space.allow_ssh
+      ssh_allowed = global_allow_ssh && space.allow_ssh
 
-      if app_allow_ssh && !allow_ssh_enabled
+      if app_enable_ssh && !ssh_allowed
         raise VCAP::Errors::ApiError.new_from_details(
           'InvalidRequest',
-          'allow_ssh must be false due to global allow_ssh setting',
+          'enable_ssh must be false due to global allow_ssh setting',
         )
       end
     end

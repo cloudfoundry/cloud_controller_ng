@@ -25,7 +25,7 @@ module VCAP::CloudController
       global_allow_ssh = VCAP::CloudController::Config.config[:enable_allow_ssh]
       check_authentication(:ssh_access_internal)
       app = find_guid_and_validate_access(:read, guid)
-      unless app.diego && app.allow_ssh && global_allow_ssh && app.space.allow_ssh
+      unless app.diego && app.enable_ssh && global_allow_ssh && app.space.allow_ssh
         raise ApiError.new_from_details('InvalidRequest')
       end
       response_body = { 'process_guid' => VCAP::CloudController::Diego::ProcessGuid.from_app(app) }

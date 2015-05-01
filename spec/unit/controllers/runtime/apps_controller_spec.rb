@@ -40,7 +40,7 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_creatable_attributes(
           {
-            allow_ssh:            { type: 'bool', default: false },
+            enable_ssh:           { type: 'bool', default: false },
             buildpack:            { type: 'string' },
             command:              { type: 'string' },
             console:              { type: 'bool', default: false },
@@ -66,7 +66,7 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_updatable_attributes(
           {
-            allow_ssh:             { type: 'bool' },
+            enable_ssh:            { type: 'bool' },
             buildpack:             { type: 'string' },
             command:               { type: 'string' },
             console:               { type: 'bool' },
@@ -165,13 +165,13 @@ module VCAP::CloudController
             space.save
           end
 
-          it 'allows allow_ssh to be set to true' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: true)), json_headers(admin_headers)
+          it 'allows enable_ssh to be set to true' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(admin_headers)
             expect(last_response.status).to eq(201)
           end
 
-          it 'allows allow_ssh to be set to false' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: false)), json_headers(admin_headers)
+          it 'allows enable_ssh to be set to false' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false)), json_headers(admin_headers)
             expect(last_response.status).to eq(201)
           end
         end
@@ -182,13 +182,13 @@ module VCAP::CloudController
             space.save
           end
 
-          it 'errors when attempting to set allow_ssh to true' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: true)), json_headers(admin_headers)
+          it 'errors when attempting to set enable_ssh to true' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(admin_headers)
             expect(last_response.status).to eq(400)
           end
 
-          it 'allows allow_ssh to be set to false' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: false)), json_headers(admin_headers)
+          it 'allows enable_ssh to be set to false' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false)), json_headers(admin_headers)
             expect(last_response.status).to eq(201)
           end
         end
@@ -206,13 +206,13 @@ module VCAP::CloudController
             space.save
           end
 
-          it 'errors when attempting to set allow_ssh to true' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: true)), json_headers(admin_headers)
+          it 'errors when attempting to set enable_ssh to true' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(admin_headers)
             expect(last_response.status).to eq(400)
           end
 
-          it 'allows allow_ssh to be set to false' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: false)), json_headers(admin_headers)
+          it 'allows enable_ssh to be set to false' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false)), json_headers(admin_headers)
             expect(last_response.status).to eq(201)
           end
         end
@@ -223,13 +223,13 @@ module VCAP::CloudController
             space.save
           end
 
-          it 'errors when attempting to set allow_ssh to true' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: true)), json_headers(admin_headers)
+          it 'errors when attempting to set enable_ssh to true' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(admin_headers)
             expect(last_response.status).to eq(400)
           end
 
-          it 'allows allow_ssh to be set to false' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(allow_ssh: false)), json_headers(admin_headers)
+          it 'allows enable_ssh to be set to false' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false)), json_headers(admin_headers)
             expect(last_response.status).to eq(201)
           end
         end
@@ -281,13 +281,13 @@ module VCAP::CloudController
             app_obj.space.save
           end
 
-          it 'allows allow_ssh to be set to true' do
+          it 'allows enable_ssh to be set to true' do
             put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
             expect(last_response.status).to eq(201)
           end
 
-          it 'allows allow_ssh to be set to false' do
-            put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+          it 'allows enable_ssh to be set to false' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
             expect(last_response.status).to eq(201)
           end
         end
@@ -299,12 +299,12 @@ module VCAP::CloudController
           end
 
           it 'errors when attempting to set allow_ssh to true' do
-            put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
             expect(last_response.status).to eq(400)
           end
 
           it 'allows allow_ssh to be set to false' do
-            put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
             expect(last_response.status).to eq(201)
           end
         end
@@ -322,13 +322,13 @@ module VCAP::CloudController
             app_obj.space.save
           end
 
-          it 'errors when attempting to set allow_ssh to true' do
-            put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+          it 'errors when attempting to set enable_ssh to true' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
             expect(last_response.status).to eq(400)
           end
 
-          it 'allows allow_ssh to be set to false' do
-            put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+          it 'allows enable_ssh to be set to false' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
             expect(last_response.status).to eq(201)
           end
         end
@@ -339,13 +339,13 @@ module VCAP::CloudController
             app_obj.space.save
           end
 
-          it 'errors when attempting to set allow_ssh to true' do
-            put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+          it 'errors when attempting to set enable_ssh to true' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
             expect(last_response.status).to eq(400)
           end
 
-          it 'allows allow_ssh to be set to false' do
-            put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+          it 'allows enable_ssh to be set to false' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
             expect(last_response.status).to eq(201)
           end
         end

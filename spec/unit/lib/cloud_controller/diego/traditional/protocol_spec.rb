@@ -178,7 +178,7 @@ module VCAP::CloudController
               version: 'version-guid',
               updated_at: Time.at(12345.6789),
               uris: ['fake-uris'],
-              allow_ssh: true,
+              enable_ssh: true,
             )
           end
 

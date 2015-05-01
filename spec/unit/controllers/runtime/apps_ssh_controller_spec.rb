@@ -4,9 +4,9 @@ require 'cloud_controller/diego/process_guid'
 module VCAP::CloudController
   describe AppsSSHController do
     let(:diego) { true }
-    let(:allow_ssh) { true }
+    let(:enable_ssh) { true }
     let(:user) { User.make }
-    let(:app_model) { AppFactory.make(diego: diego, allow_ssh: allow_ssh) }
+    let(:app_model) { AppFactory.make(diego: diego, enable_ssh: enable_ssh) }
     let(:space) { app_model.space }
 
     before do
@@ -70,7 +70,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is does not allow ssh access' do
-        let(:allow_ssh) { false }
+        let(:enable_ssh) { false }
 
         it 'returns a 400' do
           get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)

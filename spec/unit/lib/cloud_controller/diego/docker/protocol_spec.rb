@@ -17,7 +17,7 @@ module VCAP::CloudController
           AppFactory.make(
             docker_image: 'fake/docker_image',
             health_check_timeout: 120,
-            allow_ssh: true,
+            enable_ssh: true,
           )
         end
 
