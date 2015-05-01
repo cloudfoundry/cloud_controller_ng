@@ -3,6 +3,7 @@ require 'actions/package_stage_action'
 require 'cloud_controller/backends/staging_memory_calculator'
 require 'cloud_controller/backends/staging_disk_calculator'
 require 'cloud_controller/backends/staging_environment_builder'
+require 'messages/droplet_create_message'
 
 module VCAP::CloudController
   describe PackageStageAction do
@@ -19,7 +20,7 @@ module VCAP::CloudController
       let(:space)  { Space.make }
       let(:org) { space.organization }
       let(:buildpack)  { Buildpack.make }
-      let(:staging_message) { StagingMessage.new(package.guid, opts) }
+      let(:staging_message) { DropletCreateMessage.create_from_http_request(opts) }
       let(:stack) { 'trusty32' }
       let(:memory_limit) { 12340 }
       let(:disk_limit) { 32100 }
@@ -58,6 +59,15 @@ module VCAP::CloudController
       it 'initiates a staging request' do
         droplet = action.stage(package, app, space, org, buildpack, staging_message, stagers)
         expect(stager).to have_received(:stage_package).with(droplet, stack, calculated_mem_limit, calculated_disk_limit, buildpack.key, buildpack_git_url)
+      end
+
+      it 'has a default value for stack' do
+        expected_stack = Stack.default.name
+        staging_message.stack = nil
+
+        droplet = action.stage(package, app, space, org, buildpack, staging_message, stagers)
+
+        expect(stager).to have_received(:stage_package).with(droplet, expected_stack, calculated_mem_limit, calculated_disk_limit, buildpack.key, buildpack_git_url)
       end
 
       context 'when the package is not type bits' do

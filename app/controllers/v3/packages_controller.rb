@@ -7,6 +7,7 @@ require 'actions/package_stage_action'
 require 'actions/package_delete'
 require 'actions/package_upload'
 require 'messages/package_upload_message'
+require 'messages/droplet_create_message'
 
 module VCAP::CloudController
   class PackagesController < RestController::BaseController
@@ -90,18 +91,18 @@ module VCAP::CloudController
     def stage(package_guid)
       check_write_permissions!
 
-      staging_message = StagingMessage.create_from_http_request(package_guid, body)
-      valid, error    = staging_message.validate
-      unprocessable!(error) if !valid
+      request = parse_and_validate_json(body)
+      message = DropletCreateMessage.create_from_http_request(request)
+      unprocessable!(message.errors.full_messages) unless message.valid?
 
-      package, app, space, org, buildpack = package_stage_fetcher.fetch(package_guid, staging_message.buildpack_guid)
+      package, app, space, org, buildpack = package_stage_fetcher.fetch(package_guid, message.buildpack_guid)
       space_not_found! if space.nil?
       app_not_found! if app.nil?
       package_not_found! if package.nil? || !can_read?(space.guid, org.guid)
-      buildpack_not_found! if staging_message.buildpack_guid && buildpack.nil?
+      buildpack_not_found! if message.buildpack_guid && buildpack.nil?
       unauthorized! unless can_stage?(space.guid)
 
-      droplet = package_stage_action.stage(package, app, space, org, buildpack, staging_message, @stagers)
+      droplet = package_stage_action.stage(package, app, space, org, buildpack, message, @stagers)
 
       [HTTP::CREATED, @droplet_presenter.present_json(droplet)]
     rescue PackageStageAction::InvalidPackage => e

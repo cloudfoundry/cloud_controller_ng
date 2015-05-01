@@ -523,7 +523,7 @@ module VCAP::CloudController
             expect(response_code).to eq 201
             expect(body).to eq droplet_response
             expect(package_stage_action).to have_received(:stage).with(
-              package, app, space, org, nil, an_instance_of(StagingMessage), stagers)
+              package, app, space, org, nil, an_instance_of(DropletCreateMessage), stagers)
           end
         end
       end
@@ -585,10 +585,10 @@ module VCAP::CloudController
             expect(response_code).to eq 201
             expect(body).to eq droplet_response
             expect(package_stage_action).to have_received(:stage).with(
-              package, app, space, org, buildpack, an_instance_of(StagingMessage), stagers)
+              package, app, space, org, buildpack, an_instance_of(DropletCreateMessage), stagers)
           end
 
-          context 'when the StagingMessage is not valid' do
+          context 'when the DropletCreateMessage is not valid' do
             let(:req_body) { '{"memory_limit":"invalid"}' }
 
             it 'returns an UnprocessableEntity error' do
@@ -686,7 +686,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the user cannot read the package' do
+      context 'when the user cannot read the package due to roles' do
         before do
           allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
           allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
@@ -707,7 +707,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the user can read but cannot write to the package' do
+      context 'when the user can read but cannot write to the package due to roles' do
         before do
           allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
           allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
@@ -727,6 +727,19 @@ module VCAP::CloudController
           }.to raise_error do |error|
             expect(error.name).to eq 'NotAuthorized'
             expect(error.response_code).to eq 403
+          end
+        end
+      end
+
+      context 'when the request body is invalid JSON' do
+        let(:req_body) { '{ invalid_json }' }
+
+        it 'returns an 400 Bad Request' do
+          expect {
+            packages_controller.stage(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'MessageParseError'
+            expect(error.response_code).to eq 400
           end
         end
       end

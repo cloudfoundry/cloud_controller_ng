@@ -17,6 +17,12 @@ module VCAP::CloudController
       end
     end
 
+    class UriValidator < ActiveModel::EachValidator
+      def validate_each(record, attribute, value)
+        record.errors.add attribute, 'must be a valid URI' unless value =~ /\A#{URI.regexp}\Z/
+      end
+    end
+
     class NoAdditionalKeysValidator < ActiveModel::Validator
       def validate(record)
         if record.extra_keys.any?

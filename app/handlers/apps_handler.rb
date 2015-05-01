@@ -32,8 +32,7 @@ module VCAP::CloudController
     class IncorrectProcessSpace < StandardError; end
     class IncorrectPackageSpace < StandardError; end
 
-    def initialize(droplets_handler, paginator=SequelPaginator.new)
-      @droplets_handler  = droplets_handler
+    def initialize(paginator=SequelPaginator.new)
       @paginator         = paginator
     end
 

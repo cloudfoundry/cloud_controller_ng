@@ -177,7 +177,7 @@ module CloudController
     end
 
     def apps_handler
-      AppsHandler.new(droplets_handler)
+      AppsHandler.new
     end
 
     def app_presenter
@@ -186,10 +186,6 @@ module CloudController
 
     def package_presenter
       PackagePresenter.new
-    end
-
-    def droplets_handler
-      DropletsHandler.new(@config, stagers)
     end
 
     def droplet_presenter

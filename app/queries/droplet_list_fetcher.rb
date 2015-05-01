@@ -1,12 +1,12 @@
 module VCAP::CloudController
-  class PackageListFetcher
+  class DropletListFetcher
     def fetch_all(pagination_options)
-      dataset = PackageModel.dataset
+      dataset = DropletModel.dataset
       paginate(dataset, pagination_options)
     end
 
     def fetch(pagination_options, space_guids)
-      dataset = PackageModel.select_all(:packages).join(:apps_v3, guid: :app_guid, space_guid: space_guids)
+      dataset = DropletModel.select_all(:v3_droplets).join(:apps_v3, guid: :app_guid, space_guid: space_guids)
       paginate(dataset, pagination_options)
     end
 
