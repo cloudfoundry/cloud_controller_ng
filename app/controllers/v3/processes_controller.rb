@@ -109,13 +109,5 @@ module VCAP::CloudController
     def not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
     end
-
-    def unauthorized!
-      raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
-    end
-
-    def unprocessable!(message)
-      raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
-    end
   end
 end

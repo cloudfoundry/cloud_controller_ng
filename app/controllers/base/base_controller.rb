@@ -200,6 +200,14 @@ module VCAP::CloudController::RestController
       raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', message)
     end
 
+    def unprocessable!(message)
+      raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+    end
+
+    def unauthorized!
+      raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+    end
+
     attr_reader :config, :logger, :env, :params, :body, :request_attrs
 
     class << self

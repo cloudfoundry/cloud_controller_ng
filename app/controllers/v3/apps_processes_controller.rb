@@ -27,6 +27,29 @@ module VCAP::CloudController
       [HTTP::OK, @process_presenter.present_json_list(paginated_result, "/v3/apps/#{guid}/processes")]
     end
 
+    put '/v3/apps/:guid/processes/:type/scale', :scale
+    def scale(app_guid, type)
+      check_write_permissions!
+
+      FeatureFlag.raise_unless_enabled!('app_scaling')
+
+      request = parse_and_validate_json(body)
+      message = ProcessScaleMessage.create_from_http_request(request)
+      unprocessable!(message.errors.full_messages) if message.invalid?
+
+      app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
+      app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
+      process = app.processes_dataset.where(type: type).first
+      process_not_found! if process.nil?
+      unauthorized! if !can_scale?(app.space.guid)
+
+      ProcessScale.new(current_user, current_user_email).scale(process, message)
+
+      [HTTP::OK, @process_presenter.present_json(process)]
+    rescue ProcessScale::InvalidProcess => e
+      unprocessable!(e.message)
+    end
+
     private
 
     def membership
@@ -40,8 +63,16 @@ module VCAP::CloudController
                                  Membership::ORG_MANAGER], space_guid, org_guid)
     end
 
+    def can_scale?(space_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+    end
+
     def app_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+    end
+
+    def process_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
     end
   end
 end
