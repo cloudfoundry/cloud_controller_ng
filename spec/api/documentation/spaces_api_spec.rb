@@ -22,6 +22,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
       field :domain_guids, 'The list of the associated domains'
       field :security_group_guids, 'The list of the associated security groups'
       field :space_quota_definition_guid, 'The guid of the associated space quota definition'
+      field :allow_ssh, 'Whether or not Space Developers can enable ssh on apps in the space'
     end
 
     shared_context 'updatable_fields' do |opts|
@@ -32,6 +33,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
       field :auditor_guids, 'The list of the associated auditors'
       field :domain_guids, 'The list of the associated domains'
       field :security_group_guids, 'The list of the associated security groups'
+      field :allow_ssh, 'Whether or not Space Developers can enable ssh on apps in the space'
     end
 
     standard_model_list :space, VCAP::CloudController::SpacesController
