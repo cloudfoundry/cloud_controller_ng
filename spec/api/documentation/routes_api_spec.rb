@@ -67,12 +67,17 @@ resource 'Routes', type: [:api, :legacy_api] do
   end
 
   describe 'Reserved Routes' do
-    get '/v2/routes/reserved/domain/:domain_guid/host/:host' do
+    before do
+      route.path = route_path
+      route.save
+    end
+    get '/v2/routes/reserved/domain/:domain_guid/host/:host?path=:path' do
       request_parameter :domain_guid, 'The guid of a domain'
       request_parameter :host, 'The host portion of the route'
+      request_parameter :path, 'The path of a route', required: false, example_values: ['/apps/v1/path', '/apps/v2/path'], experimental: true
 
       example 'Check a Route exists' do
-        client.get "/v2/routes/reserved/domain/#{domain.guid}/host/#{route.host}", {}, headers
+        client.get "/v2/routes/reserved/domain/#{domain.guid}/host/#{route.host}?path=#{route_path}", {}, headers
         expect(status).to eq 204
       end
     end
