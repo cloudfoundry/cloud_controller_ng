@@ -49,6 +49,16 @@ module CloudController
         staging_uri("/staging/droplets/#{app_guid}/download")
       end
 
+      def unauthorized_perma_droplet_download_url(app)
+        return nil unless app.droplet_hash
+
+        URI::HTTP.build(
+          host: @blobstore_options[:blobstore_host],
+          port: @blobstore_options[:blobstore_port],
+          path: "/internal/v2/droplets/#{app.guid}/#{app.droplet_hash}/download",
+        ).to_s
+      end
+
       # Uploads
       def droplet_upload_url(app)
         staging_uri("/staging/droplets/#{app.guid}/upload")

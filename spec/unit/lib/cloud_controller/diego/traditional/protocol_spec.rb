@@ -8,7 +8,7 @@ module VCAP::CloudController
           instance_double(CloudController::Blobstore::UrlGenerator,
             buildpack_cache_download_url: 'http://buildpack-artifacts-cache.com',
             app_package_download_url: 'http://app-package.com',
-            perma_droplet_download_url: 'fake-droplet_uri',
+            unauthorized_perma_droplet_download_url: 'fake-droplet_uri',
             buildpack_cache_upload_url: 'http://buildpack-artifacts-cache.up.com',
             droplet_upload_url: 'http://droplet-upload-uri',
           )
