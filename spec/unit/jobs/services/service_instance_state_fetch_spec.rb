@@ -107,6 +107,7 @@ module VCAP::CloudController
                   service_instance.guid,
                   nil,
                   request_attrs,
+                  nil,
                   service_event_repository_opts
               )
               expect(job.services_event_repository).to be_a Repositories::Services::EventRepository
@@ -390,10 +391,6 @@ module VCAP::CloudController
           context 'when the job was migrated before the addition of end_timestamp' do
             let(:state) { 'in progress' }
 
-            before do
-              job.instance_variable_set(:@end_timestamp, nil) # terrible
-            end
-
             it 'should compute the end_timestamp based on the current time' do
               Timecop.freeze(Time.now)
 
@@ -422,6 +419,38 @@ module VCAP::CloudController
         describe '#job_name_in_configuration' do
           it 'returns the name of the job' do
             expect(job.job_name_in_configuration).to eq(:service_instance_state_fetch)
+          end
+        end
+
+        describe '#end_timestamp' do
+          let(:max_poll_duration) { VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes] }
+
+          context 'when the job is new' do
+            it 'adds the broker_client_max_async_poll_duration_minutes to the current time' do
+              now = Time.now
+              expected_end_timestamp = now + max_poll_duration.minutes
+              Timecop.freeze now do
+                expect(job.end_timestamp).to be_within(0.01).of(expected_end_timestamp)
+              end
+            end
+          end
+
+          context 'when the job is fetched from the database' do
+            it 'returns the previously computed and persisted end_timestamp' do
+              now = Time.now
+              expected_end_timestamp = now + max_poll_duration.minutes
+
+              job_id = nil
+              Timecop.freeze now do
+                enqueued_job = Jobs::Enqueuer.new(job, queue: 'cc-generic', run_at: Time.now).enqueue
+                job_id = enqueued_job.id
+              end
+
+              Timecop.freeze(now + 1.day) do
+                rehydrated_job = Delayed::Job.first(id: job_id).payload_object.handler.handler.handler
+                expect(rehydrated_job.end_timestamp).to be_within(0.01).of(expected_end_timestamp)
+              end
+            end
           end
         end
       end

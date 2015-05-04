@@ -2,14 +2,15 @@ module VCAP::CloudController
   module Jobs
     module Services
       class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository, :request_attrs, :poll_interval
+        attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository, :request_attrs, :poll_interval, :end_timestamp
 
-        def initialize(name, client_attrs, service_instance_guid, services_event_repository, request_attrs, services_event_repository_opts=nil)
+        def initialize(name, client_attrs, service_instance_guid, services_event_repository, request_attrs, end_timestamp=nil, services_event_repository_opts=nil)
           @name = name
           @client_attrs = client_attrs
           @service_instance_guid = service_instance_guid
           get_repository(services_event_repository, services_event_repository_opts)
           @request_attrs = request_attrs
+          @end_timestamp = end_timestamp || new_end_timestamp
 
           default_poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds]
           poll_interval = [default_poll_interval, 24.hours].min
@@ -38,11 +39,11 @@ module VCAP::CloudController
           1
         end
 
-        def end_timestamp
-          @end_timestamp ||= Time.now + VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes].minutes
-        end
-
         private
+
+        def new_end_timestamp
+          Time.now + VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes].minutes
+        end
 
         def get_repository(services_event_repository, services_event_repository_opts)
           @services_event_repository = services_event_repository

@@ -435,6 +435,49 @@ module VCAP::CloudController
               })
             end
           end
+
+          context 'and the worker never gets a success response during polling' do
+            let!(:now) { Time.now }
+            let(:max_poll_duration) { VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes] }
+            let(:before_poll_timeout) { now + (max_poll_duration / 2).minutes  }
+            let(:after_poll_timeout) { now + max_poll_duration.minutes + 1.minutes }
+
+            before do
+              stub_request(:get, service_broker_url_regex).
+                with(headers: { 'Accept' => 'application/json' }).
+                to_return(status: 200, body: {
+                    state: 'in progress',
+                    description: 'new description'
+                  }.to_json)
+            end
+
+            it 'does not enqueue additional delay_jobs after broker_client_max_async_poll_duration_minutes' do
+              service_instance_guid = nil
+              Timecop.freeze now do
+                create_managed_service_instance
+                service_instance_guid = decoded_response['metadata']['guid']
+              end
+
+              Timecop.travel(before_poll_timeout) do
+                successes, failures = Delayed::Worker.new.work_off
+                expect(successes).to eq 1
+                expect(failures).to eq 0
+                expect(Delayed::Job.count).to eq 1
+              end
+
+              Timecop.travel(after_poll_timeout) do
+                successes, failures = Delayed::Worker.new.work_off
+                expect(successes).to eq 1
+                expect(failures).to eq 0
+                expect(Delayed::Job.count).to eq 0
+              end
+
+              get "/v2/service_instances/#{service_instance_guid}", {}, admin_headers
+              expect(last_response).to have_status_code 200
+              expect(decoded_response['entity']['last_operation']['state']).to eq 'failed'
+              expect(decoded_response['entity']['last_operation']['description']).to match /Service Broker failed to provision within the required time/
+            end
+          end
         end
 
         context 'when the client explicitly does not request accepts_incomplete provisioning' do
