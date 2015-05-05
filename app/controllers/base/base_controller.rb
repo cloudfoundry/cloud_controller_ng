@@ -261,9 +261,9 @@ module VCAP::CloudController::RestController
       # @return [Set] If called with no arguments, returns the list
       # of preserve query parameters.
       def preserve_query_parameters(*args)
-        @perserved_query_params ||= Set.new
-        @perserved_query_params |= args.map(&:to_s) unless args.empty?
-        @perserved_query_params
+        @preserved_query_params ||= Set.new
+        @preserved_query_params |= args.map(&:to_s) unless args.empty?
+        @preserved_query_params
       end
 
       def deprecated_endpoint(path, message='Endpoint deprecated')
