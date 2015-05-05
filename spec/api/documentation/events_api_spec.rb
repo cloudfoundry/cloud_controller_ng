@@ -69,6 +69,7 @@ resource 'Events', type: [:api, :legacy_api] do
     standard_list_parameters VCAP::CloudController::EventsController
 
     let(:test_app) { VCAP::CloudController::App.make }
+    let(:test_v3app) { VCAP::CloudController::AppModel.make }
     let(:test_user) { VCAP::CloudController::User.make }
     let(:test_user_email) { 'user@example.com' }
     let(:test_space) { VCAP::CloudController::Space.make }
@@ -139,7 +140,7 @@ resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App Start Events' do
-      app_event_repository.record_app_start(test_app, test_user.guid, test_user_email)
+      app_event_repository.record_app_start(test_v3app, test_user.guid, test_user_email)
 
       client.get '/v2/events?q=type:audit.app.start', {}, headers
       expect(status).to eq(200)
@@ -147,15 +148,15 @@ resource 'Events', type: [:api, :legacy_api] do
                                actor_type: 'user',
                                actor: test_user.guid,
                                actor_name: test_user_email,
-                               actee_type: 'app',
-                               actee: test_app.guid,
-                               actee_name: test_app.name,
-                               space_guid: test_app.space.guid,
+                               actee_type: 'v3-app',
+                               actee: test_v3app.guid,
+                               actee_name: test_v3app.name,
+                               space_guid: test_v3app.space.guid,
                                metadata: {}
     end
 
     example 'List App Stop Events' do
-      app_event_repository.record_app_stop(test_app, test_user.guid, test_user_email)
+      app_event_repository.record_app_stop(test_v3app, test_user.guid, test_user_email)
 
       client.get '/v2/events?q=type:audit.app.stop', {}, headers
       expect(status).to eq(200)
@@ -163,10 +164,10 @@ resource 'Events', type: [:api, :legacy_api] do
                               actor_type: 'user',
                               actor: test_user.guid,
                               actor_name: test_user_email,
-                              actee_type: 'app',
-                              actee: test_app.guid,
-                              actee_name: test_app.name,
-                              space_guid: test_app.space.guid,
+                              actee_type: 'v3-app',
+                              actee: test_v3app.guid,
+                              actee_name: test_v3app.name,
+                              space_guid: test_v3app.space.guid,
                               metadata: {}
     end
 
