@@ -5,7 +5,7 @@ describe 'Stable API warning system', api_version_check: true do
   API_FOLDER_CHECKSUM = '7665f50de858f45bb1b219ff29a9f4212cf1aa10'
 
   it 'double-checks the version' do
-    expect(VCAP::CloudController::Constants::API_VERSION).to eq('2.25.0')
+    expect(VCAP::CloudController::Constants::API_VERSION).to eq('2.26.0')
   end
 
   it 'tells the developer if the API specs change' do
