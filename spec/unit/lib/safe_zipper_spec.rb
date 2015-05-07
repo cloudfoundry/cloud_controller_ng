@@ -96,6 +96,14 @@ describe SafeZipper do
           expect { unzip }.to raise_exception VCAP::Errors::ApiError, /relative path.+outside/i
         end
       end
+
+      context 'when the are outside the root directory and have spaces' do
+        let(:zip_path) { File.expand_path('../../fixtures/bad_relative_paths_with_spaces.zip', File.dirname(__FILE__)) }
+
+        it 'raises an exception' do
+          expect { unzip }.to raise_exception VCAP::Errors::ApiError, /relative path.+outside/i
+        end
+      end
     end
   end
 
