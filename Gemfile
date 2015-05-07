@@ -65,4 +65,5 @@ end
 
 group :development do
   gem 'roodi'
+  gem 'byebug'
 end

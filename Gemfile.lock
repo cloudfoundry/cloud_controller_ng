@@ -338,6 +338,7 @@ DEPENDENCIES
   allowy
   astrolabe
   awesome_print
+  byebug
   cf-message-bus (~> 0.3.0)
   cf-registrar (~> 1.0.2)!
   cf-uaa-lib (~> 3.1.0)!

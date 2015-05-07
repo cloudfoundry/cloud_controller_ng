@@ -11,10 +11,7 @@ module VCAP::CloudController
           get_repository(services_event_repository, services_event_repository_opts)
           @request_attrs = request_attrs
           @end_timestamp = end_timestamp || new_end_timestamp
-
-          default_poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds]
-          poll_interval = [default_poll_interval, 24.hours].min
-          @poll_interval = poll_interval
+          update_polling_interval
         end
 
         def perform
@@ -67,6 +64,7 @@ module VCAP::CloudController
         end
 
         def retry_state_updater
+          update_polling_interval
           if Time.now + @poll_interval > end_timestamp
             ManagedServiceInstance.first(guid: service_instance_guid).save_with_operation(
                 last_operation: {
@@ -97,6 +95,12 @@ module VCAP::CloudController
         def enqueue_again
           opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now + @poll_interval }
           VCAP::CloudController::Jobs::Enqueuer.new(self, opts).enqueue
+        end
+
+        def update_polling_interval
+          default_poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds]
+          poll_interval = [default_poll_interval, 24.hours].min
+          @poll_interval = poll_interval
         end
       end
     end
