@@ -50,6 +50,15 @@ module VCAP::CloudController
 
         expect(result['pagination']).to eq('pagination-bazooka')
       end
+
+      it 'presents the route path under resources' do
+        route1.path = '/foo/bar'
+        json_result = presenter.present_json_list(paginated_result, 'something')
+        result      = MultiJson.load(json_result)
+
+        path = result['resources'].first['path'] # entity?
+        expect(path).to eq('/foo/bar')
+      end
     end
   end
 end

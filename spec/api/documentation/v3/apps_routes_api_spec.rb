@@ -22,7 +22,7 @@ resource 'App Routes (Experimental)', type: :api do
     let(:space_guid) { space.guid }
 
     let!(:route1) { VCAP::CloudController::Route.make(space_guid: space_guid) }
-    let!(:route2) { VCAP::CloudController::Route.make(space_guid: space_guid) }
+    let!(:route2) { VCAP::CloudController::Route.make(space_guid: space_guid, path: '/foo/bar') }
 
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { app_model.guid }
@@ -58,6 +58,7 @@ resource 'App Routes (Experimental)', type: :api do
           {
             'guid'       => route2.guid,
             'host'       => route2.host,
+            'path'       => '/foo/bar',
             'created_at' => iso8601,
             'updated_at' => nil,
             '_links' => {
