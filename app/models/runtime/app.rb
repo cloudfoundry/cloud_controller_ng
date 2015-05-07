@@ -97,7 +97,8 @@ module VCAP::CloudController
         InstancesPolicy.new(self),
         HealthCheckPolicy.new(self, health_check_timeout),
         CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?),
-        DockerPolicy.new(self)
+        DockerPolicy.new(self),
+        EnableSshPolicy.new(self)
       ]
     end
 
