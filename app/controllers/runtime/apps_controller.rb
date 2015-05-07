@@ -5,7 +5,7 @@ module VCAP::CloudController
     end
 
     define_attributes do
-      attribute :enable_ssh,             Message::Boolean, default: false
+      attribute :enable_ssh,             Message::Boolean, default: nil
       attribute :buildpack,              String,           default: nil
       attribute :command,                String,           default: nil
       attribute :console,                Message::Boolean, default: false

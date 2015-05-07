@@ -40,7 +40,7 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_creatable_attributes(
           {
-            enable_ssh:           { type: 'bool', default: false },
+            enable_ssh:           { type: 'bool' },
             buildpack:            { type: 'string' },
             command:              { type: 'string' },
             console:              { type: 'bool', default: false },
