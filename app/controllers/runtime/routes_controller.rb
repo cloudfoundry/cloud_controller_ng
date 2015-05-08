@@ -11,9 +11,14 @@ module VCAP::CloudController
     query_parameters :host, :domain_guid, :organization_guid, :path
 
     def self.translate_validation_exception(e, attributes)
-      name_errors = e.errors.on([:host, :domain_id]) || e.errors.on([:host, :domain_id, :path])
+      name_errors = e.errors.on([:host, :domain_id])
       if name_errors && name_errors.include?(:unique)
         return Errors::ApiError.new_from_details('RouteHostTaken', attributes['host'])
+      end
+
+      path_errors = e.errors.on([:host, :domain_id, :path])
+      if path_errors && path_errors.include?(:unique)
+        return Errors::ApiError.new_from_details('RoutePathTaken', attributes['path'])
       end
 
       space_errors = e.errors.on(:space)

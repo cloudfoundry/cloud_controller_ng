@@ -133,15 +133,15 @@ module VCAP::CloudController
         expect(decoded_response['code']).to eq(210003)
       end
 
-      it 'returns the RouteHostTaken message when paths conflict' do
+      it 'returns the RoutePathTaken message when paths conflict' do
         taken_host = 'someroute'
-        path = '%2Fsome%20path'
+        path = '/%2Fsome%20path'
         post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: domain.guid, space_guid: space.guid, path: path), json_headers(admin_headers)
 
         post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: domain.guid, space_guid: space.guid, path: path), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
-        expect(decoded_response['code']).to eq(130004)
+        expect(decoded_response['code']).to eq(210004)
       end
 
       it 'returns the SpaceQuotaTotalRoutesExceeded message' do
