@@ -52,7 +52,8 @@ module VCAP::CloudController
                       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
                       :state, :command, :console, :debug, :staging_task_id,
                       :service_binding_guids, :route_guids, :health_check_type,
-                      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh
+                      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
+                      :docker_login_server, :docker_auth_token, :docker_email
 
     strip_attributes :name
 
@@ -72,6 +73,9 @@ module VCAP::CloudController
 
     # Last staging response which will contain streaming log url
     attr_accessor :last_stager_response
+
+    # docker image credentials propagated to staging task. Not stored in DB!
+    attr_accessor :docker_login_server, :docker_auth_token, :docker_email
 
     alias_method :diego?, :diego
 

@@ -60,6 +60,9 @@ module VCAP::CloudController
             stack_guid:           { type: 'string' },
             diego:                { type: 'bool' },
             docker_image:         { type: 'string', required: false },
+            docker_login_server:  { type: 'string', required: false },
+            docker_auth_token:    { type: 'string', required: false },
+            docker_email:         { type: 'string', required: false },
           })
       end
 
@@ -87,6 +90,9 @@ module VCAP::CloudController
             stack_guid:            { type: 'string' },
             diego:                 { type: 'bool' },
             docker_image:          { type: 'string' },
+            docker_login_server:   { type: 'string' },
+            docker_auth_token:     { type: 'string' },
+            docker_email:          { type: 'string' },
           })
       end
     end
