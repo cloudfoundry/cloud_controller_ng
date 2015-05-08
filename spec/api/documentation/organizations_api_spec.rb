@@ -86,6 +86,30 @@ resource 'Organizations', type: [:api, :legacy_api] do
       end
     end
 
+    describe 'Quota Usage' do
+      before do
+        organization.add_space(space)
+        app_obj.add_route(route)
+        space.add_service_instance(service_instance)
+        space.add_app(app_obj)
+      end
+
+      let(:space) { VCAP::CloudController::Space.make(organization: organization) }
+      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space, instances: 1, memory: 500, state: 'STARTED') }
+
+      get '/v2/organizations/:guid/quota_usage' do
+        example 'Retrieving quota usaged in the Organization' do
+          client.get "/v2/organizations/#{guid}/quota_usage", {}, headers
+
+          expect(status).to eq(200)
+          expect(parsed_response['entity']['org_usage']).
+            to include('routes', 'services', 'memory')
+        end
+      end
+    end
+
     describe 'Spaces' do
       before do
         VCAP::CloudController::Space.make(organization: organization)
