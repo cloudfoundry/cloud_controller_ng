@@ -22,12 +22,15 @@ module VCAP::RestAPI
     #
     # @option opts [Object] :default default value for the attribute if it
     # isn't supplied.
+    #
+    # @option opts :redact redact the value if supplied
     def initialize(name, opts={})
       @name        = name
       @exclude_in  = Set.new(Array(opts[:exclude_in]))
       @optional_in = Set.new(Array(opts[:optional_in]))
       @default     = opts[:default]
       @has_default = opts.key?(:default)
+      @redact_in   = Set.new(Array(opts[:redact_in]))
     end
 
     # Predicate to check if the attribute is excluded for a certain type of
@@ -48,6 +51,16 @@ module VCAP::RestAPI
     # @return [Boolean] True if the attribute is optional.
     def optional_in?(operation_type)
       @optional_in.include?(operation_type)
+    end
+
+    # Predicate to check if the attribute needs redacting for a certain type of
+    # operation.
+    #
+    # @param [Symbol] operation_type The type of operation.
+    #
+    # @return [Boolean] True if the attribute should be redacted.
+    def redact_in?(operation_type)
+      @redact_in.include?(operation_type)
     end
   end
 

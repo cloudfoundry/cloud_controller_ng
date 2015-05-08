@@ -60,6 +60,10 @@ module VCAP::CloudController
             stack_guid:           { type: 'string' },
             diego:                { type: 'bool' },
             docker_image:         { type: 'string', required: false },
+            docker_login_server:  { type: 'string', required: false },
+            docker_user:          { type: 'string', required: false },
+            docker_password:      { type: 'string', required: false },
+            docker_email:         { type: 'string', required: false },
           })
       end
 
@@ -87,7 +91,11 @@ module VCAP::CloudController
             stack_guid:            { type: 'string' },
             diego:                 { type: 'bool' },
             docker_image:          { type: 'string' },
-          })
+            docker_login_server:  { type: 'string', required: false },
+            docker_user:          { type: 'string', required: false },
+            docker_password:      { type: 'string', required: false },
+            docker_email:         { type: 'string', required: false },
+        })
       end
     end
 
@@ -231,6 +239,113 @@ module VCAP::CloudController
           it 'allows enable_ssh to be set to false' do
             post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false)), json_headers(admin_headers)
             expect(last_response.status).to eq(201)
+          end
+        end
+      end
+    end
+
+    describe 'docker image credentials' do
+      let(:space) { Space.make }
+      let(:space_guid) { space.guid.to_s }
+      let(:initial_hash) do
+        {
+          name: 'maria',
+          space_guid: space_guid
+        }
+      end
+      let(:decoded_response) { MultiJson.load(last_response.body) }
+
+      let(:user) { 'user' }
+      let(:password) { 'password' }
+      let(:email) { 'email@example.com' }
+      let(:body) do
+        MultiJson.dump(initial_hash.merge(
+          docker_user: user,
+          docker_password: password,
+          docker_email: email,
+        ))
+      end
+
+      let(:user_headers) { json_headers(admin_headers) }
+      let(:redacted_message) { { 'redacted_message' => '[PRIVATE DATA HIDDEN]' } }
+
+      def create_app
+        post '/v2/apps', body, user_headers
+        expect(last_response.status).to eq(201)
+        decoded_response['metadata']['guid']
+      end
+
+      def read_app
+        app_guid = create_app
+        get "/v2/apps/#{app_guid}", '{}', user_headers
+        expect(last_response.status).to eq(200)
+      end
+
+      def update_app
+        app_guid = create_app
+        put "/v2/apps/#{app_guid}", body, user_headers
+        expect(last_response.status).to eq(201)
+      end
+
+      context 'create app' do
+        context 'by admin' do
+          it 'redacts the credentials' do
+            create_app
+          end
+        end
+
+        context 'by developer' do
+          let(:user_headers) { json_headers(headers_for(make_developer_for_space(space))) }
+
+          it 'redacts the credentials' do
+            create_app
+            expect(decoded_response['entity']['docker_user']).to eq redacted_message
+            expect(decoded_response['entity']['docker_password']).to eq redacted_message
+            expect(decoded_response['entity']['docker_email']).to eq redacted_message
+          end
+        end
+      end
+
+      context 'read app' do
+        context 'by admin' do
+          it 'redacts the credentials' do
+            read_app
+            expect(decoded_response['entity']['docker_user']).to eq redacted_message
+            expect(decoded_response['entity']['docker_password']).to eq redacted_message
+            expect(decoded_response['entity']['docker_email']).to eq redacted_message
+          end
+        end
+
+        context 'by developer' do
+          let(:user_headers) { json_headers(headers_for(make_developer_for_space(space))) }
+
+          it 'redacts the credentials' do
+            read_app
+            expect(decoded_response['entity']['docker_user']).to eq redacted_message
+            expect(decoded_response['entity']['docker_password']).to eq redacted_message
+            expect(decoded_response['entity']['docker_email']).to eq redacted_message
+          end
+        end
+      end
+
+      context 'update app' do
+        context 'by admin' do
+          it 'redacts the credentials' do
+            update_app
+            expect(decoded_response['entity']['docker_user']).to eq redacted_message
+            expect(decoded_response['entity']['docker_password']).to eq redacted_message
+            expect(decoded_response['entity']['docker_email']).to eq redacted_message
+          end
+        end
+
+        context 'by developer' do
+          let(:user_headers) { json_headers(headers_for(make_developer_for_space(space))) }
+
+          it 'redacts the credentials' do
+            update_app
+            expect(decoded_response['entity']['docker_user']).to eq redacted_message
+            expect(decoded_response['entity']['docker_password']).to eq redacted_message
+            expect(decoded_response['entity']['docker_email']).to eq redacted_message
           end
         end
       end

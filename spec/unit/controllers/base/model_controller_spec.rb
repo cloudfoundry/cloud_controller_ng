@@ -163,6 +163,18 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(201)
       end
+
+      context 'with attributes for redacting' do
+        let(:request_attributes) { { redacted: 'super secret data' } }
+        let(:redact_request_attributes) { { 'redacted' =>  'super secret data' } }
+
+        it 'attempts to redact the attributes' do
+          expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:create, redact_request_attributes)
+
+          post '/v2/test_model_redact', MultiJson.dump(request_attributes), admin_headers
+          expect(last_response.status).to eq(201)
+        end
+      end
     end
 
     describe '#read' do
@@ -258,6 +270,19 @@ module VCAP::CloudController
 
         put "/v2/test_models/#{model.guid}", MultiJson.dump(fields), admin_headers
         expect(calls).to eq([:before_update, :read_for_update, :update_from_hash, :update, :after_update])
+      end
+
+      context 'with attributes for redacting' do
+        let!(:model) { TestModelRedact.make }
+        let(:request_attributes) { { redacted: 'super secret data' } }
+        let(:redact_request_attributes) { { 'redacted' =>  'super secret data' } }
+
+        it 'attempts to redact the attributes' do
+          expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:update, redact_request_attributes)
+
+          put "/v2/test_model_redact/#{model.guid}", MultiJson.dump(request_attributes), admin_headers
+          expect(last_response.status).to eq(201)
+        end
       end
     end
 
@@ -772,6 +797,40 @@ module VCAP::CloudController
               end
             end
           end
+        end
+      end
+    end
+
+    describe 'attributes censoring' do
+      let(:dep) { { object_renderer: nil, collection_renderer: nil } }
+      let(:model_controller) { TestModelRedactController.new(nil, FakeLogger.new([]), nil, {}, nil, nil, dep) }
+
+      context 'when the request contains sensitive attributes' do
+        let(:request_attributes) { { 'one' => 1, 'two' => 2, 'redacted' => 'password' } }
+        let(:redacted_attributes) { { 'one' => 1, 'two' => 2, 'redacted' => 'PRIVATE DATA HIDDEN' } }
+
+        it 'redacts attributes for censoring' do
+          processed_attributes = model_controller.redact_attributes(:create, request_attributes)
+          expect(processed_attributes).to eq redacted_attributes
+        end
+
+        context 'and the operation does not require censoring' do
+          let(:redacted_attributes) { { 'one' => 1, 'two' => 2, 'redacted' => 'password' } }
+
+          it 'does not redact' do
+            processed_attributes = model_controller.redact_attributes(:read, request_attributes)
+            expect(processed_attributes).to eq redacted_attributes
+          end
+        end
+      end
+
+      context 'when the request has no sensitive attributes' do
+        let(:request_attributes) { { 'one' => 1, 'two' => 2 } }
+        let(:redacted_attributes) { { 'one' => 1, 'two' => 2 } }
+
+        it 'does not redact' do
+          processed_attributes = model_controller.redact_attributes(:create, request_attributes)
+          expect(processed_attributes).to eq redacted_attributes
         end
       end
     end

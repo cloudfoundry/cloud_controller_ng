@@ -11,6 +11,10 @@ module VCAP::CloudController
       attribute :console,                Message::Boolean, default: false
       attribute :diego,                  Message::Boolean, default: nil
       attribute :docker_image,           String,           default: nil
+      attribute :docker_login_server,    String,           default: nil
+      attribute :docker_user,            String,           default: nil,      redact_in: [:create, :update]
+      attribute :docker_password,        String,           default: nil,      redact_in: [:create, :update]
+      attribute :docker_email,           String,           default: nil,      redact_in: [:create, :update]
       attribute :debug,                  String,           default: nil
       attribute :disk_quota,             Integer,          default: nil
       attribute :environment_json,       Hash,             default: {}
@@ -21,7 +25,7 @@ module VCAP::CloudController
       attribute :name,                   String
       attribute :production,             Message::Boolean, default: false
       attribute :state,                  String,           default: 'STOPPED'
-      attribute :detected_start_command, String,           exclude_in: [:create, :update]
+      attribute :detected_start_command, String,                              exclude_in: [:create, :update]
 
       to_one :space
       to_one :stack,               optional_in: :create

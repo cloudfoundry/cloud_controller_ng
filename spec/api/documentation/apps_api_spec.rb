@@ -43,6 +43,14 @@ resource 'Apps', type: [:api, :legacy_api] do
       default: nil,
       experimental: true,
       example_values: ['cloudfoundry/helloworld', 'registry.example.com:5000/user/repository/tag']
+    field :docker_login_server,
+      'Server to authenticate to when pulling Docker image',
+      default: nil,
+      experimental: true,
+      example_values: ['https://index.docker.io/v1/']
+    field :docker_user, 'User to use for Docker image pull', default: nil, experimental: true
+    field :docker_password, 'Password to use for Docker image pull', default: nil, experimental: true
+    field :docker_email, 'Email to use for Docker image pull', default: nil, experimental: true
 
     field :environment_json, 'Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables.'
     field :production, 'Deprecated.', deprecated: true, default: true, valid_values: [true, false]

@@ -409,4 +409,7 @@ module VCAP::CloudController
 
   TestModelSecondLevel.blueprint do
   end
+
+  TestModelRedact.blueprint do
+  end
 end

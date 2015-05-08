@@ -46,19 +46,24 @@ module VCAP::CloudController
                       :state, :version, :command, :console, :debug, :staging_task_id,
                       :package_state, :health_check_type, :health_check_timeout,
                       :staging_failed_reason, :diego, :docker_image, :package_updated_at,
-                      :detected_start_command, :enable_ssh
+                      :detected_start_command, :enable_ssh, :docker_login_server, :docker_user,
+                      :docker_password, :docker_email
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
                       :state, :command, :console, :debug, :staging_task_id,
                       :service_binding_guids, :route_guids, :health_check_type,
-                      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh
+                      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
+                      :docker_login_server, :docker_user, :docker_password, :docker_email
 
     strip_attributes :name
 
     serialize_attributes :json, :metadata
 
     encrypt :environment_json, salt: :salt, column: :encrypted_environment_json
+    encrypt :docker_user, salt: :docker_salt, column: :encrypted_docker_user
+    encrypt :docker_password, salt: :docker_salt, column: :encrypted_docker_password
+    encrypt :docker_email, salt: :docker_salt, column: :encrypted_docker_email
 
     APP_STATES = %w(STOPPED STARTED).map(&:freeze).freeze
     PACKAGE_STATES = %w(PENDING STAGED FAILED).map(&:freeze).freeze
@@ -72,6 +77,9 @@ module VCAP::CloudController
 
     # Last staging response which will contain streaming log url
     attr_accessor :last_stager_response
+
+    # docker login server used to authenticate against
+    attr_accessor :docker_login_server
 
     alias_method :diego?, :diego
 
@@ -548,7 +556,9 @@ module VCAP::CloudController
 
     def to_hash(opts={})
       if !VCAP::CloudController::SecurityContext.admin? && !space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
-        opts.merge!(redact: %w(environment_json system_env_json))
+        opts.merge!(redact: %w(environment_json system_env_json docker_user docker_password docker_email encrypted_docker_user encrypted_docker_password encrypted_docker_email))
+      else
+        opts.merge!(redact: %w(docker_user docker_password docker_email encrypted_docker_user encrypted_docker_password encrypted_docker_email))
       end
       super(opts)
     end

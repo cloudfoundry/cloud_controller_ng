@@ -63,6 +63,14 @@ class FakeModelTables
       foreign_key [:test_model_id], :test_models, name: :fk_tmmtmtm_tmi
       foreign_key [:test_model_many_to_many_id], :test_model_many_to_manies, name: :fk_tmmtmtm_tmmtmi
     end
+
+    db.create_table :test_model_redacts do
+      primary_key :id
+      String :guid
+      String :redacted
+      DateTime :created_at
+      DateTime :updated_at
+    end
   end
 
   def tables_for_vcap_relations_spec
