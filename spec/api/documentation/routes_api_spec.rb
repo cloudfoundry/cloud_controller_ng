@@ -13,12 +13,18 @@ resource 'Routes', type: [:api, :legacy_api] do
   authenticated_request
 
   describe 'Standard endpoints' do
+    path_description = 'The path for a route as raw text.'
+    path_description += ' 1) Paths must be between 2 and 128 characters'
+    path_description += ' 2) Paths must start with a /'
+    path_description += ' 3) Paths must not contain a "?"'
+
+
     shared_context 'updatable_fields' do |opts|
       field :guid, 'The guid of the route.'
       field :domain_guid, 'The guid of the associated domain', required: opts[:required], example_values: [Sham.guid]
       field :space_guid, 'The guid of the associated space', required: opts[:required], example_values: [Sham.guid]
       field :host, 'The host portion of the route'
-      field :path, 'The path of a route', required: false, example_values: ['/apps/v1/path', '/apps/v2/path'], experimental: true
+      field :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path'], experimental: true
     end
 
     standard_model_list :route, VCAP::CloudController::RoutesController
