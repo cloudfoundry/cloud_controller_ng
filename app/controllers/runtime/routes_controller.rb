@@ -31,9 +31,9 @@ module VCAP::CloudController
         return Errors::ApiError.new_from_details('OrgQuotaTotalRoutesExceeded')
       end
 
-      path_errors = e.errors.on(:path)
-      if path_errors && path_errors.include?(:invalid_path)
-        return Errors::ApiError.new_from_details('PathInvalid', attributes['path'])
+      path_error = e.errors.on(:path)
+      if path_error
+        return path_errors(path_error, attributes)
       end
 
       Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
@@ -80,5 +80,19 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+  end
+
+  private
+
+  def path_errors(path_error, attributes)
+    if path_error.include?(:single_slash)
+      return Errors::ApiError.new_from_details('PathInvalid', 'the path cannot be a single slash')
+    elsif path_error.include?(:missing_beginning_slash)
+      return Errors::ApiError.new_from_details('PathInvalid', 'the path must start with a "/"')
+    elsif path_error.include?(:path_contains_question)
+      return Errors::ApiError.new_from_details('PathInvalid', 'illegal "?" character')
+    elsif path_error.include?(:invalid_path)
+      return Errors::ApiError.new_from_details('PathInvalid', attributes['path'])
+    end
   end
 end

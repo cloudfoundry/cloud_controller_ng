@@ -173,6 +173,30 @@ module VCAP::CloudController
         expect(decoded_response['code']).to eq(210001)
       end
 
+      it 'returns the a path cannot contain only "/"' do
+        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid, path: '/'), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(130004)
+        expect(decoded_response['description']).to include('the path cannot be a single slash')
+      end
+
+      it 'returns the a path must start with a "/"' do
+        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid, path: 'a/'), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(130004)
+        expect(decoded_response['description']).to include('the path must start with a "/"')
+      end
+
+      it 'returns the a path cannot contain "?" message for paths' do
+        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid, path: '/v2/zak?'), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(130004)
+        expect(decoded_response['description']).to include('illegal "?" character')
+      end
+
       it 'returns the PathInvalid message' do
         post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid, path: '/v2/zak?'), json_headers(admin_headers)
 

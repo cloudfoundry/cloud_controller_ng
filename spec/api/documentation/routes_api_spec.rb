@@ -18,7 +18,6 @@ resource 'Routes', type: [:api, :legacy_api] do
     path_description += ' 2) Paths must start with a /'
     path_description += ' 3) Paths must not contain a "?"'
 
-
     shared_context 'updatable_fields' do |opts|
       field :guid, 'The guid of the route.'
       field :domain_guid, 'The guid of the associated domain', required: opts[:required], example_values: [Sham.guid]
