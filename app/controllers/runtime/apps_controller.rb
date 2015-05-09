@@ -11,6 +11,9 @@ module VCAP::CloudController
       attribute :console,                Message::Boolean, default: false
       attribute :diego,                  Message::Boolean, default: nil
       attribute :docker_image,           String,           default: nil
+      attribute :docker_login_server,    String,           default: nil
+      attribute :docker_auth_token,      String,           default: nil
+      attribute :docker_email,           String,           default: nil
       attribute :debug,                  String,           default: nil
       attribute :disk_quota,             Integer,          default: nil
       attribute :environment_json,       Hash,             default: {}
