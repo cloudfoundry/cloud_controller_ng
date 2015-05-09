@@ -246,6 +246,7 @@ diego_docker: <%= p("cc.diego_docker") %>
 diego_nsync_url: http://nsync.service.consul:8787
 diego_stager_url: http://stager.service.consul:8888
 diego_tps_url: http://tps.service.consul:1518
+allow_app_ssh_access: <%= p("cc.allow_app_ssh_access") %>
 default_to_diego_backend: <%= p("cc.default_to_diego_backend") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
