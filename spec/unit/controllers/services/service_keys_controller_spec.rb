@@ -128,7 +128,7 @@ module VCAP::CloudController
           include_examples 'permission enumeration', 'SpaceManager',
                            name: 'getting service key',
                            path: '/v2/service_keys',
-                           enumerate: 0
+                           enumerate: 1
         end
 
         describe 'Developer' do

@@ -394,7 +394,7 @@ module VCAP::CloudController
           describe 'SpaceManager' do
             it_behaves_like(
               'enumerating service instances', 'SpaceManager',
-              expected: 0,
+              expected: 1,
             ) do
               let(:member_a) { @space_a_manager }
               let(:member_b) { @space_b_manager }

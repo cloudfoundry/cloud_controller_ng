@@ -54,6 +54,7 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(service_key.service_instance.space) }
       let(:auditor) { make_auditor_for_space(service_key.service_instance.space) }
       let(:user) { make_user_for_space(service_key.service_instance.space) }
+      let(:manager) { make_manager_for_space(service_key.service_instance.space) }
 
       it 'does not redact creds for an admin' do
         allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
@@ -72,6 +73,11 @@ module VCAP::CloudController
 
       it 'redacts creds for a space user' do
         allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user)
+        expect(service_key.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
+      end
+
+      it 'redacts creds for a space manager' do
+        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
         expect(service_key.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
       end
     end

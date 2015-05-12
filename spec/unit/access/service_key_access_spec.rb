@@ -67,7 +67,7 @@ module VCAP::CloudController
         space.add_manager(user)
       end
 
-      it_behaves_like :no_access
+      it_behaves_like :read_only
     end
 
     context 'space developer' do

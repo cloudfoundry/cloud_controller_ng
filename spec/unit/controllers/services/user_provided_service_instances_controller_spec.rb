@@ -52,8 +52,6 @@ module VCAP::CloudController
       end
 
       describe 'App Space Level Permissions' do
-        user_sees_empty_enumerate('SpaceManager', :@space_a_manager, :@space_b_manager)
-
         describe 'Developer' do
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
@@ -72,6 +70,16 @@ module VCAP::CloudController
                            name: 'user provided service instance',
                            path: '/v2/user_provided_service_instances',
                            enumerate: 1
+        end
+
+        describe 'SpaceManager' do
+          let(:member_a) { @space_a_manager }
+          let(:member_b) { @space_b_manager }
+
+          include_examples 'permission enumeration', 'SpaceManager',
+            name: 'user provided service instance',
+            path: '/v2/user_provided_service_instances',
+            enumerate: 1
         end
       end
     end
