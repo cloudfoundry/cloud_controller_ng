@@ -65,6 +65,18 @@ module ServiceBrokerHelpers
     /#{build_broker_url(broker.client.attrs)}#{path}(\?#{query})?/
   end
 
+  def update_url_for_broker(broker, accepts_incomplete: nil)
+    query = "accepts_incomplete=#{accepts_incomplete}" if accepts_incomplete
+    path = "/v2/service_instances/#{guid_pattern}"
+
+    /#{build_broker_url(broker.client.attrs)}#{path}(\?#{query})?/
+  end
+
+  def bind_url(service_instance, query: nil)
+    path = "/v2/service_instances/#{service_instance.guid}/service_bindings/#{guid_pattern}"
+    /#{build_broker_url(service_instance.client.attrs)}#{path}(\?#{query})?/
+  end
+
   def unbind_url(service_binding)
     plan = service_binding.service_instance.service_plan
     service = plan.service

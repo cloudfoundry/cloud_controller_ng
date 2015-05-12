@@ -36,7 +36,7 @@ module VCAP::Services::ServiceBrokers::V2
         make_request
         expect(a_request(http_method, full_url).
           with(query: hash_including({})).
-          with(headers: { 'X-Broker-Api-Version' => '2.4' })).
+          with(headers: { 'X-Broker-Api-Version' => '2.5' })).
           to have_been_made
       end
 

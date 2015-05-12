@@ -115,7 +115,7 @@ module VCAP::Services
         client = HTTPClient.new(force_basic_auth: true)
         client.set_auth(uri, auth_username, auth_password)
 
-        client.default_header[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.4'
+        client.default_header[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.5'
         client.default_header[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
         client.default_header['Accept'] = 'application/json'
 
