@@ -63,7 +63,7 @@ module VCAP::CloudController::BrokerApiHelper
     stub_catalog_fetch(200, catalog)
 
     post('/v2/service_brokers',
-         {name: 'broker-name', broker_url: 'http://broker-url', auth_username: 'username', auth_password: 'password'}.to_json,
+         { name: 'broker-name', broker_url: 'http://broker-url', auth_username: 'username', auth_password: 'password' }.to_json,
          json_headers(admin_headers))
     response = JSON.parse(last_response.body)
     @broker_guid = response['metadata']['guid']
@@ -100,7 +100,7 @@ module VCAP::CloudController::BrokerApiHelper
 
   def provision_service(opts={})
     stub_request(:put, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
-      to_return(status: 201, body: "#{{dashboard_url: 'https://your.service.com/dashboard'}.to_json}")
+      to_return(status: 201, body: "#{{ dashboard_url: 'https://your.service.com/dashboard' }.to_json}")
 
     body = {
       name: 'test-service',
@@ -144,7 +144,7 @@ module VCAP::CloudController::BrokerApiHelper
     stub_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
       to_return(status: 201, body: {}.to_json)
 
-    body = {app_guid: @app_guid, service_instance_guid: @service_instance_guid}
+    body = { app_guid: @app_guid, service_instance_guid: @service_instance_guid }
     if opts[:parameters]
       body[:parameters] = opts[:parameters]
     end
@@ -161,7 +161,7 @@ module VCAP::CloudController::BrokerApiHelper
     stub_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
       to_return(status: 201, body: {}.to_json)
 
-    body = {service_instance_guid: @service_instance_guid, name: 'test-key'}
+    body = { service_instance_guid: @service_instance_guid, name: 'test-key' }
     if opts[:parameters]
       body[:parameters] = opts[:parameters]
     end
