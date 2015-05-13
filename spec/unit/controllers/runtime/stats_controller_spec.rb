@@ -95,15 +95,17 @@ module VCAP::CloudController
 
         context 'when there is an error finding instances' do
           before do
-            allow(instances_reporters).to receive(:stats_for_app).and_raise(VCAP::Errors::ApiError.new_from_details('StatsError', 'msg'))
+            @app.start!
+            allow(instances_reporters).to receive(:stats_for_app).and_raise
           end
 
-          it 'returns 400' do
+          it 'returns an empty hash' do
             get("/v2/apps/#{@app.guid}/stats",
                 {},
                 headers_for(@developer))
 
-            expect(last_response.status).to eq(400)
+            expect(last_response.status).to eq(200)
+            expect(last_response.body).to match('{}')
           end
         end
 
