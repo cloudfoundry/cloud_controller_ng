@@ -177,7 +177,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:code) { '204' }
         let(:client) { Client.new(client_attrs) }
 
-        it 'throws ServiceBrokerBadResponse and initiates orphan mitigation' do
+        it 'raises ServiceBrokerBadResponse and initiates orphan mitigation' do
           expect {
             client.provision(instance)
           }.to raise_error(Errors::ServiceBrokerBadResponse)
@@ -990,6 +990,17 @@ module VCAP::Services::ServiceBrokers::V2
               }
             )
       end
+
+      context 'when the broker returns a 204 NO CONTENT' do
+        let(:code) { '204' }
+        let(:message) { 'NO CONTENT' }
+
+        it 'raises a ServiceBrokerBadResponse error' do
+          expect {
+            client.unbind(binding)
+          }.to raise_error(Errors::ServiceBrokerBadResponse)
+        end
+      end
     end
 
     describe '#deprovision' do
@@ -1075,6 +1086,18 @@ module VCAP::Services::ServiceBrokers::V2
               }
             })
           end
+        end
+      end
+
+      context 'when the broker returns a 204 NO CONTENT' do
+        let(:code) { '204' }
+        let(:message) { 'NO CONTENT' }
+        let(:client) { Client.new(client_attrs) }
+
+        it 'raises a ServiceBrokerBadResponse error' do
+          expect {
+            client.deprovision(instance)
+          }.to raise_error(Errors::ServiceBrokerBadResponse)
         end
       end
     end

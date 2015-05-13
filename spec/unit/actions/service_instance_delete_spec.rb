@@ -201,8 +201,10 @@ module VCAP::CloudController
       end
 
       context 'when the broker returns an error for one of the deletions' do
+        let(:error_status_code) { 500 }
+
         before do
-          stub_deprovision(service_instance_2, status: 500)
+          stub_deprovision(service_instance_2, status: error_status_code)
         end
 
         it 'does not rollback previous deletions of service instances' do

@@ -59,7 +59,7 @@ module VCAP::Services
                 FailingValidator.new(Errors::ServiceBrokerBadResponse),
                   SuccessValidator.new(state: 'in progress')))
           when 204
-            SuccessValidator.new { |res| {} }
+            FailingValidator.new(Errors::ServiceBrokerBadResponse)
           when 410
             @logger.warn("Already deleted: #{unvalidated_response.uri}")
             SuccessValidator.new { |res| {} }
