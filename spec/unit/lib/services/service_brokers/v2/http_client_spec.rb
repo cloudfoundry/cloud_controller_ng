@@ -64,9 +64,9 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'logs the default headers' do
         make_request
-        expect(fake_logger).to have_received(:debug).with(match(%r{Accept"=>"application/json}))
-        expect(fake_logger).to have_received(:debug).with(match(%r{X-VCAP-Request-ID"=>"[[:alnum:]-]+}))
-        expect(fake_logger).to have_received(:debug).with(match(%r{X-Broker-Api-Version"=>"2\.5}))
+        expect(fake_logger).to have_received(:debug).with(match(/Accept"=>"application\/json/))
+        expect(fake_logger).to have_received(:debug).with(match(/X-VCAP-Request-ID"=>"[[:alnum:]-]+/))
+        expect(fake_logger).to have_received(:debug).with(match(/X-Broker-Api-Version"=>"2\.5/))
       end
 
       context 'when an https URL is used' do
@@ -368,7 +368,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'logs the Content-Type Header' do
           make_request
-          expect(fake_logger).to have_received(:debug).with(match(%r{"Content-Type"=>"application/json"}))
+          expect(fake_logger).to have_received(:debug).with(match(/"Content-Type"=>"application\/json"/))
         end
 
         it 'has a content body' do
@@ -430,7 +430,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'logs the Content-Type Header' do
           make_request
-          expect(fake_logger).to have_received(:debug).with(match(%r{"Content-Type"=>"application/json"}))
+          expect(fake_logger).to have_received(:debug).with(match(/"Content-Type"=>"application\/json"/))
         end
 
         it 'has a content body' do
