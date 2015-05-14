@@ -59,7 +59,7 @@ module VCAP::CloudController
       plan_changed = plan != service_instance.service_plan
       arbitrary_params_present = request_attrs['parameters']
 
-      return successful_sync_operation, nil if ! plan_changed && ! arbitrary_params_present
+      return successful_sync_operation, nil if !plan_changed && !arbitrary_params_present
 
       service_instance.client.update_service_plan(
           service_instance,
