@@ -22,6 +22,8 @@ module VCAP::CloudController
           version: Fixnum,
           support_address: String,
           description: String,
+          optional(:app_ssh_endpoint) => String,
+          optional(:app_ssh_host_key_fingerprint) => String
         },
 
         :system_domain => String,
