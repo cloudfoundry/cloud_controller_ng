@@ -115,12 +115,15 @@ module VCAP::CloudController
             allow(instances_reporters).to receive(:stats_for_app).and_raise(VCAP::Errors::ApiError.new_from_details('StatsError', 'msg'))
           end
 
-          it 'returns 400' do
+          it 'raises an error' do
+            @app.update(state: 'STARTED')
+
             get("/v2/apps/#{@app.guid}/stats",
                 {},
                 headers_for(@developer))
 
             expect(last_response.status).to eq(400)
+            expect(MultiJson.load(last_response.body)['code']).to eq(200001)
           end
         end
 
@@ -133,7 +136,7 @@ module VCAP::CloudController
             get("/v2/apps/#{@app.guid}/stats", {}, headers_for(@developer))
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match("Stats error: Request failed for app: #{@app.name} as the app is in stopped state.")
+            expect(last_response.body).to match("Could not fetch stats for stopped app #{@app.name}")
           end
         end
       end
