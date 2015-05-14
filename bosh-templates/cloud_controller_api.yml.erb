@@ -102,12 +102,6 @@ info:
   version: <%= p("version") %>
   support_address: <%= p("support_address") %>
   description: <%= p("description") %>
-<% if_p("cc.allow_app_ssh_access") do %>
-  app_ssh_endpoint: <%= "ssh." + p("system_domain") + ":" + p("app_ssh.port").to_s %>
-<% if_p("app_ssh.host_key_fingerprint") do |fingerprint| %>
-  app_ssh_host_key_fingerprint: <%= fingerprint %>
-<% end %>
-<% end %>
 <% if_p("cc.min_cli_version") do |min_cli_version| %>
   min_cli_version: <%= min_cli_version %>
 <% end %>

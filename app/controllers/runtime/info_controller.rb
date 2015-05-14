@@ -14,9 +14,7 @@ module VCAP::CloudController
         token_endpoint: config[:uaa][:url],
         min_cli_version: @config[:info][:min_cli_version],
         min_recommended_cli_version: @config[:info][:min_recommended_cli_version],
-        api_version: VCAP::CloudController::Constants::API_VERSION,
-        app_ssh_endpoint: @config[:info][:app_ssh_endpoint],
-        app_ssh_host_key_fingerprint: @config[:info][:app_ssh_host_key_fingerprint]
+        api_version: VCAP::CloudController::Constants::API_VERSION
       }
 
       if @config[:loggregator] && @config[:loggregator][:url]

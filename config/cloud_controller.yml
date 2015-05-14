@@ -45,8 +45,6 @@ info:
   version: 2
   support_address: "http://support.cloudfoundry.com"
   description: "Cloud Foundry sponsored by Pivotal"
-  app_ssh_endpoint: "ssh.system.domain.example.com:2222"
-  app_ssh_host_key_fingerprint: "47:0d:d1:c8:c3:3d:0a:36:d1:49:2f:f2:90:27:31:d0"
 
 nginx:
   use_nginx: false
