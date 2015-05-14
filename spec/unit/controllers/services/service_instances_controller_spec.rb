@@ -872,6 +872,25 @@ module VCAP::CloudController
                 to have_been_made.times(0)
             end
           end
+
+          context 'when only arbitrary parameters are passed' do
+            let(:body) do
+              {
+                parameters: parameters
+              }.to_json
+            end
+
+            let(:parameters) do
+              { myParam: 'some-value' }
+            end
+
+            it 'should pass along the parameters to the service broker' do
+              put "/v2/service_instances/#{service_instance.guid}", body, headers_for(admin_user, email: 'admin@example.com')
+              puts last_response.inspect
+              expect(last_response).to have_status_code(201)
+              expect(a_request(:patch, service_broker_url_regex).with(body: hash_including(parameters: parameters))).to have_been_made.times(1)
+            end
+          end
         end
 
         context 'when the request is a service instance rename' do

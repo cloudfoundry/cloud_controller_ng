@@ -53,12 +53,17 @@ module VCAP::CloudController
       space_guid = request_attrs['space_guid']
       return { space_guid: space_guid }.merge(successful_sync_operation), nil if space_guid
 
-      new_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
-      return successful_sync_operation, nil if new_plan == service_instance.service_plan
+      service_plan_guid = request_attrs['service_plan_guid'] ? request_attrs['service_plan_guid'] : service_instance.service_plan_guid
+      plan = ServicePlan.find(guid: service_plan_guid)
+
+      plan_changed = plan != service_instance.service_plan
+      arbitrary_params_present = request_attrs['parameters']
+
+      return successful_sync_operation, nil if ! plan_changed && ! arbitrary_params_present
 
       service_instance.client.update_service_plan(
           service_instance,
-          new_plan,
+          plan,
           accepts_incomplete: accepts_incomplete,
           arbitrary_parameters: request_attrs['parameters']
       )
