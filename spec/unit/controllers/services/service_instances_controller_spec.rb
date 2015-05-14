@@ -886,7 +886,6 @@ module VCAP::CloudController
 
             it 'should pass along the parameters to the service broker' do
               put "/v2/service_instances/#{service_instance.guid}", body, headers_for(admin_user, email: 'admin@example.com')
-              puts last_response.inspect
               expect(last_response).to have_status_code(201)
               expect(a_request(:patch, service_broker_url_regex).with(body: hash_including(parameters: parameters))).to have_been_made.times(1)
             end
