@@ -11,12 +11,16 @@ module VCAP::Services::ServiceBrokers::V2
     let(:url) { 'http://broker.example.com' }
     let(:full_url) { "http://#{auth_username}:#{auth_password}@broker.example.com#{path}" }
     let(:path) { '/the/path' }
+    let(:fake_logger) { nil }
 
     subject(:client) do
       HttpClient.new(
-        url: url,
-        auth_username: auth_username,
-        auth_password: auth_password
+        {
+          url: url,
+          auth_username: auth_username,
+          auth_password: auth_password,
+        },
+        fake_logger
       )
     end
 
@@ -25,18 +29,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     shared_examples 'a basic successful request' do
-      let(:fake_logger) { double(:logger, debug: nil) }
-
-      subject(:client) do
-        HttpClient.new(
-          {
-            url: url,
-            auth_username: auth_username,
-            auth_password: auth_password
-          },
-          fake_logger
-        )
-      end
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
 
       describe 'returning a correct response object' do
         subject { make_request }
@@ -69,9 +62,11 @@ module VCAP::Services::ServiceBrokers::V2
           to have_been_made
       end
 
-      it 'logs the Broker API Version' do
+      it 'logs the default headers' do
         make_request
-        expect(fake_logger).to have_received(:debug).with(match(/X-Broker-Api-Version.*2\.5/))
+        expect(fake_logger).to have_received(:debug).with(match(%r{Accept"=>"application/json}))
+        expect(fake_logger).to have_received(:debug).with(match(%r{X-VCAP-Request-ID"=>"[[:alnum:]-]+}))
+        expect(fake_logger).to have_received(:debug).with(match(%r{X-Broker-Api-Version"=>"2\.5}))
       end
 
       context 'when an https URL is used' do
@@ -343,6 +338,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#put' do
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
       let(:http_method) { :put }
       let(:message) do
         {
@@ -368,6 +364,11 @@ module VCAP::Services::ServiceBrokers::V2
           expect(a_request(:put, full_url).
             with(headers: { 'Content-Type' => 'application/json' })).
             to have_been_made
+        end
+
+        it 'logs the Content-Type Header' do
+          make_request
+          expect(fake_logger).to have_received(:debug).with(match(%r{"Content-Type"=>"application/json"}))
         end
 
         it 'has a content body' do
@@ -399,6 +400,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#patch' do
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
       let(:http_method) { :patch }
       let(:message) do
         {
@@ -424,6 +426,11 @@ module VCAP::Services::ServiceBrokers::V2
           expect(a_request(:patch, full_url).
             with(headers: { 'Content-Type' => 'application/json' })).
             to have_been_made
+        end
+
+        it 'logs the Content-Type Header' do
+          make_request
+          expect(fake_logger).to have_received(:debug).with(match(%r{"Content-Type"=>"application/json"}))
         end
 
         it 'has a content body' do
