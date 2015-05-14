@@ -101,9 +101,14 @@ module VCAP::CloudController
       update = ServiceInstanceUpdate.new(accepts_incomplete: accepts_incomplete, services_event_repository: @services_event_repository)
       update.update_service_instance(service_instance, request_attrs)
 
+      status_code = status_from_operation_state(service_instance)
+      if status_code == HTTP::ACCEPTED
+        headers = { 'Location' => "#{self.class.path}/#{service_instance.guid}" }
+      end
+
       [
-        status_from_operation_state(service_instance),
-        {},
+        status_code,
+        headers,
         object_renderer.render_json(self.class, service_instance, @opts)
       ]
     end
@@ -129,9 +134,17 @@ module VCAP::CloudController
       delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
 
       if delete_job
-        [HTTP::ACCEPTED, JobPresenter.new(delete_job).to_json]
+        [
+          HTTP::ACCEPTED,
+          { 'Location' => "/v2/jobs/#{delete_job.guid}" },
+          JobPresenter.new(delete_job).to_json
+        ]
       elsif service_instance.exists?
-        [HTTP::ACCEPTED, {}, object_renderer.render_json(self.class, service_instance.refresh, @opts)]
+        [
+          HTTP::ACCEPTED,
+          { 'Location' => "#{self.class.path}/#{service_instance.guid}" },
+          object_renderer.render_json(self.class, service_instance.refresh, @opts)
+        ]
       else
         [HTTP::NO_CONTENT, nil]
       end

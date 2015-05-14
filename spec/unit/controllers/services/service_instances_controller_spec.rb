@@ -231,6 +231,7 @@ module VCAP::CloudController
           instance = create_managed_service_instance(accepts_incomplete: 'false')
 
           expect(last_response).to have_status_code(201)
+          expect(last_response.headers['Location']).to eq "/v2/service_instances/#{instance.guid}"
 
           expect(instance.credentials).to eq({})
           expect(instance.dashboard_url).to eq('the dashboard_url')
@@ -843,6 +844,11 @@ module VCAP::CloudController
           expect(last_response).to have_status_code 201
         end
 
+        it 'does not set a Location header' do
+          put "/v2/service_instances/#{service_instance.guid}", body, headers_for(admin_user, email: 'admin@example.com')
+          expect(last_response.headers['Location']).to be_nil
+        end
+
         context 'when the request has arbitrary parameters' do
           let(:body) do
             {
@@ -1143,6 +1149,11 @@ module VCAP::CloudController
           it 'returns a 202' do
             put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
             expect(last_response).to have_status_code 202
+          end
+
+          it 'sets the Location header' do
+            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(admin_user, email: 'admin@example.com')
+            expect(last_response.headers['Location']).to eq("/v2/service_instances/#{service_instance.guid}")
           end
 
           it 'immediately enqueues a job to fetch the state' do
@@ -1528,6 +1539,7 @@ module VCAP::CloudController
             delete "/v2/service_instances/#{service_instance.guid}", {}, admin_headers
           }.to change(ServiceInstance, :count).by(-1)
           expect(last_response.status).to eq(204)
+          expect(last_response.headers['Location']).to be_nil
           expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
         end
 
@@ -1693,6 +1705,7 @@ module VCAP::CloudController
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
               expect(last_response).to have_status_code 202
+              expect(last_response.headers['Location']).to eq "/v2/service_instances/#{service_instance.guid}"
               expect(service_instance.last_operation.state).to eq 'in progress'
 
               expect(ManagedServiceInstance.last.last_operation.type).to eq('delete')
@@ -1843,6 +1856,7 @@ module VCAP::CloudController
           it 'returns a job id' do
             delete "/v2/service_instances/#{service_instance.guid}?async=true", {}, admin_headers
             expect(last_response).to have_status_code 202
+            expect(last_response.headers['Location']).to eq "/v2/jobs/#{decoded_response['entity']['guid']}"
             expect(decoded_response['entity']['guid']).to be
             expect(decoded_response['entity']['status']).to eq 'queued'
 
