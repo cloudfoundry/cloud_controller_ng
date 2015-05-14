@@ -25,6 +25,19 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     shared_examples 'a basic successful request' do
+      let(:fake_logger) { double(:logger, debug: nil) }
+
+      subject(:client) do
+        HttpClient.new(
+          {
+            url: url,
+            auth_username: auth_username,
+            auth_password: auth_password
+          },
+          fake_logger
+        )
+      end
+
       describe 'returning a correct response object' do
         subject { make_request }
 
@@ -56,6 +69,11 @@ module VCAP::Services::ServiceBrokers::V2
           to have_been_made
       end
 
+      it 'logs the Broker API Version' do
+        make_request
+        expect(fake_logger).to have_received(:debug).with(match(/X-Broker-Api-Version.*2\.5/))
+      end
+
       context 'when an https URL is used' do
         let(:url) { 'https://broker.example.com' }
         let(:full_url) { "https://#{auth_username}:#{auth_password}@broker.example.com#{path}" }
@@ -74,6 +92,7 @@ module VCAP::Services::ServiceBrokers::V2
               :receive_timeout= => nil,
               :send_timeout= => nil,
               :set_auth => nil,
+              :default_header= => nil,
               :default_header => {},
               :ssl_config => ssl_config,
               :request => response)
@@ -165,6 +184,7 @@ module VCAP::Services::ServiceBrokers::V2
           :receive_timeout= => nil,
           :send_timeout= => nil,
           :set_auth => nil,
+          :default_header= => nil,
           :default_header => {},
           :ssl_config => ssl_config,
           :request => response)
