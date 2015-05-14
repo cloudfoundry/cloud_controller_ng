@@ -16,6 +16,36 @@ describe StructuredError do
     end
   end
 
+  context 'with an array source' do
+    let(:source) { [] }
+
+    it 'returns the hashed array' do
+      exception = described_class.new('some msg', source)
+      exception.set_backtrace(['/foo:1', '/bar:2'])
+
+      expect(exception.to_h).to eq({
+         'description' => 'some msg',
+         'backtrace' => ['/foo:1', '/bar:2'],
+         'source' => {},
+      })
+    end
+
+    context 'when the array is not hashable' do
+      let(:source) { [{}] }
+
+      it 'returns the string form of the array' do
+        exception = described_class.new('some msg', source)
+        exception.set_backtrace(['/foo:1', '/bar:2'])
+
+        expect(exception.to_h).to eq({
+         'description' => 'some msg',
+         'backtrace' => ['/foo:1', '/bar:2'],
+         'source' => '[{}]',
+        })
+      end
+    end
+  end
+
   context 'with a nested exception source' do
     let(:source) do
       src = SocketError.new('something bad happened')
