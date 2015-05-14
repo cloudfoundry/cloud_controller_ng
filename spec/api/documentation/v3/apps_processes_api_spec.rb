@@ -84,6 +84,7 @@ resource 'Apps (Experimental)', type: :api do
         'updated_at' => iso8601,
         '_links'     => {
           'self'     => { 'href' => "/v3/processes/#{process.guid}" },
+          'scale'    => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'      => { 'href' => "/v3/apps/#{process.app_guid}" },
           'space'    => { 'href' => "/v2/spaces/#{process.space_guid}" },
         },
@@ -128,6 +129,7 @@ resource 'Apps (Experimental)', type: :api do
         'updated_at' => iso8601,
         '_links'     => {
           'self'     => { 'href' => "/v3/processes/#{process.guid}" },
+          'scale'    => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'      => { 'href' => "/v3/apps/#{process.app_guid}" },
           'space'    => { 'href' => "/v2/spaces/#{process.space_guid}" },
         },

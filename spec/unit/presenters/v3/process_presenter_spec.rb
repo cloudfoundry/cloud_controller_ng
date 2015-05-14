@@ -14,6 +14,7 @@ module VCAP::CloudController
 
         links = {
           'self'  => { 'href' => "/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "/v2/spaces/#{process.space_guid}" },
         }

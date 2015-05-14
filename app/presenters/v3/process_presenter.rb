@@ -27,6 +27,7 @@ module VCAP::CloudController
     def build_links(process)
       {
         self:  { href: "/v3/processes/#{process.guid}" },
+        scale: { href: "/v3/processes/#{process.guid}/scale", 'method' => 'PUT', },
         app:   { href: "/v3/apps/#{process.app_guid}" },
         space: { href: "/v2/spaces/#{process.space_guid}" },
       }
