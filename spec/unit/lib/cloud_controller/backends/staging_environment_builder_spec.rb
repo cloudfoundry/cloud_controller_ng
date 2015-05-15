@@ -49,9 +49,9 @@ module VCAP::CloudController
         it 'includes the uris as part of vcap_application' do
           route1 = Route.make(space: space)
           route2 = Route.make(space: space)
-          route_adder = AddRouteToApp.new(app)
-          route_adder.add(route1)
-          route_adder.add(route2)
+          add_route_to_app = AddRouteToApp.new(nil, nil)
+          add_route_to_app.add(app, route1, nil)
+          add_route_to_app.add(app, route2, nil)
 
           environment_variables = builder.build(app, space, stack, memory_limit, disk_limit)
           expect(environment_variables['VCAP_APPLICATION']['uris']).to match([route1.fqdn, route2.fqdn])

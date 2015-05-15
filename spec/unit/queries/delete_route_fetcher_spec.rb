@@ -9,8 +9,8 @@ module VCAP::CloudController
     let(:route) { Route.make(space: space) }
 
     before do
-      AddRouteToApp.new(app_model).add(Route.make(space: space))
-      AddRouteToApp.new(app_model).add(route)
+      AddRouteToApp.new(nil, nil).add(app_model, Route.make(space: space), nil)
+      AddRouteToApp.new(nil, nil).add(app_model, route, nil)
     end
 
     it 'fetches the associated app, route, space, org' do

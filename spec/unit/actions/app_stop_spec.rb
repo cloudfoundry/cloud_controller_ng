@@ -39,6 +39,18 @@ module VCAP::CloudController
           expect(process.state).to eq('STOPPED')
         end
       end
+
+      context 'when the app is invalid' do
+        before do
+          allow_any_instance_of(AppModel).to receive(:update).and_raise(Sequel::ValidationFailed.new('some message'))
+        end
+
+        it 'raises a InvalidApp exception' do
+          expect {
+            app_stop.stop(app_model)
+          }.to raise_error(AppStop::InvalidApp, 'some message')
+        end
+      end
     end
   end
 end

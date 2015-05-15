@@ -650,6 +650,24 @@ module VCAP::CloudController
               end
             end
           end
+
+          context 'when the user has an invalid app' do
+            let(:app_start) { instance_double(AppStart) }
+
+            before do
+              allow(AppStart).to receive(:new).and_return(app_start)
+              allow(app_start).to receive(:start).and_raise(AppStart::InvalidApp.new)
+            end
+
+            it 'returns an UnprocessableEntity error' do
+              expect {
+                apps_controller.start(app_model.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'UnprocessableEntity'
+                expect(error.response_code).to eq 422
+              end
+            end
+          end
         end
       end
     end
@@ -727,6 +745,24 @@ module VCAP::CloudController
               }.to raise_error do |error|
                 expect(error.name).to eq 'ResourceNotFound'
                 expect(error.response_code).to eq 404
+              end
+            end
+          end
+
+          context 'when the user has an invalid app' do
+            let(:app_stop) { instance_double(AppStop) }
+
+            before do
+              allow(AppStop).to receive(:new).and_return(app_stop)
+              allow(app_stop).to receive(:stop).and_raise(AppStop::InvalidApp.new)
+            end
+
+            it 'returns an UnprocessableEntity error' do
+              expect {
+                apps_controller.stop(app_model.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'UnprocessableEntity'
+                expect(error.response_code).to eq 422
               end
             end
           end

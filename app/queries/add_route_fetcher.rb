@@ -4,10 +4,11 @@ module VCAP::CloudController
       app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
       return nil if app.nil?
 
-      route = routes_dataset(app.space_guid).where(:"#{Route.table_name}__guid" => route_guid).first
+      web_process = app.processes_dataset.where(type: 'web').first
+      route       = routes_dataset(app.space_guid).where(:"#{Route.table_name}__guid" => route_guid).first
 
       org = app.space ? app.space.organization : nil
-      [app, route, app.space, org]
+      [app, route, web_process, app.space, org]
     end
 
     private

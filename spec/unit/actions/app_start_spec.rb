@@ -49,6 +49,18 @@ module VCAP::CloudController
           app_start.start(app_model)
         end
 
+        context 'when the app is invalid' do
+          before do
+            allow_any_instance_of(AppModel).to receive(:update).and_raise(Sequel::ValidationFailed.new('some message'))
+          end
+
+          it 'raises a InvalidApp exception' do
+            expect {
+              app_start.start(app_model)
+            }.to raise_error(AppStart::InvalidApp, 'some message')
+          end
+        end
+
         context 'and the droplet has a package' do
           let(:droplet) { DropletModel.make(package_guid: package.guid) }
           let(:package) { PackageModel.make(package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }

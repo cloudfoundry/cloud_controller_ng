@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class AppStop
+    class InvalidApp < StandardError; end
+
     def initialize(user, user_email)
       @user = user
       @user_email = user_email
@@ -24,6 +26,8 @@ module VCAP::CloudController
           })
         end
       end
+    rescue Sequel::ValidationFailed => e
+      raise InvalidApp.new(e.message)
     end
   end
 end

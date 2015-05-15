@@ -3,6 +3,7 @@ require 'actions/procfile_parse'
 module VCAP::CloudController
   class AppStart
     class DropletNotFound < StandardError; end
+    class InvalidApp < StandardError; end
 
     def initialize(user, user_email)
       @user = user
@@ -36,6 +37,8 @@ module VCAP::CloudController
           })
         end
       end
+    rescue Sequel::ValidationFailed => e
+      raise InvalidApp.new(e.message)
     end
   end
 end

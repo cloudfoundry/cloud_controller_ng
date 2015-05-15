@@ -127,6 +127,21 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the mapping is invalid' do
+        before do
+          allow(AddRouteToApp).to receive(:new).and_raise(AddRouteToApp::InvalidRouteMapping.new('shablam'))
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          expect {
+            apps_routes_controller.add_route(app.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq 422
+          end
+        end
+      end
     end
 
     describe '#list' do
@@ -204,7 +219,7 @@ module VCAP::CloudController
       let(:req_body) { { route_guid: route_guid }.to_json }
 
       before do
-        AddRouteToApp.new(app_model).add(route)
+        AppModelRoute.create(app: app_model, route: route, type: 'web')
         allow(apps_routes_controller).to receive(:check_write_permissions!).and_return(nil)
       end
 
@@ -218,7 +233,7 @@ module VCAP::CloudController
       context 'when the route is mapped to multiple apps' do
         let(:another_app) { AppModel.make(space_guid: space.guid) }
         before do
-          AddRouteToApp.new(another_app).add(route)
+          AppModelRoute.create(app: another_app, route: route, type: 'web')
         end
 
         it 'removes only the mapping from the current app' do

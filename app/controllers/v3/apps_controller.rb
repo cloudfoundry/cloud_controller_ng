@@ -119,6 +119,8 @@ module VCAP::CloudController
       [HTTP::OK, @app_presenter.present_json(app)]
     rescue AppStart::DropletNotFound
       droplet_not_found!
+    rescue AppStart::InvalidApp => e
+      unprocessable!(e.message)
     end
 
     put '/v3/apps/:guid/stop', :stop
@@ -131,6 +133,8 @@ module VCAP::CloudController
 
       AppStop.new(current_user, current_user_email).stop(app)
       [HTTP::OK, @app_presenter.present_json(app)]
+    rescue AppStop::InvalidApp => e
+      unprocessable!(e.message)
     end
 
     get '/v3/apps/:guid/env', :env

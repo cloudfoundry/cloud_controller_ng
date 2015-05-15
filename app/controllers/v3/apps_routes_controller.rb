@@ -26,15 +26,17 @@ module VCAP::CloudController
       check_write_permissions!
 
       opts = MultiJson.load(body)
-      app, route, space, org = AddRouteFetcher.new.fetch(app_guid, opts['route_guid'])
+      app, route, web_process, space, org = AddRouteFetcher.new.fetch(app_guid, opts['route_guid'])
       app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
       route_not_found! if route.nil?
       unauthorized! unless can_delete?(space.guid)
 
       app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
 
-      AddRouteToApp.new(app).add(route)
+      AddRouteToApp.new(current_user, current_user_email).add(app, route, web_process)
       [HTTP::NO_CONTENT]
+    rescue AddRouteToApp::InvalidRouteMapping => e
+      unprocessable!(e.message)
     end
 
     delete '/v3/apps/:guid/routes', :delete
