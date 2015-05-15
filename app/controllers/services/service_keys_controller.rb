@@ -43,7 +43,13 @@ module VCAP::CloudController
     rescue ServiceKeyManager::ServiceInstanceNotFound
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid'])
     rescue ServiceKeyManager::ServiceInstanceNotBindable
-      raise VCAP::Errors::ApiError.new_from_details('ServiceKeyNotSupported')
+      error_message = "This service doesn't support creation of keys."
+      raise VCAP::Errors::ApiError.new_from_details('ServiceKeyNotSupported', error_message)
+    rescue ServiceKeyManager::ServiceInstanceVersionMismatch
+      error_message = 'Service keys are not supported for this service. ' \
+        'The service broker implements the v1 Service Broker API which has been deprecated. '\
+        'To generate credentials, try binding an application to the service instance.'
+      raise VCAP::Errors::ApiError.new_from_details('ServiceKeyNotSupported', error_message)
     end
 
     delete path_guid, :delete

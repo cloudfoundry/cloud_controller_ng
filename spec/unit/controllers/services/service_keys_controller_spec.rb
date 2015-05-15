@@ -154,20 +154,20 @@ module VCAP::CloudController
     end
 
     describe 'create' do
-      context 'for managed instances' do
-        let(:instance) { ManagedServiceInstance.make }
-        let(:space) { instance.space }
-        let(:service) { instance.service }
-        let(:developer) { make_developer_for_space(space) }
-        let(:name) { 'fake-service-key' }
-        let(:service_instance_guid) { instance.guid }
-        let(:req) do
-          {
-            name: name,
-            service_instance_guid: service_instance_guid
-          }.to_json
-        end
+      let(:instance) { ManagedServiceInstance.make }
+      let(:space) { instance.space }
+      let(:service) { instance.service }
+      let(:developer) { make_developer_for_space(space) }
+      let(:name) { 'fake-service-key' }
+      let(:service_instance_guid) { instance.guid }
+      let(:req) do
+        {
+          name: name,
+          service_instance_guid: service_instance_guid
+        }.to_json
+      end
 
+      context 'for managed services' do
         before do
           stub_requests(service.service_broker)
         end
@@ -373,6 +373,19 @@ module VCAP::CloudController
 
             expect(a_request(:put, url_regex).with(body: expected_body)).to have_been_made
           end
+        end
+      end
+
+      context 'when the instance is for a v1 service' do
+        let(:instance) { ManagedServiceInstance.make(:v1) }
+
+        it 'returns an error to the user' do
+          post '/v2/service_keys', req, json_headers(headers_for(developer))
+          expect(last_response).to have_status_code 400
+          expect(decoded_response['description']).to eq(
+              'Service keys are not supported for this service. The service broker ' \
+              'implements the v1 Service Broker API which has been deprecated. To ' \
+              'generate credentials, try binding an application to the service instance.')
         end
       end
     end
