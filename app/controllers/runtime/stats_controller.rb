@@ -18,7 +18,11 @@ module VCAP::CloudController
         raise ApiError.new_from_details('StatsError', msg)
       end
 
-      [HTTP::OK, MultiJson.dump(instances_reporters.stats_for_app(app))]
+      begin
+        [HTTP::OK, MultiJson.dump(instances_reporters.stats_for_app(app))]
+      rescue
+        [HTTP::OK, MultiJson.dump({})]
+      end
     end
 
     protected
