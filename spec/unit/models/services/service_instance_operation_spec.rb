@@ -28,8 +28,8 @@ module VCAP::CloudController
           'type' => 'create'
         })
 
-        expect(operation.to_hash['updated_at']).to eq(updated_at_time)
-        expect(operation.to_hash['created_at']).to eq(created_at_time)
+        expect(operation.to_hash['updated_at'].to_i).to eq(updated_at_time.to_i)
+        expect(operation.to_hash['created_at'].to_i).to eq(created_at_time.to_i)
       end
     end
 
