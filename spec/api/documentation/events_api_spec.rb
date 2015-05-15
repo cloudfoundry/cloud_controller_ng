@@ -221,6 +221,38 @@ resource 'Events', type: [:api, :legacy_api] do
                                metadata: { 'request' => { 'recursive' => false } }
     end
 
+    example 'List App SSH Authorized Events' do
+      app_event_repository.record_app_ssh_authorized(test_app, test_user.guid, test_user_email)
+
+      client.get '/v2/events?q=type:audit.app.ssh-authorized', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'app',
+                               actee: test_app.guid,
+                               actee_name: test_app.name,
+                               space_guid: test_app.space.guid,
+                               metadata: {}
+    end
+
+    example 'List App SSH Unauthorized Events' do
+      app_event_repository.record_app_ssh_unauthorized(test_app, test_user.guid, test_user_email)
+
+      client.get '/v2/events?q=type:audit.app.ssh-unauthorized', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'app',
+                               actee: test_app.guid,
+                               actee_name: test_app.name,
+                               space_guid: test_app.space.guid,
+                               metadata: {}
+    end
+
     example 'List events associated with an App since January 1, 2014' do
       app_event_repository.record_app_create(test_app, test_app.space, test_user.guid, test_user_email, app_request)
       app_event_repository.record_app_update(test_app, test_app.space, test_user.guid, test_user_email, app_request)
