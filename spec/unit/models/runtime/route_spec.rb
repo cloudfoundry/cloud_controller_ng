@@ -141,6 +141,14 @@ module VCAP::CloudController
             Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id)
           }.not_to raise_error
         end
+
+        it 'allows a route with same host and domain with a path' do
+          r = Route.make
+
+          expect {
+            Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id, path: '/a/path')
+          }.not_to raise_error
+        end
       end
 
       describe 'host' do

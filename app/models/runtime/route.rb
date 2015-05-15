@@ -55,10 +55,13 @@ module VCAP::CloudController
 
       validates_format /^([\w\-]+|\*)$/, :host if host && !host.empty?
 
-      validates_unique [:host, :domain_id] do |ds|
-        ds.where(path: '')
+      if path.empty?
+        validates_unique [:host, :domain_id]  do |ds|
+          ds.where(path: '')
+        end
+      else
+        validates_unique [:host, :domain_id, :path]
       end
-      validates_unique [:host, :domain_id, :path] unless path.empty?
 
       validate_path
 
