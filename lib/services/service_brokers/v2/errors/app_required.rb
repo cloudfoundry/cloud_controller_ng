@@ -4,7 +4,7 @@ module VCAP::Services
       module Errors
         class AppRequired < HttpResponseError
           def initialize(uri, method, response)
-            message = VCAP::Errors::ApiError.new_from_details('ServiceKeyNotCreatable').message
+            message = 'This service supports generation of credentials through binding an application only.'
             super(message, uri, method, response)
           end
 
