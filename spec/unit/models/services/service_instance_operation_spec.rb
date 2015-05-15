@@ -3,12 +3,14 @@ require 'spec_helper'
 module VCAP::CloudController
   describe ServiceInstanceOperation, type: :model do
     let(:updated_at_time) { Time.now }
+    let(:created_at_time) { Time.now }
     let(:operation_attributes) do
       {
         state: 'in progress',
         description: '50% all the time',
         type: 'create',
         updated_at: updated_at_time,
+        created_at: created_at_time,
         proposed_changes: {
           name: 'pizza',
           service_plan_guid: '1800-pizza',
@@ -26,7 +28,8 @@ module VCAP::CloudController
           'type' => 'create'
         })
 
-        expect(operation.to_hash['updated_at']).to be
+        expect(operation.to_hash['updated_at']).to eq(updated_at_time)
+        expect(operation.to_hash['created_at']).to eq(created_at_time)
       end
     end
 
