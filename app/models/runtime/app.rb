@@ -390,14 +390,15 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      Sequel.or([
-        [:space, user.spaces_dataset],
-        [:space, user.managed_spaces_dataset],
-        [:space, user.audited_spaces_dataset],
-        [:apps__space_id, user.managed_organizations_dataset.join(
-          :spaces, spaces__organization_id: :organizations__id
-        ).select(:spaces__id)]
-      ])
+      {
+        space_id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
+          Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id).union(
+            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id).union(
+              Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
+            )
+          )
+        ).select(:id)
+      }
     end
 
     def needs_staging?

@@ -128,12 +128,15 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      Sequel.or(
-        organization: user.managed_organizations_dataset,
-        developers: [user],
-        managers: [user],
-        auditors: [user]
-      )
+      {
+        id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
+              Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id).union(
+                Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id).union(
+                  Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
+                )
+              )
+            ).select(:id)
+      }
     end
 
     def has_remaining_memory(mem)
