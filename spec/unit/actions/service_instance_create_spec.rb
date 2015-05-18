@@ -74,6 +74,7 @@ module VCAP::CloudController
         before do
           allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
           allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise
+          allow(logger).to receive(:error)
         end
 
         it 'attempts synchronous orphan mitigation' do
@@ -81,6 +82,12 @@ module VCAP::CloudController
             create_action.create(request_attrs, false)
           }.to raise_error
           expect(mock_orphan_mitigator).to have_received(:attempt_deprovision_instance)
+        end
+
+        it 'logs that it was unable to save' do
+          create_action.create(request_attrs, false) rescue nil
+
+          expect(logger).to have_received(:error).with /Failed to save/
         end
       end
     end

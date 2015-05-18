@@ -16,6 +16,11 @@ module VCAP::CloudController
         }
       end
 
+      before do
+        allow(logger).to receive :info
+        allow(logger).to receive :error
+      end
+
       context 'v2 service' do
         before do
           credentials = { 'credentials' => '{}' }
@@ -157,8 +162,6 @@ module VCAP::CloudController
 
             allow_any_instance_of(ServiceBinding).to receive(:save).and_raise('meow')
 
-            allow(logger).to receive :error
-
             ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
           end
 
@@ -185,7 +188,8 @@ module VCAP::CloudController
             end
 
             it 'logs that the unbind failed' do
-              expect(logger).to have_received(:error).with /Unable to delete orphaned binding/
+              expect(logger).to have_received(:error).with /Failed to save/
+              expect(logger).to have_received(:error).with /Unable to delete orphaned service binding/
             end
           end
         end

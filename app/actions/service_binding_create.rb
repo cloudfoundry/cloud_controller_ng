@@ -19,10 +19,11 @@ module VCAP::CloudController
         begin
           service_binding.set_all(attributes_to_update)
           service_binding.save
-        rescue
+        rescue => e
+          @logger.error "Failed to save state of create for service binding #{service_binding.guid} with exception: #{e}"
           orphan_mitigator = SynchronousOrphanMitigate.new(@logger)
           orphan_mitigator.attempt_unbind(service_binding)
-          raise
+          raise e
         end
 
       rescue => e

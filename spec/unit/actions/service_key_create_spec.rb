@@ -14,6 +14,11 @@ module VCAP::CloudController
         }
       end
 
+      before do
+        allow(logger).to receive :error
+        allow(logger).to receive :info
+      end
+
       describe 'orphan mitigation situations' do
         context 'when the broker returns an error on creation' do
           before do
@@ -33,8 +38,6 @@ module VCAP::CloudController
             stub_request(:delete, service_binding_url_pattern)
 
             allow_any_instance_of(ServiceKey).to receive(:save).and_raise
-
-            allow(logger).to receive :error
 
             ServiceKeyCreate.new(logger).create(service_instance, key_attrs, {})
           end
@@ -56,7 +59,8 @@ module VCAP::CloudController
             end
 
             it 'logs that the unbind failed' do
-              expect(logger).to have_received(:error).with /Unable to delete orphaned key/
+              expect(logger).to have_received(:error).with /Failed to save/
+              expect(logger).to have_received(:error).with /Unable to delete orphaned service key/
             end
           end
         end
