@@ -117,6 +117,14 @@ module VCAP::CloudController
             Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id)
           }.to raise_error(Sequel::ValidationFailed)
         end
+
+        it 'is case-insensitive' do
+          r = Route.make(path: '/path')
+
+          expect {
+            Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id, path: '/PATH')
+          }.to raise_error(Sequel::ValidationFailed)
+        end
       end
 
       context 'escaped paths' do
