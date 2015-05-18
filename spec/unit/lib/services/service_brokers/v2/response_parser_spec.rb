@@ -7,7 +7,7 @@ module VCAP::Services
         def get_method_and_path(operation)
           case operation
           when :provision
-            method = :parse_provision_or_bind
+            method = :parse_provision
             path = '/v2/service_instances/GUID'
           when :deprovision
             method = :parse_deprovision_or_unbind
@@ -16,7 +16,7 @@ module VCAP::Services
             method = :parse_update
             path = '/v2/service_instances/GUID'
           when :bind
-            method = :parse_provision_or_bind
+            method = :parse_bind
             path = '/v2/service_instances/GUID/service_bindings/BINDING_GUID'
           when :unbind
             method = :parse_deprovision_or_unbind
@@ -180,16 +180,16 @@ module VCAP::Services
         test_case(:provision, 200, broker_partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json))
         test_case(:provision, 200, broker_malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json))
         test_case(:provision, 200, broker_empty_json,                                result: client_result_with_state('succeeded'))
-        test_case(:provision, 200, with_dashboard_url.to_json,                result: client_result_with_state('succeeded').merge(with_dashboard_url))
+        test_case(:provision, 200, with_dashboard_url.to_json,                       result: client_result_with_state('succeeded').merge(with_dashboard_url))
         test_case(:provision, 201, broker_partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json))
         test_case(:provision, 201, broker_malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json))
         test_case(:provision, 201, broker_empty_json,                                result: client_result_with_state('succeeded'))
-        test_case(:provision, 201, with_dashboard_url.to_json,                result: client_result_with_state('succeeded').merge(with_dashboard_url))
+        test_case(:provision, 201, with_dashboard_url.to_json,                       result: client_result_with_state('succeeded').merge(with_dashboard_url))
         test_case(:provision, 202, broker_partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json))
         test_case(:provision, 202, broker_malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json))
         test_case(:provision, 202, broker_empty_json,                                result: client_result_with_state('in progress'))
         test_case(:provision, 202, broker_non_empty_json,                            result: client_result_with_state('in progress'))
-        test_case(:provision, 202, with_dashboard_url.to_json,                result: client_result_with_state('in progress').merge(with_dashboard_url))
+        test_case(:provision, 202, with_dashboard_url.to_json,                       result: client_result_with_state('in progress').merge(with_dashboard_url))
         test_case(:bind,      202, broker_empty_json,                                error: Errors::ServiceBrokerBadResponse)
         test_case(:provision, 204, broker_partial_json,                              error: Errors::ServiceBrokerBadResponse)
         test_case(:provision, 204, broker_malformed_json,                            error: Errors::ServiceBrokerBadResponse)
@@ -239,15 +239,15 @@ module VCAP::Services
         test_case(:fetch_catalog, 200, broker_partial_json,                          error: Errors::ServiceBrokerResponseMalformed)
         test_case(:fetch_catalog, 200, broker_malformed_json,                        error: Errors::ServiceBrokerResponseMalformed)
         test_case(:fetch_catalog, 200, broker_empty_json,                            result: {})
-        test_case(:fetch_catalog, 200, valid_catalog.to_json,                 result: valid_catalog)
+        test_case(:fetch_catalog, 200, valid_catalog.to_json,                        result: valid_catalog)
         test_case(:fetch_catalog, 201, broker_partial_json,                          error: Errors::ServiceBrokerResponseMalformed)
         test_case(:fetch_catalog, 201, broker_malformed_json,                        error: Errors::ServiceBrokerResponseMalformed)
         test_case(:fetch_catalog, 201, broker_empty_json,                            error: Errors::ServiceBrokerBadResponse)
-        test_case(:fetch_catalog, 201, valid_catalog.to_json,                 error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_catalog, 201, valid_catalog.to_json,                        error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_catalog, 204, broker_partial_json,                          error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_catalog, 204, broker_malformed_json,                        error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_catalog, 204, broker_empty_json,                            error: Errors::ServiceBrokerBadResponse)
-        test_case(:fetch_catalog, 204, valid_catalog.to_json,                 error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_catalog, 204, valid_catalog.to_json,                        error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_catalog, 409, broker_partial_json,                          error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_catalog, 409, broker_malformed_json,                        error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_catalog, 409, broker_empty_json,                            error: Errors::ServiceBrokerBadResponse)
@@ -262,20 +262,20 @@ module VCAP::Services
         test_case(:deprovision, 200, broker_partial_json,                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json))
         test_case(:deprovision, 200, broker_malformed_json,                          error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json))
         test_case(:deprovision, 200, broker_empty_json,                              result: client_result_with_state('succeeded'))
-        test_pass_through(:deprovision, 200,                                  expected_state: 'succeeded')
+        test_pass_through(:deprovision, 200,                                         expected_state: 'succeeded')
         test_case(:deprovision, 201, broker_partial_json,                            error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, broker_partial_json))
         test_case(:deprovision, 201, broker_malformed_json,                          error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, broker_malformed_json))
         test_case(:deprovision, 201, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, broker_empty_json))
-        test_case(:deprovision, 201, { description: 'error' }.to_json,        error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, { description: 'error' }.to_json))
+        test_case(:deprovision, 201, { description: 'error' }.to_json,               error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, { description: 'error' }.to_json))
         test_case(:deprovision, 202, broker_partial_json,                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json))
         test_case(:deprovision, 202, broker_malformed_json,                          error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json))
         test_case(:deprovision, 202, broker_empty_json,                              result: client_result_with_state('in progress'))
         test_case(:deprovision, 202, broker_non_empty_json,                          result: client_result_with_state('in progress'))
-        test_pass_through(:deprovision, 202,                                  expected_state: 'in progress')
+        test_pass_through(:deprovision, 202,                                         expected_state: 'in progress')
         test_case(:unbind,      202, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
         test_case(:unbind,      204, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
-        test_case(:unbind,      204, broker_partial_json,                              error: Errors::ServiceBrokerBadResponse)
-        test_case(:unbind,      204, broker_malformed_json,                              error: Errors::ServiceBrokerBadResponse)
+        test_case(:unbind,      204, broker_partial_json,                            error: Errors::ServiceBrokerBadResponse)
+        test_case(:unbind,      204, broker_malformed_json,                          error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 204, broker_partial_json,                            error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 204, broker_malformed_json,                          error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 204, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
@@ -287,22 +287,22 @@ module VCAP::Services
         test_case(:deprovision, 422, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 422, broker_partial_json,                            error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 422, broker_malformed_json,                          error: Errors::ServiceBrokerBadResponse)
-        test_case(:deprovision, 422, { error: 'AsyncRequired' }.to_json,      error: Errors::AsyncRequired)
+        test_case(:deprovision, 422, { error: 'AsyncRequired' }.to_json,             error: Errors::AsyncRequired)
         test_common_error_cases(:deprovision)
 
         test_case(:update, 200, broker_partial_json,                                 error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json))
         test_case(:update, 200, broker_malformed_json,                               error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json))
         test_case(:update, 200, broker_empty_json,                                   result: client_result_with_state('succeeded'))
-        test_pass_through(:update, 200,                                       expected_state: 'succeeded')
+        test_pass_through(:update, 200,                                              expected_state: 'succeeded')
         test_case(:update, 201, broker_partial_json,                                 error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, broker_partial_json))
         test_case(:update, 201, broker_malformed_json,                               error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, broker_malformed_json))
         test_case(:update, 201, broker_empty_json,                                   error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, broker_empty_json))
-        test_case(:update, 201, { 'foo' => 'bar' }.to_json,                   error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, { 'foo' => 'bar' }.to_json))
+        test_case(:update, 201, { 'foo' => 'bar' }.to_json,                          error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, { 'foo' => 'bar' }.to_json))
         test_case(:update, 202, broker_partial_json,                                 error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json))
         test_case(:update, 202, broker_malformed_json,                               error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json))
         test_case(:update, 202, broker_empty_json,                                   result: client_result_with_state('in progress'))
         test_case(:update, 202, broker_non_empty_json,                               result: client_result_with_state('in progress'))
-        test_pass_through(:update, 202,                                       expected_state: 'in progress')
+        test_pass_through(:update, 202,                                              expected_state: 'in progress')
         test_case(:update, 204, broker_partial_json,                                 error: Errors::ServiceBrokerBadResponse)
         test_case(:update, 204, broker_malformed_json,                               error: Errors::ServiceBrokerBadResponse)
         test_case(:update, 204, broker_empty_json,                                   error: Errors::ServiceBrokerBadResponse)
@@ -312,7 +312,7 @@ module VCAP::Services
         test_case(:update, 410, broker_partial_json,                                 error: Errors::ServiceBrokerBadResponse)
         test_case(:update, 422, broker_empty_json,                                   error: Errors::ServiceBrokerRequestRejected)
         test_case(:update, 422, broker_partial_json,                                 error: Errors::ServiceBrokerRequestRejected)
-        test_case(:update, 422, { error: 'AsyncRequired' }.to_json,           error: Errors::AsyncRequired)
+        test_case(:update, 422, { error: 'AsyncRequired' }.to_json,                  error: Errors::AsyncRequired)
         test_common_error_cases(:update)
         # rubocop:enable Metrics/LineLength
       end

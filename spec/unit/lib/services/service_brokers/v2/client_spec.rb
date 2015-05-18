@@ -243,7 +243,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response_parser) { instance_double(ResponseParser) }
 
           before do
-            allow(response_parser).to receive(:parse_provision_or_bind).and_raise(error)
+            allow(response_parser).to receive(:parse_provision).and_raise(error)
             allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
           end
 
@@ -751,7 +751,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response_parser) { instance_double(ResponseParser) }
 
           before do
-            allow(response_parser).to receive(:parse_provision_or_bind).and_raise(error)
+            allow(response_parser).to receive(:parse_bind).and_raise(error)
             allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
           end
 
@@ -922,7 +922,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:response_parser) { instance_double(ResponseParser) }
 
           before do
-            allow(response_parser).to receive(:parse_provision_or_bind).and_raise(error)
+            allow(response_parser).to receive(:parse_bind).and_raise(error)
             allow(VCAP::Services::ServiceBrokers::V2::ResponseParser).to receive(:new).and_return(response_parser)
           end
 

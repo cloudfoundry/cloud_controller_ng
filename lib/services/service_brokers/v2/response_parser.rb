@@ -9,7 +9,7 @@ module VCAP::Services
           @logger = Steno.logger('cc.service_broker.v2.client')
         end
 
-        def parse_provision_or_bind(path, response)
+        def parse_provision(path, response)
           unvalidated_response = UnvalidatedResponse.new(:put, @url, path, response)
 
           validator =
@@ -22,22 +22,41 @@ module VCAP::Services
                 SuccessValidator.new(state: 'succeeded'))
           when 202
             JsonObjectValidator.new(@logger,
-              IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
-                FailingValidator.new(Errors::ServiceBrokerBadResponse),
-                SuccessValidator.new(state: 'in progress')))
+                SuccessValidator.new(state: 'in progress'))
           when 409
             FailingValidator.new(Errors::ServiceBrokerConflict)
           when 422
-            IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
-                FailWhenValidator.new('error',
-                                      { 'RequiresApp' => Errors::AppRequired, 'AsyncRequired' => Errors::AsyncRequired },
-                                      FailingValidator.new(Errors::ServiceBrokerBadResponse)),
-                FailWhenValidator.new('error',
-                                      { 'AsyncRequired' => Errors::AsyncRequired },
-                                      FailingValidator.new(Errors::ServiceBrokerBadResponse)))
+            FailWhenValidator.new('error',
+                                  { 'AsyncRequired' => Errors::AsyncRequired },
+                                  FailingValidator.new(Errors::ServiceBrokerBadResponse))
           else
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
           end
+
+          validator = CommonErrorValidator.new(validator)
+          validator.validate(unvalidated_response.to_hash)
+        end
+
+        def parse_bind(path, response, opts={})
+          unvalidated_response = UnvalidatedResponse.new(:put, @url, path, response)
+
+          validator =
+            case unvalidated_response.code
+            when 200, 201
+              JsonObjectValidator.new(@logger,
+                SuccessValidator.new(state: 'succeeded'))
+            when 202
+              JsonObjectValidator.new(@logger,
+                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+            when 409
+              FailingValidator.new(Errors::ServiceBrokerConflict)
+            when 422
+              FailWhenValidator.new('error',
+                { 'RequiresApp' => Errors::AppRequired, 'AsyncRequired' => Errors::AsyncRequired },
+                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+            else
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            end
 
           validator = CommonErrorValidator.new(validator)
           validator.validate(unvalidated_response.to_hash)

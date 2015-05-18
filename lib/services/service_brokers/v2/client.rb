@@ -32,7 +32,7 @@ module VCAP::Services::ServiceBrokers::V2
       body_parameters[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
       response = @http_client.put(path, body_parameters)
 
-      parsed_response = @response_parser.parse_provision_or_bind(path, response)
+      parsed_response = @response_parser.parse_provision(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
       attributes = {
         # DEPRECATED, but needed because of not null constraint
@@ -89,10 +89,10 @@ module VCAP::Services::ServiceBrokers::V2
       attr[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       response = @http_client.put(path, attr)
-      parsed_response = @response_parser.parse_provision_or_bind(path, response)
+      parsed_response = @response_parser.parse_bind(path, response)
 
       attributes = {
-          credentials: parsed_response['credentials']
+        credentials: parsed_response['credentials']
       }
 
       attributes
@@ -112,7 +112,7 @@ module VCAP::Services::ServiceBrokers::V2
       attr[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       response = @http_client.put(path, attr)
-      parsed_response = @response_parser.parse_provision_or_bind(path, response)
+      parsed_response = @response_parser.parse_bind(path, response)
 
       attributes = {
         credentials: parsed_response['credentials']
