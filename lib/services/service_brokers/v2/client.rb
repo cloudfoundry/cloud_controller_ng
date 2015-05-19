@@ -137,7 +137,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id:    binding.service_plan.broker_provided_id,
       })
 
-      @response_parser.parse_deprovision_or_unbind(path, response)
+      @response_parser.parse_unbind(path, response)
     end
 
     def deprovision(instance, accepts_incomplete: false)
@@ -150,7 +150,7 @@ module VCAP::Services::ServiceBrokers::V2
       request_params.merge!(accepts_incomplete: true) if accepts_incomplete
       response = @http_client.delete(path, request_params)
 
-      parsed_response = @response_parser.parse_deprovision_or_unbind(path, response) || {}
+      parsed_response = @response_parser.parse_deprovision(path, response) || {}
       last_operation_hash = parsed_response['last_operation'] || {}
       state = last_operation_hash['state']
 

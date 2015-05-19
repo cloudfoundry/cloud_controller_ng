@@ -2,8 +2,6 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       class ResponseParser
-        SERVICE_BINDINGS_REGEX = %r{/v2/service_instances/[[:alnum:]-]+/service_bindings}
-
         def initialize(url)
           @url = url
           @logger = Steno.logger('cc.service_broker.v2.client')
@@ -63,7 +61,7 @@ module VCAP::Services
           validator.validate(unvalidated_response.to_hash)
         end
 
-        def parse_deprovision_or_unbind(path, response)
+        def parse_unbind(path, response)
           unvalidated_response = UnvalidatedResponse.new(:delete, @url, path, response)
 
           validator =
@@ -75,9 +73,7 @@ module VCAP::Services
             IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
           when 202
             JsonObjectValidator.new(@logger,
-              IfElsePathMatchValidator.new(SERVICE_BINDINGS_REGEX,
-                FailingValidator.new(Errors::ServiceBrokerBadResponse),
-                  SuccessValidator.new(state: 'in progress')))
+              FailingValidator.new(Errors::ServiceBrokerBadResponse))
           when 204
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
           when 410
@@ -89,6 +85,35 @@ module VCAP::Services
           else
             FailingValidator.new(Errors::ServiceBrokerBadResponse)
           end
+
+          validator = CommonErrorValidator.new(validator)
+          validator.validate(unvalidated_response.to_hash)
+        end
+
+        def parse_deprovision(path, response)
+          unvalidated_response = UnvalidatedResponse.new(:delete, @url, path, response)
+
+          validator =
+            case unvalidated_response.code
+            when 200
+              JsonObjectValidator.new(@logger,
+                SuccessValidator.new(state: 'succeeded'))
+            when 201
+              IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
+            when 202
+              JsonObjectValidator.new(@logger,
+                SuccessValidator.new(state: 'in progress'))
+            when 204
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            when 410
+              @logger.warn("Already deleted: #{unvalidated_response.uri}")
+              SuccessValidator.new { |res| {} }
+            when 422
+              FailWhenValidator.new('error', { 'AsyncRequired' => Errors::AsyncRequired },
+                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+            else
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            end
 
           validator = CommonErrorValidator.new(validator)
           validator.validate(unvalidated_response.to_hash)
@@ -195,24 +220,6 @@ module VCAP::Services
               raise Errors::ServiceBrokerInvalidSyslogDrainUrl.new(uri, method, response)
             end
             @validator.validate(method: method, uri: uri, code: code, response: response)
-          end
-        end
-
-        class IfElsePathMatchValidator
-          attr_reader :error_class
-
-          def initialize(path_regex, if_validator, else_validator)
-            @path_regex = path_regex
-            @if_validator = if_validator
-            @else_validator = else_validator
-          end
-
-          def validate(method:, uri:, code:, response:)
-            if @path_regex.match(uri.to_s)
-              @if_validator.validate(method: method, uri: uri, code: code, response: response)
-            else
-              @else_validator.validate(method: method, uri: uri, code: code, response: response)
-            end
           end
         end
 
