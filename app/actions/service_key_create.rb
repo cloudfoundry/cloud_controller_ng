@@ -1,4 +1,5 @@
 require 'actions/synchronous_orphan_mitigate'
+require 'actions/locks/lock_check'
 
 module VCAP::CloudController
   class ServiceKeyCreate
