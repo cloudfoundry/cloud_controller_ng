@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class UpdaterLock
-    include LockCheck
+    include VCAP::CloudController::LockCheck
 
     attr_reader :service_instance
 

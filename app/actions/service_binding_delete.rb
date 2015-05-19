@@ -2,7 +2,7 @@ require 'actions/locks/lock_check'
 
 module VCAP::CloudController
   class ServiceBindingDelete
-    include LockCheck
+    include VCAP::CloudController::LockCheck
 
     def delete(service_binding_dataset)
       service_binding_dataset.each_with_object([]) do |service_binding, errs|

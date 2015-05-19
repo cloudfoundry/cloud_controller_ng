@@ -2,7 +2,7 @@ require 'actions/synchronous_orphan_mitigate'
 
 module VCAP::CloudController
   class ServiceBindingCreate
-    include LockCheck
+    include VCAP::CloudController::LockCheck
 
     def initialize(logger)
       @logger = logger
