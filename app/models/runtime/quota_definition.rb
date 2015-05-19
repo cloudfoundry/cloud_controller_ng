@@ -2,6 +2,8 @@ module VCAP::CloudController
   class QuotaDefinition < Sequel::Model
     one_to_many :organizations
 
+    attr_accessor :org_usage
+
     export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
                       :memory_limit, :trial_db_allowed, :instance_memory_limit
     import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
@@ -34,6 +36,12 @@ module VCAP::CloudController
 
     def self.configure(config)
       @default_quota_name = config[:default_quota_definition]
+    end
+
+    def to_hash(opts={})
+      return super(opts) unless org_usage
+
+      super(opts).merge!('org_usage' => org_usage)
     end
 
     class << self

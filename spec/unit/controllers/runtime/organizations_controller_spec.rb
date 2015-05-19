@@ -204,6 +204,24 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/organizations/:guid/quota_usage' do
+      context 'for an organization that does not exist' do
+        it 'returns a 404' do
+          get '/v2/organizations/foobar/quota_usage', {}, admin_headers
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      context 'when the user does not have permissions to read' do
+        let(:user) { User.make }
+
+        it 'returns a 403' do
+          get "/v2/organizations/#{org.guid}/quota_usage", {}, headers_for(user)
+          expect(last_response.status).to eq(403)
+        end
+      end
+    end
+
     describe 'GET', '/v2/organizations/:guid/services' do
       let(:other_org) { Organization.make }
       let(:space_one) { Space.make(organization: org) }

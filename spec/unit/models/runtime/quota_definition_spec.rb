@@ -96,5 +96,16 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#to_hash' do
+      it 'does not include org_usage when org_usage has not been set' do
+        expect(quota_definition.to_hash).to_not include('org_usage')
+      end
+
+      it 'includes org_usage when org_usage has been set' do
+        quota_definition.org_usage = 'someusage'
+        expect(quota_definition.to_hash).to include('org_usage')
+      end
+    end
   end
 end
