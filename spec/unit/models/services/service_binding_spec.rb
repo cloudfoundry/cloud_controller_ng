@@ -131,17 +131,6 @@ module VCAP::CloudController
       context 'service that does not require syslog_drain' do
         let(:service) { Service.make(requires: []) }
 
-        it 'should not allow a non syslog_drain with a syslog drain url' do
-          expect {
-            service_binding = ServiceBinding.make(service_instance: service_instance)
-            service_binding.syslog_drain_url = 'http://this.is.a.mean.url.com'
-            service_binding.save
-          }.to raise_error { |error|
-            expect(error).to be_a(VCAP::Errors::ApiError)
-            expect(error.code).to eq(90006)
-          }
-        end
-
         it 'should allow a non syslog_drain with a nil syslog drain url' do
           expect {
             service_binding = ServiceBinding.make(service_instance: service_instance)
@@ -167,17 +156,6 @@ module VCAP::CloudController
               service_plan: service_plan,
               name: 'not a syslog drain instance'
             )
-          end
-
-          it 'should not allow a non syslog_drain with a syslog drain url' do
-            expect {
-              service_binding = ServiceBinding.make(service_instance: service_instance)
-              service_binding.syslog_drain_url = 'http://this.is.a.mean.url.com'
-              service_binding.save
-            }.to raise_error { |error|
-                expect(error).to be_a(VCAP::Errors::ApiError)
-                expect(error.code).to eq(90006)
-              }
           end
 
           it 'should allow a non syslog_drain with a nil syslog drain url' do

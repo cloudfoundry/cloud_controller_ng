@@ -44,7 +44,8 @@ module VCAP::Services
             case unvalidated_response.code
             when 200, 201
               JsonObjectValidator.new(@logger,
-                SuccessValidator.new(state: 'succeeded'))
+                SyslogDrainValidator.new(opts[:service_guid],
+                  SuccessValidator.new(state: 'succeeded')))
             when 202
               JsonObjectValidator.new(@logger,
                 FailingValidator.new(Errors::ServiceBrokerBadResponse))
@@ -178,6 +179,22 @@ module VCAP::Services
               code: @code,
               response: @response,
             }
+          end
+        end
+
+        class SyslogDrainValidator
+          def initialize(service_guid, validator)
+            @validator = validator
+            @service_guid = service_guid
+          end
+
+          def validate(method:, uri:, code:, response:)
+            service = VCAP::CloudController::Service.first(guid: @service_guid)
+            parsed_response = MultiJson.load(response.body)
+            if parsed_response.key?('syslog_drain_url') && !service.requires.include?('syslog_drain')
+              raise Errors::ServiceBrokerInvalidSyslogDrainUrl.new(uri, method, response)
+            end
+            @validator.validate(method: method, uri: uri, code: code, response: response)
           end
         end
 

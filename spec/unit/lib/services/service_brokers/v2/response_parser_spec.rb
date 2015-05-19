@@ -61,12 +61,29 @@ module VCAP::Services
           description = opts[:description]
           result = opts[:result]
           error = opts[:error]
+          service_passthrough = opts[:service]
 
           context "making a #{operation} request that returns code #{code} and body #{body}" do
+            let!(:syslog_service) { VCAP::CloudController::Service.make(:v2, requires: ['syslog_drain']) }
+            let!(:non_syslog_service) { VCAP::CloudController::Service.make(:v2, requires: []) }
             let(:response_parser) { ResponseParser.new('service-broker.com') }
             let(:fake_response) { instance_double(VCAP::Services::ServiceBrokers::V2::HttpResponse) }
             let(:body) { body }
             let(:logger) { instance_double(Steno::Logger, warn: nil) }
+            let(:call_method) do
+              ->(response_parser, method_name, path, fake_response, service_param) do
+                if service_param
+                  if service_param == :syslog
+                    service = syslog_service
+                  else
+                    service = non_syslog_service
+                  end
+                  response_parser.send(method_name, path, fake_response, service_guid: service.guid)
+                else
+                  response_parser.send(method_name, path, fake_response)
+                end
+              end
+            end
 
             before do
               @method, @path = get_method_and_path(operation)
@@ -78,14 +95,14 @@ module VCAP::Services
 
             if error
               it "raises a #{error} error" do
-                expect { response_parser.send(@method, @path, fake_response) }.to raise_error(error) do |e|
+                expect { call_method.call(response_parser, @method, @path, fake_response, service_passthrough) }.to raise_error(error) do |e|
                   expect(e.to_h['description']).to eq(description) if description
                 end
                 expect(logger).to have_received(:warn) if expect_warning
               end
             else
               it 'returns the parsed response' do
-                expect(response_parser.send(@method, @path, fake_response)).to eq(result)
+                expect(call_method.call(response_parser, @method, @path, fake_response, service_passthrough)).to eq(result)
               end
             end
           end
@@ -132,13 +149,18 @@ module VCAP::Services
           }
         end
 
-
         def self.with_credentials
           {
             'credentials' => {
               'user' => 'user',
               'password' => 'password'
             }
+          }
+        end
+
+        def self.with_syslog_drain_url
+          {
+            'syslog_drain_url' => 'syslog.com/drain'
           }
         end
 
@@ -231,11 +253,15 @@ module VCAP::Services
         test_case(:bind,      200, broker_malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, binding_uri))
         test_case(:bind,      200, broker_empty_json,                                result: client_result_with_state('succeeded'))
         test_case(:bind,      200, with_credentials.to_json,                         result: client_result_with_state('succeeded').merge(with_credentials))
+        test_case(:bind,      200, with_syslog_drain_url.to_json, service: :syslog,  result: client_result_with_state('succeeded').merge('syslog_drain_url' => 'syslog.com/drain'))
+        test_case(:bind,      200, with_syslog_drain_url.to_json, service: :no_syslog, error: Errors::ServiceBrokerInvalidSyslogDrainUrl)
         test_pass_through(:bind, 200, with_credentials,                              expected_state: 'succeeded')
         test_case(:bind,      201, broker_partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_uri))
         test_case(:bind,      201, broker_malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, binding_uri))
         test_case(:bind,      201, broker_empty_json,                                result: client_result_with_state('succeeded'))
         test_case(:bind,      201, with_credentials.to_json,                         result: client_result_with_state('succeeded').merge(with_credentials))
+        test_case(:bind,      201, with_syslog_drain_url.to_json, service: :syslog,  result: client_result_with_state('succeeded').merge('syslog_drain_url' => 'syslog.com/drain'))
+        test_case(:bind,      201, with_syslog_drain_url.to_json, service: :no_syslog, error: Errors::ServiceBrokerInvalidSyslogDrainUrl)
         test_pass_through(:bind, 201, with_credentials,                              expected_state: 'succeeded')
         test_case(:bind,      202, broker_empty_json,                                error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      204, broker_partial_json,                              error: Errors::ServiceBrokerBadResponse)

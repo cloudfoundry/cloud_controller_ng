@@ -808,7 +808,6 @@ module VCAP::Services::ServiceBrokers::V2
       let(:message) { 'Created' }
 
       before do
-        instance.service_plan.service.update_from_hash(requires: ['syslog_drain'])
         allow(http_client).to receive(:put).and_return(response)
       end
 
@@ -857,6 +856,10 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'with a syslog drain url' do
+        before do
+          instance.service_plan.service.update_from_hash(requires: ['syslog_drain'])
+        end
+
         let(:response_data) do
           {
             'credentials' => {},
@@ -871,6 +874,20 @@ module VCAP::Services::ServiceBrokers::V2
           binding.save
 
           expect(binding.syslog_drain_url).to eq('syslog://example.com:514')
+        end
+
+        context 'and the service does not require syslog_drain' do
+          before do
+            instance.service_plan.service.update_from_hash(requires: [])
+          end
+
+          it 'raises an error and initiates orphan mitigation' do
+            expect {
+              client.bind(binding)
+            }.to raise_error(Errors::ServiceBrokerInvalidSyslogDrainUrl)
+
+            expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+          end
         end
       end
 

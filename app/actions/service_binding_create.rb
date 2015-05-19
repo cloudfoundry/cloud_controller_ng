@@ -17,8 +17,9 @@ module VCAP::CloudController
         service_binding = ServiceBinding.new(binding_attrs)
         attributes_to_update = service_binding.client.bind(service_binding, arbitrary_parameters: arbitrary_parameters)
 
+        service_binding.set_all(attributes_to_update)
+
         begin
-          service_binding.set_all(attributes_to_update)
           service_binding.save
         rescue => e
           @logger.error "Failed to save state of create for service binding #{service_binding.guid} with exception: #{e}"

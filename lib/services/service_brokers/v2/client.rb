@@ -89,7 +89,7 @@ module VCAP::Services::ServiceBrokers::V2
       attr[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       response = @http_client.put(path, attr)
-      parsed_response = @response_parser.parse_bind(path, response)
+      parsed_response = @response_parser.parse_bind(path, response, service_guid: key.service.guid)
 
       attributes = {
         credentials: parsed_response['credentials']
@@ -112,7 +112,7 @@ module VCAP::Services::ServiceBrokers::V2
       attr[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       response = @http_client.put(path, attr)
-      parsed_response = @response_parser.parse_bind(path, response)
+      parsed_response = @response_parser.parse_bind(path, response, service_guid: binding.service.guid)
 
       attributes = {
         credentials: parsed_response['credentials']
@@ -122,7 +122,9 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       attributes
-    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
+    rescue Errors::ServiceBrokerApiTimeout,
+           Errors::ServiceBrokerBadResponse,
+           Errors::ServiceBrokerInvalidSyslogDrainUrl => e
       @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
       raise e
     end

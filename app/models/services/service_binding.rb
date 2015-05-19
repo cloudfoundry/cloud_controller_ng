@@ -25,17 +25,8 @@ module VCAP::CloudController
       validates_presence :service_instance
       validates_unique [:app_id, :service_instance_id]
 
-      validate_logging_service_binding if service_instance.respond_to?(:service_plan)
-
       validate_app_and_service_instance(app, service_instance)
       validate_cannot_change_binding
-    end
-
-    def validate_logging_service_binding
-      return if syslog_drain_url.blank?
-
-      service_advertised_as_logging_service = service_instance.service_plan.service.requires.include?('syslog_drain')
-      raise VCAP::Errors::ApiError.new_from_details('InvalidLoggingServiceBinding') unless service_advertised_as_logging_service
     end
 
     def validate_app_and_service_instance(app, service_instance)

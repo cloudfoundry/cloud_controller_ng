@@ -89,41 +89,29 @@ module VCAP::CloudController
           expect(binding).not_to be_nil
           expect(ServiceBinding.count).to eq(1)
         end
-
-        context 'and the bind request returns a syslog drain url' do
-          let(:syslog_service_instance) { ManagedServiceInstance.make(space: space, service_plan: syslog_service_plan) }
-          let(:syslog_service_plan) { ServicePlan.make(service: syslog_service) }
-          let(:syslog_service) { Service.make(:v1, requires: ['syslog_drain']) }
-          let(:syslog_binding_attrs) do
-            {
-              'service_instance_guid' => syslog_service_instance.guid,
-              'app_guid' => App.make(space: space).guid,
-            }
-          end
-
-          before do
-            stub_v1_broker(syslog_drain_url: 'http://syslog.com/drain')
-          end
-
-          it 'does not create a binding and raises an error for services that do not require syslog_drain' do
-            _, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
-
-            expect(errors.length).to eq 1
-            expect(errors.first.message).to match /not registered as a logging service/
-            expect(ServiceBinding.count).to eq(0)
-          end
-
-          it 'creates a binding for services that require syslog_drain' do
-            binding, errors = ServiceBindingCreate.new(logger).bind(syslog_service_instance, syslog_binding_attrs, {})
-
-            expect(errors).to be_empty
-            expect(binding).not_to be_nil
-            expect(ServiceBinding.count).to eq(1)
-          end
-        end
       end
 
       describe 'orphan mitigation situations' do
+        context 'when the broker returns an invalid syslog_drain_url' do
+          before do
+            stub_bind(service_instance, status: 201, body: { syslog_drain_url: 'syslog.com/drain' }.to_json)
+          end
+
+          it 'enqueues a DeleteOrphanedBinding job' do
+            _, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
+
+            expect(errors.length).to eq 1
+
+            expect(Delayed::Job.count).to eq 1
+
+            orphan_mitigating_job = Delayed::Job.first
+            expect(orphan_mitigating_job).not_to be_nil
+            expect(orphan_mitigating_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedBinding
+
+            expect(a_request(:delete, service_binding_url_pattern)).to_not have_been_made
+          end
+        end
+
         context 'when the broker returns an error on creation' do
           before do
             stub_bind(service_instance, status: 500)
@@ -135,7 +123,7 @@ module VCAP::CloudController
             expect(ServiceBinding.count).to eq 0
           end
 
-          it 'enqueues a ServiceInstanceUnbind job' do
+          it 'enqueues a DeleteOrphanedBinding job' do
             _, errors = ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
 
             expect(errors.length).to eq 1
