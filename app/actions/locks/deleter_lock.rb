@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class DeleterLock
+    include LockCheck
+
     attr_reader :service_instance
 
     def initialize(service_instance, type='delete')
@@ -13,9 +15,7 @@ module VCAP::CloudController
         service_instance.lock!
         service_instance.last_operation.lock! if service_instance.last_operation
 
-        if service_instance.operation_in_progress?
-          raise Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
-        end
+        raise_if_locked(service_instance)
 
         service_instance.save_with_operation(
           last_operation: {

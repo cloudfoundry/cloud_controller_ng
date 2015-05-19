@@ -19,6 +19,13 @@ module VCAP::CloudController
         allow(logger).to receive :info
       end
 
+      it 'fails if the instance has another operation in progress' do
+        service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
+        service_key_create = ServiceKeyCreate.new(logger)
+        _, errors = service_key_create.create(service_instance, key_attrs, {})
+        expect(errors.first).to be_instance_of Errors::ApiError
+      end
+
       describe 'orphan mitigation situations' do
         context 'when the broker returns an error on creation' do
           before do

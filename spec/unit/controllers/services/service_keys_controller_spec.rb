@@ -5,10 +5,10 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
-                                                                 name: { type: 'string', required: true },
-                                                                 service_instance_guid: { type: 'string', required: true },
-                                                                 parameters: { type: 'hash', required: false }
-                                                             })
+           name: { type: 'string', required: true },
+           service_instance_guid: { type: 'string', required: true },
+           parameters: { type: 'hash', required: false }
+         })
       end
     end
 

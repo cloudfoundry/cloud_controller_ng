@@ -25,6 +25,7 @@ module VCAP::CloudController
     describe '#delete' do
       let!(:service_key_1) { ServiceKey.make }
       let!(:service_key_2) { ServiceKey.make }
+      let(:service_instance) { service_key_1.service_instance }
       let!(:service_key_dataset) { ServiceKey.dataset }
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
@@ -45,6 +46,12 @@ module VCAP::CloudController
         service_key_delete.delete(service_key_dataset)
         expect(a_request(:delete, service_key_url_regex(service_instance: service_key_1.service_instance, service_key: service_key_1))).to have_been_made
         expect(a_request(:delete, service_key_url_regex(service_instance: service_key_2.service_instance, service_key: service_key_2))).to have_been_made
+      end
+
+      it 'fails if the instance has another operation in progress' do
+        service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
+        errors = service_key_delete.delete([service_key_1])
+        expect(errors.first).to be_instance_of Errors::ApiError
       end
 
       context 'when one key deletion fails' do

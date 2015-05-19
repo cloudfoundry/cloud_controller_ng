@@ -2,6 +2,8 @@ require 'actions/synchronous_orphan_mitigate'
 
 module VCAP::CloudController
   class ServiceBindingCreate
+    include LockCheck
+
     def initialize(logger)
       @logger = logger
     end
@@ -10,8 +12,7 @@ module VCAP::CloudController
       errors = []
 
       begin
-        lock = BinderLock.new(service_instance)
-        lock.lock!
+        raise_if_locked(service_instance)
 
         service_binding = ServiceBinding.new(binding_attrs)
         attributes_to_update = service_binding.client.bind(service_binding, arbitrary_parameters: arbitrary_parameters)
@@ -25,11 +26,8 @@ module VCAP::CloudController
           orphan_mitigator.attempt_unbind(service_binding)
           raise e
         end
-
       rescue => e
         errors << e
-      ensure
-        lock.unlock_and_revert_operation! if lock.needs_unlock?
       end
 
       [service_binding, errors]

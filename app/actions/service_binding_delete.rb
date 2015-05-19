@@ -1,29 +1,29 @@
-require 'actions/locks/binder_lock'
+require 'actions/locks/lock_check'
 
 module VCAP::CloudController
   class ServiceBindingDelete
+    include LockCheck
+
     def delete(service_binding_dataset)
       service_binding_dataset.each_with_object([]) do |service_binding, errs|
-        errs.concat delete_service_binding(service_binding.service_instance, service_binding)
+        errs.concat delete_service_binding(service_binding)
       end
     end
 
     private
 
-    def delete_service_binding(service_instance, service_binding)
+    def delete_service_binding(service_binding)
       errors = []
+      service_instance = service_binding.service_instance
 
       begin
-        lock = BinderLock.new(service_instance)
-        lock.lock!
+        raise_if_locked(service_instance)
 
         service_instance.client.unbind(service_binding)
         service_binding.destroy
 
       rescue => e
         errors << e
-      ensure
-        lock.unlock_and_revert_operation! if lock.needs_unlock?
       end
 
       errors

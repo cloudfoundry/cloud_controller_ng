@@ -2,6 +2,8 @@ require 'actions/synchronous_orphan_mitigate'
 
 module VCAP::CloudController
   class ServiceKeyCreate
+    include LockCheck
+
     def initialize(logger)
       @logger = logger
     end
@@ -10,8 +12,7 @@ module VCAP::CloudController
       errors = []
 
       begin
-        lock = BinderLock.new(service_instance)
-        lock.lock!
+        raise_if_locked(service_instance)
 
         service_key = ServiceKey.new(key_attrs)
 
@@ -29,8 +30,6 @@ module VCAP::CloudController
 
       rescue => e
         errors << e
-      ensure
-        lock.unlock_and_revert_operation! if lock.needs_unlock?
       end
 
       [service_key, errors]

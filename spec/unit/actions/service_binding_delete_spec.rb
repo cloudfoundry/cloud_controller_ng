@@ -7,6 +7,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       let!(:service_binding_1) { ServiceBinding.make }
+      let(:service_instance) { service_binding_1.service_instance }
       let!(:service_binding_2) { ServiceBinding.make }
       let!(:service_binding_dataset) { ServiceBinding.dataset }
       let(:user) { User.make }
@@ -22,6 +23,13 @@ module VCAP::CloudController
 
         expect { service_binding_1.refresh }.to raise_error Sequel::Error, 'Record not found'
         expect { service_binding_2.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      it 'fails if the instance has another operation in progress' do
+        service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
+        service_binding_delete = ServiceBindingDelete.new
+        errors = service_binding_delete.delete([service_binding_1])
+        expect(errors.first).to be_instance_of Errors::ApiError
       end
 
       context 'when one binding deletion fails' do
@@ -44,75 +52,6 @@ module VCAP::CloudController
         it 'returns all of the errors caught' do
           errors = service_binding_delete.delete(service_binding_dataset)
           expect(errors[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
-        end
-      end
-
-      describe 'locking service instances while binding deletes' do
-        describe 'restoring the last operation' do
-          context 'when the service instance has a last operation' do
-            before do
-              last_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
-              service_binding_1.service_instance.service_instance_operation = last_operation
-              service_binding_1.service_instance.save
-            end
-
-            context 'when the delete succeeds' do
-              it 'restores the last operation' do
-                service_instance = service_binding_1.service_instance
-
-                service_binding_delete.delete(service_binding_dataset)
-
-                last_operation = service_instance.reload.last_operation
-                expect(last_operation.type).to eq('create')
-                expect(last_operation.state).to eq('succeeded')
-              end
-            end
-            context 'when the delete fails' do
-              before do
-                stub_unbind(service_binding_1, status: 500)
-              end
-              it 'restores the last operation' do
-                service_instance = service_binding_1.service_instance
-
-                service_binding_delete.delete(service_binding_dataset)
-
-                last_operation = service_instance.reload.last_operation
-                expect(last_operation.type).to eq('create')
-                expect(last_operation.state).to eq('succeeded')
-              end
-            end
-          end
-
-          context 'when the service instance does not have an operation in progress' do
-            before do
-              service_binding_1.service_instance.service_instance_operation = nil
-              service_binding_1.service_instance.save
-            end
-
-            context 'when the delete succeeds' do
-              it 'restores the last operation' do
-                service_instance = service_binding_1.service_instance
-
-                service_binding_delete.delete(service_binding_dataset)
-
-                last_operation = service_instance.reload.last_operation
-                expect(last_operation).to be_nil
-              end
-            end
-            context 'when the delete fails' do
-              before do
-                stub_unbind(service_binding_1, status: 500)
-              end
-              it 'restores the last operation' do
-                service_instance = service_binding_1.service_instance
-
-                service_binding_delete.delete(service_binding_dataset)
-
-                last_operation = service_instance.reload.last_operation
-                expect(last_operation).to be_nil
-              end
-            end
-          end
         end
       end
     end

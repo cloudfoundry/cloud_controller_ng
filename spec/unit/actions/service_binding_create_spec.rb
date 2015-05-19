@@ -33,16 +33,11 @@ module VCAP::CloudController
           expect(ServiceBinding.count).to eq(1)
         end
 
-        it 'locks the instance by setting its state to `in progress` while the request is being processed' do
-          operation_state_during_request = nil
-          stub_bind(service_instance) do |req|
-            operation_state_during_request = service_instance.reload.last_operation.state
-            { status: 200, body: {}.to_json }
-          end
-
-          ServiceBindingCreate.new(logger).bind(service_instance, binding_attrs, {})
-          expect(operation_state_during_request).to eq 'in progress'
-          expect(service_instance.reload.last_operation).to be_nil
+        it 'fails if the instance has another operation in progress' do
+          service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
+          service_binding_create = ServiceBindingCreate.new(logger)
+          _, errors = service_binding_create.bind(service_instance, binding_attrs, {})
+          expect(errors.first).to be_instance_of Errors::ApiError
         end
 
         context 'and the bind request returns a syslog drain url' do
