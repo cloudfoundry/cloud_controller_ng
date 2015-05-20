@@ -1856,7 +1856,7 @@ module VCAP::CloudController
             end
 
             context 'and with ?async=true' do
-              it 'gives accepts_incomplete precedence and deletes the instance synchronously', isolation: :truncation do
+              it 'gives accepts_incomplete precedence and deletes the instance synchronously' do
                 service_instance_guid = service_instance.guid
                 delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true&async=true", {}, headers_for(admin_user, email: 'admin@example.com')
 
