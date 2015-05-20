@@ -57,7 +57,7 @@ module VCAP::Services
 
       it 'sets relevant attributes on the instance' do
         attributes = client.provision(instance)
-        instance.save_with_operation(attributes)
+        instance.save_with_new_operation(attributes)
 
         expect(instance.broker_provided_id).to eq('123')
         expect(instance.gateway_data).to eq('setting' => true)

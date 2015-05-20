@@ -10,5 +10,10 @@ module VCAP::CloudController
     def proposed_changes
       super || {}
     end
+
+    def update_attributes(attrs)
+      self.set_all attrs
+      self.save
+    end
   end
 end

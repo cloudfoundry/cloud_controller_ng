@@ -90,8 +90,8 @@ module VCAP::CloudController
       end
     end
 
-    it 'pretends it can #save_with_operation' do
-      service_instance.save_with_operation({ foo: 'bar' })
+    it 'pretends it can #save_with_new_operation' do
+      service_instance.save_with_new_operation({ foo: 'bar' })
     end
   end
 end

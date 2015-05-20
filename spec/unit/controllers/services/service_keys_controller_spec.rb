@@ -248,7 +248,7 @@ module VCAP::CloudController
 
           context 'when the instance operation is in progress' do
             before do
-              instance.save_with_operation(
+              instance.save_with_new_operation(
                   last_operation: {
                       type: 'delete',
                       state: 'in progress',

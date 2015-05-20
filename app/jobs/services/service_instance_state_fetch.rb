@@ -52,7 +52,7 @@ module VCAP::CloudController
         def update_with_attributes(attrs_to_update, service_instance)
           ServiceInstance.db.transaction do
             service_instance.lock!
-            service_instance.save_with_operation(
+            service_instance.save_and_update_operation(
                 last_operation: attrs_to_update[:last_operation].slice(:state, :description)
             )
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
         def retry_state_updater
           update_polling_interval
           if Time.now + @poll_interval > end_timestamp
-            ManagedServiceInstance.first(guid: service_instance_guid).save_with_operation(
+            ManagedServiceInstance.first(guid: service_instance_guid).save_and_update_operation(
                 last_operation: {
                     state: 'failed',
                     description: 'Service Broker failed to provision within the required time.',
@@ -88,7 +88,7 @@ module VCAP::CloudController
             service_instance.last_operation.destroy
             service_instance.destroy
           else
-            service_instance.save_with_operation(service_instance.last_operation.proposed_changes)
+            service_instance.save_and_update_operation(service_instance.last_operation.proposed_changes)
           end
         end
 

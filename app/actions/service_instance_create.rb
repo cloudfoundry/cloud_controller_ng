@@ -19,7 +19,7 @@ module VCAP::CloudController
       )
 
       begin
-        service_instance.save_with_operation(attributes_to_update)
+        service_instance.save_with_new_operation(attributes_to_update)
       rescue => e
         @logger.error "Failed to save while creating service instance #{service_instance.guid} with exception: #{e}."
         orphan_mitigator = SynchronousOrphanMitigate.new(@logger)

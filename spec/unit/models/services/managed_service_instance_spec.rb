@@ -88,45 +88,65 @@ module VCAP::CloudController
       end
     end
 
-    describe '#save_with_operation' do
-      context 'when the operation does not exist' do
-        it 'also creates a last_operation object and assoicates it with the service instance' do
-          service_instance = ManagedServiceInstance.make
-          attrs = {
-            last_operation: {
-              state: 'in progress',
-              description: '10%'
-            },
-            dashboard_url: 'a-different-url.com'
-          }
-          service_instance.save_with_operation(attrs)
+    describe '#save_with_new_operation'  do
+      it 'creates a new last_operation object and associates it with the service instance' do
+        service_instance = ManagedServiceInstance.make
+        attrs = {
+          last_operation: {
+            state: 'in progress',
+            description: '10%'
+          },
+          dashboard_url: 'a-different-url.com'
+        }
+        service_instance.save_with_new_operation(attrs)
 
-          service_instance.reload
-          expect(service_instance.dashboard_url).to eq 'a-different-url.com'
-          expect(service_instance.last_operation.state).to eq 'in progress'
-          expect(service_instance.last_operation.description).to eq '10%'
-        end
+        service_instance.reload
+        expect(service_instance.dashboard_url).to eq 'a-different-url.com'
+        expect(service_instance.last_operation.state).to eq 'in progress'
+        expect(service_instance.last_operation.description).to eq '10%'
       end
 
-      context 'when the operation already exists' do
-        it 'updates the existing operation associated with the service instance' do
-          operation = ServiceInstanceOperation.make
-          service_instance = ManagedServiceInstance.make
-          service_instance.service_instance_operation = operation
-          attrs = {
-            last_operation: {
-              state: 'in progress',
-              description: '10%'
-            },
-            dashboard_url: 'a-different-url.com'
-          }
-          service_instance.save_with_operation(attrs)
+      context 'when the instance already has a last operation' do
+        before do
+          attrs = { last_operation: { state: 'finished' } }
+          service_instance.save_with_new_operation(attrs)
+          service_instance.reload
+          @old_guid = service_instance.last_operation.guid
+        end
+
+        it 'creates a new operation' do
+          attrs = { last_operation: { state: 'in progress' } }
+          service_instance.save_with_new_operation(attrs)
 
           service_instance.reload
-          expect(service_instance.dashboard_url).to eq 'a-different-url.com'
-          expect(service_instance.last_operation.state).to eq 'in progress'
-          expect(service_instance.last_operation.description).to eq '10%'
+          expect(service_instance.last_operation.guid).not_to eq(@old_guid)
         end
+      end
+    end
+
+    describe '#save_and_update_operation' do
+      before do
+        attrs = { last_operation: { state: 'in progress', description: '10%' } }
+        service_instance.save_with_new_operation(attrs)
+        service_instance.reload
+        @old_guid = service_instance.last_operation.guid
+      end
+
+      it 'updates the existing last_operation object' do
+        attrs = {
+          last_operation: {
+            state: 'in progress',
+            description: '20%'
+          },
+          dashboard_url: 'a-different-url.com'
+        }
+        service_instance.save_and_update_operation(attrs)
+
+        service_instance.reload
+        expect(service_instance.dashboard_url).to eq 'a-different-url.com'
+        expect(service_instance.last_operation.state).to eq 'in progress'
+        expect(service_instance.last_operation.guid).to eq @old_guid
+        expect(service_instance.last_operation.description).to eq '20%'
       end
     end
 

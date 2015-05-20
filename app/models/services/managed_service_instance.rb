@@ -185,41 +185,48 @@ module VCAP::CloudController
       false
     end
 
-    def save_with_operation(attributes_to_update)
+    def save_with_new_operation(attributes_to_update)
       ManagedServiceInstance.db.transaction do
         lock!
 
-        last_operation_attributes = attributes_to_update.delete(:last_operation)
+        instance_attrs, operation_attrs = extract_operation_attrs(attributes_to_update)
+        update_attributes(instance_attrs)
 
-        set_all(attributes_to_update)
-        save
+        if self.last_operation
+          self.last_operation.destroy
+        end
 
-        if last_operation_attributes
-          if self.service_instance_operation
-            self.service_instance_operation.set_all(last_operation_attributes)
-            self.service_instance_operation.save
-          else
-            operation = ServiceInstanceOperation.create(last_operation_attributes)
-            self.service_instance_operation = operation
-          end
+        self.service_instance_operation = ServiceInstanceOperation.create(operation_attrs)
+      end
+    end
+
+    def save_and_update_operation(attributes_to_update)
+      ManagedServiceInstance.db.transaction do
+        lock!
+
+        instance_attrs, operation_attrs = extract_operation_attrs(attributes_to_update)
+        update_attributes(instance_attrs)
+
+        if operation_attrs
+          update_last_operation(operation_attrs)
         end
       end
     end
 
-    def update_from_broker_response(attributes_to_update)
-      return unless attributes_to_update
-      attributes_to_update = attributes_to_update.clone
-      ManagedServiceInstance.db.transaction do
-        lock!
+    private
 
-        last_operation_attributes = attributes_to_update.delete(:last_operation)
+    def update_attributes(instance_attrs)
+      set_all(instance_attrs)
+      save
+    end
 
-        update_from_hash(attributes_to_update)
+    def update_last_operation(operation_attrs)
+      self.last_operation.update_attributes operation_attrs
+    end
 
-        if last_operation_attributes
-          self.service_instance_operation.update_from_hash(last_operation_attributes)
-        end
-      end
+    def extract_operation_attrs(attributes_to_update)
+      operation_attrs = attributes_to_update.delete(:last_operation)
+      [attributes_to_update, operation_attrs]
     end
   end
 end

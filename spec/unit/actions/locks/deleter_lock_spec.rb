@@ -5,14 +5,19 @@ module VCAP::CloudController
   describe VCAP::CloudController::DeleterLock do
     let(:service_instance) { ManagedServiceInstance.make }
     let(:deleter_lock) { DeleterLock.new service_instance }
+    let(:operation) { ServiceInstanceOperation.make(state: 'override me') }
 
     before do
-      service_instance.service_instance_operation = ServiceInstanceOperation.make(state: 'override me')
+      service_instance.service_instance_operation = operation
     end
 
     describe 'locking' do
       before do
         deleter_lock.lock!
+      end
+
+      it 'creates a new service instance operation' do
+        expect(service_instance.last_operation.guid).not_to eq(operation.guid)
       end
 
       it 'sets the last operation of the service instance to "in progress"' do

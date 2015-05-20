@@ -37,8 +37,10 @@ module VCAP::CloudController
 
       it 'deletes user provided service instances' do
         user_provided_instance = UserProvidedServiceInstance.make
-        service_instance_delete.delete(service_instance_dataset)
-        expect { user_provided_instance.refresh }.to raise_error('Record not found')
+        errors = service_instance_delete.delete(service_instance_dataset)
+        expect(errors).to be_empty
+
+        expect(user_provided_instance.exists?).to be_falsey
       end
 
       it 'deletes the last operation for each managed service instance' do
@@ -46,10 +48,11 @@ module VCAP::CloudController
         service_instance_1.service_instance_operation = instance_operation_1
         service_instance_1.save
 
-        service_instance_delete.delete(service_instance_dataset)
+        errors = service_instance_delete.delete(service_instance_dataset)
+        expect(errors).to be_empty
 
-        expect { service_instance_1.refresh }.to raise_error('Record not found')
-        expect { instance_operation_1.refresh }.to raise_error('Record not found')
+        expect(service_instance_1.exists?).to be_falsey
+        expect(instance_operation_1.exists?).to be_falsey
       end
 
       it 'defaults accepts_incomplete to false' do

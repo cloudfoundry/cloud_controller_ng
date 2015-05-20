@@ -39,5 +39,15 @@ module VCAP::CloudController
         expect(operation.reload.proposed_changes).to eq(expected_value)
       end
     end
+
+    describe 'updating attributes' do
+      it 'updates the attributes of the service instance operation' do
+        new_attributes = {
+          state: 'finished'
+        }
+        operation.update_attributes(new_attributes)
+        expect(operation.state).to eq 'finished'
+      end
+    end
   end
 end

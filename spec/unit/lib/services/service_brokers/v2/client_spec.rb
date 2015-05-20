@@ -141,7 +141,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'returns the attributes to update on a service instance' do
         attributes, _ = client.provision(instance)
         # ensure updating attributes and saving to service instance works
-        instance.save_with_operation(attributes)
+        instance.save_and_update_operation(attributes)
 
         expect(instance.dashboard_url).to eq('foo')
       end
@@ -323,7 +323,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:message) { 'OK' }
 
       before do
-        instance.save_with_operation(
+        instance.save_with_new_operation(
           last_operation: { type: 'create' }
         )
         allow(http_client).to receive(:get).and_return(response)
@@ -367,7 +367,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'when the last operation type is `delete`' do
           before do
-            instance.save_with_operation(
+            instance.save_with_new_operation(
               last_operation: {
                 type: 'delete',
               }
@@ -386,7 +386,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'with any other operation type' do
           before do
-            instance.save_with_operation(
+            instance.save_with_new_operation(
               last_operation: {
                 type: 'update'
               }

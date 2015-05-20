@@ -345,7 +345,7 @@ module VCAP::CloudController
           end
 
           before do
-            instance.save_with_operation(
+            instance.save_with_new_operation(
               last_operation: {
                 type: 'delete',
                 state: 'in progress',

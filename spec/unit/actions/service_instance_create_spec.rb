@@ -28,6 +28,11 @@ module VCAP::CloudController
         }.to change { ServiceInstance.count }.from(0).to(1)
       end
 
+      it 'creates a new service instance operation' do
+        create_action.create(request_attrs, false)
+        expect(ManagedServiceInstance.last.last_operation).to eq(ServiceInstanceOperation.last)
+      end
+
       it 'creates an audit event' do
         create_action.create(request_attrs, false)
         expect(event_repository).to have_received(:record_service_instance_event).with(:create, an_instance_of(ManagedServiceInstance), request_attrs)
