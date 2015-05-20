@@ -113,19 +113,17 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      orgs = Organization.filter(Sequel.or(
-        managers: [user],
-        auditors: [user],
-      ))
-
-      spaces = Space.filter(Sequel.or(
-        developers:   [user],
-        auditors:     [user],
-        managers:     [user],
-        organization: orgs,
-      ))
-
-      { space: spaces }
+      {
+        space_id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
+          Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id).union(
+            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id).union(
+              Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id).union(
+                Space.dataset.join_table(:inner, :organizations_auditors, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
+              )
+            )
+          )
+        ).select(:id)
+      }
     end
 
     def in_suspended_org?

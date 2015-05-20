@@ -47,14 +47,15 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      Sequel.or([
-        [:space_guid, user.spaces_dataset.select(:guid)],
-        [:space_guid, user.managed_spaces_dataset.select(:guid)],
-        [:space_guid, user.audited_spaces_dataset.select(:guid)],
-        [:space_guid, user.managed_organizations_dataset.join(
-          :spaces, spaces__organization_id: :organizations__id
-        ).select(:spaces__guid)],
-      ])
+      {
+        space_guid: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).union(
+          Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid).union(
+            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid).union(
+              Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)
+            )
+          )
+        ).select(:space_guid)
+      }
     end
   end
 end
