@@ -1,4 +1,5 @@
 require 'cloud_controller/rest_controller'
+require 'actions/propagate_instance_credentials'
 
 module VCAP::CloudController
   class UserProvidedServiceInstancesController < RestController::ModelController
@@ -70,6 +71,8 @@ module VCAP::CloudController
         service_instance.update_from_hash(request_attrs)
       end
 
+      propagate_instance_credentials(service_instance)
+
       @services_event_repository.record_user_provided_service_instance_event(:update, service_instance, request_attrs)
 
       [HTTP::CREATED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
@@ -95,5 +98,11 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+  end
+
+  private
+
+  def propagate_instance_credentials(service_instance)
+    PropagateInstanceCredentials.new.execute service_instance
   end
 end

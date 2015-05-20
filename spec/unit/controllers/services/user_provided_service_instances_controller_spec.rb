@@ -213,6 +213,16 @@ module VCAP::CloudController
           expect(last_response.status).to eq 201
         end
       end
+
+      context 'when the service instance has a binding' do
+        let!(:binding) { ServiceBinding.make service_instance: service_instance }
+
+        it 'propagates the updated credentials to the binding' do
+          put "/v2/user_provided_service_instances/#{service_instance.guid}", req.to_json, headers_for(developer)
+
+          expect(binding.reload.credentials).to eq({ 'uri' => 'https://user:password@service-location.com:port/db' })
+        end
+      end
     end
 
     describe 'DELETE', '/v2/user_provided_service_instances/:guid' do
