@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'actions/locks/deleter_lock'
+require 'actions/services/locks/deleter_lock'
 
 module VCAP::CloudController
   describe VCAP::CloudController::DeleterLock do

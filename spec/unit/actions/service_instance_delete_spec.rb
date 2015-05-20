@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'actions/service_instance_delete'
+require 'actions/services/service_instance_delete'
 
 module VCAP::CloudController
   describe ServiceInstanceDelete do

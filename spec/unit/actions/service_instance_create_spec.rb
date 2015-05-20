@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'actions/service_instance_create'
+require 'actions/services/service_instance_create'
 
 module VCAP::CloudController
   describe ServiceInstanceCreate do

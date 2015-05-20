@@ -1,6 +1,6 @@
 require 'presenters/api/service_broker_presenter'
-require 'actions/service_broker_create'
-require 'actions/service_broker_update'
+require 'actions/services/service_broker_create'
+require 'actions/services/service_broker_update'
 
 module VCAP::CloudController
   # This controller is an experiment breaking away from the old

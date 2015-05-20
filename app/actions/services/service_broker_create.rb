@@ -1,4 +1,4 @@
-require 'actions/mixins/service_broker_registration_error_parser'
+require 'actions/services/mixins/service_broker_registration_error_parser'
 
 module VCAP::CloudController
   class ServiceBrokerCreate

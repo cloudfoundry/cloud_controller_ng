@@ -1,4 +1,4 @@
-require 'actions/locks/updater_lock'
+require 'actions/services/locks/updater_lock'
 
 module VCAP::CloudController
   class ServiceInstanceUpdate

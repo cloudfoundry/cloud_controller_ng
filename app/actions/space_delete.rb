@@ -1,4 +1,4 @@
-require 'actions/service_instance_delete'
+require 'actions/services/service_instance_delete'
 
 module VCAP::CloudController
   class SpaceDelete

@@ -1,5 +1,5 @@
-require 'actions/service_binding_delete'
-require 'actions/locks/deleter_lock'
+require 'actions/services/service_binding_delete'
+require 'actions/services/locks/deleter_lock'
 
 module VCAP::CloudController
   class ServiceInstanceDelete

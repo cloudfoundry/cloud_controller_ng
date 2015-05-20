@@ -1,15 +1,14 @@
-require 'actions/locks/lock_check'
+require 'actions/services/locks/lock_check'
 
 module VCAP::CloudController
-  class DeleterLock
+  class UpdaterLock
     include VCAP::CloudController::LockCheck
 
     attr_reader :service_instance
 
-    def initialize(service_instance, type='delete')
+    def initialize(service_instance, type='update')
       @service_instance = service_instance
       @type = type
-      @needs_unlock = false
     end
 
     def lock!
@@ -25,7 +24,6 @@ module VCAP::CloudController
             state: 'in progress'
           }
         )
-        @needs_unlock = true
       end
     end
 
@@ -36,25 +34,16 @@ module VCAP::CloudController
           state: 'failed'
         }
       )
-      @needs_unlock = false
     end
 
-    def unlock_and_destroy!
-      # set state for code that use the service instance afterwards
-      service_instance.last_operation.state = 'succeeded' if service_instance.last_operation
-      service_instance.destroy
-      @needs_unlock = false
+    def synchronous_unlock!(attributes_to_update)
+      service_instance.save_and_update_operation(attributes_to_update)
     end
 
     def enqueue_unlock!(attributes_to_update, job)
       service_instance.save_and_update_operation(attributes_to_update)
       enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
       enqueuer.enqueue
-      @needs_unlock = false
-    end
-
-    def needs_unlock?
-      @needs_unlock
     end
   end
 end

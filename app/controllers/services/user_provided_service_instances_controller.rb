@@ -1,5 +1,5 @@
 require 'cloud_controller/rest_controller'
-require 'actions/propagate_instance_credentials'
+require 'actions/services/propagate_instance_credentials'
 
 module VCAP::CloudController
   class UserProvidedServiceInstancesController < RestController::ModelController

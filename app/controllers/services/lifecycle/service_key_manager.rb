@@ -1,5 +1,5 @@
-require 'actions/service_key_delete'
-require 'actions/service_key_create'
+require 'actions/services/service_key_delete'
+require 'actions/services/service_key_create'
 
 module VCAP::CloudController
   class ServiceKeyManager

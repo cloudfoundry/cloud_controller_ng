@@ -1,7 +1,7 @@
 require 'services/api'
 require 'jobs/audit_event_job'
-require 'actions/service_instance_create'
-require 'actions/service_instance_update'
+require 'actions/services/service_instance_create'
+require 'actions/services/service_instance_update'
 require 'controllers/services/lifecycle/service_instance_deprovisioner'
 require 'queries/service_instance_fetcher'
 
