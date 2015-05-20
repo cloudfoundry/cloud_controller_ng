@@ -4,10 +4,8 @@ module VCAP::CloudController
   module Jobs::Services
     describe DeleteOrphanedInstance do
       let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
-
       let(:plan) { VCAP::CloudController::ServicePlan.make }
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.new(service_plan: plan, space: space) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.new(service_plan: plan) }
 
       let(:name) { 'fake-name' }
 
@@ -18,18 +16,14 @@ module VCAP::CloudController
 
       describe '#perform' do
         before do
-          allow(client).to receive(:deprovision)
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
         end
 
-        it 'deprovisions the service instance' do
+        it 'deprovisions the service instance with accepts_incomplete' do
+          expect(client).to receive(:deprovision).with(service_instance, accepts_incomplete: true)
           Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
           expect(Delayed::Worker.new.work_off).to eq [1, 0]
-
-          expect(client).to have_received(:deprovision) do |instance|
-            expect(instance.guid).to eq service_instance.guid
-            expect(instance.service_plan.guid).to eq service_instance.service_plan.guid
-          end
+          expect(Delayed::Job.count).to eq 0
         end
       end
 

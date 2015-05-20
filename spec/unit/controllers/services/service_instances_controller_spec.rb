@@ -223,8 +223,6 @@ module VCAP::CloudController
           stub_request(:put, service_broker_url_regex).
             with(headers: { 'Accept' => 'application/json' }).
             to_return(status: response_code, body: response_body, headers: { 'Content-Type' => 'application/json' })
-
-          stub_delete_and_return(200, '{}')
         end
 
         it 'provisions a service instance' do
@@ -667,16 +665,22 @@ module VCAP::CloudController
         end
 
         describe 'orphan mitigation' do
+          let(:delete_request_status) { 200 }
+          before do
+            stub_delete_and_return(delete_request_status, '{}')
+          end
+
           context 'when the broker returns an error' do
             let(:response_code) { 500 }
-
-            it 'enqueues a job to deprovision the instance' do
-              req = MultiJson.dump(
+            let(:req) do
+              MultiJson.dump(
                 name: 'foo',
                 space_guid: space.guid,
                 service_plan_guid: plan.guid
               )
+            end
 
+            it 'mitigates orphans by deprovisioning the instance' do
               post '/v2/service_instances', req, json_headers(headers_for(developer))
 
               expect(last_response.status).to eq(502)
@@ -686,6 +690,31 @@ module VCAP::CloudController
               orphan_mitigation_job = Delayed::Job.first
               expect(orphan_mitigation_job).not_to be_nil
               expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedInstance
+
+              expect(Delayed::Worker.new.work_off).to eq([1, 0])
+              expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
+            end
+
+            context 'and the broker returns a 202 for the follow up deletion request' do
+              let(:delete_request_status) { 202 }
+
+              it 'treats the 202 as a successful deletion and does not poll the last_operation endpoint' do
+                post '/v2/service_instances', req, json_headers(headers_for(developer))
+
+                expect(last_response.status).to eq(502)
+                expect(a_request(:put, service_broker_url_regex)).to have_been_made.times(1)
+                expect(a_request(:delete, service_broker_url_regex)).not_to have_been_made.times(1)
+
+                orphan_mitigation_job = Delayed::Job.first
+                expect(orphan_mitigation_job).not_to be_nil
+                expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedInstance
+
+                expect(Delayed::Worker.new.work_off).to eq([1, 0])
+                expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
+                expect(a_request(:get, /#{service_broker_url_regex}\/last_operation/)).not_to have_been_made.times(1)
+
+                expect(Delayed::Job.count).to eq 0
+              end
             end
           end
 

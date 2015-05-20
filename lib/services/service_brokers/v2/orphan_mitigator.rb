@@ -7,7 +7,7 @@ module VCAP::Services
     module V2
       class OrphanMitigator
         def cleanup_failed_provision(client_attrs, service_instance)
-          deprovision_job = VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance.new(
+          orphan_deprovision_job = VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance.new(
             'service-instance-deprovision',
             client_attrs,
             service_instance.guid,
@@ -15,7 +15,7 @@ module VCAP::Services
           )
 
           opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }
-          VCAP::CloudController::Jobs::Enqueuer.new(deprovision_job, opts).enqueue
+          VCAP::CloudController::Jobs::Enqueuer.new(orphan_deprovision_job, opts).enqueue
         end
 
         def cleanup_failed_bind(client_attrs, service_binding)
