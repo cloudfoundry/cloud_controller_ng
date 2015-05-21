@@ -12,7 +12,7 @@ module VCAP::CloudController
       end
     end
 
-    SHARED_DOMAIN_CONDITION =  { owning_organization_id: nil }
+    SHARED_DOMAIN_CONDITION =  { owning_organization_id: nil }.freeze
 
     dataset_module do
       def shared_domains
@@ -113,18 +113,18 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      allowed_organization_ids = Organization.filter(Sequel.or(
-                                     managers: [user],
-                                     auditors: [user],
-                                     spaces: Space.having_developers(user))).select(:id)
+      organizations_filter = dataset.db[:organizations_managers].where(user_id: user.id).select(:organization_id).union(
+        dataset.db[:organizations_auditors].where(user_id: user.id).select(:organization_id)
+      ).union(
+        Space.dataset.join_table(:inner, :spaces_developers, space_id: :spaces__id, user_id: user.id).select(:organization_id)
+      ).select(:organization_id)
 
-      r = Organization.association_reflection(:private_domains)
-      shared_domains = r.associated_dataset.select(r.qualified_right_key).where(r.predicate_key => allowed_organization_ids)
+      shared_private_domains_filter = dataset.db[:organizations_private_domains].where(organization_id: organizations_filter).select(:private_domain_id)
 
       Sequel.or([
         SHARED_DOMAIN_CONDITION.flatten,
-        [:owning_organization_id, allowed_organization_ids],
-        [:id, shared_domains]
+        [:owning_organization_id, organizations_filter],
+        [:id, shared_private_domains_filter]
       ])
     end
 

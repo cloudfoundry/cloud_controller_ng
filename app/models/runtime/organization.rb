@@ -104,12 +104,12 @@ module VCAP::CloudController
     def self.user_visibility_filter(user)
       {
         id: dataset.join_table(:inner, :organizations_managers, organization_id: :id, user_id: user.id).select(:organizations__id).union(
-              dataset.join_table(:inner, :organizations_users, organization_id: :id, user_id: user.id).select(:organizations__id).union(
-                dataset.join_table(:inner, :organizations_billing_managers, organization_id: :id, user_id: user.id).select(:organizations__id).union(
-                  dataset.join_table(:inner, :organizations_auditors, organization_id: :id, user_id: user.id).select(:organizations__id)
-                )
-              )
-            ).select(:id)
+            dataset.join_table(:inner, :organizations_users, organization_id: :id, user_id: user.id).select(:organizations__id)
+          ).union(
+            dataset.join_table(:inner, :organizations_billing_managers, organization_id: :id, user_id: user.id).select(:organizations__id)
+          ).union(
+            dataset.join_table(:inner, :organizations_auditors, organization_id: :id, user_id: user.id).select(:organizations__id)
+          ).select(:id)
       }
     end
 
