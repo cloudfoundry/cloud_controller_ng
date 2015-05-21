@@ -404,6 +404,44 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'docker credentials' do
+        context 'when all credentials are present' do
+          it 'succeeds' do
+            expect {
+              AppFactory.make(docker_credentials_json: {
+                                'docker_user' => 'user',
+                                'docker_password' => 'password',
+                                'docker_email' => 'email',
+                              })
+            }.to_not raise_error
+          end
+        end
+
+        context 'when some credentials are missing' do
+          it 'errors' do
+            expect {
+              AppFactory.make(docker_credentials_json: { 'docker_user' => 'user' })
+            }.to raise_error
+          end
+        end
+
+        context 'when no credentials are provided' do
+          it 'succeeds' do
+            expect {
+              AppFactory.make(docker_credentials_json: {})
+            }.to_not raise_error
+          end
+        end
+
+        context 'when docker_credentials_json is nil' do
+          it 'succeeds' do
+            expect {
+              AppFactory.make
+            }.to_not raise_error
+          end
+        end
+      end
     end
 
     describe 'Serialization' do
@@ -419,10 +457,7 @@ module VCAP::CloudController
           :diego,
           :disk_quota,
           :docker_image,
-          :docker_login_server,
-          :docker_user,
-          :docker_password,
-          :docker_email,
+          :docker_credentials_json,
           :environment_json,
           :health_check_timeout,
           :health_check_type,
@@ -453,10 +488,7 @@ module VCAP::CloudController
           :diego,
           :disk_quota,
           :docker_image,
-          :docker_login_server,
-          :docker_user,
-          :docker_password,
-          :docker_email,
+          :docker_credentials_json,
           :environment_json,
           :health_check_timeout,
           :health_check_type,
@@ -877,60 +909,58 @@ module VCAP::CloudController
     end
 
     describe 'docker credentials' do
+      let(:login_server) { 'https://index.docker.io/v1' }
       let(:user) { 'user' }
       let(:password) { 'password' }
       let(:email) { 'email@example.com' }
+      let(:docker_credentials) do
+        {
+          docker_login_server: login_server,
+          docker_user: user,
+          docker_password: password,
+          docker_email: email
+        }
+      end
+      let(:expected_docker_credentials) do
+        {
+          'docker_login_server' => login_server,
+          'docker_user' => user,
+          'docker_password' => password,
+          'docker_email' => email
+        }
+      end
 
       describe 'serialization' do
         let(:app) do
-          AppFactory.make(
-            docker_user: user,
-            docker_password: password,
-            docker_email: email
-          )
+          AppFactory.make(docker_credentials_json: docker_credentials)
         end
 
         it 'deserializes the serialized value' do
-          expect(app.docker_user).to eq(user)
-          expect(app.docker_password).to eq(password)
-          expect(app.docker_email).to eq(email)
+          expect(app.docker_credentials_json).to eq(expected_docker_credentials)
         end
       end
 
       describe 'restage' do
-        context 'if password changes' do
-          let(:old_password) { 'old_password' }
-          let(:new_password) { 'new_password' }
+        context 'if credentials change' do
+          let(:new_credentials) do
+            {
+              docker_login_server: login_server,
+              docker_user: user,
+              docker_password: password,
+              docker_email: email
+            }
+          end
           let(:app) do
             AppFactory.make(
               package_hash: 'deadbeef',
               package_state: 'STAGED',
-              docker_password: old_password,
+              docker_credentials_json: docker_credentials,
             )
           end
 
           it 'does not mark an app for restage' do
             expect {
-              app.docker_password = new_password
-              app.save
-            }.not_to change { app.needs_staging? }
-          end
-        end
-
-        context 'if email changes' do
-          let(:old_email) { 'old_email' }
-          let(:new_email) { 'new_email' }
-          let(:app) do
-            AppFactory.make(
-              package_hash: 'deadbeef',
-              package_state: 'STAGED',
-              docker_email: old_email,
-            )
-          end
-
-          it 'does not mark an app for restage' do
-            expect {
-              app.docker_email = new_email
+              app.docker_credentials_json = new_credentials
               app.save
             }.not_to change { app.needs_staging? }
           end
@@ -939,35 +969,25 @@ module VCAP::CloudController
 
       describe 'encryption' do
         let!(:app) do
-          AppFactory.make(
-            docker_user: user,
-            docker_password: password,
-            docker_email: email,
-          )
+          AppFactory.make(docker_credentials_json: docker_credentials)
         end
         let(:last_row) { VCAP::CloudController::App.dataset.naked.order_by(:id).last }
 
         it 'is encrypted' do
-          expect(last_row[:encrypted_docker_user]).not_to eq user
-          expect(last_row[:encrypted_docker_password]).not_to eq password
-          expect(last_row[:encrypted_docker_email]).not_to eq email
+          expect(last_row[:encrypted_docker_credentials_json]).not_to eq docker_credentials
         end
 
         it 'is decrypted' do
           app.reload
-          expect(app.docker_user).to eq user
-          expect(app.docker_password).to eq password
-          expect(app.docker_email).to eq email
+          expect(app.docker_credentials_json).to eq expected_docker_credentials
         end
 
         it 'does not store unecrypted credentials' do
-          expect(last_row[:docker_user]).to be_nil
-          expect(last_row[:docker_password]).to be_nil
-          expect(last_row[:docker_email]).to be_nil
+          expect(last_row[:docker_credentials_json]).to be_nil
         end
 
         it 'docker_salt is unique for each app' do
-          app_2 = AppFactory.make(docker_user: user, docker_password: password, docker_email: email)
+          app_2 = AppFactory.make(docker_credentials_json: docker_credentials)
           expect(app.docker_salt).not_to eq app_2.docker_salt
         end
 
@@ -977,9 +997,7 @@ module VCAP::CloudController
 
         it 'must deal with null credentials to remain null after encryption' do
           null_credentials_app = AppFactory.make
-          expect(null_credentials_app.docker_user).to be_nil
-          expect(null_credentials_app.docker_password).to be_nil
-          expect(null_credentials_app.docker_email).to be_nil
+          expect(null_credentials_app.docker_credentials_json).to be_nil
         end
       end
     end

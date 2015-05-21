@@ -89,9 +89,11 @@ resource 'Events', type: [:api, :legacy_api] do
         'memory' => 84,
         'state' => 'STOPPED',
         'environment_json' => { 'super' => 'secret' },
-        'docker_user' => 'user',
-        'docker_password' => 'password',
-        'docker_email' => 'email',
+        'docker_credentials_json' => {
+          'docker_user' => 'user',
+          'docker_password' => 'password',
+          'docker_email' => 'email'
+        }
       }
     end
     let(:space_request) do
@@ -111,9 +113,7 @@ resource 'Events', type: [:api, :legacy_api] do
     let(:expected_app_request) do
       expected_request = app_request
       expected_request['environment_json'] = 'PRIVATE DATA HIDDEN'
-      expected_request['docker_user'] = 'PRIVATE DATA HIDDEN'
-      expected_request['docker_password'] = 'PRIVATE DATA HIDDEN'
-      expected_request['docker_email'] = 'PRIVATE DATA HIDDEN'
+      expected_request['docker_credentials_json'] = 'PRIVATE DATA HIDDEN'
       expected_request
     end
 

@@ -112,14 +112,15 @@ module VCAP::CloudController
             let(:user) { 'user' }
             let(:password) { 'password' }
             let(:email) { 'email' }
-            let(:app) { AppFactory.make(docker_image: 'fake/docker_image') }
-
-            before do
-              app.docker_login_server = server
-              app.docker_user = user
-              app.docker_password = password
-              app.docker_email = email
+            let(:docker_credentials) do
+              {
+                docker_login_server: server,
+                docker_user: user,
+                docker_password: password,
+                docker_email: email
+              }
             end
+            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', docker_credentials_json: docker_credentials) }
 
             it 'uses the provided credentials to stage a Docker app' do
               expect(message[:lifecycle_data][:docker_login_server]).to eq(server)

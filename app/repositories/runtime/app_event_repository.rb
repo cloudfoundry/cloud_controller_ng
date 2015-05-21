@@ -6,12 +6,8 @@ module VCAP::CloudController
                            :command,
                            :environment_json,
                            :environment_variables,
-                           :docker_user,
-                           :docker_password,
-                           :docker_email,
-                           :encrypted_docker_user,
-                           :encrypted_docker_password,
-                           :encrypted_docker_email]
+                           :docker_credentials_json,
+                           :encrypted_docker_credentials_json]
         CENSORED_MESSAGE = 'PRIVATE DATA HIDDEN'.freeze
         SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system' }
 

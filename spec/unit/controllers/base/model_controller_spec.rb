@@ -165,10 +165,23 @@ module VCAP::CloudController
       end
 
       context 'with attributes for redacting' do
-        let(:request_attributes) { { redacted: 'super secret data' } }
-        let(:redact_request_attributes) { { 'redacted' =>  'super secret data' } }
+        let(:request_attributes) { { redacted: { a: 'b' } } }
+        let(:redact_request_attributes) { { 'redacted' =>  { 'a' => 'b' } } }
 
         it 'attempts to redact the attributes' do
+          expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:create, redact_request_attributes)
+
+          post '/v2/test_model_redact', MultiJson.dump(request_attributes), admin_headers
+          expect(last_response.status).to eq(201)
+        end
+      end
+
+      context 'with empty attributes for redacting' do
+        let(:request_attributes) { { redacted: {} } }
+        let(:redact_request_attributes) { { 'redacted' =>  {} } }
+
+        it 'attempts to redact the attributes' do
+          expect(TestModelRedact).to receive(:create_from_hash) { TestModelRedact.make }
           expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:create, redact_request_attributes)
 
           post '/v2/test_model_redact', MultiJson.dump(request_attributes), admin_headers
@@ -274,8 +287,8 @@ module VCAP::CloudController
 
       context 'with attributes for redacting' do
         let!(:model) { TestModelRedact.make }
-        let(:request_attributes) { { redacted: 'super secret data' } }
-        let(:redact_request_attributes) { { 'redacted' =>  'super secret data' } }
+        let(:request_attributes) { { redacted: { secret: 'super secret data' } } }
+        let(:redact_request_attributes) { { 'redacted' => { 'secret' => 'super secret data' } } }
 
         it 'attempts to redact the attributes' do
           expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:update, redact_request_attributes)

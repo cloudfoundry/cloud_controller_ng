@@ -93,7 +93,7 @@ module VCAP::CloudController
 
   class TestModelRedactController < RestController::ModelController
     define_attributes do
-      attribute :redacted, String, redact_in: [:create, :update]
+      attribute :redacted, Hash, redact_in: [:create, :update]
     end
 
     define_messages

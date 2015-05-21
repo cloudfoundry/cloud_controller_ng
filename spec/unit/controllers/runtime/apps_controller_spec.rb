@@ -40,61 +40,55 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_creatable_attributes(
           {
-            enable_ssh:           { type: 'bool' },
-            buildpack:            { type: 'string' },
-            command:              { type: 'string' },
-            console:              { type: 'bool', default: false },
-            debug:                { type: 'string' },
-            disk_quota:           { type: 'integer' },
-            environment_json:     { type: 'hash', default: {} },
-            health_check_timeout: { type: 'integer' },
-            health_check_type:    { type: 'string', default: 'port' },
-            instances:            { type: 'integer', default: 1 },
-            memory:               { type: 'integer' },
-            name:                 { type: 'string', required: true },
-            production:           { type: 'bool', default: false },
-            state:                { type: 'string', default: 'STOPPED' },
-            event_guids:          { type: '[string]' },
-            route_guids:          { type: '[string]' },
-            space_guid:           { type: 'string', required: true },
-            stack_guid:           { type: 'string' },
-            diego:                { type: 'bool' },
-            docker_image:         { type: 'string', required: false },
-            docker_login_server:  { type: 'string', required: false },
-            docker_user:          { type: 'string', required: false },
-            docker_password:      { type: 'string', required: false },
-            docker_email:         { type: 'string', required: false },
+            enable_ssh:              { type: 'bool' },
+            buildpack:               { type: 'string' },
+            command:                 { type: 'string' },
+            console:                 { type: 'bool', default: false },
+            debug:                   { type: 'string' },
+            disk_quota:              { type: 'integer' },
+            environment_json:        { type: 'hash', default: {} },
+            health_check_timeout:    { type: 'integer' },
+            health_check_type:       { type: 'string', default: 'port' },
+            instances:               { type: 'integer', default: 1 },
+            memory:                  { type: 'integer' },
+            name:                    { type: 'string', required: true },
+            production:              { type: 'bool', default: false },
+            state:                   { type: 'string', default: 'STOPPED' },
+            event_guids:             { type: '[string]' },
+            route_guids:             { type: '[string]' },
+            space_guid:              { type: 'string', required: true },
+            stack_guid:              { type: 'string' },
+            diego:                   { type: 'bool' },
+            docker_image:            { type: 'string', required: false },
+            docker_credentials_json: { type: 'hash', default: {} },
           })
       end
 
       it do
         expect(described_class).to have_updatable_attributes(
           {
-            enable_ssh:            { type: 'bool' },
-            buildpack:             { type: 'string' },
-            command:               { type: 'string' },
-            console:               { type: 'bool' },
-            debug:                 { type: 'string' },
-            disk_quota:            { type: 'integer' },
-            environment_json:      { type: 'hash' },
-            health_check_timeout:  { type: 'integer' },
-            health_check_type:     { type: 'string' },
-            instances:             { type: 'integer' },
-            memory:                { type: 'integer' },
-            name:                  { type: 'string' },
-            production:            { type: 'bool' },
-            state:                 { type: 'string' },
-            event_guids:           { type: '[string]' },
-            route_guids:           { type: '[string]' },
-            service_binding_guids: { type: '[string]' },
-            space_guid:            { type: 'string' },
-            stack_guid:            { type: 'string' },
-            diego:                 { type: 'bool' },
-            docker_image:          { type: 'string' },
-            docker_login_server:  { type: 'string', required: false },
-            docker_user:          { type: 'string', required: false },
-            docker_password:      { type: 'string', required: false },
-            docker_email:         { type: 'string', required: false },
+            enable_ssh:              { type: 'bool' },
+            buildpack:               { type: 'string' },
+            command:                 { type: 'string' },
+            console:                 { type: 'bool' },
+            debug:                   { type: 'string' },
+            disk_quota:              { type: 'integer' },
+            environment_json:        { type: 'hash' },
+            health_check_timeout:    { type: 'integer' },
+            health_check_type:       { type: 'string' },
+            instances:               { type: 'integer' },
+            memory:                  { type: 'integer' },
+            name:                    { type: 'string' },
+            production:              { type: 'bool' },
+            state:                   { type: 'string' },
+            event_guids:             { type: '[string]' },
+            route_guids:             { type: '[string]' },
+            service_binding_guids:   { type: '[string]' },
+            space_guid:              { type: 'string' },
+            stack_guid:              { type: 'string' },
+            diego:                   { type: 'bool' },
+            docker_image:            { type: 'string' },
+            docker_credentials_json: { type: 'hash' },
         })
       end
     end
@@ -255,15 +249,20 @@ module VCAP::CloudController
       end
       let(:decoded_response) { MultiJson.load(last_response.body) }
 
+      let(:login_server) { 'https://index.docker.io/v1' }
       let(:user) { 'user' }
       let(:password) { 'password' }
       let(:email) { 'email@example.com' }
-      let(:body) do
-        MultiJson.dump(initial_hash.merge(
+      let(:docker_credentials) do
+        {
+          docker_login_server: login_server,
           docker_user: user,
           docker_password: password,
-          docker_email: email,
-        ))
+          docker_email: email
+        }
+      end
+      let(:body) do
+        MultiJson.dump(initial_hash.merge(docker_credentials_json: docker_credentials))
       end
 
       let(:user_headers) { json_headers(admin_headers) }
@@ -299,9 +298,7 @@ module VCAP::CloudController
 
           it 'redacts the credentials' do
             create_app
-            expect(decoded_response['entity']['docker_user']).to eq redacted_message
-            expect(decoded_response['entity']['docker_password']).to eq redacted_message
-            expect(decoded_response['entity']['docker_email']).to eq redacted_message
+            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
           end
         end
       end
@@ -310,9 +307,7 @@ module VCAP::CloudController
         context 'by admin' do
           it 'redacts the credentials' do
             read_app
-            expect(decoded_response['entity']['docker_user']).to eq redacted_message
-            expect(decoded_response['entity']['docker_password']).to eq redacted_message
-            expect(decoded_response['entity']['docker_email']).to eq redacted_message
+            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
           end
         end
 
@@ -321,9 +316,7 @@ module VCAP::CloudController
 
           it 'redacts the credentials' do
             read_app
-            expect(decoded_response['entity']['docker_user']).to eq redacted_message
-            expect(decoded_response['entity']['docker_password']).to eq redacted_message
-            expect(decoded_response['entity']['docker_email']).to eq redacted_message
+            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
           end
         end
       end
@@ -332,9 +325,7 @@ module VCAP::CloudController
         context 'by admin' do
           it 'redacts the credentials' do
             update_app
-            expect(decoded_response['entity']['docker_user']).to eq redacted_message
-            expect(decoded_response['entity']['docker_password']).to eq redacted_message
-            expect(decoded_response['entity']['docker_email']).to eq redacted_message
+            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
           end
         end
 
@@ -343,9 +334,7 @@ module VCAP::CloudController
 
           it 'redacts the credentials' do
             update_app
-            expect(decoded_response['entity']['docker_user']).to eq redacted_message
-            expect(decoded_response['entity']['docker_password']).to eq redacted_message
-            expect(decoded_response['entity']['docker_email']).to eq redacted_message
+            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
           end
         end
       end

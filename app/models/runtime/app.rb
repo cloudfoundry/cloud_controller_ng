@@ -46,24 +46,21 @@ module VCAP::CloudController
                       :state, :version, :command, :console, :debug, :staging_task_id,
                       :package_state, :health_check_type, :health_check_timeout,
                       :staging_failed_reason, :diego, :docker_image, :package_updated_at,
-                      :detected_start_command, :enable_ssh, :docker_login_server, :docker_user,
-                      :docker_password, :docker_email
+                      :detected_start_command, :enable_ssh, :docker_credentials_json
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
                       :state, :command, :console, :debug, :staging_task_id,
                       :service_binding_guids, :route_guids, :health_check_type,
                       :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
-                      :docker_login_server, :docker_user, :docker_password, :docker_email
+                      :docker_credentials_json
 
     strip_attributes :name
 
     serialize_attributes :json, :metadata
 
     encrypt :environment_json, salt: :salt, column: :encrypted_environment_json
-    encrypt :docker_user, salt: :docker_salt, column: :encrypted_docker_user
-    encrypt :docker_password, salt: :docker_salt, column: :encrypted_docker_password
-    encrypt :docker_email, salt: :docker_salt, column: :encrypted_docker_email
+    encrypt :docker_credentials_json, salt: :docker_salt, column: :encrypted_docker_credentials_json
 
     APP_STATES = %w(STOPPED STARTED).map(&:freeze).freeze
     PACKAGE_STATES = %w(PENDING STAGED FAILED).map(&:freeze).freeze
@@ -77,9 +74,6 @@ module VCAP::CloudController
 
     # Last staging response which will contain streaming log url
     attr_accessor :last_stager_response
-
-    # docker login server used to authenticate against
-    attr_accessor :docker_login_server
 
     alias_method :diego?, :diego
 
@@ -328,6 +322,18 @@ module VCAP::CloudController
     end
     alias_method_chain :environment_json, 'serialization'
 
+    def docker_credentials_json_with_serialization=(env)
+      self.docker_credentials_json_without_serialization = MultiJson.dump(env)
+    end
+    alias_method_chain :docker_credentials_json=, 'serialization'
+
+    def docker_credentials_json_with_serialization
+      string = docker_credentials_json_without_serialization
+      return if string.blank?
+      MultiJson.load string
+    end
+    alias_method_chain :docker_credentials_json, 'serialization'
+
     def system_env_json
       vcap_services
     end
@@ -555,10 +561,10 @@ module VCAP::CloudController
     end
 
     def to_hash(opts={})
-      if !VCAP::CloudController::SecurityContext.admin? && !space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
-        opts.merge!(redact: %w(environment_json system_env_json docker_user docker_password docker_email encrypted_docker_user encrypted_docker_password encrypted_docker_email))
+      if VCAP::CloudController::SecurityContext.admin? || space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+        opts.merge!(redact: %w(docker_credentials_json))
       else
-        opts.merge!(redact: %w(docker_user docker_password docker_email encrypted_docker_user encrypted_docker_password encrypted_docker_email))
+        opts.merge!(redact: %w(environment_json system_env_json docker_credentials_json))
       end
       super(opts)
     end

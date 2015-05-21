@@ -18,10 +18,13 @@ module VCAP::CloudController
         def stage_app_message(app, staging_config)
           lifecycle_data = LifecycleData.new
           lifecycle_data.docker_image = app.docker_image
-          lifecycle_data.docker_login_server = app.docker_login_server
-          lifecycle_data.docker_user = app.docker_user
-          lifecycle_data.docker_password = app.docker_password
-          lifecycle_data.docker_email = app.docker_email
+          docker_credentials = app.docker_credentials_json
+          if docker_credentials
+            lifecycle_data.docker_login_server = docker_credentials['docker_login_server']
+            lifecycle_data.docker_user = docker_credentials['docker_user']
+            lifecycle_data.docker_password = docker_credentials['docker_password']
+            lifecycle_data.docker_email = docker_credentials['docker_email']
+          end
 
           staging_request = StagingRequest.new
           staging_request.app_id = app.guid
