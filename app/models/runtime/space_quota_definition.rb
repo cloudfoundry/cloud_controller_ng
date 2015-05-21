@@ -5,6 +5,7 @@ module VCAP::CloudController
     many_to_one :organization, before_set: :validate_change_organization
     one_to_many :spaces
 
+    attr_accessor :space_usage
     export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
       :total_routes, :memory_limit, :instance_memory_limit
     import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
@@ -27,6 +28,11 @@ module VCAP::CloudController
 
     def validate_change_organization(new_org)
       raise OrganizationAlreadySet unless organization.nil? || organization.guid == new_org.guid
+    end
+
+    def to_hash(opts={})
+      return super(opts) unless space_usage
+      super(opts).merge!('space_usage' => space_usage)
     end
 
     def self.user_visibility_filter(user)
