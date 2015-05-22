@@ -235,8 +235,6 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/services/:guid' do
-      let(:email) { 'admin@example.com' }
-
       let!(:service) { Service.make(:v2) }
       let!(:service_plan) { ServicePlan.make(service: service) }
       let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
@@ -245,7 +243,7 @@ module VCAP::CloudController
 
       context 'when no purge parameter is given' do
         it 'gives error info to user' do
-          delete "/v2/services/#{service.guid}", '{}', headers_for(admin_user, email: email)
+          delete "/v2/services/#{service.guid}", '{}', headers_for(admin_user)
 
           expect(last_response).to have_status_code 400
           expect(last_response.body).to match /AssociationNotEmpty/
@@ -253,6 +251,8 @@ module VCAP::CloudController
       end
 
       context 'when the purge parameter is "true"' do
+        let(:email) { 'admin@example.com' }
+
         before do
           stub_request(:delete, /#{service.service_broker.broker_url}.*/).to_return(body: '', status: 200)
         end
@@ -279,13 +279,16 @@ module VCAP::CloudController
           })
         end
 
-        it 'requires authentication' do
+        it 'requires admin headers' do
           delete "/v2/services/#{service.guid}", '{}', headers_for(nil)
           expect(last_response.status).to eq 401
+
+          delete "/v2/services/#{service.guid}", '{}', headers_for(User.make)
+          expect(last_response.status).to eq 403
         end
 
         it 'deletes the service and its dependent models' do
-          delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
+          delete "/v2/services/#{service.guid}?purge=true", '{}', headers_for(admin_user)
 
           expect(last_response).to have_status_code(204)
           expect(Service.first(guid: service.guid)).to be_nil
@@ -296,7 +299,7 @@ module VCAP::CloudController
         end
 
         it 'does not contact the broker' do
-          delete "/v2/services/#{service.guid}?purge=true", '{}', json_headers(admin_headers)
+          delete "/v2/services/#{service.guid}?purge=true", '{}', headers_for(admin_user)
 
           expect(a_request(:delete, /#{service.service_broker.broker_url}.*/)).not_to have_been_made
         end

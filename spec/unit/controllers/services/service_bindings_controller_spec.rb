@@ -223,7 +223,7 @@ module VCAP::CloudController
         end
 
         it 'binds a service instance to an app' do
-          post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer))
+          post '/v2/service_bindings', req.to_json, headers_for(developer)
           expect(last_response).to have_status_code(201)
 
           binding = ServiceBinding.last
@@ -232,7 +232,7 @@ module VCAP::CloudController
 
         it 'creates an audit event upon binding' do
           email = 'email@example.com'
-          post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer, email: email))
+          post '/v2/service_bindings', req.to_json, headers_for(developer, email: email)
 
           service_binding = ServiceBinding.last
 
@@ -267,7 +267,7 @@ module VCAP::CloudController
           end
 
           it 'sends the parameters in the request to the broker' do
-            post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer))
+            post '/v2/service_bindings', req.to_json, headers_for(developer)
             expect(last_response).to have_status_code(201)
             binding_endpoint = %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
             expect(a_request(:put, binding_endpoint).with(body: hash_including(parameters: parameters))).to have_been_made
@@ -284,7 +284,7 @@ module VCAP::CloudController
               service_instance_guid: instance.guid
             }.to_json
 
-            post '/v2/service_bindings', req, json_headers(headers_for(developer))
+            post '/v2/service_bindings', req, headers_for(developer)
           end
 
           it 'raises UnbindableService error' do
@@ -308,7 +308,7 @@ module VCAP::CloudController
             end
 
             it 'returns CF-AppNotFound' do
-              post '/v2/service_bindings', req, json_headers(headers_for(developer))
+              post '/v2/service_bindings', req, headers_for(developer)
 
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-AppNotFound')
@@ -327,7 +327,7 @@ module VCAP::CloudController
             end
 
             it 'returns CF-ServiceInstanceNotFound error' do
-              post '/v2/service_bindings', req, json_headers(headers_for(developer))
+              post '/v2/service_bindings', req, headers_for(developer)
 
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
@@ -354,14 +354,14 @@ module VCAP::CloudController
           end
 
           it 'does not tell the service broker to bind the service' do
-            post '/v2/service_bindings', request_body, json_headers(headers_for(developer))
+            post '/v2/service_bindings', request_body, headers_for(developer)
 
             expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
               to_not have_been_made
           end
 
           it 'does not trigger orphan mitigation' do
-            post '/v2/service_bindings', request_body, json_headers(headers_for(developer))
+            post '/v2/service_bindings', request_body, headers_for(developer)
 
             orphan_mitigation_job = Delayed::Job.first
             expect(orphan_mitigation_job).to be_nil
@@ -370,7 +370,7 @@ module VCAP::CloudController
           end
 
           it 'should show an error message for create bind operation' do
-            post '/v2/service_bindings', request_body, json_headers(headers_for(developer))
+            post '/v2/service_bindings', request_body, headers_for(developer)
             expect(last_response).to have_status_code 409
             expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
           end
@@ -389,7 +389,7 @@ module VCAP::CloudController
                 service_instance_guid: instance.guid
               }.to_json
 
-              post '/v2/service_bindings', req, json_headers(headers_for(developer))
+              post '/v2/service_bindings', req, headers_for(developer)
               expect(instance.last_operation.state).to eq 'succeeded'
               expect(instance.last_operation.type).to eq 'create'
             end
@@ -407,7 +407,7 @@ module VCAP::CloudController
                 service_instance_guid: instance.guid
               }.to_json
 
-              post '/v2/service_bindings', req, json_headers(headers_for(developer))
+              post '/v2/service_bindings', req, headers_for(developer)
               expect(instance.refresh.last_operation).to be_nil
             end
           end
@@ -419,7 +419,7 @@ module VCAP::CloudController
               app_guid: app_obj.guid,
               service_instance_guid: instance.guid
             }.to_json
-            post '/v2/service_bindings', req, json_headers(headers_for(developer))
+            post '/v2/service_bindings', req, headers_for(developer)
           end
 
           context 'when attempting to bind and the service binding already exists' do
@@ -523,7 +523,7 @@ module VCAP::CloudController
         end
 
         it 'binds a service instance to an app' do
-          post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer))
+          post '/v2/service_bindings', req.to_json, headers_for(developer)
           expect(last_response).to have_status_code(201)
 
           binding = ServiceBinding.last
@@ -540,7 +540,7 @@ module VCAP::CloudController
           end
 
           it 'ignores arbitrary params' do
-            post '/v2/service_bindings', req.to_json, json_headers(headers_for(developer, email: 'email@example.com'))
+            post '/v2/service_bindings', req.to_json, headers_for(developer, email: 'email@example.com')
             expect(last_response).to have_status_code(201)
 
             label_with_version = "#{service_instance.service.label}-#{service_instance.service.version}"
@@ -566,13 +566,13 @@ module VCAP::CloudController
       end
 
       it 'returns an empty response body' do
-        delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer))
+        delete "/v2/service_bindings/#{service_binding.guid}", '', headers_for(developer)
         expect(last_response).to have_status_code 204
         expect(last_response.body).to be_empty
       end
 
       it 'unbinds a service instance from an app' do
-        delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer))
+        delete "/v2/service_bindings/#{service_binding.guid}", '', headers_for(developer)
         expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
         expect(a_request(:delete, bind_url_regex(service_binding: service_binding))).to have_been_made
       end
@@ -581,7 +581,7 @@ module VCAP::CloudController
         email = 'email@example.com'
         space = service_binding.service_instance.space
 
-        delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer, email: email))
+        delete "/v2/service_bindings/#{service_binding.guid}", '', headers_for(developer, email: email)
 
         event = Event.first(type: 'audit.service_binding.delete')
         expect(event.actor_type).to eq('user')
@@ -610,7 +610,7 @@ module VCAP::CloudController
           it 'does not save a last_operation' do
             service_instance = service_binding.service_instance
 
-            delete "/v2/service_bindings/#{service_binding.guid}", '{}', json_headers(headers_for(developer))
+            delete "/v2/service_bindings/#{service_binding.guid}", '{}', headers_for(developer)
             expect(service_instance.refresh.last_operation).to be_nil
           end
 
@@ -618,7 +618,7 @@ module VCAP::CloudController
             it 'does not save a last_operation' do
               service_instance = service_binding.service_instance
 
-              delete "/v2/service_bindings/#{service_binding.guid}?async=true", '{}', json_headers(headers_for(developer))
+              delete "/v2/service_bindings/#{service_binding.guid}?async=true", '{}', headers_for(developer)
               expect(service_binding).not_to be_nil
               expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::AuditEventJob
 
@@ -636,7 +636,7 @@ module VCAP::CloudController
           it 'reverts to the previous last_operation' do
             service_instance = service_binding.service_instance
 
-            delete "/v2/service_bindings/#{service_binding.guid}", '{}', json_headers(headers_for(developer))
+            delete "/v2/service_bindings/#{service_binding.guid}", '{}', headers_for(developer)
             expect(service_instance.refresh.last_operation.state).to eq 'succeeded'
             expect(service_instance.refresh.last_operation.type).to eq 'create'
           end
@@ -645,7 +645,7 @@ module VCAP::CloudController
             it 'reverts to the previous last_operation' do
               service_instance = service_binding.service_instance
 
-              delete "/v2/service_bindings/#{service_binding.guid}?async=true", '{}', json_headers(headers_for(developer))
+              delete "/v2/service_bindings/#{service_binding.guid}?async=true", '{}', headers_for(developer)
               expect(service_binding).not_to be_nil
               expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::AuditEventJob
 
@@ -658,7 +658,7 @@ module VCAP::CloudController
 
       context 'with ?async=true' do
         it 'returns a job id' do
-          delete "/v2/service_bindings/#{service_binding.guid}?async=true", '', json_headers(headers_for(developer))
+          delete "/v2/service_bindings/#{service_binding.guid}?async=true", '', headers_for(developer)
           expect(last_response.status).to eq 202
           expect(decoded_response['entity']['guid']).to be
           expect(decoded_response['entity']['status']).to eq 'queued'
@@ -675,7 +675,7 @@ module VCAP::CloudController
         end
 
         it 'should show an error message for unbind operation' do
-          delete "/v2/service_bindings/#{service_binding.guid}", '', json_headers(headers_for(developer))
+          delete "/v2/service_bindings/#{service_binding.guid}", '', headers_for(developer)
           expect(last_response).to have_status_code 409
           expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
           expect(ServiceBinding.find(guid: service_binding.guid)).not_to be_nil
@@ -694,14 +694,16 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_bindings?inline-relations-depth=1', regression: true do
-      it 'returns both user provided and managed service instances' do
-        managed_service_instance = ManagedServiceInstance.make
-        ServiceBinding.make(service_instance: managed_service_instance)
+      let(:space) { Space.make }
+      let(:managed_service_instance) { ManagedServiceInstance.make(space: space) }
+      let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
+      let(:developer) { make_developer_for_space(space) }
 
-        user_provided_service_instance = UserProvidedServiceInstance.make
+      it 'returns both user provided and managed service instances' do
+        ServiceBinding.make(service_instance: managed_service_instance)
         ServiceBinding.make(service_instance: user_provided_service_instance)
 
-        get '/v2/service_bindings?inline-relations-depth=1', {}, admin_headers
+        get '/v2/service_bindings?inline-relations-depth=1', {}, headers_for(developer)
         expect(last_response.status).to eql(200)
 
         service_bindings = decoded_response['resources']

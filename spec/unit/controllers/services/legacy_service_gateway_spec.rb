@@ -37,29 +37,29 @@ module VCAP::CloudController
         end
 
         it 'should reject requests without auth tokens' do
-          post path, build_offering.encode, json_headers({})
+          post path, build_offering.encode, {}
           expect(last_response.status).to eq(403)
         end
 
         it 'should should reject posts with malformed bodies' do
-          post path, MultiJson.dump(bla: 'foobar'), json_headers(auth_header)
+          post path, MultiJson.dump(bla: 'foobar'), auth_header
           expect(last_response.status).to eq(400)
         end
 
         it 'should reject requests with missing parameters' do
           msg = { label: 'foobar-2.2',
                   description: 'the foobar svc' }
-          post path, MultiJson.dump(msg), json_headers(auth_header)
+          post path, MultiJson.dump(msg), auth_header
           expect(last_response.status).to eq(400)
         end
 
         it 'should reject requests with extra dash in label' do
-          post path, foo_bar_dash_offering.encode, json_headers(auth_header)
+          post path, foo_bar_dash_offering.encode, auth_header
           expect(last_response.status).to eq(400)
         end
 
         it 'should create service offerings for label/provider services' do
-          post path, build_offering.encode, json_headers(auth_header)
+          post path, build_offering.encode, auth_header
           expect(last_response.status).to eq(200)
           svc = Service.find(label: 'foobar', provider: 'core')
           expect(svc).not_to be_nil
@@ -70,7 +70,7 @@ module VCAP::CloudController
           extra_data = "{\"I\": \"am json #{'more' * 100}\"}"
           o = build_offering
           o.extra = extra_data
-          post path, o.encode, json_headers(auth_header)
+          post path, o.encode, auth_header
 
           expect(last_response.status).to eq(200)
           service = Service[label: 'foobar', provider: 'core']
@@ -78,7 +78,7 @@ module VCAP::CloudController
         end
 
         it 'should set bindable to true' do
-          post path, build_offering.encode, json_headers(auth_header)
+          post path, build_offering.encode, auth_header
 
           expect(last_response.status).to eq(200)
           service = Service[label: 'foobar', provider: 'core']
@@ -87,23 +87,23 @@ module VCAP::CloudController
 
         shared_examples_for 'offering containing service plans' do
           it 'should create service plans' do
-            post path, both_plans.encode, json_headers(auth_header)
+            post path, both_plans.encode, auth_header
 
             service = Service[label: 'foobar', provider: 'core']
             expect(service.service_plans.map(&:name)).to include('free', 'nonfree')
           end
 
           it 'should update service plans' do
-            post path, just_free_plan.encode, json_headers(auth_header)
-            post path, both_plans.encode, json_headers(auth_header)
+            post path, just_free_plan.encode, auth_header
+            post path, both_plans.encode, auth_header
 
             service = Service[label: 'foobar', provider: 'core']
             expect(service.service_plans.map(&:name)).to include('free', 'nonfree')
           end
 
           it 'should remove plans not posted' do
-            post path, both_plans.encode, json_headers(auth_header)
-            post path, just_free_plan.encode, json_headers(auth_header)
+            post path, both_plans.encode, auth_header
+            post path, just_free_plan.encode, auth_header
 
             service = Service[label: 'foobar', provider: 'core']
             expect(service.service_plans.map(&:name)).to eq(['free'])
@@ -141,7 +141,7 @@ module VCAP::CloudController
                 }
               ]
             )
-            post path, offer.encode, json_headers(auth_header)
+            post path, offer.encode, auth_header
             expect(last_response.status).to eq(200)
 
             service = Service[label: 'foobar', provider: 'core']
@@ -153,11 +153,11 @@ module VCAP::CloudController
           end
 
           it 'does not add plans with identical names but different freeness under the same service' do
-            post path, just_free_plan.encode, json_headers(auth_header)
+            post path, just_free_plan.encode, auth_header
             expect(last_response.status).to eq(200)
 
             offer2 = build_offering(plan_details: [{ 'name' => 'free', 'free' => false, 'description' => 'tetris' }])
-            post path, offer2.encode, json_headers(auth_header)
+            post path, offer2.encode, auth_header
             expect(last_response.status).to eq(200)
 
             service = Service[label: 'foobar', provider: 'core']
@@ -170,7 +170,7 @@ module VCAP::CloudController
             offer = build_offering(
               plan_details: [{ 'name' => 'plan name', 'free' => true, 'guid' => 'myguid' }]
             )
-            post path, offer.encode, json_headers(auth_header)
+            post path, offer.encode, auth_header
             expect(last_response.status).to eq(200)
 
             service = Service[label: 'foobar', provider: 'core']
@@ -201,10 +201,10 @@ module VCAP::CloudController
         end
 
         it 'should update service offerings for label/provider services' do
-          post path, build_offering.encode, json_headers(auth_header)
+          post path, build_offering.encode, auth_header
           offer = build_offering
           offer.url = 'http://newurl.com'
-          post path, offer.encode, json_headers(auth_header)
+          post path, offer.encode, auth_header
           expect(last_response.status).to eq(200)
           svc = Service.find(label: 'foobar', provider: 'core')
           expect(svc).not_to be_nil
@@ -388,7 +388,7 @@ module VCAP::CloudController
                 service_id: 'xxx',
                 configuration: [],
                 credentials: []
-            ).encode, json_headers(@auth_header)
+            ).encode, @auth_header
             expect(last_response.status).to eq(404)
           end
 
@@ -398,7 +398,7 @@ module VCAP::CloudController
                 service_id: 'foo1',
                 configuration: [],
                 credentials: { foo: 'bar' }
-            ).encode, json_headers(@auth_header)
+            ).encode, @auth_header
             expect(last_response.status).to eq(200)
           end
 
@@ -408,7 +408,7 @@ module VCAP::CloudController
                 service_id: 'bind1',
                 configuration: [],
                 credentials: []
-            ).encode, json_headers(@auth_header)
+            ).encode, @auth_header
             expect(last_response.status).to eq(200)
           end
         end
@@ -442,7 +442,7 @@ module VCAP::CloudController
                 service_id: 'foo2',
                 configuration: [],
                 credentials: { foo: 'bar' }
-            ).encode, json_headers(@auth_header)
+            ).encode, @auth_header
             expect(last_response.status).to eq(200)
           end
 
@@ -452,7 +452,7 @@ module VCAP::CloudController
                 service_id: 'bind2',
                 configuration: [],
                 credentials: []
-            ).encode, json_headers(@auth_header)
+            ).encode, @auth_header
             expect(last_response.status).to eq(200)
           end
         end
