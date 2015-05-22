@@ -28,6 +28,7 @@ module VCAP::CloudController
       quota_errors = e.errors.on(:quota)
       service_plan_errors = e.errors.on(:service_plan)
       service_instance_name_errors = e.errors.on(:name)
+      service_instance_tags_errors = e.errors.on(:tags)
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         return Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
       elsif quota_errors
@@ -47,6 +48,10 @@ module VCAP::CloudController
           return Errors::ApiError.new_from_details('ServiceInstanceNameTooLong')
         else
           return Errors::ApiError.new_from_details('ServiceInstanceNameEmpty', attributes['name'])
+        end
+      elsif service_instance_tags_errors
+        if service_instance_tags_errors.include?(:too_long)
+          return Errors::ApiError.new_from_details('ServiceInstanceTagsTooLong')
         end
       end
 

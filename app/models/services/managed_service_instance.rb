@@ -92,6 +92,7 @@ module VCAP::CloudController
       super
       validates_presence :service_plan
       validation_policies.map(&:validate)
+      validate_tags_length
     end
 
     def last_operation
@@ -238,6 +239,12 @@ module VCAP::CloudController
     def extract_operation_attrs(attributes_to_update)
       operation_attrs = attributes_to_update.delete(:last_operation)
       [attributes_to_update, operation_attrs]
+    end
+
+    def validate_tags_length
+      if tags.join('').length > 255
+        @errors[:tags] = [:too_long]
+      end
     end
   end
 end

@@ -2340,6 +2340,21 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(60009)
+        expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTooLong')
+      end
+
+      it 'returns service instance tags too long message correctly' do
+        service_instance_params = {
+          name: 'sweet name',
+          tags: ['a' * 256],
+          space_guid: space.guid,
+          service_plan_guid: free_plan.guid
+        }
+        post '/v2/service_instances', MultiJson.dump(service_instance_params), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(60015)
+        expect(decoded_response['error_code']).to eq('CF-ServiceInstanceTagsTooLong')
       end
 
       context 'invalid space guid' do

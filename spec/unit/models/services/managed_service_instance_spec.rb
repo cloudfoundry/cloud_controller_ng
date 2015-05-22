@@ -35,6 +35,16 @@ module VCAP::CloudController
       it { is_expected.to validate_uniqueness [:space_id, :name] }
       it { is_expected.to strip_whitespace :name }
 
+      it 'validates that the combined length of all tags is 255 or less characters' do
+        expect {
+          ManagedServiceInstance.make tags: ['a' * 255]
+        }.not_to raise_error
+
+        expect {
+          ManagedServiceInstance.make tags: ['a' * 128, 'b' * 128]
+        }.to raise_error(Sequel::ValidationFailed, 'tags too_long')
+      end
+
       it 'should not bind an app and a service instance from different app spaces' do
         AppFactory.make(space: service_instance.space)
         service_binding = ServiceBinding.make
