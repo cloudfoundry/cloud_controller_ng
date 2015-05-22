@@ -91,6 +91,8 @@ module VCAP::CloudController
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
 
       service_instance, related_objects = ServiceInstanceFetcher.new.fetch(guid)
+      not_found!(guid) if !service_instance
+
       validate_access(:read_for_update, service_instance)
       validate_access(:update, service_instance)
 
@@ -279,6 +281,10 @@ module VCAP::CloudController
 
     def space_change_not_allowed!
       raise Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
+    end
+
+    def not_found!(guid)
+      raise Errors::ApiError.new_from_details('ServiceInstanceNotFound', guid)
     end
 
     def plan_visible_to_org?(organization, service_plan)

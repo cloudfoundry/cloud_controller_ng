@@ -1023,6 +1023,14 @@ module VCAP::CloudController
         end
 
         describe 'error cases' do
+          context 'when the service instance does not exist' do
+            it 'returns a ServiceInstanceNotFound error' do
+              put '/v2/service_instances/non-existing-instance-guid', body, headers_for(developer)
+              expect(last_response).to have_status_code 404
+              expect(decoded_response['error_code']).to eq 'CF-ServiceInstanceNotFound'
+            end
+          end
+
           context 'when the service instance has an operation in progress' do
             let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
             let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
@@ -1068,6 +1076,7 @@ module VCAP::CloudController
 
             it 'does not call out to the service broker' do
               put "/v2/service_instances/#{service_instance.guid}", body, headers_for(auditor)
+              expect(last_response).to have_status_code 403
               expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
             end
           end
@@ -1376,6 +1385,14 @@ module VCAP::CloudController
         end
 
         describe 'error cases' do
+          context 'when the service instance does not exist' do
+            it 'returns a ServiceInstanceNotFound error' do
+              put '/v2/service_instances/non-existing-instance-guid?accepts_incomplete=true', body, headers_for(developer)
+              expect(last_response).to have_status_code 404
+              expect(decoded_response['error_code']).to eq 'CF-ServiceInstanceNotFound'
+            end
+          end
+
           context 'when the service instance has an operation in progress' do
             let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
             let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
