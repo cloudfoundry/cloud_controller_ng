@@ -56,7 +56,8 @@ module VCAP::CloudController
     many_to_one :service_plan
 
     export_attributes :name, :credentials, :service_plan_guid,
-      :space_guid, :gateway_data, :dashboard_url, :type, :last_operation
+      :space_guid, :gateway_data, :dashboard_url, :type, :last_operation,
+      :tags
 
     import_attributes :name, :service_plan_guid,
       :space_guid, :gateway_data
@@ -64,6 +65,8 @@ module VCAP::CloudController
     strip_attributes :name
 
     plugin :after_initialize
+
+    serialize_attributes :json, :tags
 
     # This only applies to V1 services
     alias_attribute :broker_provided_id, :gateway_name
@@ -171,7 +174,15 @@ module VCAP::CloudController
     end
 
     def tags
+      super || []
+    end
+
+    def service_tags
       service.tags
+    end
+
+    def merged_tags
+      service.tags + tags
     end
 
     def terminal_state?

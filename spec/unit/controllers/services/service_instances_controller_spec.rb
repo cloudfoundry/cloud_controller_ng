@@ -14,24 +14,26 @@ module VCAP::CloudController
     end
 
     describe 'Attributes' do
-      it do
+      it 'has creatable attributes' do
         expect(described_class).to have_creatable_attributes({
           name: { type: 'string', required: true },
           space_guid: { type: 'string', required: true },
           service_plan_guid: { type: 'string', required: true },
           service_binding_guids: { type: '[string]' },
           service_key_guids: { type: '[string]' },
+          tags: { type: '[string]', default: [] },
           parameters: { type: 'hash', default: nil },
         })
       end
 
-      it do
+      it 'has updatable attributes' do
         expect(described_class).to have_updatable_attributes({
           name: { type: 'string' },
           space_guid: { type: 'string' },
           service_plan_guid: { type: 'string' },
           service_binding_guids: { type: '[string]' },
           service_key_guids: { type: '[string]' },
+          tags: { type: '[string]' },
           parameters: { type: 'hash' },
         })
       end
@@ -251,6 +253,38 @@ module VCAP::CloudController
           expect(event).to match_service_instance(instance)
         end
 
+        describe 'instance tags' do
+          context 'when service instance tags are sent with the create request' do
+            it 'saves the service instance tags' do
+              tags = %w(a b c)
+              new_instance = create_managed_service_instance(
+                email: 'developer@example.com',
+                accepts_incomplete: false,
+                tags: tags
+              )
+
+              expect(last_response).to have_status_code 201
+              expect(decoded_response['entity']['tags']).to eq tags
+
+              expect(new_instance.tags).to eq tags
+            end
+          end
+
+          context 'when no service instance tags are sent with the create request' do
+            it 'saves no service instance tags' do
+              new_instance = create_managed_service_instance(
+                email: 'developer@example.com',
+                accepts_incomplete: false,
+              )
+
+              expect(last_response).to have_status_code 201
+              expect(decoded_response['entity']['tags']).to eq([])
+
+              expect(new_instance.tags).to eq([])
+            end
+          end
+        end
+
         context 'when the client provides arbitrary parameters' do
           before do
             create_managed_service_instance(
@@ -305,12 +339,10 @@ module VCAP::CloudController
             expect(event.space_guid).to eq(instance.space.guid)
             expect(event.space_id).to eq(instance.space.id)
             expect(event.organization_guid).to eq(instance.space.organization.guid)
-            expect(event.metadata).to include({
-              'request' => {
+            expect(event.metadata['request']).to include({
                 'name' => instance.name,
                 'service_plan_guid' => instance.service_plan_guid,
                 'space_guid' => instance.space_guid,
-              }
             })
           end
 
@@ -433,12 +465,10 @@ module VCAP::CloudController
               expect(event.space_guid).to eq(instance.space.guid)
               expect(event.space_id).to eq(instance.space.id)
               expect(event.organization_guid).to eq(instance.space.organization.guid)
-              expect(event.metadata).to include({
-                'request' => {
+              expect(event.metadata['request']).to include({
                   'name' => instance.name,
                   'service_plan_guid' => instance.service_plan_guid,
                   'space_guid' => instance.space_guid,
-                }
               })
             end
           end
@@ -510,12 +540,10 @@ module VCAP::CloudController
             expect(event.space_guid).to eq(instance.space.guid)
             expect(event.space_id).to eq(instance.space.id)
             expect(event.organization_guid).to eq(instance.space.organization.guid)
-            expect(event.metadata).to include({
-              'request' => {
+            expect(event.metadata['request']).to include({
                 'name' => instance.name,
                 'service_plan_guid' => instance.service_plan_guid,
                 'space_guid' => instance.space_guid,
-              }
             })
           end
         end
@@ -2337,6 +2365,7 @@ module VCAP::CloudController
       arbitrary_params = user_opts.delete(:parameters)
       accepts_incomplete = user_opts.delete(:accepts_incomplete) { |_| 'true' }
       headers = json_headers(headers_for(developer, user_opts))
+      tags = user_opts.delete(:tags)
 
       body = {
         name: 'foo',
@@ -2344,6 +2373,7 @@ module VCAP::CloudController
         service_plan_guid: plan.guid,
       }
       body[:parameters] = arbitrary_params if arbitrary_params
+      body[:tags] = tags if tags
       req = MultiJson.dump(body)
 
       if accepts_incomplete

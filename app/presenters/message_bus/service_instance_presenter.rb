@@ -40,7 +40,7 @@ class ServiceInstancePresenter
         vendor: @service_instance.service.label,
         plan: @service_instance.service_plan.name,
         name: @service_instance.name,
-        tags: @service_instance.tags
+        tags: @service_instance.merged_tags
       }.tap do |hash|
         if @service_instance.service.version
           hash[:version] = @service_instance.service.version

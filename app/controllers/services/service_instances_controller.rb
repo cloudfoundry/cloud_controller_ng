@@ -11,6 +11,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       attribute :parameters, Hash, default: nil
+      attribute :tags, [String], default: []
       to_one :space
       to_one :service_plan
       to_many :service_bindings

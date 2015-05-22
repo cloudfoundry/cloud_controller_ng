@@ -4,6 +4,7 @@ module VCAP::CloudController
   class ServiceInstance < Sequel::Model
     class InvalidServiceBinding < StandardError; end
 
+    plugin :serialization
     plugin :single_table_inheritance, :is_gateway_service,
            model_map: lambda { |is_gateway_service|
              if is_gateway_service

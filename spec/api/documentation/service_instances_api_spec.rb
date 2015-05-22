@@ -8,7 +8,8 @@ resource 'Service Instances', type: [:api, :legacy_api] do
   let(:service) { VCAP::CloudController::Service.make(service_broker: service_broker) }
   let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: true) }
   let!(:service_instance) do
-    service_instance = VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan)
+    service_instance = VCAP::CloudController::ManagedServiceInstance.make(
+      service_plan: service_plan, tags: %w(accounting_mongodb))
     service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(
       state: 'succeeded',
       description: 'service broker-provided description'
@@ -60,6 +61,7 @@ resource 'Service Instances', type: [:api, :legacy_api] do
     response_field 'space_url', 'The relative path to the space resource that this service instance belongs to.'
     response_field 'service_plan_url', 'The relative path to the service plan resource that this service instance belongs to.'
     response_field 'service_binding_url', 'The relative path to the service bindings that this service instance is bound to.'
+    response_field 'tags', 'A list of tags for the service instance'
 
     standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
     standard_model_get :managed_service_instance, path: :service_instance, nested_attributes: [:space, :service_plan]
@@ -70,6 +72,8 @@ resource 'Service Instances', type: [:api, :legacy_api] do
       field :space_guid, 'The guid of the space in which the instance will be created', required: true
       field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
       field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
+      field :tags, 'A list of tags for the service instance',
+            required: false, example_values: [%w(db), %w(accounting_mongodb)], default: []
 
       param_description = <<EOF
 Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
@@ -92,7 +96,8 @@ EOF
           service_plan_guid: service_plan.guid,
           parameters: {
             the_service_broker: 'wants this object'
-          }
+          },
+          tags: %w(accounting_mongodb)
         }
 
         client.post '/v2/service_instances?accepts_incomplete=true', MultiJson.dump(request_hash, pretty: true), headers

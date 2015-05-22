@@ -63,7 +63,7 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type, :last_operation }
+      it { is_expected.to export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type, :last_operation, :tags }
       it { is_expected.to import_attributes :name, :service_plan_guid, :space_guid, :gateway_data }
     end
 
@@ -468,13 +468,61 @@ module VCAP::CloudController
       end
     end
 
-    describe '#tags' do
-      let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+    describe 'tags' do
+      let(:instance_tags) { %w(a b c) }
+      let(:service_tags) { %w(relational mysql) }
+      let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, tags: instance_tags) }
       let(:service_plan) { ServicePlan.make(service: service) }
-      let(:service) { Service.make(tags: %w(relational mysql)) }
+      let(:service) { Service.make(tags: service_tags) }
 
-      it 'gets tags from the service' do
-        expect(service_instance.tags).to eq %w(relational mysql)
+      describe '#tags' do
+        it 'returns the instance tags' do
+          expect(service_instance.tags).to eq instance_tags
+        end
+
+        context 'when there are no tags' do
+          let(:instance_tags) { nil }
+          it 'returns an empty array' do
+            expect(service_instance.tags).to eq []
+          end
+        end
+      end
+
+      describe '#service_tags' do
+        it 'gets tags from the service' do
+          expect(service_instance.service_tags).to eq(service_tags)
+        end
+      end
+
+      describe '#merged_tags' do
+        context 'when the instance tags are not set' do
+          let(:service_instance) { ManagedServiceInstance.make service_plan: service_plan }
+
+          it 'returns only the service tags' do
+            expect(service_instance.merged_tags).to eq(service_tags)
+          end
+        end
+
+        context 'when the service tags are not set' do
+          let(:service_plan) { ServicePlan.make }
+
+          it 'returns only the instance tags' do
+            expect(service_instance.merged_tags).to eq(instance_tags)
+          end
+        end
+
+        context 'when no service or instance tags are set' do
+          let(:instance_tags) { nil }
+          let(:service_tags) { nil }
+
+          it 'returns an empty array' do
+            expect(service_instance.merged_tags).to eq([])
+          end
+        end
+
+        it 'returns the service tags merged with the instance tags' do
+          expect(service_instance.merged_tags).to eq(service_tags + instance_tags)
+        end
       end
     end
 
