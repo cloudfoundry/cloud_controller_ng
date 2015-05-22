@@ -282,7 +282,21 @@ module VCAP::CloudController
         end
       end
 
-      context 'when deleting one of the records fails' do
+      context 'when deleting a service instance fails' do
+        let(:service) { Service.make }
+
+        before do
+          allow_any_instance_of(VCAP::CloudController::ServiceInstance).to receive(:destroy).and_raise('Boom')
+        end
+
+        it 'raises the same error' do
+          expect {
+            service.purge
+          }.to raise_error(RuntimeError, /Boom/)
+        end
+      end
+
+      context 'when deleting a service plan fails' do
         let(:service) { Service.make }
 
         before do
