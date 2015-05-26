@@ -93,6 +93,23 @@ module VCAP::CloudController
           end
         end
 
+        context 'when instance reporter is unavailable' do
+          before do
+            allow(instances_reporters).to receive(:stats_for_app).and_raise(VCAP::Errors::InstancesUnavailable.new(StandardError.new))
+          end
+
+          it 'returns 503' do
+            @app.update(state: 'STARTED')
+
+            get("/v2/apps/#{@app.guid}/stats",
+                {},
+                headers_for(@developer))
+
+            expect(last_response.status).to eq(503)
+            expect(last_response.body).to match('Stats unavailable: Stats server temporarily unavailable.')
+          end
+        end
+
         context 'when there is an error finding instances' do
           before do
             allow(instances_reporters).to receive(:stats_for_app).and_raise(VCAP::Errors::ApiError.new_from_details('StatsError', 'msg'))
