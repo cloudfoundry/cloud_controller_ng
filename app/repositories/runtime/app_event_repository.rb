@@ -2,7 +2,12 @@ module VCAP::CloudController
   module Repositories
     module Runtime
       class AppEventRepository
-        CENSORED_FIELDS = [:encrypted_environment_json, :command, :environment_json, :environment_variables]
+        CENSORED_FIELDS = [:encrypted_environment_json,
+                           :command,
+                           :environment_json,
+                           :environment_variables,
+                           :docker_credentials_json,
+                           :encrypted_docker_credentials_json]
         CENSORED_MESSAGE = 'PRIVATE DATA HIDDEN'.freeze
         SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system' }
 

@@ -51,5 +51,6 @@ module VCAP::CloudController
 
     include_examples 'operation list', :exclude_in, :exclude_in?, 'excluded'
     include_examples 'operation list', :optional_in, :optional_in?, 'optional'
+    include_examples 'operation list', :redact_in, :redact_in?, 'redacted'
   end
 end

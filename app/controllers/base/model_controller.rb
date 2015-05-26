@@ -5,6 +5,8 @@ module VCAP::CloudController::RestController
   class ModelController < BaseController
     include Routes
 
+    CENSORED_MESSAGE = 'PRIVATE DATA HIDDEN'.freeze
+
     attr_reader :object_renderer, :collection_renderer
 
     def inject_dependencies(dependencies)
@@ -19,7 +21,7 @@ module VCAP::CloudController::RestController
 
       @request_attrs = json_msg.extract(stringify_keys: true)
 
-      logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
+      logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
       before_create
 
@@ -54,7 +56,7 @@ module VCAP::CloudController::RestController
     def update(guid)
       json_msg = self.class::UpdateMessage.decode(body)
       @request_attrs = json_msg.extract(stringify_keys: true)
-      logger.debug 'cc.update', guid: guid, attributes: request_attrs
+      logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
       raise InvalidRequest unless request_attrs
 
       obj = find_guid(guid)
@@ -240,6 +242,15 @@ module VCAP::CloudController::RestController
     # @return [Sequel::Model] The model associated with this api endpoint.
     def model
       self.class.model
+    end
+
+    def redact_attributes(op, request_attributes)
+      request_attributes.dup.tap do |changes|
+        changes.keys.each do |key|
+          attrib = self.class.attributes[key.to_sym]
+          changes[key] = CENSORED_MESSAGE if attrib && attrib.redact_in?(op)
+        end
+      end
     end
 
     private

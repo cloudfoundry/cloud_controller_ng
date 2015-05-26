@@ -43,6 +43,13 @@ resource 'Apps', type: [:api, :legacy_api] do
       default: nil,
       experimental: true,
       example_values: ['cloudfoundry/helloworld', 'registry.example.com:5000/user/repository/tag']
+    field :docker_credentials_json, 'Docker credentials for pulling docker image.',
+      default: {},
+      experimental: true,
+      example_values: [{ 'docker_user' => 'user name',
+                         'docker_password' => 's3cr3t',
+                         'docker_email' => 'email@example.com',
+                         'docker_login_server' => 'https://index.docker.io/v1/' }]
 
     field :environment_json, 'Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables.'
     field :production, 'Deprecated.', deprecated: true, default: true, valid_values: [true, false]

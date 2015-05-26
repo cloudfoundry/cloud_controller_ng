@@ -106,6 +106,29 @@ module VCAP::CloudController
               expect(message[:file_descriptors]).to eq(staging_config[:minimum_staging_file_descriptor_limit])
             end
           end
+
+          context 'when there are image credentials' do
+            let(:server) { 'http://loginServer.com' }
+            let(:user) { 'user' }
+            let(:password) { 'password' }
+            let(:email) { 'email' }
+            let(:docker_credentials) do
+              {
+                docker_login_server: server,
+                docker_user: user,
+                docker_password: password,
+                docker_email: email
+              }
+            end
+            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', docker_credentials_json: docker_credentials) }
+
+            it 'uses the provided credentials to stage a Docker app' do
+              expect(message[:lifecycle_data][:docker_login_server]).to eq(server)
+              expect(message[:lifecycle_data][:docker_user]).to eq(user)
+              expect(message[:lifecycle_data][:docker_password]).to eq(password)
+              expect(message[:lifecycle_data][:docker_email]).to eq(email)
+            end
+          end
         end
 
         describe '#desire_app_request' do
