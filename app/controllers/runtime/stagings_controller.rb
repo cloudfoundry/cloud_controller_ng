@@ -94,9 +94,8 @@ module VCAP::CloudController
       check_app_exists(app, guid)
       check_file_was_uploaded(app)
       check_file_md5
-      blobstore_key = "#{app.stack.name}-#{app.guid}"
 
-      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, blobstore_key, :buildpack_cache_blobstore)
+      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, app.buildpack_cache_key, :buildpack_cache_blobstore)
       Jobs::Enqueuer.new(blobstore_upload, queue: Jobs::LocalQueue.new(config)).enqueue
       HTTP::OK
     end
@@ -106,8 +105,7 @@ module VCAP::CloudController
       app = App.find(guid: guid)
       check_app_exists(app, guid)
 
-      blobstore_key = "#{app.stack.name}-#{app.guid}"
-      blob = buildpack_cache_blobstore.blob(blobstore_key)
+      blob = buildpack_cache_blobstore.blob(app.buildpack_cache_key)
       blob_name = 'buildpack cache'
 
       @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless blob
@@ -147,15 +145,15 @@ module VCAP::CloudController
       [HTTP::OK, StagingJobPresenter.new(job).to_json]
     end
 
-    post "#{V3_APP_BUILDPACK_CACHE_PATH}/:stack/:guid/upload", :upload_v3_app_buildpack_cache
-    def upload_v3_app_buildpack_cache(stack, guid)
+    post "#{V3_APP_BUILDPACK_CACHE_PATH}/:stack_name/:guid/upload", :upload_v3_app_buildpack_cache
+    def upload_v3_app_buildpack_cache(stack_name, guid)
       app_model = AppModel.find(guid: guid)
 
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found') if app_model.nil?
       raise ApiError.new_from_details('StagingError', "malformed buildpack cache upload request for #{guid}") unless upload_path
       check_file_md5
 
-      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, "#{stack}-#{guid}", :buildpack_cache_blobstore)
+      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, "#{stack_name}-#{guid}", :buildpack_cache_blobstore)
       Jobs::Enqueuer.new(blobstore_upload, queue: Jobs::LocalQueue.new(config)).enqueue
       HTTP::OK
     end

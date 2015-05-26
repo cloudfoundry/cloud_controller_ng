@@ -494,6 +494,10 @@ module VCAP::CloudController
       buildpack.url if buildpack.custom?
     end
 
+    def buildpack_cache_key
+      "#{stack.name}-#{guid}"
+    end
+
     def docker_image=(value)
       value = fill_docker_string(value)
       super

@@ -14,18 +14,21 @@ module VCAP::CloudController
         previous_changes: previous_changes,
         started?: app_started,
         needs_staging?: app_needs_staging,
+        buildpack_cache_key: key,
       )
     end
     let(:app_started) { false }
     let(:app_needs_staging) { false }
     let(:previous_changes) { nil }
     let(:package_hash) { nil }
+    let(:key) { nil }
 
     before do
       AppObserver.configure(stagers, runners)
     end
 
     describe '.deleted' do
+      let(:key) { 'my-cache-key' }
       subject { AppObserver.deleted(app) }
 
       it 'stops the app' do
@@ -37,7 +40,8 @@ module VCAP::CloudController
         delete_buildpack_cache_jobs = Delayed::Job.where("handler like '%buildpack_cache_blobstore%'")
         expect { subject }.to change { delete_buildpack_cache_jobs.count }.by(1)
         job = delete_buildpack_cache_jobs.last
-        expect(job.handler).to include(app.guid)
+
+        expect(job.handler).to include(key)
         expect(job.queue).to eq('cc-generic')
       end
 

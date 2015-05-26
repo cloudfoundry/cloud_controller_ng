@@ -568,6 +568,15 @@ module VCAP::CloudController
       end
     end
 
+    describe '#buildpack_cache_key' do
+      let(:app) { AppFactory.make }
+      it 'compose the buildpack cache key from stack name and app guid' do
+        app.save
+        app.refresh
+        expect(app.buildpack_cache_key).to eq("#{app.stack.name}-#{app.guid}")
+      end
+    end
+
     describe '#stack=' do
       let(:new_stack) { Stack.make }
 

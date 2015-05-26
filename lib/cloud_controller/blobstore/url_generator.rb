@@ -19,7 +19,7 @@ module CloudController
       end
 
       def buildpack_cache_download_url(app)
-        generate_download_url(@buildpack_cache_blobstore, "/staging/buildpack_cache/#{app.guid}/download", "#{app.stack.name}-#{app.guid}")
+        generate_download_url(@buildpack_cache_blobstore, "/staging/buildpack_cache/#{app.guid}/download", app.buildpack_cache_key)
       end
 
       def v3_app_buildpack_cache_download_url(app_guid, stack)
