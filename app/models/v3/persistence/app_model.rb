@@ -21,7 +21,26 @@ module VCAP::CloudController
       validates_unique [:space_guid, :name]
       validates_format APP_NAME_REGEX, :name
       validate_environment_variables
+      validate_desired_droplet_is_staged
     end
+
+    def self.user_visible(user)
+      dataset.where(user_visibility_filter(user))
+    end
+
+    def self.user_visibility_filter(user)
+      {
+        space_guid: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).union(
+            Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)
+          ).union(
+            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)
+          ).union(
+            Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)
+        ).select(:space_guid)
+      }
+    end
+
+    private
 
     def validate_environment_variables
       return unless environment_variables
@@ -42,20 +61,10 @@ module VCAP::CloudController
       end
     end
 
-    def self.user_visible(user)
-      dataset.where(user_visibility_filter(user))
-    end
-
-    def self.user_visibility_filter(user)
-      {
-        space_guid: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).union(
-            Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)
-          ).union(
-            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)
-          ).union(
-            Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)
-        ).select(:space_guid)
-      }
+    def validate_desired_droplet_is_staged
+      if desired_droplet && desired_droplet.state != DropletModel::STAGED_STATE
+        errors.add(:desired_droplet, 'must be in staged state')
+      end
     end
   end
 end

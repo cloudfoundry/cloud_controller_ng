@@ -2,8 +2,7 @@ require 'cloud_controller/procfile'
 
 module VCAP::CloudController
   class SetCurrentDroplet
-    # class DropletNotFound < StandardError; end
-    # class ProcfileNotFound < StandardError; end
+    class InvalidApp < StandardError; end
 
     def initialize(user, user_email)
       @user = user
@@ -20,6 +19,8 @@ module VCAP::CloudController
       end
 
       app
+    rescue Sequel::ValidationFailed => e
+      raise InvalidApp.new(e.message)
     end
 
     private

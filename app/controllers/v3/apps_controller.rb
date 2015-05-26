@@ -190,6 +190,8 @@ module VCAP::CloudController
       app = SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
 
       [HTTP::OK, @app_presenter.present_json(app)]
+    rescue SetCurrentDroplet::InvalidApp => e
+      unprocessable!(e.message)
     end
 
     def membership

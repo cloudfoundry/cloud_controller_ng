@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       context 'when the desired_droplet exists' do
-        let(:droplet) { DropletModel.make }
+        let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE) }
         let(:droplet_guid) { droplet.guid }
 
         it 'sets the desired state on the app' do
@@ -62,7 +62,7 @@ module VCAP::CloudController
         end
 
         context 'and the droplet has a package' do
-          let(:droplet) { DropletModel.make(package_guid: package.guid) }
+          let(:droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::STAGED_STATE) }
           let(:package) { PackageModel.make(package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
 
           it 'sets the package hash correctly on the process' do

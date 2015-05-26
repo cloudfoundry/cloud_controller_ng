@@ -154,7 +154,7 @@ module VCAP::CloudController
 
       context 'when the app is associated with a v3 app' do
         let(:app_model) { AppModel.make }
-        let(:droplet) { DropletModel.make(droplet_hash: 'foobar') }
+        let(:droplet) { DropletModel.make(droplet_hash: 'foobar', state: DropletModel::STAGED_STATE) }
 
         before do
           app_model.update(desired_droplet_guid: droplet.guid)

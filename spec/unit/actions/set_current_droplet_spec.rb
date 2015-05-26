@@ -10,7 +10,7 @@ module VCAP::CloudController
     let(:procfile_parse) { double(:procfile_parse) }
 
     describe '.update_to' do
-      let(:droplet) { DropletModel.make(procfile: 'web: x') }
+      let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, procfile: 'web: x') }
       let(:droplet_guid) { droplet.guid }
       let(:message) { { 'desired_droplet_guid' => droplet_guid } }
 
@@ -36,6 +36,13 @@ module VCAP::CloudController
                                                                              )
 
         set_current_droplet.update_to(app_model, droplet)
+      end
+
+      it 're-raises validation errors' do
+        allow(app_model).to receive(:save).and_raise(Sequel::ValidationFailed.new('invalid'))
+        expect {
+          set_current_droplet.update_to(app_model, droplet)
+        }.to raise_error(SetCurrentDroplet::InvalidApp)
       end
     end
   end

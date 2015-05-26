@@ -347,7 +347,7 @@ resource 'Apps (Experimental)', type: :api do
   put '/v3/apps/:guid/start' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid) }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:droplet_guid) { droplet.guid }
 
     let(:app_model) do
@@ -407,7 +407,7 @@ resource 'Apps (Experimental)', type: :api do
   put '/v3/apps/:guid/stop' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid) }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:droplet_guid) { droplet.guid }
 
     let(:app_model) do
@@ -536,7 +536,7 @@ resource 'Apps (Experimental)', type: :api do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
     let(:procfile) { 'web: start the app' }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid, procfile: procfile) }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid, procfile: procfile, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space_guid: space_guid) }
 
     before do
@@ -544,7 +544,7 @@ resource 'Apps (Experimental)', type: :api do
       space.add_developer(user)
     end
 
-    parameter :desired_droplet_guid, 'GUID of the Droplet to be used for the App'
+    parameter :desired_droplet_guid, 'GUID of the Staged Droplet to be used for the App'
 
     let(:desired_droplet_guid) { droplet.guid }
     let(:guid) { app_model.guid }

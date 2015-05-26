@@ -549,7 +549,7 @@ module VCAP::CloudController
       let(:app_model) { AppModel.make }
       let(:space) { app_model.space }
       let(:org) { space.organization }
-      let(:droplet) { DropletModel.make(procfile: 'web: a', app_guid: app_model.guid) }
+      let(:droplet) { DropletModel.make(procfile: 'web: a', app_guid: app_model.guid, state: DropletModel::STAGED_STATE) }
 
       before do
         app_model.update(desired_droplet: droplet)
@@ -871,7 +871,7 @@ module VCAP::CloudController
       let(:space) { app_model.space }
       let(:org) { space.organization }
       let(:guid) { app_model.guid }
-      let(:droplet) { DropletModel.make(procfile: 'web: start app') }
+      let(:droplet) { DropletModel.make(procfile: 'web: start app', state: DropletModel::STAGED_STATE) }
       let(:droplet_guid) { droplet.guid }
       let(:req_body) { JSON.dump({ desired_droplet_guid: droplet_guid }) }
 
@@ -988,6 +988,22 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'ResourceNotFound'
               expect(error.response_code).to eq 404
+            end
+          end
+        end
+
+        context 'when the app is invalid' do
+          before do
+            allow_any_instance_of(SetCurrentDroplet).to receive(:update_to).and_raise(SetCurrentDroplet::InvalidApp.new('app is broked'))
+          end
+
+          it 'returns an UnprocessableEntity error' do
+            expect {
+              apps_controller.assign_current_droplet(guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'UnprocessableEntity'
+              expect(error.response_code).to eq(422)
+              expect(error.message).to match('app is broked')
             end
           end
         end

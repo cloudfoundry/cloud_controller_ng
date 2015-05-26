@@ -16,7 +16,7 @@ web: thing
 other: stuff
           PROCFILE
         end
-        let(:droplet) { DropletModel.make(procfile: procfile) }
+        let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, procfile: procfile) }
 
         it 'adds missing processes' do
           expect(app.processes.count).to eq(0)
@@ -57,7 +57,7 @@ other: stuff
       end
 
       context 'when the app has a droplet, but the droplet does not have a procfile' do
-        let(:droplet) { DropletModel.make(procfile: nil) }
+        let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, procfile: nil) }
         let(:app) { AppModel.make(desired_droplet: droplet) }
 
         it 'raises procfile not found' do
