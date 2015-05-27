@@ -953,6 +953,19 @@ module VCAP::CloudController
 
             expect(service_instance.reload.last_operation.state).to eq('succeeded')
           end
+
+          context 'when the updated service instance name is too long' do
+
+            it 'fails and returns service instance name too long message correctly' do
+              new_long_instance_name = 'a' * 51
+              put "/v2/service_instances/#{service_instance.guid}",
+                  MultiJson.dump({name: new_long_instance_name}), json_headers(admin_headers)
+
+              expect(last_response).to have_status_code(400)
+              expect(decoded_response['code']).to eq(60009)
+              expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTooLong')
+            end
+          end
         end
 
         context 'when the request is to update the instance to the plan it already has' do

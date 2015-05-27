@@ -28,12 +28,12 @@ module VCAP::CloudController
     end
 
     def unlock_and_fail!
-      service_instance.save_and_update_operation(
-        last_operation: {
-          type: @type,
-          state: 'failed'
-        }
-      )
+      ServiceInstanceOperation.db.transaction do
+        service_instance.last_operation.update_attributes(
+            type: @type,
+            state: 'failed'
+        )
+      end
     end
 
     def synchronous_unlock!(attributes_to_update)

@@ -36,16 +36,20 @@ module VCAP::CloudController
 
     describe 'unlocking' do
       describe 'unlocking and failing' do
-        before do
-          updater_lock.unlock_and_fail!
-        end
-
         it 'sets the last operation of the service instance to "failed"' do
+          updater_lock.unlock_and_fail!
           expect(service_instance.last_operation.state).to eq('failed')
         end
 
         it 'sets the last operation type to "update"' do
+          updater_lock.unlock_and_fail!
           expect(service_instance.last_operation.type).to eq('update')
+        end
+
+        it 'does not update the service instance' do
+          expect {
+            updater_lock.unlock_and_fail!
+          }.to_not change { service_instance.updated_at }
         end
       end
 
