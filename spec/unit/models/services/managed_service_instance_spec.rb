@@ -35,14 +35,28 @@ module VCAP::CloudController
       it { is_expected.to validate_uniqueness [:space_id, :name] }
       it { is_expected.to strip_whitespace :name }
 
-      xit 'validates that the combined length of all tags is 255 or less characters' do
+      it 'accepts user-provided tags where combined length of all tags is exactly 255 characters' do
         expect {
-          ManagedServiceInstance.make tags: ['a' * 255]
+          ManagedServiceInstance.make tags: ['a'] * 255
         }.not_to raise_error
+      end
 
+      it 'accepts user-provided tags where combined length of all tags is less than 255 characters' do
         expect {
-          ManagedServiceInstance.make tags: ['a' * 128, 'b' * 128]
-        }.to raise_error(Sequel::ValidationFailed, 'tags too_long')
+          ManagedServiceInstance.make tags: ['a'] * 128
+        }.not_to raise_error
+      end
+
+      it 'does not accept user-provided tags with combined length of over 255 characters' do
+        expect {
+          ManagedServiceInstance.make tags: ['a'] * 256
+        }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
+      end
+
+      it 'does not accept a single user-provided tag of length greater than 255 characters' do
+        expect {
+          ManagedServiceInstance.make tags: ['a' * 256]
+        }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
       it 'should not bind an app and a service instance from different app spaces' do
