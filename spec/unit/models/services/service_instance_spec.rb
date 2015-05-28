@@ -52,6 +52,17 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the name is blank' do
+        let(:blank_name) { '' }
+        let(:service_instance) { ServiceInstance.new(service_instance_attrs) }
+
+        it 'returns a ServiceInstanceNameEmpty error' do
+          service_instance_attrs[:name] = blank_name
+          service_instance.validate
+          expect(service_instance.errors.on(:name)).to eq([:presence])
+        end
+      end
+
       describe 'when is_gateway_service is false' do
         it 'returns a UserProvidedServiceInstance' do
           service_instance_attrs[:is_gateway_service] = false

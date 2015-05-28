@@ -983,11 +983,10 @@ module VCAP::CloudController
           end
 
           context 'when the updated service instance name is too long' do
-
             it 'fails and returns service instance name too long message correctly' do
               new_long_instance_name = 'a' * 51
               put "/v2/service_instances/#{service_instance.guid}",
-                  MultiJson.dump({name: new_long_instance_name}), json_headers(admin_headers)
+                  MultiJson.dump({ name: new_long_instance_name }), json_headers(admin_headers)
 
               expect(last_response).to have_status_code(400)
               expect(decoded_response['code']).to eq(60009)
@@ -2372,6 +2371,113 @@ module VCAP::CloudController
           post '/v2/service_instances', MultiJson.dump(body), json_headers(headers_for(make_developer_for_space(space)))
           expect(last_response).to have_status_code 400
           expect(decoded_response['description']).to match(/invalid.*space.*/)
+        end
+      end
+    end
+
+    describe '.translate_validation_exception' do
+      let(:e) { instance_double(Sequel::ValidationFailed) }
+      let(:errors) { instance_double(Sequel::Model::Errors) }
+      let(:attributes) { {} }
+
+      let(:space_and_name_errors) { nil }
+      let(:quota_errors) { nil }
+      let(:service_plan_errors) { nil }
+      let(:service_instance_name_errors) { nil }
+      let(:service_instance_tags_errors) { nil }
+      let(:full_messages) { 'Service instance invalid message' }
+
+      before do
+        allow(e).to receive(:errors).and_return(errors)
+        allow(errors).to receive(:on).with([:space_id, :name]).and_return(space_and_name_errors)
+        allow(errors).to receive(:on).with(:quota).and_return(quota_errors)
+        allow(errors).to receive(:on).with(:service_plan).and_return(service_plan_errors)
+        allow(errors).to receive(:on).with(:name).and_return(service_instance_name_errors)
+        allow(errors).to receive(:on).with(:tags).and_return(service_instance_tags_errors)
+        allow(errors).to receive(:full_messages).and_return(full_messages)
+      end
+
+      it 'returns a generic ServiceInstanceInvalid error' do
+        expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceInvalid')
+        expect(described_class.translate_validation_exception(e, attributes).message).to include(full_messages)
+      end
+
+      context "when errors are included but aren't supported validation exceptions" do
+        let(:space_and_name_errors) { [:stuff] }
+        let(:quota_errors) { [:stuff] }
+        let(:service_plan_errors) { [:stuff] }
+        let(:service_instance_name_errors) { [:stuff] }
+        let(:service_instance_tags_errors) { [:stuff] }
+
+        it 'returns a generic ServiceInstanceInvalid error' do
+          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceInvalid')
+          expect(described_class.translate_validation_exception(e, attributes).message).to include(full_messages)
+        end
+      end
+
+      context 'when there is a service instance name taken error' do
+        let(:attributes) { { 'name' => 'test name' } }
+        let(:space_and_name_errors) { [:unique] }
+
+        it 'returns a ServiceInstanceNameTaken error' do
+          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceNameTaken')
+          expect(described_class.translate_validation_exception(e, attributes).message).to include(attributes['name'])
+        end
+      end
+
+      context 'when the space quota has been exceeded' do
+        let(:quota_errors) { [:service_instance_space_quota_exceeded] }
+
+        it 'returns a ServiceInstanceSpaceQuotaExceeded error' do
+          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceSpaceQuotaExceeded')
+        end
+      end
+
+      context 'when the service instance quota has been exceeded' do
+        let(:quota_errors) { [:service_instance_quota_exceeded] }
+
+        it 'returns a ServiceInstanceSpaceQuotaExceeded error' do
+          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceQuotaExceeded')
+        end
+      end
+
+      context 'when the service plan is not allowed by the space quota' do
+        let(:service_plan_errors) { [:paid_services_not_allowed_by_space_quota] }
+
+        it 'returns a ServiceInstanceServicePlanNotAllowedBySpaceQuota error' do
+          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
+        end
+      end
+
+      context 'when the service plan is not allowed by the service instance quota' do
+        let(:service_plan_errors) { [:paid_services_not_allowed_by_quota] }
+
+        it 'returns a ServiceInstanceServicePlanNotAllowed error' do
+          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceServicePlanNotAllowed')
+        end
+      end
+
+      context 'when the service instance name is too long' do
+        let(:service_instance_name_errors) { [:max_length] }
+
+        it 'returns a ServiceInstanceNameTooLong error' do
+          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceNameTooLong')
+        end
+      end
+
+      context 'when the service instance name is empty' do
+        let(:service_instance_name_errors) { [:presence] }
+
+        it 'returns a ServiceInstanceNameEmpty error' do
+          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceNameEmpty')
+        end
+      end
+
+      context 'when the service instance tags are too long' do
+        let(:service_instance_tags_errors) { [:too_long] }
+
+        it 'returns a ServiceInstanceTagsTooLong error' do
+          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceTagsTooLong')
         end
       end
     end
