@@ -97,7 +97,7 @@ module VCAP::CloudController
         let(:staging_message) { double(:staging_message, buildpack_key: buildpack_key) }
         let(:blobstore_url_generator) { double(:blobstore_url_generator) }
 
-        let(:stack) { 'lucid64' }
+        let(:stack) { 'cflinuxfs2' }
         let(:mem) { 1024 }
         let(:disk) { 1024 }
         let(:bp_guid) { 'bp-guid' }

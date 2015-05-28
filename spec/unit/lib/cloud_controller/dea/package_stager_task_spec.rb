@@ -57,7 +57,7 @@ module VCAP::CloudController
       }
     end
 
-    let(:stack_name) { 'lucid64' }
+    let(:stack_name) { 'cflinuxfs2' }
     let(:task_id) { 'some_task_id' }
 
     before do

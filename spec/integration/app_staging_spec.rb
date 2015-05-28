@@ -18,7 +18,7 @@ describe 'Staging an app', type: :integration do
     let(:advertisment) do
       {
         'id' => stager_id,
-        'stacks' => ['lucid64'],
+        'stacks' => ['cflinuxfs2'],
         'available_memory' => 2048,
       }.to_json
     end
