@@ -41,6 +41,7 @@ end
   end
 
   namespace :dev do
+    desc "Migrate the database set in spec/support/bootstrap/db_config"
     task :migrate do
       require_relative "../../spec/support/bootstrap/db_config"
 
@@ -48,6 +49,7 @@ end
       Rake::Task["db:migrate"].invoke
     end
 
+    desc "Rollback the database migration set in spec/support/bootstrap/db_config"
     task :rollback, [:number_to_rollback] do |_, args|
       require_relative "../../spec/support/bootstrap/db_config"
 
@@ -63,6 +65,7 @@ end
     end
   end
 
+  desc "Create the database set in spec/support/bootstrap/db_config"
   task :create do
     require_relative "../../spec/support/bootstrap/db_config"
 
@@ -81,6 +84,7 @@ end
     end
   end
 
+  desc "Drop the database set in spec/support/bootstrap/db_config"
   task :drop do
     require_relative "../../spec/support/bootstrap/db_config"
 
