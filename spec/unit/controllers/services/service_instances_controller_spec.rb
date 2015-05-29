@@ -1022,12 +1022,60 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the service instance tags are updated' do
+          let(:body) do
+            {
+              tags: ['tag1', 'tag2']
+            }.to_json
+          end
+
+          let(:longtags) { ['a'] * 255 }
+
+          let(:update_body) do
+            {
+              tags: longtags
+            }.to_json
+          end
+
+          it 'updates the service instance tags in the database' do
+            put "/v2/service_instances/#{service_instance.guid}", body, headers_for(admin_user)
+
+            expect(last_response).to have_status_code(201)
+            expect(service_instance.reload.tags).to include('tag1', 'tag2')
+
+            put "/v2/service_instances/#{service_instance.guid}", update_body, headers_for(admin_user)
+            expect(last_response).to have_status_code(201)
+            expect(service_instance.reload.tags).to eq(longtags)
+          end
+
+          it 'make sure the tags update works with the max length (edge case)' do
+            put "/v2/service_instances/#{service_instance.guid}", update_body, headers_for(admin_user)
+            expect(last_response).to have_status_code(201)
+            expect(decoded_response['entity']['tags']).to eq(longtags)
+            expect(service_instance.reload.tags).to eq(longtags)
+          end
+        end
+
         describe 'error cases' do
           context 'when the service instance does not exist' do
             it 'returns a ServiceInstanceNotFound error' do
               put '/v2/service_instances/non-existing-instance-guid', body, headers_for(developer)
               expect(last_response).to have_status_code 404
               expect(decoded_response['error_code']).to eq 'CF-ServiceInstanceNotFound'
+            end
+          end
+
+          context 'when the tags passed in are too long' do
+            it 'returns service instance tags too long message correctly' do
+              body = {
+                tags: ['a'] * 256,
+              }.to_json
+
+              put "/v2/service_instances/#{service_instance.guid}", body, json_headers(admin_headers)
+
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['code']).to eq(60015)
+              expect(decoded_response['error_code']).to eq('CF-ServiceInstanceTagsTooLong')
             end
           end
 

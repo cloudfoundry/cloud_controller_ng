@@ -115,6 +115,8 @@ EOF
       field :name, 'The new name for the service instance', required: false, example_values: ['my-new-service-instance']
       field :service_plan_guid, 'The new plan guid for the service instance', required: false, example_values: ['6c4bd80f-4593-41d1-a2c9-b20cb65ec76e']
       field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
+      field :tags, 'A list of tags for the service instance. NOTE: Updating the tags will overwrite any old tags.',
+            required: false, example_values: [['db'], ['accounting', 'mongodb']]
 
       param_description = <<EOF
 Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
