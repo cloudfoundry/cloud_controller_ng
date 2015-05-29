@@ -104,6 +104,19 @@ module CloudController
         dest_file.save
       end
 
+      def delete_all(opts={})
+        logger.info("Attempting to delete all files in #{@directory_key} blobstore", opts: opts)
+
+        root_dir = opts[:root_dir]
+        files_to_delete = files.find_all { |f| /#{root_dir}/.match(f.key) }
+
+        if connection.respond_to?(:delete_multiple_objects)
+          connection.delete_multiple_objects(@directory_key, files_to_delete)
+        else
+          files_to_delete.each(&:destroy)
+        end
+      end
+
       def delete(key)
         blob_file = file(key)
         delete_file(blob_file) if blob_file

@@ -471,6 +471,98 @@ module CloudController
           end
         end
 
+        describe '#delete_all' do
+          let(:connection_config) { { provider: 'Local', local_root: local_dir } }
+
+          before do
+            Fog.unmock!
+          end
+
+          after do
+            Fog.mock!
+          end
+
+          it 'deletes all the files' do
+            first_path = File.join(local_dir, 'first_empty_file')
+            FileUtils.touch(first_path)
+            path = File.join(local_dir, 'empty_file')
+            FileUtils.touch(path)
+
+            client.cp_to_blobstore(first_path, 'ab56')
+            expect(client.exists?('ab56')).to be true
+            client.cp_to_blobstore(path, 'abcdef123456')
+            expect(client.exists?('abcdef123456')).to be true
+
+            client.delete_all
+
+            expect(client.exists?('ab56')).to be false
+            expect(client.exists?('abcdef123456')).to be false
+          end
+
+          it 'should be ok if there are no files' do
+            expect(client.files).to have(0).items
+            expect {
+              client.delete_all
+            }.to_not raise_error
+          end
+
+          context 'when the root_dir option is specified' do
+            let(:root_dir) { 'my-root-dir' }
+            let(:root_dir_client) do
+              Client.new(connection_config, directory_key, nil, root_dir)
+            end
+
+            it 'deletes only files in the root_dir' do
+              path = File.join(local_dir, 'empty_file')
+              FileUtils.touch(path)
+              root_dir_path = File.join(local_dir, 'another-empty_file')
+              FileUtils.touch(root_dir_path)
+
+              client.cp_to_blobstore(path, 'abcdef123456')
+              expect(client.exists?('abcdef123456')).to be true
+              root_dir_client.cp_to_blobstore(root_dir_path, 'xyz987')
+              expect(root_dir_client.exists?('xyz987')).to be true
+
+              root_dir_client.delete_all(root_dir: root_dir)
+
+              expect(client.exists?('abcdef123456')).to be true
+              expect(root_dir_client.exists?('xyz987')).to be false
+            end
+          end
+
+          context 'when the underlying blobstore allows multiple deletes in a single request' do
+            let(:connection_config) do
+              {
+                provider: 'AWS',
+                aws_access_key_id: 'fake_access_key_id',
+                aws_secret_access_key: 'fake_secret_access_key',
+              }
+            end
+
+            it 'should be ok if there are no files' do
+              Fog.mock!
+              expect(client.files).to have(0).items
+              expect {
+                client.delete_all
+              }.to_not raise_error
+            end
+
+            it 'optimizes the number of requests made and deletes the files' do
+              Fog.mock!
+              path = File.join(local_dir, 'empty_file')
+              FileUtils.touch(path)
+
+              client.cp_to_blobstore(path, 'abcdef123456')
+              expect(client.exists?('abcdef123456')).to be true
+
+              resp = client.delete_all
+
+              deleted_file = resp.data[:body]['DeleteResult'][0]['Deleted']['Key']
+              expect(deleted_file.key).to match('abcdef123456')
+            end
+          end
+        end
+
         describe '#delete' do
           it 'deletes the file' do
             path = File.join(local_dir, 'empty_file')

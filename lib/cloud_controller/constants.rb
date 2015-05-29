@@ -1,5 +1,5 @@
 module VCAP::CloudController
   class Constants
-    API_VERSION = '2.27.0'.freeze
+    API_VERSION = '2.28.0'.freeze
   end
 end
