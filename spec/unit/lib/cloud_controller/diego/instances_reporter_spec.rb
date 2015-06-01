@@ -174,10 +174,8 @@ module VCAP::CloudController
               allow(tps_client).to receive(:lrp_instances).and_raise(StandardError.new('oh no'))
             end
 
-            it 'raises an InstancesUnavailable exception' do
-              expect {
-                subject.number_of_starting_and_running_instances_for_app(app)
-              }.to raise_error(Errors::InstancesUnavailable, /oh no/)
+            it 'returns -1 indicating not fresh' do
+              expect(subject.number_of_starting_and_running_instances_for_app(app)).to eq(-1)
             end
 
             context 'when its an InstancesUnavailable' do
@@ -186,8 +184,8 @@ module VCAP::CloudController
                 allow(tps_client).to receive(:lrp_instances).and_raise(error)
               end
 
-              it 're-raises' do
-                expect { subject.number_of_starting_and_running_instances_for_app(app) }.to raise_error(error)
+              it 'returns -1 indicating not fresh' do
+                expect(subject.number_of_starting_and_running_instances_for_app(app)).to eq(-1)
               end
             end
           end

@@ -45,10 +45,11 @@ module VCAP::CloudController
         end
 
         running_indices.length
-      rescue Errors::InstancesUnavailable => e
-        raise e
+      rescue Errors::InstancesUnavailable
+        return -1
       rescue => e
-        raise Errors::InstancesUnavailable.new(e)
+        logger.error('tps.error', error: e.to_s)
+        return -1
       end
 
       def crashed_instances_for_app(app)
@@ -126,6 +127,10 @@ module VCAP::CloudController
         end
 
         reported_instances
+      end
+
+      def logger
+        @logger ||= Steno.logger('cc.diego.instances_reporter')
       end
     end
   end
