@@ -47,29 +47,33 @@ module VCAP::CloudController
     def get_attributes_to_update(service_instance, request_attrs, accepts_incomplete)
       return successful_sync_operation, nil if request_attrs.empty?
 
-      new_name = request_attrs['name']
-      return { name: new_name }.merge(successful_sync_operation), nil if new_name
+      attributes_to_update = request_attrs.slice('name', 'space_guid', 'tags')
 
-      space_guid = request_attrs['space_guid']
-      return { space_guid: space_guid }.merge(successful_sync_operation), nil if space_guid
+      attributes_to_update.merge! successful_sync_operation
 
+      broker_response, err  = update_broker(accepts_incomplete, request_attrs, service_instance)
+      attributes_to_update.merge! broker_response
+
+      [attributes_to_update, err]
+    end
+
+    def update_broker(accepts_incomplete, request_attrs, service_instance)
       service_plan_guid = request_attrs['service_plan_guid'] ? request_attrs['service_plan_guid'] : service_instance.service_plan_guid
       plan = ServicePlan.find(guid: service_plan_guid)
 
       plan_changed = plan != service_instance.service_plan
       arbitrary_params_present = request_attrs['parameters']
 
-      new_tags = request_attrs['tags']
-      return { tags: new_tags }.merge(successful_sync_operation), nil if new_tags
-
-      return successful_sync_operation, nil if !plan_changed && !arbitrary_params_present
-
-      service_instance.client.update_service_plan(
+      if plan_changed || arbitrary_params_present
+        service_instance.client.update_service_plan(
           service_instance,
           plan,
           accepts_incomplete: accepts_incomplete,
           arbitrary_parameters: request_attrs['parameters']
-      )
+        )
+      else
+        [{}, nil]
+      end
     end
 
     def successful_sync_operation

@@ -10,6 +10,14 @@ module ServiceBrokerHelpers
     end
   end
 
+  def stub_update(service_instance, opts={})
+    status = opts[:status] || 200
+    body = opts[:body] || '{}'
+    accepts_incomplete = opts[:accepts_incomplete]
+    url = update_url_for_broker(service_instance, accepts_incomplete: accepts_incomplete)
+    stub_request(:patch, url).to_return(status: status, body: body)
+  end
+
   def stub_deprovision(service_instance, opts={}, &block)
     status = opts[:status] || 200
     body = opts[:body] || '{}'
@@ -70,6 +78,10 @@ module ServiceBrokerHelpers
     path = "/v2/service_instances/#{guid_pattern}"
 
     /#{build_broker_url(broker.client.attrs)}#{path}(\?#{query})?/
+  end
+
+  def update_url(service_instance)
+    service_instance_url(service_instance, '')
   end
 
   def bind_url(service_instance, query: nil)
