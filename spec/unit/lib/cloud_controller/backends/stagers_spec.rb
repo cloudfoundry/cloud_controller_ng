@@ -83,11 +83,18 @@ module VCAP::CloudController
 
       context 'if diego docker support is not enabled' do
         before do
-          config[:diego_docker] = false
+          allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return true
+          @docker_app = instance_double(App,
+                                        docker_image: docker_image,
+                                        package_hash: package_hash,
+                                        buildpack: buildpack,
+                                        custom_buildpacks_enabled?: custom_buildpacks_enabled?,
+                                        buildpack_specified?: false)
+          allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return false
         end
 
         context 'and the app has a docker_image' do
-          let(:docker_image) do
+          let!(:docker_image) do
             'fake-docker-image'
           end
 

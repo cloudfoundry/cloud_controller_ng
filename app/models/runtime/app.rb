@@ -377,6 +377,10 @@ module VCAP::CloudController
       raise objection if space.nil?
       raise objection if route.space_id != space.id
 
+      if docker_image.present?
+        raise VCAP::Errors::ApiError.new_from_details('DockerDisabled') unless FeatureFlag.enabled?('diego_docker')
+      end
+
       raise objection unless route.domain.usable_by_organization?(space.organization)
     end
 

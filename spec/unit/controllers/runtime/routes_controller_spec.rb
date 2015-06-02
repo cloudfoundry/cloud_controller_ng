@@ -203,6 +203,28 @@ module VCAP::CloudController
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(130004)
       end
+
+      context 'with Docker app' do
+        before do
+          allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return true
+          @app = AppFactory.make(space: space, docker_image: 'some-image')
+          @route = Route.make(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid, path: '/path')
+        end
+
+        context 'and Docker disabled' do
+          before do
+            allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return false
+          end
+
+          it 'returns Docker disabled message' do
+            put "/v2/routes/#{@route.guid}/apps/#{@app.guid}", MultiJson.dump(guid: @route.guid), json_headers(admin_headers)
+
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['code']).to eq(1002)
+            expect(decoded_response['description']).to match(/Docker support has not been enabled./)
+          end
+        end
+      end
     end
 
     describe 'Associations' do

@@ -55,27 +55,34 @@ module VCAP::CloudController
       memory_errors          = e.errors.on(:memory)
       instance_number_errors = e.errors.on(:instances)
       state_errors           = e.errors.on(:state)
+      docker_errors          = e.errors.on(:docker)
 
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::ApiError.new_from_details('AppNameTaken', attributes['name'])
       elsif memory_errors
-        if memory_errors.include?(:space_quota_exceeded)
-          Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded')
-        elsif memory_errors.include?(:space_instance_memory_limit_exceeded)
-          Errors::ApiError.new_from_details('SpaceQuotaInstanceMemoryLimitExceeded')
-        elsif memory_errors.include?(:quota_exceeded)
-          Errors::ApiError.new_from_details('AppMemoryQuotaExceeded')
-        elsif memory_errors.include?(:zero_or_less)
-          Errors::ApiError.new_from_details('AppMemoryInvalid')
-        elsif memory_errors.include?(:instance_memory_limit_exceeded)
-          Errors::ApiError.new_from_details('QuotaInstanceMemoryLimitExceeded')
-        end
+        translate_memory_validation_exception(memory_errors)
       elsif instance_number_errors
         Errors::ApiError.new_from_details('AppInvalid', 'Number of instances less than 1')
       elsif state_errors
         Errors::ApiError.new_from_details('AppInvalid', 'Invalid app state provided')
+      elsif docker_errors && docker_errors.include?(:docker_disabled)
+        Errors::ApiError.new_from_details('DockerDisabled')
       else
         Errors::ApiError.new_from_details('AppInvalid', e.errors.full_messages)
+      end
+    end
+
+    def self.translate_memory_validation_exception(memory_errors)
+      if memory_errors.include?(:space_quota_exceeded)
+        Errors::ApiError.new_from_details('SpaceQuotaMemoryLimitExceeded')
+      elsif memory_errors.include?(:space_instance_memory_limit_exceeded)
+        Errors::ApiError.new_from_details('SpaceQuotaInstanceMemoryLimitExceeded')
+      elsif memory_errors.include?(:quota_exceeded)
+        Errors::ApiError.new_from_details('AppMemoryQuotaExceeded')
+      elsif memory_errors.include?(:zero_or_less)
+        Errors::ApiError.new_from_details('AppMemoryInvalid')
+      elsif memory_errors.include?(:instance_memory_limit_exceeded)
+        Errors::ApiError.new_from_details('QuotaInstanceMemoryLimitExceeded')
       end
     end
 
