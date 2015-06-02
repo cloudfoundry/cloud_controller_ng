@@ -136,7 +136,7 @@ module VCAP::CloudController
             get("/v2/apps/#{@app.guid}/stats", {}, headers_for(@developer))
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match("Could not fetch stats for stopped app #{@app.name}")
+            expect(last_response.body).to match("Could not fetch stats for stopped app: #{@app.name}")
           end
         end
       end
