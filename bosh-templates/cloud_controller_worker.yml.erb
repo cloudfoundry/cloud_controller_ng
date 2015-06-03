@@ -14,8 +14,7 @@ message_bus_servers:
 <% end %>
 
 external_protocol: <%= p("cc.external_protocol") %>
-external_domain:
-  - <%= p("cc.external_host") %>.<%= p("domain") %>
+external_domain: <%= p("cc.external_host") %>.<%= p("domain") %>
 
 system_domain_organization: <%= p("system_domain_organization") %>
 system_domain: <%= p("system_domain") %>
