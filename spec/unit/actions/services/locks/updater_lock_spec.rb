@@ -55,34 +55,17 @@ module VCAP::CloudController
 
       describe 'unlocking synchronously' do
         let(:new_service_plan) { ServicePlan.make }
-        it 'updates the service instance' do
-          old_service_plan = service_instance.service_plan
-          expect {
-            updater_lock.synchronous_unlock!(service_plan_id: new_service_plan.id)
-          }.to change { service_instance.service_plan }.from(old_service_plan).to(new_service_plan)
-        end
 
         it 'updates the last operation of the service instance to the new state' do
-          updater_lock.synchronous_unlock!(
-            last_operation: {
-              state: 'succeeded'
-            }
-          )
+          updater_lock.synchronous_unlock!({})
           expect(service_instance.last_operation.state).to eq 'succeeded'
         end
       end
 
       describe 'unlocking with a delayed job' do
-        it 'updates the attributes on the service instance' do
-          job = double(Jobs::Services::ServiceInstanceStateFetch)
-          new_description = 'new description'
-          updater_lock.enqueue_unlock!({ last_operation: { description: new_description } }, job)
-          expect(service_instance.last_operation.description).to eq new_description
-        end
-
         it 'enqueues the job' do
           job = Jobs::Services::ServiceInstanceStateFetch.new(nil, nil, nil, nil, nil)
-          updater_lock.enqueue_unlock!({}, job)
+          updater_lock.enqueue_unlock!(job)
           expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
         end
       end

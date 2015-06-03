@@ -212,6 +212,14 @@ module VCAP::CloudController
       end
     end
 
+    def update_service_instance(attributes_to_update)
+      ManagedServiceInstance.db.transaction do
+        lock!
+
+        update_attributes(attributes_to_update)
+      end
+    end
+
     def save_and_update_operation(attributes_to_update)
       ManagedServiceInstance.db.transaction do
         lock!
@@ -225,20 +233,20 @@ module VCAP::CloudController
       end
     end
 
-    private
-
-    def update_attributes(instance_attrs)
-      set_all(instance_attrs)
-      save
+    def extract_operation_attrs(attributes_to_update)
+      operation_attrs = attributes_to_update.delete(:last_operation)
+      [attributes_to_update, operation_attrs]
     end
 
     def update_last_operation(operation_attrs)
       self.last_operation.update_attributes operation_attrs
     end
 
-    def extract_operation_attrs(attributes_to_update)
-      operation_attrs = attributes_to_update.delete(:last_operation)
-      [attributes_to_update, operation_attrs]
+    private
+
+    def update_attributes(instance_attrs)
+      set_all(instance_attrs)
+      save
     end
 
     def validate_tags_length

@@ -36,12 +36,12 @@ module VCAP::CloudController
       end
     end
 
-    def synchronous_unlock!(attributes_to_update)
-      service_instance.save_and_update_operation(attributes_to_update)
+    def synchronous_unlock!(operation_attrs)
+      operation_attrs[:state] = 'succeeded'
+      service_instance.update_last_operation(operation_attrs)
     end
 
-    def enqueue_unlock!(attributes_to_update, job)
-      service_instance.save_and_update_operation(attributes_to_update)
+    def enqueue_unlock!(job)
       enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
       enqueuer.enqueue
     end

@@ -1258,6 +1258,7 @@ module VCAP::CloudController
         end
 
         it 'returns 201' do
+          body = { 'name' => 'blah name' }.to_json
           put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(developer)
           expect(last_response).to have_status_code 201
         end
@@ -1265,10 +1266,10 @@ module VCAP::CloudController
         context 'when the broker returns a 202' do
           let(:status) { 202 }
 
-          it 'does not update the service plan in the database' do
+          it 'updates the service plan in the database, because that is done before the broker update' do
             put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(developer)
 
-            expect(service_instance.reload.service_plan).to eq(old_service_plan)
+            expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
           end
 
           it 'does not create an audit event' do
