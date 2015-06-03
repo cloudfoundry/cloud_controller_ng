@@ -25,7 +25,7 @@ gem 'allowy'
 gem 'loggregator_emitter', '~> 4.0'
 gem 'delayed_job_sequel', git: 'https://github.com/cloudfoundry/delayed_job_sequel.git'
 gem 'thin', '~> 1.6.0'
-gem 'newrelic_rpm', '3.7.3.204'
+gem 'newrelic_rpm', '3.12.0.288'
 gem 'clockwork', require: false
 gem 'activemodel'
 
