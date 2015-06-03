@@ -34,7 +34,6 @@ namespace :jobs do
       Delayed::Worker.max_attempts = 3
       logger = Steno.logger("cc-worker")
       logger.info("Starting job with options #{@queue_options}")
-      Delayed::Worker.logger = logger
       worker = Delayed::Worker.new(@queue_options)
       worker.name = @queue_options[:worker_name]
       worker.start
