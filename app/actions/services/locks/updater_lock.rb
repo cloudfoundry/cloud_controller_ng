@@ -36,9 +36,8 @@ module VCAP::CloudController
       end
     end
 
-    def synchronous_unlock!(operation_attrs)
-      operation_attrs[:state] = 'succeeded'
-      service_instance.update_last_operation(operation_attrs)
+    def synchronous_unlock!
+      service_instance.update_last_operation(state: 'succeeded')
     end
 
     def enqueue_unlock!(job)

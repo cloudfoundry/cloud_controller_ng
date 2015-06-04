@@ -1284,6 +1284,11 @@ module VCAP::CloudController
             expect(last_response).to have_status_code 202
           end
 
+          it 'updates the last operation to in progress in the database' do
+            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(developer)
+            expect(service_instance.last_operation.state).to eq('in progress')
+          end
+
           it 'sets the Location header' do
             put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(developer)
             expect(last_response.headers['Location']).to eq("/v2/service_instances/#{service_instance.guid}")

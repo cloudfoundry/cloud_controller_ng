@@ -165,7 +165,7 @@ module VCAP::Services::ServiceBrokers::V2
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
 
-    def update_service_plan(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil)
+    def update_service_broker(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body_hash = {

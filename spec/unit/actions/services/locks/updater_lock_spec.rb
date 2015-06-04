@@ -57,7 +57,7 @@ module VCAP::CloudController
         let(:new_service_plan) { ServicePlan.make }
 
         it 'updates the last operation of the service instance to the new state' do
-          updater_lock.synchronous_unlock!({})
+          updater_lock.synchronous_unlock!
           expect(service_instance.last_operation.state).to eq 'succeeded'
         end
       end

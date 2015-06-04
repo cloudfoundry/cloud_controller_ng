@@ -17,7 +17,7 @@ module VCAP::CloudController
       let(:old_service_plan) { ServicePlan.make(:v2, service: service) }
       let(:new_service_plan) { ServicePlan.make(:v2, service: service) }
       let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan,
-                                                           tags: nil,
+                                                           tags: [],
                                                            name: 'Old name')
       }
 
@@ -75,48 +75,73 @@ module VCAP::CloudController
             service_instance.reload
             expect(service_instance.name).to eq(old_name)
             expect(service_instance.service_plan.guid).to eq(old_service_plan.guid)
-          end
-        end
-
-        context 'when an updated field fails validations' do
-          it 'rolls back changes' do
-            old_tags = service_instance.tags
-            old_name = service_instance.name
-            updated_name = 'name' * 1000
-            request_attrs = {
-              'name' => updated_name,
-              'tags' => ['new', 'tags']
-            }
-
-            expect {
-              service_instance_update.update_service_instance(service_instance, request_attrs)
-            }.to raise_error
-
-            service_instance.reload
-            expect(service_instance.name).to eq(old_name)
-            expect(service_instance.tags).to eq(old_tags)
+            expect(service_instance.tags).to be_empty
           end
 
-          it 'does not update the broker' do
-            updated_name = 'name' * 1000
-            request_attrs = {
-              'name' => updated_name,
-              'service_plan_guid' => new_service_plan.guid
-            }
+          context 'when an updated field fails validations' do
+            it 'rolls back changes' do
+              old_tags = service_instance.tags
+              old_name = service_instance.name
+              updated_name = 'name' * 1000
+              request_attrs = {
+                'name' => updated_name,
+                'tags' => ['new', 'tags']
+              }
 
-            expect {
-              service_instance_update.update_service_instance(service_instance, request_attrs)
-            }.to raise_error
+              expect {
+                service_instance_update.update_service_instance(service_instance, request_attrs)
+              }.to raise_error
 
-            expect(
-              a_request(:patch, update_url(service_instance)).with(
-                body: hash_including({
-                    'plan_id' => new_service_plan.broker_provided_id
-                  })
-              )
-            ).not_to have_been_made.once
-            service_instance.reload
-            expect(service_instance.service_plan.guid).to eq(old_service_plan.guid)
+              service_instance.reload
+              expect(service_instance.name).to eq(old_name)
+              expect(service_instance.tags).to eq(old_tags)
+            end
+
+            it 'does not update the broker' do
+              updated_name = 'name' * 1000
+              request_attrs = {
+                'name' => updated_name,
+                'service_plan_guid' => new_service_plan.guid
+              }
+
+              expect {
+                service_instance_update.update_service_instance(service_instance, request_attrs)
+              }.to raise_error
+
+              expect(
+                a_request(:patch, update_url(service_instance)).with(
+                  body: hash_including({
+                      'plan_id' => new_service_plan.broker_provided_id
+                    })
+                )
+              ).not_to have_been_made.once
+              service_instance.reload
+              expect(service_instance.service_plan.guid).to eq(old_service_plan.guid)
+            end
+          end
+
+          context 'when the model rollback fails' do
+            before do
+              stub_update(service_instance, status: 500)
+            end
+
+            it 'raises a nested exception' do
+              request_attrs = { 'parameters' => { 'arb' => 'it', 'ar' => 'y' } }
+
+              allow(service_instance).to receive(:update_service_instance).with({}).and_call_original
+
+              allow(service_instance).to receive(:update_service_instance).with({
+                    'tags' => [],
+                    'name' => 'Old name',
+                    'service_plan_guid' => old_service_plan.guid,
+                    'space_guid' => service_instance.space.guid }).and_raise(
+                  StandardError.new('test'))
+
+              expect {
+                service_instance_update.update_service_instance(service_instance, request_attrs)
+              }.to raise_error(Exception,
+                  /Error resetting the service instance: test Original error that caused the reset: The service broker/)
+            end
           end
         end
       end
