@@ -178,10 +178,6 @@ module VCAP::CloudController
       super || []
     end
 
-    def service_tags
-      service.tags
-    end
-
     def merged_tags
       service.tags + tags
     end

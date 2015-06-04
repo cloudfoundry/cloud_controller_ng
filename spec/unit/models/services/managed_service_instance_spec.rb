@@ -512,13 +512,11 @@ module VCAP::CloudController
         end
       end
 
-      describe '#service_tags' do
-        it 'gets tags from the service' do
-          expect(service_instance.service_tags).to eq(service_tags)
-        end
-      end
-
       describe '#merged_tags' do
+        it 'returns the service tags merged with the instance tags' do
+          expect(service_instance.merged_tags).to eq(service_tags + instance_tags)
+        end
+
         context 'when the instance tags are not set' do
           let(:service_instance) { ManagedServiceInstance.make service_plan: service_plan }
 
@@ -542,10 +540,6 @@ module VCAP::CloudController
           it 'returns an empty array' do
             expect(service_instance.merged_tags).to eq([])
           end
-        end
-
-        it 'returns the service tags merged with the instance tags' do
-          expect(service_instance.merged_tags).to eq(service_tags + instance_tags)
         end
       end
     end
