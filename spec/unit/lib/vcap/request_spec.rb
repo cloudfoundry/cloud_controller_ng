@@ -10,6 +10,18 @@ module VCAP
       end
     end
 
+    describe '::HEADER_BROKER_API_VERSION' do
+      it 'constant is expected api version' do
+        expect(Request::HEADER_BROKER_API_VERSION).to eq 'X-Broker-Api-Version'
+      end
+    end
+
+    describe '::HEADER_API_INFO' do
+      it 'constant is expected api info' do
+        expect(Request::HEADER_API_INFO_LOCATION).to eq 'X-Api-Info-Location'
+      end
+    end
+
     describe '.current_id' do
       after do
         described_class.current_id = nil

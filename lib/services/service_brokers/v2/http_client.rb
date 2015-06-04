@@ -145,7 +145,8 @@ module VCAP::Services
         {
           VCAP::Request::HEADER_BROKER_API_VERSION => '2.5',
           VCAP::Request::HEADER_NAME => VCAP::Request.current_id,
-          'Accept' => 'application/json'
+          'Accept' => 'application/json',
+          VCAP::Request::HEADER_API_INFO_LOCATION => "#{VCAP::CloudController::Config.config[:external_domain]}/v2/info"
         }
       end
 
