@@ -428,7 +428,7 @@ module VCAP::CloudController
       it 'acquires the data in one select' do
         expect {
           runners.diego_apps_cache_data(100, 0)
-        }.to have_queried_db_times(/SELECT.*FROM `apps`/, 1)
+        }.to have_queried_db_times(/SELECT.*FROM.*apps.*/, 1)
       end
 
       context 'when docker is enabled' do
