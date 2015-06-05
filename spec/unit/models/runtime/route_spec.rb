@@ -448,6 +448,40 @@ module VCAP::CloudController
           )
         }.to raise_error Sequel::ValidationFailed
       end
+
+      context 'when docker is disabled' do
+        subject(:route) { Route.make(space: space_a, domain: domain_a) }
+
+        context 'when docker app is added to a route' do
+          before do
+            allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return true
+            @app = AppFactory.make(space: space_a, docker_image: 'docker-image-ref')
+
+            allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return false
+          end
+
+          it 'errors' do
+            expect {
+              route.add_app(@app)
+            }.to raise_error(Route::DockerDisabled, /Docker support has not been enabled/)
+          end
+        end
+
+        context 'when non-docker app is added to a route' do
+          before do
+            allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return true
+            @app = AppFactory.make(space: space_a)
+
+            allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return false
+          end
+
+          it 'does not error' do
+            expect {
+              route.add_app(@app)
+            }.not_to raise_error
+          end
+        end
+      end
     end
 
     describe '#destroy' do

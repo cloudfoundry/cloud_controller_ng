@@ -7,6 +7,7 @@ module VCAP::CloudController
     class InvalidDomainRelation < VCAP::Errors::InvalidRelation; end
     class InvalidAppRelation < VCAP::Errors::InvalidRelation; end
     class InvalidOrganizationRelation < VCAP::Errors::InvalidRelation; end
+    class DockerDisabled < VCAP::Errors::InvalidRelation; end
 
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
@@ -97,6 +98,10 @@ module VCAP::CloudController
 
     def validate_app(app)
       return unless space && app && domain
+
+      if app.docker_image.present? && !FeatureFlag.enabled?('diego_docker')
+        raise DockerDisabled.new(Errors::ApiError.new_from_details('DockerDisabled').message)
+      end
 
       unless app.space == space
         raise InvalidAppRelation.new(app.guid)

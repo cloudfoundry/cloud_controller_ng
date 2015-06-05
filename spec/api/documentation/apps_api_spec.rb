@@ -69,7 +69,7 @@ resource 'Apps', type: [:api, :legacy_api] do
         staging: 'optional',
         running: 'optional',
       )
-      allow(VCAP::CloudController::Config.config).to receive(:[]).with(:diego_docker).and_return true
+      allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return true
     end
 
     def after_standard_model_delete(guid)

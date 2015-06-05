@@ -200,7 +200,7 @@ module VCAP::CloudController
             get '/internal/bulk/apps', {
                                          'batch_size' => App.count,
                                          'token' => '{}',
-                                     }
+                                       }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['apps'].size).to eq(App.count - 1)
@@ -209,17 +209,18 @@ module VCAP::CloudController
 
         context 'when docker is enabled' do
           before do
-            TestConfig.override(diego_docker: true, diego: { staging: 'optional', running: 'optional' })
+            TestConfig.override(diego: { staging: 'optional', running: 'optional' })
+            allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return true
+
+            @docker_app = make_diego_app(state: 'STARTED', docker_image: 'fake-docker-image')
+            @docker_app.save
           end
 
           it 'does return docker apps' do
-            app = make_diego_app(state: 'STARTED', docker_image: 'fake-docker-image')
-            app.save
-
             get '/internal/bulk/apps', {
                                          'batch_size' => App.count,
                                          'token' => '{}',
-                                     }
+                                       }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['apps'].size).to eq(App.count)
@@ -232,7 +233,7 @@ module VCAP::CloudController
               get '/internal/bulk/apps', {
                                            'batch_size' => size,
                                            'token' => { id: 0 }.to_json,
-                                       }
+                                         }
 
               expect(last_response.status).to eq(200)
               expect(decoded_response['apps'].size).to eq(size)
@@ -243,7 +244,7 @@ module VCAP::CloudController
             get '/internal/bulk/apps', {
                                          'batch_size' => 2,
                                          'token' => { id: 0 }.to_json,
-                                     }
+                                       }
 
             expect(last_response.status).to eq(200)
 
@@ -253,7 +254,7 @@ module VCAP::CloudController
             get '/internal/bulk/apps', {
                                          'batch_size' => 2,
                                          'token' => MultiJson.dump(decoded_response['token']),
-                                     }
+                                       }
 
             expect(last_response.status).to eq(200)
 

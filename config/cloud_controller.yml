@@ -152,7 +152,6 @@ cloud_controller_username_lookup_client_name: 'username_lookup_client_name'
 cloud_controller_username_lookup_client_secret: 'username_lookup_secret'
 
 users_can_select_backend: true
-diego_docker: false
 allow_app_ssh_access: true
 diego_nsync_url: http://nsync.service.consul:8787
 diego_stager_url: http://stager.service.consul:8888

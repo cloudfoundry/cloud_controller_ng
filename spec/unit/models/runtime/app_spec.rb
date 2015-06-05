@@ -789,6 +789,61 @@ module VCAP::CloudController
           app.add_route(route)
         }.to raise_error Errors::InvalidRouteRelation
       end
+
+      context 'with Docker app' do
+        before do
+          allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return true
+          @app = AppFactory.make(space: space, docker_image: 'some-image')
+        end
+
+        context 'and Docker disabled' do
+          before do
+            allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return false
+          end
+
+          it 'should not associate an app with a route' do
+            domain = PrivateDomain.make(
+              owning_organization: @app.space.organization
+            )
+            route = Route.make(
+              host: Sham.host,
+              space: space,
+              domain: domain
+            )
+
+            expect {
+              @app.add_route(route)
+            }.to raise_error(Errors::ApiError, /Docker support has not been enabled/)
+          end
+        end
+      end
+
+      context 'with non-docker app' do
+        before do
+          @app = AppFactory.make(space: space)
+        end
+
+        context 'and Docker disabled' do
+          before do
+            allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return false
+          end
+
+          it 'succeeds' do
+            domain = PrivateDomain.make(
+              owning_organization: @app.space.organization
+            )
+            route = Route.make(
+              host: Sham.host,
+              space: space,
+              domain: domain
+            )
+
+            expect {
+              @app.add_route(route)
+            }.not_to raise_error
+          end
+        end
+      end
     end
 
     describe 'vcap_application' do

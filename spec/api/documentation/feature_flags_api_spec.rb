@@ -24,7 +24,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(6)
+      expect(parsed_response.length).to eq(7)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -163,6 +163,22 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/service_instance_creation'
         })
+    end
+  end
+
+  get '/v2/config/feature_flags/diego_docker' do
+    example 'Get the Diego Docker feature flag' do
+      explanation 'When enabled, Docker applications are supported by Diego. When disabled, Docker applications can only be stopped or deleted.'
+      client.get '/v2/config/feature_flags/diego_docker', {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+                                   {
+                                     'name'          => 'diego_docker',
+                                     'enabled'       => false,
+                                     'error_message' => nil,
+                                     'url'           => '/v2/config/feature_flags/diego_docker'
+                                   })
     end
   end
 

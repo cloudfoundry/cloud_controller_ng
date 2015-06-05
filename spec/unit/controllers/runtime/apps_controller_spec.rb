@@ -791,6 +791,31 @@ module VCAP::CloudController
         expect(last_response.status).to eq(201)
       end
 
+      context 'with Docker app' do
+        before do
+          @route = domain.add_route(
+            host: 'app',
+            space: space,
+          )
+
+          allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return true
+          @app.docker_image = 'some-image'
+          @app.save
+        end
+
+        context 'when Docker is disabled' do
+          before do
+            allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return false
+          end
+
+          it 'errors' do
+            put "#{@app_url}/routes/#{@route.guid}", nil, json_headers(@headers_for_user)
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['code']).to eq(320003)
+          end
+        end
+      end
+
       it 'tells the dea client to update when we remove a url through PUT /v2/apps/:guid' do
         bar_route = @app.add_route(
           host: 'bar',
@@ -997,6 +1022,46 @@ module VCAP::CloudController
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match /Invalid app state provided/
         expect(decoded_response['code']).to eq(100001)
+      end
+
+      context 'when docker is disabled' do
+        before do
+          allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return true
+          @stopped_app = App.make(space: space, state: 'STOPPED', package_hash: 'made-up-package-hash', docker_image: 'docker-image')
+          @started_app = App.make(space: space, state: 'STARTED', package_hash: 'made-up-package-hash', docker_image: 'docker-image')
+
+          allow(VCAP::CloudController::FeatureFlag).to receive(:enabled?).with('diego_docker').and_return false
+        end
+
+        it 'returns docker disabled message on instance change' do
+          put "/v2/apps/#{@started_app.guid}", MultiJson.dump(instances: 2), json_headers(admin_headers)
+
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match /Docker support has not been enabled/
+          expect(decoded_response['code']).to eq(320003)
+        end
+
+        it 'returns docker disabled message on start' do
+          put "/v2/apps/#{@stopped_app.guid}", MultiJson.dump(state: 'STARTED'), json_headers(admin_headers)
+
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match /Docker support has not been enabled/
+          expect(decoded_response['code']).to eq(320003)
+        end
+
+        it 'returns docker disabled message on environment change' do
+          put "/v2/apps/#{@started_app.guid}", MultiJson.dump(environment_json: { env_var: 'env_val' }), json_headers(admin_headers)
+
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match /Docker support has not been enabled/
+          expect(decoded_response['code']).to eq(320003)
+        end
+
+        it 'does not return docker disabled message on stop' do
+          put "/v2/apps/#{@started_app.guid}", MultiJson.dump(state: 'STOPPED'), json_headers(admin_headers)
+
+          expect(last_response.status).to eq(201)
+        end
       end
     end
   end
