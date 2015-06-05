@@ -4,7 +4,7 @@ require 'queries/space_user_roles_fetcher'
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
-      [:space_event_repository, :username_and_roles_populating_collection_renderer]
+      [:space_event_repository, :username_and_roles_populating_collection_renderer, :quota_usage_populating_renderer]
     end
 
     define_attributes do
@@ -42,6 +42,7 @@ module VCAP::CloudController
       super
       @space_event_repository = dependencies.fetch(:space_event_repository)
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
+      @quota_usage_renderer = dependencies.fetch(:quota_usage_populating_renderer)
     end
 
     get '/v2/spaces/:guid/user_roles', :enumerate_user_roles
@@ -119,6 +120,27 @@ module VCAP::CloudController
         "/v2/spaces/#{guid}/service_instances",
         @opts,
         {}
+      )
+    end
+
+    get '/v2/spaces/:guid/quota_usage', :enumerate_quota_usage
+    def enumerate_quota_usage(guid)
+      logger.debug('cc.enumerate.related', guid: guid, association: 'quota_usage')
+
+      space = find_guid_and_validate_access(:read, guid)
+
+      associated_controller, associated_model = SpaceQuotaDefinitionsController, SpaceQuotaDefinition
+      if space.space_quota_definition_guid.nil?
+        raise VCAP::Errors::ApiError.new_from_details('SpaceInvalid', 'quota not associated', Space.table_name)
+      end
+
+      ds = find_guid_and_validate_access(:read, space.space_quota_definition_guid, associated_model)
+      opts = @opts.merge(transform_opts: { space_id: space.id })
+
+      @quota_usage_renderer.render_json(
+        associated_controller,
+        ds,
+        opts,
       )
     end
 

@@ -192,6 +192,31 @@ resource 'Spaces', type: [:api, :legacy_api] do
       standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, outer_model: :space, path: :service_instances
     end
 
+    describe 'Quota Usage' do
+      before do
+        app_obj.add_route(route)
+        space_obj.add_service_instance(service_instance)
+        space_obj.add_app(app_obj)
+      end
+
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
+      let(:space_obj) { VCAP::CloudController::Space.make(organization: org, space_quota_definition: space_quota_definition) }
+      let(:route) { VCAP::CloudController::Route.make(space: space_obj) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space_obj) }
+      let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space_obj, instances: 1, memory: 500, state: 'STARTED') }
+
+      get '/v2/spaces/:guid/quota_usage' do
+        example 'Retrieving quota usaged for the Space' do
+          client.get "/v2/spaces/#{space_obj.guid}/quota_usage", {}, headers
+
+          expect(status).to eq(200)
+          expect(parsed_response['entity']['space_usage']).
+            to include('routes', 'services', 'memory')
+        end
+      end
+    end
+
     describe 'Services' do
       before do
         some_service = VCAP::CloudController::Service.make(active: true)

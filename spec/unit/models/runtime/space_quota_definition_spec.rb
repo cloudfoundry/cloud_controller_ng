@@ -60,5 +60,15 @@ module VCAP::CloudController
         expect { space_quota_definition.destroy }.to change { space.reload.space_quota_definition }.from(space_quota_definition).to(nil)
       end
     end
+
+    describe '#to_hash' do
+      it 'does not include space usage when space_usage has not been set' do
+        expect(space_quota_definition.to_hash).to_not include('space_usage')
+      end
+      it 'includes space usage when space_usage has been set' do
+        space_quota_definition.space_usage = 'someusage'
+        expect(space_quota_definition.to_hash).to include('space_usage')
+      end
+    end
   end
 end
