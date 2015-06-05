@@ -35,7 +35,10 @@ module VCAP::CloudController
     end
 
     def droplets_to_delete(app_model)
-      app_model.droplets_dataset.select(:"#{DropletModel.table_name}__guid", :"#{DropletModel.table_name}__id").all
+      app_model.droplets_dataset.
+        select(:"#{DropletModel.table_name}__guid",
+        :"#{DropletModel.table_name}__id",
+        :"#{DropletModel.table_name}__droplet_hash").all
     end
 
     def processes_to_delete(app_model)
