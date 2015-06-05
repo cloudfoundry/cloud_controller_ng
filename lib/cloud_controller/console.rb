@@ -28,7 +28,7 @@ db_config[:database] ||= DbConfig.connection_string
 VCAP::CloudController::DB.load_models(db_config, logger)
 VCAP::CloudController::Config.configure_components(@config)
 
-if ENV['RACK_ENV'] == 'development'
+if ENV['NEW_RELIC_ENV'] == 'development'
   $LOAD_PATH.unshift(File.expand_path('../../../spec/support', __FILE__))
   require 'machinist/sequel'
   require 'machinist/object'

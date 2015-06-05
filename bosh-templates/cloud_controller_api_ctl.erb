@@ -37,7 +37,7 @@ export LANG=en_US.UTF-8
 
 export NEWRELIC_ENABLE=<%= !!properties.cc.newrelic.license_key || p("cc.development_mode") %>
 export NRCONFIG=$CONFIG_DIR/newrelic.yml
-export RACK_ENV=<%= p("cc.newrelic.environment_name") %>
+export NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>
 
 source /var/vcap/packages/common/utils.sh
 

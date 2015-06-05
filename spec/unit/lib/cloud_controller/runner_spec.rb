@@ -284,9 +284,9 @@ module VCAP::CloudController
 
       subject { Runner.new(argv_options) }
 
-      it "should set ENV['RACK_ENV'] to production" do
-        ENV.delete('RACK_ENV')
-        expect { subject }.to change { ENV['RACK_ENV'] }.from(nil).to('production')
+      it "should set ENV['NEW_RELIC_ENV'] to production" do
+        ENV.delete('NEW_RELIC_ENV')
+        expect { subject }.to change { ENV['NEW_RELIC_ENV'] }.from(nil).to('production')
       end
 
       it 'should set the configuration file' do

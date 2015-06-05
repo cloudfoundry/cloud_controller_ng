@@ -23,7 +23,7 @@ module VCAP::CloudController
       @argv = argv
 
       # default to production. this may be overridden during opts parsing
-      ENV['RACK_ENV'] ||= 'production'
+      ENV['NEW_RELIC_ENV'] ||= 'production'
 
       @config_file = File.expand_path('../../../config/cloud_controller.yml', __FILE__)
       parse_options!
