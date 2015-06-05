@@ -21,7 +21,7 @@ describe 'Cloud controller', type: :integration, monitoring: true do
       config: cc_config_file.path,
       env: {
         'NRCONFIG' => newrelic_config_file,
-        'RACK_ENV' => 'development'
+        'NEW_RELIC_ENV' => 'development'
       }
     }
     start_cc(opts)
