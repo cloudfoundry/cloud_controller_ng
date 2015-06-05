@@ -52,9 +52,6 @@ describe 'Cloud controller', type: :integration, monitoring: true do
         info_response = make_get_request('/info', {}, port)
         expect(info_response.code).to eq('200')
 
-        # newrelic needs a moment to process the information - so give it a bit
-        # of time
-        sleep(0.05)
         newrelic_response = make_get_request('/newrelic', {}, port)
         expect(newrelic_response.code).to eq('200')
         expect(newrelic_response.body).to include('/info')
@@ -72,8 +69,6 @@ describe 'Cloud controller', type: :integration, monitoring: true do
       end
 
       it 'loads new relic' do
-        # give newrelic some time to start up on slower machines
-        sleep(0.05)
         expect(File).to exist('/tmp/newrelic/development.log')
       end
     end
