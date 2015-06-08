@@ -7,7 +7,7 @@ module VCAP::CloudController
           logger.info('Attempting cleanup of buildpack_cache blobstore')
 
           blobstore = CloudController::DependencyLocator.instance.buildpack_cache_blobstore
-          blobstore.delete_all(root_dir: 'buildpack_cache')
+          blobstore.delete_all
         end
 
         def job_name_in_configuration

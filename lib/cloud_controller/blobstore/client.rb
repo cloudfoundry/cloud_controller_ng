@@ -104,16 +104,31 @@ module CloudController
         dest_file.save
       end
 
-      def delete_all(opts={})
-        logger.info("Attempting to delete all files in #{@directory_key} blobstore", opts: opts)
+      def delete_all(page_size=1000)
+        logger.info("Attempting to delete all files in #{@directory_key}/#{@root_dir} blobstore")
 
-        root_dir = opts[:root_dir]
-        files_to_delete = files.find_all { |f| /#{root_dir}/.match(f.key) }
+        files_to_destroy = []
 
+        files.each do |blobstore_file|
+          next unless /#{@root_dir}/.match(blobstore_file.key)
+
+          files_to_destroy << blobstore_file
+          if files_to_destroy.length == page_size
+            delete_files(files_to_destroy)
+            files_to_destroy = []
+          end
+        end
+
+        if files_to_destroy.length > 0
+          delete_files(files_to_destroy)
+        end
+      end
+
+      def delete_files(files_to_delete)
         if connection.respond_to?(:delete_multiple_objects)
           connection.delete_multiple_objects(@directory_key, files_to_delete)
         else
-          files_to_delete.each(&:destroy)
+          files_to_delete.each { |f| delete_file(f) }
         end
       end
 
@@ -171,7 +186,7 @@ module CloudController
       def connection
         options = @connection_config
         options = options.merge(endpoint: '') if local?
-        Fog::Storage.new(options)
+        @connection ||= Fog::Storage.new(options)
       end
 
       def logger
