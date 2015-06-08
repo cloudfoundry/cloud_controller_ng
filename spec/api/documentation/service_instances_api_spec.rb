@@ -3,13 +3,14 @@ require 'rspec_api_documentation/dsl'
 require 'uri'
 
 resource 'Service Instances', type: [:api, :legacy_api] do
+  tags = %w(accounting mongodb)
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
   let(:service) { VCAP::CloudController::Service.make(service_broker: service_broker) }
   let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: true) }
   let!(:service_instance) do
     service_instance = VCAP::CloudController::ManagedServiceInstance.make(
-      service_plan: service_plan, tags: %w(accounting_mongodb))
+      service_plan: service_plan, tags: tags)
     service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(
       state: 'succeeded',
       description: 'service broker-provided description'
@@ -73,7 +74,7 @@ resource 'Service Instances', type: [:api, :legacy_api] do
       field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
       field :gateway_data, 'Configuration information for the broker gateway in v1 services', required: false, deprecated: true
       field :tags, 'A list of tags for the service instance',
-            required: false, example_values: [%w(db), %w(accounting_mongodb)], default: []
+            required: false, example_values: [%w(db), tags], default: []
 
       param_description = <<EOF
 Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
@@ -97,7 +98,7 @@ EOF
           parameters: {
             the_service_broker: 'wants this object'
           },
-          tags: %w(accounting_mongodb)
+          tags: tags
         }
 
         client.post '/v2/service_instances?accepts_incomplete=true', MultiJson.dump(request_hash, pretty: true), headers
