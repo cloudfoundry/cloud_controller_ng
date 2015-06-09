@@ -23,7 +23,7 @@ resource 'Routes', type: [:api, :legacy_api] do
       field :domain_guid, 'The guid of the associated domain', required: opts[:required], example_values: [Sham.guid]
       field :space_guid, 'The guid of the associated space', required: opts[:required], example_values: [Sham.guid]
       field :host, 'The host portion of the route'
-      field :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path'], experimental: true
+      field :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
     end
 
     standard_model_list :route, VCAP::CloudController::RoutesController
@@ -79,7 +79,7 @@ resource 'Routes', type: [:api, :legacy_api] do
     get '/v2/routes/reserved/domain/:domain_guid/host/:host?path=:path' do
       request_parameter :domain_guid, 'The guid of a domain'
       request_parameter :host, 'The host portion of the route'
-      request_parameter :path, 'The path of a route', required: false, example_values: ['/apps/v1/path', '/apps/v2/path'], experimental: true
+      request_parameter :path, 'The path of a route', required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
 
       example 'Check a Route exists' do
         client.get "/v2/routes/reserved/domain/#{domain.guid}/host/#{route.host}?path=#{route_path}", {}, headers
