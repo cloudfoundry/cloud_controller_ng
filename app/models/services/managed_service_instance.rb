@@ -175,11 +175,11 @@ module VCAP::CloudController
     end
 
     def tags
-      super || []
+      (super || []).uniq
     end
 
     def merged_tags
-      service.tags + tags
+      (service.tags + tags).uniq
     end
 
     def terminal_state?

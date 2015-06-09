@@ -68,7 +68,7 @@ module VCAP::CloudController
     end
 
     def tags
-      super || []
+      (super || []).uniq
     end
 
     def requires
