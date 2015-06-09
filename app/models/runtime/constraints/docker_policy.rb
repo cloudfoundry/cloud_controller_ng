@@ -12,6 +12,10 @@ class DockerPolicy
       @errors.add(:docker_image, BUILDPACK_DETECTED_ERROR_MSG)
     end
 
+    if @app.docker_image.present? && !VCAP::CloudController::FeatureFlag.enabled?('diego_docker')
+      @errors.add(:docker, :docker_disabled) if @app.state_changed? unless @app.being_stopped?
+    end
+
     docker_credentials = @app.docker_credentials_json
     if docker_credentials.present?
       unless docker_credentials['docker_user'].present? && docker_credentials['docker_password'].present? && docker_credentials['docker_email'].present?

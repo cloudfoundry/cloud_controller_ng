@@ -448,6 +448,25 @@ module VCAP::CloudController
           )
         }.to raise_error Sequel::ValidationFailed
       end
+
+      context 'when docker is disabled' do
+        subject(:route) { Route.make(space: space_a, domain: domain_a) }
+
+        context 'when docker app is added to a route' do
+          let!(:docker_app) do
+            FeatureFlag.create(name: 'diego_docker', enabled: true)
+            AppFactory.make(space: space_a, docker_image: 'some-image', state: 'STARTED')
+          end
+
+          before do
+            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
+          end
+
+          it 'should associate with the docker app' do
+            expect { route.add_app(docker_app) }.not_to raise_error
+          end
+        end
+      end
     end
 
     describe '#destroy' do
