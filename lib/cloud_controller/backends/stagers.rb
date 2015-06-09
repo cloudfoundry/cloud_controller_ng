@@ -17,7 +17,7 @@ module VCAP::CloudController
     end
 
     def validate_app(app)
-      if app.docker_image.present? && !FeatureFlag.enabled?('diego_docker')
+      if app.docker_image.present? && FeatureFlag.disabled?('diego_docker')
         raise Errors::ApiError.new_from_details('DockerDisabled')
       end
 
