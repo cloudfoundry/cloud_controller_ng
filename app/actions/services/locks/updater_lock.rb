@@ -9,6 +9,7 @@ module VCAP::CloudController
     def initialize(service_instance, type='update')
       @service_instance = service_instance
       @type = type
+      @needs_unlock = false
     end
 
     def lock!
@@ -24,6 +25,7 @@ module VCAP::CloudController
             state: 'in progress'
           }
         )
+        @needs_unlock = true
       end
     end
 
@@ -34,15 +36,22 @@ module VCAP::CloudController
             state: 'failed'
         )
       end
+      @needs_unlock = false
     end
 
     def synchronous_unlock!
       service_instance.update_last_operation(state: 'succeeded')
+      @needs_unlock = false
     end
 
     def enqueue_unlock!(job)
       enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
       enqueuer.enqueue
+      @needs_unlock = false
+    end
+
+    def needs_unlock?
+      @needs_unlock
     end
   end
 end
