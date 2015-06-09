@@ -36,6 +36,10 @@ module VCAP::CloudController
       raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"
     end
 
+    def self.disabled?(feature_flag_name)
+      !FeatureFlag.enabled?(feature_flag_name)
+    end
+
     def self.raise_unless_enabled!(feature_flag_name)
       feature_flag = FeatureFlag.find(name: feature_flag_name)
 
