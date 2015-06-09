@@ -30,16 +30,7 @@ module VCAP::CloudController
         logger.info('lrp.instances.status', process_guid: guid)
 
         path = "/v1/actual_lrps/#{guid}"
-        tps_instances = fetch_from_tps(path, {})
-
-        result = []
-
-        tps_instances.each do |instance|
-          info = build_cc_instance(instance)
-          result << info
-        end
-
-        result
+        fetch_from_tps(path, {})
       end
 
       def fetch_lrp_stats(guid)
@@ -47,17 +38,7 @@ module VCAP::CloudController
 
         path = "/v1/actual_lrps/#{guid}/stats"
         headers = { 'Authorization' => VCAP::CloudController::SecurityContext.auth_token }
-        tps_instances = fetch_from_tps(path, headers)
-
-        result = []
-
-        tps_instances.each do |instance|
-          info = build_cc_instance(instance)
-          info[:stats] = instance['stats'] || {}
-          result << info
-        end
-
-        result
+        fetch_from_tps(path, headers)
       end
 
       def fetch_from_tps(path, headers)
@@ -81,21 +62,9 @@ module VCAP::CloudController
           raise Errors::InstancesUnavailable.new(err_msg)
         end
 
-        JSON.parse(response.body)
+        JSON.parse(response.body, symbolize_names: true)
       rescue JSON::JSONError => e
         raise Errors::InstancesUnavailable.new(e)
-      end
-
-      def build_cc_instance(instance)
-        info = {
-          process_guid: instance['process_guid'],
-          instance_guid: instance['instance_guid'],
-          index: instance['index'],
-          state: instance['state'].upcase,
-          since: instance['since_in_ns'].to_i / 1_000_000_000,
-        }
-        info[:details] = instance['details'] if instance['details']
-        info
       end
 
       def logger

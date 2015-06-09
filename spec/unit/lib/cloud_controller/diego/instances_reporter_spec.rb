@@ -7,6 +7,8 @@ module VCAP::CloudController
       let(:app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED', instances: desired_instances, memory: 128, disk_quota: 2048) }
       let(:tps_client) { double(:tps_client) }
       let(:desired_instances) { 3 }
+      let(:now) { Time.now.utc }
+      let(:usage_time) { now.to_s }
       let(:instances_to_return) {
         [
           {
@@ -16,14 +18,22 @@ module VCAP::CloudController
             state: 'RUNNING',
             details: 'some-details',
             since: 1,
-            stats: { 'cpu' => 80, 'mem' => 128, 'disk' => 1024 }
+            host: 'myhost',
+            port: 8080,
+            stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
           },
-          { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', since: 2, stats: { 'cpu' => 70, 'mem' => 128, 'disk' => 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', since: 3, stats: { 'cpu' => 70, 'mem' => 128, 'disk' => 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'RUNNING', since: 4, stats: { 'cpu' => 80, 'mem' => 256, 'disk' => 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-E', index: 2, state: 'STARTING', since: 5, stats: { 'cpu' => 80, 'mem' => 256, 'disk' => 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-F', index: 3, state: 'STARTING', since: 6, stats: { 'cpu' => 80, 'mem' => 128, 'disk' => 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-G', index: 4, state: 'CRASHED', since: 7, stats: { 'cpu' => 80, 'mem' => 128, 'disk' => 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', since: 2, host: 'myhost1', port: 8081,
+            stats: { time: usage_time, cpu: 70, mem: 128, disk: 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', since: 3, host: 'myhost1', port: 8081,
+            stats: { time: usage_time, cpu: 70, mem: 128, disk: 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'RUNNING', since: 4, host: 'myhost2', port: 8082,
+            stats: { time: usage_time, cpu: 80, mem: 256, disk: 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-E', index: 2, state: 'STARTING', since: 5, host: 'myhost2', port: 8082,
+            stats: { time: usage_time, cpu: 80, mem: 256, disk: 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-F', index: 3, state: 'STARTING', since: 6, host: 'myhost3', port: 8083,
+            stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
+          { process_guid: 'process-guid', instance_guid: 'instance-G', index: 4, state: 'CRASHED', since: 7, host: 'myhost4', port: 8084,
+            stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
         ]
       }
 
@@ -38,11 +48,11 @@ module VCAP::CloudController
 
           expect(tps_client).to have_received(:lrp_instances).with(app)
           expect(result).to eq(
-                                {
-                                    0 => { state: 'RUNNING', details: 'some-details', since: 1 },
-                                    1 => { state: 'CRASHED', since: 3 },
-                                    2 => { state: 'STARTING', since: 5 },
-                                })
+            {
+              0 => { state: 'RUNNING', details: 'some-details', since: 1 },
+              1 => { state: 'CRASHED', since: 3 },
+              2 => { state: 'STARTING', since: 5 },
+            })
         end
 
         it 'returns DOWN instances for instances that tps does not report within range of app.instances' do
@@ -237,7 +247,7 @@ module VCAP::CloudController
       end
 
       describe '#stats_for_app' do
-        it 'stubs out stuff for now' do
+        it 'returns the stats reported for the application' do
           result = subject.stats_for_app(app)
 
           expect(result).to eq(
@@ -246,9 +256,16 @@ module VCAP::CloudController
                 'state' => 'RUNNING',
                 'details' => 'some-details',
                 'stats' => {
+                  'name' => app.name,
+                  'uris' => app.uris,
+                  'host' => 'myhost',
+                  'port' => 8080,
+                  'uptime' => instances_to_return[0][:since],
                   'mem_quota'  => app[:memory] * 1024 * 1024,
                   'disk_quota' => app[:disk_quota] * 1024 * 1024,
+                  'fds_quota' => app.file_descriptors,
                   'usage'      => {
+                    'time' => usage_time,
                     'cpu'  => 80,
                     'mem'  => 128,
                     'disk' => 1024,
@@ -258,9 +275,16 @@ module VCAP::CloudController
               1 => {
                 'state' => 'CRASHED',
                 'stats' => {
+                  'name' => app.name,
+                  'uris' => app.uris,
+                  'host' => 'myhost1',
+                  'port' => 8081,
+                  'uptime' => instances_to_return[2][:since],
                   'mem_quota'  => app[:memory] * 1024 * 1024,
                   'disk_quota' => app[:disk_quota] * 1024 * 1024,
+                  'fds_quota' => app.file_descriptors,
                   'usage'      => {
+                    'time' => usage_time,
                     'cpu'  => 70,
                     'mem'  => 128,
                     'disk' => 1024,
@@ -270,9 +294,16 @@ module VCAP::CloudController
               2 => {
                 'state' => 'STARTING',
                 'stats' => {
+                  'name' => app.name,
+                  'uris' => app.uris,
+                  'host' => 'myhost2',
+                  'port' => 8082,
+                  'uptime' => instances_to_return[4][:since],
                   'mem_quota'  => app[:memory] * 1024 * 1024,
                   'disk_quota' => app[:disk_quota] * 1024 * 1024,
+                  'fds_quota' => app.file_descriptors,
                   'usage'      => {
+                    'time' => usage_time,
                     'cpu'  => 80,
                     'mem'  => 256,
                     'disk' => 1024,
@@ -299,12 +330,20 @@ module VCAP::CloudController
           end
 
           it 'creates zero usage for the instance' do
+            allow(Time).to receive(:now).and_return(now)
             result = subject.stats_for_app(app)
 
             expect(result[0]['stats']).to eq({
+              'name' => app.name,
+              'uris' => app.uris,
+              'host' => 'myhost',
+              'port' => 8080,
+              'uptime' => instances_to_return[0][:since],
               'mem_quota'  => app[:memory] * 1024 * 1024,
               'disk_quota' => app[:disk_quota] * 1024 * 1024,
+              'fds_quota' => app.file_descriptors,
               'usage'      => {
+                'time' => usage_time,
                 'cpu'  => 0,
                 'mem'  => 0,
                 'disk' => 0,

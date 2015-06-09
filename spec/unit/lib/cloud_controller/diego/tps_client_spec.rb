@@ -19,22 +19,22 @@ module VCAP::CloudController::Diego
                   process_guid: 'abc',
                   instance_guid: '123',
                   index: 0,
-                  state: 'running',
-                  since_in_ns: '1257894000000000001'
+                  state: 'RUNNING',
+                  since: 1257894000,
                 },
                 { process_guid: 'abc',
                   instance_guid: '456',
                   index: 1,
-                  state: 'starting',
-                  since_in_ns: '1257895000000000001'
+                  state: 'STARTING',
+                  since: 1257895000,
                 },
                 {
                   process_guid: 'abc',
                   instance_guid: '789',
                   index: 1,
-                  state: 'crashed',
+                  state: 'CRASHED',
                   details: 'down-hard',
-                  since_in_ns: '1257896000000000001'
+                  since: 1257896000,
                 }
               ].to_json)
           end
@@ -46,14 +46,14 @@ module VCAP::CloudController::Diego
                 instance_guid: '123',
                 index: 0,
                 state: 'RUNNING',
-                since: 1257894000
+                since: 1257894000,
               },
               {
                 process_guid: 'abc',
                 instance_guid: '456',
                 index: 1,
                 state: 'STARTING',
-                since: 1257895000
+                since: 1257895000,
               },
               {
                 process_guid: 'abc',
@@ -61,7 +61,7 @@ module VCAP::CloudController::Diego
                 index: 1,
                 state: 'CRASHED',
                 details: 'down-hard',
-                since: 1257896000
+                since: 1257896000,
               }
             ]
 
@@ -143,24 +143,24 @@ module VCAP::CloudController::Diego
                   process_guid: 'abc',
                   instance_guid: '123',
                   index: 0,
-                  state: 'running',
-                  since_in_ns: '1257894000000000001',
+                  state: 'RUNNING',
+                  since: 1257894000,
                   stats: { cpu: 80, mem: 128, disk: 1024 }
                 },
                 {
                   process_guid: 'abc',
                   instance_guid: '456',
                   index: 1,
-                  state: 'starting',
-                  since_in_ns: '1257895000000000001',
+                  state: 'STARTING',
+                  since: 1257895000,
                   stats: { cpu: 70, mem: 256, disk: 1024 }
                 },
                 {
                   process_guid: 'abc',
                   instance_guid: '789',
                   index: 1,
-                  state: 'crashed',
-                  since_in_ns: '1257896000000000001',
+                  state: 'CRASHED',
+                  since: 1257896000,
                   details: 'down-hard',
                   stats: { cpu: 50, mem: 512, disk: 2048 }
                 }
@@ -175,7 +175,7 @@ module VCAP::CloudController::Diego
                 index: 0,
                 state: 'RUNNING',
                 since: 1257894000,
-                stats: { 'cpu' => 80, 'mem' => 128, 'disk' => 1024 }
+                stats: { cpu: 80, mem: 128, disk: 1024 }
               },
               {
                 process_guid: 'abc',
@@ -183,7 +183,7 @@ module VCAP::CloudController::Diego
                 index: 1,
                 state: 'STARTING',
                 since: 1257895000,
-                stats: { 'cpu' => 70, 'mem' => 256, 'disk' => 1024 }
+                stats: { cpu: 70, mem: 256, disk: 1024 }
               },
               {
                 process_guid: 'abc',
@@ -192,7 +192,7 @@ module VCAP::CloudController::Diego
                 state: 'CRASHED',
                 details: 'down-hard',
                 since: 1257896000,
-                stats: { 'cpu' => 50, 'mem' => 512, 'disk' => 2048 }
+                stats: { cpu: 50, mem: 512, disk: 2048 }
               }
             ]
 
