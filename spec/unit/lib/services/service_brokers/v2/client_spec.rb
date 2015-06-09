@@ -452,17 +452,14 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a patch request with the new service plan' do
-        client.update_service_broker(instance, new_plan)
+        client.update_service_broker(instance, new_plan, previous_values: { plan_id: '1234' })
 
         expect(http_client).to have_received(:patch).with(
           anything,
           {
             plan_id:	new_plan.broker_provided_id,
             previous_values: {
-              plan_id: old_plan.broker_provided_id,
-              service_id: old_plan.service.broker_provided_id,
-              organization_id: instance.organization.guid,
-              space_id: instance.space.guid
+              plan_id: '1234'
             }
           }
         )
@@ -483,12 +480,7 @@ module VCAP::Services::ServiceBrokers::V2
             {
               plan_id:	new_plan.broker_provided_id,
               parameters: { myParam: 'some-value' },
-              previous_values: {
-                plan_id: old_plan.broker_provided_id,
-                service_id: old_plan.service.broker_provided_id,
-                organization_id: instance.organization.guid,
-                space_id: instance.space.guid
-              }
+              previous_values: {}
             }
           )
         end

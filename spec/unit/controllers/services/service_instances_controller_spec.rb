@@ -2083,7 +2083,7 @@ module VCAP::CloudController
               expect(successes + failures).to eq 1
 
               service_instance = ServiceInstance.find(guid: service_instance_guid)
-              expect(service_instance).to be
+              expect(service_instance).to_not be_nil
               expect(service_instance.last_operation.type).to eq 'delete'
               expect(service_instance.last_operation.state).to eq 'failed'
             end

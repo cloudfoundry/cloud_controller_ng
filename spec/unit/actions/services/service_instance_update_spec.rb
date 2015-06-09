@@ -48,13 +48,53 @@ module VCAP::CloudController
           a_request(:patch, update_url(service_instance)).with(
             body: hash_including({
                 'parameters' => updated_parameters,
-                'plan_id' => new_service_plan.broker_provided_id
+                'plan_id' => new_service_plan.broker_provided_id,
+                'previous_values' => {
+                  'plan_id' => old_service_plan.broker_provided_id,
+                  'service_id' => service_instance.service.broker_provided_id,
+                  'organization_id' => service_instance.organization.guid,
+                  'space_id' => service_instance.space.guid
+                }
               })
           )
         ).to have_been_made.once
       end
 
       describe 'failure cases' do
+        context 'when the update times out' do
+          before do
+            stub_update(service_instance, body: lambda { |r|
+                                                  sleep 10
+                                                  raise 'Should time out'
+                                                })
+          end
+
+          it 'should mark the service instance as failed' do
+            expect {
+              Timeout.timeout(0.5.second) do
+                service_instance_update.update_service_instance(service_instance, { 'parameters' => { 'foo' => 'bar' } })
+              end
+            }.to raise_error(Timeout::Error)
+
+            service_instance.reload
+
+            expect(a_request(:patch, update_url(service_instance))).
+                to have_been_made.times(1)
+            expect(service_instance.last_operation.type).to eq('update')
+            expect(service_instance.last_operation.state).to eq('failed')
+          end
+        end
+
+        context 'when there is a validation failure' do
+          it 'unlocks the service instance' do
+            tags = ['a'] * 1000
+            expect {
+              service_instance_update.update_service_instance(service_instance, { 'tags' => tags })
+            }.to raise_error
+            expect(service_instance.last_operation.state).to eq('failed')
+          end
+        end
+
         context 'when the broker returns an error' do
           before do
             stub_update(service_instance, status: 500)
@@ -117,30 +157,6 @@ module VCAP::CloudController
               ).not_to have_been_made.once
               service_instance.reload
               expect(service_instance.service_plan.guid).to eq(old_service_plan.guid)
-            end
-          end
-
-          context 'when the model rollback fails' do
-            before do
-              stub_update(service_instance, status: 500)
-            end
-
-            it 'raises a nested exception' do
-              request_attrs = { 'parameters' => { 'arb' => 'it', 'ar' => 'y' } }
-
-              allow(service_instance).to receive(:update_service_instance).with({}).and_call_original
-
-              allow(service_instance).to receive(:update_service_instance).with({
-                    'tags' => [],
-                    'name' => 'Old name',
-                    'service_plan_guid' => old_service_plan.guid,
-                    'space_guid' => service_instance.space.guid }).and_raise(
-                  StandardError.new('test'))
-
-              expect {
-                service_instance_update.update_service_instance(service_instance, request_attrs)
-              }.to raise_error(Exception,
-                  /Error resetting the service instance: test Original error that caused the reset: The service broker/)
             end
           end
         end
