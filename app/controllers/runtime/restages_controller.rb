@@ -35,5 +35,12 @@ module VCAP::CloudController
         object_renderer.render_json(self.class, app, @opts)
       ]
     end
+
+    def self.translate_validation_exception(e, attributes)
+      docker_errors = e.errors.on(:docker)
+      return Errors::ApiError.new_from_details('DockerDisabled') if docker_errors
+
+      Errors::ApiError.new_from_details('StagingError', e.errors.full_messages)
+    end
   end
 end

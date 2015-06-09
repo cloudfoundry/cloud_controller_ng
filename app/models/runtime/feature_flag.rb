@@ -12,6 +12,7 @@ module VCAP::CloudController
       app_scaling: true,
       route_creation: true,
       service_instance_creation: true,
+      diego_docker: false,
     }.freeze
 
     export_attributes :name, :enabled, :error_message
