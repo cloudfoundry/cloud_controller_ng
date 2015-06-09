@@ -12,6 +12,7 @@ module VCAP::CloudController
         process.lock!
 
         process.instances = message.instances if message.requested?(:instances)
+        process.memory    = message.memory_in_mb if message.requested?(:memory_in_mb)
 
         process.save
 

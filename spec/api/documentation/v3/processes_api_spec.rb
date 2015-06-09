@@ -49,31 +49,33 @@ resource 'Processes (Experimental)', type: :api do
         },
         'resources'  => [
           {
-            'guid'       => process1.guid,
-            'type'       => process1.type,
-            'command'    => nil,
-            'instances'  => 1,
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            '_links'     => {
-              'self'     => { 'href' => "/v3/processes/#{process1.guid}" },
-              'scale'    => { 'href' => "/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
-              'app'      => { 'href' => "/v3/apps/#{app_model.guid}" },
-              'space'    => { 'href' => "/v2/spaces/#{process1.space_guid}" },
+            'guid'         => process1.guid,
+            'type'         => process1.type,
+            'command'      => nil,
+            'instances'    => 1,
+            'memory_in_mb' => 1024,
+            'created_at'   => iso8601,
+            'updated_at'   => iso8601,
+            '_links'       => {
+              'self'  => { 'href' => "/v3/processes/#{process1.guid}" },
+              'scale' => { 'href' => "/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
+              'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
+              'space' => { 'href' => "/v2/spaces/#{process1.space_guid}" },
             },
           },
           {
-            'guid'       => process2.guid,
-            'type'       => process2.type,
-            'command'    => nil,
-            'instances'  => 1,
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            '_links'     => {
-              'self'     => { 'href' => "/v3/processes/#{process2.guid}" },
-              'scale'    => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
-              'app'      => { 'href' => "/v3/apps/#{process2.app_guid}" },
-              'space'    => { 'href' => "/v2/spaces/#{process2.space_guid}" },
+            'guid'         => process2.guid,
+            'type'         => process2.type,
+            'command'      => nil,
+            'instances'    => 1,
+            'memory_in_mb' => 1024,
+            'created_at'   => iso8601,
+            'updated_at'   => iso8601,
+            '_links'       => {
+              'self'  => { 'href' => "/v3/processes/#{process2.guid}" },
+              'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
+              'app'   => { 'href' => "/v3/apps/#{process2.app_guid}" },
+              'space' => { 'href' => "/v2/spaces/#{process2.space_guid}" },
             },
           }
         ]
@@ -99,17 +101,18 @@ resource 'Processes (Experimental)', type: :api do
 
     example 'Get a Process' do
       expected_response = {
-        'guid'       => guid,
-        'type'       => type,
-        'command'    => nil,
-        'instances'  => 1,
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        '_links'     => {
-          'self'     => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale'    => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'      => { 'href' => "/v3/apps/#{process.app_guid}" },
-          'space'    => { 'href' => "/v2/spaces/#{process.space_guid}" },
+        'guid'         => guid,
+        'type'         => type,
+        'command'      => nil,
+        'instances'    => 1,
+        'memory_in_mb' => 1024,
+        'created_at'   => iso8601,
+        'updated_at'   => iso8601,
+        '_links'       => {
+          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },
+          'space' => { 'href' => "/v2/spaces/#{process.space_guid}" },
         },
       }
 
@@ -144,17 +147,18 @@ resource 'Processes (Experimental)', type: :api do
       process.reload
 
       expected_response = {
-        'guid'       => guid,
-        'type'       => process.type,
-        'command'    => 'X',
-        'instances'  => process.instances,
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        '_links'     => {
-          'self'     => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale'    => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'      => { 'href' => "/v3/apps/#{process.app_guid}" },
-          'space'    => { 'href' => "/v2/spaces/#{process.space_guid}" },
+        'guid'         => guid,
+        'type'         => process.type,
+        'command'      => 'X',
+        'instances'    => process.instances,
+        'memory_in_mb' => 1024,
+        'created_at'   => iso8601,
+        'updated_at'   => iso8601,
+        '_links'       => {
+          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },
+          'space' => { 'href' => "/v2/spaces/#{process.space_guid}" },
         },
       }
 
@@ -166,8 +170,10 @@ resource 'Processes (Experimental)', type: :api do
 
   put '/v3/processes/:guid/scale' do
     parameter :instances, 'Number of instances'
+    parameter :memory_in_mb, 'The memory in mb allocated per instance'
 
     let(:instances) { 3 }
+    let(:memory_in_mb) { 100 }
     let(:guid) { process.guid }
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
 
@@ -188,17 +194,18 @@ resource 'Processes (Experimental)', type: :api do
       process.reload
 
       expected_response = {
-        'guid'       => process.guid,
-        'type'       => process.type,
-        'command'    => process.command,
-        'instances'  => instances,
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        '_links'     => {
-          'self'     => { 'href' => "/v3/processes/#{process.guid}" },
-          'scale'    => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
-          'app'      => { 'href' => "/v3/apps/#{process.app_guid}" },
-          'space'    => { 'href' => "/v2/spaces/#{process.space_guid}" },
+        'guid'         => process.guid,
+        'type'         => process.type,
+        'command'      => process.command,
+        'instances'    => instances,
+        'memory_in_mb' => memory_in_mb,
+        'created_at'   => iso8601,
+        'updated_at'   => iso8601,
+        '_links'       => {
+          'self'  => { 'href' => "/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },
+          'space' => { 'href' => "/v2/spaces/#{process.space_guid}" },
         },
       }
 
