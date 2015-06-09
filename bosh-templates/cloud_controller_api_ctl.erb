@@ -68,7 +68,12 @@ case $1 in
 
     ulimit -c unlimited
 
-    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller \
+    # TODO: remove the -m when we have a stand alone utility for loading
+    # frameworks etc, and call those utilities here.  See corresponding
+    # comments in cc runner.
+    <% if spec.index.to_i == 0 %>
+    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller -m \<% else %>
+    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller \<% end %>
       -c $CLOUD_CONTROLLER_NG_CONFIG
     ;;
 
