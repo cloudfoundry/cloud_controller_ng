@@ -439,6 +439,13 @@ module VCAP::CloudController
       state == 'STARTED'
     end
 
+    def active?
+      if diego? && docker_image.present?
+        return false unless FeatureFlag.enabled?('diego_docker')
+      end
+      true
+    end
+
     def stopped?
       state == 'STOPPED'
     end

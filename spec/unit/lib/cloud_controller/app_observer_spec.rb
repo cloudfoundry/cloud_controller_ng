@@ -6,6 +6,7 @@ module VCAP::CloudController
     let(:runners) { double(:runners, runner_for_app: runner) }
     let(:stager) { double(:stager) }
     let(:runner) { double(:runner, stop: nil, start: nil) }
+    let(:app_active) { true }
     let(:app) do
       double(
         :app,
@@ -14,6 +15,7 @@ module VCAP::CloudController
         previous_changes: previous_changes,
         started?: app_started,
         needs_staging?: app_needs_staging,
+        active?: app_active,
         buildpack_cache_key: key,
       )
     end
@@ -218,6 +220,24 @@ module VCAP::CloudController
             expect(runner).to_not receive(:scale)
             subject
           end
+
+          context 'when Docker is enabled' do
+            let(:app_active) { true }
+
+            it 'does not scale the app' do
+              expect(runner).to_not receive(:scale)
+              subject
+            end
+          end
+
+          context 'when Docker is disabled' do
+            let(:app_active) { false }
+
+            it 'does not scale the app' do
+              expect(runner).to_not receive(:scale)
+              subject
+            end
+          end
         end
 
         context 'if the app has been started' do
@@ -227,6 +247,24 @@ module VCAP::CloudController
             expect(runner).to receive(:scale)
             subject
           end
+
+          context 'when Docker is enabled' do
+            let(:app_active) { true }
+
+            it 'scales the app' do
+              expect(runner).to receive(:scale)
+              subject
+            end
+          end
+
+          context 'when Docker is disabled' do
+            let(:app_active) { false }
+
+            it 'does not scale the app' do
+              expect(runner).to_not receive(:scale)
+              subject
+            end
+          end
         end
       end
     end
@@ -234,12 +272,30 @@ module VCAP::CloudController
     describe '.routes_changed' do
       subject { AppObserver.routes_changed(app) }
 
-      context 'if the app has not been started' do
+      context 'when the app is not started' do
         let(:app_started) { false }
 
         it 'does not update routes' do
           expect(runner).to_not receive(:update_routes)
           subject
+        end
+
+        context 'with Docker disabled' do
+          let(:app_active) { false }
+
+          it 'does not update routes' do
+            expect(runner).to_not receive(:update_routes)
+            subject
+          end
+        end
+
+        context 'with Docker enabled' do
+          let(:app_active) { true }
+
+          it 'does not update routes' do
+            expect(runner).to_not receive(:update_routes)
+            subject
+          end
         end
       end
 
@@ -249,6 +305,24 @@ module VCAP::CloudController
         it 'updates routes' do
           expect(runner).to receive(:update_routes)
           subject
+        end
+
+        context 'with Docker disabled' do
+          let(:app_active) { false }
+
+          it 'does not update routes' do
+            expect(runner).to_not receive(:update_routes)
+            subject
+          end
+        end
+
+        context 'with Docker enabled' do
+          let(:app_active) { true }
+
+          it 'updates routes' do
+            expect(runner).to receive(:update_routes)
+            subject
+          end
         end
       end
     end
