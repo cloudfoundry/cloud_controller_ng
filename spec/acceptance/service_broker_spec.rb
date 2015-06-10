@@ -203,7 +203,7 @@ describe 'Service Broker' do
           "Service service-3\n" \
           "  Service dashboard client secret is required\n" \
           "  Service dashboard client redirect_uri is required\n" \
-          "  Plan names must be unique within a service\n" \
+          "  Plan names must be unique within a service. Service service-3 already has a plan named tiny\n" \
           "  Plan tiny\n" \
           "    Plan id must be a string, but has value 123\n" \
           "Service service-4\n" \

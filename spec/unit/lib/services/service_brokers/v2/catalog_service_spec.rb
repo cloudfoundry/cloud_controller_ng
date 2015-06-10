@@ -207,11 +207,34 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that the plan names are all unique' do
-        attrs = build_valid_service_attrs(plans: [build_valid_plan_attrs(name: 'same-name'), build_valid_plan_attrs(name: 'same-name')])
+        plans = [
+          build_valid_plan_attrs(name: 'same-name'),
+          build_valid_plan_attrs(name: 'same-name'),
+          build_valid_plan_attrs(name: 'other-name')
+        ]
+        attrs = build_valid_service_attrs(plans: plans)
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
         expect(service).not_to be_valid
 
-        expect(service.errors.messages).to include 'Plan names must be unique within a service'
+        expect(service.errors.messages).to include "Plan names must be unique within a service. Service #{service.name} already has a plan named same-name"
+      end
+
+      context 'when there are multiple duplicate plan names' do
+        it 'validates that the plan names are all unique' do
+          plans = [
+            build_valid_plan_attrs(name: 'dup-name-1'),
+            build_valid_plan_attrs(name: 'dup-name-1'),
+            build_valid_plan_attrs(name: 'dup-name-2'),
+            build_valid_plan_attrs(name: 'dup-name-2'),
+            build_valid_plan_attrs(name: 'unique-name'),
+          ]
+          attrs = build_valid_service_attrs(plans: plans)
+          service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+          expect(service).not_to be_valid
+
+          expect(service.errors.messages).to include "Plan names must be unique within a service. Service #{service.name} already has a plan named dup-name-1"
+          expect(service.errors.messages).to include "Plan names must be unique within a service. Service #{service.name} already has a plan named dup-name-2"
+        end
       end
 
       it 'validates that the plans are all valid' do

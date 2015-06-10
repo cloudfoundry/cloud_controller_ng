@@ -1,7 +1,7 @@
 require 'actions/services/mixins/service_broker_registration_error_parser'
 module VCAP::CloudController
   class ServiceBrokerUpdate
-    include ServiceBrokerRegistrationErrorParser
+    include VCAP::CloudController::ServiceBrokerRegistrationErrorParser
 
     def initialize(service_manager, services_event_repository, warning_observer)
       @service_manager = service_manager
