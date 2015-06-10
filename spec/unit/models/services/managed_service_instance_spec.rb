@@ -511,14 +511,6 @@ module VCAP::CloudController
             expect(service_instance.tags).to eq []
           end
         end
-
-        context 'when there are duplicate tags' do
-          let(:instance_tags) { %w(a a b c) }
-
-          it 'does not display duplicate tags' do
-            expect(service_instance.tags).to match_array(%w(a b c))
-          end
-        end
       end
 
       describe '#merged_tags' do

@@ -175,7 +175,7 @@ module VCAP::CloudController
     end
 
     def tags
-      (super || []).uniq
+      super || []
     end
 
     def merged_tags

@@ -175,13 +175,6 @@ module VCAP::CloudController
           expect(service.tags).to eq []
         end
       end
-
-      context 'there are duplicate tags' do
-        it 'returns the provided service tags without duplicates' do
-          service = Service.make(tags: %w(a a b c))
-          expect(service.tags).to match_array(%w(a b c))
-        end
-      end
     end
 
     describe '#requires' do
