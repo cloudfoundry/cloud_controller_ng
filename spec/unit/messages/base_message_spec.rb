@@ -54,7 +54,7 @@ module VCAP::CloudController
           message = GuidMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be a string')
+          expect(message.errors[:guid]).to include('must be a string')
         end
       end
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
           message = GuidMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be a string')
+          expect(message.errors[:guid]).to include('must be a string')
         end
       end
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
           message = GuidMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be between 1 and 200 characters')
+          expect(message.errors[:guid]).to include('must be between 1 and 200 characters')
         end
       end
 
@@ -87,7 +87,7 @@ module VCAP::CloudController
           message = GuidMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be between 1 and 200 characters')
+          expect(message.errors[:guid]).to include('must be between 1 and 200 characters')
         end
       end
     end

@@ -51,7 +51,7 @@ module VCAP::CloudController
           message = ProcessUpdateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be a string')
+          expect(message.errors[:command]).to include('must be a string')
         end
       end
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
           message = ProcessUpdateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be a string')
+          expect(message.errors[:command]).to include('must be a string')
         end
       end
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
           message = ProcessUpdateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be between 1 and 4096 characters')
+          expect(message.errors[:command]).to include('must be between 1 and 4096 characters')
         end
       end
 
@@ -84,7 +84,7 @@ module VCAP::CloudController
           message = ProcessUpdateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be between 1 and 4096 characters')
+          expect(message.errors[:command]).to include('must be between 1 and 4096 characters')
         end
       end
 

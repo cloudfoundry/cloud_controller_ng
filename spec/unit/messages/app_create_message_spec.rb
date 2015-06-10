@@ -32,7 +32,7 @@ module VCAP::CloudController
           message = AppCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include("Unknown field(s): 'unexpected'")
+          expect(message.errors[:base]).to include("Unknown field(s): 'unexpected'")
         end
       end
 
@@ -43,7 +43,7 @@ module VCAP::CloudController
           message = AppCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be a string')
+          expect(message.errors_on(:name)).to include('must be a string')
         end
       end
 

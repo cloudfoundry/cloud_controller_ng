@@ -41,7 +41,7 @@ module VCAP::CloudController
           message = PackageCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be one of \'bits, docker\'')
+          expect(message.errors[:type]).to include('must be one of \'bits, docker\'')
         end
       end
 
@@ -52,7 +52,7 @@ module VCAP::CloudController
           message = PackageCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be blank when type is bits')
+          expect(message.errors[:url]).to include('must be blank when type is bits')
         end
       end
 
@@ -74,7 +74,7 @@ module VCAP::CloudController
             message = PackageCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages[0]).to include("can't be blank type is docker")
+            expect(message.errors[:url]).to include('can not be blank when type is docker')
           end
         end
       end

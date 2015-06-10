@@ -39,7 +39,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('is not a number')
+          expect(message.errors[:memory_limit]).to include('is not a number')
         end
       end
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be an integer')
+          expect(message.errors[:memory_limit]).to include('must be an integer')
         end
       end
 
@@ -61,7 +61,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('is not a number')
+          expect(message.errors[:disk_limit]).to include('is not a number')
         end
       end
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be an integer')
+          expect(message.errors[:disk_limit]).to include('must be an integer')
         end
       end
 
@@ -83,7 +83,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be a string')
+          expect(message.errors[:stack]).to include('must be a string')
         end
       end
 
@@ -94,7 +94,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be a string')
+          expect(message.errors[:stack]).to include('must be a string')
         end
       end
 
@@ -105,7 +105,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be between 1 and 4096 characters')
+          expect(message.errors[:stack]).to include('must be between 1 and 4096 characters')
         end
       end
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be between 1 and 4096 characters')
+          expect(message.errors[:stack]).to include('must be between 1 and 4096 characters')
         end
       end
 
@@ -127,7 +127,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('must be a valid URI')
+          expect(message.errors[:buildpack_git_url]).to include('must be a valid URI')
         end
       end
 
@@ -138,6 +138,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
+          expect(message.errors[:buildpack_guid]).to_not be_empty
         end
       end
 
@@ -148,7 +149,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include('Only one of buildpack_git_url or buildpack_guid may be provided')
+          expect(message.errors[:buildpack_git_url]).to include('Only one of buildpack_git_url or buildpack_guid may be provided')
         end
       end
     end
