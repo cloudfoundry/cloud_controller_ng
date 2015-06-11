@@ -12,7 +12,8 @@ module VCAP::CloudController
         process.lock!
 
         process.instances = message.instances if message.requested?(:instances)
-        process.memory    = message.memory_in_mb if message.requested?(:memory_in_mb)
+        process.memory = message.memory_in_mb if message.requested?(:memory_in_mb)
+        process.disk_quota = message.disk_in_mb if message.requested?(:disk_in_mb)
 
         process.save
 

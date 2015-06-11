@@ -303,18 +303,20 @@ module VCAP::CloudController
     end
 
     describe '#scale' do
-      let(:req_body) { '{"instances": 2, "memory_in_mb": 100}' }
+      let(:req_body) { '{"instances": 2, "memory_in_mb": 100, "disk_in_mb": 200}' }
       let(:process) { AppFactory.make }
 
       it 'scales the process and returns the correct things' do
         expect(process.instances).not_to eq(2)
         expect(process.memory).not_to eq(100)
+        expect(process.disk_quota).not_to eq(200)
 
         status, body = processes_controller.scale(process.guid)
 
         process.reload
         expect(process.instances).to eq(2)
         expect(process.memory).to eq(100)
+        expect(process.disk_quota).to eq(200)
         expect(status).to eq(HTTP::OK)
         expect(body).to eq(expected_response)
       end

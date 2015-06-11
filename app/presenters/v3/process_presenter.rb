@@ -40,6 +40,7 @@ module VCAP::CloudController
         command:      process.command,
         instances:    process.instances,
         memory_in_mb: process.memory,
+        disk_in_mb:   process.disk_quota,
         created_at:   process.created_at,
         updated_at:   process.updated_at,
         _links:       build_links(process),

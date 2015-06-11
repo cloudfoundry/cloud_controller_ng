@@ -50,6 +50,7 @@ resource 'Apps (Experimental)', type: :api do
             'type'         => process.type,
             'instances'    => 1,
             'memory_in_mb' => 1024,
+            'disk_in_mb'   => 1024,
             'command'      => nil,
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
@@ -90,6 +91,7 @@ resource 'Apps (Experimental)', type: :api do
         'command'      => nil,
         'instances'    => 1,
         'memory_in_mb' => 1024,
+        'disk_in_mb'   => 1024,
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         '_links'       => {
@@ -138,6 +140,7 @@ resource 'Apps (Experimental)', type: :api do
         'command'      => process.command,
         'instances'    => instances,
         'memory_in_mb' => memory_in_mb,
+        'disk_in_mb'   => 1024,
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         '_links'       => {
