@@ -203,7 +203,7 @@ module VCAP::Services::ServiceBrokers::V2
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
         expect(service).not_to be_valid
 
-        expect(service.errors.messages).to include 'Plan ids must be unique'
+        expect(service.errors.messages).to include "Plan ids must be unique within a service. Service #{service.name} already has a plan with id 'id-1'"
       end
 
       it 'validates that the plan names are all unique' do

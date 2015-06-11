@@ -95,19 +95,27 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def validate_all_plan_ids_are_unique!
-      errors.add('Plan ids must be unique') if plans.uniq(&:broker_provided_id).count < plans.count
+      duplicate_plans = find_duplicate_plans :broker_provided_id
+      if duplicate_plans
+        duplicate_plans.each do |plan|
+          errors.add("Plan ids must be unique within a service. Service #{name} already has a plan with id '#{plan}'")
+        end
+      end
     end
 
     def validate_all_plan_names_are_unique!
-      unique_plans = plans.uniq(&:name)
-      if unique_plans.count < plans.count
-        plan_names = plans.map(&:name)
-        duplicate_plans =  plan_names.find_all { |plan| plan_names.count(plan) > 1 }
-        duplicate_plans =  duplicate_plans.uniq
+      duplicate_plans = find_duplicate_plans :name
+      if duplicate_plans.present?
         duplicate_plans.each do |plan|
           errors.add("Plan names must be unique within a service. Service #{name} already has a plan named #{plan}")
         end
       end
+    end
+
+    def find_duplicate_plans(field)
+      plan_names = plans.map(&field)
+      duplicate_plans = plan_names.find_all { |plan| plan_names.count(plan) > 1 }
+      duplicate_plans.uniq
     end
 
     def validate_dashboard_client!
