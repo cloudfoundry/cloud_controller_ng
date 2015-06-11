@@ -2,12 +2,25 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe Encryptor do
+
+    # Use rspec -t ~fips if your Ruby is not built against a FIPS-enabled OpenSSL library
+    it 'supports FIPS mode', :fips => true do
+        OpenSSL::fips_mode = true
+    end
+
     let(:salt) { Encryptor.generate_salt }
+    let(:key) { Encryptor.generate_key(salt) }
 
     describe 'generating some salt' do
       it 'returns a short, random string' do
         expect(salt.length).to eql(8)
         expect(salt).not_to eql(Encryptor.generate_salt)
+      end
+    end
+
+    describe 'generating a key' do
+      it 'returns a generated key of the specified length' do
+        expect(key.length).to eq(16)
       end
     end
 
@@ -20,8 +33,8 @@ module VCAP::CloudController
         expect(encrypted_string).not_to include(input)
       end
 
-      it 'is deterministic' do
-        expect(Encryptor.encrypt(input, salt)).to eql(encrypted_string)
+      it 'does not produce a predictable output' do
+        expect(Encryptor.encrypt(input, salt)).not_to eql(encrypted_string)
       end
 
       it 'depends on the salt' do
