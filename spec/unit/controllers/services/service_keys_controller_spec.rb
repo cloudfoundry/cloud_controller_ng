@@ -472,11 +472,30 @@ module VCAP::CloudController
         stub_requests(service_key.service_instance.service.service_broker)
       end
 
-      it 'returns ServiceKeyNotFound error if there is no such key' do
-        delete '/v2/service_keys/non-exist-service-key', '', headers_for(developer)
+      def verify_not_found_response(service_key_guid)
         expect(last_response).to have_status_code 404
         expect(decoded_response.fetch('error_code')).to eq('CF-ServiceKeyNotFound')
-        expect(decoded_response.fetch('description')).to eq('The service key could not be found: non-exist-service-key')
+        expect(decoded_response.fetch('description')).to eq("The service key could not be found: #{service_key_guid}")
+      end
+
+      context 'Not authorized to perform delete operation' do
+        let(:manager) { make_manager_for_space(service_key.service_instance.space) }
+        let(:auditor) { make_auditor_for_space(service_key.service_instance.space) }
+
+        it 'SpaceManager role can not delete a service key' do
+          delete "/v2/service_keys/#{service_key.guid}", '', headers_for(manager)
+          verify_not_found_response(service_key.guid)
+        end
+
+        it 'SpaceAuditor role can not delete a service key' do
+          delete "/v2/service_keys/#{service_key.guid}", '', headers_for(auditor)
+          verify_not_found_response(service_key.guid)
+        end
+      end
+
+      it 'returns ServiceKeyNotFound error if there is no such key' do
+        delete '/v2/service_keys/non-exist-service-key', '', headers_for(developer)
+        verify_not_found_response('non-exist-service-key')
       end
 
       it 'deletes the service key' do
