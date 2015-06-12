@@ -795,7 +795,6 @@ module VCAP::CloudController
         let(:route) { domain.add_route(host: 'app', space: space) }
         let(:pre_mapped_route) { domain.add_route(host: 'pre_mapped_route', space: space) }
         let(:docker_app) do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
           AppFactory.make(
             space: space,
             state: 'STARTED',
@@ -808,6 +807,7 @@ module VCAP::CloudController
         end
 
         before do
+          FeatureFlag.create(name: 'diego_docker', enabled: true)
           put "/v2/apps/#{docker_app.guid}/routes/#{pre_mapped_route.guid}", {}, json_headers(@headers_for_user)
         end
 
@@ -865,11 +865,13 @@ module VCAP::CloudController
     end
 
     describe 'on instance number change' do
+      before do
+        FeatureFlag.create(name: 'diego_docker', enabled: true)
+      end
+
       context 'when docker is disabled' do
         let(:space) { Space.make }
-        let(:stopped_app) { App.make(space: space, state: 'STOPPED', package_hash: 'made-up-package-hash', docker_image: 'docker-image') }
         let!(:started_app) do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
           App.make(space: space, state: 'STARTED', package_hash: 'made-up-package-hash', docker_image: 'docker-image')
         end
 
@@ -877,10 +879,28 @@ module VCAP::CloudController
           FeatureFlag.find(name: 'diego_docker').update(enabled: false)
         end
 
-        it 'does not return docker disabled message on instance change' do
+        it 'does not return docker disabled message' do
           put "/v2/apps/#{started_app.guid}", MultiJson.dump(instances: 2), json_headers(admin_headers)
 
           expect(last_response.status).to eq(201)
+        end
+      end
+    end
+
+    describe 'on state change' do
+      before do
+        FeatureFlag.create(name: 'diego_docker', enabled: true)
+      end
+
+      context 'when docker is disabled' do
+        let(:space) { Space.make }
+        let!(:stopped_app) { App.make(space: space, state: 'STOPPED', package_hash: 'made-up-package-hash', docker_image: 'docker-image') }
+        let!(:started_app) do
+          App.make(space: space, state: 'STARTED', package_hash: 'made-up-package-hash', docker_image: 'docker-image')
+        end
+
+        before do
+          FeatureFlag.find(name: 'diego_docker').update(enabled: false)
         end
 
         it 'returns docker disabled message on start' do

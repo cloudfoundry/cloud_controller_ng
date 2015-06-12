@@ -13,7 +13,7 @@ class DockerPolicy
     end
 
     if @app.docker_image.present? && VCAP::CloudController::FeatureFlag.disabled?('diego_docker')
-      @errors.add(:docker, :docker_disabled) if @app.state_changed? unless @app.being_stopped?
+      @errors.add(:docker, :docker_disabled) if @app.being_started?
     end
 
     docker_credentials = @app.docker_credentials_json

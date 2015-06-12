@@ -68,8 +68,11 @@ module VCAP::CloudController
       it { is_expected.to have_associated :routes, associated_instance: ->(app) { Route.make(space: app.space) } }
 
       context 'with Docker app' do
-        let!(:docker_app) do
+        before do
           FeatureFlag.create(name: 'diego_docker', enabled: true)
+        end
+
+        let!(:docker_app) do
           AppFactory.make(space: space, docker_image: 'some-image', state: 'STARTED')
         end
 
