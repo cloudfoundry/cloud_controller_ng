@@ -26,12 +26,12 @@ module VCAP::CloudController::Encryptor
       end
 
       iv = SecureRandom.hex
-      return(iv + Base64.strict_encode64(run_cipher(make_cipher.encrypt, input, salt, iv)))
+      (iv + Base64.strict_encode64(run_cipher(make_cipher.encrypt, input, salt, iv)))
     end
 
     def decrypt(encrypted_input, salt)
       return nil unless encrypted_input
-      run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input[32, (encrypted_input.length - 32)]), salt, encrypted_input[0,32])
+      run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input[32, (encrypted_input.length - 32)]), salt, encrypted_input[0, 32])
     end
 
     private
@@ -41,8 +41,8 @@ module VCAP::CloudController::Encryptor
     end
 
     def run_cipher(cipher, input, salt, iv)
-      cipher.key=(generate_key(salt))
-      cipher.iv=(iv)
+      cipher.key = (generate_key(salt))
+      cipher.iv = (iv)
       cipher.update(input).tap { |result| result << cipher.final }
     end
   end

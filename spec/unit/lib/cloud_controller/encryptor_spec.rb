@@ -2,10 +2,9 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe Encryptor do
-
     # Use rspec -t ~fips if your Ruby is not built against a FIPS-enabled OpenSSL library
-    it 'supports FIPS mode', :fips => true do
-        OpenSSL::fips_mode = true
+    it 'supports FIPS mode', fips: true do
+      OpenSSL.fips_mode = true
     end
 
     let(:salt) { Encryptor.generate_salt }
