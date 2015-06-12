@@ -3,6 +3,10 @@ require 'spec_helper'
 module VCAP::CloudController
   describe Encryptor do
     # Use rspec -t ~fips if your Ruby is not built against a FIPS-enabled OpenSSL library
+    RSpec.configure do |c|
+      c.filter_run_excluding fips: true
+    end
+
     it 'supports FIPS mode', fips: true do
       OpenSSL.fips_mode = true
     end
