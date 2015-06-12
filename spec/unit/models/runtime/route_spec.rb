@@ -453,8 +453,11 @@ module VCAP::CloudController
         subject(:route) { Route.make(space: space_a, domain: domain_a) }
 
         context 'when docker app is added to a route' do
-          let!(:docker_app) do
+          before do
             FeatureFlag.create(name: 'diego_docker', enabled: true)
+          end
+
+          let!(:docker_app) do
             AppFactory.make(space: space_a, docker_image: 'some-image', state: 'STARTED')
           end
 
