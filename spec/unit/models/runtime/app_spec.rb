@@ -79,7 +79,8 @@ module VCAP::CloudController
       it 'includes validator policies' do
         expect_validator(InstancesPolicy)
         expect_validator(AppEnvironmentPolicy)
-        expect_validator(DiskQuotaPolicy)
+        expect_validator(MaxDiskQuotaPolicy)
+        expect_validator(MinDiskQuotaPolicy)
         expect_validator(MetadataPolicy)
         expect_validator(MinMemoryPolicy)
         expect_validator(MaxInstanceMemoryPolicy)

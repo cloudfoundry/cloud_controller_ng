@@ -89,7 +89,8 @@ module VCAP::CloudController
     def validation_policies
       [
         AppEnvironmentPolicy.new(self),
-        DiskQuotaPolicy.new(self, max_app_disk_in_mb),
+        MaxDiskQuotaPolicy.new(self, max_app_disk_in_mb),
+        MinDiskQuotaPolicy.new(self),
         MetadataPolicy.new(self, metadata_deserialized),
         MinMemoryPolicy.new(self),
         MaxMemoryPolicy.new(self, space, :space_quota_exceeded),

@@ -1,4 +1,4 @@
-class DiskQuotaPolicy
+class MaxDiskQuotaPolicy
   ERROR_MSG = 'too much disk requested (must be less than %s)'
 
   def initialize(app, max_mb)

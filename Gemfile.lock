@@ -235,7 +235,7 @@ GEM
     rack-test (0.6.2)
       rack (>= 1.0)
     rainbow (2.0.0)
-    rake (10.4.1)
+    rake (10.4.2)
     rfc822 (0.1.5)
     roodi (4.0.0)
       ruby_parser (~> 3.2, >= 3.2.2)
