@@ -5,13 +5,7 @@ module VCAP::CloudController::RestController
     subject(:renderer) { described_class.new(eager_loader, serializer, renderer_opts) }
     let(:eager_loader) { SecureEagerLoader.new }
     let(:serializer) { PreloadedObjectSerializer.new }
-    let(:transformer) { nil }
-    let(:renderer_opts) do
-      {
-         max_inline_relations_depth: 100_000,
-         transformer: transformer
-      }
-    end
+    let(:renderer_opts) { { max_inline_relations_depth: 100_000 } }
 
     describe '#render_json' do
       let(:controller) { VCAP::CloudController::TestModelSecondLevelsController }
@@ -47,18 +41,6 @@ module VCAP::CloudController::RestController
         it 'renders json response' do
           result = subject.render_json(controller, instance, opts)
           expect(result).to be_instance_of(String)
-        end
-      end
-
-      context 'when transformer is given' do
-        let(:transformer) { double('transformer') }
-
-        it 'passes the populated dataset to the transformer' do
-          expect(transformer).to receive(:transform) do |object|
-            expect(object).to eq(instance)
-          end
-
-          subject.render_json(controller, instance, opts)
         end
       end
     end

@@ -34,22 +34,23 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :space }
       it { is_expected.to validate_uniqueness [:space_id, :name] }
       it { is_expected.to strip_whitespace :name }
+      let(:max_tags) { build_max_tags }
 
       it 'accepts user-provided tags where combined length of all tags is exactly 255 characters' do
         expect {
-          ManagedServiceInstance.make tags: ['a'] * 255
+          ManagedServiceInstance.make tags: max_tags
         }.not_to raise_error
       end
 
       it 'accepts user-provided tags where combined length of all tags is less than 255 characters' do
         expect {
-          ManagedServiceInstance.make tags: ['a'] * 128
+          ManagedServiceInstance.make tags: max_tags[0..50]
         }.not_to raise_error
       end
 
       it 'does not accept user-provided tags with combined length of over 255 characters' do
         expect {
-          ManagedServiceInstance.make tags: ['a'] * 256
+          ManagedServiceInstance.make tags: max_tags + ['z']
         }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
@@ -541,6 +542,30 @@ module VCAP::CloudController
             expect(service_instance.merged_tags).to eq([])
           end
         end
+
+        context 'when there are duplicate service tags' do
+          let(:service_tags) { %w(relational mysql mysql) }
+
+          it 'does not display duplicate tags' do
+            expect(service_instance.merged_tags).to match_array(%w(a b c relational mysql))
+          end
+        end
+
+        context 'when there are duplicate instance tags' do
+          let(:instance_tags) { %w(a a b c) }
+
+          it 'does not display duplicate tags' do
+            expect(service_instance.merged_tags).to match_array(%w(a b c relational mysql))
+          end
+        end
+
+        context 'when there are instance tags which are duplicates of a service tag' do
+          let(:instance_tags) { %w(mysql a b c) }
+
+          it 'does not display duplicate tags' do
+            expect(service_instance.merged_tags).to match_array(%w(a b c relational mysql))
+          end
+        end
       end
     end
 
@@ -628,6 +653,15 @@ module VCAP::CloudController
 
         expect(service_instance.to_hash['last_operation']['updated_at']).to be
       end
+    end
+
+    # Construct an array of unique tags with 255 characters total
+    def build_max_tags
+      tags = []
+      (10..94).each do |i|
+        tags.push('a' + i.to_s)
+      end
+      tags
     end
   end
 end

@@ -70,5 +70,37 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'tracking if unlock is needed' do
+      it 'is false by default' do
+        expect(updater_lock.needs_unlock?).to be_falsey
+      end
+
+      describe 'after it is locked' do
+        before do
+          updater_lock.lock!
+        end
+
+        it 'is true' do
+          expect(updater_lock.needs_unlock?).to be_truthy
+        end
+
+        it 'is false if you unlock and fail' do
+          updater_lock.unlock_and_fail!
+          expect(updater_lock.needs_unlock?).to be_falsey
+        end
+
+        it 'is false if you synchronous unlock' do
+          updater_lock.synchronous_unlock!
+          expect(updater_lock.needs_unlock?).to be_falsey
+        end
+
+        it 'is false if you enqueue an unlock' do
+          job = double(Jobs::Services::ServiceInstanceStateFetch)
+          updater_lock.enqueue_unlock!(job)
+          expect(updater_lock.needs_unlock?).to be_falsey
+        end
+      end
+    end
   end
 end

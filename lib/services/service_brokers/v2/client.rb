@@ -165,17 +165,12 @@ module VCAP::Services::ServiceBrokers::V2
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end
 
-    def update_service_broker(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil)
+    def update_service_broker(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {})
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body_hash = {
         plan_id: plan.broker_provided_id,
-        previous_values: {
-          plan_id: instance.service_plan.broker_provided_id,
-          service_id: instance.service.broker_provided_id,
-          organization_id: instance.organization.guid,
-          space_id: instance.space.guid
-        }
+        previous_values: previous_values
       }
       body_hash[:parameters] = arbitrary_parameters if arbitrary_parameters
       response = @http_client.patch(path, body_hash)

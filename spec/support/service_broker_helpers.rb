@@ -10,12 +10,16 @@ module ServiceBrokerHelpers
     end
   end
 
-  def stub_update(service_instance, opts={})
+  def stub_update(service_instance, opts={}, &block)
     status = opts[:status] || 200
     body = opts[:body] || '{}'
     accepts_incomplete = opts[:accepts_incomplete]
     url = update_url_for_broker(service_instance, accepts_incomplete: accepts_incomplete)
-    stub_request(:patch, url).to_return(status: status, body: body)
+    if block
+      stub_request(:patch, url).to_return(&block)
+    else
+      stub_request(:patch, url).to_return(status: status, body: body)
+    end
   end
 
   def stub_deprovision(service_instance, opts={}, &block)

@@ -13,7 +13,7 @@ module VCAP::CloudController
     validates :type, inclusion: { in: %w(bits docker), message: 'must be one of \'bits, docker\'' }
     validates :app_guid, guid: true
     validates :url, absence: { absence: true, message: 'must be blank when type is bits' }, if: "type == 'bits'"
-    validates :url, presence: { presence: true, message: "can't be blank type is docker" }, if: "type == 'docker'"
+    validates :url, presence: { presence: true, message: 'can not be blank when type is docker' }, if: "type == 'docker'"
 
     def self.create_from_http_request(app_guid, body)
       PackageCreateMessage.new(body.symbolize_keys.merge({ app_guid: app_guid }))

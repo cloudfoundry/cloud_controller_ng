@@ -164,6 +164,11 @@ module VCAP::CloudController
     end
 
     describe '#tags' do
+      it 'returns the provided service tags' do
+        service = Service.make(tags: %w(a b c))
+        expect(service.tags).to match_array(%w(a b c))
+      end
+
       context 'null tags in the database' do
         it 'returns an empty array' do
           service = Service.make(tags: nil)

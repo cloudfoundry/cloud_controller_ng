@@ -44,14 +44,15 @@ resource 'App Routes (Experimental)', type: :api do
           'next'          => nil,
           'previous'      => nil,
         },
-        'resources' => [
+        'resources'  => [
           {
             'guid'       => route1.guid,
             'host'       => route1.host,
+            'path'       => '',
             'created_at' => iso8601,
             'updated_at' => nil,
-            '_links' => {
-              'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+            '_links'     => {
+              'space'  => { 'href' => "/v2/spaces/#{space.guid}" },
               'domain' => { 'href' => "/v2/domains/#{route1.domain.guid}" }
             }
           },
@@ -61,8 +62,8 @@ resource 'App Routes (Experimental)', type: :api do
             'path'       => '/foo/bar',
             'created_at' => iso8601,
             'updated_at' => nil,
-            '_links' => {
-              'space' => { 'href' => "/v2/spaces/#{space.guid}" },
+            '_links'     => {
+              'space'  => { 'href' => "/v2/spaces/#{space.guid}" },
               'domain' => { 'href' => "/v2/domains/#{route2.domain.guid}" }
             }
           },

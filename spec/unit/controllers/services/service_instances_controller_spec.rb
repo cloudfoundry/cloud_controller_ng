@@ -1029,11 +1029,11 @@ module VCAP::CloudController
             }.to_json
           end
 
-          let(:longtags) { ['a'] * 255 }
+          let(:max_tags) { build_max_tags }
 
           let(:update_body) do
             {
-              tags: longtags
+              tags: max_tags
             }.to_json
           end
 
@@ -1045,14 +1045,14 @@ module VCAP::CloudController
 
             put "/v2/service_instances/#{service_instance.guid}", update_body, headers_for(admin_user)
             expect(last_response).to have_status_code(201)
-            expect(service_instance.reload.tags).to eq(longtags)
+            expect(service_instance.reload.tags).to eq(max_tags)
           end
 
           it 'make sure the tags update works with the max length (edge case)' do
             put "/v2/service_instances/#{service_instance.guid}", update_body, headers_for(admin_user)
             expect(last_response).to have_status_code(201)
-            expect(decoded_response['entity']['tags']).to eq(longtags)
-            expect(service_instance.reload.tags).to eq(longtags)
+            expect(decoded_response['entity']['tags']).to eq(max_tags)
+            expect(service_instance.reload.tags).to eq(max_tags)
           end
         end
 
@@ -1066,9 +1066,11 @@ module VCAP::CloudController
           end
 
           context 'when the tags passed in are too long' do
+            let(:max_tags) { build_max_tags }
+
             it 'returns service instance tags too long message correctly' do
               body = {
-                tags: ['a'] * 256,
+                tags: max_tags + ['z'],
               }.to_json
 
               put "/v2/service_instances/#{service_instance.guid}", body, json_headers(admin_headers)
@@ -2081,7 +2083,7 @@ module VCAP::CloudController
               expect(successes + failures).to eq 1
 
               service_instance = ServiceInstance.find(guid: service_instance_guid)
-              expect(service_instance).to be
+              expect(service_instance).to_not be_nil
               expect(service_instance.last_operation.type).to eq 'delete'
               expect(service_instance.last_operation.state).to eq 'failed'
             end
@@ -2598,6 +2600,15 @@ module VCAP::CloudController
       post '/v2/user_provided_service_instances', req, headers
 
       ServiceInstance.last
+    end
+
+    # Construct an array of unique tags with 255 characters total
+    def build_max_tags
+      tags = []
+      (10..94).each do |i|
+        tags.push('a' + i.to_s)
+      end
+      tags
     end
   end
 end
