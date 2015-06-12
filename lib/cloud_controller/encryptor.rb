@@ -1,5 +1,5 @@
 require 'securerandom'
-require 'openssl/cipher'
+require 'openssl'
 require 'base64'
 
 module VCAP::CloudController::Encryptor
@@ -10,17 +10,29 @@ module VCAP::CloudController::Encryptor
       SecureRandom.hex(4).to_s
     end
 
+    attr_accessor :db_encryption_key
+
+    def generate_key(salt)
+      iter = 200000
+      key_len = 16
+      OpenSSL::PKCS5.pbkdf2_hmac_sha1(db_encryption_key, salt, iter, key_len)
+    end
+
     def encrypt(input, salt)
       return nil unless input
-      Base64.strict_encode64(run_cipher(make_cipher.encrypt, input, salt))
+
+      unless salt
+        salt = salt.to_s
+      end
+
+      iv = SecureRandom.hex
+      (iv + Base64.strict_encode64(run_cipher(make_cipher.encrypt, input, salt, iv)))
     end
 
     def decrypt(encrypted_input, salt)
       return nil unless encrypted_input
-      run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt)
+      run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input[32, (encrypted_input.length - 32)]), salt, encrypted_input[0, 32])
     end
-
-    attr_accessor :db_encryption_key
 
     private
 
@@ -28,8 +40,9 @@ module VCAP::CloudController::Encryptor
       OpenSSL::Cipher::Cipher.new(ALGORITHM)
     end
 
-    def run_cipher(cipher, input, salt)
-      cipher.pkcs5_keyivgen(db_encryption_key, salt)
+    def run_cipher(cipher, input, salt, iv)
+      cipher.key = (generate_key(salt))
+      cipher.iv = (iv)
       cipher.update(input).tap { |result| result << cipher.final }
     end
   end
