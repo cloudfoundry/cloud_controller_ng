@@ -791,53 +791,6 @@ module VCAP::CloudController
         expect(last_response.status).to eq(201)
       end
 
-      context 'with Docker app' do
-        let(:route) { domain.add_route(host: 'app', space: space) }
-        let(:pre_mapped_route) { domain.add_route(host: 'pre_mapped_route', space: space) }
-        let(:docker_app) do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
-          AppFactory.make(
-            space: space,
-            state: 'STARTED',
-            package_hash: 'abc',
-            droplet_hash: 'def',
-            package_state: 'STAGED',
-            diego: true,
-            docker_image: 'some-image',
-          )
-        end
-
-        before do
-          put "/v2/apps/#{docker_app.guid}/routes/#{pre_mapped_route.guid}", {}, json_headers(@headers_for_user)
-        end
-
-        context 'when Docker is disabled' do
-          before do
-            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-          end
-
-          context 'and a route is mapped' do
-            before do
-              put "/v2/apps/#{docker_app.guid}/routes/#{route.guid}", nil, json_headers(@headers_for_user)
-            end
-
-            it 'succeeds' do
-              expect(last_response.status).to eq(201)
-            end
-          end
-
-          context 'and a previously mapped route is unmapped' do
-            before do
-              delete "/v2/apps/#{docker_app.guid}/routes/#{pre_mapped_route.guid}", nil, json_headers(@headers_for_user)
-            end
-
-            it 'succeeds' do
-              expect(last_response.status).to eq(201)
-            end
-          end
-        end
-      end
-
       it 'tells the dea client to update when we remove a url through PUT /v2/apps/:guid' do
         bar_route = @app.add_route(
           host: 'bar',
@@ -861,41 +814,6 @@ module VCAP::CloudController
         put @app_url, MultiJson.dump({ route_guids: [route.guid] }), json_headers(@headers_for_user)
 
         expect(last_response.status).to eq(201)
-      end
-    end
-
-    describe 'on instance number change' do
-      context 'when docker is disabled' do
-        let(:space) { Space.make }
-        let(:stopped_app) { App.make(space: space, state: 'STOPPED', package_hash: 'made-up-package-hash', docker_image: 'docker-image') }
-        let!(:started_app) do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
-          App.make(space: space, state: 'STARTED', package_hash: 'made-up-package-hash', docker_image: 'docker-image')
-        end
-
-        before do
-          FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-        end
-
-        it 'does not return docker disabled message on instance change' do
-          put "/v2/apps/#{started_app.guid}", MultiJson.dump(instances: 2), json_headers(admin_headers)
-
-          expect(last_response.status).to eq(201)
-        end
-
-        it 'returns docker disabled message on start' do
-          put "/v2/apps/#{stopped_app.guid}", MultiJson.dump(state: 'STARTED'), json_headers(admin_headers)
-
-          expect(last_response.status).to eq(400)
-          expect(last_response.body).to match /Docker support has not been enabled/
-          expect(decoded_response['code']).to eq(320003)
-        end
-
-        it 'does not return docker disabled message on stop' do
-          put "/v2/apps/#{started_app.guid}", MultiJson.dump(state: 'STOPPED'), json_headers(admin_headers)
-
-          expect(last_response.status).to eq(201)
-        end
       end
     end
 

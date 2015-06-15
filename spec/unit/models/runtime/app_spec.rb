@@ -66,39 +66,6 @@ module VCAP::CloudController
       it { is_expected.to have_associated :space }
       it { is_expected.to have_associated :stack }
       it { is_expected.to have_associated :routes, associated_instance: ->(app) { Route.make(space: app.space) } }
-
-      context 'with Docker app' do
-        let!(:docker_app) do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
-          AppFactory.make(space: space, docker_image: 'some-image', state: 'STARTED')
-        end
-
-        context 'and Docker disabled' do
-          before do
-            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-          end
-
-          it 'should associate an app with a route' do
-            expect { docker_app.add_route(route) }.not_to raise_error
-          end
-        end
-      end
-
-      context 'with non-docker app' do
-        let(:non_docker_app) do
-          AppFactory.make(space: space)
-        end
-
-        context 'and Docker disabled' do
-          before do
-            FeatureFlag.create(name: 'diego_docker', enabled: false)
-          end
-
-          it 'should associate an app with a route' do
-            expect { non_docker_app.add_route(route) }.not_to raise_error
-          end
-        end
-      end
     end
 
     describe 'Validations' do

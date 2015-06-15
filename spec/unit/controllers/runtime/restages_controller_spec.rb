@@ -54,32 +54,6 @@ module VCAP::CloudController
           end
         end
 
-        context 'when there are validation error' do
-          let!(:application) do
-            FeatureFlag.create(name: 'diego_docker', enabled: true)
-            AppFactory.make(package_hash: 'abc', docker_image: 'some_image', state: 'STARTED')
-          end
-
-          before do
-            allow_any_instance_of(VCAP::CloudController::RestagesController).to receive(:find_guid_and_validate_access).with(:read, application.guid).and_return(application)
-            allow(application).to receive(:package_state).and_return('STAGED')
-          end
-
-          context 'when Docker is disabled' do
-            before do
-              FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-            end
-
-            it 'correctly propagates the error' do
-              restage_request
-
-              expect(last_response.status).to eq(400)
-              expect(decoded_response['code']).to eq(320003)
-              expect(decoded_response['description']).to match(/Docker support has not been enabled./)
-            end
-          end
-        end
-
         describe 'events' do
           before do
             allow(app_event_repository).to receive(:record_app_restage).and_call_original

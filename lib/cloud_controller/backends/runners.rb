@@ -50,14 +50,13 @@ module VCAP::CloudController
     end
 
     def diego_apps_cache_data(batch_size, last_id)
-      diego_apps = App.select(:id, :guid, :version, :updated_at).
+      App.select(:id, :guid, :version, :updated_at).
         where('id > ?', last_id).
         where(state: 'STARTED').
         where(package_state: 'STAGED').
         where('deleted_at IS NULL').
-        where(diego: true)
-      diego_apps = filter_docker_apps(diego_apps) unless FeatureFlag.enabled?('diego_docker')
-      diego_apps.order(:id).
+        where(diego: true).
+        order(:id).
         limit(batch_size).
         select_map([:id, :guid, :version, :updated_at])
     end
@@ -103,10 +102,6 @@ module VCAP::CloudController
 
     def staging_timeout
       @config[:staging][:timeout_in_seconds]
-    end
-
-    def filter_docker_apps(query)
-      query.where(docker_image: nil)
     end
   end
 end

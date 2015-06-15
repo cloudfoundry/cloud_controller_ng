@@ -17,7 +17,7 @@ module VCAP::CloudController
     end
 
     def validate_app(app)
-      if app.docker_image.present? && !FeatureFlag.enabled?('diego_docker')
+      if app.docker_image.present? && docker_disabled?
         raise Errors::ApiError.new_from_details('DockerDisabled')
       end
 
@@ -43,6 +43,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def docker_disabled?
+      !@config[:diego_docker]
+    end
 
     def dea_stager(app)
       Dea::Stager.new(app, @config, @message_bus, @dea_pool, @stager_pool, @runners)

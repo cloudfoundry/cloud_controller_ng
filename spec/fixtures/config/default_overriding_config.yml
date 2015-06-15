@@ -147,6 +147,7 @@ allowed_cors_domains:
 - http://sharon.corr
 
 users_can_select_backend: false
+diego_docker: true
 default_to_diego_backend: true
 allow_app_ssh_access: true
 

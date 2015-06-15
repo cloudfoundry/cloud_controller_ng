@@ -223,6 +223,7 @@ module VCAP::CloudController
 
         optional(:dea_advertisement_timeout_in_seconds) => Integer,
 
+        optional(:diego_docker) => bool,
         optional(:diego_stager_url) => String,
         optional(:diego_tps_url) => String,
         optional(:users_can_select_backend) => bool,
@@ -323,6 +324,7 @@ module VCAP::CloudController
         config[:db][:database] ||= ENV['DB_CONNECTION_STRING']
         config[:default_locale] ||= 'en_US'
         config[:allowed_cors_domains] ||= []
+        config[:diego_docker] ||= false
         config[:default_to_diego_backend] ||= false
         config[:dea_advertisement_timeout_in_seconds] ||= 10
         config[:staging][:minimum_staging_memory_mb] ||= 1024

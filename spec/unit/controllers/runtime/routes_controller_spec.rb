@@ -209,29 +209,6 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_nested_routes({ apps: [:get, :put, :delete] })
       end
-
-      context 'with Docker app' do
-        let(:organization) { Organization.make }
-        let(:domain) { PrivateDomain.make(owning_organization: organization) }
-        let(:space) { Space.make(organization: organization) }
-        let(:route) { Route.make(domain: domain, space: space) }
-        let!(:docker_app) do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
-          AppFactory.make(space: space, docker_image: 'some-image', state: 'STARTED')
-        end
-
-        context 'and Docker disabled' do
-          before do
-            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-          end
-
-          it 'associates the route with the app' do
-            put "/v2/routes/#{route.guid}/apps/#{docker_app.guid}", MultiJson.dump(guid: route.guid), json_headers(admin_headers)
-
-            expect(last_response.status).to eq(201)
-          end
-        end
-      end
     end
 
     describe 'POST /v2/routes' do

@@ -51,6 +51,10 @@ module VCAP::CloudController
           expect(config[:allowed_cors_domains]).to eq([])
         end
 
+        it 'disables docker images on diego' do
+          expect(config[:diego_docker]).to eq(false)
+        end
+
         it 'allows users to select the backend for their apps' do
           expect(config[:users_can_select_backend]).to eq(true)
         end
@@ -150,6 +154,10 @@ module VCAP::CloudController
 
           it 'preserves the backend selection configuration from the file' do
             expect(config[:users_can_select_backend]).to eq(false)
+          end
+
+          it 'preserves the diego configuration from the file' do
+            expect(config[:diego_docker]).to eq(true)
           end
 
           it 'runs apps on diego' do

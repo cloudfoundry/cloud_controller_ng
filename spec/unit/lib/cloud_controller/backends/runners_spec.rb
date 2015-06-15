@@ -5,6 +5,7 @@ module VCAP::CloudController
   describe Runners do
     let(:config) do
       {
+          diego_docker: true,
           staging: {
               timeout_in_seconds: 90
           }
@@ -428,40 +429,7 @@ module VCAP::CloudController
       it 'acquires the data in one select' do
         expect {
           runners.diego_apps_cache_data(100, 0)
-        }.to have_queried_db_times(/SELECT.*FROM.*apps.*/, 1)
-      end
-
-      context 'with Docker app' do
-        let!(:docker_app) do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
-          make_diego_app(docker_image: 'some-image', state: 'STARTED')
-        end
-
-        context 'when docker is enabled' do
-          before do
-            FeatureFlag.find(name: 'diego_docker').update(enabled: true)
-          end
-
-          it 'returns docker apps' do
-            batch = runners.diego_apps_cache_data(100, 0)
-            app_ids = batch.map { |data| data[0] }
-
-            expect(app_ids).to include(docker_app.id)
-          end
-        end
-
-        context 'when docker is disabled' do
-          before do
-            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-          end
-
-          it 'does not return docker apps' do
-            batch = runners.diego_apps_cache_data(100, 0)
-            app_ids = batch.map { |data| data[0] }
-
-            expect(app_ids).not_to include(docker_app.id)
-          end
-        end
+        }.to have_queried_db_times(/SELECT/, 1)
       end
     end
 

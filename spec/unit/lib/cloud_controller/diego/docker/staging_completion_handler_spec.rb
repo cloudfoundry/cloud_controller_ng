@@ -121,10 +121,6 @@ module VCAP::CloudController
             end
             let(:droplet) { app.reload.current_droplet }
 
-            before do
-              FeatureFlag.create(name: 'diego_docker', enabled: true)
-            end
-
             context 'when image was cached' do
               let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id', docker_image: 'user_provided') }
 

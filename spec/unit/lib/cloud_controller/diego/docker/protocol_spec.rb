@@ -6,7 +6,7 @@ module VCAP::CloudController
     module Docker
       describe Protocol do
         before do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
+          TestConfig.override(diego_docker: true)
         end
 
         let(:default_health_check_timeout) { 9999 }

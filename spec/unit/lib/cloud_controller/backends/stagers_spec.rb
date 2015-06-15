@@ -81,31 +81,20 @@ module VCAP::CloudController
         end
       end
 
-      context 'with a docker app' do
-        let(:buildpack)    { instance_double(AutoDetectionBuildpack, custom?: true) }
-        let(:docker_image) do
-          'fake-docker-image'
+      context 'if diego docker support is not enabled' do
+        before do
+          config[:diego_docker] = false
         end
 
-        context 'and Docker disabled' do
-          before do
-            FeatureFlag.create(name: 'diego_docker', enabled: false)
+        context 'and the app has a docker_image' do
+          let(:docker_image) do
+            'fake-docker-image'
           end
 
           it 'raises' do
             expect {
               subject.validate_app(app)
             }.to raise_error(Errors::ApiError, /Docker support has not been enabled/)
-          end
-        end
-
-        context 'and Docker enabled' do
-          before do
-            FeatureFlag.create(name: 'diego_docker', enabled: true)
-          end
-
-          it 'does not raise' do
-            expect { subject.validate_app(app) }.not_to raise_error
           end
         end
       end

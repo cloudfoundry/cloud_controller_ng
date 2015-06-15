@@ -219,10 +219,6 @@ module VCAP::CloudController
       space.in_suspended_org?
     end
 
-    def state_changed?
-      column_changed?(:state)
-    end
-
     def being_stopped?
       column_changed?(:state) && stopped?
     end
