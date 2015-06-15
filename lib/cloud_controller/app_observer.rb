@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       def routes_changed(app)
-        @runners.runner_for_app(app).update_routes if app.started? && app.active?
+        @runners.runner_for_app(app).update_routes if app.started?
       end
 
       private
@@ -61,7 +61,7 @@ module VCAP::CloudController
       end
 
       def react_to_instances_change(app)
-        @runners.runner_for_app(app).scale if app.started? && app.active?
+        @runners.runner_for_app(app).scale if app.started?
       end
     end
   end
