@@ -14,7 +14,7 @@ module VCAP::CloudController::Encryptor
     attr_accessor :db_encryption_key
 
     def encryption
-      @@encryption ||= {
+      @encryption ||= {
         fips_mode: FIPS_MODE,
         fips_algorithm: FIPS_ALGORITHM,
         fips_iv_length: FIPS_IV_LENGTH,
