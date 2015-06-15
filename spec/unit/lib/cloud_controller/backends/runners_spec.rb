@@ -432,11 +432,8 @@ module VCAP::CloudController
       end
 
       context 'with Docker app' do
-        before do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
-        end
-
         let!(:docker_app) do
+          FeatureFlag.create(name: 'diego_docker', enabled: true)
           make_diego_app(docker_image: 'some-image', state: 'STARTED')
         end
 

@@ -209,12 +209,12 @@ module VCAP::CloudController
 
         context 'when docker is enabled' do
           let(:space) { Space.make }
-          let(:docker_app) do
+          let!(:docker_app) do
+            FeatureFlag.create(name: 'diego_docker', enabled: true)
             make_diego_app(docker_image: 'some-image', state: 'STARTED')
           end
 
           before do
-            FeatureFlag.create(name: 'diego_docker', enabled: true)
             TestConfig.override(diego: { staging: 'optional', running: 'optional' })
           end
 

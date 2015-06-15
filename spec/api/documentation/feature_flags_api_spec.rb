@@ -169,7 +169,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
   get '/v2/config/feature_flags/diego_docker' do
     example 'Get the Diego Docker feature flag' do
       explanation '''When enabled, Docker applications are supported by Diego. When disabled, Docker applications will stop running.
-                     It will still be possible to stop and delete them and update their configurations.'''
+                     It will still be possible to stop them, delete them and manipulate their configuration such as routes, instances, services, resources, etc.'''
       client.get '/v2/config/feature_flags/diego_docker', {}, headers
 
       expect(status).to eq(200)

@@ -211,15 +211,12 @@ module VCAP::CloudController
       end
 
       context 'with Docker app' do
-        before do
-          FeatureFlag.create(name: 'diego_docker', enabled: true)
-        end
-
         let(:organization) { Organization.make }
         let(:domain) { PrivateDomain.make(owning_organization: organization) }
         let(:space) { Space.make(organization: organization) }
         let(:route) { Route.make(domain: domain, space: space) }
         let!(:docker_app) do
+          FeatureFlag.create(name: 'diego_docker', enabled: true)
           AppFactory.make(space: space, docker_image: 'some-image', state: 'STARTED')
         end
 

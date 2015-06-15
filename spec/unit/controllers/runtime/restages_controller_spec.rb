@@ -54,35 +54,28 @@ module VCAP::CloudController
           end
         end
 
-        context 'with a Docker app' do
-          before do
+        context 'when there are validation error' do
+          let!(:application) do
             FeatureFlag.create(name: 'diego_docker', enabled: true)
-          end
-
-          let!(:docker_app) do
             AppFactory.make(package_hash: 'abc', docker_image: 'some_image', state: 'STARTED')
           end
 
-          subject(:restage_request) { post("/v2/apps/#{docker_app.guid}/restage", {}, headers_for(account)) }
+          before do
+            allow_any_instance_of(VCAP::CloudController::RestagesController).to receive(:find_guid_and_validate_access).with(:read, application.guid).and_return(application)
+            allow(application).to receive(:package_state).and_return('STAGED')
+          end
 
-          context 'when there are validation errors' do
+          context 'when Docker is disabled' do
             before do
-              allow_any_instance_of(VCAP::CloudController::RestagesController).to receive(:find_guid_and_validate_access).with(:read, docker_app.guid).and_return(docker_app)
-              allow(docker_app).to receive(:package_state).and_return('STAGED')
+              FeatureFlag.find(name: 'diego_docker').update(enabled: false)
             end
 
-            context 'when Docker is disabled' do
-              before do
-                FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-              end
+            it 'correctly propagates the error' do
+              restage_request
 
-              it 'correctly propagates the error' do
-                restage_request
-
-                expect(last_response.status).to eq(400)
-                expect(decoded_response['code']).to eq(320003)
-                expect(decoded_response['description']).to match(/Docker support has not been enabled./)
-              end
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['code']).to eq(320003)
+              expect(decoded_response['description']).to match(/Docker support has not been enabled./)
             end
           end
         end
