@@ -7,7 +7,7 @@ CC_PACKAGE_DIR=/var/vcap/packages/cloud_controller_ng
 
 RUN_DIR=/var/vcap/sys/run/cloud_controller_migration
 LOG_DIR=/var/vcap/sys/log/cloud_controller_migration
-PID_FILE=$RUN_DIR/cloud_controller_migration.pid
+PIDFILE=$RUN_DIR/cloud_controller_migration.pid
 
 export CONFIG_DIR=$CC_JOB_DIR/config
 export CLOUD_CONTROLLER_NG_CONFIG=$CONFIG_DIR/cloud_controller_ng.yml
@@ -23,17 +23,16 @@ source /var/vcap/packages/common/utils.sh
 case $1 in
 
   start)
-    pid_guard $PIDFILE "Cloud controller migration"
-
     mkdir -p $RUN_DIR
     mkdir -p $LOG_DIR
-
 
     chown vcap:vcap $RUN_DIR
     chown vcap:vcap $LOG_DIR
 
-    echo "$$" > $PID_FILE
-    chown vcap:vcap $PID_FILE
+    pid_guard $PIDFILE "Cloud controller migration"
+
+    echo "$$" > $PIDFILE
+    chown vcap:vcap $PIDFILE
 
     cd $CC_PACKAGE_DIR/cloud_controller_ng
 
@@ -47,11 +46,11 @@ case $1 in
     fi
     <% end %>
 
-    sleep 100000d
+    exec sleep 100000d
     ;;
 
   stop)
-    kill_and_wait $PID_FILE
+    kill_and_wait $PIDFILE
     ;;
 
   *)
