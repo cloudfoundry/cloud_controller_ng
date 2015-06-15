@@ -100,14 +100,12 @@ module VCAP::CloudController
 
         it 'should return the override value' do
           expect(FeatureFlag.enabled?(key)).to eq(!default_value)
-          expect(FeatureFlag.disabled?(key)).to eq(default_value)
         end
       end
 
       context 'when the feature flag is not overridden' do
         it 'should return the default value' do
           expect(FeatureFlag.enabled?(key)).to eq(default_value)
-          expect(FeatureFlag.disabled?(key)).to_not eq(default_value)
         end
       end
 
@@ -115,9 +113,6 @@ module VCAP::CloudController
         it 'blows up somehow' do
           expect {
             FeatureFlag.enabled?('bogus_feature_flag')
-          }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
-          expect {
-            FeatureFlag.disabled?('bogus_feature_flag')
           }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
         end
       end
