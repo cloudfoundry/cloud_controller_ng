@@ -138,6 +138,12 @@ loggregator:
   url: ws<%= "s" if p("logger_endpoint.use_ssl") %>://loggregator.<%= p("system_domain") %>:<%= p("logger_endpoint.port") %>
 <% end %>
 
+doppler:
+  enabled: <%= p("doppler.enabled") %>
+  <% if p("doppler.enabled") %>
+  url: ws<%= "s" if p("doppler.use_ssl") %>://doppler.<%= p("system_domain") %>:<%= p("doppler.port") %>
+  <% end %>
+
 <% db = p("ccdb.databases").find { |db| db["tag"] == "cc" } %>
 <% db_role = p("ccdb.roles").find { |role| role["tag"] == "admin" } %>
 db: &db

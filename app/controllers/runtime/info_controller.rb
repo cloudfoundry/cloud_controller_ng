@@ -23,6 +23,10 @@ module VCAP::CloudController
         info[:logging_endpoint] = @config[:loggregator][:url]
       end
 
+      if @config[:doppler][:enabled]
+        info[:doppler_logging_endpoint] = @config[:doppler][:url]
+      end
+
       if @config[:info][:custom]
         info[:custom] = @config[:info][:custom]
       end

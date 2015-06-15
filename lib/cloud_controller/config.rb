@@ -202,6 +202,11 @@ module VCAP::CloudController
           optional(:shared_secret) => String,
         },
 
+        optional(:doppler) => {
+          enabled: bool,
+          optional(:url) => String
+        },
+
         optional(:request_timeout_in_seconds) => Integer,
         optional(:skip_cert_verify) => bool,
 

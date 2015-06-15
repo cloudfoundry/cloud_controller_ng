@@ -44,6 +44,20 @@ module VCAP::CloudController
         expect(hash['logging_endpoint']).to eq('loggregator_url')
       end
 
+      it 'includes the doppler_logging_endpoint when enabled' do
+        TestConfig.override(doppler: { enabled: true, url: 'doppler_url' })
+        get '/v2/info', {}, {}
+        hash = MultiJson.load(last_response.body)
+        expect(hash['doppler_logging_endpoint']).to eq('doppler_url')
+      end
+
+      it 'excludes the doppler_logging_endpoint when disabled' do
+        TestConfig.override(doppler: { enabled: false })
+        get '/v2/info', {}, {}
+        hash = MultiJson.load(last_response.body)
+        expect(hash['doppler_logging_endpoint']).to be_nil
+      end
+
       it 'includes cli version info when confgired' do
         TestConfig.override(info: {
           min_cli_version: 'min_cli_version',
