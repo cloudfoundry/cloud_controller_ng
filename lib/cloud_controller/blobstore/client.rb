@@ -126,7 +126,11 @@ module CloudController
 
       def delete_files(files_to_delete)
         if connection.respond_to?(:delete_multiple_objects)
-          connection.delete_multiple_objects(@directory_key, files_to_delete)
+          # AWS needs the file key to work; other providers with multiple delete
+          # are currently not supported. When support is added this code may
+          # need an update.
+          keys = files_to_delete.collect(&:key)
+          connection.delete_multiple_objects(@directory_key, keys)
         else
           files_to_delete.each { |f| delete_file(f) }
         end

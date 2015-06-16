@@ -656,7 +656,7 @@ module CloudController
               delete_response = client.delete_files(files)
 
               expect(delete_response[:body]['DeleteResult'].length).to eq(files.length)
-              expect(connection).to have_received(:delete_multiple_objects).with(directory_key, files)
+              expect(connection).to have_received(:delete_multiple_objects).with(directory_key, ['ab/cd/abcdef123456', 'ab/56/ab56'])
             end
           end
         end
