@@ -987,7 +987,7 @@ module VCAP::CloudController
         put "/v2/apps/#{app_obj.guid}", MultiJson.dump(instances: -1), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
-        expect(last_response.body).to match /instances less than 1/
+        expect(last_response.body).to match /instances less than 0/
         expect(decoded_response['code']).to eq(100001)
       end
 

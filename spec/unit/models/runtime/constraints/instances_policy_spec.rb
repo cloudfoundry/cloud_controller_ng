@@ -8,21 +8,16 @@ describe InstancesPolicy do
   describe 'instances' do
     it 'registers an error if requested instances is negative' do
       app.instances = -1
-      expect(validator).to validate_with_error(app, :instances, :less_than_one)
+      expect(validator).to validate_with_error(app, :instances, :less_than_zero)
     end
 
-    it 'registers an error if requested instances is zero' do
+    it 'does not register error if the requested instances is 0' do
       app.instances = 0
-      expect(validator).to validate_with_error(app, :instances, :less_than_one)
-    end
-
-    it 'does not register error if the requested instances is 1' do
-      app.instances = 1
       expect(validator).to validate_without_error(app)
     end
 
-    it 'does not register error if the requested instances is greater than 1' do
-      app.instances = 2
+    it 'does not register error if the requested instances is greater than 0' do
+      app.instances = 1
       expect(validator).to validate_without_error(app)
     end
   end

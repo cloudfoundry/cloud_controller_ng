@@ -71,7 +71,7 @@ module VCAP::CloudController
           Errors::ApiError.new_from_details('QuotaInstanceMemoryLimitExceeded')
         end
       elsif instance_number_errors
-        Errors::ApiError.new_from_details('AppInvalid', 'Number of instances less than 1')
+        Errors::ApiError.new_from_details('AppInvalid', 'Number of instances less than 0')
       elsif state_errors
         Errors::ApiError.new_from_details('AppInvalid', 'Invalid app state provided')
       else
