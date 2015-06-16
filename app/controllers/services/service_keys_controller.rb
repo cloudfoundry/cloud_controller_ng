@@ -57,7 +57,12 @@ module VCAP::CloudController
 
     delete path_guid, :delete
     def delete(guid)
-      service_key = find_guid_and_validate_access(:delete, guid, ServiceKey)
+      begin
+        service_key = find_guid_and_validate_access(:delete, guid, ServiceKey)
+      rescue VCAP::Errors::ApiError => e
+        e.name == 'NotAuthorized' ? raise(VCAP::Errors::ApiError.new_from_details('ServiceKeyNotFound', guid)) : raise(e)
+      end
+
       key_manager = ServiceKeyManager.new(@services_event_repository, self, logger)
       key_manager.delete_service_key(service_key)
 
