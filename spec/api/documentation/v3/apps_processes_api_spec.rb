@@ -113,9 +113,11 @@ resource 'Apps (Experimental)', type: :api do
   put '/v3/apps/:guid/processes/:type/scale' do
     parameter :instances, 'Number of instances'
     parameter :memory_in_mb, 'The memory in mb allocated per instance'
+    parameter :disk_in_mb, 'The disk in mb allocated per instance'
 
     let(:instances) { 3 }
     let(:memory_in_mb) { 100 }
+    let(:disk_in_mb) { 100 }
     let(:guid) { app_model.guid }
     let(:type) { process.type }
     let(:raw_post) { MultiJson.dump(params, pretty: true) }
@@ -140,7 +142,7 @@ resource 'Apps (Experimental)', type: :api do
         'command'      => process.command,
         'instances'    => instances,
         'memory_in_mb' => memory_in_mb,
-        'disk_in_mb'   => 1024,
+        'disk_in_mb'   => disk_in_mb,
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         '_links'       => {
