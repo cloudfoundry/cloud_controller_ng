@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class AppsController < RestController::ModelController
     def self.dependencies
-      [:app_event_repository]
+      [:app_event_repository, :droplet_blobstore, :blobstore_url_generator, :blob_sender]
     end
 
     define_attributes do
@@ -89,6 +89,9 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @app_event_repository = dependencies.fetch(:app_event_repository)
+      @blobstore = dependencies.fetch(:droplet_blobstore)
+      @blobstore_url_generator = dependencies.fetch(:blobstore_url_generator)
+      @blob_sender = dependencies.fetch(:blob_sender)
     end
 
     def delete(guid)
@@ -108,6 +111,21 @@ module VCAP::CloudController
           recursive?)
 
       [HTTP::NO_CONTENT, nil]
+    end
+
+    get '/v2/apps/:guid/droplet/download', :download_droplet
+    def download_droplet(guid)
+      app = find_guid_and_validate_access(:read, guid)
+
+      if @blobstore.local?
+        droplet = app.current_droplet
+        raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless droplet && droplet.blob
+        @blob_sender.send_blob(app.guid, 'droplet', droplet.blob, self)
+      else
+        url = @blobstore_url_generator.droplet_download_url(app)
+        raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}") unless url
+        redirect url
+      end
     end
 
     private

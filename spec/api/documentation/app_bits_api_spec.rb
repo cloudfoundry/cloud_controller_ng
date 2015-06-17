@@ -117,6 +117,35 @@ resource 'Apps', type: [:api, :legacy_api] do
     end
   end
 
+  get '/v2/apps/:guid/droplet/download' do
+    let(:async) { false }
+    let(:blobstore) do
+      CloudController::DependencyLocator.instance.droplet_blobstore
+    end
+
+    before do
+      app_obj.droplet_hash = 'abcdef'
+      app_obj.save
+
+      droplet_file = Tempfile.new(app_obj.guid)
+      droplet_file.write('droplet contents')
+      droplet_file.close
+
+      droplet = CloudController::DropletUploader.new(app_obj, blobstore)
+      droplet.upload(droplet_file.path)
+    end
+
+    example 'Downloads the staged droplet for an App' do
+      explanation <<-eos
+        When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the droplet.
+      eos
+
+      client.get "/v2/apps/#{app_obj.guid}/droplet/download", {}, headers
+      expect(status).to eq(302)
+      expect(response_headers['Location']).to include('cc-droplets.s3.amazonaws.com')
+    end
+  end
+
   post '/v2/apps/:guid/copy_bits' do
     let(:src_app) { VCAP::CloudController::AppFactory.make }
     let(:dest_app) { VCAP::CloudController::AppFactory.make }
