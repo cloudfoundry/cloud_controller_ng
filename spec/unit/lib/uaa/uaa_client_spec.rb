@@ -120,5 +120,72 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#id_for_username' do
+      let(:username) { 'user@example.com' }
+
+      it 'returns the id for the username' do
+        response_body = {
+          'resources' => [
+            { 'id' => '123', 'origin' => 'uaa', 'username' => 'user@example.com' }],
+          'schemas' => ['urn:scim:schemas:core:1.0'],
+          'startindex' => 1,
+          'itemsperpage' => 100,
+          'totalresults' => 1 }
+
+        WebMock::API.stub_request(:get, "#{url}/ids/Users").
+          with(query: { 'filter' => 'username eq "user@example.com"' }).
+          to_return(
+            status: 200,
+            headers: { 'content-type' => 'application/json' },
+            body: response_body.to_json)
+
+        expect(uaa_client.id_for_username(username)).to eq('123')
+      end
+
+      it 'returns nil when given username does not exist' do
+        response_body = {
+          'resources' => [],
+          'schemas' => ['urn:scim:schemas:core:1.0'],
+          'startindex' => 1,
+          'itemsperpage' => 100,
+          'totalresults' => 0 }
+
+        WebMock::API.stub_request(:get, "#{url}/ids/Users").
+          with(query: { 'filter' => 'username eq "user@example.com"' }).
+          to_return(
+            status: 200,
+            headers: { 'content-type' => 'application/json' },
+            body: response_body.to_json)
+
+        expect(uaa_client.id_for_username(username)).to be_nil
+      end
+
+      context 'when UAA is unavailable' do
+        before do
+          allow(uaa_client).to receive(:token_info).and_raise(UaaUnavailable)
+        end
+
+        it 'raises UaaUnavailable' do
+          expect {
+            uaa_client.id_for_username(username)
+          }.to raise_error(UaaUnavailable)
+        end
+      end
+
+      context 'when the endpoint is disabled' do
+        before do
+          scim = double('scim')
+          allow(scim).to receive(:query).and_raise(CF::UAA::TargetError)
+          allow(uaa_client).to receive(:scim).and_return(scim)
+        end
+
+        it 'raises UaaUnavailable' do
+          expect {
+            uaa_client.id_for_username(username)
+          }.to raise_error(UaaEndpointDisabled)
+        end
+      end
+    end
   end
 end

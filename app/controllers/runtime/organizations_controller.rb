@@ -4,12 +4,13 @@ require 'queries/organization_user_roles_fetcher'
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
     def self.dependencies
-      [:username_and_roles_populating_collection_renderer]
+      [:username_and_roles_populating_collection_renderer, :username_lookup_uaa_client]
     end
 
     def inject_dependencies(dependencies)
       super
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
+      @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
     end
 
     define_attributes do
@@ -102,6 +103,32 @@ module VCAP::CloudController
     def get_memory_usage(guid)
       org = find_guid_and_validate_access(:read, guid)
       [HTTP::OK, MultiJson.dump({ memory_usage_in_mb: OrganizationMemoryCalculator.get_memory_usage(org) })]
+    end
+
+    [:user, :manager, :billing_manager, :auditor].each do |role|
+      plural_role = role.to_s.pluralize
+
+      put "/v2/organizations/:guid/#{plural_role}", "add_#{role}_by_username".to_sym
+
+      define_method("add_#{role}_by_username") do |guid|
+        username = parse_and_validate_json(body)['username']
+
+        begin
+          user_id = @username_lookup_uaa_client.id_for_username(username)
+        rescue UaaUnavailable
+          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
+        rescue UaaEndpointDisabled
+          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
+        end
+        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
+
+        user = User.where(guid: user_id).first || User.create(guid: user_id)
+
+        org = find_guid_and_validate_access(:update, guid)
+        org.send("add_#{role}", user)
+
+        [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
+      end
     end
 
     def delete(guid)

@@ -42,6 +42,16 @@ module VCAP::CloudController
       {}
     end
 
+    def id_for_username(username)
+      filter_string = %(username eq "#{username}")
+      results = scim.query(:user_id, filter: filter_string)
+
+      user = results['resources'].first
+      user && user['id']
+    rescue CF::UAA::TargetError
+      raise UaaEndpointDisabled
+    end
+
     private
 
     def token_issuer

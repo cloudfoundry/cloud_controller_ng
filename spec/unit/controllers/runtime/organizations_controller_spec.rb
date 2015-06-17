@@ -714,5 +714,66 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'adding user roles by username' do
+      [:user, :manager, :billing_manager, :auditor].each do |role|
+        plural_role = role.to_s.pluralize
+        describe "PUT /v2/organizations/:guid/#{plural_role}" do
+          let(:user) { User.make(username: 'larry_the_user') }
+
+          before do
+            allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
+          end
+
+          it "makes the user an org #{role}" do
+            put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+            expect(last_response.status).to eq(201)
+            expect(org.send(plural_role)).to include(user)
+            expect(decoded_response['metadata']['guid']).to eq(org.guid)
+          end
+
+          it "makes the user an org #{role}, and creates a user record when one does not exist" do
+            expect_any_instance_of(UaaClient).to receive(:id_for_username).with('uaa-only-user@example.com').and_return('user-guid')
+            put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: 'uaa-only-user@example.com' }), admin_headers
+
+            expect(last_response.status).to eq(201)
+            expect(org.send("#{plural_role}_dataset").where(guid: 'user-guid')).to_not be_empty
+          end
+
+          it 'verifies the user has update access to the org' do
+            expect_any_instance_of(OrganizationsController).to receive(:find_guid_and_validate_access).with(:update, org.guid).and_call_original
+            put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+          end
+
+          it 'returns a 404 when the user does not exist in UAA' do
+            expect_any_instance_of(UaaClient).to receive(:id_for_username).with('fake@example.com').and_return(nil)
+
+            put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' }), admin_headers
+
+            expect(last_response.status).to eq(404)
+            expect(decoded_response['code']).to eq(20003)
+          end
+
+          it 'returns an error when UAA is not available' do
+            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaUnavailable)
+
+            put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+            expect(last_response.status).to eq(503)
+            expect(decoded_response['code']).to eq(20004)
+          end
+
+          it 'returns an error when UAA endpoint is disabled' do
+            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
+
+            put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+            expect(last_response.status).to eq(501)
+            expect(decoded_response['code']).to eq(20005)
+          end
+        end
+      end
+    end
   end
 end
