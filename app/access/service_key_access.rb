@@ -9,5 +9,10 @@ module VCAP::CloudController
     def delete?(service_key)
       create?(service_key)
     end
+
+    def read?(service_key)
+      return true if admin_user?
+      service_key.service_instance.space.developers.include?(context.user)
+    end
   end
 end

@@ -446,8 +446,25 @@ module VCAP::CloudController
       let(:instance)  { ManagedServiceInstance.make(space: space) }
       let(:service_key) { ServiceKey.make(name: 'fake-key', service_instance: instance) }
 
-      before do
-        service_key.save
+      def verify_not_found_response(service_key_guid)
+        expect(last_response).to have_status_code 404
+        expect(decoded_response.fetch('error_code')).to eq('CF-ServiceKeyNotFound')
+        expect(decoded_response.fetch('description')).to eq("The service key could not be found: #{service_key_guid}")
+      end
+
+      context 'Not authorized to perform get operation' do
+        let(:manager) { make_manager_for_space(service_key.service_instance.space) }
+        let(:auditor) { make_auditor_for_space(service_key.service_instance.space) }
+
+        it 'SpaceManager role can not get a service key' do
+          get "/v2/service_keys/#{service_key.guid}", '', headers_for(manager)
+          verify_not_found_response(service_key.guid)
+        end
+
+        it 'SpaceAuditor role can not get a service key' do
+          get "/v2/service_keys/#{service_key.guid}", '', headers_for(auditor)
+          verify_not_found_response(service_key.guid)
+        end
       end
 
       it 'returns the specific service key' do

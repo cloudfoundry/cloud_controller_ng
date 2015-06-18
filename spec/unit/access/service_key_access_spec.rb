@@ -58,7 +58,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :no_access
     end
 
     context 'space manager (defensive)' do
@@ -67,7 +67,7 @@ module VCAP::CloudController
         space.add_manager(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :no_access
     end
 
     context 'space developer' do
