@@ -568,7 +568,9 @@ module VCAP::CloudController
             let(:reply_error_info) { { 'type' => 'NoAppDetectedError', 'message' => 'uh oh' } }
 
             it 'sets the staging failed reason to the specified value' do
-              expect { stage }.to change { app.staging_failed_reason }.to('NoAppDetectedError')
+              stage
+              expect(app.staging_failed_reason).to eq('NoAppDetectedError')
+              expect(app.staging_failed_description).to eq('uh oh')
             end
           end
 

@@ -45,7 +45,7 @@ module VCAP::CloudController
                       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
                       :state, :version, :command, :console, :debug, :staging_task_id,
                       :package_state, :health_check_type, :health_check_timeout,
-                      :staging_failed_reason, :diego, :docker_image, :package_updated_at,
+                      :staging_failed_reason, :staging_failed_description, :diego, :docker_image, :package_updated_at,
                       :detected_start_command, :enable_ssh, :docker_credentials_json
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
@@ -462,9 +462,10 @@ module VCAP::CloudController
       self.package_pending_since = nil
     end
 
-    def mark_as_failed_to_stage(reason='StagingError')
+    def mark_as_failed_to_stage(reason='StagingError', description=nil)
       self.package_state = 'FAILED'
       self.staging_failed_reason = reason
+      self.staging_failed_description = description
       self.package_pending_since = nil
       self.state = 'STOPPED' if diego?
       save

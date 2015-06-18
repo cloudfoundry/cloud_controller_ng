@@ -507,6 +507,7 @@ module VCAP::CloudController
           :space_guid,
           :stack_guid,
           :staging_failed_reason,
+          :staging_failed_description,
           :staging_task_id,
           :state,
           :version
@@ -1713,6 +1714,16 @@ module VCAP::CloudController
           expect {
             app.mark_as_failed_to_stage('MyReason')
           }.to raise_error(Sequel::ValidationFailed)
+        end
+      end
+
+      context 'when a description is given' do
+        App::STAGING_FAILED_REASONS.each do |reason|
+          it 'sets the requested staging failed reason' do
+            expect {
+              app.mark_as_failed_to_stage(reason, "#{reason} description")
+            }.to change { app.staging_failed_description }.to("#{reason} description")
+          end
         end
       end
 

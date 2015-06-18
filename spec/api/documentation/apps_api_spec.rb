@@ -55,6 +55,9 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :production, 'Deprecated.', deprecated: true, default: true, valid_values: [true, false]
     field :console, 'Open the console port for the app (at $CONSOLE_PORT).', deprecated: true, default: false, valid_values: [true, false]
     field :debug, 'Open the debug port for the app (at $DEBUG_PORT).', deprecated: true, default: false, valid_values: [true, false]
+
+    field :staging_failed_reason, 'Reason for application staging failures', default: nil
+    field :staging_failed_description, 'Detailed description for the staging_failed_reason', default: nil
   end
 
   describe 'Standard endpoints' do
