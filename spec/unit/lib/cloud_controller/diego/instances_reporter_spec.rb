@@ -17,22 +17,22 @@ module VCAP::CloudController
             index: 0,
             state: 'RUNNING',
             details: 'some-details',
-            since: 1,
+            uptime: 1,
             host: 'myhost',
             port: 8080,
             stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
           },
-          { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', since: 2, host: 'myhost1', port: 8081,
+          { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', uptime: 2, host: 'myhost1', port: 8081,
             stats: { time: usage_time, cpu: 70, mem: 128, disk: 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', since: 3, host: 'myhost1', port: 8081,
+          { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', uptime: 3, host: 'myhost1', port: 8081,
             stats: { time: usage_time, cpu: 70, mem: 128, disk: 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'RUNNING', since: 4, host: 'myhost2', port: 8082,
+          { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'RUNNING', uptime: 4, host: 'myhost2', port: 8082,
             stats: { time: usage_time, cpu: 80, mem: 256, disk: 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-E', index: 2, state: 'STARTING', since: 5, host: 'myhost2', port: 8082,
+          { process_guid: 'process-guid', instance_guid: 'instance-E', index: 2, state: 'STARTING', uptime: 5, host: 'myhost2', port: 8082,
             stats: { time: usage_time, cpu: 80, mem: 256, disk: 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-F', index: 3, state: 'STARTING', since: 6, host: 'myhost3', port: 8083,
+          { process_guid: 'process-guid', instance_guid: 'instance-F', index: 3, state: 'STARTING', uptime: 6, host: 'myhost3', port: 8083,
             stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-G', index: 4, state: 'CRASHED', since: 7, host: 'myhost4', port: 8084,
+          { process_guid: 'process-guid', instance_guid: 'instance-G', index: 4, state: 'CRASHED', uptime: 7, host: 'myhost4', port: 8084,
             stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
         ]
       }
@@ -49,9 +49,9 @@ module VCAP::CloudController
           expect(tps_client).to have_received(:lrp_instances).with(app)
           expect(result).to eq(
             {
-              0 => { state: 'RUNNING', details: 'some-details', since: 1 },
-              1 => { state: 'CRASHED', since: 3 },
-              2 => { state: 'STARTING', since: 5 },
+              0 => { state: 'RUNNING', details: 'some-details', uptime: 1 },
+              1 => { state: 'CRASHED', uptime: 3 },
+              2 => { state: 'STARTING', uptime: 5 },
             })
         end
 
@@ -112,8 +112,8 @@ module VCAP::CloudController
           context 'when a desired instance is missing' do
             let(:instances_to_return) {
               [
-                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', since: 1 },
-                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', since: 4 },
+                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', uptime: 4 },
               ]
             }
 
@@ -128,10 +128,10 @@ module VCAP::CloudController
           context 'when multiple instances are reporting as running/started at a desired index' do
             let(:instances_to_return) {
               [
-                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', since: 1 },
-                { process_guid: 'process-guid', instance_guid: 'instance-B', index: 0, state: 'STARTING', since: 1 },
-                { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'RUNNING', since: 1 },
-                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', since: 4 },
+                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-B', index: 0, state: 'STARTING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', uptime: 4 },
               ]
             }
 
@@ -146,10 +146,10 @@ module VCAP::CloudController
           context 'when there are undesired instances that are running/starting' do
             let(:instances_to_return) {
               [
-                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', since: 1 },
-                { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', since: 1 },
-                { process_guid: 'process-guid', instance_guid: 'instance-C', index: 2, state: 'STARTING', since: 4 },
-                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 3, state: 'RUNNING', since: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-C', index: 2, state: 'STARTING', uptime: 4 },
+                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 3, state: 'RUNNING', uptime: 1 },
               ]
             }
 
@@ -164,10 +164,10 @@ module VCAP::CloudController
           context 'when there are crashed instances at a desired index' do
             let(:instances_to_return) {
               [
-                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', since: 1 },
-                { process_guid: 'process-guid', instance_guid: 'instance-B', index: 0, state: 'CRASHED', since: 1 },
-                { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', since: 1 },
-                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', since: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-B', index: 0, state: 'CRASHED', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', uptime: 1 },
+                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', uptime: 1 },
               ]
             }
 
@@ -218,7 +218,7 @@ module VCAP::CloudController
 
           expect(tps_client).to have_received(:lrp_instances).with(app)
           expect(result).to eq([
-            { 'instance' => 'instance-C', 'since' => 3 },
+            { 'instance' => 'instance-C', 'uptime' => 3 },
           ])
         end
 
@@ -260,7 +260,7 @@ module VCAP::CloudController
                   'uris' => app.uris,
                   'host' => 'myhost',
                   'port' => 8080,
-                  'uptime' => instances_to_return[0][:since],
+                  'uptime' => instances_to_return[0][:uptime],
                   'mem_quota'  => app[:memory] * 1024 * 1024,
                   'disk_quota' => app[:disk_quota] * 1024 * 1024,
                   'fds_quota' => app.file_descriptors,
@@ -279,7 +279,7 @@ module VCAP::CloudController
                   'uris' => app.uris,
                   'host' => 'myhost1',
                   'port' => 8081,
-                  'uptime' => instances_to_return[2][:since],
+                  'uptime' => instances_to_return[2][:uptime],
                   'mem_quota'  => app[:memory] * 1024 * 1024,
                   'disk_quota' => app[:disk_quota] * 1024 * 1024,
                   'fds_quota' => app.file_descriptors,
@@ -298,7 +298,7 @@ module VCAP::CloudController
                   'uris' => app.uris,
                   'host' => 'myhost2',
                   'port' => 8082,
-                  'uptime' => instances_to_return[4][:since],
+                  'uptime' => instances_to_return[4][:uptime],
                   'mem_quota'  => app[:memory] * 1024 * 1024,
                   'disk_quota' => app[:disk_quota] * 1024 * 1024,
                   'fds_quota' => app.file_descriptors,
@@ -338,7 +338,7 @@ module VCAP::CloudController
               'uris' => app.uris,
               'host' => 'myhost',
               'port' => 8080,
-              'uptime' => instances_to_return[0][:since],
+              'uptime' => instances_to_return[0][:uptime],
               'mem_quota'  => app[:memory] * 1024 * 1024,
               'disk_quota' => app[:disk_quota] * 1024 * 1024,
               'fds_quota' => app.file_descriptors,

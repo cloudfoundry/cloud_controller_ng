@@ -14,7 +14,7 @@ module VCAP::CloudController
         for_each_desired_instance(instances, app) do |instance|
           info = {
             state: instance[:state],
-            since: instance[:since],
+            uptime: instance[:uptime],
           }
           info[:details] = instance[:details] if instance[:details]
           result[instance[:index]] = info
@@ -60,7 +60,7 @@ module VCAP::CloudController
           if instance[:state] == 'CRASHED'
             result << {
                 'instance' => instance[:instance_guid],
-                'since'    => instance[:since],
+                'uptime'    => instance[:uptime],
             }
           end
         end
@@ -86,7 +86,7 @@ module VCAP::CloudController
               'uris' => app.uris,
               'host' => instance[:host],
               'port' => instance[:port],
-              'uptime' => instance[:since],
+              'uptime' => instance[:uptime],
               'mem_quota'  => app[:memory] * 1024 * 1024,
               'disk_quota' => app[:disk_quota] * 1024 * 1024,
               'fds_quota' => app.file_descriptors,
@@ -128,7 +128,7 @@ module VCAP::CloudController
           unless reported_instances[i]
             reported_instances[i] = {
                 state: 'DOWN',
-                since: Time.now.utc.to_i,
+                uptime: 0,
             }
           end
         end
