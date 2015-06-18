@@ -219,6 +219,10 @@ module VCAP::CloudController
       space.in_suspended_org?
     end
 
+    def being_started?
+      column_changed?(:state) && started?
+    end
+
     def being_stopped?
       column_changed?(:state) && stopped?
     end
@@ -434,6 +438,13 @@ module VCAP::CloudController
 
     def started?
       state == 'STARTED'
+    end
+
+    def active?
+      if diego? && docker_image.present?
+        return false unless FeatureFlag.enabled?('diego_docker')
+      end
+      true
     end
 
     def stopped?
