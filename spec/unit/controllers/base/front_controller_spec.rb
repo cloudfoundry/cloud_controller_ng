@@ -2,6 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe FrontController do
+    let(:fake_logger) { double(Steno::Logger, info: nil) }
     before :all do
       FrontController.get '/test_front_endpoint' do
         'test'
@@ -38,6 +39,22 @@ module VCAP::CloudController
         it 'maintains the default locale' do
           get '/test_front_endpoint', '', {}
           expect(I18n.locale).to eq(:metropolis)
+        end
+      end
+    end
+
+    describe 'log request id and status code for all requests' do
+      context 'get request' do
+
+        before do
+          allow(Steno).to receive(:logger).with(anything()).and_return(fake_logger)
+        end
+
+        it 'validate logging' do
+          get '/test_front_endpoint', '', {}
+          request_id = last_response.headers['X-Vcap-Request-Id']
+          request_status = last_response.status.to_s
+          expect(fake_logger).to have_received(:info).with("Vcap-Request-Id: #{request_id}; status: #{request_status}; processed")
         end
       end
     end
