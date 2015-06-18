@@ -150,7 +150,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
           allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
 
-          client.put "v2/organizations/#{organization.guid}/users", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
+          client.put "v2/organizations/#{organization.guid}/users", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
           expect(status).to eq(201)
 
           standard_entity_response parsed_response, :organization
@@ -180,7 +180,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
           allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
 
-          client.put "v2/organizations/#{organization.guid}/managers", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
+          client.put "v2/organizations/#{organization.guid}/managers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
           expect(status).to eq(201)
 
           standard_entity_response parsed_response, :organization
@@ -209,7 +209,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
           allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
 
-          client.put "v2/organizations/#{organization.guid}/billing_managers", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
+          client.put "v2/organizations/#{organization.guid}/billing_managers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
           expect(status).to eq(201)
 
           standard_entity_response parsed_response, :organization
@@ -238,7 +238,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
           allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
 
-          client.put "v2/organizations/#{organization.guid}/auditors", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
+          client.put "v2/organizations/#{organization.guid}/auditors", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
           expect(status).to eq(201)
 
           standard_entity_response parsed_response, :organization
