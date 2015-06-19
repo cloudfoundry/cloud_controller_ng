@@ -10,32 +10,32 @@ module VCAP::CloudController
         services_event_repository: services_event_repo
       )
     end
+    let(:service_broker) { ServiceBroker.make }
+    let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
+    let(:old_service_plan) { ServicePlan.make(:v2, service: service) }
+    let(:new_service_plan) { ServicePlan.make(:v2, service: service) }
+    let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan,
+                                                         tags: [],
+                                                         name: 'Old name')
+    }
+    updated_name = 'New name'
+    updated_parameters = { 'thing1' => 'thing2' }
+    updated_tags = ['tag1', 'tag2']
+    let(:request_attrs) {
+      {
+        'parameters' => updated_parameters,
+        'name' => updated_name,
+        'tags' => updated_tags,
+        'service_plan_guid' => new_service_plan.guid
+      }
+    }
 
     describe 'updating multiple attributes' do
-      let(:service_broker) { ServiceBroker.make }
-      let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
-      let(:old_service_plan) { ServicePlan.make(:v2, service: service) }
-      let(:new_service_plan) { ServicePlan.make(:v2, service: service) }
-      let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan,
-                                                           tags: [],
-                                                           name: 'Old name')
-      }
-
       before do
         stub_update service_instance
       end
 
       it 'can update all the attributes at the same time' do
-        updated_name = 'New name'
-        updated_parameters = { 'thing1' => 'thing2' }
-        updated_tags = ['tag1', 'tag2']
-        request_attrs = {
-          'parameters' => updated_parameters,
-          'name' => updated_name,
-          'tags' => updated_tags,
-          'service_plan_guid' => new_service_plan.guid
-        }
-
         service_instance_update.update_service_instance(service_instance, request_attrs)
 
         service_instance.reload
@@ -79,7 +79,7 @@ module VCAP::CloudController
             service_instance.reload
 
             expect(a_request(:patch, update_url(service_instance))).
-                to have_been_made.times(1)
+              to have_been_made.times(1)
             expect(service_instance.last_operation.type).to eq('update')
             expect(service_instance.last_operation.state).to eq('failed')
           end
@@ -158,6 +158,84 @@ module VCAP::CloudController
               service_instance.reload
               expect(service_instance.service_plan.guid).to eq(old_service_plan.guid)
             end
+          end
+        end
+      end
+    end
+
+    describe 'passing in a single attribute to update' do
+      before do
+        stub_update service_instance
+      end
+
+      context 'arbitrary params are the only change' do
+        request_attrs = { 'parameters' => updated_parameters }
+
+        it 'sends a request to the broker updating only parameters' do
+          service_instance_update.update_service_instance(service_instance, request_attrs)
+
+          expect(
+            a_request(:patch, update_url(service_instance)).with(
+              body: hash_including({
+                  'parameters' => updated_parameters,
+                  'plan_id' => old_service_plan.broker_provided_id,
+                  'previous_values' => {
+                    'plan_id' => old_service_plan.broker_provided_id,
+                    'service_id' => service_instance.service.broker_provided_id,
+                    'organization_id' => service_instance.organization.guid,
+                    'space_id' => service_instance.space.guid
+                  }
+                })
+            )
+          ).to have_been_made.once
+        end
+      end
+
+      context 'plan is the only attr passed in' do
+        context "but didn't change" do
+          let(:request_attrs) { { 'service_plan_guid' => old_service_plan.guid } }
+
+          it 'should not update the broker' do
+            service_instance_update.update_service_instance(service_instance, request_attrs)
+
+            expect(
+              a_request(:patch, update_url(service_instance)).with(
+                body: hash_including({
+                    'plan_id' => old_service_plan.broker_provided_id,
+                    'previous_values' => {
+                      'plan_id' => old_service_plan.broker_provided_id,
+                      'service_id' => service_instance.service.broker_provided_id,
+                      'organization_id' => service_instance.organization.guid,
+                      'space_id' => service_instance.space.guid
+                    }
+                  })
+              )
+            ).to_not have_been_made
+          end
+        end
+        context 'and changed' do
+          let(:request_attrs) {
+            {
+              'service_plan_guid' => new_service_plan.guid
+            }
+          }
+
+          it 'should update the broker' do
+            service_instance_update.update_service_instance(service_instance, request_attrs)
+
+            expect(
+              a_request(:patch, update_url(service_instance)).with(
+                body: hash_including({
+                    'plan_id' => new_service_plan.broker_provided_id,
+                    'previous_values' => {
+                      'plan_id' => old_service_plan.broker_provided_id,
+                      'service_id' => service_instance.service.broker_provided_id,
+                      'organization_id' => service_instance.organization.guid,
+                      'space_id' => service_instance.space.guid
+                    }
+                  })
+              )
+            ).to have_been_made.once
           end
         end
       end

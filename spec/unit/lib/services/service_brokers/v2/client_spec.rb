@@ -451,7 +451,6 @@ module VCAP::Services::ServiceBrokers::V2
         instance.service_instance_operation = last_operation
       end
 
-
       it 'makes a patch request with the service_id included in the body' do
         client.update(instance, new_plan, previous_values: { plan_id: '1234' })
 
