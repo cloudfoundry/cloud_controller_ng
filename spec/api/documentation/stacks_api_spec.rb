@@ -13,6 +13,20 @@ resource 'Stacks', type: [:api, :legacy_api] do
 
     standard_model_list(:stack, VCAP::CloudController::StacksController)
     standard_model_get(:stack)
+
+    post '/v2/stacks' do
+      context 'Creating a stack' do
+        let(:fields_json) { MultiJson.dump({ name: 'example_stack', description: 'Description for the example stack' }) }
+
+        example 'creates a stack' do
+          client.post '/v2/stacks', fields_json, headers
+          expect(status).to eq 201
+          standard_entity_response parsed_response, :stack,
+            name: 'example_stack',
+            description: 'Description for the example stack'
+        end
+      end
+    end
   end
 
   standard_model_delete(:stack)
