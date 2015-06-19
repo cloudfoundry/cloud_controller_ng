@@ -22,15 +22,15 @@ module VCAP::Services::ServiceBrokers::V2
     def provision(instance, arbitrary_parameters: {}, accepts_incomplete: false)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
-      body_parameters = {
+      body = {
         service_id: instance.service.broker_provided_id,
         plan_id: instance.service_plan.broker_provided_id,
         organization_guid: instance.organization.guid,
         space_guid: instance.space.guid,
       }
 
-      body_parameters[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
-      response = @http_client.put(path, body_parameters)
+      body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
+      response = @http_client.put(path, body)
 
       parsed_response = @response_parser.parse_provision(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
@@ -81,14 +81,14 @@ module VCAP::Services::ServiceBrokers::V2
 
     def create_service_key(key, arbitrary_parameters: {})
       path = service_binding_resource_path(key)
-      attr = {
+      body = {
           service_id:  key.service.broker_provided_id,
           plan_id:     key.service_plan.broker_provided_id
       }
 
-      attr[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
+      body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
-      response = @http_client.put(path, attr)
+      response = @http_client.put(path, body)
       parsed_response = @response_parser.parse_bind(path, response, service_guid: key.service.guid)
 
       attributes = {
@@ -103,15 +103,15 @@ module VCAP::Services::ServiceBrokers::V2
 
     def bind(binding, arbitrary_parameters: {})
       path = service_binding_resource_path(binding)
-      attr = {
+      body = {
           service_id:  binding.service.broker_provided_id,
           plan_id:     binding.service_plan.broker_provided_id,
           app_guid:    binding.app_guid
       }
 
-      attr[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
+      body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
-      response = @http_client.put(path, attr)
+      response = @http_client.put(path, body)
       parsed_response = @response_parser.parse_bind(path, response, service_guid: binding.service.guid)
 
       attributes = {
@@ -132,10 +132,11 @@ module VCAP::Services::ServiceBrokers::V2
     def unbind(binding)
       path = service_binding_resource_path(binding)
 
-      response = @http_client.delete(path, {
+      body = {
         service_id: binding.service.broker_provided_id,
-        plan_id:    binding.service_plan.broker_provided_id,
-      })
+        plan_id: binding.service_plan.broker_provided_id,
+      }
+      response = @http_client.delete(path, body)
 
       @response_parser.parse_unbind(path, response)
     end
@@ -143,12 +144,12 @@ module VCAP::Services::ServiceBrokers::V2
     def deprovision(instance, accepts_incomplete: false)
       path = service_instance_resource_path(instance)
 
-      request_params = {
+      body = {
         service_id: instance.service.broker_provided_id,
         plan_id:    instance.service_plan.broker_provided_id,
       }
-      request_params.merge!(accepts_incomplete: true) if accepts_incomplete
-      response = @http_client.delete(path, request_params)
+      body.merge!(accepts_incomplete: true) if accepts_incomplete
+      response = @http_client.delete(path, body)
 
       parsed_response = @response_parser.parse_deprovision(path, response) || {}
       last_operation_hash = parsed_response['last_operation'] || {}
@@ -168,12 +169,13 @@ module VCAP::Services::ServiceBrokers::V2
     def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {})
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
-      body_hash = {
+      body = {
+        service_id: instance.service.id,
         plan_id: plan.broker_provided_id,
         previous_values: previous_values
       }
-      body_hash[:parameters] = arbitrary_parameters if arbitrary_parameters
-      response = @http_client.patch(path, body_hash)
+      body[:parameters] = arbitrary_parameters if arbitrary_parameters
+      response = @http_client.patch(path, body)
 
       parsed_response = @response_parser.parse_update(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}

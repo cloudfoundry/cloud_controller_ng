@@ -451,37 +451,48 @@ module VCAP::Services::ServiceBrokers::V2
         instance.service_instance_operation = last_operation
       end
 
-      it 'makes a patch request with the new service plan' do
+
+      it 'makes a patch request with the service_id included in the body' do
         client.update(instance, new_plan, previous_values: { plan_id: '1234' })
 
-        expect(http_client).to have_received(:patch).with(
-          anything,
-          {
-            plan_id:	new_plan.broker_provided_id,
-            previous_values: {
-              plan_id: '1234'
-            }
-          }
-        )
+        expect(http_client).to have_received(:patch).with(anything,
+            hash_including({
+              service_id: instance.service.id,
+            })
+          )
       end
 
       it 'makes a patch request to the correct path' do
         client.update(instance, new_plan)
-
         expect(http_client).to have_received(:patch).with(path, anything)
+      end
+
+      context 'when the caller passes a new service plan' do
+        it 'makes a patch request with the new service plan' do
+          client.update(instance, new_plan, previous_values: { plan_id: '1234' })
+
+          expect(http_client).to have_received(:patch).with(
+              anything,
+              hash_including({
+                  plan_id:	new_plan.broker_provided_id,
+                  previous_values: {
+                    plan_id: '1234'
+                  }
+                })
+            )
+        end
       end
 
       context 'when the caller passes arbitrary parameters' do
         it 'includes the parameters in the request to the broker' do
-          client.update(instance, new_plan, arbitrary_parameters: { myParam: 'some-value' })
+          client.update(instance, old_plan, arbitrary_parameters: { myParam: 'some-value' })
 
           expect(http_client).to have_received(:patch).with(
             anything,
-            {
-              plan_id:	new_plan.broker_provided_id,
+              hash_including({
               parameters: { myParam: 'some-value' },
               previous_values: {}
-            }
+            })
           )
         end
       end
