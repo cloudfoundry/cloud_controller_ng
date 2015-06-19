@@ -98,7 +98,7 @@ module VCAP::CloudController
     end
 
     def update_broker(accepts_incomplete, request_attrs, service_instance, previous_values)
-      response, err = service_instance.client.update_service_broker(
+      response, err = service_instance.client.update(
           service_instance,
           service_instance.service_plan,
           accepts_incomplete: accepts_incomplete,
