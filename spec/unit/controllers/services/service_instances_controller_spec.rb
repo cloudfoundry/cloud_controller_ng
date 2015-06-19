@@ -2273,15 +2273,29 @@ module VCAP::CloudController
 
     describe 'GET', '/v2/service_instances/:service_instance_guid/service_keys' do
       let(:space)   { Space.make }
+      let(:manager) { make_manager_for_space(space) }
+      let(:auditor) { make_auditor_for_space(space) }
       let(:developer) { make_developer_for_space(space) }
 
       context 'when the user is not a member of the space this instance exists in' do
         let(:space_a)   { Space.make }
         let(:instance)  { ManagedServiceInstance.make(space: space_a) }
 
-        it 'returns the forbidden code' do
-          get "/v2/service_instances/#{instance.guid}/service_keys", {}, headers_for(developer)
+        def verify_forbidden(user)
+          get "/v2/service_instances/#{instance.guid}/service_keys", {}, headers_for(user)
           expect(last_response.status).to eql(403)
+        end
+
+        it 'returns the forbidden code for developers' do
+          verify_forbidden developer
+        end
+
+        it 'returns the forbidden code for managers' do
+          verify_forbidden manager
+        end
+
+        it 'returns the forbidden code for auditors' do
+          verify_forbidden auditor
         end
       end
 
@@ -2298,28 +2312,44 @@ module VCAP::CloudController
           service_key_c.save
         end
 
-        it 'returns the service keys that belong to the service instance' do
-          get "/v2/service_instances/#{instance_a.guid}/service_keys", {}, headers_for(developer)
-          expect(last_response.status).to eql(200)
-          expect(decoded_response.fetch('total_results')).to eq(2)
-          expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
-          expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(service_key_b.guid)
+        context 'when the user is not of developer role' do
+          it 'return an empty service key list if the user is of space manager role' do
+            get "/v2/service_instances/#{instance_a.guid}/service_keys", {}, headers_for(manager)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(0)
+          end
 
-          get "/v2/service_instances/#{instance_b.guid}/service_keys", {}, headers_for(developer)
-          expect(last_response.status).to eql(200)
-          expect(decoded_response.fetch('total_results')).to eq(1)
-          expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_c.guid)
+          it 'return an empty service key list if the user is of space auditor role' do
+            get "/v2/service_instances/#{instance_a.guid}/service_keys", {}, headers_for(auditor)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(0)
+          end
         end
 
-        it 'returns the service keys filtered by key name' do
-          get "/v2/service_instances/#{instance_a.guid}/service_keys?q=name:fake-key-a", {}, headers_for(developer)
-          expect(last_response.status).to eql(200)
-          expect(decoded_response.fetch('total_results')).to eq(1)
-          expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
+        context 'when the user is of developer role' do
+          it 'returns the service keys that belong to the service instance' do
+            get "/v2/service_instances/#{instance_a.guid}/service_keys", {}, headers_for(developer)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(2)
+            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
+            expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(service_key_b.guid)
 
-          get "/v2/service_instances/#{instance_b.guid}/service_keys?q=name:non-exist-key-name", {}, headers_for(developer)
-          expect(last_response.status).to eql(200)
-          expect(decoded_response.fetch('total_results')).to eq(0)
+            get "/v2/service_instances/#{instance_b.guid}/service_keys", {}, headers_for(developer)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(1)
+            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_c.guid)
+          end
+
+          it 'returns the service keys filtered by key name' do
+            get "/v2/service_instances/#{instance_a.guid}/service_keys?q=name:fake-key-a", {}, headers_for(developer)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(1)
+            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
+
+            get "/v2/service_instances/#{instance_b.guid}/service_keys?q=name:non-exist-key-name", {}, headers_for(developer)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(0)
+          end
         end
       end
     end

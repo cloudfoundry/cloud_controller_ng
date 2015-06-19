@@ -48,7 +48,7 @@ module VCAP::CloudController
     alias_method_chain :credentials, 'serialization'
 
     def self.user_visibility_filter(user)
-      { service_instance: ServiceInstance.user_visible(user) }
+      { service_instance: ServiceInstance.dataset.filter({ space: user.spaces_dataset }) }
     end
 
     def after_initialize

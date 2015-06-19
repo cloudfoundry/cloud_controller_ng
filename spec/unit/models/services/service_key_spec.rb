@@ -90,13 +90,13 @@ module VCAP::CloudController
       let(:auditor) { make_auditor_for_space(service_instance.space) }
       let(:other_user) { User.make }
 
-      it 'has the same rules as ServiceInstances' do
+      it 'only open to the space developers' do
         visible_to_developer = ServiceKey.user_visible(developer)
         visible_to_auditor = ServiceKey.user_visible(auditor)
         visible_to_other_user = ServiceKey.user_visible(other_user)
 
         expect(visible_to_developer.all).to eq [service_key]
-        expect(visible_to_auditor.all).to eq [service_key]
+        expect(visible_to_auditor.all).to be_empty
         expect(visible_to_other_user.all).to be_empty
       end
     end
