@@ -7,6 +7,7 @@ module VCAP::CloudController
       EM.add_periodic_timer(600) { record_user_count }
       EM.add_periodic_timer(30) { update_job_queue_length }
       EM.add_periodic_timer(30) { update_thread_info }
+      EM.add_periodic_timer(30) { update_failed_job_count }
     end
 
     def self.record_user_count
@@ -16,9 +17,16 @@ module VCAP::CloudController
     end
 
     def self.update_job_queue_length
-      local_pending_job_count_by_queue = pending_job_count_by_queue
+      jobs_by_queue_with_count = Delayed::Job.where(attempts: 0).group_and_count(:queue)
 
-      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_job_queue_length] = local_pending_job_count_by_queue }
+      total = 0
+      pending_job_count_by_queue = jobs_by_queue_with_count.each_with_object({}) do |row, hash|
+        total += row[:count]
+        hash[row[:queue].to_sym] = row[:count]
+      end
+
+      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_job_queue_length] = pending_job_count_by_queue }
+      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_job_queue_length][:total] = total }
     end
 
     def self.update_thread_info
@@ -31,14 +39,20 @@ module VCAP::CloudController
       record_user_count
       update_job_queue_length
       update_thread_info
+      update_failed_job_count
     end
 
-    def self.pending_job_count_by_queue
-      jobs_by_queue_with_count = Delayed::Job.where(attempts: 0).group_and_count(:queue)
+    def self.update_failed_job_count
+      jobs_by_queue_with_count = Delayed::Job.where('failed_at IS NOT NULL').group_and_count(:queue)
 
-      jobs_by_queue_with_count.each_with_object({}) do |row, hash|
+      total = 0
+      failed_jobs_by_queue = jobs_by_queue_with_count.each_with_object({}) do |row, hash|
+        total += row[:count]
         hash[row[:queue].to_sym] = row[:count]
       end
+
+      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_failed_job_count] = failed_jobs_by_queue }
+      ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:cc_failed_job_count][:total] = total }
     end
 
     def self.thread_info

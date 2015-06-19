@@ -32,6 +32,11 @@ module VCAP::CloudController
         Varz.setup_updates
       end
 
+      it 'bumps the length of cc failed job queues and sets periodic timer' do
+        expect(VCAP::CloudController::Varz).to receive(:update_failed_job_count).once
+        Varz.setup_updates
+      end
+
       it 'updates thread count and event machine queues' do
         expect(VCAP::CloudController::Varz).to receive(:update_thread_info).once
         Varz.setup_updates
@@ -70,6 +75,13 @@ module VCAP::CloudController
           expect(@periodic_timers[2][:interval]).to eq(30)
 
           @periodic_timers[2][:block].call
+        end
+
+        it 'bumps the length of cc failed job queues and sets periodic timer' do
+          expect(VCAP::CloudController::Varz).to receive(:update_failed_job_count).once
+          expect(@periodic_timers[3][:interval]).to eq(30)
+
+          @periodic_timers[3][:block].call
         end
       end
     end
@@ -129,7 +141,64 @@ module VCAP::CloudController
         Varz.update_job_queue_length
 
         VCAP::Component.varz.synchronize do
+          expect(VCAP::Component.varz[:cc_job_queue_length][:total]).to eq(0)
+          VCAP::Component.varz[:cc_job_queue_length].delete(:total)
           expect(VCAP::Component.varz[:cc_job_queue_length]).to eq({})
+        end
+      end
+
+      it 'includes the total number of queued jobs across all queues' do
+        VCAP::Component.varz.synchronize do
+          VCAP::Component.varz[:cc_job_queue_length] = 0
+        end
+
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('ghj', 'klm', []), queue: 'cc_local')
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
+
+        Varz.update_job_queue_length
+
+        VCAP::Component.varz.synchronize do
+          expect(VCAP::Component.varz[:cc_job_queue_length][:total]).to eq(3)
+        end
+      end
+    end
+
+    describe '#update_failed_job_count' do
+      it 'includes the number of failed jobs in the delayed job queue' do
+        VCAP::Component.varz.synchronize do
+          VCAP::Component.varz[:cc_failed_job_count] = 0
+        end
+
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('ghj', 'klm', []), queue: 'cc_local')
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
+        Delayed::Job.dataset.update(failed_at: DateTime.now.utc)
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('gej', 'kkm', []), queue: 'cc_local')
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('bcz', 'dqf', []), queue: 'cc_generic')
+
+        Varz.update_failed_job_count
+
+        VCAP::Component.varz.synchronize do
+          expect(VCAP::Component.varz[:cc_failed_job_count][:cc_local]).to eq(2)
+          expect(VCAP::Component.varz[:cc_failed_job_count][:cc_generic]).to eq(1)
+        end
+      end
+
+      it 'includes the total number of failed jobs across all queues' do
+        VCAP::Component.varz.synchronize do
+          VCAP::Component.varz[:cc_failed_job_count] = 0
+        end
+
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('ghj', 'klm', []), queue: 'cc_local')
+        Delayed::Job.enqueue(Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
+        Delayed::Job.dataset.update(failed_at: DateTime.now.utc)
+
+        Varz.update_failed_job_count
+
+        VCAP::Component.varz.synchronize do
+          expect(VCAP::Component.varz[:cc_failed_job_count][:total]).to eq(3)
         end
       end
     end
