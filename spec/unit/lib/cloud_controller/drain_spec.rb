@@ -31,53 +31,6 @@ module VCAP::CloudController
       FileUtils.rm_r(log_dir)
     end
 
-    describe '#unregister_cc' do
-      before do
-        allow(Process).to receive(:kill).with('USR2', pid)
-      end
-
-      it 'sends USR2 to the process specified in the pid file' do
-        drain.unregister_cc(pid_path)
-
-        expect(Process).to have_received(:kill).with('USR2', pid)
-      end
-
-      it 'sleeps while it waits for the router unregistration' do
-        expect(drain).to receive(:sleep).at_least(:once)
-
-        drain.unregister_cc(pid_path)
-      end
-
-      it 'logs that it sends the signal to CC and is waiting for the router unregistration' do
-        drain.unregister_cc(pid_path)
-
-        log_contents do |log|
-          expect(log).to match("Sending signal USR2 to cc_ng with pid #{pid}.")
-          expect(log).to match('Waiting for router unregister')
-        end
-      end
-
-      it 'logs if the process no longer exists' do
-        allow(Process).to receive(:kill).with('USR2', pid).and_raise(Errno::ESRCH)
-
-        drain.unregister_cc(pid_path)
-
-        log_contents do |log|
-          expect(log).to match('Pid no longer exists')
-        end
-      end
-
-      it 'logs if the process file no longer exists' do
-        allow(File).to receive(:read).with(pid_path).and_raise(Errno::ENOENT)
-
-        drain.unregister_cc(pid_path)
-
-        log_contents do |log|
-          expect(log).to match('Pid file no longer exists')
-        end
-      end
-    end
-
     describe '#shutdown_nginx' do
       before do
         allow(Process).to receive(:kill).with('QUIT', pid)

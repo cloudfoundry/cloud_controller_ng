@@ -12,17 +12,6 @@ module VCAP
         log_info("Drain invoked with #{args.map(&:inspect).join(' ')}")
       end
 
-      def unregister_cc(pid_path)
-        unregister_wait_timeout = 20 # because we don't know when/wheter the router has acted on the unregister message
-        unregister_wait_interval = 5
-        send_signal(pid_path, 'USR2', 'cc_ng')
-        while unregister_wait_timeout > 0
-          log_info("Waiting for router unregister to have taken effect #{unregister_wait_timeout} more seconds")
-          sleep unregister_wait_interval
-          unregister_wait_timeout -= unregister_wait_interval
-        end
-      end
-
       def shutdown_nginx(pid_path)
         nginx_timeout = 30
         nginx_interval = 3

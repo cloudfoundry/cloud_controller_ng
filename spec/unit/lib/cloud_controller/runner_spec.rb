@@ -5,7 +5,6 @@ module VCAP::CloudController
     let(:valid_config_file_path) { File.join(Paths::FIXTURES, 'config/minimal_config.yml') }
     let(:config_file) { File.new(valid_config_file_path) }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:registrar) { Cf::Registrar.new({}) }
 
     let(:argv) { [] }
 
@@ -17,14 +16,11 @@ module VCAP::CloudController
       allow(EM).to receive(:add_timer).and_yield
       allow(VCAP::CloudController::Varz).to receive(:setup_updates)
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
-      allow(registrar).to receive_messages(message_bus: message_bus)
-      allow(registrar).to receive(:register_with_router)
     end
 
     subject do
       Runner.new(argv + ['-c', config_file.path]).tap do |r|
         allow(r).to receive(:start_thin_server)
-        allow(r).to receive_messages(router_registrar: registrar)
       end
     end
 
@@ -97,11 +93,6 @@ module VCAP::CloudController
           dea_respondent = double(:dea_respondent)
           expect(Dea::Respondent).to receive(:new).with(message_bus).and_return(dea_respondent)
           expect(dea_respondent).to receive(:start)
-          subject.run!
-        end
-
-        it 'registers with router' do
-          expect(registrar).to receive(:register_with_router)
           subject.run!
         end
 
@@ -213,17 +204,11 @@ module VCAP::CloudController
         let(:argv) { [] }
 
         it_behaves_like 'running Cloud Controller'
-
-        it 'registers with the router' do
-          expect(registrar).to receive(:register_with_router)
-          subject.run!
-        end
       end
     end
 
     describe '#stop!' do
-      it 'should stop thin and EM after unregistering routes' do
-        expect(registrar).to receive(:shutdown).and_yield
+      it 'should stop thin and EM' do
         expect(subject).to receive(:stop_thin_server)
         expect(EM).to receive(:stop)
         subject.stop!
@@ -231,12 +216,11 @@ module VCAP::CloudController
     end
 
     describe '#trap_signals' do
-      it 'registers TERM, INT, QUIT, USR1, and USR2 handlers' do
+      it 'registers TERM, INT, QUIT and USR1 handlers' do
         expect(subject).to receive(:trap).with('TERM')
         expect(subject).to receive(:trap).with('INT')
         expect(subject).to receive(:trap).with('QUIT')
         expect(subject).to receive(:trap).with('USR1')
-        expect(subject).to receive(:trap).with('USR2')
         subject.trap_signals
       end
 
@@ -259,17 +243,9 @@ module VCAP::CloudController
           callbacks << blk
         end
 
-        expect(subject).to receive(:trap).with('USR2') do |_, &blk|
-          callbacks << blk
-        end
-
         subject.trap_signals
 
         expect(subject).to receive(:stop!).exactly(3).times
-
-        registrar = double(:registrar)
-        expect(subject).to receive(:router_registrar).and_return(registrar)
-        expect(registrar).to receive(:shutdown)
 
         callbacks.each(&:call)
       end
@@ -385,7 +361,6 @@ module VCAP::CloudController
         expect(subject).to receive(:trap).with('TERM')
         expect(subject).to receive(:trap).with('INT')
         expect(subject).to receive(:trap).with('QUIT')
-        expect(subject).to receive(:trap).with('USR2')
         expect(subject).to receive(:trap).with('USR1') do |_, &blk|
           callback = blk
         end
