@@ -28,7 +28,7 @@ module VCAP::CloudController
     end
 
     after do
-      logger.info "Vcap-Request-Id: " + headers['X-Vcap-Request-Id'] + "; status: " + status.to_s + "; processed"
+      logger.info 'Vcap-Request-Id: ' + headers['X-Vcap-Request-Id'] + '; status: ' + status.to_s + '; processed'
     end
 
     private

@@ -45,9 +45,8 @@ module VCAP::CloudController
 
     describe 'log request id and status code for all requests' do
       context 'get request' do
-
         before do
-          allow(Steno).to receive(:logger).with(anything()).and_return(fake_logger)
+          allow(Steno).to receive(:logger).with(anything).and_return(fake_logger)
         end
 
         it 'validate logging' do
