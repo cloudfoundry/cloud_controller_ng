@@ -80,47 +80,6 @@ module VCAP::CloudController
         end
       end
 
-      describe 'managers' do
-        subject(:org) { Organization.make }
-
-        it 'allows creating an org with no managers' do
-          expect {
-            org.save
-          }.to_not raise_error
-        end
-
-        it 'allows deleting a manager but leaving at least one manager behind' do
-          u1, u2 = [User.make, User.make]
-          org.manager_guids = [u1.guid, u2.guid]
-          org.save
-
-          org.manager_guids = [u1.guid]
-          expect {
-            org.save
-          }.not_to raise_error
-        end
-
-        it 'disallows removing all the managers' do
-          u1, u2 = [User.make, User.make]
-          org.manager_guids = [u1.guid]
-          org.save
-
-          expect {
-            org.manager_guids = [u2.guid]
-          }.not_to raise_error
-        end
-
-        it 'disallows removing all the managers' do
-          u1, u2 = [User.make, User.make]
-          org.manager_guids = [u1.guid, u2.guid]
-          org.save
-
-          expect {
-            org.manager_guids = []
-          }.to raise_error(Sequel::HookFailed)
-        end
-      end
-
       describe 'space_quota_definitions' do
         it 'adds when in this org' do
           org = Organization.make

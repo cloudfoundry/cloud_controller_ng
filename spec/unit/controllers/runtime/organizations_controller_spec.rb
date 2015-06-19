@@ -715,6 +715,32 @@ module VCAP::CloudController
       end
     end
 
+    describe 'DELETE /v2/organizations/:guid/managers/:user_guid' do
+      let(:org_manager) { User.make }
+
+      before do
+        org.add_manager org_manager
+        org.save
+      end
+
+      describe 'removing the last org manager' do
+        context 'as an admin' do
+          it 'is allowed' do
+            delete "/v2/organizations/#{org.guid}/managers/#{org_manager.guid}", {}, admin_headers
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        context 'as the manager' do
+          it 'is not allowed' do
+            delete "/v2/organizations/#{org.guid}/managers/#{org_manager.guid}", {}, headers_for(org_manager)
+            expect(last_response.status).to eql(403)
+            expect(decoded_response['code']).to eq(10003)
+          end
+        end
+      end
+    end
+
     describe 'adding user roles by username' do
       [:user, :manager, :billing_manager, :auditor].each do |role|
         plural_role = role.to_s.pluralize
