@@ -74,6 +74,7 @@ resource 'Packages (Experimental)', type: :api do
               '_links'     => {
                 'self'   => { 'href' => "/v3/packages/#{package1.guid}" },
                 'upload' => { 'href' => "/v3/packages/#{package1.guid}/upload", 'method' => 'POST' },
+                'stage' => { 'href' => "/v3/packages/#{package1.guid}/droplets", 'method' => 'POST' },
                 'app'    => { 'href' => "/v3/apps/#{package1.app_guid}" },
               }
             },
@@ -130,6 +131,7 @@ resource 'Packages (Experimental)', type: :api do
         '_links'     => {
           'self'   => { 'href' => "/v3/packages/#{guid}" },
           'upload' => { 'href' => "/v3/packages/#{guid}/upload", 'method' => 'POST' },
+          'stage' => { 'href' => "/v3/packages/#{guid}/droplets", 'method' => 'POST' },
           'app'    => { 'href' => "/v3/apps/#{app_model.guid}" },
         }
       }
@@ -267,6 +269,7 @@ resource 'Packages (Experimental)', type: :api do
         '_links'     => {
           'self'   => { 'href' => "/v3/packages/#{package_model.guid}" },
           'upload' => { 'href' => "/v3/packages/#{package_model.guid}/upload", 'method' => 'POST' },
+          'stage' => { 'href' => "/v3/packages/#{package_model.guid}/droplets", 'method' => 'POST' },
           'app'    => { 'href' => "/v3/apps/#{app_model.guid}" },
         }
       }

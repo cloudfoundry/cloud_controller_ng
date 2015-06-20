@@ -54,6 +54,7 @@ resource 'Apps (Experimental)', type: :api do
             '_links'     => {
               'self'   => { 'href' => "/v3/packages/#{package.guid}" },
               'upload' => { 'href' => "/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
+              'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
               'app'    => { 'href' => "/v3/apps/#{guid}" },
             }
           }

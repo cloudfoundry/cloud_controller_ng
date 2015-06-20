@@ -42,6 +42,7 @@ module VCAP::CloudController
       upload_link = nil
       if package.type == 'bits'
         upload_link = { href: "/v3/packages/#{package.guid}/upload", method: 'POST' }
+        stage_link = { href: "/v3/packages/#{package.guid}/droplets", method: 'POST' }
       end
 
       links = {
@@ -49,6 +50,7 @@ module VCAP::CloudController
           href: "/v3/packages/#{package.guid}"
         },
         upload: upload_link,
+        stage: stage_link,
         app:  {
           href: "/v3/apps/#{package.app_guid}",
         },
