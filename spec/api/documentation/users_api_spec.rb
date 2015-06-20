@@ -69,6 +69,8 @@ resource 'Users', type: [:api, :legacy_api] do
       let(:space) { VCAP::CloudController::Space.make }
       let(:space_guid) { space.guid }
 
+      parameter :space_guid, 'The guid of the space'
+
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user
       nested_model_associate :space, :user
       nested_model_remove :space, :user
@@ -86,6 +88,8 @@ resource 'Users', type: [:api, :legacy_api] do
       let(:associated_managed_space_guid) { associated_managed_space.guid }
       let(:managed_space) { VCAP::CloudController::Space.make }
       let(:managed_space_guid) { managed_space.guid }
+
+      parameter :managed_space_guid, 'The guid of the managed space'
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user, path: :managed_spaces
       nested_model_associate :managed_space, :user
@@ -105,6 +109,8 @@ resource 'Users', type: [:api, :legacy_api] do
       let(:audited_space) { VCAP::CloudController::Space.make }
       let(:audited_space_guid) { audited_space.guid }
 
+      parameter :audited_space_guid, 'The guid of the audited space'
+
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user, path: :audited_spaces
       nested_model_associate :audited_space, :user
       nested_model_remove :audited_space, :user
@@ -119,6 +125,8 @@ resource 'Users', type: [:api, :legacy_api] do
       let(:associated_organization_guid) { associated_organization.guid }
       let(:organization) { VCAP::CloudController::Organization.make }
       let(:organization_guid) { organization.guid }
+
+      parameter :organization_guid, 'The guid of the organization'
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user
       nested_model_associate :organization, :user
@@ -138,6 +146,8 @@ resource 'Users', type: [:api, :legacy_api] do
       let(:managed_organization) { VCAP::CloudController::Organization.make }
       let(:managed_organization_guid) { managed_organization.guid }
 
+      parameter :managed_organization_guid, 'The guid of the managed_organization'
+
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :managed_organizations
       nested_model_associate :managed_organization, :user
       nested_model_remove :managed_organization, :user
@@ -155,6 +165,8 @@ resource 'Users', type: [:api, :legacy_api] do
       let(:billing_managed_organization) { VCAP::CloudController::Organization.make }
       let(:billing_managed_organization_guid) { billing_managed_organization.guid }
 
+      parameter :billing_managed_organization_guid, 'The guid of the billing managed organization'
+
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :billing_managed_organizations
       nested_model_associate :billing_managed_organization, :user
       nested_model_remove :billing_managed_organization, :user
@@ -171,6 +183,8 @@ resource 'Users', type: [:api, :legacy_api] do
       let(:associated_audited_organization_guid) { associated_audited_organization.guid }
       let(:audited_organization) { VCAP::CloudController::Organization.make }
       let(:audited_organization_guid) { audited_organization.guid }
+
+      parameter :audited_organization_guid, 'The guid of the audited organization'
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :audited_organizations
       nested_model_associate :audited_organization, :user

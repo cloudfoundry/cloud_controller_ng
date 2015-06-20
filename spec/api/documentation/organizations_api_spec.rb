@@ -119,6 +119,8 @@ resource 'Organizations', type: [:api, :legacy_api] do
         organization.add_private_domain(associated_private_domain)
       end
 
+      parameter :private_domain_guid, 'The guid of the private domain'
+
       let!(:associated_private_domain) { VCAP::CloudController::PrivateDomain.make }
       let(:associated_private_domain_guid) { associated_private_domain.guid }
       let(:private_domain) { VCAP::CloudController::PrivateDomain.make }
@@ -134,6 +136,8 @@ resource 'Organizations', type: [:api, :legacy_api] do
         organization.add_user(associated_user)
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_user.guid => 'user@example.com' })
       end
+
+      parameter :user_guid, 'The guid of the user'
 
       let!(:associated_user) { VCAP::CloudController::User.make }
       let(:associated_user_guid) { associated_user.guid }
@@ -165,6 +169,8 @@ resource 'Organizations', type: [:api, :legacy_api] do
         make_manager_for_org(organization)
       end
 
+      parameter :manager_guid, 'The guid of the user to associate as a manager'
+
       let!(:associated_manager) { VCAP::CloudController::User.make }
       let(:associated_manager_guid) { associated_manager.guid }
       let(:manager) { VCAP::CloudController::User.make }
@@ -194,6 +200,8 @@ resource 'Organizations', type: [:api, :legacy_api] do
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_billing_manager.guid => 'billing_manager@example.com' })
       end
 
+      parameter :billing_manager_guid, 'The guid of the user'
+
       let!(:associated_billing_manager) { VCAP::CloudController::User.make }
       let(:associated_billing_manager_guid) { associated_billing_manager.guid }
       let(:billing_manager) { VCAP::CloudController::User.make }
@@ -222,6 +230,8 @@ resource 'Organizations', type: [:api, :legacy_api] do
         organization.add_auditor(associated_auditor)
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_auditor.guid => 'auditor@example.com' })
       end
+
+      parameter :auditor_guid, 'The guid of the user'
 
       let!(:associated_auditor) { VCAP::CloudController::User.make }
       let(:associated_auditor_guid) { associated_auditor.guid }

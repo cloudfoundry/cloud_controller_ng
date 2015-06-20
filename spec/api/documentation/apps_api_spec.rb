@@ -133,6 +133,8 @@ resource 'Apps', type: [:api, :legacy_api] do
       let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: associated_service_instance) }
       let(:associated_service_binding_guid) { associated_service_binding.guid }
 
+      parameter :service_binding_guid, 'The guid of the service binding'
+
       before do
         service_broker = associated_service_binding.service.service_broker
         instance_guid = associated_service_instance.guid
@@ -158,6 +160,8 @@ resource 'Apps', type: [:api, :legacy_api] do
       let(:route_guid) { route.guid }
       let(:associated_route) { VCAP::CloudController::Route.make(space: app_obj.space) }
       let(:associated_route_guid) { associated_route.guid }
+
+      parameter :route_guid, 'The guid of the route'
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :app
       nested_model_associate :route, :app

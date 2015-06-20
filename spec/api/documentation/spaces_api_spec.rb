@@ -103,6 +103,8 @@ resource 'Spaces', type: [:api, :legacy_api] do
       let(:developer) { VCAP::CloudController::User.make }
       let(:developer_guid) { developer.guid }
 
+      parameter :developer_guid, 'The guid of the developer'
+
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :developers
       nested_model_associate :developer, :space
       nested_model_remove :developer, :space
@@ -134,6 +136,8 @@ resource 'Spaces', type: [:api, :legacy_api] do
       let(:manager) { VCAP::CloudController::User.make }
       let(:manager_guid) { manager.guid }
 
+      parameter :manager_guid, 'The guid of the manager'
+
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :managers
       nested_model_associate :manager, :space
       nested_model_remove :manager, :space
@@ -164,6 +168,8 @@ resource 'Spaces', type: [:api, :legacy_api] do
       let(:associated_auditor_guid) { associated_auditor.guid }
       let(:auditor) { VCAP::CloudController::User.make }
       let(:auditor_guid) { auditor.guid }
+
+      parameter :auditor_guid, 'The guid of the auditor'
 
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :auditors
       nested_model_associate :auditor, :space
@@ -256,6 +262,8 @@ resource 'Spaces', type: [:api, :legacy_api] do
       let(:associated_security_group_guid) { associated_security_group.guid }
       let(:security_group) { VCAP::CloudController::SecurityGroup.make }
       let(:security_group_guid) { security_group.guid }
+
+      parameter :security_group_guid, 'The guid of the security group'
 
       standard_model_list :security_group, VCAP::CloudController::SecurityGroupsController, outer_model: :space
       nested_model_associate :security_group, :space

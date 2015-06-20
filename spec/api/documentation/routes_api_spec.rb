@@ -65,6 +65,8 @@ resource 'Routes', type: [:api, :legacy_api] do
       let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space) }
       let(:app_guid) { app_obj.guid }
 
+      parameter :app_guid, 'The guid of the app'
+
       standard_model_list :app, VCAP::CloudController::AppsController, outer_model: :route
       nested_model_associate :app, :route
       nested_model_remove :app, :route
