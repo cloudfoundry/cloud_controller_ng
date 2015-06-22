@@ -148,6 +148,8 @@ module VCAP::CloudController
       put "/v2/spaces/:guid/#{plural_role}", "add_#{role}_by_username".to_sym
 
       define_method("add_#{role}_by_username") do |guid|
+        FeatureFlag.raise_unless_enabled!('set_roles_by_username') unless SecurityContext.admin?
+
         username = parse_and_validate_json(body)['username']
 
         begin

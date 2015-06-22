@@ -931,6 +931,27 @@ module VCAP::CloudController
             expect(last_response.status).to eq(501)
             expect(decoded_response['code']).to eq(20005)
           end
+
+          context 'when the feature flag "set_roles_by_username" is disabled' do
+            before do
+              FeatureFlag.new(name: 'set_roles_by_username', enabled: false).save
+            end
+
+            it 'raises a feature flag error for non-admins' do
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), headers_for(user)
+
+              expect(last_response.status).to eq(403)
+              expect(decoded_response['code']).to eq(330002)
+            end
+
+            it 'succeeds for admins' do
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+              expect(last_response.status).to eq(201)
+              expect(space_one.send(plural_role)).to include(user)
+              expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+            end
+          end
         end
       end
     end
