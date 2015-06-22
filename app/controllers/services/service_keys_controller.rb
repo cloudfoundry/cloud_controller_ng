@@ -9,7 +9,6 @@ module VCAP::CloudController
     end
 
     get path,      :enumerate
-    get path_guid, :read
 
     query_parameters :name, :service_instance_guid
 
@@ -67,6 +66,20 @@ module VCAP::CloudController
       key_manager.delete_service_key(service_key)
 
       [HTTP::NO_CONTENT, nil]
+    end
+
+    get '/v2/service_keys/:guid', :read
+    def read(guid)
+      begin
+        service_key = find_guid_and_validate_access(:read, guid, ServiceKey)
+      rescue VCAP::Errors::ApiError => e
+        e.name == 'NotAuthorized' ? raise(VCAP::Errors::ApiError.new_from_details('ServiceKeyNotFound', guid)) : raise(e)
+      end
+
+      [HTTP::OK,
+       { 'Location' => "#{self.class.path}/#{service_key.guid}" },
+       object_renderer.render_json(self.class, service_key, @opts)
+      ]
     end
 
     private
