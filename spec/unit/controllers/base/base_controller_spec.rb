@@ -74,6 +74,10 @@ module VCAP::CloudController
       allow_any_instance_of(TestController).to receive(:logger).and_return(logger)
     end
 
+    after(:all) do
+      I18n.locale = nil # reset locale after running tests that change it
+    end
+
     describe '#dispatch' do
       context 'when the dispatch is successful' do
         let(:token_decoder) { double(:decoder) }
