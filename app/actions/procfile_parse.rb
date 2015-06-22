@@ -54,6 +54,7 @@ module VCAP::CloudController
           space: app.space,
           name: "v3-#{app.name}-#{type}",
           metadata: {},
+          instances: type == 'web' ? 1 : 0
         }
         app.add_process(message)
       end

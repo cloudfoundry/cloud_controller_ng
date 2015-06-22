@@ -26,6 +26,38 @@ other: stuff
           expect(app.processes.count).to eq(2)
         end
 
+        context 'when adding processes it sets the default instance count' do
+          context 'web processes' do
+            let(:procfile) do
+              <<-PROCFILE
+web: thing
+              PROCFILE
+            end
+
+            it '1 instance' do
+              procfile_parse.process_procfile(app)
+              app.reload
+
+              expect(app.processes[0].instances).to eq(1)
+            end
+          end
+
+          context 'non-web processes' do
+            let(:procfile) do
+              <<-PROCFILE
+other: stuff
+              PROCFILE
+            end
+
+            it '0 instances' do
+              procfile_parse.process_procfile(app)
+              app.reload
+
+              expect(app.processes[0].instances).to eq(0)
+            end
+          end
+        end
+
         it 'deletes processes that are no longer mentioned' do
           existing_process = AppFactory.make(type: 'bogus', command: 'old')
           app.add_process_by_guid(existing_process.guid)
