@@ -372,6 +372,7 @@ resource 'Packages (Experimental)', type: :api do
         'updated_at'             => nil,
         'environment_variables'  => { 'CF_STACK' => stack, 'VCAP_APPLICATION' => {
           'limits' => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
+          'application_id' => app_guid,
           'application_version' => 'whatuuid',
           'application_name' => app_model.name, 'application_uris' => [],
           'version' => 'whatuuid',

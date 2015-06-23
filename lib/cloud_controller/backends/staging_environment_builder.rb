@@ -24,6 +24,7 @@ module VCAP::CloudController
           'disk' => disk_limit,
           'fds'  => Config.config[:instance_file_descriptor_limit] || 16384,
         },
+        'application_id' => app.guid,
         'application_version' => version,
         'application_name'    => app.name,
         'application_uris'    => uris,

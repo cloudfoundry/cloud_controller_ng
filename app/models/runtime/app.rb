@@ -351,6 +351,7 @@ module VCAP::CloudController
           disk: disk_quota,
           fds: file_descriptors
         },
+        application_id: guid,
         application_version: version,
         application_name: app_name,
         application_uris: uris,

@@ -32,6 +32,7 @@ module VCAP::CloudController
               'disk' => disk_limit,
               'fds'  => 16384
             },
+            'application_id'    => app.guid,
             'application_name'    => app.name,
             'name'                => app.name,
             'application_uris'    => [],
