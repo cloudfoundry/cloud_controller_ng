@@ -228,9 +228,10 @@ module VCAP::CloudController
           space.space_quota_definition = space_quota
         end
 
-        subject(:route) { Route.new(space: space) }
+        let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+        subject(:route) { Route.new(space: space, domain: domain, host: 'bar') }
 
-        context 'for organizatin quotas' do
+        context 'for organization quotas' do
           context 'on create' do
             context 'when not exceeding total allowed routes' do
               before do
@@ -259,12 +260,14 @@ module VCAP::CloudController
 
           context 'on update' do
             it 'should not validate the total routes limit if already existing' do
-              expect {
-                org_quota.total_routes = 0
-                org_quota.save
-              }.not_to change {
-                subject.valid?
-              }
+              subject.save
+
+              expect(subject).to be_valid
+
+              org_quota.total_routes = 0
+              org_quota.save
+
+              expect(subject).to be_valid
             end
           end
         end
