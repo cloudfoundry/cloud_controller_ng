@@ -170,7 +170,7 @@ module VCAP::Services::ServiceBrokers::V2
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body = {
-        service_id: instance.service.id,
+        service_id: instance.service.broker_provided_id,
         plan_id: plan.broker_provided_id,
         previous_values: previous_values
       }

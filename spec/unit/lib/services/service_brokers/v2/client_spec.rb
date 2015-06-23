@@ -456,7 +456,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(http_client).to have_received(:patch).with(anything,
             hash_including({
-              service_id: instance.service.id,
+              service_id: instance.service.broker_provided_id,
             })
           )
       end
