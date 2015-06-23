@@ -14,7 +14,7 @@ module VCAP::CloudController
       allow(VCAP::Component).to receive(:register)
       allow(EM).to receive(:run).and_yield
       allow(EM).to receive(:add_timer).and_yield
-      allow(VCAP::CloudController::Varz).to receive(:setup_updates)
+      allow_any_instance_of(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:setup_updates)
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
     end
 
@@ -97,7 +97,7 @@ module VCAP::CloudController
         end
 
         it 'sets up varz updates' do
-          expect(VCAP::CloudController::Varz).to receive(:setup_updates)
+          expect_any_instance_of(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:setup_updates)
           subject.run!
         end
 

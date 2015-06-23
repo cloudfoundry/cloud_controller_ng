@@ -279,6 +279,7 @@ GEM
     slop (3.6.0)
     squash_ruby (2.0.0)
       json
+    statsd-ruby (1.2.1)
     steno (1.2.4)
       fluent-logger
       yajl-ruby (~> 1.0)
@@ -364,6 +365,7 @@ DEPENDENCIES
   sequel
   sinatra (~> 1.4)
   sinatra-contrib
+  statsd-ruby
   steno
   thin (~> 1.6.0)
   timecop
@@ -372,6 +374,3 @@ DEPENDENCIES
   vcap_common (~> 4.0)
   webmock
   yajl-ruby
-
-BUNDLED WITH
-   1.10.4

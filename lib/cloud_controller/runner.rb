@@ -9,7 +9,7 @@ require 'loggregator_emitter'
 require 'loggregator'
 require 'cloud_controller/dea/sub_system'
 require 'cloud_controller/rack_app_builder'
-require 'cloud_controller/varz'
+require 'cloud_controller/metrics/periodic_updater'
 
 require_relative 'seeds'
 require_relative 'message_bus_configurer'
@@ -87,7 +87,8 @@ module VCAP::CloudController
           start_cloud_controller(message_bus)
 
           Seeds.write_seed_data(@config) if @insert_seed_data
-          register_with_collector(message_bus)
+
+          setup_metrics(@config, message_bus)
 
           Dea::SubSystem.setup!(message_bus)
 
@@ -95,13 +96,30 @@ module VCAP::CloudController
           app     = builder.build(@config)
 
           start_thin_server(app)
-
-          VCAP::CloudController::Varz.setup_updates
         rescue => e
           logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
           raise e
         end
       end
+    end
+
+    def setup_metrics(config, message_bus)
+      logger.info('setting up metrics')
+
+      logger.info('registering with collector')
+      register_with_collector(message_bus)
+
+      logger.info("configuring statsd server at #{config[:statsd_host]}:#{config[:statsd_port]}")
+      Statsd.logger = Steno.logger('statsd.client')
+      statsd = Statsd.new(config[:statsd_host], config[:statsd_port].to_i)
+
+      logger.info('starting periodic metrics updater')
+      VCAP::CloudController::Metrics::PeriodicUpdater.new(
+        ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:start] },  # this can become Time.now.utc after we remove varz
+        [
+          VCAP::CloudController::Metrics::VarzUpdater.new,
+          VCAP::CloudController::Metrics::StatsdUpdater.new(statsd)
+        ]).setup_updates
     end
 
     def trap_signals

@@ -28,6 +28,7 @@ gem 'thin', '~> 1.6.0'
 gem 'newrelic_rpm', '3.12.0.288'
 gem 'clockwork', require: false
 gem 'activemodel'
+gem 'statsd-ruby'
 
 # We need to use https for git urls as the git protocol is blocked by various
 # firewalls
