@@ -122,7 +122,8 @@ module VCAP::CloudController::Metrics
           mem_used_bytes: 542,
           mem_free_bytes: 927,
           mem_bytes:      1,
-          cpu:            2.0
+          cpu:            2.0,
+          num_cores:      4,
         }
 
         updater.update_vitals(vitals)
@@ -133,6 +134,7 @@ module VCAP::CloudController::Metrics
         expect(batch).to have_received(:gauge).with('cc.vitals.mem_free_bytes',  927)
         expect(batch).to have_received(:gauge).with('cc.vitals.mem_bytes',  1)
         expect(batch).to have_received(:gauge).with('cc.vitals.cpu',  2.0)
+        expect(batch).to have_received(:gauge).with('cc.vitals.num_cores',  4)
       end
     end
   end

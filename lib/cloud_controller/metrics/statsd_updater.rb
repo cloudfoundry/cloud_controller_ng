@@ -47,6 +47,7 @@ module VCAP::CloudController::Metrics
         batch.gauge('cc.vitals.mem_free_bytes', vitals[:mem_free_bytes])
         batch.gauge('cc.vitals.mem_bytes', vitals[:mem_bytes])
         batch.gauge('cc.vitals.cpu', vitals[:cpu])
+        batch.gauge('cc.vitals.num_cores', vitals[:num_cores])
       end
     end
   end
