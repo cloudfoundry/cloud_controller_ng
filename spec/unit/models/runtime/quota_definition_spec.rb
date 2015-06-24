@@ -32,7 +32,7 @@ module VCAP::CloudController
           expect(quota_definition).to be_valid
         end
 
-        it 'instance_memory_limit cannot be less than zero' do
+        it 'instance_memory_limit cannot be less than -1' do
           quota_definition.instance_memory_limit = -2
           expect(quota_definition).not_to be_valid
           expect(quota_definition.errors.on(:instance_memory_limit)).to include(:invalid_instance_memory_limit)
