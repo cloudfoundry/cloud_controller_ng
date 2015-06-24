@@ -139,6 +139,8 @@ module VCAP::Services::ServiceBrokers::V2
       response = @http_client.delete(path, body)
 
       @response_parser.parse_unbind(path, response)
+    rescue => e
+      raise e.exception("Service instance #{binding.service_instance.name}: #{e.message}")
     end
 
     def deprovision(instance, accepts_incomplete: false)
@@ -164,6 +166,8 @@ module VCAP::Services::ServiceBrokers::V2
       }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
+    rescue => e
+      raise e.exception("Service instance #{instance.name}: #{e.message}")
     end
 
     def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {})

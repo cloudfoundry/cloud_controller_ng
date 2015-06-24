@@ -1020,6 +1020,20 @@ module VCAP::Services::ServiceBrokers::V2
           }.to raise_error(Errors::ServiceBrokerBadResponse)
         end
       end
+      context 'when the broker returns an error' do
+        let(:code) { '204' }
+        let(:response_data) do
+          { 'description' => 'Could not delete instance' }
+        end
+        let(:response_body) { response_data.to_json }
+
+        it 'raises a ServiceBrokerBadResponse error with the instance name' do
+          expect {
+            client.unbind(binding)
+          }.to raise_error(Errors::ServiceBrokerBadResponse).
+                 with_message("Service instance #{binding.service_instance.name}: Service broker error: Could not delete instance")
+        end
+      end
     end
 
     describe '#deprovision' do
@@ -1117,6 +1131,22 @@ module VCAP::Services::ServiceBrokers::V2
           expect {
             client.deprovision(instance)
           }.to raise_error(Errors::ServiceBrokerBadResponse)
+        end
+      end
+
+      context 'when the broker returns an error' do
+        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+        let(:code) { '204' }
+        let(:response_data) do
+          { 'description' => 'Could not delete instance' }
+        end
+        let(:response_body) { response_data.to_json }
+
+        it 'raises a ServiceBrokerBadResponse error with the instance name' do
+          expect {
+            client.deprovision(instance)
+          }.to raise_error(Errors::ServiceBrokerBadResponse).
+                 with_message("Service instance #{instance.name}: Service broker error: Could not delete instance")
         end
       end
     end

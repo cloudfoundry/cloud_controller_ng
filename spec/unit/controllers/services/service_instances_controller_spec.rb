@@ -1959,7 +1959,7 @@ module VCAP::CloudController
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(developer)
 
               expect(last_response).to have_status_code 502
-              expect(decoded_response['description']).to eq("Service broker error: #{MultiJson.load(body)['description']}")
+              expect(decoded_response['description']).to eq("Service instance #{service_instance.name}: Service broker error: #{MultiJson.load(body)['description']}")
             end
           end
 
@@ -1975,7 +1975,7 @@ module VCAP::CloudController
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(developer)
 
               expect(last_response).to have_status_code 502
-              expect(decoded_response['description']).to eq("Service broker error: #{MultiJson.load(body)['description']}")
+              expect(decoded_response['description']).to eq("Service instance #{service_instance.name}: Service broker error: #{MultiJson.load(body)['description']}")
             end
           end
 
@@ -1996,7 +1996,11 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code 504
 
-              response_description = "The request to the service broker timed out: #{service.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}"
+              response_description = [
+                "Service instance #{service_instance.name}:",
+                ' The request to the service broker timed out:',
+                " #{service.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}"
+              ].join
               expect(decoded_response['description']).to eq(response_description)
             end
           end

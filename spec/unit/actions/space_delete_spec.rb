@@ -121,12 +121,17 @@ module VCAP::CloudController
             instance_2_url = remove_basic_auth(deprovision_url(service_instance_2))
             instance_4_url = remove_basic_auth(deprovision_url(service_instance_4))
 
-            expect(results.first.message).to include("Deletion of space #{space_3.name} failed because one or more resources within could not be deleted.")
-            expect(results.first.message).to include("\tThe service broker returned an invalid response for the request to #{instance_1_url}")
-            expect(results.first.message).to include("\tThe service broker returned an invalid response for the request to #{instance_2_url}")
+            expect(results.first.message).
+              to include("Deletion of space #{space_3.name} failed because one or more resources within could not be deleted.")
+            expect(results.first.message).
+              to include("\tService instance #{service_instance_1.name}: The service broker returned an invalid response for the request to #{instance_1_url}")
+            expect(results.first.message).
+              to include("\tService instance #{service_instance_2.name}: The service broker returned an invalid response for the request to #{instance_2_url}")
 
-            expect(results.second.message).to include("Deletion of space #{space_4.name} failed because one or more resources within could not be deleted.")
-            expect(results.second.message).to include("\tThe service broker returned an invalid response for the request to #{instance_4_url}")
+            expect(results.second.message).
+              to include("Deletion of space #{space_4.name} failed because one or more resources within could not be deleted.")
+            expect(results.second.message).
+              to include("\tService instance #{service_instance_4.name}: The service broker returned an invalid response for the request to #{instance_4_url}")
           end
         end
       end
