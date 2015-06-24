@@ -128,13 +128,48 @@ module VCAP::CloudController::Metrics
 
         updater.update_vitals(vitals)
 
-        expect(batch).to have_received(:gauge).with('cc.vitals.uptime',  33)
-        expect(batch).to have_received(:gauge).with('cc.vitals.cpu_load_avg',  0.5)
-        expect(batch).to have_received(:gauge).with('cc.vitals.mem_used_bytes',  542)
-        expect(batch).to have_received(:gauge).with('cc.vitals.mem_free_bytes',  927)
-        expect(batch).to have_received(:gauge).with('cc.vitals.mem_bytes',  1)
-        expect(batch).to have_received(:gauge).with('cc.vitals.cpu',  2.0)
-        expect(batch).to have_received(:gauge).with('cc.vitals.num_cores',  4)
+        expect(batch).to have_received(:gauge).with('cc.vitals.uptime', 33)
+        expect(batch).to have_received(:gauge).with('cc.vitals.cpu_load_avg', 0.5)
+        expect(batch).to have_received(:gauge).with('cc.vitals.mem_used_bytes', 542)
+        expect(batch).to have_received(:gauge).with('cc.vitals.mem_free_bytes', 927)
+        expect(batch).to have_received(:gauge).with('cc.vitals.mem_bytes', 1)
+        expect(batch).to have_received(:gauge).with('cc.vitals.cpu', 2.0)
+        expect(batch).to have_received(:gauge).with('cc.vitals.num_cores', 4)
+      end
+    end
+
+    describe '#update_log_counts' do
+      let(:batch) { double(:batch) }
+
+      before do
+        allow(statsd_client).to receive(:batch).and_yield(batch)
+        allow(batch).to receive(:gauge)
+      end
+
+      it 'sends log counts to statsd' do
+        counts = {
+          off:    1,
+          fatal:  2,
+          error:  3,
+          warn:   4,
+          info:   5,
+          debug:  6,
+          debug1: 7,
+          debug2: 8,
+          all:    9
+        }
+
+        updater.update_log_counts(counts)
+
+        expect(batch).to have_received(:gauge).with('cc.log_count.off', 1)
+        expect(batch).to have_received(:gauge).with('cc.log_count.fatal', 2)
+        expect(batch).to have_received(:gauge).with('cc.log_count.error', 3)
+        expect(batch).to have_received(:gauge).with('cc.log_count.warn', 4)
+        expect(batch).to have_received(:gauge).with('cc.log_count.info', 5)
+        expect(batch).to have_received(:gauge).with('cc.log_count.debug', 6)
+        expect(batch).to have_received(:gauge).with('cc.log_count.debug1', 7)
+        expect(batch).to have_received(:gauge).with('cc.log_count.debug2', 8)
+        expect(batch).to have_received(:gauge).with('cc.log_count.all', 9)
       end
     end
   end

@@ -41,13 +41,17 @@ module VCAP::CloudController::Metrics
 
     def update_vitals(vitals)
       @statsd.batch do |batch|
-        batch.gauge('cc.vitals.uptime', vitals[:uptime])
-        batch.gauge('cc.vitals.cpu_load_avg', vitals[:cpu_load_avg])
-        batch.gauge('cc.vitals.mem_used_bytes', vitals[:mem_used_bytes])
-        batch.gauge('cc.vitals.mem_free_bytes', vitals[:mem_free_bytes])
-        batch.gauge('cc.vitals.mem_bytes', vitals[:mem_bytes])
-        batch.gauge('cc.vitals.cpu', vitals[:cpu])
-        batch.gauge('cc.vitals.num_cores', vitals[:num_cores])
+        vitals.each do |key, val|
+          batch.gauge("cc.vitals.#{key}", val)
+        end
+      end
+    end
+
+    def update_log_counts(counts)
+      @statsd.batch do |batch|
+        counts.each do |key, val|
+          batch.gauge("cc.log_count.#{key}", val)
+        end
       end
     end
   end

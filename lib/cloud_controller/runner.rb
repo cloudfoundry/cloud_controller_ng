@@ -123,6 +123,7 @@ module VCAP::CloudController
       logger.info('starting periodic metrics updater')
       VCAP::CloudController::Metrics::PeriodicUpdater.new(
         ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:start] },  # this can become Time.now.utc after we remove varz
+        @log_counter,
         [
           VCAP::CloudController::Metrics::VarzUpdater.new,
           VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client)

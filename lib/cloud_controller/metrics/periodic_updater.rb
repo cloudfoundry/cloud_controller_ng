@@ -3,9 +3,10 @@ require 'cloud_controller/metrics/statsd_updater'
 
 module VCAP::CloudController::Metrics
   class PeriodicUpdater
-    def initialize(start_time, updaters=[VarzUpdater.new, StatsdUpdater.new])
+    def initialize(start_time, log_counter, updaters=[VarzUpdater.new, StatsdUpdater.new])
       @start_time = start_time
-      @updaters   = updaters
+      @updaters    = updaters
+      @log_counter = log_counter
     end
 
     def setup_updates
@@ -15,6 +16,7 @@ module VCAP::CloudController::Metrics
       EM.add_periodic_timer(30) { update_thread_info }
       EM.add_periodic_timer(30) { update_failed_job_count }
       EM.add_periodic_timer(30) { update_vitals }
+      EM.add_periodic_timer(30) { update_log_counts }
     end
 
     def update!
@@ -23,6 +25,18 @@ module VCAP::CloudController::Metrics
       update_thread_info
       update_failed_job_count
       update_vitals
+      update_log_counts
+    end
+
+    def update_log_counts
+      counts = @log_counter.counts
+
+      hash = {}
+      Steno::Logger::LEVELS.keys.each do |level_name|
+        hash[level_name] = counts.fetch(level_name.to_s, 0)
+      end
+
+      @updaters.each { |u| u.update_log_counts(hash) }
     end
 
     def record_user_count

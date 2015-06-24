@@ -23,5 +23,9 @@ module VCAP::CloudController::Metrics
     def update_vitals(_)
       # noop
     end
+
+    def update_log_counts(_)
+      # noop
+    end
   end
 end

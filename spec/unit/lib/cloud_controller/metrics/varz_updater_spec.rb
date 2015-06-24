@@ -106,5 +106,9 @@ module VCAP::CloudController::Metrics
     describe '#update_vitals' do
       # noop
     end
+
+    describe '#update_log_counts' do
+      # noop
+    end
   end
 end
