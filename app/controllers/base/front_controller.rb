@@ -12,13 +12,16 @@ module VCAP::CloudController
 
     vcap_configure(logger_name: 'cc.api', reload_path: File.dirname(__FILE__))
 
-    def initialize(config, token_decoder)
+    def initialize(config, token_decoder, request_metrics)
       @config = config
       @token_decoder = token_decoder
+      @request_metrics = request_metrics
       super()
     end
 
     before do
+      @request_metrics.start_request
+
       auth_token = env['HTTP_AUTHORIZATION']
       I18n.locale = env['HTTP_ACCEPT_LANGUAGE']
 
@@ -28,6 +31,7 @@ module VCAP::CloudController
     end
 
     after do
+      @request_metrics.complete_request(status)
       logger.info 'Vcap-Request-Id: ' + headers['X-Vcap-Request-Id'] + '; status: ' + status.to_s + '; processed'
     end
 

@@ -10,6 +10,7 @@ require 'loggregator'
 require 'cloud_controller/dea/sub_system'
 require 'cloud_controller/rack_app_builder'
 require 'cloud_controller/metrics/periodic_updater'
+require 'cloud_controller/metrics/request_metrics'
 
 require_relative 'seeds'
 require_relative 'message_bus_configurer'
@@ -88,12 +89,16 @@ module VCAP::CloudController
 
           Seeds.write_seed_data(@config) if @insert_seed_data
 
-          setup_metrics(@config, message_bus)
-
           Dea::SubSystem.setup!(message_bus)
 
+          VCAP::Component.varz.threadsafe! # initialize varz
+
+          statsd_client   = create_statsd_client(@config)
+          request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
+          gather_periodic_metrics(statsd_client, message_bus)
+
           builder = RackAppBuilder.new
-          app     = builder.build(@config)
+          app     = builder.build(@config, request_metrics)
 
           start_thin_server(app)
         rescue => e
@@ -103,22 +108,24 @@ module VCAP::CloudController
       end
     end
 
-    def setup_metrics(config, message_bus)
+    def create_statsd_client(config)
+      logger.info("configuring statsd server at #{config[:statsd_host]}:#{config[:statsd_port]}")
+      Statsd.logger = Steno.logger('statsd.client')
+      Statsd.new(config[:statsd_host], config[:statsd_port].to_i)
+    end
+
+    def gather_periodic_metrics(statsd_client, message_bus)
       logger.info('setting up metrics')
 
       logger.info('registering with collector')
       register_with_collector(message_bus)
-
-      logger.info("configuring statsd server at #{config[:statsd_host]}:#{config[:statsd_port]}")
-      Statsd.logger = Steno.logger('statsd.client')
-      statsd = Statsd.new(config[:statsd_host], config[:statsd_port].to_i)
 
       logger.info('starting periodic metrics updater')
       VCAP::CloudController::Metrics::PeriodicUpdater.new(
         ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:start] },  # this can become Time.now.utc after we remove varz
         [
           VCAP::CloudController::Metrics::VarzUpdater.new,
-          VCAP::CloudController::Metrics::StatsdUpdater.new(statsd)
+          VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client)
         ]).setup_updates
     end
 

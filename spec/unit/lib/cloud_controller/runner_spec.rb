@@ -106,6 +106,13 @@ module VCAP::CloudController
           expect(subject.logger).to receive(:error)
           expect { subject.run! }.to raise_exception
         end
+
+        it 'initializes varz threadsafety' do
+          VCAP::Component.varz.synchronize do
+            expect(VCAP::Component.varz).to receive(:threadsafe!)
+            subject.run!
+          end
+        end
       end
 
       describe 'insert seed flag' do
