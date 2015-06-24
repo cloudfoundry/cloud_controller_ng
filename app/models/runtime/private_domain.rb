@@ -42,6 +42,8 @@ module VCAP::CloudController
       validates_presence :owning_organization
       exclude_domains_from_same_org = Domain.dataset.exclude(owning_organization_id: owning_organization_id).or(SHARED_DOMAIN_CONDITION)
       errors.add(:name, :overlapping_domain) if exclude_domains_from_same_org.filter(Sequel.like(:name, "%.#{name}")).count > 0
+
+      validate_total_private_domains
     end
 
     def in_suspended_org?
@@ -70,6 +72,15 @@ module VCAP::CloudController
 
     def shared_by?(org)
       shared_organization_ids.include?(org.id)
+    end
+
+    def validate_total_private_domains
+      return unless new? && owning_organization
+
+      private_domains_policy = MaxPrivateDomainsPolicy.new(owning_organization.quota_definition, owning_organization.owned_private_domains)
+      unless private_domains_policy.allow_more_private_domains?(1)
+        errors.add(:organization, :total_private_domains_exceeded)
+      end
     end
   end
 end

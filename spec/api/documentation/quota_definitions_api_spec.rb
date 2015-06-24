@@ -16,6 +16,9 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
     field :non_basic_services_allowed, 'If an organization can have non basic services', required: opts[:required], valid_values: [true, false]
     field :total_services, 'How many services an organization can have.', required: opts[:required], example_values: [5, 201]
     field :total_routes, 'How many routes an organization can have.', required: opts[:required], example_values: [10, 23]
+    field :total_private_domains,
+      'How many private domains an organization can have. (-1 represents an unlimited amount)',
+      example_values: [-1, 10, 23], default: -1, experimental: true
     field :memory_limit, 'How much memory in megabyte an organization can have.', required: opts[:required], example_values: [5_120, 9999]
 
     field :instance_memory_limit,

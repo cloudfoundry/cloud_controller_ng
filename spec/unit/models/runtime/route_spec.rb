@@ -303,12 +303,14 @@ module VCAP::CloudController
 
           context 'on update' do
             it 'should not validate the total routes limit if already existing' do
-              expect {
-                space_quota.total_routes = 0
-                space_quota.save
-              }.not_to change {
-                subject.valid?
-              }
+              subject.save
+
+              expect(subject).to be_valid
+
+              space_quota.total_routes = 0
+              space_quota.save
+
+              expect(subject).to be_valid
             end
           end
         end

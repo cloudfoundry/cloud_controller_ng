@@ -17,8 +17,11 @@ module VCAP::CloudController
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on(:name)
+      organization_errors = e.errors.on(:organization)
       if name_errors && name_errors.include?(:unique)
         Errors::ApiError.new_from_details('DomainNameTaken', attributes['name'])
+      elsif organization_errors && organization_errors.include?(:total_private_domains_exceeded)
+        Errors::ApiError.new_from_details('TotalPrivateDomainsExceeded', Organization[guid: attributes['owning_organization_guid']].name)
       else
         Errors::ApiError.new_from_details('DomainInvalid', e.errors.full_messages)
       end
