@@ -157,6 +157,16 @@ module VCAP::CloudController::BrokerApiHelper
     @binding_id = JSON.parse(last_response.body)['metadata']['guid']
   end
 
+  def unbind_service
+    stub_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
+      to_return(status: 204, body: {}.to_json)
+
+    delete("/v2/service_bindings/#{@binding_id}",
+      '{}',
+      json_headers(admin_headers)
+    )
+  end
+
   def create_service_key(opts={})
     stub_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
       to_return(status: 201, body: {}.to_json)
@@ -172,6 +182,16 @@ module VCAP::CloudController::BrokerApiHelper
     )
 
     @service_key_id = JSON.parse(last_response.body)['metadata']['guid']
+  end
+
+  def delete_key
+    stub_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
+      to_return(status: 204, body: {}.to_json)
+
+    delete("/v2/service_keys/#{@service_key_id}",
+      '{}',
+      json_headers(admin_headers)
+    )
   end
 
   def deprovision_service
