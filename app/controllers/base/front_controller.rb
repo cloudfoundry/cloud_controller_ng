@@ -28,11 +28,14 @@ module VCAP::CloudController
       process_cors_headers
       VCAP::CloudController::Security::SecurityContextConfigurer.new(@token_decoder).configure(auth_token)
       validate_scheme
+
+      user_guid = VCAP::CloudController::SecurityContext.current_user.nil? ? nil : VCAP::CloudController::SecurityContext.current_user.guid
+      logger.info("Started request, Vcap-Request-Id: #{VCAP::Request.current_id}, User: #{user_guid}")
     end
 
     after do
       @request_metrics.complete_request(status)
-      logger.info 'Vcap-Request-Id: ' + headers['X-Vcap-Request-Id'] + '; status: ' + status.to_s + '; processed'
+      logger.info("Completed request, Vcap-Request-Id: #{headers['X-Vcap-Request-Id']}, Status: #{status}")
     end
 
     private

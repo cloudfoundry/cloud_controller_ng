@@ -45,17 +45,25 @@ module VCAP::CloudController
       end
     end
 
-    describe 'log request id and status code for all requests' do
+    describe 'logging' do
+      let(:user) { User.make }
+
       context 'get request' do
         before do
           allow(Steno).to receive(:logger).with(anything).and_return(fake_logger)
         end
 
-        it 'validate logging' do
+        it 'logs request id and status code for all requests' do
           get '/test_front_endpoint', '', {}
           request_id = last_response.headers['X-Vcap-Request-Id']
           request_status = last_response.status.to_s
-          expect(fake_logger).to have_received(:info).with("Vcap-Request-Id: #{request_id}; status: #{request_status}; processed")
+          expect(fake_logger).to have_received(:info).with("Completed request, Vcap-Request-Id: #{request_id}, Status: #{request_status}")
+        end
+
+        it 'logs request id and user guid for all requests' do
+          get '/test_front_endpoint', '', headers_for(user)
+          request_id = last_response.headers['X-Vcap-Request-Id']
+          expect(fake_logger).to have_received(:info).with("Started request, Vcap-Request-Id: #{request_id}, User: #{user.guid}")
         end
       end
     end
