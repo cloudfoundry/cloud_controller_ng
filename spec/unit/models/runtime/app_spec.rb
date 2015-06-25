@@ -611,7 +611,7 @@ module VCAP::CloudController
       it 'compose the buildpack cache key from stack name and app guid' do
         app.save
         app.refresh
-        expect(app.buildpack_cache_key).to eq("#{app.stack.name}-#{app.guid}")
+        expect(app.buildpack_cache_key).to eq("#{app.guid}-#{app.stack.name}")
       end
     end
 

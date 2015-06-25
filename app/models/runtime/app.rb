@@ -505,7 +505,7 @@ module VCAP::CloudController
     end
 
     def buildpack_cache_key
-      "#{stack.name}-#{guid}"
+      "#{guid}-#{stack.name}"
     end
 
     def docker_image=(value)

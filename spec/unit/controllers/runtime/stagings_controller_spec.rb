@@ -570,7 +570,7 @@ module VCAP::CloudController
           }.by(1)
 
           job = Delayed::Job.last
-          expect(job.handler).to include("#{app_obj.stack.name}-#{app_obj.guid}")
+          expect(job.handler).to include("#{app_obj.guid}-#{app_obj.stack.name}")
         end
 
         context 'when a content-md5 is specified' do
@@ -627,12 +627,12 @@ module VCAP::CloudController
           it 'redirects nginx to serve staged droplet' do
             buildpack_cache_blobstore.cp_to_blobstore(
                 buildpack_cache.path,
-                "#{app_obj.stack.name}-#{app_obj.guid}"
+                "#{app_obj.guid}-#{app_obj.stack.name}"
             )
 
             make_request
             expect(last_response.status).to eq(200)
-            expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{app_obj.stack.name}-#{app_obj.guid}")
+            expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{app_obj.guid}-#{app_obj.stack.name}")
           end
         end
 
@@ -644,7 +644,7 @@ module VCAP::CloudController
           it 'should return the buildpack cache' do
             buildpack_cache_blobstore.cp_to_blobstore(
                 buildpack_cache.path,
-                "#{app_obj.stack.name}-#{app_obj.guid}"
+                "#{app_obj.guid}-#{app_obj.stack.name}"
             )
 
             make_request
@@ -724,7 +724,7 @@ module VCAP::CloudController
           }.by(1)
 
           job = Delayed::Job.last
-          expect(job.handler).to include("#{stack}-#{app_model.guid}")
+          expect(job.handler).to include("#{app_model.guid}-#{stack}")
           expect(job.handler).to include('ngx.uploads')
           expect(job.handler).to include('buildpack_cache_blobstore')
           expect(job.queue).to eq('cc-api_z1-99')
@@ -791,12 +791,12 @@ module VCAP::CloudController
           it 'redirects nginx to serve staged droplet' do
             buildpack_cache_blobstore.cp_to_blobstore(
               buildpack_cache.path,
-              "#{stack}-#{app_model.guid}"
+              "#{app_model.guid}-#{stack}"
             )
 
             make_request
             expect(last_response.status).to eq(200)
-            expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{stack}-#{app_model.guid}")
+            expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{app_model.guid}-#{stack}")
           end
         end
 
@@ -808,7 +808,7 @@ module VCAP::CloudController
           it 'should return the buildpack cache' do
             buildpack_cache_blobstore.cp_to_blobstore(
               buildpack_cache.path,
-              "#{stack}-#{app_model.guid}"
+              "#{app_model.guid}-#{stack}"
             )
 
             make_request
