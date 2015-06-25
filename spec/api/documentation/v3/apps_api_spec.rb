@@ -194,11 +194,11 @@ resource 'Apps (Experimental)', type: :api do
       space.add_developer(user)
     end
 
-    parameter :name, 'Name of the App', required: true
-    parameter :space_guid, 'GUID of associated Space', required: true
-    parameter :environment_variables, 'Environment variables to be used for the App when running', required: false
+    body_parameter :name, 'Name of the App', required: true
+    body_parameter :space_guid, 'GUID of associated Space', required: true
+    body_parameter :environment_variables, 'Environment variables to be used for the App when running', required: false
 
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+    let(:raw_post) { body_parameters }
 
     example 'Create an App' do
       expect {
@@ -254,8 +254,8 @@ resource 'Apps (Experimental)', type: :api do
       space.add_developer(user)
     end
 
-    parameter :name, 'Name of the App'
-    parameter :environment_variables, 'Environment variables to be used for the App when running'
+    body_parameter :name, 'Name of the App'
+    body_parameter :environment_variables, 'Environment variables to be used for the App when running'
 
     let(:name) { 'new_name' }
     let(:environment_variables) do
@@ -266,7 +266,7 @@ resource 'Apps (Experimental)', type: :api do
     end
     let(:guid) { app_model.guid }
 
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+    let(:raw_post) { body_parameters }
 
     example 'Updating an App' do
       do_request_with_error_handling
@@ -362,8 +362,6 @@ resource 'Apps (Experimental)', type: :api do
 
     let(:guid) { app_model.guid }
 
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
-
     example 'Starting an App' do
       do_request_with_error_handling
 
@@ -421,8 +419,6 @@ resource 'Apps (Experimental)', type: :api do
     end
 
     let(:guid) { app_model.guid }
-
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
 
     example 'Stopping an App' do
       do_request_with_error_handling
@@ -488,8 +484,6 @@ resource 'Apps (Experimental)', type: :api do
 
     let(:guid) { app_model.guid }
 
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
-
     example 'getting the env of an app' do
       do_request_with_error_handling
 
@@ -544,12 +538,12 @@ resource 'Apps (Experimental)', type: :api do
       space.add_developer(user)
     end
 
-    parameter :desired_droplet_guid, 'GUID of the Staged Droplet to be used for the App'
+    body_parameter :desired_droplet_guid, 'GUID of the Staged Droplet to be used for the App'
 
     let(:desired_droplet_guid) { droplet.guid }
     let(:guid) { app_model.guid }
 
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+    let(:raw_post) { body_parameters }
 
     example 'Assigning a droplet as a an Apps current droplet' do
       do_request_with_error_handling

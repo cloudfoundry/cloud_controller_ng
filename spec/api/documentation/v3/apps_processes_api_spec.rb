@@ -111,16 +111,16 @@ resource 'Apps (Experimental)', type: :api do
   end
 
   put '/v3/apps/:guid/processes/:type/scale' do
-    parameter :instances, 'Number of instances'
-    parameter :memory_in_mb, 'The memory in mb allocated per instance'
-    parameter :disk_in_mb, 'The disk in mb allocated per instance'
+    body_parameter :instances, 'Number of instances'
+    body_parameter :memory_in_mb, 'The memory in mb allocated per instance'
+    body_parameter :disk_in_mb, 'The disk in mb allocated per instance'
 
     let(:instances) { 3 }
     let(:memory_in_mb) { 100 }
     let(:disk_in_mb) { 100 }
     let(:guid) { app_model.guid }
     let(:type) { process.type }
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+    let(:raw_post) { body_parameters }
 
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:process) { VCAP::CloudController::AppFactory.make(app_guid: app_model.guid, space: app_model.space) }

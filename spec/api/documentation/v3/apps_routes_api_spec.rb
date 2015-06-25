@@ -76,7 +76,7 @@ resource 'App Routes (Experimental)', type: :api do
   end
 
   put '/v3/apps/:guid/routes' do
-    parameter :route_guid, 'GUID of the route', required: true
+    body_parameter :route_guid, 'GUID of the route', required: true
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
@@ -90,7 +90,7 @@ resource 'App Routes (Experimental)', type: :api do
     let(:web_process) { VCAP::CloudController::AppFactory.make(space_guid: space_guid, type: 'web') }
     let(:worker_process) { VCAP::CloudController::AppFactory.make(space_guid: space_guid, type: 'worker_process') }
 
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+    let(:raw_post) { body_parameters }
 
     before do
       space.organization.add_user(user)
@@ -112,7 +112,7 @@ resource 'App Routes (Experimental)', type: :api do
   end
 
   delete '/v3/apps/:guid/routes' do
-    parameter :route_guid, 'GUID of the route', required: true
+    body_parameter :route_guid, 'GUID of the route', required: true
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
@@ -125,7 +125,7 @@ resource 'App Routes (Experimental)', type: :api do
     let(:guid) { app_model.guid }
 
     let(:route_guid) { route1.guid }
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+    let(:raw_post) { body_parameters }
 
     before do
       space.organization.add_user(user)

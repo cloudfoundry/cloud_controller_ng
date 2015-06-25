@@ -133,52 +133,55 @@
         <pre class="request query_parameters highlight">{{ request_query_parameters_text }}</pre>
       {{/ request_query_parameters_text }}
 
-      <h4>Body</h4>
-      <table class="fields table table-striped table-bordered table-condensed">
-        <thead>
-        <tr>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Default</th>
-          <th>Valid Values</th>
-          <th>Example Values</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{# fields }}
-          <tr class="{{# deprecated }}deprecated{{/ deprecated }} {{# readonly }}readonly{{/ readonly }}">
-            <td class="{{# required }}required{{/required}} {{# experimental }}experimental{{/ experimental }}">
-              <span class="name">{{ name }}</span>
-            </td>
-            <td>
-              <span class="description">{{ description }}</span>
-            </td>
-            <td>
-              <span class="default">{{ default }}</span>
-            </td>
-            <td>
-              <ul class="valid_values">
-                {{# valid_values }}
-                  <li>{{ . }}</li>
-                {{/ valid_values }}
-              </ul>
-            </td>
-            <td>
-              <ul class="example_values">
-                {{# example_values }}
-                  {{# render_example_pre_tag }}
-                    <li><pre>{{ . }}</pre></li>
-                  {{/ render_example_pre_tag }}
-                  {{^ render_example_pre_tag }}
-                    <li>{{ . }}</li>
-                  {{/ render_example_pre_tag }}
-                {{/ example_values }}
-              </ul>
-            </td>
+      {{# has_body_parameters? }}
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
           </tr>
-        {{/ fields }}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+          {{# body_parameters }}
+            <tr class="{{# deprecated }}deprecated{{/ deprecated }} {{# readonly }}readonly{{/ readonly }}">
+              <td class="{{# required }}required{{/required}} {{# experimental }}experimental{{/ experimental }}">
+                <span class="name">{{ name }}</span>
+              </td>
+              <td>
+                <span class="description">{{ description }}</span>
+              </td>
+              <td>
+                <span class="default">{{ default }}</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                  {{# valid_values }}
+                    <li>{{ . }}</li>
+                  {{/ valid_values }}
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                  {{# example_values }}
+                    {{# render_example_pre_tag }}
+                      <li><pre>{{ . }}</pre></li>
+                    {{/ render_example_pre_tag }}
+                    {{^ render_example_pre_tag }}
+                      <li>{{ . }}</li>
+                    {{/ render_example_pre_tag }}
+                  {{/ example_values }}
+                </ul>
+              </td>
+            </tr>
+          {{/ body_parameters }}
+          </tbody>
+        </table>
+      {{/ has_body_parameters? }}
+
       {{# request_body }}
         <pre class="request body">{{{ request_body }}}</pre>
       {{/ request_body }}

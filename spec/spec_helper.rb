@@ -46,7 +46,8 @@ RSpec.configure do |rspec_config|
   rspec_config.include ControllerHelpers, type: :controller, file_path: EscapedPath.join(%w(spec unit controllers))
   rspec_config.include ControllerHelpers, type: :api
   rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec acceptance))
-  rspec_config.include ApiDsl, type: :legacy_api
+  rspec_config.include ApiDsl, type: :api
+  rspec_config.include LegacyApiDsl, type: :legacy_api
 
   rspec_config.include IntegrationHelpers, type: :integration
   rspec_config.include IntegrationHttp, type: :integration

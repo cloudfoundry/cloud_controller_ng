@@ -151,26 +151,20 @@ resource 'Packages (Experimental)', type: :api do
     let(:guid) { app_model.guid }
     let(:type) { 'docker' }
     let(:url) { 'docker://cloudfoundry/runtime-ci' }
-    let(:packages_params) do
-      {
-        type: type,
-        url:  url
-      }
-    end
 
     before do
       space.organization.add_user(user)
       space.add_developer(user)
     end
 
-    let(:raw_post) { MultiJson.dump(packages_params, pretty: true) }
+    let(:raw_post) { body_parameters }
 
-    parameter :type, 'Package type', required: true, valid_values: ['bits', 'docker']
-    parameter :url, 'Url of docker image', required: false
+    body_parameter :type, 'Package type', required: true, valid_values: ['bits', 'docker']
+    body_parameter :url, 'Url of docker image', required: false
 
     example 'Create a Package' do
       expect {
-        do_request packages_params
+        do_request
       }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
       package = VCAP::CloudController::PackageModel.last
@@ -303,12 +297,12 @@ resource 'Packages (Experimental)', type: :api do
   end
 
   post '/v3/packages/:guid/droplets' do
-    parameter :buildpack_guid, 'Admin buildpack used to stage the package (cannot be used with buildpack_git_url)', required: false
-    parameter :buildpack_git_url, 'Git url of a buildpack used to stage the package (cannot be used with buildpack_guid)', required: false
-    parameter :staging_environment_variables, 'Environment variables to use during staging', required: false
-    parameter :stack, 'Stack used to stage package', required: false
-    parameter :memory_limit, 'Memory limit used to stage package', required: false
-    parameter :disk_limit, 'Disk limit used to stage package', required: false
+    body_parameter :buildpack_guid, 'Admin buildpack used to stage the package (cannot be used with buildpack_git_url)', required: false
+    body_parameter :buildpack_git_url, 'Git url of a buildpack used to stage the package (cannot be used with buildpack_guid)', required: false
+    body_parameter :staging_environment_variables, 'Environment variables to use during staging', required: false
+    body_parameter :stack, 'Stack used to stage package', required: false
+    body_parameter :memory_limit, 'Memory limit used to stage package', required: false
+    body_parameter :disk_limit, 'Disk limit used to stage package', required: false
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
@@ -324,7 +318,7 @@ resource 'Packages (Experimental)', type: :api do
     let(:guid) { package_model.guid }
     let(:buildpack_git_url) { 'http://github.com/myorg/awesome-buildpack' }
 
-    let(:raw_post) { MultiJson.dump(params, pretty: true) }
+    let(:raw_post) { body_parameters }
 
     let(:stager_id) { 'abc123' }
     let(:stager_subject) { "staging.#{stager_id}.start" }

@@ -153,6 +153,8 @@ resource 'Apps', type: [:api, :legacy_api] do
 
     field :source_app_guid, 'The guid for the source app', required: true
 
+    let(:raw_post) { body_parameters }
+
     example 'Copy the app bits for an App' do
       explanation <<-eos
         This endpoint will copy the package bits in the blobstore from the source app to the destination app.
