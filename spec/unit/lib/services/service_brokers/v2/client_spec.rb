@@ -100,10 +100,12 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_body) { response_data.to_json }
       let(:code) { '201' }
       let(:message) { 'Created' }
+      let(:developer) { make_developer_for_space(instance.space) }
 
       before do
         allow(http_client).to receive(:put).and_return(response)
         allow(http_client).to receive(:delete).and_return(response)
+        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
 
         instance.service_instance_operation = service_instance_operation
       end

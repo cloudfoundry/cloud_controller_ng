@@ -114,8 +114,14 @@ module VCAP::CloudController
     end
 
     describe '#save_with_new_operation'  do
+      let(:service_instance) { ManagedServiceInstance.make }
+      let(:developer) { make_developer_for_space(service_instance.space) }
+
+      before do
+        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
+      end
+
       it 'creates a new last_operation object and associates it with the service instance' do
-        service_instance = ManagedServiceInstance.make
         attrs = {
           last_operation: {
             state: 'in progress',
@@ -150,6 +156,10 @@ module VCAP::CloudController
     end
 
     describe '#save_and_update_operation' do
+      let(:service_instance) { ManagedServiceInstance.make }
+      let(:developer) { make_developer_for_space(service_instance.space) }
+      let(:manager) { make_manager_for_space(service_instance.space) }
+
       before do
         attrs = { last_operation: { state: 'in progress', description: '10%' } }
         service_instance.save_with_new_operation(attrs)
@@ -157,21 +167,50 @@ module VCAP::CloudController
         @old_guid = service_instance.last_operation.guid
       end
 
-      it 'updates the existing last_operation object' do
-        attrs = {
-          last_operation: {
-            state: 'in progress',
-            description: '20%'
-          },
-          dashboard_url: 'a-different-url.com'
-        }
-        service_instance.save_and_update_operation(attrs)
+      context 'developer' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
+        end
 
-        service_instance.reload
-        expect(service_instance.dashboard_url).to eq 'a-different-url.com'
-        expect(service_instance.last_operation.state).to eq 'in progress'
-        expect(service_instance.last_operation.guid).to eq @old_guid
-        expect(service_instance.last_operation.description).to eq '20%'
+        it 'updates the existing last_operation object' do
+          attrs = {
+            last_operation: {
+              state: 'in progress',
+              description: '20%'
+            },
+            dashboard_url: 'a-different-url.com'
+          }
+          service_instance.save_and_update_operation(attrs)
+
+          service_instance.reload
+          expect(service_instance.dashboard_url).to eq 'a-different-url.com'
+          expect(service_instance.last_operation.state).to eq 'in progress'
+          expect(service_instance.last_operation.guid).to eq @old_guid
+          expect(service_instance.last_operation.description).to eq '20%'
+        end
+      end
+
+      context 'manager' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
+        end
+
+        it 'updates the existing last_operation object without displaying the dashboard url' do
+          attrs = {
+            last_operation: {
+              state: 'in progress',
+              description: '20%'
+            },
+            dashboard_url: 'this.should.not.appear.com'
+          }
+          service_instance.save_and_update_operation(attrs)
+
+          service_instance.reload
+          expect(service_instance.dashboard_url).to eq ''
+          expect(service_instance.last_operation.state).to eq 'in progress'
+          expect(service_instance.last_operation.guid).to eq @old_guid
+          expect(service_instance.last_operation.description).to eq '20%'
+        end
       end
     end
 
@@ -198,43 +237,92 @@ module VCAP::CloudController
       let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ', provider: 'Bill Gates', version: '1.2.3') }
       let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service) }
       subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+      let(:developer)       { make_developer_for_space(service_instance.space) }
+      let(:manager)       { make_manager_for_space(service_instance.space) }
 
-      it 'returns detailed summary' do
-        last_operation = ServiceInstanceOperation.make(
-          state: 'in progress',
-          description: '50% all the time',
-          type: 'create',
-        )
-        service_instance.service_instance_operation = last_operation
+      context 'developer' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
+        end
 
-        service_instance.dashboard_url = 'http://dashboard.example.com'
+        it 'returns detailed summary' do
+          last_operation = ServiceInstanceOperation.make(
+            state: 'in progress',
+            description: '50% all the time',
+            type: 'create',
+          )
+          service_instance.service_instance_operation = last_operation
 
-        expect(service_instance.as_summary_json).to include({
-          'guid' => subject.guid,
-          'name' => subject.name,
-          'bound_app_count' => 0,
-          'dashboard_url' => 'http://dashboard.example.com',
-          'service_plan' => {
-            'guid' => '12763abc',
-            'name' => 'Gold Plan',
-            'service' => {
-              'guid' => '9876XZ',
-              'label' => 'YourSQL',
-              'provider' => 'Bill Gates',
-              'version' => '1.2.3',
+          service_instance.dashboard_url = 'http://dashboard.example.com'
+
+          expect(service_instance.as_summary_json).to include({
+            'guid' => subject.guid,
+            'name' => subject.name,
+            'bound_app_count' => 0,
+            'dashboard_url' => 'http://dashboard.example.com',
+            'service_plan' => {
+              'guid' => '12763abc',
+              'name' => 'Gold Plan',
+              'service' => {
+                'guid' => '9876XZ',
+                'label' => 'YourSQL',
+                'provider' => 'Bill Gates',
+                'version' => '1.2.3',
+              }
             }
-          }
-        })
+          })
 
-        expect(service_instance.as_summary_json['last_operation']).to include(
-          {
-            'state' => 'in progress',
-            'description' => '50% all the time',
-            'type' => 'create',
-          }
-        )
+          expect(service_instance.as_summary_json['last_operation']).to include(
+            {
+              'state' => 'in progress',
+              'description' => '50% all the time',
+              'type' => 'create',
+            }
+          )
+        end
       end
 
+      context 'manager' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
+        end
+
+        it 'returns detailed summary without dashboard url' do
+          last_operation = ServiceInstanceOperation.make(
+            state: 'in progress',
+            description: '50% all the time',
+            type: 'create',
+          )
+          service_instance.service_instance_operation = last_operation
+
+          service_instance.dashboard_url = 'http://dashboard.example.com'
+
+          expect(service_instance.as_summary_json).to include({
+                'guid' => subject.guid,
+                'name' => subject.name,
+                'bound_app_count' => 0,
+                'dashboard_url' => '',
+                'service_plan' => {
+                  'guid' => '12763abc',
+                  'name' => 'Gold Plan',
+                  'service' => {
+                    'guid' => '9876XZ',
+                    'label' => 'YourSQL',
+                    'provider' => 'Bill Gates',
+                    'version' => '1.2.3',
+                  }
+                }
+              })
+
+          expect(service_instance.as_summary_json['last_operation']).to include(
+              {
+                'state' => 'in progress',
+                'description' => '50% all the time',
+                'type' => 'create',
+              }
+            )
+        end
+      end
       context 'when the last_operation does not exist' do
         it 'sets the field to nil' do
           expect(service_instance.as_summary_json['last_operation']).to be_nil
@@ -634,6 +722,7 @@ module VCAP::CloudController
       let(:developer)       { make_developer_for_space(service_instance.space) }
       let(:auditor)         { make_auditor_for_space(service_instance.space) }
       let(:user)            { make_user_for_space(service_instance.space) }
+      let(:manager)         { make_manager_for_space(service_instance.space) }
 
       it 'includes the last operation hash' do
         updated_at_time = Time.now.utc
@@ -652,6 +741,37 @@ module VCAP::CloudController
         })
 
         expect(service_instance.to_hash['last_operation']['updated_at']).to be
+      end
+
+      context 'dashboard_url' do
+        before do
+          service_instance.dashboard_url = 'http://meow.com?username:password'
+        end
+
+        it 'returns a dashboard_url for an admin' do
+          allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
+          expect(service_instance.to_hash['dashboard_url']).to eq(service_instance.dashboard_url)
+        end
+
+        it 'returns a dashboard_url for a space developer' do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
+          expect(service_instance.to_hash['dashboard_url']).to eq(service_instance.dashboard_url)
+        end
+
+        it 'returns a blank dashboard_url for a space auditor' do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(auditor)
+          expect(service_instance.to_hash['dashboard_url']).to eq('')
+        end
+
+        it 'returns a blank dashboard_url for a space user' do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user)
+          expect(service_instance.to_hash['dashboard_url']).to eq('')
+        end
+
+        it 'returns a blank dashboard_url for a space manager' do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
+          expect(service_instance.to_hash['dashboard_url']).to eq('')
+        end
       end
     end
 

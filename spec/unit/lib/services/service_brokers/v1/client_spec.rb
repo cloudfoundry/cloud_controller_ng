@@ -10,6 +10,7 @@ module VCAP::Services
     end
 
     let(:http_client) { double('http_client') }
+    let(:developer) { make_developer_for_space(instance.space) }
 
     before do
       allow(ServiceBrokers::V1::HttpClient).to receive(:new).
@@ -53,6 +54,8 @@ module VCAP::Services
             organization_guid: space.organization_guid
           }
         ).and_return(response)
+
+        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
       end
 
       it 'sets relevant attributes on the instance' do

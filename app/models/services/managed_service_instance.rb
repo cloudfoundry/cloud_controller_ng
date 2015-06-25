@@ -178,6 +178,13 @@ module VCAP::CloudController
       super || []
     end
 
+    def dashboard_url
+      if !VCAP::CloudController::SecurityContext.admin? && !space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+        return ''
+      end
+      super
+    end
+
     def merged_tags
       (service.tags + tags).uniq
     end
