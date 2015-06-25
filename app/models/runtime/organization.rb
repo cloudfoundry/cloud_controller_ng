@@ -126,8 +126,6 @@ module VCAP::CloudController
       super
       # We cannot start billing events without the guid being assigned to the org.
       if @is_billing_enabled
-        OrganizationStartEvent.create_from_org(self)
-        # retroactively emit start events for services
         spaces.map(&:service_instances).flatten.each do |si|
           ServiceCreateEvent.create_from_service_instance(si)
         end

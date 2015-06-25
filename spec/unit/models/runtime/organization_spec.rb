@@ -219,12 +219,6 @@ module VCAP::CloudController
           o
         end
 
-        it 'should call OrganizationStartEvent.create_from_org' do
-          expect(OrganizationStartEvent).to receive(:create_from_org)
-          org.billing_enabled = true
-          org.save(validate: false)
-        end
-
         it 'should emit create events for provisioned services' do
           ds = ServiceCreateEvent.filter(
             organization_guid: org.guid,

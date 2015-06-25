@@ -256,10 +256,6 @@ module VCAP::CloudController
     space      { Space.make }
   end
 
-  OrganizationStartEvent.blueprint do
-    BillingEvent.blueprint
-  end
-
   AppEvent.blueprint do
     app               { AppFactory.make }
     instance_guid     { Sham.guid }

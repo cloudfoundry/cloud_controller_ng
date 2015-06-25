@@ -40,14 +40,12 @@ module VCAP::CloudController
 
     describe 'all' do
       before do
-        @org_event = OrganizationStartEvent.make
         @service_create_event = ServiceCreateEvent.make
         @service_delete_event = ServiceDeleteEvent.make
       end
 
       it 'should return an array of all events' do
         expect(BillingEvent.all).to eq([
-          @org_event,
           @service_create_event,
           @service_delete_event,
         ])
@@ -55,7 +53,6 @@ module VCAP::CloudController
 
       it 'should return events with the correct event_type strings' do
         expect(BillingEvent.map(&:event_type)).to eq([
-          'organization_billing_start',
           'service_create',
           'service_delete',
         ])
@@ -77,7 +74,6 @@ module VCAP::CloudController
         end
       end
 
-      it_behaves_like 'an event which works with both single table inheritance keys', OrganizationStartEvent, 'VCAP::CloudController::Models::OrganizationStartEvent'
       it_behaves_like 'an event which works with both single table inheritance keys', ServiceCreateEvent, 'VCAP::CloudController::Models::ServiceCreateEvent'
       it_behaves_like 'an event which works with both single table inheritance keys', ServiceDeleteEvent, 'VCAP::CloudController::Models::ServiceDeleteEvent'
     end

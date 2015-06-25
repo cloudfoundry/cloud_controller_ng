@@ -20,10 +20,6 @@ module VCAP::CloudController
       timestamp = Time.new(2012, 01, 01, 00, 00, 01).utc
       @start_time = timestamp
 
-      @org_event = OrganizationStartEvent.make(
-        timestamp: timestamp
-      )
-
       @service_create_event = ServiceCreateEvent.make(
         timestamp: timestamp += 1
       )
@@ -63,26 +59,16 @@ module VCAP::CloudController
           it 'returns all records' do
             get path, {}, admin_headers
             expect(last_response.status).to eq(200)
-            expect(decoded_response['total_results']).to eq(3)
+            expect(decoded_response['total_results']).to eq(2)
             expect(decoded_response['total_pages']).to eq(1)
             expect(decoded_response['prev_url']).to eq(nil)
             expect(decoded_response['next_url']).to eq(nil)
-            expect(decoded_response['resources'].size).to eq(3)
-          end
-
-          it 'correctly serializes the org billing start event' do
-            get path, {}, admin_headers
-            expect(decoded_response['resources'][0]).to eq({
-              'event_type' => 'organization_billing_start',
-              'organization_guid' => @org_event.organization_guid,
-              'organization_name' => @org_event.organization_name,
-              'timestamp' => @org_event.timestamp.iso8601,
-            })
+            expect(decoded_response['resources'].size).to eq(2)
           end
 
           it 'correctly serializes the service create event' do
             get path, {}, admin_headers
-            expect(decoded_response['resources'][1]).to eq({
+            expect(decoded_response['resources'][0]).to eq({
               'event_type' => 'service_create',
               'organization_guid' => @service_create_event.organization_guid,
               'organization_name' => @service_create_event.organization_name,
@@ -102,7 +88,7 @@ module VCAP::CloudController
 
           it 'correctly serializes the service delete event' do
             get path, {}, admin_headers
-            expect(decoded_response['resources'][2]).to eq({
+            expect(decoded_response['resources'][1]).to eq({
               'event_type' => 'service_delete',
               'organization_guid' => @service_delete_event.organization_guid,
               'organization_name' => @service_delete_event.organization_name,
@@ -134,11 +120,11 @@ module VCAP::CloudController
 
         it 'correctly filters events' do
           get path, {}, admin_headers
-          expect(decoded_response['total_results']).to eq(2)
+          expect(decoded_response['total_results']).to eq(1)
           expect(decoded_response['total_pages']).to eq(1)
           expect(decoded_response['prev_url']).to eq(nil)
           expect(decoded_response['next_url']).to eq(nil)
-          expect(decoded_response['resources'].size).to eq(2)
+          expect(decoded_response['resources'].size).to eq(1)
         end
       end
 
