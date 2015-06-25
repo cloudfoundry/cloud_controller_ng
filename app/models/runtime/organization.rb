@@ -122,16 +122,6 @@ module VCAP::CloudController
       super
     end
 
-    def after_save
-      super
-      # We cannot start billing events without the guid being assigned to the org.
-      if @is_billing_enabled
-        spaces.map(&:service_instances).flatten.each do |si|
-          ServiceCreateEvent.create_from_service_instance(si)
-        end
-      end
-    end
-
     def validate
       validates_presence :name
       validates_unique :name

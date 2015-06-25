@@ -99,17 +99,6 @@ module VCAP::CloudController
       service_instance_operation
     end
 
-    def after_create
-      super
-      ServiceCreateEvent.create_from_service_instance(self)
-    end
-
-    def after_destroy
-      super
-
-      ServiceDeleteEvent.create_from_service_instance(self)
-    end
-
     def after_initialize
       super
       self.guid ||= SecureRandom.uuid

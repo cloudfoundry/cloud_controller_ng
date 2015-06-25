@@ -238,12 +238,6 @@ module VCAP::CloudController
     organization { Organization.make }
   end
 
-  BillingEvent.blueprint do
-    timestamp         { Time.now.utc }
-    organization_guid { Sham.guid }
-    organization_name { Sham.name }
-  end
-
   Event.blueprint do
     timestamp  { Time.now.utc }
     type       { Sham.name }
@@ -263,28 +257,6 @@ module VCAP::CloudController
     exit_status       { Random.rand(256) }
     exit_description  { Sham.description }
     timestamp         { Time.now.utc }
-  end
-
-  ServiceCreateEvent.blueprint do
-    BillingEvent.blueprint
-    space_guid        { Sham.guid }
-    space_name        { Sham.name }
-    service_instance_guid { Sham.guid }
-    service_instance_name { Sham.name }
-    service_guid      { Sham.guid }
-    service_label     { Sham.label }
-    service_provider  { Sham.provider }
-    service_version   { Sham.version }
-    service_plan_guid { Sham.guid }
-    service_plan_name { Sham.name }
-  end
-
-  ServiceDeleteEvent.blueprint do
-    BillingEvent.blueprint
-    space_guid        { Sham.guid }
-    space_name        { Sham.name }
-    service_instance_guid { Sham.guid }
-    service_instance_name { Sham.name }
   end
 
   QuotaDefinition.blueprint do

@@ -190,44 +190,6 @@ module VCAP::CloudController
       it 'should not be enabled for billing when first created' do
         expect(Organization.make.billing_enabled).to eq(false)
       end
-
-      context 'enabling billing' do
-        before do
-          TestConfig.override({ billing_event_writing_enabled: true })
-        end
-
-        let(:org) do
-          o = Organization.make
-          2.times do
-            space = Space.make(
-              organization: o,
-            )
-            2.times do
-              AppFactory.make(
-                space: space,
-                state: 'STARTED',
-                package_hash: 'abc',
-                package_state: 'STAGED',
-              )
-              AppFactory.make(
-                space: space,
-                state: 'STOPPED',
-              )
-              ManagedServiceInstance.make(space: space)
-            end
-          end
-          o
-        end
-
-        it 'should emit create events for provisioned services' do
-          ds = ServiceCreateEvent.filter(
-            organization_guid: org.guid,
-          )
-          org.billing_enabled = true
-          org.save(validate: false)
-          expect(ds.count).to eq(4)
-        end
-      end
     end
 
     context 'memory quota' do

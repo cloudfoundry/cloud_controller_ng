@@ -214,25 +214,6 @@ module VCAP::CloudController
       end
     end
 
-    context 'billing' do
-      context 'creating a service instance' do
-        it 'should call ServiceCreateEvent.create_from_service_instance' do
-          expect(ServiceCreateEvent).to receive(:create_from_service_instance)
-          expect(ServiceDeleteEvent).not_to receive(:create_from_service_instance)
-          service_instance
-        end
-      end
-
-      context 'destroying a service instance' do
-        it 'should call ServiceDeleteEvent.create_from_service_instance' do
-          service_instance
-          expect(ServiceCreateEvent).not_to receive(:create_from_service_instance)
-          expect(ServiceDeleteEvent).to receive(:create_from_service_instance).with(service_instance)
-          service_instance.destroy
-        end
-      end
-    end
-
     describe '#as_summary_json' do
       let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ', provider: 'Bill Gates', version: '1.2.3') }
       let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service) }
