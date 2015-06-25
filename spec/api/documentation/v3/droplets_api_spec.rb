@@ -58,6 +58,11 @@ resource 'Droplets (Experimental)', type: :api do
           'self'    => { 'href' => "/v3/droplets/#{guid}" },
           'package' => { 'href' => "/v3/packages/#{package_model.guid}" },
           'app'     => { 'href' => "/v3/apps/#{app_guid}" },
+          'assign_current_droplet' => {
+            'href' => "/v3/apps/#{app_guid}/current_droplet",
+            'method' => 'PUT',
+            'body' => { desired_droplet_guid: droplet_model.guid }.to_json
+          }
         }
       }
 
@@ -163,6 +168,11 @@ resource 'Droplets (Experimental)', type: :api do
                 'package'   => { 'href' => "/v3/packages/#{package.guid}" },
                 'buildpack' => { 'href' => "/v2/buildpacks/#{buildpack.guid}" },
                 'app'       => { 'href' => "/v3/apps/#{droplet1.app_guid}" },
+                'assign_current_droplet' => {
+                  'href' => "/v3/apps/#{droplet1.app_guid}/current_droplet",
+                  'method' => 'PUT',
+                  'body' => { desired_droplet_guid: droplet1.guid }.to_json
+                }
               }
             },
             {
@@ -180,6 +190,11 @@ resource 'Droplets (Experimental)', type: :api do
                 'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },
                 'package' => { 'href' => "/v3/packages/#{package.guid}" },
                 'app'     => { 'href' => "/v3/apps/#{droplet2.app_guid}" },
+                'assign_current_droplet' => {
+                  'href' => "/v3/apps/#{droplet2.app_guid}/current_droplet",
+                  'method' => 'PUT',
+                  'body' => { desired_droplet_guid: droplet2.guid }.to_json
+                }
               }
             },
           ]

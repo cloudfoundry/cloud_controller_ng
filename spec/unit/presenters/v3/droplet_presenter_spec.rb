@@ -36,6 +36,9 @@ module VCAP::CloudController
         expect(result['_links']['package']['href']).to eq("/v3/packages/#{droplet.package_guid}")
         expect(result['_links']['buildpack']['href']).to eq("/v2/buildpacks/#{droplet.buildpack_guid}")
         expect(result['_links']['app']['href']).to eq("/v3/apps/#{droplet.app_guid}")
+        expect(result['_links']['assign_current_droplet']['href']).to eq("/v3/apps/#{droplet.app_guid}/current_droplet")
+        expect(result['_links']['assign_current_droplet']['method']).to eq('PUT')
+        expect(result['_links']['assign_current_droplet']['body']).to eq({ desired_droplet_guid: droplet.guid }.to_json)
       end
     end
 
