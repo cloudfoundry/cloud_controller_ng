@@ -108,7 +108,7 @@ module VCAP::CloudController
         message = error_message(response)
 
         if type && message
-          @app.mark_as_failed_to_stage(type, message)
+          @app.mark_as_failed_to_stage(type)
           raise Errors::ApiError.new_from_details(type, message)
         end
       end

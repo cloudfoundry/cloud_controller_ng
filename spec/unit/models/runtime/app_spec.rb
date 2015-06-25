@@ -1701,6 +1701,28 @@ module VCAP::CloudController
         }.to change { app.package_pending_since }.from(kind_of(Time)).to(nil)
       end
 
+      describe 'setting staging_failed_description' do
+        it 'sets the staging_failed_description to the v2.yml description of the error type' do
+          expect {
+            app.mark_as_failed_to_stage('NoAppDetectedError')
+          }.to change { app.staging_failed_description }.to('An app was not successfully detected by any available buildpack')
+        end
+
+        it 'provides a string for interpolation on errors that require it' do
+          expect {
+            app.mark_as_failed_to_stage('StagingError')
+          }.to change { app.staging_failed_description }.to('Staging error: staging failed')
+        end
+
+        App::STAGING_FAILED_REASONS.each do |reason|
+          it "successfully sets staging_failed_description for reason: #{reason}" do
+            expect {
+              app.mark_as_failed_to_stage(reason)
+            }.to_not raise_error
+          end
+        end
+      end
+
       context 'when a valid reason is specified' do
         App::STAGING_FAILED_REASONS.each do |reason|
           it 'sets the requested staging failed reason' do
@@ -1712,20 +1734,10 @@ module VCAP::CloudController
       end
 
       context 'when an unexpected reason is specifed' do
-        it 'should fail validation' do
+        it 'should use the default, generic reason' do
           expect {
-            app.mark_as_failed_to_stage('MyReason')
-          }.to raise_error(Sequel::ValidationFailed)
-        end
-      end
-
-      context 'when a description is given' do
-        App::STAGING_FAILED_REASONS.each do |reason|
-          it 'sets the requested staging failed reason' do
-            expect {
-              app.mark_as_failed_to_stage(reason, "#{reason} description")
-            }.to change { app.staging_failed_description }.to("#{reason} description")
-          end
+            app.mark_as_failed_to_stage
+          }.to change { app.staging_failed_reason }.to 'StagingError'
         end
       end
 
