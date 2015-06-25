@@ -41,7 +41,6 @@ module VCAP::CloudController
         :failed_jobs => {
           cutoff_age_in_days: Fixnum
         },
-        optional(:billing_event_writing_enabled) => bool,
         :default_app_memory => Fixnum,
         :default_app_disk_in_mb => Fixnum,
         optional(:maximum_app_disk_in_mb) => Fixnum,
@@ -321,7 +320,6 @@ module VCAP::CloudController
         config[:maximum_app_disk_in_mb] ||= 2048
         config[:request_timeout_in_seconds] ||= 900
         config[:directories] ||= {}
-        config[:billing_event_writing_enabled] = true if config[:billing_event_writing_enabled].nil?
         config[:skip_cert_verify] = false if config[:skip_cert_verify].nil?
         config[:app_bits_upload_grace_period_in_seconds] ||= 0
         config[:db] ||= {}

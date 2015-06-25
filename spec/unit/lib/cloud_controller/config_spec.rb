@@ -27,10 +27,6 @@ module VCAP::CloudController
           expect(config[:directories]).to eq({})
         end
 
-        it 'enables writing billing events' do
-          expect(config[:billing_event_writing_enabled]).to be true
-        end
-
         it 'sets a default request_timeout_in_seconds value' do
           expect(config[:request_timeout_in_seconds]).to eq(900)
         end
@@ -115,10 +111,6 @@ module VCAP::CloudController
 
           it 'preserves the external_protocol value from the file' do
             expect(config[:external_protocol]).to eq('http')
-          end
-
-          it 'preserves the billing_event_writing_enabled value from the file' do
-            expect(config[:billing_event_writing_enabled]).to be false
           end
 
           it 'preserves the request_timeout_in_seconds value from the file' do

@@ -126,7 +126,6 @@ default_app_disk_in_mb: 512
 maximum_app_disk_in_mb: 3
 directories:
   some: "value"
-billing_event_writing_enabled: false
 request_timeout_in_seconds: 600
 skip_cert_verify: true
 app_bits_upload_grace_period_in_seconds: 600
