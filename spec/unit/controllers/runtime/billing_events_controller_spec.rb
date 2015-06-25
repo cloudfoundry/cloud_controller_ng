@@ -24,14 +24,6 @@ module VCAP::CloudController
         timestamp: timestamp
       )
 
-      @app_start_event = AppStartEvent.make(
-        timestamp: timestamp += 1
-      )
-
-      @app_stop_event = AppStopEvent.make(
-        timestamp: timestamp += 1
-      )
-
       @service_create_event = ServiceCreateEvent.make(
         timestamp: timestamp += 1
       )
@@ -71,11 +63,11 @@ module VCAP::CloudController
           it 'returns all records' do
             get path, {}, admin_headers
             expect(last_response.status).to eq(200)
-            expect(decoded_response['total_results']).to eq(5)
+            expect(decoded_response['total_results']).to eq(3)
             expect(decoded_response['total_pages']).to eq(1)
             expect(decoded_response['prev_url']).to eq(nil)
             expect(decoded_response['next_url']).to eq(nil)
-            expect(decoded_response['resources'].size).to eq(5)
+            expect(decoded_response['resources'].size).to eq(3)
           end
 
           it 'correctly serializes the org billing start event' do
@@ -88,42 +80,9 @@ module VCAP::CloudController
             })
           end
 
-          it 'correctly serializes the app start event' do
-            get path, {}, admin_headers
-            expect(decoded_response['resources'][1]).to eq({
-              'event_type' => 'app_start',
-              'organization_guid' => @app_start_event.organization_guid,
-              'organization_name' => @app_start_event.organization_name,
-              'space_guid' => @app_start_event.space_guid,
-              'space_name' => @app_start_event.space_name,
-              'app_guid' => @app_start_event.app_guid,
-              'app_name' => @app_start_event.app_name,
-              'app_run_id' => @app_start_event.app_run_id,
-              'app_plan_name' => @app_start_event.app_plan_name,
-              'app_memory' => @app_start_event.app_memory,
-              'app_instance_count' => @app_start_event.app_instance_count,
-              'timestamp' => @app_start_event.timestamp.iso8601,
-            })
-          end
-
-          it 'correctly serializes the app stop event' do
-            get path, {}, admin_headers
-            expect(decoded_response['resources'][2]).to eq({
-              'event_type' => 'app_stop',
-              'organization_guid' => @app_stop_event.organization_guid,
-              'organization_name' => @app_stop_event.organization_name,
-              'space_guid' => @app_stop_event.space_guid,
-              'space_name' => @app_stop_event.space_name,
-              'app_guid' => @app_stop_event.app_guid,
-              'app_name' => @app_stop_event.app_name,
-              'app_run_id' => @app_stop_event.app_run_id,
-              'timestamp' => @app_stop_event.timestamp.iso8601,
-            })
-          end
-
           it 'correctly serializes the service create event' do
             get path, {}, admin_headers
-            expect(decoded_response['resources'][3]).to eq({
+            expect(decoded_response['resources'][1]).to eq({
               'event_type' => 'service_create',
               'organization_guid' => @service_create_event.organization_guid,
               'organization_name' => @service_create_event.organization_name,
@@ -143,7 +102,7 @@ module VCAP::CloudController
 
           it 'correctly serializes the service delete event' do
             get path, {}, admin_headers
-            expect(decoded_response['resources'][4]).to eq({
+            expect(decoded_response['resources'][2]).to eq({
               'event_type' => 'service_delete',
               'organization_guid' => @service_delete_event.organization_guid,
               'organization_name' => @service_delete_event.organization_name,
@@ -175,11 +134,11 @@ module VCAP::CloudController
 
         it 'correctly filters events' do
           get path, {}, admin_headers
-          expect(decoded_response['total_results']).to eq(4)
+          expect(decoded_response['total_results']).to eq(2)
           expect(decoded_response['total_pages']).to eq(1)
           expect(decoded_response['prev_url']).to eq(nil)
           expect(decoded_response['next_url']).to eq(nil)
-          expect(decoded_response['resources'].size).to eq(4)
+          expect(decoded_response['resources'].size).to eq(2)
         end
       end
 
@@ -192,11 +151,11 @@ module VCAP::CloudController
 
         it 'correctly filters them' do
           get path, {}, admin_headers
-          expect(decoded_response['total_results']).to eq(4)
+          expect(decoded_response['total_results']).to eq(2)
           expect(decoded_response['total_pages']).to eq(1)
           expect(decoded_response['prev_url']).to eq(nil)
           expect(decoded_response['next_url']).to eq(nil)
-          expect(decoded_response['resources'].size).to eq(4)
+          expect(decoded_response['resources'].size).to eq(2)
         end
       end
     end

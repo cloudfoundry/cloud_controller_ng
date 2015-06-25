@@ -225,15 +225,6 @@ module VCAP::CloudController
           org.save(validate: false)
         end
 
-        it 'should emit start events for running apps' do
-          ds = AppStartEvent.filter(
-            organization_guid: org.guid,
-          )
-          org.billing_enabled = true
-          org.save(validate: false)
-          expect(ds.count).to eq(4)
-        end
-
         it 'should emit create events for provisioned services' do
           ds = ServiceCreateEvent.filter(
             organization_guid: org.guid,

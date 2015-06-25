@@ -260,27 +260,6 @@ module VCAP::CloudController
     BillingEvent.blueprint
   end
 
-  AppStartEvent.blueprint do
-    BillingEvent.blueprint
-    space_guid        { Sham.guid }
-    space_name        { Sham.name }
-    app_guid          { Sham.guid }
-    app_name          { Sham.name }
-    app_run_id        { Sham.guid }
-    app_plan_name     { 'free' }
-    app_memory        { 256 }
-    app_instance_count { 1 }
-  end
-
-  AppStopEvent.blueprint do
-    BillingEvent.blueprint
-    space_guid        { Sham.guid }
-    space_name        { Sham.name }
-    app_guid          { Sham.guid }
-    app_name          { Sham.name }
-    app_run_id        { Sham.guid }
-  end
-
   AppEvent.blueprint do
     app               { AppFactory.make }
     instance_guid     { Sham.guid }

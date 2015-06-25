@@ -152,9 +152,6 @@ module VCAP::CloudController
 
       set_new_version if version_needs_to_be_updated?
 
-      AppStopEvent.create_from_app(self) if generate_stop_event?
-      AppStartEvent.create_from_app(self) if generate_start_event?
-
       if diego.nil?
         self.diego = Config.config[:default_to_diego_backend]
       end
@@ -243,11 +240,6 @@ module VCAP::CloudController
       space && space.organization
     end
 
-    def has_stop_event_for_latest_run?
-      latest_run_id = AppStartEvent.filter(app_guid: guid).order(Sequel.desc(:id)).select_map(:app_run_id).first
-      !!AppStopEvent.find(app_run_id: latest_run_id)
-    end
-
     def before_destroy
       lock!
       self.state = 'STOPPED'
@@ -264,7 +256,6 @@ module VCAP::CloudController
 
     def after_destroy
       super
-      AppStopEvent.create_from_app(self) unless initial_value(:state) == 'STOPPED' || has_stop_event_for_latest_run?
       create_app_usage_event
     end
 
