@@ -825,16 +825,59 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_instances/:service_instance_guid' do
-      let(:developer) { make_developer_for_space(space) }
       let(:space) { service_instance.space }
+      let(:developer) { make_developer_for_space(space) }
 
       context 'with a managed service instance' do
-        let(:service_instance) { ManagedServiceInstance.make }
+        let(:space) { Space.make }
+        let(:service_instance) { ManagedServiceInstance.make(space: space) }
+
+        before do
+          service_instance.dashboard_url = 'this.should.be.visible.com'
+          service_instance.save
+        end
 
         it 'returns the service instance with the given guid' do
           get "v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
           expect(last_response.status).to eq(200)
           expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_instance.guid)
+        end
+
+        context 'developer' do
+          before do
+            allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(false)
+            allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
+          end
+          it 'returns the dashboard url in the response' do
+            get "v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
+            expect(last_response.status).to eq(200)
+            expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('this.should.be.visible.com')
+          end
+        end
+
+        context 'manager' do
+          let(:manager) { make_manager_for_space(space) }
+
+          before do
+            allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(false)
+            allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
+          end
+          it 'returns the dashboard url in the response' do
+            get "v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
+            expect(last_response.status).to eq(200)
+            expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('')
+          end
+        end
+
+        context 'admin' do
+          before do
+            allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
+          end
+          it 'returns the dashboard url in the response' do
+            get "v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
+            expect(last_response.status).to eq(200)
+            expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('this.should.be.visible.com')
+          end
         end
       end
 
