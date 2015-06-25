@@ -328,7 +328,7 @@ resource 'Packages (Experimental)', type: :api do
 
     let(:stager_id) { 'abc123' }
     let(:stager_subject) { "staging.#{stager_id}.start" }
-    let(:stack) { 'trusty64' }
+    let(:stack) { 'cflinuxfs2' }
     let(:advertisment) do
       {
         'id' => stager_id,
