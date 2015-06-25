@@ -24,6 +24,14 @@ module VCAP::CloudController
           post '/v2/stacks', MultiJson.dump(params), json_headers(admin_headers)
           expect(last_response.status).to eq(201)
         end
+
+        context 'when the description is not provided' do
+          let(:params) { { name: 'zakstack' } }
+          it 'creates a stack' do
+            post '/v2/stacks', MultiJson.dump(params), json_headers(admin_headers)
+            expect(last_response.status).to eq(201)
+          end
+        end
       end
 
       it 'returns unauthorized' do
