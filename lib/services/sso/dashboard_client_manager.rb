@@ -29,7 +29,7 @@ module VCAP::Services::SSO
 
       return false unless all_clients_can_be_claimed_in_db?(catalog)
 
-      existing_ccdb_clients    = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
+      existing_ccdb_clients    = VCAP::CloudController::ServiceDashboardClient.find_claimed_client(service_broker)
       existing_ccdb_client_ids = existing_ccdb_clients.map(&:uaa_id)
 
       existing_uaa_client_ids  = fetch_clients_from_uaa(requested_client_ids | existing_ccdb_client_ids).map { |c| c['client_id'] }
@@ -43,7 +43,7 @@ module VCAP::Services::SSO
       return unless cc_configured_to_modify_uaa_clients?
 
       requested_clients       = [] # request no clients
-      existing_db_clients     = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
+      existing_db_clients     = VCAP::CloudController::ServiceDashboardClient.find_claimed_client(service_broker)
       existing_db_client_ids  = existing_db_clients.map(&:uaa_id)
       existing_uaa_client_ids = fetch_clients_from_uaa(existing_db_client_ids).map { |client| client['client_id'] }
 

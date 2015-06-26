@@ -212,6 +212,11 @@ module VCAP::CloudController
     service_broker  { ServiceBroker.make }
   end
 
+  ServiceInstanceDashboardClient.blueprint do
+    uaa_id { Sham.name }
+    managed_service_instance { ManagedServiceInstance.make }
+  end
+
   ServicePlan.blueprint do
     name              { Sham.name }
     free              { false }

@@ -373,7 +373,7 @@ module VCAP::Services::SSO
 
         context 'when claiming the client for the broker fails' do
           before do
-            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client_for_broker).and_raise
+            allow(VCAP::CloudController::ServiceDashboardClient).to receive(:claim_client).and_raise
           end
 
           it 'does not modify the UAA client' do
@@ -464,11 +464,11 @@ module VCAP::Services::SSO
       end
 
       it 'deletes the claims for the service broker in CC' do
-        expect(VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).count).to eq(2)
+        expect(VCAP::CloudController::ServiceDashboardClient.find_claimed_client(service_broker).count).to eq(2)
 
         manager.remove_clients_for_broker
 
-        expect(VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).count).to eq(0)
+        expect(VCAP::CloudController::ServiceDashboardClient.find_claimed_client(service_broker).count).to eq(0)
       end
 
       it 'records a delete event for each dashboard client' do
@@ -503,11 +503,11 @@ module VCAP::Services::SSO
         end
 
         it 'does not delete any clients claimed in CC' do
-          expect(VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).count).to eq(2)
+          expect(VCAP::CloudController::ServiceDashboardClient.find_claimed_client(service_broker).count).to eq(2)
 
           manager.remove_clients_for_broker rescue nil
 
-          expect(VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).count).to eq(2)
+          expect(VCAP::CloudController::ServiceDashboardClient.find_claimed_client(service_broker).count).to eq(2)
         end
 
         it 'does not record any events' do
@@ -532,7 +532,7 @@ module VCAP::Services::SSO
 
       context 'when removing CC claims raises an exception' do
         before do
-          allow(VCAP::CloudController::ServiceDashboardClient).to receive(:remove_claim_on_client).and_raise('test error')
+          allow(VCAP::CloudController::ServiceDashboardClient).to receive(:release_client).and_raise('test error')
         end
 
         it 'reraises the error' do
@@ -563,11 +563,11 @@ module VCAP::Services::SSO
         end
 
         it 'does not delete any clients claimed in CC' do
-          expect(VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).count).to eq(2)
+          expect(VCAP::CloudController::ServiceDashboardClient.find_claimed_client(service_broker).count).to eq(2)
 
           manager.remove_clients_for_broker rescue nil
 
-          expect(VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).count).to eq(2)
+          expect(VCAP::CloudController::ServiceDashboardClient.find_claimed_client(service_broker).count).to eq(2)
         end
       end
     end
