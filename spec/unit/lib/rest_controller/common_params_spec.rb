@@ -27,9 +27,14 @@ module VCAP::CloudController::RestController
         expect(common_params.parse({ 'include-relations' => 'name1,name2' })).to eq({ include_relations: ['name1', 'name2'] })
       end
 
+      it 'treats order-by as a String Array and symbolizes the key' do
+        expect(common_params.parse({ 'order-by' => 'name1,name2' })).to eq({ order_by: ['name1', 'name2'] })
+      end
+
       it 'treats page as an Integer and symbolizes the key' do
         expect(common_params.parse({ 'page' => '123' })).to eq({ page: 123 })
       end
+
       it 'treats results-per-page as an Integer and symbolizes the key' do
         expect(common_params.parse({ 'results-per-page' => '123' })).to eq({ results_per_page: 123 })
       end

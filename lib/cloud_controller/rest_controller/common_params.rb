@@ -20,6 +20,7 @@ module VCAP::CloudController::RestController
         ['orphan-relations',       Integer],
         ['exclude-relations',      String],
         ['include-relations',      String],
+        ['order-by',               String],
 
       ].each do |key, klass|
         val = params[key]
@@ -37,6 +38,10 @@ module VCAP::CloudController::RestController
 
       if res[:include_relations]
         res[:include_relations] = res[:include_relations].split(',')
+      end
+
+      if res[:order_by]
+        res[:order_by] = res[:order_by].split(',')
       end
 
       res

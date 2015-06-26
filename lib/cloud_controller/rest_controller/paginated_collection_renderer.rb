@@ -126,6 +126,7 @@ module VCAP::CloudController::RestController
       params['orphan-relations'] = opts[:orphan_relations] if opts[:orphan_relations]
       params['exclude-relations'] = opts[:exclude_relations] if opts[:exclude_relations]
       params['include-relations'] = opts[:include_relations] if opts[:include_relations]
+      params['order-by'] = opts[:order_by].join(',') if opts[:order_by]
 
       controller.preserve_query_parameters.each do |preserved_param|
         params[preserved_param] = request_params[preserved_param] if request_params[preserved_param]
