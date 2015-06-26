@@ -47,6 +47,8 @@ module VCAP::CloudController
     def upload(package_guid)
       check_write_permissions!
 
+      FeatureFlag.raise_unless_enabled!('app_bits_upload')
+
       message = PackageUploadMessage.create_from_params(params)
       unprocessable!(message.errors.full_messages) unless message.valid?
 

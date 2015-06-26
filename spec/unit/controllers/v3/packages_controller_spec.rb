@@ -55,6 +55,20 @@ module VCAP::CloudController
         expect(package.reload.state).to eq(PackageModel::PENDING_STATE)
       end
 
+      context 'when app_bits_upload is disabled' do
+        before { FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil) }
+
+        it 'raises 403' do
+          expect {
+            packages_controller.upload(package.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'FeatureDisabled'
+            expect(error.response_code).to eq 403
+            expect(error.message).to match('app_bits_upload')
+          end
+        end
+      end
+
       context 'when the package type is not bits' do
         before do
           package.type = 'docker'
