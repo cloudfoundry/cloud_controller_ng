@@ -44,6 +44,7 @@ module VCAP::CloudController
       before do
         allow(package_presenter).to receive(:present_json).and_return(expected_response)
         allow(packages_controller).to receive(:check_write_permissions!)
+        allow(membership).to receive(:admin?).and_return(false)
       end
 
       it 'returns 200 and updates the package state' do
@@ -56,15 +57,32 @@ module VCAP::CloudController
       end
 
       context 'when app_bits_upload is disabled' do
-        before { FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil) }
+        before do
+          FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
+        end
 
-        it 'raises 403' do
-          expect {
-            packages_controller.upload(package.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'FeatureDisabled'
-            expect(error.response_code).to eq 403
-            expect(error.message).to match('app_bits_upload')
+        context 'non-admin user' do
+          it 'raises 403' do
+            expect {
+              packages_controller.upload(package.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'FeatureDisabled'
+              expect(error.response_code).to eq 403
+              expect(error.message).to match('app_bits_upload')
+            end
+          end
+        end
+
+        context 'admin user' do
+          before { allow(membership).to receive(:admin?).and_return(true) }
+
+          it 'returns 200 and updates the package state' do
+            code, response = packages_controller.upload(package.guid)
+
+            expect(code).to eq(HTTP::OK)
+            expect(response).to eq(expected_response)
+            expect(package_presenter).to have_received(:present_json).with(an_instance_of(PackageModel))
+            expect(package.reload.state).to eq(PackageModel::PENDING_STATE)
           end
         end
       end
