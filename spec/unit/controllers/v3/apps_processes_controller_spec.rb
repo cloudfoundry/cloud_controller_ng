@@ -145,6 +145,7 @@ module VCAP::CloudController
       before do
         allow(controller).to receive(:check_write_permissions!)
         allow(process_presenter).to receive(:present_json).and_return(expected_response)
+        allow(membership).to receive(:admin?).and_return(false)
       end
 
       it 'scales the process and returns the correct things' do
@@ -181,13 +182,34 @@ module VCAP::CloudController
       context 'when scaling is disabled' do
         before { FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
 
-        it 'raises 403' do
-          expect {
-            controller.scale(app.guid, process.type)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'FeatureDisabled'
-            expect(error.response_code).to eq 403
-            expect(error.message).to match('app_scaling')
+        context 'user is non-admin' do
+          it 'raises 403' do
+            expect {
+              controller.scale(app.guid, process.type)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'FeatureDisabled'
+              expect(error.response_code).to eq 403
+              expect(error.message).to match('app_scaling')
+            end
+          end
+        end
+
+        context 'user is admin' do
+          before { allow(membership).to receive(:admin?).and_return(true) }
+
+          it 'scales the process and returns the correct things' do
+            expect(process.instances).not_to eq(2)
+            expect(process.memory).not_to eq(100)
+            expect(process.disk_quota).not_to eq(200)
+
+            status, body = controller.scale(app.guid, process.type)
+
+            process.reload
+            expect(process.instances).to eq(2)
+            expect(process.memory).to eq(100)
+            expect(process.disk_quota).to eq(200)
+            expect(status).to eq(HTTP::OK)
+            expect(body).to eq(expected_response)
           end
         end
       end

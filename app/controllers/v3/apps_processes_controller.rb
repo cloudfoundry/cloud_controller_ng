@@ -44,7 +44,7 @@ module VCAP::CloudController
     def scale(app_guid, type)
       check_write_permissions!
 
-      FeatureFlag.raise_unless_enabled!('app_scaling')
+      FeatureFlag.raise_unless_enabled!('app_scaling') unless membership.admin?
 
       request = parse_and_validate_json(body)
       message = ProcessScaleMessage.create_from_http_request(request)
