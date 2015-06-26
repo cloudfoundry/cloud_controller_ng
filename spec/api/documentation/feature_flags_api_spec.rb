@@ -24,7 +24,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(8)
+      expect(parsed_response.length).to eq(9)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -73,6 +73,13 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
           'enabled'       => true,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/set_roles_by_username'
+        })
+      expect(parsed_response).to include(
+        {
+          'name'          => 'unset_roles_by_username',
+          'enabled'       => true,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/unset_roles_by_username'
         })
     end
   end
