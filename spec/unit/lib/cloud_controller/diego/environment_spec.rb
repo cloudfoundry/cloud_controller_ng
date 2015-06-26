@@ -6,7 +6,8 @@ module VCAP::CloudController::Diego
       app = VCAP::CloudController::AppFactory.make
       app.environment_json = {
         APP_KEY1: 'APP_VAL1',
-        APP_KEY2: 'APP_VAL2',
+        APP_KEY2: { nested: 'data' },
+        APP_KEY3: [1, 2, 3],
       }
       app
     end
@@ -24,7 +25,8 @@ module VCAP::CloudController::Diego
         { 'name' => 'MEMORY_LIMIT', 'value' => "#{app.memory}m" },
         { 'name' => 'CF_STACK', 'value' => "#{app.stack.name}" },
         { 'name' => 'APP_KEY1', 'value' => 'APP_VAL1' },
-        { 'name' => 'APP_KEY2', 'value' => 'APP_VAL2' },
+        { 'name' => 'APP_KEY2', 'value' => '{"nested":"data"}' },
+        { 'name' => 'APP_KEY3', 'value' => '[1,2,3]' },
       ])
     end
 

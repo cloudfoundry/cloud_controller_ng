@@ -19,6 +19,11 @@ module VCAP::CloudController
 
         app_env_json = app.environment_json || {}
         app_env_json.each do |k, v|
+          case v
+          when Array, Hash
+            v = MultiJson.dump(v)
+          end
+
           env << { 'name' => k, 'value' => v }
         end
 
