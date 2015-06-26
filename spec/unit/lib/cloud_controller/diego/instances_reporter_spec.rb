@@ -18,21 +18,22 @@ module VCAP::CloudController
             state: 'RUNNING',
             details: 'some-details',
             uptime: 1,
+            since: 101,
             host: 'myhost',
             port: 8080,
             stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
           },
-          { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', uptime: 2, host: 'myhost1', port: 8081,
+          { process_guid: 'process-guid', instance_guid: 'instance-B', index: 1, state: 'RUNNING', uptime: 2, since: 202, host: 'myhost1', port: 8081,
             stats: { time: usage_time, cpu: 70, mem: 128, disk: 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', uptime: 3, host: 'myhost1', port: 8081,
+          { process_guid: 'process-guid', instance_guid: 'instance-C', index: 1, state: 'CRASHED', uptime: 3, since: 303, host: 'myhost1', port: 8081,
             stats: { time: usage_time, cpu: 70, mem: 128, disk: 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'RUNNING', uptime: 4, host: 'myhost2', port: 8082,
+          { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'RUNNING', uptime: 4, since: 404, host: 'myhost2', port: 8082,
             stats: { time: usage_time, cpu: 80, mem: 256, disk: 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-E', index: 2, state: 'STARTING', uptime: 5, host: 'myhost2', port: 8082,
+          { process_guid: 'process-guid', instance_guid: 'instance-E', index: 2, state: 'STARTING', uptime: 5, since: 505, host: 'myhost2', port: 8082,
             stats: { time: usage_time, cpu: 80, mem: 256, disk: 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-F', index: 3, state: 'STARTING', uptime: 6, host: 'myhost3', port: 8083,
+          { process_guid: 'process-guid', instance_guid: 'instance-F', index: 3, state: 'STARTING', uptime: 6, since: 606, host: 'myhost3', port: 8083,
             stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
-          { process_guid: 'process-guid', instance_guid: 'instance-G', index: 4, state: 'CRASHED', uptime: 7, host: 'myhost4', port: 8084,
+          { process_guid: 'process-guid', instance_guid: 'instance-G', index: 4, state: 'CRASHED', uptime: 7, since: 707, host: 'myhost4', port: 8084,
             stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 } },
         ]
       }
@@ -49,9 +50,9 @@ module VCAP::CloudController
           expect(tps_client).to have_received(:lrp_instances).with(app)
           expect(result).to eq(
             {
-              0 => { state: 'RUNNING', details: 'some-details', uptime: 1 },
-              1 => { state: 'CRASHED', uptime: 3 },
-              2 => { state: 'STARTING', uptime: 5 },
+              0 => { state: 'RUNNING', details: 'some-details', uptime: 1, since: 101 },
+              1 => { state: 'CRASHED', uptime: 3, since: 303 },
+              2 => { state: 'STARTING', uptime: 5, since: 505 },
             })
         end
 
@@ -112,8 +113,8 @@ module VCAP::CloudController
           context 'when a desired instance is missing' do
             let(:instances_to_return) {
               [
-                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1 },
-                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', uptime: 4 },
+                { process_guid: 'process-guid', instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 1, since: 101 },
+                { process_guid: 'process-guid', instance_guid: 'instance-D', index: 2, state: 'STARTING', uptime: 4, since: 404 },
               ]
             }
 
@@ -218,7 +219,7 @@ module VCAP::CloudController
 
           expect(tps_client).to have_received(:lrp_instances).with(app)
           expect(result).to eq([
-            { 'instance' => 'instance-C', 'uptime' => 3 },
+            { 'instance' => 'instance-C', 'uptime' => 3, 'since' => 303 },
           ])
         end
 

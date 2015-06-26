@@ -15,6 +15,7 @@ module VCAP::CloudController
           info = {
             state: instance[:state],
             uptime: instance[:uptime],
+            since: instance[:since],
           }
           info[:details] = instance[:details] if instance[:details]
           result[instance[:index]] = info
@@ -60,7 +61,8 @@ module VCAP::CloudController
           if instance[:state] == 'CRASHED'
             result << {
                 'instance' => instance[:instance_guid],
-                'uptime'    => instance[:uptime],
+                'uptime' => instance[:uptime],
+                'since' => instance[:since],
             }
           end
         end
