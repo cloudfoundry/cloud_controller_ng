@@ -199,6 +199,7 @@ module VCAP::CloudController
         [HTTP::OK, object_renderer.render_json(self.class, space, @opts)]
       end
     end
+
     private
 
     def after_create(space)
