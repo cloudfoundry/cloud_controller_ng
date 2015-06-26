@@ -101,6 +101,9 @@ class VCAP::CloudController::ResourcePool
       key = key_from_sha1(sha1)
       blobstore.files.head(key)
     end
+  rescue => e
+    logger.error('Fog connection error: ' + e)
+    raise e
   end
 
   def resource_allowed?(path)
