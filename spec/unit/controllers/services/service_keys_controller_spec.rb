@@ -536,7 +536,6 @@ module VCAP::CloudController
         expect(event.actee_type).to eq('service_key')
         expect(event.actee_name).to eq(service_key.name)
         expect(event.space_guid).to eq(service_key.space.guid)
-        expect(event.space_id).to eq(service_key.space.id)
         expect(event.organization_guid).to eq(service_key.space.organization.guid)
         expect(event.metadata).to include({ 'request' => {} })
       end

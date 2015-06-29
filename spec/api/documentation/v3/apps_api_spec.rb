@@ -580,7 +580,6 @@ resource 'Apps (Experimental)', type: :api do
         actor: user.guid,
         actor_type: 'user',
         space_guid: space_guid,
-        space_id: space.id,
         organization_guid: space.organization.guid
       })
       expect(event.metadata).to eq({ 'request' => { 'desired_droplet_guid' => droplet.guid } })
