@@ -143,7 +143,8 @@ EOF
         client.put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", request_json, headers
 
         expect(status).to eq 202
-        expect(service_instance.reload.service_plan.guid).to eq new_plan.guid
+        expect(service_instance.reload.last_operation.state).to eq 'in progress'
+        expect(service_instance.reload.service_plan.guid).to eq old_plan.guid
       end
     end
 

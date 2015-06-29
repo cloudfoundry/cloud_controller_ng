@@ -2,7 +2,7 @@ require 'actions/services/locks/updater_lock'
 
 module VCAP::CloudController
   class ServiceInstanceUpdate
-    KEYS_TO_UPDATE = %w(tags name service_plan_guid space_guid)
+    KEYS_TO_UPDATE = %w(tags name space_guid)
 
     def initialize(accepts_incomplete: false, services_event_repository: nil)
       @accepts_incomplete = accepts_incomplete
@@ -20,6 +20,7 @@ module VCAP::CloudController
 
       if update_broker_needed?(request_attrs, cached_service_instance['service_plan_guid'])
         handle_broker_update(cached_service_instance, lock, previous_values, request_attrs, service_instance)
+        update_deferred_attrs(service_instance, service_plan_guid: request_attrs.fetch('service_plan_guid', false))
       else
         lock.synchronous_unlock!
       end
@@ -46,6 +47,12 @@ module VCAP::CloudController
         lock.enqueue_unlock!(job)
       else
         lock.synchronous_unlock!
+      end
+    end
+
+    def update_deferred_attrs(service_instance, service_plan_guid:)
+      if service_plan_guid && !service_instance.operation_in_progress?
+        service_instance.update_service_instance(service_plan: ServicePlan.find(guid: service_plan_guid))
       end
     end
 
@@ -98,13 +105,20 @@ module VCAP::CloudController
     end
 
     def update_broker(accepts_incomplete, request_attrs, service_instance, previous_values)
+      if request_attrs.key?('service_plan_guid')
+        service_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
+      else
+        service_plan = service_instance.service_plan
+      end
+
       response, err = service_instance.client.update(
           service_instance,
-          service_instance.service_plan,
+          service_plan,
           accepts_incomplete: accepts_incomplete,
           arbitrary_parameters: request_attrs['parameters'],
           previous_values: previous_values
       )
+
       service_instance.last_operation.update_attributes(response[:last_operation])
 
       err

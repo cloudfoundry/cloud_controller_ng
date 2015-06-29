@@ -944,6 +944,7 @@ module VCAP::CloudController
         it 'returns a 201' do
           put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
           expect(last_response).to have_status_code 201
+          expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
         end
 
         it 'does not set a Location header' do
@@ -1291,12 +1292,6 @@ module VCAP::CloudController
               })
         end
 
-        it 'updates the service plan in the database' do
-          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(developer)
-
-          expect(service_instance.reload.service_plan).to eq(new_service_plan)
-        end
-
         it 'returns 201' do
           body = { 'name' => 'blah name' }.to_json
           put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(developer)
@@ -1306,10 +1301,12 @@ module VCAP::CloudController
         context 'when the broker returns a 202' do
           let(:status) { 202 }
 
-          it 'updates the service plan in the database, because that is done before the broker update' do
+          it 'does not update the service plan in the database when the update is in progress' do
             put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body, headers_for(developer)
 
-            expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
+            service_instance.reload
+            expect(service_instance.last_operation.state).to eq('in progress')
+            expect(service_instance.service_plan.guid).not_to eq(new_service_plan.guid)
           end
 
           it 'does not create an audit event' do
@@ -1380,6 +1377,14 @@ module VCAP::CloudController
 
               expect(service_instance.last_operation.reload.state).to eq('succeeded')
               expect(service_instance.last_operation.reload.description).to eq('Phew, all done')
+            end
+
+            it 'updates the service plan for the instance' do
+              expect(service_instance.reload.service_plan.guid).not_to eq(new_service_plan.guid)
+              Delayed::Job.last.invoke_job
+
+              expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
+              expect(a_request(:patch, /#{service_broker_url}/)).to have_been_made.times(1)
             end
 
             it 'creates a service audit event for updating the service instance' do
