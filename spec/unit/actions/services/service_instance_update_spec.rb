@@ -236,6 +236,8 @@ module VCAP::CloudController
                   })
               )
             ).to have_been_made.once
+
+            expect(service_instance.service_plan).to eq(new_service_plan)
           end
         end
       end
