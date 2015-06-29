@@ -302,7 +302,7 @@ module VCAP::CloudController::RestController
         msg[0] = msg[0] + ':'
         msg.concat(e.backtrace).join('\\n')
         logger.warn(msg.join('\\n'))
-        Errors::ApiError.new_from_details('InvalidRequest')
+        Errors::ApiError.new_from_details('ServerError')
       end
     end
   end
