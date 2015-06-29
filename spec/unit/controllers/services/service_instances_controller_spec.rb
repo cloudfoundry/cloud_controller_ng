@@ -2362,14 +2362,14 @@ module VCAP::CloudController
         context 'when the user is not of developer role' do
           it 'return an empty service key list if the user is of space manager role' do
             get "/v2/service_instances/#{instance_a.guid}/service_keys", {}, headers_for(manager)
-            expect(last_response.status).to eql(200)
-            expect(decoded_response.fetch('total_results')).to eq(0)
+            expect(last_response.status).to eql(403)
+            expect(MultiJson.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
           end
 
           it 'return an empty service key list if the user is of space auditor role' do
             get "/v2/service_instances/#{instance_a.guid}/service_keys", {}, headers_for(auditor)
-            expect(last_response.status).to eql(200)
-            expect(decoded_response.fetch('total_results')).to eq(0)
+            expect(last_response.status).to eql(403)
+            expect(MultiJson.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
           end
         end
 
