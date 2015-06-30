@@ -31,9 +31,16 @@ resource 'Apps (Experimental)', type: :api do
     let(:name2) { 'my_app2' }
     let(:name3) { 'my_app3' }
     let(:environment_variables) { { 'magic' => 'beautiful' } }
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let!(:app_model1) { VCAP::CloudController::AppModel.make(name: name1, space_guid: space.guid, created_at: Time.at(1)) }
     let!(:app_model2) { VCAP::CloudController::AppModel.make(name: name2, space_guid: space.guid, created_at: Time.at(2)) }
-    let!(:app_model3) { VCAP::CloudController::AppModel.make(name: name3, space_guid: space.guid, environment_variables: environment_variables, created_at: Time.at(3)) }
+    let!(:app_model3) { VCAP::CloudController::AppModel.make(
+      name: name3,
+      space_guid: space.guid,
+      environment_variables: environment_variables,
+      created_at: Time.at(3),
+      buildpack: buildpack.name)
+    }
     let!(:app_model4) { VCAP::CloudController::AppModel.make(space_guid: VCAP::CloudController::Space.make.guid) }
     let(:space) { VCAP::CloudController::Space.make }
     let(:page) { 1 }
@@ -63,6 +70,7 @@ resource 'Apps (Experimental)', type: :api do
             'guid'   => app_model3.guid,
             'desired_state' => app_model3.desired_state,
             'total_desired_instances' => 0,
+            'buildpack' => buildpack.name,
             'created_at' => iso8601,
             'updated_at' => nil,
             'environment_variables' => environment_variables,
@@ -81,6 +89,7 @@ resource 'Apps (Experimental)', type: :api do
             'guid'   => app_model2.guid,
             'desired_state' => app_model3.desired_state,
             'total_desired_instances' => 0,
+            'buildpack' => app_model2.buildpack,
             'created_at' => iso8601,
             'updated_at' => nil,
             'environment_variables' => {},
@@ -137,8 +146,14 @@ resource 'Apps (Experimental)', type: :api do
 
   get '/v3/apps/:guid' do
     let(:desired_droplet_guid) { 'a-droplet-guid' }
-    let(:environment_variables) { { 'darkness' => 'ugly' } }
-    let(:app_model) { VCAP::CloudController::AppModel.make(name: name, desired_droplet_guid: desired_droplet_guid, environment_variables: environment_variables) }
+    let(:environment_variables) { { 'unicorn' => 'horn' } }
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:app_model) { VCAP::CloudController::AppModel.make(
+      name: name,
+      desired_droplet_guid: desired_droplet_guid,
+      environment_variables: environment_variables,
+      buildpack: buildpack.name)
+    }
     let(:process1) { VCAP::CloudController::App.make(space: space, instances: 1) }
     let(:process2) { VCAP::CloudController::App.make(space: space, instances: 2) }
     let(:guid) { app_model.guid }
@@ -162,6 +177,7 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => guid,
         'desired_state' => app_model.desired_state,
         'total_desired_instances' => 3,
+        'buildpack' => buildpack.name,
         'created_at' => iso8601,
         'updated_at' => nil,
         'environment_variables' => environment_variables,
@@ -187,6 +203,7 @@ resource 'Apps (Experimental)', type: :api do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
     let(:name) { 'my_app' }
+    let(:buildpack) { VCAP::CloudController::Buildpack.make.name }
     let(:environment_variables) { { 'open' => 'source' } }
 
     before do
@@ -197,6 +214,8 @@ resource 'Apps (Experimental)', type: :api do
     body_parameter :name, 'Name of the App', required: true
     body_parameter :space_guid, 'GUID of associated Space', required: true
     body_parameter :environment_variables, 'Environment variables to be used for the App when running', required: false
+    body_parameter :buildpack, 'Default buildpack to use when staging the application packages.
+    Note: a nil value will use autodetection', valid_values: [nil, 'buildpack name', 'git url'], required: false
 
     let(:raw_post) { body_parameters }
 
@@ -212,6 +231,7 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => expected_guid,
         'desired_state' => 'STOPPED',
         'total_desired_instances' => 0,
+        'buildpack' => buildpack,
         'created_at' => iso8601,
         'updated_at' => nil,
         'environment_variables' => environment_variables,
@@ -247,6 +267,7 @@ resource 'Apps (Experimental)', type: :api do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
     let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid) }
+    let(:buildpack) { 'http://gitwheel.org/my-app' }
     let(:app_model) { VCAP::CloudController::AppModel.make(name: 'original_name', space_guid: space_guid) }
 
     before do
@@ -256,6 +277,8 @@ resource 'Apps (Experimental)', type: :api do
 
     body_parameter :name, 'Name of the App'
     body_parameter :environment_variables, 'Environment variables to be used for the App when running'
+    body_parameter :buildpack, 'Default buildpack to use when staging the application packages.
+    Note: a nil value will use autodetection', valid_values: [nil, 'buildpack name', 'git url'], required: false
 
     let(:name) { 'new_name' }
     let(:environment_variables) do
@@ -277,6 +300,7 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => app_model.guid,
         'desired_state' => app_model.desired_state,
         'total_desired_instances' => 0,
+        'buildpack' => buildpack,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'environment_variables' => environment_variables,
@@ -305,7 +329,7 @@ resource 'Apps (Experimental)', type: :api do
         space_guid: space_guid,
         organization_guid: space.organization.guid
       })
-      expect(event.metadata['request']).to eq({ 'name' => 'new_name', 'environment_variables' => 'PRIVATE DATA HIDDEN' })
+      expect(event.metadata['request']).to eq({ 'name' => 'new_name', 'environment_variables' => 'PRIVATE DATA HIDDEN', 'buildpack' => buildpack })
     end
   end
 
@@ -370,6 +394,7 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => app_model.guid,
         'desired_state'   => 'STARTED',
         'total_desired_instances' => 0,
+        'buildpack' => app_model.buildpack,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'environment_variables' => {},
@@ -426,6 +451,7 @@ resource 'Apps (Experimental)', type: :api do
       expected_response = {
         'name'   => app_model.name,
         'guid'   => app_model.guid,
+        'buildpack' => app_model.buildpack,
         'desired_state'   => 'STOPPED',
         'total_desired_instances' => 0,
         'created_at' => iso8601,
@@ -553,6 +579,7 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => app_model.guid,
         'desired_state' => app_model.desired_state,
         'total_desired_instances' => 1,
+        'buildpack' => app_model.buildpack,
         'environment_variables' => {},
         'created_at' => iso8601,
         'updated_at' => iso8601,

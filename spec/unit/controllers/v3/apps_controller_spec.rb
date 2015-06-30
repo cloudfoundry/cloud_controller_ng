@@ -183,6 +183,7 @@ module VCAP::CloudController
         {
           name: 'some-name',
           space_guid: space_guid,
+          buildpack: 'http://some.url',
         }.to_json
       end
       let(:app_create) { instance_double(AppCreate) }
@@ -271,10 +272,30 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the requested buildpack is not a valid url and is not a known buildpack' do
+        let(:req_body) do
+          {
+            name:       'some-name',
+            space_guid: space_guid,
+            buildpack:  'blagow!'
+          }.to_json
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          expect {
+            apps_controller.create
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq(422)
+            expect(error.message).to match('must be an existing admin buildpack or a valid git URI')
+          end
+        end
+      end
     end
 
     describe '#update' do
-      let!(:app_model) { AppModel.make }
+      let!(:app_model) { AppModel.make(buildpack: 'http://some-buildpack.com') }
       let(:space) { app_model.space }
       let(:org) { space.organization }
 
@@ -396,6 +417,51 @@ module VCAP::CloudController
           expect(response).to eq(app_response)
         end
 
+        context 'when the request body is invalid JSON' do
+          let(:req_body) { '{ invalid_json }' }
+          it 'returns an 400 Bad Request' do
+            expect {
+              apps_controller.update(app_model.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'MessageParseError'
+              expect(error.response_code).to eq 400
+            end
+          end
+        end
+
+        context 'when the request has invalid data' do
+          let(:req_body) { '{ "name": false }' }
+
+          it 'returns an UnprocessableEntity error' do
+            expect {
+              apps_controller.update(app_model.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'UnprocessableEntity'
+              expect(error.response_code).to eq(422)
+            end
+          end
+        end
+
+        context 'when the user is setting the buildpack' do
+          let(:buildpack_url) { 'http://some.url' }
+          let(:req_body) { { name: new_name, buildpack: buildpack_url }.to_json }
+
+          it 'sets the buildpack to the user provided buildpack' do
+            apps_controller.update(app_model.guid)
+            expect(app_model.reload.buildpack).to eq(buildpack_url)
+          end
+        end
+
+        context 'when the user resets a buildpack' do
+          let(:req_body) { { name: new_name, buildpack: nil }.to_json }
+
+          it 'resets the buildpack, when the user provided buildpack is nil' do
+            expect(app_model.buildpack).to_not be_nil
+            apps_controller.update(app_model.guid)
+            expect(app_model.reload.buildpack).to be_nil
+          end
+        end
+
         context 'when the app is invalid' do
           let(:app_update) { double(:app_update) }
           before do
@@ -446,6 +512,20 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq('UnprocessableEntity')
               expect(error.message).to match('The request is semantically invalid: environment_variables cannot start with CF_')
+            end
+          end
+        end
+
+        context 'when the requested buildpack is not a valid url and is not a known buildpack' do
+          let(:req_body) { { buildpack: 'blagow!' }.to_json }
+
+          it 'returns an UnprocessableEntity error' do
+            expect {
+              apps_controller.update(app_model.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'UnprocessableEntity'
+              expect(error.response_code).to eq(422)
+              expect(error.message).to match('must be an existing admin buildpack or a valid git URI')
             end
           end
         end

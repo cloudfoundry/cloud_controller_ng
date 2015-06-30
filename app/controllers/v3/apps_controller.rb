@@ -12,6 +12,8 @@ require 'actions/app_create'
 require 'queries/assign_current_droplet_fetcher'
 require 'actions/set_current_droplet'
 require 'messages/app_create_message'
+require 'messages/app_update_message'
+require 'messages/buildpack_request_validator'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
@@ -64,6 +66,9 @@ module VCAP::CloudController
       message = AppCreateMessage.create_from_http_request(request)
       unprocessable!(message.errors.full_messages) unless message.valid?
 
+      buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
+      unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
+
       space_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], message.space_guid)
 
       app = AppCreate.new(current_user, current_user_email).create(message)
@@ -76,12 +81,18 @@ module VCAP::CloudController
     patch '/v3/apps/:guid', :update
     def update(guid)
       check_write_permissions!
-      message = parse_and_validate_json(body)
+
+      request = parse_and_validate_json(body)
+      message = AppUpdateMessage.create_from_http_request(request)
+      unprocessable!(message.errors.full_messages) unless message.valid?
 
       app, space, org = AppFetcher.new.fetch(guid)
 
       app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
       unauthorized! unless can_update?(space.guid)
+
+      buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
+      unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
 
       app = AppUpdate.new(current_user, current_user_email).update(app, message)
 

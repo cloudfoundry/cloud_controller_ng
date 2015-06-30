@@ -11,13 +11,15 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:space_guid) { space.guid }
       let(:environment_variables) { { 'BAKED' => 'POTATO' } }
+      let(:buildpack) { Buildpack.make }
 
       it 'create an app' do
-        message = AppCreateMessage.new(name: 'my-app', space_guid: space_guid, environment_variables: environment_variables)
-        app = app_create.create(message)
+        message = AppCreateMessage.new(name: 'my-app', space_guid: space_guid, environment_variables: environment_variables, buildpack: buildpack.name)
+        app     = app_create.create(message)
         expect(app.name).to eq('my-app')
         expect(app.space).to eq(space)
         expect(app.environment_variables).to eq(environment_variables)
+        expect(app.buildpack).to eq(buildpack.name)
       end
 
       it 're-raises validation errors' do
@@ -28,13 +30,19 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        message = AppCreateMessage.new(name: 'my-app', space_guid: space_guid, environment_variables: environment_variables)
+        message = AppCreateMessage.new(name: 'my-app', space_guid: space_guid, environment_variables: environment_variables, buildpack: buildpack.name)
+
         expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_create).with(
             instance_of(AppModel),
             space,
             user.guid,
             user_email,
-            message.as_json
+            {
+              'name'                  => 'my-app',
+              'space_guid'            => space_guid,
+              'environment_variables' => {},
+              'buildpack'             => buildpack.name
+            }
           )
 
         app_create.create(message)
