@@ -397,7 +397,7 @@ module VCAP::CloudController
       it 'deletes the service broker' do
         delete "/v2/service_brokers/#{broker.guid}", {}, headers
 
-        expect(last_response.status).to eq(204)
+        expect(last_response).to have_status_code(204)
 
         get '/v2/service_brokers', {}, headers
         expect(decoded_response).to include('total_results' => 0)
