@@ -109,7 +109,7 @@ module VCAP::CloudController
         it 'logs the error when a Sequel Database Error occurs' do
           expect(logger).to receive(:warn).with(/exception not translated/)
           get '/test_database_error', '', headers_for(user)
-          expect(decoded_response['code']).to eq 10001
+          expect(decoded_response['code']).to eq 10011
         end
 
         it 'logs an error when a JSON error occurs' do
