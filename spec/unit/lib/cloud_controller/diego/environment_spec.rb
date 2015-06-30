@@ -8,6 +8,8 @@ module VCAP::CloudController::Diego
         APP_KEY1: 'APP_VAL1',
         APP_KEY2: { nested: 'data' },
         APP_KEY3: [1, 2, 3],
+        APP_KEY4: 1,
+        APP_KEY5: true,
       }
       app
     end
@@ -27,6 +29,8 @@ module VCAP::CloudController::Diego
         { 'name' => 'APP_KEY1', 'value' => 'APP_VAL1' },
         { 'name' => 'APP_KEY2', 'value' => '{"nested":"data"}' },
         { 'name' => 'APP_KEY3', 'value' => '[1,2,3]' },
+        { 'name' => 'APP_KEY4', 'value' => '1' },
+        { 'name' => 'APP_KEY5', 'value' => 'true' },
       ])
     end
 

@@ -22,6 +22,8 @@ module VCAP::CloudController
           case v
           when Array, Hash
             v = MultiJson.dump(v)
+          else
+            v = v.to_s
           end
 
           env << { 'name' => k, 'value' => v }
