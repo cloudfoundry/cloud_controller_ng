@@ -9,6 +9,7 @@ require 'allowy'
 require 'eventmachine/schedule_sync'
 
 require 'vcap/common'
+require 'cf-registrar'
 require 'vcap/errors/details'
 require 'vcap/errors/api_error'
 require 'uaa/token_coder'

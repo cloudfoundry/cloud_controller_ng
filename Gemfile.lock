@@ -1,4 +1,14 @@
 GIT
+  remote: https://github.com/cloudfoundry/cf-registrar.git
+  revision: e586e0c16bbb5cc8e8960b2c1940e82ed8d4e623
+  specs:
+    cf-registrar (1.0.2)
+      cf-message-bus
+      eventmachine (~> 1.0.0)
+      steno
+      vcap-concurrency
+
+GIT
   remote: https://github.com/cloudfoundry/cf-uaa-lib.git
   revision: b1e11235dc6cd7d8d4680e005526de37201305ea
   ref: b1e11235dc6cd7d8d4680e005526de37201305ea
@@ -331,6 +341,7 @@ DEPENDENCIES
   awesome_print
   byebug
   cf-message-bus (~> 0.3.0)
+  cf-registrar (~> 1.0.2)!
   cf-uaa-lib (~> 3.1.0)!
   clockwork
   cloudfront-signer

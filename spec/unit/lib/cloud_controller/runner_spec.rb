@@ -5,6 +5,7 @@ module VCAP::CloudController
     let(:valid_config_file_path) { File.join(Paths::FIXTURES, 'config/minimal_config.yml') }
     let(:config_file) { File.new(valid_config_file_path) }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
+    let(:registrar) { Cf::Registrar.new({}) }
 
     let(:argv) { [] }
 
@@ -16,11 +17,14 @@ module VCAP::CloudController
       allow(EM).to receive(:add_timer).and_yield
       allow_any_instance_of(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:setup_updates)
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
+      allow(registrar).to receive_messages(message_bus: message_bus)
+      allow(registrar).to receive(:register_with_router)
     end
 
     subject do
       Runner.new(argv + ['-c', config_file.path]).tap do |r|
         allow(r).to receive(:start_thin_server)
+        allow(r).to receive_messages(router_registrar: registrar)
       end
     end
 
@@ -93,6 +97,11 @@ module VCAP::CloudController
           dea_respondent = double(:dea_respondent)
           expect(Dea::Respondent).to receive(:new).with(message_bus).and_return(dea_respondent)
           expect(dea_respondent).to receive(:start)
+          subject.run!
+        end
+
+        it 'registers with router' do
+          expect(registrar).to receive(:register_with_router)
           subject.run!
         end
 
@@ -211,6 +220,11 @@ module VCAP::CloudController
         let(:argv) { [] }
 
         it_behaves_like 'running Cloud Controller'
+
+        it 'registers with the router' do
+          expect(registrar).to receive(:register_with_router)
+          subject.run!
+        end
       end
     end
 
