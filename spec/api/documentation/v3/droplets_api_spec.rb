@@ -28,12 +28,13 @@ resource 'Droplets (Experimental)', type: :api do
 
     let(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        package_guid: package_model.guid,
-        buildpack: buildpack_git_url,
-        failure_reason: 'example failure reason',
+        state:                  VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid:               app_model.guid,
+        package_guid:           package_model.guid,
+        buildpack:              buildpack_git_url,
+        failure_reason:         'example failure reason',
         detected_start_command: 'run -c all_the_things',
-        environment_variables: { 'cloud' => 'foundry' },
+        environment_variables:  { 'cloud' => 'foundry' },
       )
     end
 
@@ -117,20 +118,20 @@ resource 'Droplets (Experimental)', type: :api do
 
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        package_guid: package.guid,
-        buildpack: buildpack.name,
-        buildpack_guid: buildpack.guid,
+        app_guid:              app_model.guid,
+        package_guid:          package.guid,
+        buildpack:             buildpack.name,
+        buildpack_guid:        buildpack.guid,
         environment_variables: { 'yuu' => 'huuu' }
       )
     end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
+        app_guid:     app_model.guid,
         package_guid: package.guid,
         droplet_hash: 'my-hash',
-        buildpack: 'https://github.com/cloudfoundry/my-buildpack.git',
-        state: VCAP::CloudController::DropletModel::STAGED_STATE
+        buildpack:    'https://github.com/cloudfoundry/my-buildpack.git',
+        state:        VCAP::CloudController::DropletModel::STAGED_STATE
       )
     end
     let!(:droplet3) { VCAP::CloudController::DropletModel.make(package_guid: VCAP::CloudController::PackageModel.make.guid) }
@@ -169,11 +170,7 @@ resource 'Droplets (Experimental)', type: :api do
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
                 'package'   => { 'href' => "/v3/packages/#{package.guid}" },
                 'buildpack' => { 'href' => "/v2/buildpacks/#{buildpack.guid}" },
-                'app'       => { 'href' => "/v3/apps/#{droplet1.app_guid}" },
-                'assign_current_droplet' => {
-                  'href' => "/v3/apps/#{droplet1.app_guid}/current_droplet",
-                  'method' => 'PUT'
-                }
+                'app'       => { 'href' => "/v3/apps/#{droplet1.app_guid}" }
               }
             },
             {

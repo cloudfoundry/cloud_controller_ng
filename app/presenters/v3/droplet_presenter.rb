@@ -46,15 +46,20 @@ module VCAP::CloudController
         }
       end
 
-      links = {
-        self: { href: "/v3/droplets/#{droplet.guid}" },
-        package: { href: "/v3/packages/#{droplet.package_guid}" },
-        app: { href: "/v3/apps/#{droplet.app_guid}" },
-        assign_current_droplet: {
-          href: "/v3/apps/#{droplet.app_guid}/current_droplet",
+      assign_current_droplet_link = nil
+      if droplet.state == DropletModel::STAGED_STATE
+        assign_current_droplet_link = {
+          href:   "/v3/apps/#{droplet.app_guid}/current_droplet",
           method: 'PUT',
-        },
-        buildpack: buildpack_link
+        }
+      end
+
+      links = {
+        self:                   { href: "/v3/droplets/#{droplet.guid}" },
+        package:                { href: "/v3/packages/#{droplet.package_guid}" },
+        app:                    { href: "/v3/apps/#{droplet.app_guid}" },
+        assign_current_droplet: assign_current_droplet_link,
+        buildpack:              buildpack_link
       }
 
       links.delete_if { |_, v| v.nil? }
