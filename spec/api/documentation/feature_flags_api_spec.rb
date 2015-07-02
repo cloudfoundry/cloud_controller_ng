@@ -24,7 +24,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(9)
+      expect(parsed_response.length).to eq(7)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
