@@ -133,36 +133,6 @@ module VCAP::CloudController
       end
     end
 
-    [:user, :manager, :billing_manager, :auditor].each do |role|
-      plural_role = role.to_s.pluralize
-
-      delete "/v2/organizations/:guid/#{plural_role}", "remove_#{role}_by_username".to_sym
-
-      define_method("remove_#{role}_by_username") do |guid|
-        FeatureFlag.raise_unless_enabled!('unset_roles_by_username') unless SecurityContext.admin?
-
-        username = parse_and_validate_json(body)['username']
-
-        begin
-          user_id = @username_lookup_uaa_client.id_for_username(username)
-        rescue UaaUnavailable
-          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
-        rescue UaaEndpointDisabled
-          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
-        end
-        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
-
-        user = User.where(guid: user_id).first
-
-        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user
-
-        org = find_guid_and_validate_access(:update, guid)
-        org.send("remove_#{role}", user)
-
-        [HTTP::OK, object_renderer.render_json(self.class, org, @opts)]
-      end
-    end
-
     def delete(guid)
       org = find_guid_and_validate_access(:delete, guid)
       raise_if_has_associations!(org) if v2_api? && !recursive?
