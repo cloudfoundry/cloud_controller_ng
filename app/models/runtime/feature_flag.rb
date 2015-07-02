@@ -13,7 +13,6 @@ module VCAP::CloudController
       route_creation: true,
       service_instance_creation: true,
       diego_docker: false,
-      set_roles_by_username: true,
     }.freeze
 
     export_attributes :name, :enabled, :error_message

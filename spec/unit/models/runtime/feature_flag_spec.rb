@@ -3,11 +3,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe FeatureFlag, type: :model do
-    let(:valid_flags) do
-      [:user_org_creation, :private_domain_creation, :app_bits_upload,
-       :app_scaling, :route_creation, :service_instance_creation,
-       :diego_docker, :set_roles_by_username]
-    end
+    let(:valid_flags) { [:user_org_creation, :private_domain_creation, :app_bits_upload, :app_scaling, :route_creation, :service_instance_creation, :diego_docker] }
     let(:feature_flag) { FeatureFlag.make }
 
     it { is_expected.to have_timestamp_columns }
