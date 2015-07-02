@@ -168,7 +168,7 @@ module VCAP::CloudController
     end
 
     def dashboard_url
-      unless VCAP::CloudController::SecurityContext.admin? || space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+      unless VCAP::CloudController::SecurityContext.admin? || space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
         return ''
       end
       super

@@ -3,7 +3,7 @@ module VCAP::CloudController
     def create?(service_key, params=nil)
       return true if admin_user?
       return false if service_key.in_suspended_org?
-      service_key.service_instance.space.developers.include?(context.user)
+      service_key.service_instance.space.has_developer?(context.user)
     end
 
     def delete?(service_key)
@@ -12,13 +12,13 @@ module VCAP::CloudController
 
     def read?(service_key)
       return true if admin_user?
-      service_key.service_instance.space.developers.include?(context.user)
+      service_key.service_instance.space.has_developer?(context.user)
     end
 
     def index?(_, params=nil)
       return true if admin_user?
       return true unless params && params.key?(:related_obj)
-      params[:related_obj].space.developers.include?(context.user)
+      params[:related_obj].space.has_developer?(context.user)
     end
   end
 end

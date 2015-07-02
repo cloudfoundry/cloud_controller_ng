@@ -15,7 +15,7 @@ module VCAP::CloudController
     encrypt :credentials, salt: :salt
 
     def to_hash(opts={})
-      if !VCAP::CloudController::SecurityContext.admin? && !service_instance.space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+      if !VCAP::CloudController::SecurityContext.admin? && !service_instance.space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
         opts.merge!({ redact: ['credentials'] })
       end
       super(opts)

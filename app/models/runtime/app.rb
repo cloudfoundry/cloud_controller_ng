@@ -576,7 +576,7 @@ module VCAP::CloudController
     end
 
     def to_hash(opts={})
-      if VCAP::CloudController::SecurityContext.admin? || space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+      if VCAP::CloudController::SecurityContext.admin? || space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
         opts.merge!(redact: %w(docker_credentials_json))
       else
         opts.merge!(redact: %w(environment_json system_env_json docker_credentials_json))

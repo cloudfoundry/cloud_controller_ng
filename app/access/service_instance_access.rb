@@ -4,7 +4,7 @@ module VCAP::CloudController
       return true if admin_user?
       FeatureFlag.raise_unless_enabled!('service_instance_creation')
       return false if service_instance.in_suspended_org?
-      service_instance.space.developers.include?(context.user) && allowed?(service_instance)
+      service_instance.space.has_developer?(context.user) && allowed?(service_instance)
     end
 
     def read_for_update?(service_instance, params=nil)
@@ -14,13 +14,13 @@ module VCAP::CloudController
     def update?(service_instance, params=nil)
       return true if admin_user?
       return false if service_instance.in_suspended_org?
-      service_instance.space.developers.include?(context.user) && allowed?(service_instance)
+      service_instance.space.has_developer?(context.user) && allowed?(service_instance)
     end
 
     def delete?(service_instance)
       return true if admin_user?
       return false if service_instance.in_suspended_org?
-      service_instance.space.developers.include?(context.user)
+      service_instance.space.has_developer?(context.user)
     end
 
     def read_permissions?(service_instance)
