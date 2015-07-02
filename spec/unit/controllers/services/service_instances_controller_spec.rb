@@ -573,6 +573,60 @@ module VCAP::CloudController
               expect(decoded_response['entity']['last_operation']['description']).to match /Service Broker failed to provision within the required time/
             end
           end
+
+          context 'create with a dashboard client' do
+            let(:response_body) do
+              {
+                dashboard_client: {
+                  id: 'client-id-1',
+                  secret: 'secret-1',
+                  redirect_uri: 'https://dashboard.service.com'
+                },
+                dashboard_url: 'the dashboard_url'
+              }.to_json
+            end
+
+            before do
+              body = { token_type: '', access_token: '' }.to_json
+              stub_request(:post, 'http://cc-service-dashboards:some-sekret@localhost:8080/uaa/oauth/token').
+                to_return(status: 200, body: body, headers: { content_type: 'application/json' })
+              body2 = { id: '', client_id: '' }.to_json
+              stub_request(:get, 'http://localhost:8080/uaa/oauth/clients/client-id-1').
+                to_return(status: 200, body: body2, headers: { content_type: 'application/json' })
+              stub_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').
+                to_return(status: 200, body: '', headers: {})
+            end
+
+            it 'provisions a service instance' do
+              service_instance = create_managed_service_instance
+
+              expect(service_instance.service_instance_dashboard_client.uaa_id).to eq('client-id-1')
+
+              expect(decoded_response['entity']['dashboard_url']).to eq('the dashboard_url')
+              expect(last_response).to have_status_code(202)
+            end
+
+            context 'dashboard_url is not passed' do
+              let(:response_body) do
+                {
+                  dashboard_client: {
+                    'id' => 'client-id-1',
+                    'secret' => 'secret-1',
+                    'redirect_uri' => 'https://dashboard.service.com'
+                  }
+                }.to_json
+              end
+
+              it 'provisions a service instance' do
+                service_instance = create_managed_service_instance
+
+                expect(service_instance.service_instance_dashboard_client.uaa_id).to eq('client-id-1')
+
+                expect(decoded_response['entity']['dashboard_url']).to be_nil
+                expect(last_response).to have_status_code(202)
+              end
+            end
+          end
         end
 
         context 'when the client explicitly does not request accepts_incomplete provisioning' do

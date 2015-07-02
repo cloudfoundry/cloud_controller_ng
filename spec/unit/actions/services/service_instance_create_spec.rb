@@ -112,6 +112,41 @@ module VCAP::CloudController
           create_action.create(request_attrs, true)
           expect(event_repository).not_to have_received(:record_service_instance_event)
         end
+
+        context 'when the service instance create returns dashboard client credentials' do
+          let(:body) do
+            {
+              dashboard_url: 'http://example-dashboard.com/9189kdfsk0vfnku',
+              dashboard_client: {
+                id: 'client-id-1',
+                secret: 'secret-1',
+                redirect_uri: 'https://dashboard.service.com'
+              }
+            }.to_json
+          end
+          let(:client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager) }
+
+          before do
+            stub_provision(service_plan.service.service_broker, body: body)
+            allow(client_manager).to receive(:add_client_for_instance)
+            allow(VCAP::Services::SSO::DashboardClientManager).to receive(:new).and_return(client_manager)
+          end
+
+          it 'creates a new UAA dashboard client' do
+            create_action.create(request_attrs, false)
+
+            expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(
+              anything,
+              event_repository,
+              VCAP::CloudController::ServiceInstanceDashboardClient
+            )
+            expect(client_manager).to have_received(:add_client_for_instance).with(hash_including({
+              'id' => 'client-id-1',
+              'secret' => 'secret-1',
+              'redirect_uri' => 'https://dashboard.service.com'
+            }))
+          end
+        end
       end
 
       context 'when the instance fails to save to the db' do
