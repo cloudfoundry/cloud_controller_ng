@@ -215,7 +215,10 @@ resource 'Apps (Experimental)', type: :api do
     body_parameter :space_guid, 'GUID of associated Space', required: true
     body_parameter :environment_variables, 'Environment variables to be used for the App when running', required: false
     body_parameter :buildpack, 'Default buildpack to use when staging the application packages.
-    Note: a nil value will use autodetection', valid_values: [nil, 'buildpack name', 'git url'], required: false
+    Note: a null value will use autodetection',
+      example_values: ['ruby_buildpack', 'https://github.com/cloudfoundry/ruby-buildpack'],
+      valid_values: ['null', 'buildpack name', 'git url'],
+      required: false
 
     let(:raw_post) { body_parameters }
 
@@ -278,7 +281,10 @@ resource 'Apps (Experimental)', type: :api do
     body_parameter :name, 'Name of the App'
     body_parameter :environment_variables, 'Environment variables to be used for the App when running'
     body_parameter :buildpack, 'Default buildpack to use when staging the application packages.
-    Note: a nil value will use autodetection', valid_values: [nil, 'buildpack name', 'git url'], required: false
+    Note: a null value will use autodetection',
+      example_values: ['ruby_buildpack', 'https://github.com/cloudfoundry/ruby-buildpack'],
+      valid_values: ['null', 'buildpack name', 'git url'],
+      required: false
 
     let(:name) { 'new_name' }
     let(:environment_variables) do

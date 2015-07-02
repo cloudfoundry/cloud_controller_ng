@@ -298,7 +298,10 @@ resource 'Packages (Experimental)', type: :api do
 
   post '/v3/packages/:guid/droplets' do
     body_parameter :buildpack, 'Buildpack to be used when staging the package.
-    Note: If this parameter is not provided, then the buildpack associated with your app will be used as a default', valid_values: ['buildpack name', 'git url'], required: false
+    Note: If this parameter is not provided, then the buildpack associated with your app will be used as a default',
+      valid_values: ['buildpack name', 'git url'],
+      example_values: ['ruby_buildpack', 'https://github.com/cloudfoundry/ruby-buildpack'],
+      required: false
     body_parameter :staging_environment_variables, 'Environment variables to use during staging', required: false
     body_parameter :stack, 'Stack used to stage package', required: false
     body_parameter :memory_limit, 'Memory limit used to stage package', required: false
