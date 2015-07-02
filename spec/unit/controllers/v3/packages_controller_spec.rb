@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'queries/package_stage_fetcher'
 require 'actions/package_stage_action'
 
 module VCAP::CloudController
@@ -499,131 +498,48 @@ module VCAP::CloudController
     end
 
     describe '#stage' do
-      let(:req_body)  { '{"buildpack_guid":"' + buildpack.guid + '"}' }
-      let(:package) { PackageModel.make }
+      let(:req_body) { '{}' }
+      let(:package) { PackageModel.make(app_guid: app.guid, type: PackageModel::BITS_TYPE, state: PackageModel::READY_STATE) }
       let(:droplet_response) { 'barbaz' }
-      let(:package_stage_fetcher) { double(:package_stage_fetcher) }
-      let(:package_stage_action) { double(:package_stage_action) }
       let(:app) { AppModel.make }
       let(:space) { app.space }
       let(:org) { space.organization }
-      let(:droplet) { DropletModel.make }
-      let(:buildpack) { Buildpack.make }
 
       before do
-        allow(packages_controller).to receive(:package_stage_fetcher).and_return(package_stage_fetcher)
-        allow(packages_controller).to receive(:package_stage_action).and_return(package_stage_action)
         allow(packages_controller).to receive(:check_write_permissions!).and_return(nil)
         allow(droplet_presenter).to receive(:present_json).and_return(droplet_response)
-        allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, org, buildpack])
-        allow(package_stage_action).to receive(:stage).and_return(droplet)
+        allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage_package: nil))
       end
 
-      it 'checks for the proper roles' do
-        packages_controller.stage(package.guid)
+      it 'returns a 201 Created response' do
+        expect {
+          response_code, body = packages_controller.stage(package.guid)
+          expect(response_code).to eq 201
+          expect(body).to eq droplet_response
+        }.to change { DropletModel.count }.from(0).to(1)
 
         expect(membership).to have_received(:has_any_roles?).at_least(1).times.
-          with([Membership::SPACE_DEVELOPER], space.guid,)
+            with([Membership::SPACE_DEVELOPER], space.guid,)
       end
 
-      context 'when the buildpack does not exist' do
-        context 'and is requested' do
-          before do
-            allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, org, nil])
-          end
+      describe 'buildpack request' do
+        let(:req_body) { { buildpack: buildpack_request }.to_json }
+        let(:buildpack) { Buildpack.make }
 
-          it 'returns a 404 ResourceNotFound error' do
-            expect {
-              packages_controller.stage(package.guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'ResourceNotFound'
-              expect(error.response_code).to eq 404
-            end
-          end
-        end
+        context 'when a git url is requested' do
+          let(:buildpack_request) { 'http://dan-and-zach-awesome-pack.com' }
 
-        context 'and is not requested' do
-          let(:req_body)  { '{}' }
-
-          before do
-            allow(package_stage_fetcher).to receive(:fetch).with(package.guid, nil).and_return([package, app, space, org, nil])
-            allow(package_stage_action).to receive(:stage).and_return(droplet)
-          end
-
-          it 'returns a 201 Created response' do
+          it 'works with a valid url' do
             response_code, body = packages_controller.stage(package.guid)
-            expect(response_code).to eq 201
+            expect(response_code).to eq(201)
             expect(body).to eq droplet_response
-            expect(package_stage_action).to have_received(:stage).with(
-              package, app, space, org, nil, an_instance_of(DropletCreateMessage), stagers)
-          end
-        end
-      end
-
-      context 'when the package does not exist' do
-        before do
-          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([nil, app, space, org, nil])
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          expect {
-            packages_controller.stage(package.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the app does not exist' do
-        before do
-          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, nil, space, org, buildpack])
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          expect {
-            packages_controller.stage(package.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the space does not exist' do
-        before do
-          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, nil, org, buildpack])
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          expect {
-            packages_controller.stage(package.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when all the dependencies exists' do
-        context 'and the user is a space developer' do
-          before do
-            allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, org, buildpack])
-            allow(package_stage_action).to receive(:stage).and_return(droplet)
+            expect(DropletModel.last.buildpack).to eq('http://dan-and-zach-awesome-pack.com')
           end
 
-          it 'returns a 201 Created response' do
-            response_code, body = packages_controller.stage(package.guid)
-            expect(response_code).to eq 201
-            expect(body).to eq droplet_response
-            expect(package_stage_action).to have_received(:stage).with(
-              package, app, space, org, buildpack, an_instance_of(DropletCreateMessage), stagers)
-          end
+          context 'when the url is invalid' do
+            let(:buildpack_request) { 'totally-broke!' }
 
-          context 'when the DropletCreateMessage is not valid' do
-            let(:req_body) { '{"memory_limit":"invalid"}' }
-
-            it 'returns an UnprocessableEntity error' do
+            it 'returns a 422' do
               expect {
                 packages_controller.stage(package.guid)
               }.to raise_error do |error|
@@ -633,20 +549,68 @@ module VCAP::CloudController
             end
           end
         end
-      end
 
-      context 'when the request package is invalid' do
-        before do
-          allow(package_stage_fetcher).to receive(:fetch).with(package.guid, buildpack.guid).and_return([package, app, space, org, buildpack])
-          allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::InvalidPackage)
+        context 'when the buildpack is not a url' do
+          let(:buildpack_request) { buildpack.name }
+
+          it 'uses buildpack by name' do
+            response_code, body = packages_controller.stage(package.guid)
+            expect(response_code).to eq(201)
+            expect(body).to eq droplet_response
+            expect(DropletModel.last.buildpack).to eq(buildpack.name)
+          end
+
+          context 'when the buildpack does not exist' do
+            let(:buildpack_request) { 'notfound' }
+
+            it 'returns a 422' do
+              expect {
+                packages_controller.stage(package.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'UnprocessableEntity'
+                expect(error.response_code).to eq 422
+              end
+            end
+          end
         end
 
+        context 'when buildpack is not requsted and app has a buildpack' do
+          let(:req_body) { '{}' }
+
+          before do
+            app.buildpack = buildpack.name
+            app.save
+          end
+
+          it 'uses the apps buildpack' do
+            response_code, body = packages_controller.stage(package.guid)
+            expect(response_code).to eq(201)
+            expect(body).to eq droplet_response
+            expect(DropletModel.last.buildpack).to eq(app.buildpack)
+          end
+        end
+      end
+
+      context 'when the package does not exist' do
         it 'returns a 404 ResourceNotFound error' do
+          expect {
+            packages_controller.stage('made-up-guid')
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'when the DropletCreateMessage is not valid' do
+        let(:req_body) { '{"memory_limit":"invalid"}' }
+
+        it 'returns an UnprocessableEntity error' do
           expect {
             packages_controller.stage(package.guid)
           }.to raise_error do |error|
-            expect(error.name).to eq 'InvalidRequest'
-            expect(error.response_code).to eq 400
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq 422
           end
         end
       end
@@ -654,7 +618,7 @@ module VCAP::CloudController
       context 'when the user does not have the write scope' do
         it 'raises an ApiError with a 403 code' do
           expect(packages_controller).to receive(:check_write_permissions!).
-            and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
           expect {
             packages_controller.stage(package.guid)
           }.to raise_error do |error|
@@ -664,69 +628,88 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the space quota is exceeded' do
+      describe 'handling action errors' do
+        let(:package_stage_action) { double(:package_stage_action) }
+
         before do
-          allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
-          allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::SpaceQuotaExceeded)
+          allow(packages_controller).to receive(:package_stage_action).and_return(package_stage_action)
         end
 
-        it 'raises ApiError UnableToPerform' do
-          expect {
-            packages_controller.stage(package.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'UnableToPerform'
-            expect(error.response_code).to eq 400
-            expect(error.message).to include('Staging request')
-            expect(error.message).to include("space's memory limit exceeded")
+        context 'when the request package is invalid' do
+          before do
+            allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::InvalidPackage)
+          end
+
+          it 'returns a 404 ResourceNotFound error' do
+            expect {
+              packages_controller.stage(package.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'InvalidRequest'
+              expect(error.response_code).to eq 400
+            end
           end
         end
-      end
 
-      context 'when the org quota is exceeded' do
-        before do
-          allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
-          allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::OrgQuotaExceeded)
-        end
+        context 'when the space quota is exceeded' do
+          before do
+            allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::SpaceQuotaExceeded)
+          end
 
-        it 'raises ApiError UnableToPerform' do
-          expect {
-            packages_controller.stage(package.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'UnableToPerform'
-            expect(error.response_code).to eq 400
-            expect(error.message).to include('Staging request')
-            expect(error.message).to include("organization's memory limit exceeded")
+          it 'raises ApiError UnableToPerform' do
+            expect {
+              packages_controller.stage(package.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'UnableToPerform'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include('Staging request')
+              expect(error.message).to include("space's memory limit exceeded")
+            end
           end
         end
-      end
 
-      context 'when the disk limit is exceeded' do
-        before do
-          allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
-          allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::DiskLimitExceeded)
+        context 'when the org quota is exceeded' do
+          before do
+            allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::OrgQuotaExceeded)
+          end
+
+          it 'raises ApiError UnableToPerform' do
+            expect {
+              packages_controller.stage(package.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'UnableToPerform'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include('Staging request')
+              expect(error.message).to include("organization's memory limit exceeded")
+            end
+          end
         end
 
-        it 'raises ApiError UnableToPerform' do
-          expect {
-            packages_controller.stage(package.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'UnableToPerform'
-            expect(error.response_code).to eq 400
-            expect(error.message).to include('Staging request')
-            expect(error.message).to include('disk limit exceeded')
+        context 'when the disk limit is exceeded' do
+          before do
+            allow(package_stage_action).to receive(:stage).and_raise(PackageStageAction::DiskLimitExceeded)
+          end
+
+          it 'raises ApiError UnableToPerform' do
+            expect {
+              packages_controller.stage(package.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'UnableToPerform'
+              expect(error.response_code).to eq 400
+              expect(error.message).to include('Staging request')
+              expect(error.message).to include('disk limit exceeded')
+            end
           end
         end
       end
 
       context 'when the user cannot read the package due to roles' do
         before do
-          allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
           allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
           allow(membership).to receive(:has_any_roles?).with(
-            [Membership::SPACE_DEVELOPER,
-             Membership::SPACE_MANAGER,
-             Membership::SPACE_AUDITOR,
-             Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
         end
 
         it 'returns a 404 ResourceNotFound error' do
@@ -741,16 +724,15 @@ module VCAP::CloudController
 
       context 'when the user can read but cannot write to the package due to roles' do
         before do
-          allow(package_stage_fetcher).to receive(:fetch).and_return([package, app, space, org, buildpack])
           allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
           allow(membership).to receive(:has_any_roles?).with(
-            [Membership::SPACE_DEVELOPER,
-             Membership::SPACE_MANAGER,
-             Membership::SPACE_AUDITOR,
-             Membership::ORG_MANAGER], space.guid, org.guid).
-             and_return(true)
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).
+              and_return(true)
           allow(membership).to receive(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
+              and_return(false)
         end
 
         it 'raises ApiError NotAuthorized' do

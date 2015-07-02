@@ -21,6 +21,7 @@ resource 'Droplets (Experimental)', type: :api do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
     let(:guid) { droplet_model.guid }
+    let(:buildpack_git_url) { 'http://buildpack.git.url.com' }
 
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
@@ -29,6 +30,7 @@ resource 'Droplets (Experimental)', type: :api do
       VCAP::CloudController::DropletModel.make(
         app_guid: app_model.guid,
         package_guid: package_model.guid,
+        buildpack: buildpack_git_url,
         failure_reason: 'example failure reason',
         detected_start_command: 'run -c all_the_things',
         environment_variables: { 'cloud' => 'foundry' },
@@ -47,7 +49,7 @@ resource 'Droplets (Experimental)', type: :api do
         'guid'                   => droplet_model.guid,
         'state'                  => droplet_model.state,
         'hash'                   => droplet_model.droplet_hash,
-        'buildpack_git_url'      => droplet_model.buildpack_git_url,
+        'buildpack'              => buildpack_git_url,
         'failure_reason'         => droplet_model.failure_reason,
         'procfile'               => droplet_model.procfile,
         'detected_start_command' => droplet_model.detected_start_command,
@@ -60,8 +62,7 @@ resource 'Droplets (Experimental)', type: :api do
           'app'     => { 'href' => "/v3/apps/#{app_guid}" },
           'assign_current_droplet' => {
             'href' => "/v3/apps/#{app_guid}/current_droplet",
-            'method' => 'PUT',
-            'body' => { desired_droplet_guid: droplet_model.guid }.to_json
+            'method' => 'PUT'
           }
         }
       }
@@ -118,6 +119,7 @@ resource 'Droplets (Experimental)', type: :api do
       VCAP::CloudController::DropletModel.make(
         app_guid: app_model.guid,
         package_guid: package.guid,
+        buildpack: buildpack.name,
         buildpack_guid: buildpack.guid,
         environment_variables: { 'yuu' => 'huuu' }
       )
@@ -127,7 +129,7 @@ resource 'Droplets (Experimental)', type: :api do
         app_guid: app_model.guid,
         package_guid: package.guid,
         droplet_hash: 'my-hash',
-        buildpack_git_url: 'https://github.com/cloudfoundry/my-buildpack.git',
+        buildpack: 'https://github.com/cloudfoundry/my-buildpack.git',
         state: VCAP::CloudController::DropletModel::STAGED_STATE
       )
     end
@@ -156,7 +158,7 @@ resource 'Droplets (Experimental)', type: :api do
               'guid'                   => droplet1.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGING_STATE,
               'hash'                   => nil,
-              'buildpack_git_url'      => nil,
+              'buildpack'              => buildpack.name,
               'failure_reason'         => droplet1.failure_reason,
               'detected_start_command' => droplet1.detected_start_command,
               'environment_variables'  => droplet1.environment_variables,
@@ -170,8 +172,7 @@ resource 'Droplets (Experimental)', type: :api do
                 'app'       => { 'href' => "/v3/apps/#{droplet1.app_guid}" },
                 'assign_current_droplet' => {
                   'href' => "/v3/apps/#{droplet1.app_guid}/current_droplet",
-                  'method' => 'PUT',
-                  'body' => { desired_droplet_guid: droplet1.guid }.to_json
+                  'method' => 'PUT'
                 }
               }
             },
@@ -179,7 +180,7 @@ resource 'Droplets (Experimental)', type: :api do
               'guid'                   => droplet2.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGED_STATE,
               'hash'                   => 'my-hash',
-              'buildpack_git_url'      => 'https://github.com/cloudfoundry/my-buildpack.git',
+              'buildpack'              => 'https://github.com/cloudfoundry/my-buildpack.git',
               'failure_reason'         => droplet2.failure_reason,
               'detected_start_command' => droplet2.detected_start_command,
               'procfile'               => droplet2.procfile,
@@ -192,8 +193,7 @@ resource 'Droplets (Experimental)', type: :api do
                 'app'     => { 'href' => "/v3/apps/#{droplet2.app_guid}" },
                 'assign_current_droplet' => {
                   'href' => "/v3/apps/#{droplet2.app_guid}/current_droplet",
-                  'method' => 'PUT',
-                  'body' => { desired_droplet_guid: droplet2.guid }.to_json
+                  'method' => 'PUT'
                 }
               }
             },

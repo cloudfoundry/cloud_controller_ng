@@ -18,7 +18,7 @@ module VCAP::CloudController
       @environment_builder     = environment_presenter
     end
 
-    def stage(package, app, space, org, buildpack, staging_message, stagers)
+    def stage(package, app, space, org, buildpack_info, staging_message, stagers)
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
       raise InvalidPackage.new('Cannot stage package whose type is not bits.') if package.type != PackageModel::BITS_TYPE
 
@@ -29,8 +29,8 @@ module VCAP::CloudController
 
       droplet = DropletModel.create(
         app_guid:              app.guid,
-        buildpack_git_url:     staging_message.buildpack_git_url,
-        buildpack_guid:        buildpack.try(:guid),
+        buildpack_guid:        buildpack_info.buildpack_record.try(:guid),
+        buildpack:             buildpack_info.to_s,
         package_guid:          package.guid,
         state:                 DropletModel::PENDING_STATE,
         environment_variables: environment_variables
@@ -43,8 +43,8 @@ module VCAP::CloudController
         stack,
         memory_limit,
         disk_limit,
-        buildpack.try(:key),
-        staging_message.buildpack_git_url
+        buildpack_info.buildpack_record.try(:key),
+        buildpack_info.buildpack_url
       )
       logger.info("package staged: #{package.inspect}")
 

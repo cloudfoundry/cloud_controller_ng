@@ -120,36 +120,14 @@ module VCAP::CloudController
         end
       end
 
-      context 'when buildpack_git_url is not a valid url' do
-        let(:params) { { buildpack_git_url: 'blagow!' } }
+      context 'when buildpack is not a string' do
+        let(:params) { { buildpack: 34 } }
 
         it 'is not valid' do
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:buildpack_git_url]).to include('must be a valid URI')
-        end
-      end
-
-      context 'when buildpack_guid is not a guid' do
-        let(:params) { { buildpack_guid: 34 } }
-
-        it 'is not valid' do
-          message = DropletCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:buildpack_guid]).to_not be_empty
-        end
-      end
-
-      context 'when both buildpack_git_url and buildpack_guid are provided' do
-        let(:params) { { buildpack_guid: 'some-guid', buildpack_git_url: 'http://www.slashdot.org' } }
-
-        it 'is not valid' do
-          message = DropletCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:buildpack_git_url]).to include('Only one of buildpack_git_url or buildpack_guid may be provided')
+          expect(message.errors[:buildpack]).to include('must be a string')
         end
       end
     end

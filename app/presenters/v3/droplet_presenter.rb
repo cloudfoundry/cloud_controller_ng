@@ -27,7 +27,7 @@ module VCAP::CloudController
         guid:                   droplet.guid,
         state:                  droplet.state,
         hash:                   droplet.droplet_hash,
-        buildpack_git_url:      droplet.buildpack_git_url,
+        buildpack:              droplet.buildpack,
         failure_reason:         droplet.failure_reason,
         detected_start_command: droplet.detected_start_command,
         procfile:               droplet.procfile,
@@ -53,7 +53,6 @@ module VCAP::CloudController
         assign_current_droplet: {
           href: "/v3/apps/#{droplet.app_guid}/current_droplet",
           method: 'PUT',
-          body: { desired_droplet_guid: droplet.guid }.to_json
         },
         buildpack: buildpack_link
       }

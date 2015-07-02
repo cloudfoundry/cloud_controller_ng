@@ -297,8 +297,8 @@ resource 'Packages (Experimental)', type: :api do
   end
 
   post '/v3/packages/:guid/droplets' do
-    body_parameter :buildpack_guid, 'Admin buildpack used to stage the package (cannot be used with buildpack_git_url)', required: false
-    body_parameter :buildpack_git_url, 'Git url of a buildpack used to stage the package (cannot be used with buildpack_guid)', required: false
+    body_parameter :buildpack, 'Buildpack to be used when staging the package.
+    Note: If this parameter is not provided, then the buildpack associated with your app will be used as a default', valid_values: ['buildpack name', 'git url'], required: false
     body_parameter :staging_environment_variables, 'Environment variables to use during staging', required: false
     body_parameter :stack, 'Stack used to stage package', required: false
     body_parameter :memory_limit, 'Memory limit used to stage package', required: false
@@ -306,6 +306,8 @@ resource 'Packages (Experimental)', type: :api do
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
+    let(:buildpack) { 'http://github.com/myorg/awesome-buildpack' }
+
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:app_guid) { app_model.guid }
     let!(:package_model) do
@@ -316,7 +318,6 @@ resource 'Packages (Experimental)', type: :api do
       )
     end
     let(:guid) { package_model.guid }
-    let(:buildpack_git_url) { 'http://github.com/myorg/awesome-buildpack' }
 
     let(:raw_post) { body_parameters }
 
@@ -358,7 +359,7 @@ resource 'Packages (Experimental)', type: :api do
         'guid'                   => droplet.guid,
         'state'                  => 'PENDING',
         'hash'                   => nil,
-        'buildpack_git_url'      => 'http://github.com/myorg/awesome-buildpack',
+        'buildpack'              => 'http://github.com/myorg/awesome-buildpack',
         'failure_reason'         => nil,
         'detected_start_command' => nil,
         'procfile'               => nil,
@@ -382,8 +383,7 @@ resource 'Packages (Experimental)', type: :api do
           'app'     => { 'href' => "/v3/apps/#{app_guid}" },
           'assign_current_droplet' => {
             'href' => "/v3/apps/#{app_guid}/current_droplet",
-            'method' => 'PUT',
-            'body' => { desired_droplet_guid: droplet.guid }.to_json
+            'method' => 'PUT'
           }
         }
       }

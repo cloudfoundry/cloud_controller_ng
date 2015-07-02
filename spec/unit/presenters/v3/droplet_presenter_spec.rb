@@ -12,7 +12,7 @@ module VCAP::CloudController
           detected_start_command: 'blast off!',
           procfile: 'web: npm start',
           environment_variables:  { 'elastic' => 'runtime' },
-          buildpack_git_url:      'http://git.url', droplet_hash: '1234',
+          droplet_hash: '1234',
           created_at: Time.at(1),
           updated_at: Time.at(2),
         )
@@ -23,7 +23,7 @@ module VCAP::CloudController
         expect(result['guid']).to eq(droplet.guid)
         expect(result['state']).to eq(droplet.state)
         expect(result['hash']).to eq(droplet.droplet_hash)
-        expect(result['buildpack_git_url']).to eq(droplet.buildpack_git_url)
+        expect(result['buildpack']).to eq(droplet.buildpack)
         expect(result['failure_reason']).to eq(droplet.failure_reason)
         expect(result['detected_start_command']).to eq(droplet.detected_start_command)
         expect(result['procfile']).to eq(droplet.procfile)
@@ -38,7 +38,6 @@ module VCAP::CloudController
         expect(result['_links']['app']['href']).to eq("/v3/apps/#{droplet.app_guid}")
         expect(result['_links']['assign_current_droplet']['href']).to eq("/v3/apps/#{droplet.app_guid}/current_droplet")
         expect(result['_links']['assign_current_droplet']['method']).to eq('PUT')
-        expect(result['_links']['assign_current_droplet']['body']).to eq({ desired_droplet_guid: droplet.guid }.to_json)
       end
     end
 

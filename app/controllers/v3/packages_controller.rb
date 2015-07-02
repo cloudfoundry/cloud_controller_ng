@@ -2,7 +2,6 @@ require 'presenters/v3/package_presenter'
 require 'presenters/v3/droplet_presenter'
 require 'queries/package_list_fetcher'
 require 'queries/package_delete_fetcher'
-require 'queries/package_stage_fetcher'
 require 'actions/package_stage_action'
 require 'actions/package_delete'
 require 'actions/package_upload'
@@ -17,7 +16,7 @@ module VCAP::CloudController
 
     def inject_dependencies(dependencies)
       @package_presenter = dependencies[:package_presenter]
-      @stagers  = dependencies[:stagers]
+      @stagers           = dependencies[:stagers]
       @droplet_presenter = dependencies[:droplet_presenter]
     end
 
@@ -80,7 +79,7 @@ module VCAP::CloudController
       check_write_permissions!
 
       package_delete_fetcher = PackageDeleteFetcher.new
-      package, space, org = package_delete_fetcher.fetch(guid)
+      package, space, org    = package_delete_fetcher.fetch(guid)
       package_not_found! if package.nil? || !can_read?(space.guid, org.guid)
       unauthorized! unless can_delete?(space.guid)
 
@@ -97,14 +96,17 @@ module VCAP::CloudController
       message = DropletCreateMessage.create_from_http_request(request)
       unprocessable!(message.errors.full_messages) unless message.valid?
 
-      package, app, space, org, buildpack = package_stage_fetcher.fetch(package_guid, message.buildpack_guid)
-      space_not_found! if space.nil?
-      app_not_found! if app.nil?
-      package_not_found! if package.nil? || !can_read?(space.guid, org.guid)
-      buildpack_not_found! if message.buildpack_guid && buildpack.nil?
-      unauthorized! unless can_stage?(space.guid)
+      package = PackageModel.where(guid: package_guid).eager(:app, :space, space: :organization).all.first
+      package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
 
-      droplet = package_stage_action.stage(package, app, space, org, buildpack, message, @stagers)
+      unauthorized! unless can_stage?(package.space.guid)
+
+      buildpack_to_use    = message.buildpack.nil? ? package.app.buildpack : message.buildpack
+      buildpack_validator = BuildpackRequestValidator.new({ buildpack: buildpack_to_use })
+      unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
+
+      droplet = package_stage_action.stage(
+        package, package.app, package.space, package.space.organization, buildpack_validator, message, @stagers)
 
       [HTTP::CREATED, @droplet_presenter.present_json(droplet)]
     rescue PackageStageAction::InvalidPackage => e
@@ -162,10 +164,6 @@ module VCAP::CloudController
 
     def app_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found ')
-    end
-
-    def space_not_found!
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
     end
 
     def unauthorized!
