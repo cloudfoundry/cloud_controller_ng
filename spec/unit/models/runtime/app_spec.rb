@@ -1776,6 +1776,7 @@ module VCAP::CloudController
       before do
         app.package_state = 'FAILED'
         app.staging_failed_reason = 'StagingError'
+        app.staging_failed_description = 'Failed to stage because of something very tragic'
       end
 
       it 'should set the package state pending' do
@@ -1788,6 +1789,12 @@ module VCAP::CloudController
         expect {
           app.mark_for_restaging
         }.to change { app.staging_failed_reason }.to nil
+      end
+
+      it 'should clear the staging failed description' do
+        expect {
+          app.mark_for_restaging
+        }.to change { app.staging_failed_description }.to nil
       end
 
       it 'updates the package_pending_since date to current' do
