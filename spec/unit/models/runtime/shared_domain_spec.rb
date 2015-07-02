@@ -57,6 +57,11 @@ module VCAP::CloudController
         PrivateDomain.make name: 'foo.com'
         expect { SharedDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
       end
+
+      it 'denies shared foo.com when private foo.com exists' do
+        PrivateDomain.make name: 'foo.com'
+        expect { SharedDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /name unique/)
+      end
     end
 
     describe '#destroy' do

@@ -73,7 +73,7 @@ module VCAP::CloudController
 
     def validate
       validates_presence :name
-      validates_unique :name
+      validates_unique :name, dataset: Domain.dataset
 
       validates_format DOMAIN_REGEX, :name
       validates_length_range 3..255, :name
