@@ -24,6 +24,18 @@ module VCAP::Services::SSO
       @broker_or_instance # TODO: Don't name it this if you can help it
     end
 
+    def add_client_for_instance(client_info)
+      requested_client_id = client_info['id']
+
+      existing_ccdb_clients = VCAP::CloudController::ServiceInstanceDashboardClient.find_claimed_client(broker_or_instance)
+      existing_ccdb_client_ids = existing_ccdb_clients.map(&:uaa_id)
+
+      existing_clients = fetch_clients_from_uaa([requested_client_id] | existing_ccdb_client_ids)
+      existing_uaa_client_ids  = existing_clients.map { |c| c['client_id'] }
+
+      claim_clients_and_update_uaa [client_info], existing_ccdb_clients, existing_uaa_client_ids
+    end
+
     def synchronize_clients_with_catalog(catalog)
       requested_clients = catalog.services.map(&:dashboard_client).compact
       requested_client_ids = requested_clients.map { |client| client['id'] }

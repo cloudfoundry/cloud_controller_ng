@@ -140,30 +140,48 @@ module VCAP::Services::ServiceBrokers::V2
         )
       end
 
-      it 'returns the attributes to update on a service instance' do
-        attributes, _ = client.provision(instance)
-        # ensure updating attributes and saving to service instance works
-        instance.save_and_update_operation(attributes)
+      describe 'return values' do
+        let(:response_data) do
+          {
+              dashboard_url: 'http://example-dashboard.com/9189kdfsk0vfnku',
+              dashboard_client: {
+                  id: 'client-id-1',
+                  secret: 'secret-1',
+                  redirect_uri: 'https://dashboard.service.com'
+              }
+          }
+        end
 
-        expect(instance.dashboard_url).to eq('foo')
-      end
+        attributes = nil
+        before do
+          attributes = client.provision(instance)
+        end
 
-      it 'defaults the state to "succeeded"' do
-        attributes, _ = client.provision(instance)
+        it 'DEPRCATED: returns an empty credentials hash to satisfy the not null database constraint' do
+          expect(attributes[:credentials]).to eq({})
+        end
 
-        expect(attributes[:last_operation][:state]).to eq('succeeded')
-      end
+        it 'returns the dashboard url' do
+          expect(attributes[:dashboard_url]).to eq('http://example-dashboard.com/9189kdfsk0vfnku')
+        end
 
-      it 'leaves the description blank' do
-        attributes, _ = client.provision(instance)
+        it 'returns the dashboard client credentials if present' do
+          expect(attributes[:dashboard_client]).to eq({
+            'id' => 'client-id-1',
+            'secret' => 'secret-1',
+            'redirect_uri' => 'https://dashboard.service.com'
+          })
+        end
 
-        expect(attributes[:last_operation][:description]).to eq('')
-      end
+        describe 'last operation' do
+          it 'defaults the state to "succeeded"' do
+            expect(attributes[:last_operation][:state]).to eq('succeeded')
+          end
 
-      it 'DEPRECATED, maintain for database not null constraint: sets the credentials on the instance' do
-        attributes, _ = client.provision(instance)
-
-        expect(attributes[:credentials]).to eq({})
+          it 'leaves the description blank' do
+            expect(attributes[:last_operation][:description]).to eq('')
+          end
+        end
       end
 
       it 'passes arbitrary params in the broker request' do

@@ -573,5 +573,57 @@ module VCAP::Services::SSO
         end
       end
     end
+
+    context 'for service instances' do
+      let(:service_instance) {  VCAP::CloudController::ManagedServiceInstance.make }
+      let(:dashboard_client) {  VCAP::CloudController::ServiceInstanceDashboardClient }
+      let(:manager) { DashboardClientManager.new(service_instance, services_event_repository, dashboard_client) }
+      let(:client_info) do
+        {
+          'id' => 'client-id-1',
+          'secret' => 'secret-1',
+          'redirect_uri' => 'https://dashboard.service.com'
+        }
+      end
+
+      describe '#initialize' do
+        subject { manager }
+
+        it 'sets the service_broker' do
+          expect(manager.broker_or_instance).to eql(service_instance)
+        end
+
+        its(:warnings) { should == [] }
+        its(:has_warnings?) { should == false }
+      end
+
+      describe '#add_client_for_instance' do
+        before do
+          allow(VCAP::Services::SSO::UAA::UaaClientManager).to receive(:new).and_return(client_manager)
+          allow(client_manager).to receive(:get_clients).and_return([])
+          allow(client_manager).to receive(:modify_transaction)
+        end
+
+        context 'when the client does not already exist in UAA' do
+          it 'creates a client in UAA' do
+            expect(client_manager).to receive(:modify_transaction) do |changeset|
+              expect(changeset.length).to eq 1
+              expect(changeset.first).to be_an_instance_of Commands::CreateClientCommand
+              expect(changeset[0].client_attrs).to eq client_info
+            end
+
+            manager.add_client_for_instance client_info
+          end
+
+          it 'claims the client for the service instance' do
+            expect {
+              manager.add_client_for_instance client_info
+            }.to change { VCAP::CloudController::ServiceInstanceDashboardClient.count }.by 1
+
+            expect(VCAP::CloudController::ServiceInstanceDashboardClient.find(uaa_id: client_info['id'])).to_not be_nil
+          end
+        end
+      end
+    end
   end
 end

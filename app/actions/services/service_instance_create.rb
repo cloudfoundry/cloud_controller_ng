@@ -12,11 +12,13 @@ module VCAP::CloudController
       arbitrary_params = request_attrs['parameters']
 
       service_instance = ManagedServiceInstance.new(request_params)
-      attributes_to_update = service_instance.client.provision(
+      broker_response = service_instance.client.provision(
         service_instance,
         accepts_incomplete: accepts_incomplete,
-        arbitrary_parameters: arbitrary_params,
+        arbitrary_parameters: arbitrary_params
       )
+
+      attributes_to_update = broker_response.slice(:credentials, :dashboard_url, :last_operation)
 
       begin
         service_instance.save_with_new_operation(attributes_to_update)
@@ -37,6 +39,16 @@ module VCAP::CloudController
         )
         enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
         enqueuer.enqueue
+      end
+
+      dashboard_client_info = broker_response[:dashboard_client]
+      if dashboard_client_info
+        client_manager = VCAP::Services::SSO::DashboardClientManager.new(
+          service_instance,
+          @services_event_repository,
+          VCAP::CloudController::ServiceInstanceDashboardClient
+        )
+        client_manager.add_client_for_instance(dashboard_client_info)
       end
 
       if !accepts_incomplete || service_instance.last_operation.state != 'in progress'
