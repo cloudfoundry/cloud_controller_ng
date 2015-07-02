@@ -2,6 +2,7 @@ module VCAP::CloudController
   class ServiceBroker < Sequel::Model
     one_to_many :services
     one_to_many :service_dashboard_client
+    many_to_one :space
 
     import_attributes :name, :broker_url, :auth_username, :auth_password
     export_attributes :name, :broker_url, :auth_username
@@ -25,6 +26,10 @@ module VCAP::CloudController
 
     def client
       @client ||= VCAP::Services::ServiceBrokers::V2::Client.new(url: broker_url, auth_username: auth_username, auth_password: auth_password)
+    end
+
+    def private?
+      !!space_id
     end
   end
 end

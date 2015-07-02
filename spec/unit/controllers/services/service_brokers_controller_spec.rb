@@ -71,7 +71,8 @@ module VCAP::CloudController
           name: { type: 'string', required: true },
           broker_url: { type: 'string', required: true },
           auth_username: { type: 'string', required: true },
-          auth_password: { type: 'string', required: true }
+          auth_password: { type: 'string', required: true },
+          space_guid: { type: 'string', required: false }
         })
       end
 
@@ -164,6 +165,23 @@ module VCAP::CloudController
         headers = last_response.original_headers
         broker = ServiceBroker.last
         expect(headers.fetch('Location')).to eq("/v2/service_brokers/#{broker.guid}")
+      end
+
+      describe 'private brokers' do
+        let(:space) { Space.make }
+        let(:body) { body_hash.merge({ space_guid: space.guid }).to_json }
+
+        it 'creates a broker with an associated space' do
+          stub_catalog
+
+          post '/v2/service_brokers', body, headers
+
+          expect(last_response).to have_status_code(201)
+          expect(a_request(:get, broker_catalog_url)).to have_been_made
+
+          broker = ServiceBroker.last
+          expect(broker.space).to eq(space)
+        end
       end
 
       context 'when the fields for creating the broker is invalid' do

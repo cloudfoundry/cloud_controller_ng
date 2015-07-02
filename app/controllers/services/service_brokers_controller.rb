@@ -8,10 +8,11 @@ module VCAP::CloudController
   # expected by CFoundry and CF.
   class ServiceBrokersController < RestController::ModelController
     define_attributes do
-      attribute :name,       String
-      attribute :broker_url, String
-      attribute :auth_username,   String
-      attribute :auth_password,   String
+      attribute :name,           String
+      attribute :broker_url,     String
+      attribute :auth_username,  String
+      attribute :auth_password,  String
+      attribute :space_guid,     String, default: nil, exclude_in: [:update]
     end
 
     query_parameters :name
@@ -27,16 +28,16 @@ module VCAP::CloudController
     end
 
     def create
-      validate_access(:create, ServiceBroker)
+      params = CreateMessage.decode(body).extract
+
       create_action = ServiceBrokerCreate.new(
         @service_manager,
         @services_event_repository,
+        self,
         self
       )
-      params = CreateMessage.decode(body).extract
 
       broker = create_action.create(params)
-
       headers = { 'Location' => url_of(broker) }
       body = ServiceBrokerPresenter.new(broker).to_json
 

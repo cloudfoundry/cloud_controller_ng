@@ -19,6 +19,7 @@ module VCAP::CloudController
     one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances
     one_to_many :managed_service_instances
+    one_to_many :service_brokers
     one_to_many :routes
     many_to_many :security_groups,
     dataset: -> {
@@ -93,6 +94,10 @@ module VCAP::CloudController
         join(:spaces_developers, spaces_developers__space_id: :spaces__id).
           where(spaces_developers__user_id: users.map(&:id)).select_all(:spaces)
       end
+    end
+
+    def has_developer?(user)
+      developers.include?(user)
     end
 
     def in_organization?(user)

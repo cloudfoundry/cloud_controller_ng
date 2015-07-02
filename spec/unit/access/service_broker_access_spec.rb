@@ -32,6 +32,21 @@ module VCAP::CloudController
       it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::ServiceBroker }
     end
 
+    context 'space developer' do
+      let(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: space }
+
+      before do
+        org.add_user user
+        space.add_developer user
+      end
+
+      it_behaves_like :no_access
+
+      it { is_expected.to allow_op_on_object :create, broker_with_space }
+
+      it { is_expected.not_to allow_op_on_object :index, VCAP::CloudController::ServiceBroker }
+    end
+
     context 'user in a different organization (defensive)' do
       before do
         different_organization = VCAP::CloudController::Organization.make

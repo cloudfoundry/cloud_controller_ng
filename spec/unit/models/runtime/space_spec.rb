@@ -362,7 +362,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#having_developer' do
+    describe '.having_developers' do
       it 'returns only spaces with developers containing the specified user' do
         space1 = Space.make
         user = make_developer_for_space(space1)
@@ -397,6 +397,21 @@ module VCAP::CloudController
             space.save
           }.to raise_error(VCAP::Errors::ApiError, /Invalid relation: Could not find VCAP::CloudController::SpaceQuotaDefinition with guid: #{space_quota_definition_guid}/)
         end
+      end
+    end
+
+    describe '#has_developer?' do
+      subject(:space) { Space.make }
+      let(:user) { User.make }
+
+      it 'returns true if the given user is a space developer' do
+        space.organization.add_user user
+        space.add_developer user
+        expect(space.has_developer?(user)).to be_truthy
+      end
+
+      it 'returns false if the given user is not a space developer' do
+        expect(space.has_developer?(user)).to be_falsey
       end
     end
   end

@@ -18,6 +18,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :services }
+      it { is_expected.to have_associated :space }
 
       it 'has associated service_plans' do
         service = Service.make(:v2)
@@ -112,6 +113,29 @@ module VCAP::CloudController
           service_broker.destroy
           expect(client.reload.service_broker_id).to be_nil
         end
+      end
+    end
+
+    describe 'private?' do
+      context 'when the broker has an associated space' do
+        let(:space) { Space.make }
+        let(:broker) do
+          ServiceBroker.new(
+              name: name,
+              broker_url: broker_url,
+              auth_username: auth_username,
+              auth_password: auth_password,
+              space_id: space.id
+          )
+        end
+
+        it 'is true' do
+          expect(broker.private?).to be_truthy
+        end
+      end
+
+      it 'is false if the broker does not have a space id' do
+        expect(broker.private?).to be_falsey
       end
     end
   end
