@@ -881,60 +881,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'adding user roles by username' do
-      [:manager, :developer, :auditor].each do |role|
-        plural_role = role.to_s.pluralize
-        describe "PUT /v2/spaces/:guid/#{plural_role}" do
-          let(:user) { User.make(username: 'larry_the_user') }
-
-          before do
-            allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
-            organization_one.add_user(user)
-          end
-
-          it "makes the user a space #{role}" do
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
-
-            expect(last_response.status).to eq(201)
-            expect(space_one.send(plural_role)).to include(user)
-            expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
-          end
-
-          it 'verifies the user has update access to the space' do
-            expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
-          end
-
-          it 'returns a 404 when the user does not exist in UAA' do
-            expect_any_instance_of(UaaClient).to receive(:id_for_username).with('fake@example.com').and_return(nil)
-
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' }), admin_headers
-
-            expect(last_response.status).to eq(404)
-            expect(decoded_response['code']).to eq(20003)
-          end
-
-          it 'returns an error when UAA is not available' do
-            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaUnavailable)
-
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
-
-            expect(last_response.status).to eq(503)
-            expect(decoded_response['code']).to eq(20004)
-          end
-
-          it 'returns an error when UAA endpoint is disabled' do
-            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
-
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
-
-            expect(last_response.status).to eq(501)
-            expect(decoded_response['code']).to eq(20005)
-          end
-        end
-      end
-    end
-
     describe 'Deprecated endpoints' do
       let!(:domain) { SharedDomain.make }
       describe 'DELETE /v2/spaces/:guid/domains/:shared_domain' do
