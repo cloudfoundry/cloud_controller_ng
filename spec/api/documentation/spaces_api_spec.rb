@@ -108,19 +108,6 @@ resource 'Spaces', type: [:api, :legacy_api] do
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :developers
       nested_model_associate :developer, :space
       nested_model_remove :developer, :space
-
-      put 'v2/spaces/:guid/developers' do
-        example 'Associate Developer with the Space by Username (experimental)' do
-          uaa_client = double(:uaa_client)
-          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:id_for_username).and_return(developer.guid)
-
-          client.put "v2/spaces/#{space.guid}/developers", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
-          expect(status).to eq(201)
-
-          standard_entity_response parsed_response, :space
-        end
-      end
     end
 
     describe 'Managers' do
@@ -141,19 +128,6 @@ resource 'Spaces', type: [:api, :legacy_api] do
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :managers
       nested_model_associate :manager, :space
       nested_model_remove :manager, :space
-
-      put 'v2/spaces/:guid/managers' do
-        example 'Associate Manager with the Space by Username (experimental)' do
-          uaa_client = double(:uaa_client)
-          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:id_for_username).and_return(manager.guid)
-
-          client.put "v2/spaces/#{space.guid}/managers", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
-          expect(status).to eq(201)
-
-          standard_entity_response parsed_response, :space
-        end
-      end
     end
 
     describe 'Auditors' do
@@ -174,19 +148,6 @@ resource 'Spaces', type: [:api, :legacy_api] do
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :auditors
       nested_model_associate :auditor, :space
       nested_model_remove :auditor, :space
-
-      put 'v2/spaces/:guid/auditors' do
-        example 'Associate Auditor with the Space by Username (experimental)' do
-          uaa_client = double(:uaa_client)
-          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:id_for_username).and_return(auditor.guid)
-
-          client.put "v2/spaces/#{space.guid}/auditors", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
-          expect(status).to eq(201)
-
-          standard_entity_response parsed_response, :space
-        end
-      end
     end
 
     describe 'User Roles' do
