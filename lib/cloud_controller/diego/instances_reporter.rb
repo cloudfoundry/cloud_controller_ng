@@ -49,7 +49,7 @@ module VCAP::CloudController
       rescue Errors::InstancesUnavailable
         return -1
       rescue => e
-        logger.error('tps.error', error: e.to_s)
+        logger.error('num_instances_app.tps.error', error: e.to_s)
         return -1
       end
 
@@ -109,6 +109,7 @@ module VCAP::CloudController
       rescue Errors::InstancesUnavailable => e
         raise e
       rescue => e
+        logger.error('stats_for_app.tps.error', error: e.to_s)
         raise Errors::InstancesUnavailable.new(e)
       end
 

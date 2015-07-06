@@ -21,8 +21,8 @@ module VCAP::CloudController
 
       def http_client
         http_client = Net::HTTP.new(@url.host, @url.port)
-        http_client.read_timeout = 10
-        http_client.open_timeout = 10
+        http_client.read_timeout = 30
+        http_client.open_timeout = 15
         http_client
       end
 
@@ -47,12 +47,13 @@ module VCAP::CloudController
         end
 
         response = nil
-        tries = 3
+        tries = 5
 
         begin
           response = http_client.get2(path, headers)
-        rescue Errno::ECONNREFUSED => e
+        rescue Errno::ECONNREFUSED, Net::ReadTimeout, Net::OpenTimeout => e
           tries -= 1
+          logger.debug('Connection problem', error_message: e.to_s, tries: tries, path: path)
           retry unless tries == 0
           raise Errors::InstancesUnavailable.new(e)
         end
