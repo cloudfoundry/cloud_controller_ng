@@ -152,9 +152,10 @@ module VCAP::CloudController
             'url' => "/v2/service_brokers/#{service_broker.guid}",
           },
           'entity' =>  {
-              'name' => name,
-              'broker_url' => broker_url,
-              'auth_username' => auth_username,
+            'name' => name,
+            'broker_url' => broker_url,
+            'auth_username' => auth_username,
+            'space_guid' => nil,
           },
         )
       end
@@ -180,6 +181,8 @@ module VCAP::CloudController
             post '/v2/service_brokers', body, headers
 
             expect(last_response).to have_status_code(201)
+            parsed_body = JSON.load(last_response.body)
+            expect(parsed_body['entity']).to include({ 'space_guid' => space.guid })
             expect(a_request(:get, broker_catalog_url)).to have_been_made
 
             broker = ServiceBroker.last
@@ -455,6 +458,7 @@ module VCAP::CloudController
               'name' => 'My Updated Service',
               'broker_url' => broker.broker_url,
               'auth_username' => 'new-username',
+              'space_guid' => nil,
             },
           })
         end
