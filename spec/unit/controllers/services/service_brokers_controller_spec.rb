@@ -51,8 +51,9 @@ module VCAP::CloudController
       build_broker_url(attributes, '/v2/catalog')
     end
 
-    def stub_catalog
-      stub_request(:get, broker_catalog_url).
+    def stub_catalog(broker_url: nil)
+      url = broker_url || broker_catalog_url
+      stub_request(:get, url).
           to_return(status: 200, body: catalog_json.to_json)
     end
 
@@ -169,18 +170,71 @@ module VCAP::CloudController
 
       describe 'private brokers' do
         let(:space) { Space.make }
-        let(:body) { body_hash.merge({ space_guid: space.guid }).to_json }
 
-        it 'creates a broker with an associated space' do
-          stub_catalog
+        context 'when the request includes a space_guid' do
+          let(:body) { body_hash.merge({ space_guid: space.guid }).to_json }
 
-          post '/v2/service_brokers', body, headers
+          it 'creates a broker with an associated space' do
+            stub_catalog
 
-          expect(last_response).to have_status_code(201)
-          expect(a_request(:get, broker_catalog_url)).to have_been_made
+            post '/v2/service_brokers', body, headers
 
-          broker = ServiceBroker.last
-          expect(broker.space).to eq(space)
+            expect(last_response).to have_status_code(201)
+            expect(a_request(:get, broker_catalog_url)).to have_been_made
+
+            broker = ServiceBroker.last
+            expect(broker.space).to eq(space)
+          end
+
+          it 'returns a 403 if a user is not a SpaceDeveloper for the space' do
+            user = User.make
+
+            post '/v2/service_brokers', body, headers_for(user)
+            expect(last_response.status).to eq(403)
+          end
+
+          it 'returns a 400 if a another broker (private or public) exists with that name' do
+            stub_catalog broker_url: 'http://me:abc123@cf-service-broker.example-2.com/v2/catalog'
+
+            public_body = {
+                name: name,
+                broker_url: 'http://cf-service-broker.example-2.com',
+                auth_username: auth_username,
+                auth_password: auth_password,
+            }.to_json
+
+            post '/v2/service_brokers', public_body, headers
+            expect(last_response).to have_status_code(201)
+
+            post '/v2/service_brokers', body, headers
+            expect(last_response).to have_status_code(400)
+          end
+
+          it 'returns a 400 if a another broker (private or public) exists with that url' do
+            stub_catalog
+
+            public_body = {
+                name: 'other-name',
+                broker_url: broker_url,
+                auth_username: auth_username,
+                auth_password: auth_password,
+            }.to_json
+
+            post '/v2/service_brokers', public_body, headers
+            expect(last_response).to have_status_code(201)
+
+            post '/v2/service_brokers', body, headers
+            expect(last_response).to have_status_code(400)
+          end
+        end
+
+        it 'returns a 403 if a SpaceDeveloper does not include a space_guid' do
+          user = User.make
+          space.organization.add_user user
+          space.add_developer user
+
+          post '/v2/service_brokers', body, headers_for(user)
+          expect(last_response.status).to eq(403)
         end
       end
 
