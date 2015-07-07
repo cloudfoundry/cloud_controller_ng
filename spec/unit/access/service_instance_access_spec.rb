@@ -62,7 +62,7 @@ module VCAP::CloudController
 
       context 'when the organization is suspended' do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
 
       it 'allows the user to read the permissions of the service instance' do
@@ -86,7 +86,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
 
       it 'allows the user to read the permissions of the service instance' do
         expect(subject).to allow_op_on_object(:read_permissions, object)
@@ -126,7 +126,7 @@ module VCAP::CloudController
         space.add_manager(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'organization user (defensive)' do
@@ -186,7 +186,7 @@ module VCAP::CloudController
 
       context 'with only cloud_controller.read scope' do
         let(:scope) { ['cloud_controller.read'] }
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
         it { is_expected.to allow_op_on_object(:read_permissions, object) }
       end
 

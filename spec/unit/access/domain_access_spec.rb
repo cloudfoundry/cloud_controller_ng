@@ -44,7 +44,7 @@ module VCAP::CloudController
 
       context 'organization auditor' do
         before { org.add_auditor(user) }
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
 
       context 'organization user (defensive)' do
@@ -93,7 +93,7 @@ module VCAP::CloudController
           space.add_auditor(user)
         end
 
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
 
       context 'any user using client without cloud_controller.read' do
@@ -117,7 +117,7 @@ module VCAP::CloudController
       let(:object) { SharedDomain.make }
 
       it_behaves_like :admin_full_access
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
 
       context 'a user that isnt logged in (defensive)' do
         let(:user) { nil }

@@ -31,7 +31,7 @@ module VCAP::CloudController
 
       context 'when the organization is suspended' do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
 
       context 'when private_domain_creation FeatureFlag is disabled' do
@@ -44,7 +44,7 @@ module VCAP::CloudController
 
     context 'organization auditor (defensive)' do
       before { org.add_auditor(user) }
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'organization billing manager (defensive)' do
@@ -90,7 +90,7 @@ module VCAP::CloudController
         org.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'any user using client without cloud_controller.read' do

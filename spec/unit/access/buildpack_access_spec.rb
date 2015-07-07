@@ -22,7 +22,7 @@ module VCAP::CloudController
     end
 
     context 'for a logged in user' do
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
       it { is_expected.not_to allow_op_on_object :upload, object }
 
       context 'using a client without cloud_controller.read' do

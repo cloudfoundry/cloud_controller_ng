@@ -19,12 +19,12 @@ module VCAP::CloudController
     it_should_behave_like :admin_full_access
 
     context 'for a logged in user' do
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'a user that is not logged in' do
       let(:user) { nil }
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'any user using client without cloud_controller.read' do

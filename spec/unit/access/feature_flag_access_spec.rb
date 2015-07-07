@@ -21,7 +21,7 @@ module VCAP::CloudController
     context 'a user that has cloud_controller.read' do
       let(:token) { { 'scope' => ['cloud_controller.read'] } }
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'a user that does not have cloud_controller.read' do

@@ -27,7 +27,7 @@ module VCAP::CloudController
           space.add_developer(user)
         end
 
-        it_should_behave_like :read_only
+        it_should_behave_like :read_only_access
       end
 
       context 'when the user is not a developer of the owning space' do

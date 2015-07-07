@@ -25,7 +25,7 @@ module VCAP::CloudController
 
       context 'when the organization is suspended' do
         before { object.organization.status = 'suspended' }
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
     end
 
@@ -44,7 +44,7 @@ module VCAP::CloudController
       context 'when the organization is suspended' do
         before { object.organization.status = 'suspended' }
 
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
     end
 
@@ -54,7 +54,7 @@ module VCAP::CloudController
         object.add_developer(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'as a space auditor' do
@@ -63,7 +63,7 @@ module VCAP::CloudController
         object.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'as an organization auditor (defensive)' do
@@ -118,7 +118,7 @@ module VCAP::CloudController
         object.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'any user using client without cloud_controller.read' do

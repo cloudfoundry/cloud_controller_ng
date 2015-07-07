@@ -50,17 +50,17 @@ module VCAP::CloudController
 
     context 'organization manager' do
       before { org.add_manager(user) }
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
 
       context 'when the organization is suspended' do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
     end
 
     context 'organization auditor' do
       before { org.add_auditor(user) }
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'organization billing manager' do
@@ -74,7 +74,7 @@ module VCAP::CloudController
         space.add_manager(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
 
       it 'cant create wildcard routes' do
         object.host = '*'
@@ -159,7 +159,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'organization user (defensive)' do
@@ -205,7 +205,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
       it { is_expected.to allow_op_on_object :reserved, nil }
     end
 
