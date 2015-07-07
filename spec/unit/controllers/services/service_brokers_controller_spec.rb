@@ -88,42 +88,44 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_brokers' do
-      describe 'private brokers' do
-        let(:space_a) { Space.make }
-        let(:space_b) { Space.make }
-        let(:user) { User.make }
-        let!(:public_broker) { ServiceBroker.make }
-        let!(:space_a_broker) { ServiceBroker.make space: space_a }
-        let!(:space_b_broker) { ServiceBroker.make space: space_b }
+      let(:space_a) { Space.make }
+      let(:space_b) { Space.make }
+      let(:user) { User.make }
+      let!(:public_broker) { ServiceBroker.make }
+      let!(:space_a_broker) { ServiceBroker.make space: space_a }
+      let!(:space_b_broker) { ServiceBroker.make space: space_b }
 
-        context 'as an Admin' do
-          it 'sees all brokers' do
-            get '/v2/service_brokers', {}, admin_headers
-            expect(decoded_response['total_results']).to eq(3)
-          end
+      context 'as an Admin' do
+        it 'sees all brokers' do
+          get '/v2/service_brokers', {}, admin_headers
+
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['total_results']).to eq(3)
+        end
+      end
+
+      context 'as a SpaceDeveloper for space_a' do
+        before do
+          space_a.organization.add_user user
+          space_a.add_developer user
         end
 
-        context 'as a SpaceDeveloper for space_a' do
-          before do
-            space_a.organization.add_user user
-            space_a.add_developer user
-          end
+        it 'sees only private brokers in space_a' do
+          get '/v2/service_brokers', {}, headers_for(user)
 
-          it 'sees only private brokers in space_a' do
-            get '/v2/service_brokers', {}, headers_for(user)
-
-            expect(decoded_response['total_results']).to eq(1)
-            expect(decoded_response['resources'].first['metadata']['guid']).to eq(space_a_broker.guid)
-          end
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['total_results']).to eq(1)
+          expect(decoded_response['resources'].first['metadata']['guid']).to eq(space_a_broker.guid)
         end
+      end
 
-        context 'as an unaffiliated user' do
-          it 'sees no brokers' do
-            get '/v2/service_brokers', {}, headers_for(user)
+      context 'as an unaffiliated user' do
+        it 'sees no brokers' do
+          get '/v2/service_brokers', {}, headers_for(user)
 
-            expect(decoded_response['total_results']).to eq(0)
-            expect(decoded_response['resources']).to eq([])
-          end
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['total_results']).to eq(0)
+          expect(decoded_response['resources']).to eq([])
         end
       end
     end
