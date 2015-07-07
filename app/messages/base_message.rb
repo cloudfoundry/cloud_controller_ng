@@ -39,8 +39,8 @@ module VCAP::CloudController
 
     class EnvironmentVariablesValidator < ActiveModel::Validator
       def validate(record)
-        if (record.environment_variables) then
-          if (!record.environment_variables.is_a?(Hash)) then
+        if record.environment_variables
+          if !record.environment_variables.is_a?(Hash)
             record.errors.add(:environment_variables, 'must be a hash')
           else
             record.environment_variables.keys.each do |key|

@@ -622,24 +622,24 @@ module VCAP::CloudController
           }
 
           before do
-            app.environment_variables = {"key_from_app"=>"should_merge", "conflicting_key"=>"value_from_app"}
+            app.environment_variables = { 'key_from_app' => 'should_merge', 'conflicting_key' => 'value_from_app' }
             app.save
           end
           it 'merges with the existing environment variables' do
             response_code, _ = packages_controller.stage(package.guid)
             expect(response_code).to eq(201)
-            expect(DropletModel.last.environment_variables).to include("key_from_package" => "should_merge")
-            expect(DropletModel.last.environment_variables).to include("key_from_app" => "should_merge")
+            expect(DropletModel.last.environment_variables).to include('key_from_package' => 'should_merge')
+            expect(DropletModel.last.environment_variables).to include('key_from_app' => 'should_merge')
           end
           it 'clobbers the existing value from the app' do
             response_code, _ = packages_controller.stage(package.guid)
             expect(response_code).to eq(201)
-            expect(DropletModel.last.environment_variables).to include("conflicting_key" => "value_from_package")
+            expect(DropletModel.last.environment_variables).to include('conflicting_key' => 'value_from_package')
           end
         end
         context 'when the environment variables are not valid' do
           context 'because they are not a hash' do
-            let(:req_body) {'{"environment_variables":"invalid_param"}'}
+            let(:req_body) { '{"environment_variables":"invalid_param"}' }
             it 'returns a 422' do
               expect {
                 packages_controller.stage(package.guid)
@@ -651,7 +651,7 @@ module VCAP::CloudController
           end
 
           context 'because a key begins with "CF_"' do
-            let(:req_body) {'{"environment_variables":{"CF_bad_key": "should_fail"}}'}
+            let(:req_body) { '{"environment_variables":{"CF_bad_key": "should_fail"}}' }
             it 'returns a 422' do
               expect {
                 packages_controller.stage(package.guid)
@@ -663,7 +663,7 @@ module VCAP::CloudController
           end
 
           context 'because a key begins with "VCAP_"' do
-            let(:req_body) {'{"environment_variables":{"VCAP_bad_key": "should_fail"}}'}
+            let(:req_body) { '{"environment_variables":{"VCAP_bad_key": "should_fail"}}' }
             it 'returns a 422' do
               expect {
                 packages_controller.stage(package.guid)
@@ -675,7 +675,7 @@ module VCAP::CloudController
           end
 
           context 'because a key is "PORT"' do
-            let(:req_body) {'{"environment_variables":{"PORT": "should_fail"}}'}
+            let(:req_body) { '{"environment_variables":{"PORT": "should_fail"}}' }
             it 'returns a 422' do
               expect {
                 packages_controller.stage(package.guid)
