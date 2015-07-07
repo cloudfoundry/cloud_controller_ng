@@ -130,6 +130,17 @@ module VCAP::CloudController
           expect(message.errors[:buildpack]).to include('must be a string')
         end
       end
+
+      context 'when environment_variables is not a hash' do
+        let(:params) { { environment_variables: 'not-a-hash' } }
+
+        it 'is not valid' do
+          message = DropletCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:environment_variables]).to include('must be a hash')
+        end
+      end
     end
   end
 end

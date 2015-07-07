@@ -602,8 +602,94 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the DropletCreateMessage is not valid' do
-        let(:req_body) { '{"memory_limit":"invalid"}' }
+      context 'when the stage request includes environment variables' do
+        context 'when the environment variables are valid' do
+          let(:req_body) {
+            '{"environment_variables":
+            { "application_version": "whatuuid",
+            "application_name": "name-815"}'
+          }
+          it 'returns a 201' do
+            response_code, _ = packages_controller.stage(package.guid)
+            expect(response_code).to eq(201)
+          end
+        end
+        context 'when user passes in values to the app' do
+          let(:req_body) {
+            '{"environment_variables":
+            {"key_from_package":"should_merge",
+            "conflicting_key":"value_from_package"}'
+          }
+
+          before do
+            app.environment_variables = {"key_from_app"=>"should_merge", "conflicting_key"=>"value_from_app"}
+            app.save
+          end
+          it 'merges with the existing environment variables' do
+            response_code, _ = packages_controller.stage(package.guid)
+            expect(response_code).to eq(201)
+            expect(DropletModel.last.environment_variables).to include("key_from_package" => "should_merge")
+            expect(DropletModel.last.environment_variables).to include("key_from_app" => "should_merge")
+          end
+          it 'clobbers the existing value from the app' do
+            response_code, _ = packages_controller.stage(package.guid)
+            expect(response_code).to eq(201)
+            expect(DropletModel.last.environment_variables).to include("conflicting_key" => "value_from_package")
+          end
+        end
+        context 'when the environment variables are not valid' do
+          context 'because they are not a hash' do
+            let(:req_body) {'{"environment_variables":"invalid_param"}'}
+            it 'returns a 422' do
+              expect {
+                packages_controller.stage(package.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'UnprocessableEntity'
+                expect(error.response_code).to eq 422
+              end
+            end
+          end
+
+          context 'because a key begins with "CF_"' do
+            let(:req_body) {'{"environment_variables":{"CF_bad_key": "should_fail"}}'}
+            it 'returns a 422' do
+              expect {
+                packages_controller.stage(package.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'UnprocessableEntity'
+                expect(error.response_code).to eq 422
+              end
+            end
+          end
+
+          context 'because a key begins with "VCAP_"' do
+            let(:req_body) {'{"environment_variables":{"VCAP_bad_key": "should_fail"}}'}
+            it 'returns a 422' do
+              expect {
+                packages_controller.stage(package.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'UnprocessableEntity'
+                expect(error.response_code).to eq 422
+              end
+            end
+          end
+
+          context 'because a key is "PORT"' do
+            let(:req_body) {'{"environment_variables":{"PORT": "should_fail"}}'}
+            it 'returns a 422' do
+              expect {
+                packages_controller.stage(package.guid)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'UnprocessableEntity'
+                expect(error.response_code).to eq 422
+              end
+            end
+          end
+        end
+      end
+
+      context 'When the DropletCreateMessage is not valid' do
+        let(:req_body) { '{"memory_limit": "invalid"}' }
 
         it 'returns an UnprocessableEntity error' do
           expect {

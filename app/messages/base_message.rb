@@ -37,6 +37,26 @@ module VCAP::CloudController
       end
     end
 
+    class EnvironmentVariablesValidator < ActiveModel::Validator
+      def validate(record)
+        if (record.environment_variables) then
+          if (!record.environment_variables.is_a?(Hash)) then
+            record.errors.add(:environment_variables, 'must be a hash')
+          else
+            record.environment_variables.keys.each do |key|
+              if key =~ /^CF_/i
+                record.errors.add(:environment_variables, 'cannot start with CF_')
+              elsif key =~ /^VCAP_/i
+                record.errors.add(:environment_variables, 'cannot start with VCAP_')
+              elsif key == 'PORT'
+                record.errors.add(:environment_variables, 'cannot set PORT')
+              end
+            end
+          end
+        end
+      end
+    end
+
     attr_accessor :requested_keys, :extra_keys
 
     def initialize(params)

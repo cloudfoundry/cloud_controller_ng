@@ -302,7 +302,7 @@ resource 'Packages (Experimental)', type: :api do
       valid_values: ['buildpack name', 'git url'],
       example_values: ['ruby_buildpack', 'https://github.com/cloudfoundry/ruby-buildpack'],
       required: false
-    body_parameter :staging_environment_variables, 'Environment variables to use during staging', required: false
+    body_parameter :environment_variables, 'Environment variables to use during staging', required: false
     body_parameter :stack, 'Stack used to stage package', required: false
     body_parameter :memory_limit, 'Memory limit used to stage package', required: false
     body_parameter :disk_limit, 'Disk limit used to stage package', required: false

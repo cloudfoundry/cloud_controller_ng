@@ -25,7 +25,12 @@ module VCAP::CloudController
       memory_limit = get_memory_limit(staging_message.memory_limit, space, org)
       disk_limit   = get_disk_limit(staging_message.disk_limit)
       stack        = get_stack(staging_message.stack)
-      environment_variables = @environment_builder.build(app, space, stack, memory_limit, disk_limit)
+      environment_variables = @environment_builder.build(app,
+                                                         space,
+                                                         stack,
+                                                         memory_limit,
+                                                         disk_limit,
+                                                         staging_message.environment_variables)
 
       droplet = DropletModel.create(
         app_guid:              app.guid,
