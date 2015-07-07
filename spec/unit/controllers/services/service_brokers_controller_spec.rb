@@ -95,6 +95,14 @@ module VCAP::CloudController
       let!(:space_a_broker) { ServiceBroker.make space: space_a }
       let!(:space_b_broker) { ServiceBroker.make space: space_b }
 
+      it 'can filter brokers by name' do
+        get "/v2/service_brokers?q=name:#{public_broker.name}", {}, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(decoded_response['total_results']).to eq(1)
+        expect(decoded_response['resources'].first['metadata']['guid']).to eq(public_broker.guid)
+      end
+
       context 'as an Admin' do
         it 'sees all brokers' do
           get '/v2/service_brokers', {}, admin_headers
@@ -116,6 +124,16 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(200)
           expect(decoded_response['total_results']).to eq(1)
           expect(decoded_response['resources'].first['metadata']['guid']).to eq(space_a_broker.guid)
+        end
+
+        it 'sees only private broker in space_a when filtering' do
+          get "/v2/service_brokers?q=name:#{public_broker.name}", {}, headers_for(user)
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['total_results']).to eq(0)
+
+          get "/v2/service_brokers?q=name:#{space_a_broker.name}", {}, headers_for(user)
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['total_results']).to eq(1)
         end
       end
 
