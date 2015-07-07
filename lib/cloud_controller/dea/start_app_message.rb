@@ -13,7 +13,7 @@ module VCAP::CloudController
           droplet_download_url = blobstore_url_generator.droplet_download_url(app)
           droplet_hash = app.droplet_hash
         else
-          droplet = DropletModel.find(guid: app.app.desired_droplet_guid)
+          droplet = DropletModel.find(guid: app.app.droplet_guid)
           droplet_download_url = blobstore_url_generator.v3_droplet_download_url(droplet)
           droplet_hash = droplet.droplet_hash
         end

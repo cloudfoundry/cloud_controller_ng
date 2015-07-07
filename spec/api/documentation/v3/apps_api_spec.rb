@@ -145,12 +145,12 @@ resource 'Apps (Experimental)', type: :api do
   end
 
   get '/v3/apps/:guid' do
-    let(:desired_droplet_guid) { 'a-droplet-guid' }
+    let(:droplet_guid) { 'a-droplet-guid' }
     let(:environment_variables) { { 'unicorn' => 'horn' } }
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:app_model) { VCAP::CloudController::AppModel.make(
       name: name,
-      desired_droplet_guid: desired_droplet_guid,
+      droplet_guid: droplet_guid,
       environment_variables: environment_variables,
       buildpack: buildpack.name)
     }
@@ -186,7 +186,7 @@ resource 'Apps (Experimental)', type: :api do
           'processes'       => { 'href' => "/v3/apps/#{guid}/processes" },
           'packages'        => { 'href' => "/v3/apps/#{guid}/packages" },
           'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
-          'desired_droplet' => { 'href' => "/v3/droplets/#{desired_droplet_guid}" },
+          'droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
           'start'           => { 'href' => "/v3/apps/#{guid}/start", 'method' => 'PUT' },
           'stop'           => { 'href' => "/v3/apps/#{guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -387,7 +387,7 @@ resource 'Apps (Experimental)', type: :api do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      app_model.update(desired_droplet_guid: droplet_guid)
+      app_model.update(droplet_guid: droplet_guid)
     end
 
     let(:guid) { app_model.guid }
@@ -409,7 +409,7 @@ resource 'Apps (Experimental)', type: :api do
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
-          'desired_droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
+          'droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
           'start'           => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'            => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -446,7 +446,7 @@ resource 'Apps (Experimental)', type: :api do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      app_model.update(desired_droplet_guid: droplet_guid)
+      app_model.update(droplet_guid: droplet_guid)
     end
 
     let(:guid) { app_model.guid }
@@ -468,7 +468,7 @@ resource 'Apps (Experimental)', type: :api do
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
-          'desired_droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
+          'droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
           'start'           => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'            => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -570,9 +570,9 @@ resource 'Apps (Experimental)', type: :api do
       space.add_developer(user)
     end
 
-    body_parameter :desired_droplet_guid, 'GUID of the Staged Droplet to be used for the App'
+    body_parameter :droplet_guid, 'GUID of the Staged Droplet to be used for the App'
 
-    let(:desired_droplet_guid) { droplet.guid }
+    let(:droplet_guid) { droplet.guid }
     let(:guid) { app_model.guid }
 
     let(:raw_post) { body_parameters }
@@ -594,7 +594,7 @@ resource 'Apps (Experimental)', type: :api do
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
-          'desired_droplet' => { 'href' => "/v3/droplets/#{desired_droplet_guid}" },
+          'droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
           'start'     => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'      => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -615,7 +615,7 @@ resource 'Apps (Experimental)', type: :api do
         space_guid: space_guid,
         organization_guid: space.organization.guid
       })
-      expect(event.metadata).to eq({ 'request' => { 'desired_droplet_guid' => droplet.guid } })
+      expect(event.metadata).to eq({ 'request' => { 'droplet_guid' => droplet.guid } })
       expect(app_model.reload.processes).not_to be_empty
     end
   end

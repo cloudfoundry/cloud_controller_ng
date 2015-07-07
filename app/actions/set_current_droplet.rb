@@ -13,7 +13,7 @@ module VCAP::CloudController
     def update_to(app, droplet)
       app.db.transaction do
         app.lock!
-        update_app(app, { desired_droplet_guid: droplet.guid })
+        update_app(app, { droplet_guid: droplet.guid })
         procfile_parse.process_procfile(app)
         app.save
       end

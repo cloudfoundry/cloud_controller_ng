@@ -5,7 +5,7 @@ module VCAP::CloudController
   describe ProcfileParse do
     let(:user) { double(:user, guid: Sham.guid) }
     let(:droplet) { nil }
-    let(:app) { AppModel.make(desired_droplet: droplet) }
+    let(:app) { AppModel.make(droplet: droplet) }
     subject(:procfile_parse) { ProcfileParse.new(user.guid, Sham.email) }
 
     describe '#process_procfile' do
@@ -90,7 +90,7 @@ other: stuff
 
       context 'when the app has a droplet, but the droplet does not have a procfile' do
         let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, procfile: nil) }
-        let(:app) { AppModel.make(desired_droplet: droplet) }
+        let(:app) { AppModel.make(droplet: droplet) }
 
         it 'raises procfile not found' do
           expect {

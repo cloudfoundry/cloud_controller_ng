@@ -11,7 +11,7 @@ module VCAP::CloudController
     one_to_many :processes, class: 'VCAP::CloudController::App', key: :app_guid, primary_key: :guid
     one_to_many :packages, class: 'VCAP::CloudController::PackageModel', key: :app_guid, primary_key: :guid
     one_to_many :droplets, class: 'VCAP::CloudController::DropletModel', key: :app_guid, primary_key: :guid
-    many_to_one :desired_droplet, class: 'VCAP::CloudController::DropletModel', key: :desired_droplet_guid, primary_key: :guid, without_guid_generation: true
+    many_to_one :droplet, class: 'VCAP::CloudController::DropletModel', key: :droplet_guid, primary_key: :guid, without_guid_generation: true
 
     encrypt :environment_variables, salt: :salt, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
@@ -21,7 +21,7 @@ module VCAP::CloudController
       validates_unique [:space_guid, :name]
       validates_format APP_NAME_REGEX, :name
       validate_environment_variables
-      validate_desired_droplet_is_staged
+      validate_droplet_is_staged
     end
 
     def self.user_visible(user)
@@ -61,9 +61,9 @@ module VCAP::CloudController
       end
     end
 
-    def validate_desired_droplet_is_staged
-      if desired_droplet && desired_droplet.state != DropletModel::STAGED_STATE
-        errors.add(:desired_droplet, 'must be in staged state')
+    def validate_droplet_is_staged
+      if droplet && droplet.state != DropletModel::STAGED_STATE
+        errors.add(:droplet, 'must be in staged state')
       end
     end
   end

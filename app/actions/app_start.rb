@@ -12,9 +12,9 @@ module VCAP::CloudController
     end
 
     def start(app)
-      raise DropletNotFound if !app.desired_droplet
+      raise DropletNotFound if !app.droplet
 
-      package = PackageModel.find(guid: app.desired_droplet.package_guid)
+      package = PackageModel.find(guid: app.droplet.package_guid)
       package_hash = package.nil? ? 'unknown' : package.package_hash
 
       app.db.transaction do

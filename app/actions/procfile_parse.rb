@@ -14,10 +14,10 @@ module VCAP::CloudController
     def process_procfile(app)
       @logger.info('proccess_procfile', guid: app.guid)
 
-      if app.desired_droplet && app.desired_droplet.procfile
+      if app.droplet && app.droplet.procfile
         @logger.debug('using the droplet procfile', guid: app.guid)
 
-        procfile = Procfile.load(app.desired_droplet.procfile)
+        procfile = Procfile.load(app.droplet.procfile)
         converge_on_procfile(app, procfile)
         procfile
       else

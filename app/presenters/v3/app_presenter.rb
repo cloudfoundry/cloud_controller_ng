@@ -39,10 +39,10 @@ module VCAP::CloudController
     end
 
     def build_links(app)
-      desired_droplet_link = nil
-      if app.desired_droplet_guid
-        desired_droplet_link = {
-          href: "/v3/droplets/#{app.desired_droplet_guid}"
+      droplet_link = nil
+      if app.droplet_guid
+        droplet_link = {
+          href: "/v3/droplets/#{app.droplet_guid}"
         }
       end
 
@@ -51,7 +51,7 @@ module VCAP::CloudController
         processes:              { href: "/v3/apps/#{app.guid}/processes" },
         packages:               { href: "/v3/apps/#{app.guid}/packages" },
         space:                  { href: "/v2/spaces/#{app.space_guid}" },
-        desired_droplet:        desired_droplet_link,
+        droplet:        droplet_link,
         start:                  { href: "/v3/apps/#{app.guid}/start", method: 'PUT' },
         stop:                   { href: "/v3/apps/#{app.guid}/stop", method: 'PUT' },
         assign_current_droplet: { href: "/v3/apps/#{app.guid}/current_droplet", method: 'PUT' },

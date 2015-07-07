@@ -188,7 +188,7 @@ module VCAP::CloudController
     def assign_current_droplet(app_guid)
       check_write_permissions!
 
-      droplet_guid = parse_and_validate_json(body)['desired_droplet_guid']
+      droplet_guid = parse_and_validate_json(body)['droplet_guid']
 
       app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 

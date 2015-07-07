@@ -632,7 +632,7 @@ module VCAP::CloudController
       let(:droplet) { DropletModel.make(procfile: 'web: a', app_guid: app_model.guid, state: DropletModel::STAGED_STATE) }
 
       before do
-        app_model.update(desired_droplet: droplet)
+        app_model.update(droplet: droplet)
         app_model.save
       end
 
@@ -953,7 +953,7 @@ module VCAP::CloudController
       let(:guid) { app_model.guid }
       let(:droplet) { DropletModel.make(procfile: 'web: start app', state: DropletModel::STAGED_STATE) }
       let(:droplet_guid) { droplet.guid }
-      let(:req_body) { JSON.dump({ desired_droplet_guid: droplet_guid }) }
+      let(:req_body) { JSON.dump({ droplet_guid: droplet_guid }) }
 
       before do
         app_model.add_droplet(droplet)
@@ -1049,7 +1049,7 @@ module VCAP::CloudController
         end
 
         context 'and the droplet is not associated to the application' do
-          let(:req_body) { JSON.dump({ desired_droplet_guid: 'bogus' }) }
+          let(:req_body) { JSON.dump({ droplet_guid: 'bogus' }) }
 
           it 'returns a 404 ResourceNotFound' do
             expect {

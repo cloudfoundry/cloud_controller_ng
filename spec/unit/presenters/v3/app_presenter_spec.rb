@@ -19,7 +19,7 @@ module VCAP::CloudController
         expect(result['total_desired_instances']).to eq(4)
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
-        expect(result['_links']).not_to include('desired_droplet')
+        expect(result['_links']).not_to include('droplet')
         expect(result['_links']).to include('start')
         expect(result['_links']).to include('stop')
         expect(result['_links']).to include('assign_current_droplet')
@@ -45,12 +45,12 @@ module VCAP::CloudController
       end
 
       it 'includes a link to the droplet if present' do
-        app = AppModel.make(desired_droplet_guid: '123')
+        app = AppModel.make(droplet_guid: '123')
 
         json_result = AppPresenter.new.present_json(app)
         result      = MultiJson.load(json_result)
 
-        expect(result['_links']['desired_droplet']['href']).to eq('/v3/droplets/123')
+        expect(result['_links']['droplet']['href']).to eq('/v3/droplets/123')
       end
 
       it 'includes start, stop, and assign_current_droplet links' do

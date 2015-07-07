@@ -15,12 +15,12 @@ module VCAP::CloudController
       let(:app_model) do
         AppModel.make({
           desired_state: 'STOPPED',
-          desired_droplet_guid: droplet_guid,
+          droplet_guid: droplet_guid,
           environment_variables: environment_variables
         })
       end
 
-      context 'when the desired_droplet does not exist' do
+      context 'when the droplet does not exist' do
         let(:droplet_guid) { nil }
 
         it 'raises a DropletNotFound exception' do
@@ -30,7 +30,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the desired_droplet exists' do
+      context 'when the droplet exists' do
         let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE) }
         let(:droplet_guid) { droplet.guid }
 

@@ -160,7 +160,7 @@ module VCAP::CloudController
         end
       end
 
-      describe 'desired_droplet' do
+      describe 'droplet' do
         let(:droplet) { DropletModel.make(app: app_model) }
 
         it 'does not allow droplets that are not STAGED' do
@@ -168,7 +168,7 @@ module VCAP::CloudController
           states.each do |state|
             droplet.state = state
             expect {
-              app_model.desired_droplet = droplet
+              app_model.droplet = droplet
               app_model.save
             }.to raise_error(Sequel::ValidationFailed, /must be in staged state/)
           end
@@ -176,7 +176,7 @@ module VCAP::CloudController
 
         it 'is valid with droplets that are STAGED' do
           droplet.state = DropletModel::STAGED_STATE
-          app_model.desired_droplet = droplet
+          app_model.droplet = droplet
           expect(app_model).to be_valid
         end
       end

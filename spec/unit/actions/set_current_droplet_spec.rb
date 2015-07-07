@@ -12,7 +12,7 @@ module VCAP::CloudController
     describe '.update_to' do
       let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, procfile: 'web: x') }
       let(:droplet_guid) { droplet.guid }
-      let(:message) { { 'desired_droplet_guid' => droplet_guid } }
+      let(:message) { { 'droplet_guid' => droplet_guid } }
 
       before do
         app_model.add_droplet_by_guid(droplet_guid)
@@ -22,7 +22,7 @@ module VCAP::CloudController
 
       it 'sets the desired droplet guid' do
         updated_app = set_current_droplet.update_to(app_model, droplet)
-        expect(updated_app.desired_droplet_guid).to eq(droplet_guid)
+        expect(updated_app.droplet_guid).to eq(droplet_guid)
         expect(procfile_parse).to have_received(:process_procfile).once
       end
 
@@ -32,7 +32,7 @@ module VCAP::CloudController
                                                                                  app_model.space,
                                                                                  user.guid,
                                                                                  user_email,
-                                                                                 { desired_droplet_guid: droplet.guid }
+                                                                                 { droplet_guid: droplet.guid }
                                                                              )
 
         set_current_droplet.update_to(app_model, droplet)

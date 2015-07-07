@@ -35,7 +35,7 @@
 
 1. Assign your droplet to your app ([docs](http://apidocs.cloudfoundry.org/release-candidate/apps_(experimental)/assigning_a_droplet_as_a_an_apps_current_droplet.html)):
 
-  `cf curl /v3/apps/[your-app-guid]/current_droplet -X PUT -d '{"desired_droplet_guid": "[your-droplet-guid]"}'`
+  `cf curl /v3/apps/[your-app-guid]/current_droplet -X PUT -d '{"droplet_guid": "[your-droplet-guid]"}'`
 
 1. Create a route:
 
