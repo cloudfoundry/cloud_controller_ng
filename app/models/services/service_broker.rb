@@ -31,5 +31,9 @@ module VCAP::CloudController
     def private?
       !!space_id
     end
+
+    def self.user_visibility_filter(user)
+      { space: user.spaces_dataset }
+    end
   end
 end
