@@ -1,3 +1,5 @@
+require_relative "../../spec/support/bootstrap/db_config"
+
 namespace :db do
   desc "Create a Sequel migration in ./db/migrate"
   task :create_migration do
@@ -20,19 +22,40 @@ end
     end
   end
 
-  desc "Perform Sequel migration to database"
-  task :migrate do
+  def for_each_database
+    if ENV['DB'] || ENV['DB_CONNECTION_STRING']
+      RakeConfig.config[:db][:database] = DbConfig.new.connection_string
+      yield
+    else
+      %w(postgres mysql).each do |db_type|
+        RakeConfig.config[:db][:database] = DbConfig.new(db_type: db_type).connection_string
+        puts "Using #{db_type}"
+        yield
+      end
+    end
+  end
+
+  def migrate
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger("cc.db.migrations")
     DBMigrator.from_config(RakeConfig.config, db_logger).apply_migrations
   end
 
-  desc "Rollback migrations to the database (one migration by default)"
-  task :rollback, [:number_to_rollback] do |_, args|
-    number_to_rollback = (args[:number_to_rollback] || 1).to_i
+  desc "Perform Sequel migration to database"
+  task :migrate do
+    migrate
+  end
+
+  def rollback(number_to_rollback)
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger("cc.db.migrations")
     DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
+  end
+
+  desc "Rollback migrations to the database (one migration by default)"
+  task :rollback, [:number_to_rollback] do |_, args|
+    number_to_rollback = (args[:number_to_rollback] || 1).to_i
+    rollback(number_to_rollback)
   end
 
   namespace :migrate do
@@ -43,18 +66,13 @@ end
   namespace :dev do
     desc "Migrate the database set in spec/support/bootstrap/db_config"
     task :migrate do
-      require_relative "../../spec/support/bootstrap/db_config"
-
-      RakeConfig.config[:db][:database] = DbConfig.new.connection_string
-      Rake::Task["db:migrate"].invoke
+      for_each_database { migrate }
     end
 
     desc "Rollback the database migration set in spec/support/bootstrap/db_config"
     task :rollback, [:number_to_rollback] do |_, args|
-      require_relative "../../spec/support/bootstrap/db_config"
-
-      RakeConfig.config[:db][:database] = DbConfig.new.connection_string
-      Rake::Task["db:rollback"].invoke(args[:number_to_rollback])
+      number_to_rollback = (args[:number_to_rollback] || 1).to_i
+      for_each_database { rollback(number_to_rollback) }
     end
   end
 
@@ -67,7 +85,6 @@ end
 
   desc "Create the database set in spec/support/bootstrap/db_config"
   task :create do
-    require_relative "../../spec/support/bootstrap/db_config"
     db_config = DbConfig.new
 
     case ENV["DB"]
@@ -87,7 +104,6 @@ end
 
   desc "Drop the database set in spec/support/bootstrap/db_config"
   task :drop do
-    require_relative "../../spec/support/bootstrap/db_config"
     db_config = DbConfig.new
 
     case ENV["DB"]
