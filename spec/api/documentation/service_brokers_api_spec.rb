@@ -49,6 +49,11 @@ resource 'Service Brokers', type: [:api, :legacy_api] do
   end
 
   describe 'Standard endpoints' do
+    before do
+      service_broker.space = space
+      service_broker.save
+    end
+
     standard_model_list :service_broker, VCAP::CloudController::ServiceBrokersController
     standard_model_get :service_broker
     standard_model_delete :service_broker, async: false

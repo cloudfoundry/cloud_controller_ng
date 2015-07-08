@@ -54,7 +54,7 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :broker_url, :auth_username }
+      it { is_expected.to export_attributes :name, :broker_url, :auth_username, :space_guid }
       it { is_expected.to import_attributes :name, :broker_url, :auth_username, :auth_password }
     end
 

@@ -5,7 +5,7 @@ module VCAP::CloudController
     many_to_one :space
 
     import_attributes :name, :broker_url, :auth_username, :auth_password
-    export_attributes :name, :broker_url, :auth_username
+    export_attributes :name, :broker_url, :auth_username, :space_guid
 
     add_association_dependencies services: :destroy
     add_association_dependencies service_dashboard_client: :nullify

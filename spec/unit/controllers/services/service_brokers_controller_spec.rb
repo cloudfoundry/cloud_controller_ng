@@ -101,6 +101,7 @@ module VCAP::CloudController
         expect(last_response).to have_status_code(200)
         expect(decoded_response['total_results']).to eq(1)
         expect(decoded_response['resources'].first['metadata']['guid']).to eq(public_broker.guid)
+        expect(decoded_response['resources'].first['entity']['name']).to eq(public_broker.name)
       end
 
       it 'can filter brokers by space_guid' do
@@ -109,6 +110,7 @@ module VCAP::CloudController
         expect(last_response).to have_status_code(200)
         expect(decoded_response['total_results']).to eq(1)
         expect(decoded_response['resources'].first['metadata']['guid']).to eq(space_a_broker.guid)
+        expect(decoded_response['resources'].first['entity']['space_guid']).to eq(space_a_broker.space_guid)
       end
 
       context 'as an Admin' do
