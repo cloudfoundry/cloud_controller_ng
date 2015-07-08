@@ -126,7 +126,6 @@ resource 'Organizations', type: [:api, :legacy_api] do
       let(:private_domain) { VCAP::CloudController::PrivateDomain.make }
       let(:private_domain_guid) { private_domain.guid }
 
-      standard_model_list :private_domain, VCAP::CloudController::PrivateDomainsController, outer_model: :organization
       nested_model_associate :private_domain, :organization
       nested_model_remove :private_domain, :organization
     end
