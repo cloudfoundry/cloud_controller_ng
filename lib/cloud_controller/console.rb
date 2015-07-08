@@ -23,7 +23,7 @@ end
 @config = VCAP::CloudController::Config.from_file(@config_file)
 logger = Logger.new(STDOUT)
 db_config = @config.fetch(:db).merge(log_level: :debug)
-db_config[:database] ||= DbConfig.connection_string
+db_config[:database] ||= DbConfig.new.connection_string
 
 VCAP::CloudController::DB.load_models(db_config, logger)
 VCAP::CloudController::Config.configure_components(@config)

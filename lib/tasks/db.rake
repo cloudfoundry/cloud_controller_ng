@@ -45,7 +45,7 @@ end
     task :migrate do
       require_relative "../../spec/support/bootstrap/db_config"
 
-      RakeConfig.config[:db][:database] = DbConfig.connection_string
+      RakeConfig.config[:db][:database] = DbConfig.new.connection_string
       Rake::Task["db:migrate"].invoke
     end
 
@@ -53,13 +53,13 @@ end
     task :rollback, [:number_to_rollback] do |_, args|
       require_relative "../../spec/support/bootstrap/db_config"
 
-      RakeConfig.config[:db][:database] = DbConfig.connection_string
+      RakeConfig.config[:db][:database] = DbConfig.new.connection_string
       Rake::Task["db:rollback"].invoke(args[:number_to_rollback])
     end
   end
 
   task :pick do
-    unless ENV["DB_CONNECTION_STRING"] || ENV["DB_CONNECTION"]
+    unless ENV["DB_CONNECTION_STRING"]
       ENV["DB"] ||= %w[mysql postgres].sample
       puts "Using #{ENV["DB"]}"
     end
@@ -68,16 +68,17 @@ end
   desc "Create the database set in spec/support/bootstrap/db_config"
   task :create do
     require_relative "../../spec/support/bootstrap/db_config"
+    db_config = DbConfig.new
 
     case ENV["DB"]
       when "postgres"
-        sh "psql -U postgres -c 'create database #{DbConfig.name};'"
-        sh "psql -U postgres -d #{DbConfig.name} -c 'CREATE EXTENSION IF NOT EXISTS citext'"
+        sh "psql -U postgres -c 'create database #{db_config.name};'"
+        sh "psql -U postgres -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
-          sh "mysql -e 'create database #{DbConfig.name};' -u root"
+          sh "mysql -e 'create database #{db_config.name};' -u root"
         else
-          sh "mysql -e 'create database #{DbConfig.name};' -u root --password=password"
+          sh "mysql -e 'create database #{db_config.name};' -u root --password=password"
         end
       else
         puts "rake db:create requires DB to be set to create a database"
@@ -87,15 +88,16 @@ end
   desc "Drop the database set in spec/support/bootstrap/db_config"
   task :drop do
     require_relative "../../spec/support/bootstrap/db_config"
+    db_config = DbConfig.new
 
     case ENV["DB"]
       when "postgres"
-        sh "psql -U postgres -c 'drop database if exists #{DbConfig.name};'"
+        sh "psql -U postgres -c 'drop database if exists #{db_config.name};'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
-          sh "mysql -e 'drop database if exists #{DbConfig.name};' -u root"
+          sh "mysql -e 'drop database if exists #{db_config.name};' -u root"
         else
-          sh "mysql -e 'drop database if exists #{DbConfig.name};' -u root --password=password"
+          sh "mysql -e 'drop database if exists #{db_config.name};' -u root --password=password"
         end
       else
         puts "rake db:drop requires DB to be set to create a database"

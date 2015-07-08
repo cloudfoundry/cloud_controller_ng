@@ -73,7 +73,7 @@ RSpec.configure do |rspec_config|
   end
 
   rspec_config.around :each do |example|
-    isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config, DbConfig.connection)
+    isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config, DbConfig.new.connection)
     isolation.cleanly { example.run }
   end
 

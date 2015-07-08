@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'Db connection sessions' do
   it 'sets the timezone to UTC' do
-    conn = DbConfig.connection
+    conn = DbConfig.new.connection
     type = conn.database_type
 
     if type == :postgres
