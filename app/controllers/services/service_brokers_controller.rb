@@ -15,7 +15,7 @@ module VCAP::CloudController
       attribute :space_guid,     String, default: nil, exclude_in: [:update]
     end
 
-    query_parameters :name
+    query_parameters :name, :space_guid
 
     def self.dependencies
       [:service_manager, :services_event_repository]

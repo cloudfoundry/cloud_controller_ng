@@ -103,6 +103,14 @@ module VCAP::CloudController
         expect(decoded_response['resources'].first['metadata']['guid']).to eq(public_broker.guid)
       end
 
+      it 'can filter brokers by space_guid' do
+        get "/v2/service_brokers?q=space_guid:#{space_a_broker.space_guid}", {}, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(decoded_response['total_results']).to eq(1)
+        expect(decoded_response['resources'].first['metadata']['guid']).to eq(space_a_broker.guid)
+      end
+
       context 'as an Admin' do
         it 'sees all brokers' do
           get '/v2/service_brokers', {}, admin_headers
