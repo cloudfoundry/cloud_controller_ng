@@ -1,5 +1,3 @@
-require_relative "../../spec/support/bootstrap/db_config"
-
 namespace :db do
   desc "Create a Sequel migration in ./db/migrate"
   task :create_migration do
@@ -66,11 +64,13 @@ end
   namespace :dev do
     desc "Migrate the database set in spec/support/bootstrap/db_config"
     task :migrate do
+      require_relative "../../spec/support/bootstrap/db_config"
       for_each_database { migrate }
     end
 
     desc "Rollback the database migration set in spec/support/bootstrap/db_config"
     task :rollback, [:number_to_rollback] do |_, args|
+      require_relative "../../spec/support/bootstrap/db_config"
       number_to_rollback = (args[:number_to_rollback] || 1).to_i
       for_each_database { rollback(number_to_rollback) }
     end
@@ -85,6 +85,7 @@ end
 
   desc "Create the database set in spec/support/bootstrap/db_config"
   task :create do
+    require_relative "../../spec/support/bootstrap/db_config"
     db_config = DbConfig.new
 
     case ENV["DB"]
@@ -104,6 +105,7 @@ end
 
   desc "Drop the database set in spec/support/bootstrap/db_config"
   task :drop do
+    require_relative "../../spec/support/bootstrap/db_config"
     db_config = DbConfig.new
 
     case ENV["DB"]
