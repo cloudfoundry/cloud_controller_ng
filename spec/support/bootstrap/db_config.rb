@@ -46,14 +46,13 @@ class DbConfig
   def default_connection_prefix(db_type)
     default_connection_prefixes = {
       'mysql' => 'mysql2://root:password@localhost:3306',
+      'mysql_travis' => 'mysql2://root@localhost:3306',
       'postgres' => 'postgres://postgres@localhost:5432'
     }
 
-    if ENV['TRAVIS'] == 'true'
-      'mysql2://root@localhost:3306'
-    else
-      default_connection_prefixes[db_type]
-    end
+    db_type = 'mysql_travis' if ENV['TRAVIS'] == 'true' && db_type == 'mysql'
+
+    default_connection_prefixes[db_type]
   end
 
   def default_name
