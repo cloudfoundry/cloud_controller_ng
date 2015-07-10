@@ -29,6 +29,8 @@ end
         RakeConfig.config[:db][:database] = DbConfig.new(db_type: db_type).connection_string
         puts "Using #{db_type}"
         yield
+
+        DbConfig.reset_environment
       end
     end
   end

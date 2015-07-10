@@ -33,6 +33,10 @@ class DbConfig
     @db_logger
   end
 
+  def self.reset_environment
+    ENV.delete('DB_CONNECTION_STRING')
+  end
+
   private
 
   def initialize_environment_for_cc_spawning
