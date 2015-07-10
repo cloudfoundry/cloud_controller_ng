@@ -6,6 +6,7 @@ module VCAP::CloudController
     let(:req_body) { '' }
     let(:params) { {} }
     let(:process_presenter) { double(:process_presenter) }
+    let(:index_stopper) { double(:index_stopper) }
     let(:membership) { double(:membership) }
     let(:controller) do
       AppsProcessesController.new(
@@ -17,6 +18,7 @@ module VCAP::CloudController
         nil,
         {
           process_presenter: process_presenter,
+          index_stopper: index_stopper
         },
       )
     end
@@ -129,6 +131,70 @@ module VCAP::CloudController
               expect(error.message).to include('Per page must be between 1 and 5000')
             end
           end
+        end
+      end
+    end
+
+    describe '#delete' do
+      let(:req_body) { '{"instances": 1, "memory_in_mb": 100, "disk_in_mb": 200}' }
+      let(:app) { AppModel.make }
+      let(:space) { app.space }
+      let(:org) { space.organization }
+      let(:process) { AppFactory.make(app_guid: app.guid, space: space) }
+      let(:expected_response) { 'some response' }
+      let(:manager) { make_manager_for_space(space) }
+
+      before do
+        CloudController::DependencyLocator.instance.register(:index_stopper, index_stopper)
+        allow(index_stopper).to receive(:stop_index)
+
+        expect(process.instances).to eq(1)
+      end
+
+      it 'checks for the proper roles' do
+        _status, _body = controller.delete(app.guid, process.type, 0)
+
+        expect(membership).to have_received(:has_any_roles?).at_least(1).times.
+            with([Membership::SPACE_DEVELOPER], space.guid)
+      end
+
+      it 'terminates the lone process' do
+        expect(process.instances).to eq(1)
+
+        status, _body = controller.delete(app.guid, process.type, 0)
+        process.reload
+        expect(status).to eq(204)
+
+        expect(index_stopper).to have_received(:stop_index).with(process, 0)
+      end
+
+      it 'returns a 404 if app does not exist' do
+        expect {
+          controller.delete('bad-guid', process.type, 0)
+        }.to raise_error do |error|
+          expect(error.name).to eq 'ResourceNotFound'
+          expect(error.response_code).to eq(404)
+          expect(error.message).to match('App not found')
+        end
+      end
+
+      it 'returns a 404 if process type does not exist' do
+        expect {
+          controller.delete(app.guid, 'bad-type', 0)
+        }.to raise_error do |error|
+          expect(error.name).to eq 'ResourceNotFound'
+          expect(error.response_code).to eq(404)
+          expect(error.message).to match('Process not found')
+        end
+      end
+
+      it 'returns a 404 if instance index out of bounds' do
+        expect {
+          controller.delete(app.guid, process.type, 1)
+        }.to raise_error do |error|
+          expect(error.name).to eq 'ResourceNotFound'
+          expect(error.response_code).to eq(404)
+          expect(error.message).to match('Instance not found')
         end
       end
     end

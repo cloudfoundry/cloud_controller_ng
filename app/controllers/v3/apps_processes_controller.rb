@@ -1,14 +1,11 @@
 require 'presenters/v3/process_presenter'
+require 'cloud_controller/index_stopper'
 require 'cloud_controller/paging/pagination_options'
 
 module VCAP::CloudController
   class AppsProcessesController < RestController::BaseController
     def self.dependencies
-      [:process_presenter]
-    end
-
-    def inject_dependencies(dependencies)
-      @process_presenter = dependencies[:process_presenter]
+      [:process_presenter, :index_stopper]
     end
 
     get '/v3/apps/:guid/processes', :list_processes
@@ -64,7 +61,35 @@ module VCAP::CloudController
       unprocessable!(e.message)
     end
 
+    delete '/v3/apps/:guid/processes/:type/instances/:index', :delete
+    def delete(app_guid, process_type, process_index)
+      app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
+      app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
+
+      process = app.processes_dataset.where(type: process_type).first
+      process_not_found! if process.nil?
+      unauthorized! if !can_delete?(app.space.guid)
+
+      instance_not_found! unless process_index.to_i < process.instances && process_index.to_i >= 0
+
+      index_stopper.stop_index(process, process_index.to_i)
+      [HTTP::NO_CONTENT, nil]
+    end
+
+    protected
+
+    attr_reader :index_stopper
+
+    def inject_dependencies(dependencies)
+      @process_presenter = dependencies[:process_presenter]
+      @index_stopper = dependencies.fetch(:index_stopper)
+    end
+
     private
+
+    def instance_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Instance not found')
+    end
 
     def membership
       @membership ||= Membership.new(current_user)
@@ -78,6 +103,10 @@ module VCAP::CloudController
     end
 
     def can_scale?(space_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+    end
+
+    def can_delete?(space_guid)
       membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 

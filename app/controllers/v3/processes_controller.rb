@@ -10,10 +10,7 @@ require 'messages/process_update_message'
 module VCAP::CloudController
   class ProcessesController < RestController::BaseController
     def self.dependencies
-      [:process_presenter]
-    end
-    def inject_dependencies(dependencies)
-      @process_presenter = dependencies[:process_presenter]
+      [:process_presenter, :index_stopper]
     end
 
     get '/v3/processes', :list
@@ -64,6 +61,18 @@ module VCAP::CloudController
       unprocessable!(e.message)
     end
 
+    delete '/v3/processes/:guid/instances/:index', :delete
+    def delete(process_guid, process_index)
+      process = App.where(guid: process_guid).eager(:space, :organization).all.first
+      not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
+      unauthorized! if !can_delete?(process.space.guid)
+
+      instance_not_found! unless process_index.to_i < process.instances && process_index.to_i >= 0
+
+      index_stopper.stop_index(process, process_index.to_i)
+      [HTTP::NO_CONTENT, nil]
+    end
+
     put '/v3/processes/:guid/scale', :scale
     def scale(guid)
       check_write_permissions!
@@ -85,6 +94,15 @@ module VCAP::CloudController
       unprocessable!(e.message)
     end
 
+    protected
+
+    attr_reader :index_stopper
+
+    def inject_dependencies(dependencies)
+      @process_presenter = dependencies[:process_presenter]
+      @index_stopper = dependencies.fetch(:index_stopper)
+    end
+
     private
 
     def membership
@@ -102,8 +120,16 @@ module VCAP::CloudController
       membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 
+    def can_delete?(space_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+    end
+
     def can_scale?(space_guid)
       can_update?(space_guid)
+    end
+
+    def instance_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Instance not found')
     end
 
     def not_found!
