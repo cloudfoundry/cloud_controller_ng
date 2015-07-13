@@ -468,9 +468,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#dea_apps' do
-      let!(:diego_app) { make_diego_app(id: 99, state: 'STARTED') }
-
+    describe '#dea_apps_hm9k' do
       before do
         allow(runners).to receive(:diego_running_optional?).and_return(true)
 
@@ -516,26 +514,31 @@ module VCAP::CloudController
         last_app.version = 'app-version-6'
         last_app.save
 
-        apps = runners.dea_apps(100, 0)
-
+        apps, _ = runners.dea_apps_hm9k(100, 0)
         expect(apps.count).to eq(6)
 
-        expect(apps.last.to_json).to match_object(last_app.to_json)
+        expect(apps.last).to include(
+          'id' => last_app.guid, 'instances' => last_app.instances,
+          'state' => last_app.state, 'memory' => last_app.memory,
+          'package_state' => last_app.package_state, 'version' => last_app.version,
+        )
+
+        expect(apps.last).to have_key('updated_at')
       end
 
       it 'respects the batch_size' do
         app_counts = [3, 5].map do |batch_size|
-          runners.dea_apps(batch_size, 0).count
+          runners.dea_apps_hm9k(batch_size, 0)[0].count
         end
 
         expect(app_counts).to eq([3, 5])
       end
 
       it 'returns non-intersecting apps across subsequent batches' do
-        first_batch = runners.dea_apps(3, 0)
+        first_batch, next_id = runners.dea_apps_hm9k(3, 0)
         expect(first_batch.count).to eq(3)
 
-        second_batch = runners.dea_apps(3, first_batch.last.id)
+        second_batch, _ = runners.dea_apps_hm9k(3, next_id)
         expect(second_batch.count).to eq(2)
 
         expect(second_batch & first_batch).to eq([])
@@ -544,7 +547,7 @@ module VCAP::CloudController
       it 'does not return deleted apps' do
         deleted_app = make_dea_app(id: 6, state: 'STARTED', deleted_at: DateTime.now.utc)
 
-        batch = runners.dea_apps(100, 0)
+        batch, _ = runners.dea_apps_hm9k(100, 0)
 
         expect(batch).not_to include(deleted_app)
       end
