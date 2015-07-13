@@ -73,6 +73,36 @@ module VCAP::CloudController
       query.all
     end
 
+    EXPORT_ATTRIBUTES = [
+      :instances,
+      :state,
+      :memory,
+      :package_state,
+      :version
+    ]
+
+    def dea_apps_hm9k(batch_size, last_id)
+      query = App.
+        where('id > ?', last_id).
+        where('deleted_at IS NULL').
+        order(:id).
+        where(diego: false).
+        limit(batch_size).
+        select_map([:id, :guid, :instances, :state, :memory, :package_state, :version, :created_at, :updated_at])
+
+      app_hashes = query.map do |row|
+        hash = {}
+        EXPORT_ATTRIBUTES.each_with_index { |obj, i| hash[obj.to_s] = row[i + 2] }
+
+        hash['id'] = row[1]
+        hash['updated_at'] = row[8] || row[7]
+        hash
+      end
+
+      id_for_next_token = app_hashes.empty? ? nil : query.last[0]
+      [app_hashes, id_for_next_token]
+    end
+
     private
 
     def diego_runner(app)

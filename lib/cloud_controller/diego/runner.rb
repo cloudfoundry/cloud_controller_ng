@@ -26,10 +26,6 @@ module VCAP::CloudController
         @protocol.desire_app_message(@app, @default_health_check_timeout)
       end
 
-      def desired_app_info
-        raise NotImplementedError
-      end
-
       def stop
         @messenger.send_stop_app_request(@app)
       end
