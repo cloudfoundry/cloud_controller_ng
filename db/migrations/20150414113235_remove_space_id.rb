@@ -1,7 +1,7 @@
 Sequel.migration do
   # This migration was not backwards-compatible and caused API outages during upgrade.
   # It has been altered from its original form.
-  
+
   up do
     alter_table :events do
       drop_foreign_key([:space_id])
