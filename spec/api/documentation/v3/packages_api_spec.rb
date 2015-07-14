@@ -74,6 +74,7 @@ resource 'Packages (Experimental)', type: :api do
               '_links'     => {
                 'self'   => { 'href' => "/v3/packages/#{package1.guid}" },
                 'upload' => { 'href' => "/v3/packages/#{package1.guid}/upload", 'method' => 'POST' },
+                'download' => { 'href' => "/v3/packages/#{package1.guid}/download", 'method' => 'GET' },
                 'stage' => { 'href' => "/v3/packages/#{package1.guid}/droplets", 'method' => 'POST' },
                 'app'    => { 'href' => "/v3/apps/#{package1.app_guid}" },
               }
@@ -131,6 +132,7 @@ resource 'Packages (Experimental)', type: :api do
         '_links'     => {
           'self'   => { 'href' => "/v3/packages/#{guid}" },
           'upload' => { 'href' => "/v3/packages/#{guid}/upload", 'method' => 'POST' },
+          'download' => { 'href' => "/v3/packages/#{guid}/download", 'method' => 'GET' },
           'stage' => { 'href' => "/v3/packages/#{guid}/droplets", 'method' => 'POST' },
           'app'    => { 'href' => "/v3/apps/#{app_model.guid}" },
         }
@@ -263,6 +265,7 @@ resource 'Packages (Experimental)', type: :api do
         '_links'     => {
           'self'   => { 'href' => "/v3/packages/#{package_model.guid}" },
           'upload' => { 'href' => "/v3/packages/#{package_model.guid}/upload", 'method' => 'POST' },
+          'download' => { 'href' => "/v3/packages/#{package_model.guid}/download", 'method' => 'GET' },
           'stage' => { 'href' => "/v3/packages/#{package_model.guid}/droplets", 'method' => 'POST' },
           'app'    => { 'href' => "/v3/apps/#{app_model.guid}" },
         }
@@ -271,6 +274,44 @@ resource 'Packages (Experimental)', type: :api do
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
+  get '/v3/packages/:guid/download' do
+    let!(:package_model) do
+      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: 'bits')
+    end
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:bits_download_url) { CloudController::DependencyLocator.instance.blobstore_url_generator.package_download_url(package_model) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:guid) { package_model.guid }
+    let(:temp_file) do
+      file = File.join(Dir.mktmpdir, 'application.zip')
+      TestZip.create(file, 1, 1024)
+      file
+    end
+    let(:upload_body) do
+      {
+        bits_name: 'application.zip',
+        bits_path: temp_file,
+      }
+    end
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      client.post "/v3/packages/#{guid}/upload", upload_body, headers
+      Delayed::Worker.new.work_off
+    end
+
+    example 'Download the bits for a package' do
+      explanation 'Response will be redirect to download URL if blobstore is remote'
+
+      client.get "/v3/packages/#{guid}", {}, headers
+      do_request_with_error_handling
+
+      expect(response_status).to eq(302)
+      expect(response_headers['Location']).to eq(bits_download_url)
     end
   end
 

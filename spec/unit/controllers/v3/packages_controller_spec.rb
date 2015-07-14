@@ -219,6 +219,117 @@ module VCAP::CloudController
       end
     end
 
+    describe '#download' do
+      let(:download_location) { 'http://package.download.url' }
+      let(:fake_url_generator) { instance_double(CloudController::Blobstore::UrlGenerator) }
+      let(:package) { PackageModel.make }
+      let(:space) { package.space }
+      let(:org) { space.organization }
+      let(:file_path) { nil }
+
+      before do
+        allow_any_instance_of(PackageDownload).to receive(:download).and_return([file_path, download_location])
+        allow(packages_controller).to receive(:check_read_permissions!).and_return(nil)
+        package.state = 'READY'
+        package.save
+      end
+
+      context 'when the package cannot be found' do
+        it 'returns 404' do
+          expect {
+            packages_controller.download('a-bogus-guid')
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq 404
+          end
+        end
+      end
+
+      context 'permissions' do
+        context 'user is an admin' do
+          before do
+            allow(membership).to receive(:admin?).and_return(true)
+          end
+
+          it 'returns 302' do
+            response_code, response_headers, _ = packages_controller.download(package.guid)
+            expect(response_code).to eq 302
+            expect(response_headers['Location']).to eq(download_location)
+          end
+        end
+
+        context 'user does not have package read permissions' do
+          before do
+            allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+            allow(membership).to receive(:has_any_roles?).with(
+              [Membership::SPACE_DEVELOPER,
+               Membership::SPACE_MANAGER,
+               Membership::SPACE_AUDITOR,
+               Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          end
+
+          it 'returns 404' do
+            expect {
+              packages_controller.download(package.guid)
+            }.to raise_error do |error|
+              expect(error.response_code).to eq 404
+              expect(error.name).to eq 'ResourceNotFound'
+            end
+          end
+        end
+      end
+
+      context 'when the package is not of type bits' do
+        before do
+          package.type = 'docker'
+          package.save
+        end
+
+        it 'returns 422' do
+          expect {
+            packages_controller.download(package.guid)
+          }.to raise_error do |error|
+            expect(error.response_code).to eq 422
+            expect(error.name).to eq 'UnprocessableEntity'
+          end
+        end
+      end
+
+      context 'when the package has no bits' do
+        before do
+          package.state = PackageModel::CREATED_STATE
+          package.save
+        end
+
+        it 'returns 422' do
+          expect {
+            packages_controller.download(package.guid)
+          }.to raise_error do |error|
+            expect(error.response_code).to eq 422
+            expect(error.name).to eq 'UnprocessableEntity'
+          end
+        end
+      end
+
+      context 'when the package exists on S3' do
+        it 'returns 302 and the redirect' do
+          code, response_header, _ = packages_controller.download(package.guid)
+          expect(code).to eq(302)
+          expect(response_header['Location']).to eq(download_location)
+        end
+      end
+
+      context 'when the package exists on NFS' do
+        let(:file_path) { '/a/file/path/on/cc' }
+        let(:download_location) { nil }
+
+        it 'begins a download' do
+          expect(packages_controller).to receive(:send_file).with(file_path)
+          packages_controller.download(package.guid)
+        end
+      end
+    end
+
     describe '#show' do
       let(:package) { PackageModel.make }
       let(:space) { package.space }

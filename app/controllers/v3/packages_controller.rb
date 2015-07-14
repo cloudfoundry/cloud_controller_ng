@@ -4,6 +4,7 @@ require 'queries/package_list_fetcher'
 require 'queries/package_delete_fetcher'
 require 'actions/package_stage_action'
 require 'actions/package_delete'
+require 'actions/package_download'
 require 'actions/package_upload'
 require 'messages/package_upload_message'
 require 'messages/droplet_create_message'
@@ -63,6 +64,25 @@ module VCAP::CloudController
       [HTTP::OK, @package_presenter.present_json(package)]
     rescue PackageUpload::InvalidPackage => e
       unprocessable!(e.message)
+    end
+
+    get '/v3/packages/:guid/download', :download
+    def download(package_guid)
+      check_read_permissions!
+
+      package = PackageModel.where(guid: package_guid).eager(:space, space: :organization).all.first
+      package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+
+      unprocessable!('Package type must be bits.') unless package.type == 'bits'
+      unprocessable!('Package has no bits to download.') unless package.state == 'READY'
+
+      file_path_for_download, url_for_response = PackageDownload.new.download(package)
+      p file_path_for_download
+      if file_path_for_download
+        send_file(file_path_for_download)
+      elsif url_for_response
+        return [HTTP::FOUND, { 'Location' => url_for_response }, nil]
+      end
     end
 
     get '/v3/packages/:guid', :show
