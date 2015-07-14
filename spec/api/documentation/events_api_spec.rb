@@ -37,6 +37,8 @@ resource 'Events', type: [:api, :legacy_api] do
     audit.user_provided_service_instance.delete
     audit.service_binding.create
     audit.service_binding.delete
+    audit.service_key.create
+    audit.service_key.delete
   )
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
@@ -850,6 +852,53 @@ resource 'Events', type: [:api, :legacy_api] do
                                metadata: {
                                  'request' => {}
                                }
+    end
+
+    example 'List Service Key Create Events' do
+      space = VCAP::CloudController::Space.make
+      instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+      service_key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
+
+      service_event_repository.record_service_key_event(:create, service_key)
+
+      client.get '/v2/events?q=type:audit.service_key.create', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+        actor_type: 'user',
+        actor: test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'service_key',
+        actee: service_key.guid,
+        actee_name: service_key.name,
+        space_guid: instance.space_guid,
+        metadata: {
+          'request' => {
+            'service_instance_guid' => instance.guid,
+            'name' => service_key.name,
+          }
+        }
+    end
+
+    example 'List Service Key Delete Events' do
+      space = VCAP::CloudController::Space.make
+      instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+      service_key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
+
+      service_event_repository.record_service_key_event(:delete, service_key)
+
+      client.get '/v2/events?q=type:audit.service_key.delete', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+        actor_type: 'user',
+        actor: test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'service_key',
+        actee: service_key.guid,
+        actee_name: service_key.name,
+        space_guid: instance.space_guid,
+        metadata: {
+          'request' => {}
+        }
     end
   end
 end
