@@ -343,7 +343,10 @@ resource 'Packages (Experimental)', type: :api do
       valid_values: ['buildpack name', 'git url'],
       example_values: ['ruby_buildpack', 'https://github.com/cloudfoundry/ruby-buildpack'],
       required: false
-    body_parameter :environment_variables, 'Environment variables to use during staging', required: false
+    body_parameter :environment_variables, 'Environment variables to use during staging.
+    Environment variable names may not start with "VCAP_" or "CF_". "PORT" is not a valid environment variable.',
+      example_values: ['{"FEATURE_ENABLED": "true"}'],
+      required: false
     body_parameter :stack, 'Stack used to stage package', required: false
     body_parameter :memory_limit, 'Memory limit used to stage package', required: false
     body_parameter :disk_limit, 'Disk limit used to stage package', required: false
@@ -351,6 +354,8 @@ resource 'Packages (Experimental)', type: :api do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
     let(:buildpack) { 'http://github.com/myorg/awesome-buildpack' }
+    let(:custom_env_var_val) { 'hello' }
+    let(:environment_variables) { { 'CUSTOM_ENV_VAR' => custom_env_var_val } }
 
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:app_guid) { app_model.guid }
@@ -409,18 +414,22 @@ resource 'Packages (Experimental)', type: :api do
         'procfile'               => nil,
         'created_at'             => iso8601,
         'updated_at'             => nil,
-        'environment_variables'  => { 'CF_STACK' => stack, 'VCAP_APPLICATION' => {
-          'limits' => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
-          'application_id' => app_guid,
-          'application_version' => 'whatuuid',
-          'application_name' => app_model.name, 'application_uris' => [],
-          'version' => 'whatuuid',
-          'name' => app_model.name,
-          'space_name' => space.name,
-          'space_id' => space.guid,
-          'uris' => [],
-          'users' => nil
-        } },
+        'environment_variables'  => {
+          'CF_STACK' => stack,
+          'CUSTOM_ENV_VAR' => custom_env_var_val,
+          'VCAP_APPLICATION' => {
+            'limits' => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
+            'application_id' => app_guid,
+            'application_version' => 'whatuuid',
+            'application_name' => app_model.name, 'application_uris' => [],
+            'version' => 'whatuuid',
+            'name' => app_model.name,
+            'space_name' => space.name,
+            'space_id' => space.guid,
+            'uris' => [],
+            'users' => nil
+          }
+        },
         '_links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{droplet.guid}" },
           'package' => { 'href' => "/v3/packages/#{guid}" },
