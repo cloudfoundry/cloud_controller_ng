@@ -206,10 +206,78 @@ module VCAP::CloudController
       describe '#number_of_starting_and_running_instances_for_apps' do
         let(:app1) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED', state: 'STARTED', instances: 2) }
         let(:app2) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED', state: 'STARTED', instances: 5) }
+        let(:instance_map) do
+          {
+            app1.guid.to_sym => [
+              {
+                state: 'RUNNING',
+                index: 0
+              },
+              {
+                state: 'STARTING',
+                index: 1
+              },
+              {
+                state: 'CRASHED',
+                index: 2
+              },
+              {
+                state: 'STARTING',
+                index: 1
+              },
+            ],
+            app2.guid.to_sym => [
+              {
+                state: 'RUNNING',
+                index: 0
+              },
+              {
+                state: 'STARTING',
+                index: 1
+              },
+              {
+                state: 'CRASHED',
+                index: 2
+              },
+              {
+                state: 'RUNNING',
+                index: 3
+              }
+            ],
+          }
+        end
+
+        before do
+          allow(tps_client).to receive(:bulk_lrp_instances).and_return(instance_map)
+        end
 
         it 'returns a hash of app => instance count' do
           result = subject.number_of_starting_and_running_instances_for_apps([app1, app2])
-          expect(result).to eq({ app1.guid => 2, app2.guid => 4 })
+          expect(result).to eq({ app1.guid => 2, app2.guid => 3 })
+        end
+
+        context 'when the tps client raises an instances unavailable error' do
+          before do
+            allow(tps_client).to receive(:bulk_lrp_instances).and_raise(Errors::InstancesUnavailable.new(nil))
+          end
+
+          it 're raises the exception' do
+            expect {
+              subject.number_of_starting_and_running_instances_for_apps([app1, app2])
+            }.to raise_error(Errors::InstancesUnavailable)
+          end
+        end
+
+        context 'when the tps client raises an different error' do
+          before do
+            allow(tps_client).to receive(:bulk_lrp_instances).and_raise('BOOM')
+          end
+
+          it 'wraps the exception and re raises the exception' do
+            expect {
+              subject.number_of_starting_and_running_instances_for_apps([app1, app2])
+            }.to raise_error(Errors::InstancesUnavailable)
+          end
         end
       end
 

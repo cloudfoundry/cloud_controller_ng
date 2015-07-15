@@ -17,6 +17,14 @@ module VCAP::CloudController
         fetch_lrp_stats(guid)
       end
 
+      def bulk_lrp_instances(apps)
+        return {} unless apps && !apps.empty?
+
+        guids = apps.map { |a| ProcessGuid.from_app(a) }
+        path = "/v1/bulk_actual_lrp_status?guids=#{guids.join(',')}"
+        Hash[fetch_from_tps(path, {}).map { |k, v| [ProcessGuid.app_guid(k).to_sym, v] }]
+      end
+
       private
 
       def http_client

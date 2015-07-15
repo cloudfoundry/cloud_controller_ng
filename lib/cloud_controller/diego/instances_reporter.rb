@@ -29,9 +29,25 @@ module VCAP::CloudController
       end
 
       def number_of_starting_and_running_instances_for_apps(apps)
-        apps.each_with_object({}) do |app, result|
-          result.update(app.guid => number_of_starting_and_running_instances_for_app(app))
+        result = {}
+
+        instances_map = tps_client.bulk_lrp_instances(apps)
+        apps.each do |application|
+          running_indices = Set.new
+
+          for_each_desired_instance(instances_map[application.guid.to_sym] || [], application) do |instance|
+            next unless instance[:state] == 'RUNNING' || instance[:state] == 'STARTING'
+            running_indices.add(instance[:index])
+          end
+
+          result[application.guid] = running_indices.length
         end
+
+        result
+      rescue Errors::InstancesUnavailable => e
+        raise e
+      rescue => e
+        raise Errors::InstancesUnavailable.new(e)
       end
 
       def number_of_starting_and_running_instances_for_app(app)
