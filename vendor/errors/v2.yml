@@ -1,0 +1,845 @@
+1000:
+  name: InvalidAuthToken
+  http_code: 401
+  message: "Invalid Auth Token"
+
+1001:
+  name: MessageParseError
+  http_code: 400
+  message: "Request invalid due to parse error: %s"
+
+1002:
+  name: InvalidRelation
+  http_code: 400
+  message: "Invalid relation: %s"
+
+10000:
+  name: NotFound
+  http_code: 404
+  message: "Unknown request"
+
+10001:
+  name: ServerError
+  http_code: 500
+  message: "Server error"
+
+10002:
+  name: NotAuthenticated
+  http_code: 401
+  message: "Authentication error"
+
+10003:
+  name: NotAuthorized
+  http_code: 403
+  message: "You are not authorized to perform the requested action"
+
+10004:
+  name: InvalidRequest
+  http_code: 400
+  message: "The request is invalid"
+
+10005:
+  name: BadQueryParameter
+  http_code: 400
+  message: "The query parameter is invalid: %s"
+
+10006:
+  name: AssociationNotEmpty
+  http_code: 400
+  message: "Please delete the %s associations for your %s."
+
+10007:
+  name: InsufficientScope
+  http_code: 403
+  message: "Your token lacks the necessary scopes to access this resource."
+
+10008:
+  name: UnprocessableEntity
+  http_code: 422
+  message: "The request is semantically invalid: %s"
+
+10009:
+  name: UnableToPerform
+  http_code: 400
+  message: "%s could not be completed: %s"
+
+10010:
+  name: ResourceNotFound
+  http_code: 404
+  message: "%s"
+
+10011:
+  name: DatabaseError
+  http_code: 500
+  message: "Database error"
+
+20001:
+  name: UserInvalid
+  http_code: 400
+  message: "The user info is invalid: %s"
+
+20002:
+  name: UaaIdTaken
+  http_code: 400
+  message: "The UAA ID is taken: %s"
+
+20003:
+  name: UserNotFound
+  http_code: 404
+  message: "The user could not be found: %s"
+
+30001:
+  name: OrganizationInvalid
+  http_code: 400
+  message: "The organization info is invalid: %s"
+
+30002:
+  name: OrganizationNameTaken
+  http_code: 400
+  message: "The organization name is taken: %s"
+
+30003:
+  name: OrganizationNotFound
+  http_code: 404
+  message: "The organization could not be found: %s"
+
+40001:
+  name: SpaceInvalid
+  http_code: 400
+  message: "The app space info is invalid: %s"
+
+40002:
+  name: SpaceNameTaken
+  http_code: 400
+  message: "The app space name is taken: %s"
+
+40003:
+  name: SpaceUserNotInOrg
+  http_code: 400
+  message: "The app space and the user are not in the same org: %s"
+
+40004:
+  name: SpaceNotFound
+  http_code: 404
+  message: "The app space could not be found: %s"
+
+50001:
+  name: ServiceAuthTokenInvalid
+  http_code: 400
+  message: "The service auth token is invalid: %s"
+
+50002:
+  name: ServiceAuthTokenLabelTaken
+  http_code: 400
+  message: "The service auth token label is taken: %s"
+
+50003:
+  name: ServiceAuthTokenNotFound
+  http_code: 404
+  message: "The service auth token could not be found: %s"
+
+50004:
+  name: MissingServiceAuthToken
+  http_code: 500
+  message: "Missing service auth token: %s"
+
+60001:
+  name: ServiceInstanceNameEmpty
+  http_code: 400
+  message: "Service instance name is required."
+
+60002:
+  name: ServiceInstanceNameTaken
+  http_code: 400
+  message: "The service instance name is taken: %s"
+
+60003:
+  name: ServiceInstanceServiceBindingWrongSpace
+  http_code: 400
+  message: "The service instance and the service binding are in different app spaces: %s"
+
+60003:
+  name: ServiceInstanceInvalid
+  http_code: 400
+  message: "The service instance is invalid: %s"
+
+60004:
+  name: ServiceInstanceNotFound
+  http_code: 404
+  message: "The service instance could not be found: %s"
+
+60005:
+  name: ServiceInstanceQuotaExceeded
+  http_code: 400
+  message: "You have exceeded your organization's services limit."
+
+60006:
+  name: PreviouslyUsedAs_ServiceInstancePaidQuotaExceeded
+  http_code: 400
+  message: "You have exceeded your organization's services limit."
+
+60007:
+  name: ServiceInstanceServicePlanNotAllowed
+  http_code: 400
+  message: "The service instance cannot be created because paid service plans are not allowed."
+
+60008:
+  name: ServiceInstanceDuplicateNotAllowed
+  http_code: 400
+  message: "An instance of this service is already present in this space.  Some services only support one instance per space."
+
+60009:
+  name: ServiceInstanceNameTooLong
+  http_code: 400
+  message: "You have requested an invalid service instance name.  Names are limited to 50 characters."
+
+60010:
+  name: ServiceInstanceOrganizationNotAuthorized
+  http_code: 403
+  message: A service instance for the selected plan cannot be created in this organization. The plan is visible because another organization you belong to has access to it.
+
+60011:
+  name: ServiceInstanceDeprovisionFailed
+  http_code: 409
+  message: "The service broker reported an error during deprovisioning: %s"
+
+60012:
+  name: ServiceInstanceSpaceQuotaExceeded
+  http_code: 400
+  message: "You have exceeded your space's services limit."
+
+60013:
+  name: ServiceInstanceServicePlanNotAllowedBySpaceQuota
+  http_code: 400
+  message: "The service instance cannot be created because paid service plans are not allowed for your space."
+
+60014:
+  name: ServiceInstanceSpaceChangeNotAllowed
+  http_code: 400
+  message: "Cannot update space for service instance."
+
+60015:
+  name: ServiceInstanceTagsTooLong
+  http_code: 400
+  message: "Combined length of tags must be 255 characters or less."
+
+60016:
+  name: AsyncServiceInstanceOperationInProgress
+  http_code: 409
+  message: "An operation for service instance %s is in progress."
+
+70001:
+  name: RuntimeInvalid
+  http_code: 400
+  message: "The runtime is invalid: %s"
+
+70002:
+  name: RuntimeNameTaken
+  http_code: 400
+  message: "The runtime name is taken: %s"
+
+70003:
+  name: RuntimeNotFound
+  http_code: 404
+  message: "The runtime could not be found: %s"
+
+80001:
+  name: FrameworkInvalid
+  http_code: 400
+  message: "The framework is invalid: %s"
+
+80002:
+  name: FrameworkNameTaken
+  http_code: 400
+  message: "The framework name is taken: %s"
+
+80003:
+  name: FrameworkNotFound
+  http_code: 404
+  message: "The framework could not be found: %s"
+
+90001:
+  name: ServiceBindingInvalid
+  http_code: 400
+  message: "The service binding is invalid: %s"
+
+90002:
+  name: ServiceBindingDifferentSpaces
+  http_code: 400
+  message: "The app and the service are not in the same app space: %s"
+
+90003:
+  name: ServiceBindingAppServiceTaken
+  http_code: 400
+  message: "The app space binding to service is taken: %s"
+
+90004:
+  name: ServiceBindingNotFound
+  http_code: 404
+  message: "The service binding could not be found: %s"
+
+90005:
+  name: UnbindableService
+  http_code: 400
+  message: "The service doesn't support binding."
+
+90006:
+  name: InvalidLoggingServiceBinding
+  http_code: 502
+  message: "The service is attempting to stream logs from your application, but is not registered as a logging service. Please contact the service provider."
+
+100001:
+  name: AppInvalid
+  http_code: 400
+  message: "The app is invalid: %s"
+
+100002:
+  name: AppNameTaken
+  http_code: 400
+  message: "The app name is taken: %s"
+
+100004:
+  name: AppNotFound
+  http_code: 404
+  message: "The app could not be found: %s"
+
+100005:
+  name: AppMemoryQuotaExceeded
+  http_code: 400
+  message: "You have exceeded your organization's memory limit."
+
+100006:
+  name: AppMemoryInvalid
+  http_code: 400
+  message: "You have specified an invalid amount of memory for your application."
+
+100007:
+  name: QuotaInstanceMemoryLimitExceeded
+  http_code: 400
+  message: "You have exceeded the instance memory limit for your organization's quota."
+
+110001:
+  name: ServicePlanInvalid
+  http_code: 400
+  message: "The service plan is invalid: %s"
+
+110002:
+  name: ServicePlanNameTaken
+  http_code: 400
+  message: "The service plan name is taken: %s"
+
+110003:
+  name: ServicePlanNotFound
+  http_code: 404
+  message: "The service plan could not be found: %s"
+
+110004:
+  name: ServicePlanNotUpdateable
+  http_code: 400
+  message: "The service does not support changing plans."
+
+120001:
+  name: ServiceInvalid
+  http_code: 400
+  message: "The service is invalid: %s"
+
+120002:
+  name: ServiceLabelTaken
+  http_code: 400
+  message: "The service label is taken: %s"
+
+120003:
+  name: ServiceNotFound
+  http_code: 404
+  message: "The service could not be found: %s"
+
+130001:
+  name: DomainInvalid
+  http_code: 400
+  message: "The domain is invalid: %s"
+
+130002:
+  name: DomainNotFound
+  http_code: 404
+  message: "The domain could not be found: %s"
+
+130003:
+  name: DomainNameTaken
+  http_code: 400
+  message: "The domain name is taken: %s"
+
+130004:
+  name: PathInvalid
+  http_code: 400
+  message: "The path is invalid: %s"
+
+130005:
+  name: TotalPrivateDomainsExceeded
+  http_code: 400
+  message: "The number of private domains exceeds the quota for organization: %s"
+
+140001:
+  name: LegacyApiWithoutDefaultSpace
+  http_code: 400
+  message: "A legacy api call requiring a default app space was called, but no default app space is set for the user."
+
+150001:
+  name: AppPackageInvalid
+  http_code: 400
+  message: "The app package is invalid: %s"
+
+150002:
+  name: AppPackageNotFound
+  http_code: 404
+  message: "The app package could not be found: %s"
+
+150003:
+  name: InsufficientRunningResourcesAvailable
+  http_code: 503
+  message: "One or more instances could not be started because of insufficient running resources."
+
+150004:
+  name: PackageBitsAlreadyUploaded
+  http_code: 400
+  message: "Bits may be uploaded only once. Create a new package to upload different bits."
+
+150005:
+  name: BlobstoreNotLocal
+  http_code: 400
+  message: "Downloading blobs can only be done directly to the blobstore."
+
+160001:
+  name: AppBitsUploadInvalid
+  http_code: 400
+  message: "The app upload is invalid: %s"
+
+160002:
+  name: AppBitsCopyInvalid
+  http_code: 400
+  message: "The app copy is invalid: %s"
+
+170001:
+  name: StagingError
+  http_code: 400
+  message: "Staging error: %s"
+
+170002:
+  name: NotStaged
+  http_code: 400
+  message: "App has not finished staging"
+
+170003:
+  name: NoAppDetectedError
+  http_code: 400
+  message: "An app was not successfully detected by any available buildpack"
+
+170004:
+  name: BuildpackCompileFailed
+  http_code: 400
+  message: "App staging failed in the buildpack compile phase"
+
+170005:
+  name: BuildpackReleaseFailed
+  http_code: 400
+  message: "App staging failed in the buildpack release phase"
+
+170006:
+  name: NoBuildpacksFound
+  http_code: 400
+  message: "There are no buildpacks available"
+
+170007:
+  name: StagingTimeExpired
+  http_code: 504
+  message: "Staging time expired: %s"
+
+170008:
+  name: InsufficientResources
+  http_code: 400
+  message: "Insufficient resources"
+
+170009:
+  name: NoCompatibleCell
+  http_code: 400
+  message: "Found no compatible cell"
+
+170010:
+  name: StagerUnavailable
+  http_code: 503
+  message: "Stager is unavailable: %s"
+
+170011:
+  name: StagerError
+  http_code: 500
+  message: "Stager error: %s"
+
+170015:
+  name: RunnerUnavailable
+  http_code: 503
+  message: "Runner is unavailable: %s"
+
+170016:
+  name: RunnerError
+  http_code: 500
+  message: "Runner error: %s"
+
+180001:
+  name: SnapshotNotFound
+  http_code: 404
+  message: "Snapshot could not be found: %s"
+
+180002:
+  name: ServiceGatewayError
+  http_code: 503
+  message: "Service gateway internal error: %s"
+
+180003:
+  name: ServiceNotImplemented
+  http_code: 501
+  message: "Operation not supported for service"
+
+180004:
+  name: SDSNotAvailable
+  http_code: 501
+  message: "No serialization service backends available"
+
+190001:
+  name: FileError
+  http_code: 400
+  message: "File error: %s"
+
+200001:
+  name: StatsError
+  http_code: 400
+  message: "Stats error: %s"
+
+200002:
+  name: StatsUnavailable
+  http_code: 503
+  message: "Stats unavailable: %s"
+
+200003:
+  name: AppStoppedStatsError
+  http_code: 400
+  message: "Could not fetch stats for stopped app: %s"
+
+210001:
+  name: RouteInvalid
+  http_code: 400
+  message: "The route is invalid: %s"
+
+210002:
+  name: RouteNotFound
+  http_code: 404
+  message: "The route could not be found: %s"
+
+210003:
+  name: RouteHostTaken
+  http_code: 400
+  message: "The host is taken: %s"
+
+210004:
+  name: RoutePathTaken
+  http_code: 400
+  message: "The path is taken: %s"
+
+220001:
+  name: InstancesError
+  http_code: 400
+  message: "Instances error: %s"
+
+220002:
+  name: InstancesUnavailable
+  http_code: 503
+  message: "Instances information unavailable: %s"
+
+230001:
+  name: BillingEventQueryInvalid
+  http_code: 400
+  message: "Billing event query start_date and/or end_date are missing or invalid"
+
+230002:
+  name: EventNotFound
+  http_code: 404
+  message: "Event could not be found: %s"
+
+240001:
+  name: QuotaDefinitionNotFound
+  http_code: 404
+  message: "Quota Definition could not be found: %s"
+
+240002:
+  name: QuotaDefinitionNameTaken
+  http_code: 400
+  message: "Quota Definition is taken: %s"
+
+240003:
+  name: QuotaDefinitionInvalid
+  http_code: 400
+  message: "Quota Definition is invalid: %s"
+
+240004:
+  name: QuotaDefinitionMemoryLimitNegative
+  http_code: 400
+  message: "Quota Definition memory limit cannot be negative"
+
+250001:
+  name: StackInvalid
+  http_code: 400
+  message: "The stack is invalid: %s"
+
+250002:
+  name: StackNameTaken
+  http_code: 400
+  message: "The stack name is taken: %s"
+
+250003:
+  name: StackNotFound
+  http_code: 404
+  message: "The stack could not be found: %s"
+
+260001:
+  name: ServicePlanVisibilityInvalid
+  http_code: 400
+  message: "Service Plan Visibility is invalid: %s"
+
+260002:
+  name: ServicePlanVisibilityAlreadyExists
+  http_code: 400
+  message: "This combination of ServicePlan and Organization is already taken: %s"
+
+260003:
+  name: ServicePlanVisibilityNotFound
+  http_code: 404
+  message: "The service plan visibility could not be found: %s"
+
+270001:
+  name: ServiceBrokerInvalid
+  http_code: 400
+  message: "Service broker is invalid: %s"
+
+270002:
+  name: ServiceBrokerNameTaken
+  http_code: 400
+  message: "The service broker name is taken"
+
+270003:
+  name: ServiceBrokerUrlTaken
+  http_code: 400
+  message: "The service broker url is taken: %s"
+
+270004:
+  name: ServiceBrokerNotFound
+  http_code: 404
+  message: "The service broker was not found: %s"
+
+270010:
+  name: ServiceBrokerNotRemovable
+  http_code: 400
+  message: "Can not remove brokers that have associated service instances"
+
+270011:
+  name: ServiceBrokerUrlInvalid
+  http_code: 400
+  message: "%s is not a valid URL"
+
+270012:
+  name: ServiceBrokerCatalogInvalid
+  http_code: 502
+  message: "Service broker catalog is invalid: %s"
+
+270013:
+  name: ServiceBrokerDashboardClientFailure
+  http_code: 502
+  message: "Service broker dashboard clients could not be modified: %s"
+
+270014:
+  name: ServiceBrokerAsyncRequired
+  http_code: 400
+  message: "This service plan requires client support for asynchronous service operations."
+
+290001:
+  name: BuildpackNameTaken
+  http_code: 400
+  message: "The buildpack name is already in use: %s"
+
+290002:
+  name: BuildpackBitsUploadInvalid
+  http_code: 400
+  message: "The buildpack upload is invalid: %s"
+
+290003:
+  name: BuildpackInvalid
+  http_code: 400
+  message: "Buildpack is invalid: %s"
+
+290004:
+  name: CustomBuildpacksDisabled
+  http_code: 400
+  message: "Custom buildpacks are disabled"
+
+290005:
+  name: BuildpackLocked
+  http_code: 409
+  message: "The buildpack is locked"
+
+290006:
+  name: JobTimeout
+  http_code: 524
+  message: "The job execution has timed out."
+
+290007:
+  name: SpaceDeleteTimeout
+  http_code: 524
+  message: "Deletion of space %s timed out before all resources within could be deleted"
+
+290008:
+  name: SpaceDeletionFailed
+  http_code: 502
+  message: "Deletion of space %s failed because one or more resources within could not be deleted.\n\n%s"
+
+290009:
+  name: OrganizationDeleteTimeout
+  http_code: 524
+  message: "Delete of organization %s timed out before all resources within could be deleted"
+
+290010:
+  name: OrganizationDeletionFailed
+  http_code: 502
+  message: "Deletion of organization %s failed because one or more resources within could not be deleted.\n\n%s"
+
+300001:
+  name: SecurityGroupInvalid
+  http_code: 400
+  message: "The security group is invalid: %s"
+
+300002:
+  name: SecurityGroupNotFound
+  http_code: 404
+  message: "The security group could not be found: %s"
+
+300003:
+  name: SecurityGroupStagingDefaultInvalid
+  http_code: 400
+  message: "The security group could not be found: %s"
+
+300004:
+  name: SecurityGroupRunningDefaultInvalid
+  http_code: 400
+  message: "The security group could not be found: %s"
+
+300005:
+  name: SecurityGroupNameTaken
+  http_code: 400
+  message: "The security group name is taken: %s"
+
+310001:
+  name: SpaceQuotaDefinitionInvalid
+  http_code: 400
+  message: "Space Quota Definition is invalid: %s"
+
+310002:
+  name: SpaceQuotaDefinitionNameTaken
+  http_code: 400
+  message: "The space quota definition name is taken: %s"
+
+310003:
+  name: SpaceQuotaMemoryLimitExceeded
+  http_code: 400
+  message: "You have exceeded your space's memory limit."
+
+310004:
+  name: SpaceQuotaInstanceMemoryLimitExceeded
+  http_code: 400
+  message: "You have exceeded the instance memory limit for your space's quota."
+
+310005:
+  name: SpaceQuotaTotalRoutesExceeded
+  http_code: 400
+  message: "You have exceeded the total routes for your space's quota."
+
+310006:
+  name: OrgQuotaTotalRoutesExceeded
+  http_code: 400
+  message: "You have exceeded the total routes for your organization's quota."
+
+310007:
+  name: SpaceQuotaDefinitionNotFound
+  http_code: 404
+  message: "Space Quota Definition could not be found: %s"
+
+320001:
+  name: DiegoDisabled
+  http_code: 400
+  message: Diego has not been enabled.
+
+320002:
+  name: DiegoDockerBuildpackConflict
+  http_code: 400
+  message: "You cannot specify a custom buildpack and a docker image at the same time."
+
+320003:
+  name: DockerDisabled
+  http_code: 400
+  message: Docker support has not been enabled.
+
+320004:
+  name: StagingBackendInvalid
+  http_code: 403
+  message: "The request staging completion endpoint only handles apps desired to stage on the Diego backend."
+
+320005:
+  name: BackendSelectionNotAuthorized
+  http_code: 403
+  message: "You cannot select the backend on which to run this application"
+
+330000:
+  name: FeatureFlagNotFound
+  http_code: 404
+  message: "The feature flag could not be found: %s"
+
+330001:
+  name: FeatureFlagInvalid
+  http_code: 400
+  message: "The feature flag is invalid: %s"
+
+330002:
+  name: FeatureDisabled
+  http_code: 403
+  message: "Feature Disabled: %s"
+
+340001:
+  name: UserProvidedServiceInstanceNotFound
+  http_code: 404
+  message: "The service instance could not be found: %s"
+
+350001:
+  name: ProcessInvalid
+  http_code: 400
+  message: "The process is invalid: %s"
+
+350002:
+  name: UnableToDelete
+  http_code: 400
+  message: "Unable to perform delete action: %s"
+
+360001:
+  name: ServiceKeyNameTaken
+  http_code: 400
+  message: "The service key name is taken: %s"
+
+360002:
+  name: ServiceKeyInvalid
+  http_code: 400
+  message: "The service key is invalid: %s"
+
+360003:
+  name: ServiceKeyNotFound
+  http_code: 404
+  message: "The service key could not be found: %s"
+
+360004:
+  name: ServiceKeyNotSupported
+  http_code: 400
+  message: "%s"
+

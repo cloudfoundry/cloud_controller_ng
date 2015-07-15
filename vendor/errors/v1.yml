@@ -1,0 +1,189 @@
+100:
+  name: BadRequest
+  http_code: 400
+  message: "Bad request"
+
+101:
+  name: DatabaseError
+  http_code: 500
+  message: "Error talking with the database"
+
+102:
+  name: LockingError
+  http_code: 400
+  message: "Optimistic locking failure"
+
+111:
+  name: SystemError
+  http_code: 500
+  message: "System Exception Encountered"
+
+200:
+  name: Forbidden
+  http_code: 403
+  message: "Operation not permitted"
+
+201:
+  name: UserNotFound
+  http_code: 403
+  message: "User not found"
+
+202:
+  name: HttpsRequired
+  http_code: 403
+  message: "HTTPS required"
+
+300:
+  name: AppInvalid
+  http_code: 400
+  message: "Invalid application description"
+
+301:
+  name: AppNotFound
+  http_code: 404
+  message: "Application not found"
+
+302:
+  name: AppNoResources
+  http_code: 404
+  message: "Couldn't find a place to run an app"
+
+303:
+  name: AppFileNotFound
+  http_code: 404
+  message: "Could not find : '%s'"
+
+304:
+  name: AppInstanceNotFound
+  http_code: 400
+  message: "Could not find instance: '%s'"
+
+305:
+  name: AppStopped
+  http_code: 400
+  message: "Operation not permitted on a stopped app"
+
+306:
+  name: AppFileError
+  http_code: 500
+  message: "Error retrieving file '%s'"
+
+307:
+  name: AppInvalidRuntime
+  http_code: 400
+  message: "Invalid runtime specification [%s] for framework: '%s'"
+
+308:
+  name: AppInvalidFramework
+  http_code: 400
+  message: "Invalid framework description: '%s'"
+
+309:
+  name: AppDebugDisallowed
+  http_code: 400
+  message: "Cloud controller has disallowed debugging."
+
+310:
+  name: AppStagingError
+  http_code: 500
+  message: "Staging failed: '%s'"
+
+400:
+  name: ResourcesUnknownPackageType
+  http_code: 400
+  message: 'Unknown package type requested: "%"'
+
+401:
+  name: ResourcesMissingResource
+  http_code: 400
+  message: "Could not find the requested resource"
+
+402:
+  name: ResourcesPackagingFailed
+  http_code: 500
+  message: "App packaging failed: '%s'"
+
+500:
+  name: ServiceNotFound
+  http_code: 404
+  message: "Service not found"
+
+501:
+  name: BindingNotFound
+  http_code: 404
+  message: "Binding not found"
+
+502:
+  name: TokenNotFound
+  http_code: 404
+  message: "Token not found"
+
+503:
+  name: ServiceGatewayError
+  http_code: 502
+  message: "Unexpected response from service gateway"
+
+504:
+  name: AccountTooManyServices
+  http_code: 403
+  message: "Too many Services provisioned: %s, you're allowed: %s"
+
+505:
+  name: ExtensionNotImpl
+  http_code: 501
+  message: "Service extension %s is not implemented."
+
+506:
+  name: UnsupportedVersion
+  http_code: 404
+  message: "Unsupported service version %s."
+
+507:
+  name: SdsError
+  http_code: 500
+  message: "Get error from serialization_data_server: '%s'"
+
+508:
+  name: SdsNotFound
+  http_code: 500
+  message: "No available active serialization data server"
+
+600:
+  name: AccountNotEnoughMemory
+  http_code: 403
+  message: "Not enough memory capacity, you're allowed: %s"
+
+601:
+  name: AccountAppsTooMany
+  http_code: 403
+  message: "Too many applications: %s, you're allowed: %s"
+
+602:
+  name: AccountAppTooManyUris
+  http_code: 403
+  message: "Too many URIs: %s, you're allowed: %s"
+
+700:
+  name: UriInvalid
+  http_code: 400
+  message: 'Invalid URI: "%s"'
+
+701:
+  name: UriAlreadyTaken
+  http_code: 400
+  message: 'The URI: "%s" has already been taken or reserved'
+
+702:
+  name: UriNotAllowed
+  http_code: 403
+  message: "External URIs are not enabled for this account"
+
+800:
+  name: StagingTimedOut
+  http_code: 500
+  message: "Timed out waiting for staging to complete"
+
+801:
+  name: StagingFailed
+  http_code: 500
+  message: "Staging failed"

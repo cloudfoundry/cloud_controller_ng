@@ -13,8 +13,6 @@ doc
 *.rbc
 *.swp
 *.pid
-vendor
-!vendor/errors
 .DS_Store
 log
 tmp
