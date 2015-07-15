@@ -77,7 +77,6 @@ module VCAP::CloudController
       unprocessable!('Package has no bits to download.') unless package.state == 'READY'
 
       file_path_for_download, url_for_response = PackageDownload.new.download(package)
-      p file_path_for_download
       if file_path_for_download
         send_file(file_path_for_download)
       elsif url_for_response
