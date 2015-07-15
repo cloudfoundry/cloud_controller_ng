@@ -28,6 +28,9 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
       example_values: [-1, 10_240, 9999]
 
     field :trial_db_allowed, 'If an organization can have a trial db.', deprecated: true
+    field :app_instance_limit,
+      'How many app instances an organization can create. (-1 represents an unlimited amount)',
+      example_values: [-1, 10, 23], default: -1, experimental: true
   end
 
   standard_model_list(:quota_definition, VCAP::CloudController::QuotaDefinitionsController, title: 'Organization Quota Definitions')

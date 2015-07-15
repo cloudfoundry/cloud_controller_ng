@@ -54,6 +54,7 @@ module VCAP::CloudController
       space_and_name_errors  = e.errors.on([:space_id, :name])
       memory_errors          = e.errors.on(:memory)
       instance_number_errors = e.errors.on(:instances)
+      app_instance_limit_errors = e.errors.on(:app_instance_limit)
       state_errors           = e.errors.on(:state)
       docker_errors          = e.errors.on(:docker)
 
@@ -63,6 +64,8 @@ module VCAP::CloudController
         translate_memory_validation_exception(memory_errors)
       elsif instance_number_errors
         Errors::ApiError.new_from_details('AppInvalid', 'Number of instances less than 0')
+      elsif app_instance_limit_errors
+        Errors::ApiError.new_from_details('QuotaInstanceLimitExceeded')
       elsif state_errors
         Errors::ApiError.new_from_details('AppInvalid', 'Invalid app state provided')
       elsif docker_errors && docker_errors.include?(:docker_disabled)

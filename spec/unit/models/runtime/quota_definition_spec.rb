@@ -50,16 +50,27 @@ module VCAP::CloudController
         quota_definition.total_private_domains = -1
         expect(quota_definition).to be_valid
       end
+
+      it 'app_instance_limit cannot be less than -1' do
+        quota_definition.app_instance_limit = -2
+        expect(quota_definition).not_to be_valid
+        expect(quota_definition.errors.on(:app_instance_limit)).to include(:invalid_app_instance_limit)
+
+        quota_definition.app_instance_limit = -1
+        expect(quota_definition).to be_valid
+      end
     end
 
     describe 'Serialization' do
       it {
         is_expected.to export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-                                         :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit
+                                         :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
+                                         :app_instance_limit
       }
       it {
         is_expected.to import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-                                         :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit
+                                         :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
+                                         :app_instance_limit
       }
     end
 

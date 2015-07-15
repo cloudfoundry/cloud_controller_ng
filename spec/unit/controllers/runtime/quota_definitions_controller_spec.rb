@@ -15,7 +15,8 @@ module VCAP::CloudController
           total_routes: { type: 'integer', required: true },
           total_private_domains: { type: 'integer', required: false, default: -1 },
           memory_limit: { type: 'integer', required: true },
-          instance_memory_limit: { type: 'integer', required: false, default: -1 }
+          instance_memory_limit: { type: 'integer', required: false, default: -1 },
+          app_instance_limit: { type: 'integer', required: false, default: -1 }
         })
       end
 
@@ -27,7 +28,8 @@ module VCAP::CloudController
           total_routes: { type: 'integer' },
           total_private_domains: { type: 'integer' },
           memory_limit: { type: 'integer' },
-          instance_memory_limit: { type: 'integer' }
+          instance_memory_limit: { type: 'integer' },
+          app_instance_limit: { type: 'integer' }
         })
       end
     end

@@ -8,6 +8,7 @@ module VCAP::CloudController
       attribute :total_private_domains,      Integer, optional_in: :create, default: -1
       attribute :memory_limit,               Integer
       attribute :instance_memory_limit,      Integer, optional_in: :create, default: -1
+      attribute :app_instance_limit,         Integer, optional_in: :create, default: -1
     end
 
     query_parameters :name

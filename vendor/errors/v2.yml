@@ -318,6 +318,11 @@
   http_code: 400
   message: "You have exceeded the instance memory limit for your organization's quota."
 
+100008:
+  name: QuotaInstanceLimitExceeded
+  http_code: 400
+  message: "You have exceeded the instance limit for your organization's quota."
+
 110001:
   name: ServicePlanInvalid
   http_code: 400

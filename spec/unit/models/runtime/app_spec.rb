@@ -398,6 +398,15 @@ module VCAP::CloudController
             expect(app.instances).to eq(1)
           end
 
+          it 'should raise error when instance quota is exceeded' do
+            quota.app_instance_limit = 4
+            quota.memory_limit = 512
+            quota.save
+
+            app.instances = 5
+            expect { app.save }.to raise_error(/instance_limit_exceeded/)
+          end
+
           it 'raises when scaling down number of instances but remaining above quota' do
             org.quota_definition = QuotaDefinition.make(memory_limit: 32)
             act_as_cf_admin { org.save }

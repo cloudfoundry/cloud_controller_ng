@@ -1211,6 +1211,16 @@ module VCAP::CloudController
         expect(decoded_response['code']).to eq(310004)
       end
 
+      it 'returns app instance limit exceeded error correctly' do
+        space.organization.quota_definition = QuotaDefinition.make(app_instance_limit: 4)
+        space.organization.save(validate: false)
+
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(instances: 5), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(100008)
+      end
+
       it 'validates space quota instance memory limit before organization quotas' do
         space.organization.quota_definition = QuotaDefinition.make(instance_memory_limit: 100)
         space.organization.save(validate: false)
