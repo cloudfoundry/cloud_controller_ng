@@ -242,7 +242,7 @@ module VCAP::CloudController
 
     def update_attributes(instance_attrs)
       set_all(instance_attrs)
-      save
+      save_changes
     end
 
     def validate_tags_length

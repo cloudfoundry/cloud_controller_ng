@@ -131,6 +131,13 @@ module VCAP::CloudController
       service_instance_usage_event_repository.deleted_event_from_service_instance(self)
     end
 
+    def after_update
+      super
+      if @columns_updated.key?(:service_plan_id)
+        service_instance_usage_event_repository.updated_event_from_service_instance(self)
+      end
+    end
+
     def last_operation
       nil
     end

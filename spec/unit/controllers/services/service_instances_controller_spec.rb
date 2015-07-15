@@ -1055,10 +1055,21 @@ module VCAP::CloudController
               })
         end
 
-        it 'returns a 201' do
+        it 'returns a 201 and updates to the new plan' do
           put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
           expect(last_response).to have_status_code 201
           expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
+        end
+
+        it 'creates an UPDATED service usage event' do
+          expect {
+            put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
+          }.to change { ServiceUsageEvent.count }.by 1
+
+          expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
+          event = ServiceUsageEvent.last
+          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+          expect(event).to match_service_instance(service_instance)
         end
 
         it 'does not set a Location header' do
@@ -1111,6 +1122,12 @@ module VCAP::CloudController
               put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
               expect(last_response).to have_status_code(201)
               expect(a_request(:patch, service_broker_url_regex).with(body: hash_including(parameters: parameters))).to have_been_made.times(1)
+            end
+
+            it 'does not create an UPDATED service usage event' do
+              expect {
+                put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
+              }.not_to change { ServiceUsageEvent.count }
             end
           end
         end
@@ -1173,6 +1190,12 @@ module VCAP::CloudController
 
             expect(service_instance.last_operation.reload.state).to eq 'succeeded'
             expect(service_instance.last_operation.reload.description).to be_nil
+          end
+
+          it 'does not create an UPDATED service usage event' do
+            expect {
+              put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
+            }.not_to change { ServiceUsageEvent.count }
           end
         end
 
