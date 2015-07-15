@@ -35,4 +35,16 @@ describe MaxMemoryPolicy do
       expect(validator).to validate_without_error(app)
     end
   end
+
+  context 'when the app is process' do
+    let(:app) { VCAP::CloudController::AppFactory.make(memory: 100, state: 'STARTED') }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
+    before do
+      app_model.add_process app
+    end
+
+    it 'does not register error' do
+      expect(validator).to validate_without_error(app)
+    end
+  end
 end
