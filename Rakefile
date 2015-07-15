@@ -14,7 +14,7 @@ Dir['lib/tasks/**/*.rake'].each do |tasks|
   load tasks
 end
 
-task default: [:rubocop_autocorrect, :spec]
+task default: [:spec, :rubocop_autocorrect]
 
 task :rubocop_autocorrect do
   require 'rubocop'
