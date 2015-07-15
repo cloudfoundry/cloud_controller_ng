@@ -158,11 +158,11 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'DEPRCATED: returns an empty credentials hash to satisfy the not null database constraint' do
-          expect(attributes[:credentials]).to eq({})
+          expect(attributes[:instance][:credentials]).to eq({})
         end
 
         it 'returns the dashboard url' do
-          expect(attributes[:dashboard_url]).to eq('http://example-dashboard.com/9189kdfsk0vfnku')
+          expect(attributes[:instance][:dashboard_url]).to eq('http://example-dashboard.com/9189kdfsk0vfnku')
         end
 
         it 'returns the dashboard client credentials if present' do
@@ -343,9 +343,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:message) { 'OK' }
 
       before do
-        instance.save_with_new_operation(
-          last_operation: { type: 'create' }
-        )
+        instance.save_with_new_operation({}, { type: 'create' })
         allow(http_client).to receive(:get).and_return(response)
       end
 
@@ -387,11 +385,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'when the last operation type is `delete`' do
           before do
-            instance.save_with_new_operation(
-              last_operation: {
-                type: 'delete',
-              }
-            )
+            instance.save_with_new_operation({}, { type: 'delete' })
           end
 
           it 'returns attributes to indicate the service instance was deleted' do
@@ -406,11 +400,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'with any other operation type' do
           before do
-            instance.save_with_new_operation(
-              last_operation: {
-                type: 'update'
-              }
-            )
+            instance.save_with_new_operation({}, { type: 'update' })
           end
 
           it 'returns attributes to indicate the service instance operation failed' do

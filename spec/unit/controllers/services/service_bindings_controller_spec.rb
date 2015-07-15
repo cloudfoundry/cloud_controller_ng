@@ -344,12 +344,7 @@ module VCAP::CloudController
           end
 
           before do
-            instance.save_with_new_operation(
-              last_operation: {
-                type: 'delete',
-                state: 'in progress',
-              }
-            )
+            instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
           end
 
           it 'does not tell the service broker to bind the service' do

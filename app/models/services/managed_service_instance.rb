@@ -194,18 +194,17 @@ module VCAP::CloudController
       false
     end
 
-    def save_with_new_operation(attributes_to_update)
+    def save_with_new_operation(instance_attributes_to_update, last_operation)
       ManagedServiceInstance.db.transaction do
         lock!
 
-        instance_attrs, operation_attrs = extract_operation_attrs(attributes_to_update)
-        update_attributes(instance_attrs)
+        update_attributes(instance_attributes_to_update)
 
         if self.last_operation
           self.last_operation.destroy
         end
 
-        self.service_instance_operation = ServiceInstanceOperation.create(operation_attrs)
+        self.service_instance_operation = ServiceInstanceOperation.create(last_operation)
       end
     end
 

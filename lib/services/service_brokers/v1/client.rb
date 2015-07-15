@@ -27,10 +27,12 @@ module VCAP::Services
       )
 
       {
-        broker_provided_id: response.fetch('service_id'),
-        gateway_data: response.fetch('configuration'),
-        credentials: response.fetch('credentials'),
-        dashboard_url: response.fetch('dashboard_url', nil),
+        instance: {
+          broker_provided_id: response.fetch('service_id'),
+          gateway_data: response.fetch('configuration'),
+          credentials: response.fetch('credentials'),
+          dashboard_url: response.fetch('dashboard_url', nil),
+        },
         last_operation: {
           type: 'create',
           state: 'succeeded',

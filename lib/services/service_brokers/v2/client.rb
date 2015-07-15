@@ -35,13 +35,15 @@ module VCAP::Services::ServiceBrokers::V2
       parsed_response = @response_parser.parse_provision(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
       return_values = {
-        credentials: {},
-        dashboard_url: parsed_response['dashboard_url'],
+        instance: {
+          credentials: {},
+          dashboard_url: parsed_response['dashboard_url']
+        },
         dashboard_client: parsed_response['dashboard_client'],
         last_operation: {
           type: 'create',
           description: last_operation_hash['description'] || '',
-        },
+        }
       }
 
       state = last_operation_hash['state']

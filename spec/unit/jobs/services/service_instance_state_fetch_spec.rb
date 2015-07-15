@@ -159,11 +159,7 @@ module VCAP::CloudController
 
             context 'when the last operation type is `delete`' do
               before do
-                service_instance.save_with_new_operation(
-                  last_operation: {
-                    type: 'delete',
-                  },
-                )
+                service_instance.save_with_new_operation({}, { type: 'delete' })
               end
 
               it 'should delete the service instance' do

@@ -18,10 +18,8 @@ module VCAP::CloudController
         arbitrary_parameters: arbitrary_params
       )
 
-      attributes_to_update = broker_response.slice(:credentials, :dashboard_url, :last_operation)
-
       begin
-        service_instance.save_with_new_operation(attributes_to_update)
+        service_instance.save_with_new_operation(broker_response[:instance], broker_response[:last_operation])
       rescue => e
         @logger.error "Failed to save while creating service instance #{service_instance.guid} with exception: #{e}."
         orphan_mitigator = SynchronousOrphanMitigate.new(@logger)

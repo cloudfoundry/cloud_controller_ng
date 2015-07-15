@@ -19,12 +19,7 @@ module VCAP::CloudController
 
         raise_if_locked(service_instance)
 
-        service_instance.save_with_new_operation(
-          last_operation: {
-            type: @type,
-            state: 'in progress'
-          }
-        )
+        service_instance.save_with_new_operation({}, { type: @type, state: 'in progress' })
         @needs_unlock = true
       end
     end

@@ -122,14 +122,12 @@ module VCAP::CloudController
       end
 
       it 'creates a new last_operation object and associates it with the service instance' do
-        attrs = {
-          last_operation: {
-            state: 'in progress',
-            description: '10%'
-          },
-          dashboard_url: 'a-different-url.com'
+        instance = { dashboard_url: 'a-different-url.com' }
+        last_operation = {
+          state: 'in progress',
+          description: '10%'
         }
-        service_instance.save_with_new_operation(attrs)
+        service_instance.save_with_new_operation(instance, last_operation)
 
         service_instance.reload
         expect(service_instance.dashboard_url).to eq 'a-different-url.com'
@@ -139,15 +137,15 @@ module VCAP::CloudController
 
       context 'when the instance already has a last operation' do
         before do
-          attrs = { last_operation: { state: 'finished' } }
-          service_instance.save_with_new_operation(attrs)
+          last_operation = { state: 'finished' }
+          service_instance.save_with_new_operation({}, last_operation)
           service_instance.reload
           @old_guid = service_instance.last_operation.guid
         end
 
         it 'creates a new operation' do
-          attrs = { last_operation: { state: 'in progress' } }
-          service_instance.save_with_new_operation(attrs)
+          last_operation = { state: 'in progress' }
+          service_instance.save_with_new_operation({}, last_operation)
 
           service_instance.reload
           expect(service_instance.last_operation.guid).not_to eq(@old_guid)
@@ -161,8 +159,8 @@ module VCAP::CloudController
       let(:manager) { make_manager_for_space(service_instance.space) }
 
       before do
-        attrs = { last_operation: { state: 'in progress', description: '10%' } }
-        service_instance.save_with_new_operation(attrs)
+        last_operation = { state: 'in progress', description: '10%' }
+        service_instance.save_with_new_operation({}, last_operation)
         service_instance.reload
         @old_guid = service_instance.last_operation.guid
       end

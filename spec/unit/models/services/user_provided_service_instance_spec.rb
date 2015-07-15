@@ -91,7 +91,7 @@ module VCAP::CloudController
     end
 
     it 'pretends it can #save_with_new_operation' do
-      service_instance.save_with_new_operation({ foo: 'bar' })
+      service_instance.save_with_new_operation({ foo: 'bar' }, { baz: 'bot' })
     end
   end
 end
