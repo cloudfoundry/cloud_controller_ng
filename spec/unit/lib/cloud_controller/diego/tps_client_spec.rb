@@ -74,7 +74,16 @@ module VCAP::CloudController::Diego
             stub = stub_request(:get, "#{tps_status_url}").to_raise(Errno::ECONNREFUSED)
 
             expect { client.lrp_instances(app) }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
-            expect(stub).to have_been_requested.times(3)
+            expect(stub).to have_been_requested.times(5)
+          end
+        end
+
+        context 'when the TPS endpoint is slow' do
+          it 'retries and eventually raises InstancesUnavailable' do
+            stub = stub_request(:get, "#{tps_status_url}").to_raise(Net::ReadTimeout)
+
+            expect { client.lrp_instances(app) }.to raise_error(VCAP::Errors::InstancesUnavailable)
+            expect(stub).to have_been_requested.times(5)
           end
         end
 
@@ -92,7 +101,8 @@ module VCAP::CloudController::Diego
 
         describe 'timing out' do
           let(:http) { double(:http) }
-          let(:expected_timeout) { 10 }
+          let(:expected_read_timeout) { 30 }
+          let(:expected_open_timeout) { 15 }
 
           before do
             allow(Net::HTTP).to receive(:new).and_return(http)
@@ -103,12 +113,12 @@ module VCAP::CloudController::Diego
 
           it 'sets the read_timeout' do
             client.lrp_instances(app)
-            expect(http).to have_received(:read_timeout=).with(expected_timeout)
+            expect(http).to have_received(:read_timeout=).with(expected_read_timeout)
           end
 
           it 'sets the open_timeout' do
             client.lrp_instances(app)
-            expect(http).to have_received(:open_timeout=).with(expected_timeout)
+            expect(http).to have_received(:open_timeout=).with(expected_open_timeout)
           end
         end
       end
@@ -207,7 +217,18 @@ module VCAP::CloudController::Diego
             expect {
               client.lrp_instances_stats(app)
             }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
-            expect(stub).to have_been_requested.times(3)
+            expect(stub).to have_been_requested.times(5)
+          end
+        end
+
+        context 'when the TPS endpoint is slow' do
+          it 'retries and eventually raises InstancesUnavailable' do
+            stub = stub_request(:get, "#{tps_stats_url}").to_raise(Net::ReadTimeout)
+
+            expect {
+              client.lrp_instances_stats(app)
+            }.to raise_error(VCAP::Errors::InstancesUnavailable)
+            expect(stub).to have_been_requested.times(5)
           end
         end
 
@@ -225,7 +246,8 @@ module VCAP::CloudController::Diego
 
         describe 'timing out' do
           let(:http) { double(:http) }
-          let(:expected_timeout) { 10 }
+          let(:expected_read_timeout) { 30 }
+          let(:expected_open_timeout) { 15 }
 
           before do
             allow(Net::HTTP).to receive(:new).and_return(http)
@@ -236,12 +258,12 @@ module VCAP::CloudController::Diego
 
           it 'sets the read_timeout' do
             client.lrp_instances_stats(app)
-            expect(http).to have_received(:read_timeout=).with(expected_timeout)
+            expect(http).to have_received(:read_timeout=).with(expected_read_timeout)
           end
 
           it 'sets the open_timeout' do
             client.lrp_instances_stats(app)
-            expect(http).to have_received(:open_timeout=).with(expected_timeout)
+            expect(http).to have_received(:open_timeout=).with(expected_open_timeout)
           end
         end
       end
