@@ -321,7 +321,7 @@ module VCAP::CloudController
       end
 
       it 'checks for the proper roles' do
-        _status, _body = processes_controller.delete(process.guid, 0)
+        _status, _body = processes_controller.terminate(process.guid, 0)
 
         expect(membership).to have_received(:has_any_roles?).at_least(1).times.
             with([Membership::SPACE_DEVELOPER], space.guid)
@@ -330,7 +330,7 @@ module VCAP::CloudController
       it 'terminates the lone process' do
         expect(process.instances).to eq(1)
 
-        status, _body = processes_controller.delete(process.guid, 0)
+        status, _body = processes_controller.terminate(process.guid, 0)
         process.reload
         expect(status).to eq(204)
 
@@ -339,7 +339,7 @@ module VCAP::CloudController
 
       it 'returns a 404 if process does not exist' do
         expect {
-          processes_controller.delete('bad-guid', 0)
+          processes_controller.terminate('bad-guid', 0)
         }.to raise_error do |error|
           expect(error.name).to eq 'ResourceNotFound'
           expect(error.response_code).to eq(404)
@@ -349,7 +349,7 @@ module VCAP::CloudController
 
       it 'returns a 404 if instance index out of bounds' do
         expect {
-          processes_controller.delete(process.guid, 1)
+          processes_controller.terminate(process.guid, 1)
         }.to raise_error do |error|
           expect(error.name).to eq 'ResourceNotFound'
           expect(error.response_code).to eq(404)

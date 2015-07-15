@@ -61,11 +61,11 @@ module VCAP::CloudController
       unprocessable!(e.message)
     end
 
-    delete '/v3/processes/:guid/instances/:index', :delete
-    def delete(process_guid, process_index)
+    delete '/v3/processes/:guid/instances/:index', :terminate
+    def terminate(process_guid, process_index)
       process = App.where(guid: process_guid).eager(:space, :organization).all.first
       not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
-      unauthorized! if !can_delete?(process.space.guid)
+      unauthorized! unless can_delete?(process.space.guid)
 
       instance_not_found! unless process_index.to_i < process.instances && process_index.to_i >= 0
 
