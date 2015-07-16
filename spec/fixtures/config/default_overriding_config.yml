@@ -56,7 +56,7 @@ bulk_api:
   auth_user: bulk_user
   auth_password: bulk_password
 
-internal_service_hostname: cloud_controller_ng.service.consul
+internal_service_hostname: cloud_controller_ng.service.cf.internal
 internal_api:
   auth_user: internal_user
   auth_password: internal_password

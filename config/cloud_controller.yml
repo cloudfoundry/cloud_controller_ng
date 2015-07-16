@@ -154,9 +154,9 @@ cloud_controller_username_lookup_client_secret: 'username_lookup_secret'
 
 users_can_select_backend: true
 allow_app_ssh_access: true
-diego_nsync_url: http://nsync.service.consul:8787
-diego_stager_url: http://stager.service.consul:8888
-diego_tps_url: http://tps.service.consul:1518
+diego_nsync_url: http://nsync.service.cf.internal:8787
+diego_stager_url: http://stager.service.cf.internal:8888
+diego_tps_url: http://tps.service.cf.internal:1518
 
 renderer:
   max_results_per_page: 100

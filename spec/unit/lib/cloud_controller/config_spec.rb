@@ -169,7 +169,7 @@ module VCAP::CloudController
           end
 
           it 'preserves the internal_service_hostname value from the file' do
-            expect(config[:internal_service_hostname]).to eq('cloud_controller_ng.service.consul')
+            expect(config[:internal_service_hostname]).to eq('cloud_controller_ng.service.cf.internal')
           end
 
           context 'when the staging auth is already url encoded' do

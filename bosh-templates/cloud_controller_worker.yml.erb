@@ -2,7 +2,7 @@
 #Actually NGX host and port
 local_route: <%= spec.networks.send(properties.networks.apps).ip %>
 external_port: <%= p("cc.external_port") %>
-internal_service_hostname: cloud-controller-ng.service.consul
+internal_service_hostname: cloud-controller-ng.service.cf.internal
 
 pid_filename: /this/isnt/used/by/the/worker
 newrelic_enabled: <%= !!properties.cc.newrelic.license_key %>
@@ -237,9 +237,9 @@ uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 <% end %>
 
 users_can_select_backend: <%= p("cc.users_can_select_backend") %>
-diego_nsync_url: http://nsync.service.consul:8787
-diego_stager_url: http://stager.service.consul:8888
-diego_tps_url: http://tps.service.consul:1518
+diego_nsync_url: http://nsync.service.cf.internal:8787
+diego_stager_url: http://stager.service.cf.internal:8888
+diego_tps_url: http://tps.service.cf.internal:1518
 allow_app_ssh_access: <%= p("cc.allow_app_ssh_access") %>
 default_to_diego_backend: <%= p("cc.default_to_diego_backend") %>
 
