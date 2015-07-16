@@ -135,7 +135,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#delete' do
+    describe '#terminate' do
       let(:req_body) { '{"instances": 1, "memory_in_mb": 100, "disk_in_mb": 200}' }
       let(:app) { AppModel.make }
       let(:space) { app.space }
@@ -147,12 +147,12 @@ module VCAP::CloudController
       before do
         CloudController::DependencyLocator.instance.register(:index_stopper, index_stopper)
         allow(index_stopper).to receive(:stop_index)
-
+        allow(controller).to receive(:check_write_permissions!)
         expect(process.instances).to eq(1)
       end
 
       it 'checks for the proper roles' do
-        _status, _body = controller.delete(app.guid, process.type, 0)
+        _status, _body = controller.terminate(app.guid, process.type, 0)
 
         expect(membership).to have_received(:has_any_roles?).at_least(1).times.
             with([Membership::SPACE_DEVELOPER], space.guid)
@@ -161,16 +161,29 @@ module VCAP::CloudController
       it 'terminates the lone process' do
         expect(process.instances).to eq(1)
 
-        status, _body = controller.delete(app.guid, process.type, 0)
+        status, _body = controller.terminate(app.guid, process.type, 0)
         process.reload
         expect(status).to eq(204)
 
         expect(index_stopper).to have_received(:stop_index).with(process, 0)
       end
 
+      context 'when the user does not have write permissions' do
+        it 'raises an ApiError with a 403 code' do
+          expect(controller).to receive(:check_write_permissions!).
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+          expect {
+            controller.terminate(app.guid, process.type, 0)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+        end
+      end
+
       it 'returns a 404 if app does not exist' do
         expect {
-          controller.delete('bad-guid', process.type, 0)
+          controller.terminate('bad-guid', process.type, 0)
         }.to raise_error do |error|
           expect(error.name).to eq 'ResourceNotFound'
           expect(error.response_code).to eq(404)
@@ -180,7 +193,7 @@ module VCAP::CloudController
 
       it 'returns a 404 if process type does not exist' do
         expect {
-          controller.delete(app.guid, 'bad-type', 0)
+          controller.terminate(app.guid, 'bad-type', 0)
         }.to raise_error do |error|
           expect(error.name).to eq 'ResourceNotFound'
           expect(error.response_code).to eq(404)
@@ -190,7 +203,7 @@ module VCAP::CloudController
 
       it 'returns a 404 if instance index out of bounds' do
         expect {
-          controller.delete(app.guid, process.type, 1)
+          controller.terminate(app.guid, process.type, 1)
         }.to raise_error do |error|
           expect(error.name).to eq 'ResourceNotFound'
           expect(error.response_code).to eq(404)

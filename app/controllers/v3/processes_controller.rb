@@ -63,9 +63,11 @@ module VCAP::CloudController
 
     delete '/v3/processes/:guid/instances/:index', :terminate
     def terminate(process_guid, process_index)
+      check_write_permissions!
+
       process = App.where(guid: process_guid).eager(:space, :organization).all.first
       not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
-      unauthorized! unless can_delete?(process.space.guid)
+      unauthorized! unless can_terminate?(process.space.guid)
 
       instance_not_found! unless process_index.to_i < process.instances && process_index.to_i >= 0
 
@@ -120,7 +122,7 @@ module VCAP::CloudController
       membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 
-    def can_delete?(space_guid)
+    def can_terminate?(space_guid)
       membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 

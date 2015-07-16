@@ -304,7 +304,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#delete' do
+    describe '#terminate' do
       let(:req_body) { '{"instances": 1, "memory_in_mb": 100, "disk_in_mb": 200}' }
       let(:app) { AppModel.make }
       let(:space) { app.space }
@@ -354,6 +354,19 @@ module VCAP::CloudController
           expect(error.name).to eq 'ResourceNotFound'
           expect(error.response_code).to eq(404)
           expect(error.message).to match('Instance not found')
+        end
+      end
+
+      context 'when the user does not have write permissions' do
+        it 'raises an ApiError with a 403 code' do
+          expect(processes_controller).to receive(:check_write_permissions!).
+              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+          expect {
+            processes_controller.terminate(process.guid, 0)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
         end
       end
     end

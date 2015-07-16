@@ -161,7 +161,7 @@ resource 'Apps (Experimental)', type: :api do
 
   delete '/v3/apps/:guid/processes/:type/instances/:index' do
     body_parameter :guid, 'App guid'
-    body_parameter :type, 'The type of instance', example_values:['web','worker']
+    body_parameter :type, 'The type of instance', example_values: ['web', 'worker']
     body_parameter :index, 'The index of the instance to terminate'
 
     let(:guid) { app_model.guid }

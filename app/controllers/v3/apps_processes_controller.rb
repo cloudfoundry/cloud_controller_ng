@@ -61,14 +61,16 @@ module VCAP::CloudController
       unprocessable!(e.message)
     end
 
-    delete '/v3/apps/:guid/processes/:type/instances/:index', :delete
-    def delete(app_guid, process_type, process_index)
+    delete '/v3/apps/:guid/processes/:type/instances/:index', :terminate
+    def terminate(app_guid, process_type, process_index)
+      check_write_permissions!
+
       app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
       app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
 
       process = app.processes_dataset.where(type: process_type).first
       process_not_found! if process.nil?
-      unauthorized! if !can_delete?(app.space.guid)
+      unauthorized! if !can_terminate?(app.space.guid)
 
       instance_not_found! unless process_index.to_i < process.instances && process_index.to_i >= 0
 
@@ -106,7 +108,7 @@ module VCAP::CloudController
       membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 
-    def can_delete?(space_guid)
+    def can_terminate?(space_guid)
       membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 
