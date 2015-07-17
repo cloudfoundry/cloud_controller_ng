@@ -66,15 +66,40 @@ module VCAP::CloudController
           create_action.create(request_attrs, false)
 
           expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(
-            anything,
-            event_repository,
-            VCAP::CloudController::ServiceInstanceDashboardClient
-          )
+              anything,
+              event_repository,
+              VCAP::CloudController::ServiceInstanceDashboardClient
+            )
           expect(client_manager).to have_received(:add_client_for_instance).with(hash_including({
-            'id' => 'client-id-1',
-            'secret' => 'secret-1',
-            'redirect_uri' => 'https://dashboard.service.com'
-          }))
+                  'id' => 'client-id-1',
+                  'secret' => 'secret-1',
+                  'redirect_uri' => 'https://dashboard.service.com'
+                }))
+        end
+
+        context 'the dashboard_url is missing' do
+          let(:mock_orphan_mitigator) { double(:mock_orphan_mitigator, attempt_deprovision_instance: nil) }
+          let(:body) do
+            {
+              dashboard_client: {
+                'space_guid' => space.guid,
+                'service_plan_guid' => service_plan.guid,
+                'name' => 'my-instance'
+              }
+            }.to_json
+          end
+
+          before do
+            allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
+            allow(logger).to receive(:error)
+          end
+
+          it 'attempts synchronous orphan mitigation' do
+            expect {
+              create_action.create(request_attrs, false)
+            }.to raise_error
+            expect(mock_orphan_mitigator).to have_received(:attempt_deprovision_instance)
+          end
         end
       end
 
@@ -130,6 +155,31 @@ module VCAP::CloudController
             stub_provision(service_plan.service.service_broker, body: body)
             allow(client_manager).to receive(:add_client_for_instance)
             allow(VCAP::Services::SSO::DashboardClientManager).to receive(:new).and_return(client_manager)
+          end
+
+          context 'the dashboard_url is missing' do
+            let(:mock_orphan_mitigator) { double(:mock_orphan_mitigator, attempt_deprovision_instance: nil) }
+            let(:body) do
+              {
+                dashboard_client: {
+                  'space_guid' => space.guid,
+                  'service_plan_guid' => service_plan.guid,
+                  'name' => 'my-instance'
+                }
+              }.to_json
+            end
+
+            before do
+              allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
+              allow(logger).to receive(:error)
+            end
+
+            it 'attempts synchronous orphan mitigation' do
+              expect {
+                create_action.create(request_attrs, false)
+              }.to raise_error
+              expect(mock_orphan_mitigator).to have_received(:attempt_deprovision_instance)
+            end
           end
 
           it 'creates a new UAA dashboard client' do
