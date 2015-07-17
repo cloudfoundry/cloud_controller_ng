@@ -5,7 +5,7 @@ module VCAP::CloudController
     def upload(message, package, config)
       logger.info("uploading package bits for package #{package.guid}")
 
-      bits_upload_job = Jobs::Runtime::PackageBits.new(package.guid, message.bits_path)
+      bits_upload_job = Jobs::V3::PackageBits.new(package.guid, message.bits_path)
 
       package.db.transaction do
         package.lock!

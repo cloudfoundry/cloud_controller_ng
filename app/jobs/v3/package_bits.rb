@@ -3,7 +3,7 @@ require 'cloud_controller/dependency_locator'
 
 module VCAP::CloudController
   module Jobs
-    module Runtime
+    module V3
       class PackageBits
         def initialize(package_guid, uploaded_compressed_path)
           @package_guid = package_guid

@@ -284,7 +284,7 @@ module VCAP::CloudController
         zipname = File.join(tmpdir, 'test.zip')
         TestZip.create(zipname, 10, 1024)
         file_contents = File.read(zipname)
-        Jobs::Runtime::PackageBits.new(package.guid, zipname).perform
+        Jobs::V3::PackageBits.new(package.guid, zipname).perform
         FileUtils.rm_rf(tmpdir)
         file_contents
       end

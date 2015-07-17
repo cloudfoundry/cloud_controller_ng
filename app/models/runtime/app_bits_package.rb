@@ -53,6 +53,7 @@ class AppBitsPackage
       end
     rescue => e
       package.db.transaction do
+        package.lock!
         package.state = VCAP::CloudController::PackageModel::FAILED_STATE
         package.error = e.message
         package.save
