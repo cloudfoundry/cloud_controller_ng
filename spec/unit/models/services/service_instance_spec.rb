@@ -131,13 +131,28 @@ module VCAP::CloudController
     end
 
     describe '#update' do
+      let!(:service_instance) { ManagedServiceInstance.make }
+
       context 'updating service_plan' do
         let!(:service_plan) { ServicePlan.make }
-        let!(:service_instance) { ManagedServiceInstance.make }
 
         it 'creates an UPDATE service usage event' do
           expect {
             service_instance.set_all(service_plan: service_plan)
+            service_instance.save_changes
+          }.to change { ServiceUsageEvent.count }.by 1
+
+          event = ServiceUsageEvent.last
+          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+          expect(event).to match_service_instance(service_instance)
+        end
+      end
+
+      context 'updating the service instance name' do
+        let(:new_name) { 'some-new-name' }
+        it 'creates an UPDATE service usage event' do
+          expect {
+            service_instance.set_all(name: new_name)
             service_instance.save_changes
           }.to change { ServiceUsageEvent.count }.by 1
 

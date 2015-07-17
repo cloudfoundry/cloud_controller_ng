@@ -1159,6 +1159,17 @@ module VCAP::CloudController
             expect(service_instance.reload.last_operation.state).to eq('succeeded')
           end
 
+          it 'creates an UPDATED service usage event' do
+            expect {
+              put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
+            }.to change { ServiceUsageEvent.count }.by 1
+
+            expect(service_instance.reload.name).to eq('new-name')
+            event = ServiceUsageEvent.last
+            expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+            expect(event).to match_service_instance(service_instance)
+          end
+
           context 'when the updated service instance name is too long' do
             it 'fails and returns service instance name too long message correctly' do
               new_long_instance_name = 'a' * 51
@@ -1522,6 +1533,15 @@ module VCAP::CloudController
 
               expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
               expect(a_request(:patch, /#{service_broker_url}/)).to have_been_made.times(1)
+            end
+
+            it 'creates an UPDATED service usage event' do
+              Delayed::Job.last.invoke_job
+
+              expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
+              event = ServiceUsageEvent.last
+              expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+              expect(event).to match_service_instance(service_instance)
             end
 
             it 'creates a service audit event for updating the service instance' do
