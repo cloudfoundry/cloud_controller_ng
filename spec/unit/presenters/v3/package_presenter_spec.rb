@@ -14,7 +14,7 @@ module VCAP::CloudController
         expect(result['type']).to eq(package.type)
         expect(result['state']).to eq(package.state)
         expect(result['error']).to eq(package.error)
-        expect(result['hash']).to eq(package.package_hash)
+        expect(result['hash']).to eq({ 'type' => 'sha1', 'value' => package.package_hash })
         expect(result['url']).to eq(package.url)
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')

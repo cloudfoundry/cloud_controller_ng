@@ -24,11 +24,16 @@ module VCAP::CloudController
 
     private
 
+    DEFAULT_HASHING_ALGORITHM = 'sha1'
+
     def package_hash(package)
       {
         guid:       package.guid,
         type:       package.type,
-        hash:       package.package_hash,
+        hash: {
+          type: DEFAULT_HASHING_ALGORITHM,
+          value: package.package_hash
+        },
         url:        package.url,
         state:      package.state,
         error:      package.error,

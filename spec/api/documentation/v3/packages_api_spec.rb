@@ -65,7 +65,7 @@ resource 'Packages (Experimental)', type: :api do
             {
               'guid'       => package1.guid,
               'type'       => 'bits',
-              'hash'       => nil,
+              'hash'       => { 'type' => 'sha1', 'value' => nil },
               'url'        => nil,
               'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
               'error'      => nil,
@@ -82,7 +82,7 @@ resource 'Packages (Experimental)', type: :api do
             {
               'guid'       => package2.guid,
               'type'       => 'docker',
-              'hash'       => nil,
+              'hash'       => { 'type' => 'sha1', 'value' => nil },
               'url'        => 'http://docker-repo/my-image',
               'state'      => VCAP::CloudController::PackageModel::READY_STATE,
               'error'      => nil,
@@ -123,7 +123,7 @@ resource 'Packages (Experimental)', type: :api do
       expected_response = {
         'type'       => package_model.type,
         'guid'       => guid,
-        'hash'       => nil,
+        'hash'       => { 'type' => 'sha1', 'value' => nil },
         'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
         'url'        => nil,
         'error'      => nil,
@@ -174,7 +174,7 @@ resource 'Packages (Experimental)', type: :api do
       expected_response = {
         'guid'       => package.guid,
         'type'       => type,
-        'hash'       => nil,
+        'hash'       => { 'type' => 'sha1', 'value' => nil },
         'state'      => 'READY',
         'error'      => nil,
         'url'        => url,
@@ -256,7 +256,7 @@ resource 'Packages (Experimental)', type: :api do
       expected_response = {
         'guid'       => guid,
         'type'       => type,
-        'hash'       => nil,
+        'hash'       => { 'type' => 'sha1', 'value' => nil },
         'state'      => VCAP::CloudController::PackageModel::PENDING_STATE,
         'url'        => nil,
         'error'      => nil,
