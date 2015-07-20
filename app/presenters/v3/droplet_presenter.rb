@@ -22,14 +22,18 @@ module VCAP::CloudController
 
     private
 
+    DEFAULT_HASHING_ALGORITHM = 'sha1'
+
     def droplet_hash(droplet)
       {
         guid:                   droplet.guid,
         state:                  droplet.state,
-        hash:                   droplet.droplet_hash,
+        hash: {
+          type: DEFAULT_HASHING_ALGORITHM,
+          value: droplet.droplet_hash
+        },
         buildpack:              droplet.buildpack,
-        failure_reason:         droplet.failure_reason,
-        detected_start_command: droplet.detected_start_command,
+        error:         droplet.error,
         procfile:               droplet.procfile,
         environment_variables:  droplet.environment_variables || {},
         created_at:             droplet.created_at,

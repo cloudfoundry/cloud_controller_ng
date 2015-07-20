@@ -32,8 +32,7 @@ resource 'Droplets (Experimental)', type: :api do
         app_guid:               app_model.guid,
         package_guid:           package_model.guid,
         buildpack:              buildpack_git_url,
-        failure_reason:         'example failure reason',
-        detected_start_command: 'run -c all_the_things',
+        error:                  'example error',
         environment_variables:  { 'cloud' => 'foundry' },
       )
     end
@@ -49,9 +48,9 @@ resource 'Droplets (Experimental)', type: :api do
       expected_response = {
         'guid'                   => droplet_model.guid,
         'state'                  => droplet_model.state,
-        'hash'                   => droplet_model.droplet_hash,
+        'hash'                   => { 'type' => 'sha1', 'value' => droplet_model.droplet_hash },
         'buildpack'              => buildpack_git_url,
-        'failure_reason'         => droplet_model.failure_reason,
+        'error'                  => droplet_model.error,
         'procfile'               => droplet_model.procfile,
         'detected_start_command' => droplet_model.detected_start_command,
         'environment_variables'  => droplet_model.environment_variables,
@@ -158,10 +157,9 @@ resource 'Droplets (Experimental)', type: :api do
             {
               'guid'                   => droplet1.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGING_STATE,
-              'hash'                   => nil,
+              'hash'                   => { 'type' => 'sha1', 'value' => nil },
               'buildpack'              => buildpack.name,
-              'failure_reason'         => droplet1.failure_reason,
-              'detected_start_command' => droplet1.detected_start_command,
+              'error'                  => droplet1.error,
               'environment_variables'  => droplet1.environment_variables,
               'procfile'               => droplet1.procfile,
               'created_at'             => iso8601,
@@ -176,10 +174,9 @@ resource 'Droplets (Experimental)', type: :api do
             {
               'guid'                   => droplet2.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGED_STATE,
-              'hash'                   => 'my-hash',
+              'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
               'buildpack'              => 'https://github.com/cloudfoundry/my-buildpack.git',
-              'failure_reason'         => droplet2.failure_reason,
-              'detected_start_command' => droplet2.detected_start_command,
+              'error'                  => droplet2.error,
               'procfile'               => droplet2.procfile,
               'environment_variables'  => {},
               'created_at'             => iso8601,

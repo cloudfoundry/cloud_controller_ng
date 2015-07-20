@@ -8,11 +8,9 @@ module VCAP::CloudController
         droplet = DropletModel.make(
           state:                  DropletModel::STAGED_STATE,
           buildpack_guid:         'a-buildpack',
-          failure_reason:         'example failure reason',
-          detected_start_command: 'blast off!',
+          error:         'example error',
           procfile: 'web: npm start',
           environment_variables:  { 'elastic' => 'runtime' },
-          droplet_hash: '1234',
           created_at: Time.at(1),
           updated_at: Time.at(2),
         )
@@ -22,10 +20,9 @@ module VCAP::CloudController
 
         expect(result['guid']).to eq(droplet.guid)
         expect(result['state']).to eq(droplet.state)
-        expect(result['hash']).to eq(droplet.droplet_hash)
+        expect(result['hash']).to eq({ 'type' => 'sha1', 'value' => nil })
         expect(result['buildpack']).to eq(droplet.buildpack)
-        expect(result['failure_reason']).to eq(droplet.failure_reason)
-        expect(result['detected_start_command']).to eq(droplet.detected_start_command)
+        expect(result['error']).to eq(droplet.error)
         expect(result['procfile']).to eq(droplet.procfile)
         expect(result['environment_variables']).to eq(droplet.environment_variables)
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
@@ -46,11 +43,9 @@ module VCAP::CloudController
         droplet = DropletModel.make(
           state:                  DropletModel::STAGING_STATE,
           buildpack_guid:         'a-buildpack',
-          failure_reason:         'example failure reason',
-          detected_start_command: 'blast off!',
+          error:         'example error',
           procfile: 'web: npm start',
           environment_variables:  { 'elastic' => 'runtime' },
-          droplet_hash: '1234',
           created_at: Time.at(1),
           updated_at: Time.at(2),
         )

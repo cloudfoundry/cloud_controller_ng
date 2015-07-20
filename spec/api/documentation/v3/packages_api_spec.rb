@@ -447,10 +447,9 @@ resource 'Packages (Experimental)', type: :api do
       expected_response = {
         'guid'                   => droplet.guid,
         'state'                  => 'PENDING',
-        'hash'                   => nil,
+        'hash'                   => { 'type' => 'sha1', 'value' => nil },
         'buildpack'              => 'http://github.com/myorg/awesome-buildpack',
-        'failure_reason'         => nil,
-        'detected_start_command' => nil,
+        'error'                  => nil,
         'procfile'               => nil,
         'created_at'             => iso8601,
         'updated_at'             => nil,
