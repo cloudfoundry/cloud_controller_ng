@@ -42,6 +42,9 @@ module VCAP::CloudController
       body = ServiceBrokerPresenter.new(broker).to_json
 
       [HTTP::CREATED, headers, body]
+    rescue ServiceBrokerCreate::SpaceNotFound => e
+      logger.error("Space not found: #{params[:space_guid]}, Vcap-Request-Id: #{VCAP::Request.current_id}, Error: #{e.message}")
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
     end
 
     def update(guid)

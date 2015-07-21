@@ -38,7 +38,7 @@ resource 'Service Brokers', type: [:api, :legacy_api] do
     field :broker_url, 'The URL of the service broker.', required: true, example_values: %w(https://broker.example.com)
     field :auth_username, 'The username with which to authenticate against the service broker.', required: true, example_values: %w(admin)
     field :auth_password, 'The password with which to authenticate against the service broker.', required: true, example_values: %w(secretpassw0rd)
-    field :space_guid, 'Guid of a space in which the broker will be private', required: false
+    field :space_guid, 'Guid of a space the broker is scoped to. Space developers are able to create service brokers scoped to a space.', required: false, experimental: true
   end
 
   shared_context 'updatable_fields' do
@@ -78,7 +78,7 @@ resource 'Service Brokers', type: [:api, :legacy_api] do
         document_warning_header(response_headers)
       end
 
-      example 'Create a Private Service Broker' do
+      it 'can create a Private Service Broker' do
         client.post '/v2/service_brokers', fields_json({ space_guid: space.guid }), headers
 
         expect(status).to eq 201

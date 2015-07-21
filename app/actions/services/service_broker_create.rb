@@ -2,6 +2,8 @@ require 'actions/services/mixins/service_broker_registration_error_parser'
 
 module VCAP::CloudController
   class ServiceBrokerCreate
+    class SpaceNotFound < StandardError; end
+
     include ServiceBrokerRegistrationErrorParser
 
     def initialize(service_manager, services_event_repository, warning_observer, access_validator)
@@ -39,7 +41,9 @@ module VCAP::CloudController
     attr_reader :access_validator, :services_event_repository, :warning_observer
 
     def get_space_id_from_guid(params)
-      Space.first(guid: params[:space_guid]).id
+      space = Space.first(guid: params[:space_guid])
+      raise ServiceBrokerCreate::SpaceNotFound unless space
+      space.id
     end
   end
 end
