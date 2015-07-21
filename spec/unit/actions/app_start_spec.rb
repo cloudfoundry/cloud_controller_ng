@@ -9,8 +9,8 @@ module VCAP::CloudController
 
     describe '#start' do
       let(:environment_variables) { { 'FOO' => 'bar' } }
-      let(:process1) { AppFactory.make(state: 'STOPPED') }
-      let(:process2) { AppFactory.make(state: 'STOPPED') }
+      let!(:process1) { App.make(state: 'STOPPED', app: app_model) }
+      let!(:process2) { App.make(state: 'STOPPED', app: app_model) }
 
       let(:app_model) do
         AppModel.make({
@@ -67,31 +67,47 @@ module VCAP::CloudController
 
           it 'sets the package hash correctly on the process' do
             app_start.start(app_model)
-            app_model.processes.each do |process|
-              expect(process.package_hash).to eq(package.package_hash)
-              expect(process.package_state).to eq('STAGED')
-            end
+
+            process1.reload
+            expect(process1.package_hash).to eq(package.package_hash)
+            expect(process1.package_state).to eq('STAGED')
+
+            process2.reload
+            expect(process2.package_hash).to eq(package.package_hash)
+            expect(process2.package_state).to eq('STAGED')
           end
         end
 
         context 'and the droplet does not have a package' do
           it 'sets the package hash to unknown' do
             app_start.start(app_model)
-            app_model.processes.each do |process|
-              expect(process.package_hash).to eq('unknown')
-              expect(process.package_state).to eq('STAGED')
-            end
+
+            process1.reload
+            expect(process1.package_hash).to eq('unknown')
+            expect(process1.package_state).to eq('STAGED')
+
+            process2.reload
+            expect(process2.package_hash).to eq('unknown')
+            expect(process2.package_state).to eq('STAGED')
           end
         end
 
         it 'prepares the sub-processes of the app' do
           app_start.start(app_model)
-          app_model.processes.each do |process|
-            expect(process.needs_staging?).to eq(false)
-            expect(process.started?).to eq(true)
-            expect(process.state).to eq('STARTED')
-            expect(process.environment_json).to eq(app_model.environment_variables)
-          end
+
+          process1.reload
+          expect(process1.needs_staging?).to eq(false)
+          expect(process1.started?).to eq(true)
+          expect(process1.state).to eq('STARTED')
+          expect(process1.droplet_hash).to eq(droplet.droplet_hash)
+          expect(process1.environment_json).to eq(app_model.environment_variables)
+
+          process2.reload
+          expect(process2.needs_staging?).to eq(false)
+          expect(process2.started?).to eq(true)
+          expect(process2.state).to eq('STARTED')
+          expect(process2.droplet_hash).to eq(droplet.droplet_hash)
+          expect(process2.environment_json).to eq(app_model.environment_variables)
         end
       end
     end
