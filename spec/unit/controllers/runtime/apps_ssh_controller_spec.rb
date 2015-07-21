@@ -51,6 +51,20 @@ module VCAP::CloudController
         end
       end
 
+      context 'as a user who cannot update' do
+        let(:auditor) { User.make }
+
+        before do
+          space.organization.add_user(auditor)
+          space.add_auditor(auditor)
+        end
+
+        it 'returns a 403' do
+          get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(auditor)
+          expect(last_response.status).to eq(403)
+        end
+      end
+
       context 'when the app is not diego app' do
         let(:diego) { false }
 
