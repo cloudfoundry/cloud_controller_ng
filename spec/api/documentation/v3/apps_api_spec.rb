@@ -516,7 +516,7 @@ resource 'Apps (Experimental)', type: :api do
 
     let(:guid) { app_model.guid }
 
-    example 'getting the env of an app' do
+    example 'Get the env for an App' do
       do_request_with_error_handling
 
       expected_response = {
