@@ -19,8 +19,8 @@ resource 'Domains (deprecated)', type: [:api, :legacy_api] do
     standard_model_delete(:domain)
 
     post '/v2/domains' do
-      context 'Creating a shared domain' do
-        example 'creates a shared domain' do
+      context 'Creating a Shared Domain' do
+        example 'Create a Shared Domain' do
           client.post '/v2/domains', fields_json, headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :domain,
@@ -30,7 +30,7 @@ resource 'Domains (deprecated)', type: [:api, :legacy_api] do
       end
 
       context 'Creating a domain owned by an organization' do
-        example 'creates a domain owned by the given organization' do
+        example 'Create a Domain owned by the given Organization' do
           org_guid = VCAP::CloudController::Organization.make.guid
           payload = MultiJson.dump(
             {
