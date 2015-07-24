@@ -55,7 +55,7 @@ module VCAP::CloudController
         droplet.db.transaction do
           droplet.lock!
           droplet.state          = DropletModel::FAILED_STATE
-          droplet.failure_reason = "#{error.type}: #{error.message}"
+          droplet.error = "#{error.type}: #{error.message}"
           droplet.save
         end
       end

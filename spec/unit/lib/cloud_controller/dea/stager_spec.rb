@@ -187,12 +187,12 @@ module VCAP::CloudController
         end
 
         context 'when staging fails' do
-          let(:failure_reason) { 'a staging error message' }
-          let(:failure_type) { 'SomeType' }
+          let(:error_reason) { 'a staging error message' }
+          let(:error_type) { 'SomeType' }
 
           context 'because task.stage failed' do
             before do
-              allow(stager_task).to receive(:stage).and_raise(PackageStagerTask::FailedToStage.new(failure_type, failure_reason))
+              allow(stager_task).to receive(:stage).and_raise(PackageStagerTask::FailedToStage.new(error_type, error_reason))
             end
 
             it 'updates the droplet to a FAILED state' do
@@ -212,7 +212,7 @@ module VCAP::CloudController
               rescue
               end
 
-              expect(droplet.reload.failure_reason).to match(/#{failure_type}.*#{failure_reason}/)
+              expect(droplet.reload.error).to match(/#{error_type}.*#{error_reason}/)
             end
 
             it 'raises an ApiError' do
@@ -222,7 +222,7 @@ module VCAP::CloudController
           end
 
           context 'because there was an error passed to the callback' do
-            let(:staging_error) { PackageStagerTask::FailedToStage.new(failure_type, failure_reason) }
+            let(:staging_error) { PackageStagerTask::FailedToStage.new(error_type, error_reason) }
 
             it 'updates the droplet to a FAILED state' do
               expect(droplet.state).not_to eq(DropletModel::FAILED_STATE)
@@ -230,12 +230,13 @@ module VCAP::CloudController
               stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
 
               expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+              expect(droplet.reload.error).to eq("#{error_type}: #{error_reason}")
             end
 
             it 'stores the failure reason on the droplet' do
               stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
 
-              expect(droplet.reload.failure_reason).to match(/#{failure_type}.*#{failure_reason}/)
+              expect(droplet.reload.error).to match(/#{error_type}.*#{error_reason}/)
             end
           end
         end
