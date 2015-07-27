@@ -28,7 +28,7 @@ module VCAP::CloudController
               droplet.state                  = DropletModel::STAGED_STATE
               droplet.buildpack_guid         = buildpack.guid if buildpack
               droplet.detected_start_command = staging_result.detected_start_command
-              droplet.procfile               = YAML.dump(staging_result.procfile)
+              droplet.procfile               = YAML.dump(staging_result.procfile, line_width: -1)
               droplet.save
             end
           end

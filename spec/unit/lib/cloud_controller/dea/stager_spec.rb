@@ -46,7 +46,7 @@ module VCAP::CloudController
           'task_streaming_log_url' => nil,
           'detected_buildpack' => detected_buildpack,
           'buildpack_key' => buildpack_key,
-          'procfile' => { 'web' => 'npm start' },
+          'procfile' => { 'web' => "while true; do { echo -e 'HTTP/1.1 200 OK\\r\\n'; echo custom buildpack contents - cache not found; } | nc -l $PORT; done" },
           'detected_start_command' => detected_start_command,
           'error' => reply_json_error,
           'error_info' => reply_error_info,
@@ -160,9 +160,8 @@ module VCAP::CloudController
 
         it 'updates the droplet with the procfile' do
           stager.stage_package(droplet, stack, mem, disk, bp_guid, buildpack_git_url)
-          expect(droplet.refresh.procfile).to eq(YAML.dump({
-            'web' => 'npm start'
-          }))
+          expect(droplet.refresh.procfile).to eq(
+              "---\nweb: while true; do { echo -e 'HTTP/1.1 200 OK\\r\\n'; echo custom buildpack contents - cache not found; } | nc -l $PORT; done\n")
         end
 
         context 'when buildpack is not present' do
