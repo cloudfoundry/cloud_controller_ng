@@ -216,8 +216,9 @@ resource 'Packages (Experimental)', type: :api do
       let(:source_package_guid) { original_package.guid }
 
       example 'Copy a Package' do
+        # Using client directly instead of calling do_request to ensure parameter is displayed correctly in docs
         expect {
-          do_request
+          client.post "/v3/apps/#{guid}/packages?source_package_guid=#{source_package_guid}", {}, headers
         }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
         package = VCAP::CloudController::PackageModel.last
@@ -237,8 +238,8 @@ resource 'Packages (Experimental)', type: :api do
           }
         }
 
+        expect(status).to eq(201)
         parsed_response = MultiJson.load(response_body)
-        expect(response_status).to eq(201)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
     end
