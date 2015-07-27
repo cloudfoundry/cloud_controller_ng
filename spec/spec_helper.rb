@@ -60,6 +60,10 @@ RSpec.configure do |rspec_config|
 
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
 
+  rspec_config.before :all do
+    Delayed::Worker.plugins << DeserializationRetry
+  end
+
   rspec_config.before :each do
     Fog::Mock.reset
     Delayed::Worker.destroy_failed_jobs = false
