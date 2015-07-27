@@ -965,18 +965,6 @@ module VCAP::CloudController
         expect(response_code).to eq(200)
       end
 
-      context 'when the space memory quota is full' do
-        before do
-          org.quota_definition.memory_limit = 0
-          org.quota_definition.save
-        end
-
-        it 'should not fail' do
-          response_code, _ = apps_controller.assign_current_droplet(guid)
-          expect(response_code).to eq(200)
-        end
-      end
-
       context 'bad json' do
         let(:req_body) { '{___O___O___}' }
         it 'returns 400 for bad json' do

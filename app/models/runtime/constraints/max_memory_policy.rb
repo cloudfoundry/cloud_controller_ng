@@ -12,7 +12,6 @@ class MaxMemoryPolicy
   end
 
   def validate
-    return unless @app.is_v2?
     return unless @policy_target
     return unless @app.scaling_operation?
 
