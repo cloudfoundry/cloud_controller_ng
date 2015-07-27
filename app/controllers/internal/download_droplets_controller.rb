@@ -38,7 +38,7 @@ module VCAP::CloudController
       else
         url = nil
         if app.is_v3?
-          url = @blobstore_url_generator.v3_droplet_download_url(app)
+          url = @blobstore_url_generator.v3_droplet_download_url(app.app.droplet)
         else
           url = @blobstore_url_generator.droplet_download_url(app)
         end
