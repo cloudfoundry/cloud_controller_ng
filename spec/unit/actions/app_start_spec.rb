@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       context 'when the droplet exists' do
-        let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE) }
+        let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, droplet_hash: 'the-hash') }
         let(:droplet_guid) { droplet.guid }
 
         it 'sets the desired state on the app' do
@@ -100,6 +100,7 @@ module VCAP::CloudController
           expect(process1.started?).to eq(true)
           expect(process1.state).to eq('STARTED')
           expect(process1.droplet_hash).to eq(droplet.droplet_hash)
+          expect(process1.diego).to eq(true)
           expect(process1.environment_json).to eq(app_model.environment_variables)
 
           process2.reload
@@ -107,6 +108,7 @@ module VCAP::CloudController
           expect(process2.started?).to eq(true)
           expect(process2.state).to eq('STARTED')
           expect(process2.droplet_hash).to eq(droplet.droplet_hash)
+          expect(process2.diego).to eq(true)
           expect(process2.environment_json).to eq(app_model.environment_variables)
         end
       end

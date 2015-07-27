@@ -25,11 +25,24 @@ module VCAP::CloudController
       blob_name = 'droplet'
 
       if @blobstore.local?
-        droplet = app.current_droplet
-        @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet && droplet.blob
-        @blob_sender.send_blob(app.guid, blob_name, droplet.blob, self)
+        if app.is_v3?
+          droplet = app.app.droplet
+          blob = @blobstore.blob(droplet.blobstore_key)
+        else
+          droplet = app.current_droplet
+          blob = droplet.blob
+        end
+
+        @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet && blob
+        @blob_sender.send_blob(app.guid, blob_name, blob, self)
       else
-        url = @blobstore_url_generator.droplet_download_url(app)
+        url = nil
+        if app.is_v3?
+          url = @blobstore_url_generator.v3_droplet_download_url(app)
+        else
+          url = @blobstore_url_generator.droplet_download_url(app)
+        end
+
         @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless url
         redirect url
       end

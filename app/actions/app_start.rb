@@ -29,12 +29,14 @@ module VCAP::CloudController
 
         app.processes.each do |process|
           process.update({
-            state: 'STARTED',
-            package_hash: package_hash,
-            package_state: 'STAGED',
-            package_pending_since: nil,
-            environment_json: app.environment_variables
-          })
+              state:                 'STARTED',
+              diego:                 true,
+              droplet_hash:          app.droplet.droplet_hash,
+              package_hash:          package_hash,
+              package_state:         'STAGED',
+              package_pending_since: nil,
+              environment_json:      app.environment_variables
+            })
         end
       end
     rescue Sequel::ValidationFailed => e

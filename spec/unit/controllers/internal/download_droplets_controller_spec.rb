@@ -140,6 +140,46 @@ module VCAP::CloudController
           expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
         end
       end
+
+      context 'when the app is a v3 app' do
+        let(:v3_app) { AppModel.make(droplet: droplet) }
+        let(:process) { App.make(app: v3_app) }
+        let(:droplet) { DropletModel.make(state: 'STAGED') }
+
+        def upload_v3_droplet
+          droplet_file = Tempfile.new(v3_app.guid)
+          droplet_file.write('droplet contents')
+          droplet_file.close
+
+          VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, droplet.guid).perform
+          process.droplet_hash = droplet.reload.droplet_hash
+          process.save
+        end
+
+        it 'succeeds for valid droplets' do
+          upload_v3_droplet
+
+          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_hash}/download"
+          expect(last_response.status).to eq(200)
+          expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{process.droplet_hash}")
+        end
+
+        context 'when the blobstore is not local' do
+          before do
+            allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+          end
+
+          it 'should redirect to the url provided by the blobstore_url_generator' do
+            upload_v3_droplet
+            allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_droplet_download_url).and_return('http://example.com/somewhere/else')
+
+            get "/internal/v2/droplets/#{process.guid}/#{process.droplet_hash}/download"
+
+            expect(last_response).to be_redirect
+            expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
+          end
+        end
+      end
     end
   end
 end
