@@ -365,11 +365,24 @@ module VCAP::CloudController
             }
           end
 
-          it 'leaves the metadata field empty' do
+          it 'does not include client information in metadata field' do
             repository.record_service_dashboard_client_event(:create, client_attrs, broker)
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_attrs['id'])
             expect(event.metadata).to be_empty
+          end
+        end
+
+        context 'when the event is for a service instance client' do
+          let(:service_instance) { ManagedServiceInstance.make }
+
+          it 'includes the service instance guid in the metadata' do
+            repository.record_service_dashboard_client_event(:create, client_attrs, service_instance, is_instance: true)
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_attrs['id'])
+            expect(event.metadata).to include({
+              'service_instance_guid' => service_instance.guid
+            })
           end
         end
       end

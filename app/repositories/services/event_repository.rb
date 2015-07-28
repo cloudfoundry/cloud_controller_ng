@@ -59,21 +59,22 @@ module VCAP::CloudController
           create_event("audit.service_plan.#{type}", broker_actor(broker), actee, {})
         end
 
-        def record_service_dashboard_client_event(type, client_attrs, broker)
+        def record_service_dashboard_client_event(type, client_attrs, broker_or_instance, is_instance: false)
           metadata = {}
           if client_attrs.key?('redirect_uri')
             metadata = {
               secret: '[REDACTED]',
-              redirect_uri: client_attrs['redirect_uri']
+              redirect_uri: client_attrs['redirect_uri'],
             }
           end
+          metadata[:service_instance_guid] = broker_or_instance.guid if is_instance
 
           actee = {
             actee: client_attrs['id'],
             actee_type: 'service_dashboard_client',
             actee_name: client_attrs['id']
           }
-          create_event("audit.service_dashboard_client.#{type}", broker_actor(broker), actee, metadata)
+          create_event("audit.service_dashboard_client.#{type}", broker_actor(broker_or_instance), actee, metadata)
         end
 
         def record_service_instance_event(type, service_instance, params)

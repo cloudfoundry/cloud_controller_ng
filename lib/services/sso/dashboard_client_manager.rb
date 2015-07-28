@@ -1,6 +1,6 @@
 module VCAP::Services::SSO
   class DashboardClientManager
-    attr_reader :errors, :warnings
+    attr_reader :errors, :warnings, :broker_or_instance
 
     REQUESTED_FEATURE_DISABLED_WARNING = [
       'Warning: This broker includes configuration for a dashboard client.',
@@ -20,10 +20,6 @@ module VCAP::Services::SSO
       @services_event_repository = services_event_repository
     end
 
-    def broker_or_instance
-      @broker_or_instance # TODO: Don't name it this if you can help it
-    end
-
     def add_client_for_instance(client_info)
       requested_client_id = client_info['id']
 
@@ -33,7 +29,7 @@ module VCAP::Services::SSO
       existing_clients = fetch_clients_from_uaa([requested_client_id] | existing_ccdb_client_ids)
       existing_uaa_client_ids  = existing_clients.map { |c| c['client_id'] }
 
-      claim_clients_and_update_uaa [client_info], existing_ccdb_clients, existing_uaa_client_ids
+      claim_clients_and_update_uaa [client_info], existing_ccdb_clients, existing_uaa_client_ids, is_instance: true
     end
 
     def synchronize_clients_with_catalog(catalog)
@@ -69,7 +65,7 @@ module VCAP::Services::SSO
     end
 
     def has_warnings?
-      warnings.empty? == false
+      !warnings.empty?
     end
 
     private
@@ -118,7 +114,7 @@ module VCAP::Services::SSO
         existing_client_in_ccdb.service_broker.id == broker_or_instance.id
     end
 
-    def claim_clients_and_update_uaa(requested_clients, existing_db_clients, existing_uaa_clients)
+    def claim_clients_and_update_uaa(requested_clients, existing_db_clients, existing_uaa_clients, is_instance: false)
       db_changeset  = differ.create_db_changeset(requested_clients, existing_db_clients)
       uaa_changeset = differ.create_uaa_changeset(requested_clients, existing_uaa_clients)
 
@@ -134,9 +130,11 @@ module VCAP::Services::SSO
       uaa_changeset.each do |uaa_cmd|
         case uaa_cmd.uaa_command[:action]
         when 'add'
-          @services_event_repository.record_service_dashboard_client_event(:create, uaa_cmd.client_attrs, broker_or_instance)
+          @services_event_repository.record_service_dashboard_client_event(
+            :create, uaa_cmd.client_attrs, broker_or_instance, is_instance: is_instance)
         when 'delete'
-          @services_event_repository.record_service_dashboard_client_event(:delete, uaa_cmd.client_attrs, broker_or_instance)
+          @services_event_repository.record_service_dashboard_client_event(
+            :delete, uaa_cmd.client_attrs, broker_or_instance, is_instance: is_instance)
         end
       end
     end

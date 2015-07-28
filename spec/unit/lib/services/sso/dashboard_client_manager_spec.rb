@@ -119,6 +119,14 @@ module VCAP::Services::SSO
                 'redirect_uri' => dashboard_client_attrs_1['redirect_uri']
               })
             end
+
+            it 'does not include the metadata.service_instance_guid field' do
+              client_id = dashboard_client_attrs_1['id']
+              manager.synchronize_clients_with_catalog(catalog)
+              event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_id)
+
+              expect(event.metadata['service_instance_guid']).to be_nil
+            end
           end
 
           context 'when some, but not all dashboard sso clients exist in UAA' do
@@ -578,9 +586,10 @@ module VCAP::Services::SSO
       let(:service_instance) {  VCAP::CloudController::ManagedServiceInstance.make }
       let(:dashboard_client) {  VCAP::CloudController::ServiceInstanceDashboardClient }
       let(:manager) { DashboardClientManager.new(service_instance, services_event_repository, dashboard_client) }
+      let(:client_id) { 'client-id-1' }
       let(:client_info) do
         {
-          'id' => 'client-id-1',
+          'id' => client_id,
           'secret' => 'secret-1',
           'redirect_uri' => 'https://dashboard.service.com'
         }
@@ -621,6 +630,15 @@ module VCAP::Services::SSO
             }.to change { VCAP::CloudController::ServiceInstanceDashboardClient.count }.by 1
 
             expect(VCAP::CloudController::ServiceInstanceDashboardClient.find(uaa_id: client_info['id'])).to_not be_nil
+          end
+
+          it 'creates a service_dashboard_client.create event including the instance guid' do
+            manager.add_client_for_instance client_info
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_id)
+            expect(event.metadata).to include({
+              'service_instance_guid' => service_instance.guid
+            })
           end
         end
       end
