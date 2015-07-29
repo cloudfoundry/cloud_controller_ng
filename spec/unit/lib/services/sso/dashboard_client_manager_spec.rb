@@ -13,17 +13,6 @@ module VCAP::Services::SSO
       let(:dashboard_client) {  VCAP::CloudController::ServiceDashboardClient }
       let(:manager) { DashboardClientManager.new(service_broker, services_event_repository, dashboard_client) }
 
-      describe '#initialize' do
-        subject { manager }
-
-        it 'sets the service_broker' do
-          expect(manager.broker_or_instance).to eql(service_broker)
-        end
-
-        its(:warnings) { should == [] }
-        its(:has_warnings?) { should == false }
-      end
-
       describe '#synchronize_clients_with_catalog' do
         let(:dashboard_client_attrs_1) do
           {
@@ -584,6 +573,7 @@ module VCAP::Services::SSO
 
     context 'for service instances' do
       let(:service_instance) {  VCAP::CloudController::ManagedServiceInstance.make }
+      let(:service_broker) {  service_instance.service_plan.service.service_broker }
       let(:dashboard_client) {  VCAP::CloudController::ServiceInstanceDashboardClient }
       let(:manager) { DashboardClientManager.new(service_instance, services_event_repository, dashboard_client) }
       let(:client_id) { 'client-id-1' }
@@ -593,17 +583,6 @@ module VCAP::Services::SSO
           'secret' => 'secret-1',
           'redirect_uri' => 'https://dashboard.service.com'
         }
-      end
-
-      describe '#initialize' do
-        subject { manager }
-
-        it 'sets the service_broker' do
-          expect(manager.broker_or_instance).to eql(service_instance)
-        end
-
-        its(:warnings) { should == [] }
-        its(:has_warnings?) { should == false }
       end
 
       describe '#add_client_for_instance' do
@@ -636,6 +615,15 @@ module VCAP::Services::SSO
             manager.add_client_for_instance client_info
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_id)
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(service_broker.guid)
+            expect(event.actor_name).to eq(service_broker.name)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(client_id)
+            expect(event.actee_type).to eq('service_dashboard_client')
+            expect(event.actee_name).to eq(client_id)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
             expect(event.metadata).to include({
               'service_instance_guid' => service_instance.guid
             })
