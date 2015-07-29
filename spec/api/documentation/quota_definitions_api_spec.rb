@@ -40,10 +40,10 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
   post '/v2/quota_definitions' do
     include_context 'updatable_fields', required: true
     example 'Creating a Organization Quota Definition' do
-      client.post '/v2/quota_definitions', fields_json(instance_memory_limit: 10_240), headers
+      client.post '/v2/quota_definitions', fields_json(instance_memory_limit: 10_240, app_instance_limit: 10), headers
       expect(status).to eq(201)
 
-      standard_entity_response parsed_response, :quota_definition, instance_memory_limit: 10_240
+      standard_entity_response parsed_response, :quota_definition, instance_memory_limit: 10_240, app_instance_limit: 10
     end
   end
 
