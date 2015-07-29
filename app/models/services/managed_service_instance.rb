@@ -152,6 +152,10 @@ module VCAP::CloudController
       service_plan.service
     end
 
+    def service_broker
+      service_plan.service_broker
+    end
+
     def create_snapshot(name)
       NGServiceGatewayClient.new(service, gateway_name).create_snapshot(name)
     end
