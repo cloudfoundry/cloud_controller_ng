@@ -88,8 +88,8 @@ module VCAP::CloudController
 
       it_behaves_like :read_only_access
 
-      it 'allows the user to read the permissions of the service instance' do
-        expect(subject).to allow_op_on_object(:read_permissions, object)
+      it 'does not allow the user to read the permissions of the service instance' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
       end
     end
 
@@ -127,6 +127,10 @@ module VCAP::CloudController
       end
 
       it_behaves_like :read_only_access
+
+      it 'does not allow the user to read the permissions of the service instance' do
+        expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
     end
 
     context 'organization user (defensive)' do
