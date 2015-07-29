@@ -166,10 +166,13 @@ module LegacyApiDsl
       end
     end
 
-    def standard_model_delete(model, options={})
+    def standard_model_delete(model, options={}, &block)
       title = options[:title] || model.to_s.titleize
       delete "#{root(model)}/:guid" do
         parameter :guid, "The guid of the #{title}"
+
+        instance_eval(&block) if block_given?
+
         request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'." unless options[:async] == false
 
         example_request "Delete a Particular #{title}" do

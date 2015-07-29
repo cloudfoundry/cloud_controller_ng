@@ -38,7 +38,9 @@ resource 'Spaces', type: [:api, :legacy_api] do
 
     standard_model_list :space, VCAP::CloudController::SpacesController
     standard_model_get :space, nested_associations: [:organization]
-    standard_model_delete :space
+    standard_model_delete :space do
+      parameter :recursive, 'Will delete all apps associated with the space'
+    end
 
     def after_standard_model_delete(guid)
       event = VCAP::CloudController::Event.find(type: 'audit.space.delete-request', actee: guid)
