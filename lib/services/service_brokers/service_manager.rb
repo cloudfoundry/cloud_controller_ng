@@ -140,7 +140,7 @@ module VCAP::Services::ServiceBrokers
 
       def add(plan)
         @nested_warnings[plan.service.label] ||= []
-        @broker_url                          ||= plan.service.service_broker.broker_url
+        @broker_url                          ||= plan.service_broker.broker_url
         @nested_warnings[plan.service.label] << plan.name
       end
 

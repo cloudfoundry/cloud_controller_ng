@@ -49,7 +49,7 @@ module VCAP::CloudController
         end
 
         def record_service_plan_event(type, plan)
-          broker = plan.service.service_broker
+          broker = plan.service_broker
 
           actee = {
             actee: plan.guid,
@@ -158,7 +158,7 @@ module VCAP::CloudController
             actee_type: 'service_plan',
             actee_name: plan.name,
           }
-          actor = broker_actor(plan.service.service_broker)
+          actor = broker_actor(plan.service_broker)
           with_audit_event(plan, actor, actee, &saveBlock)
         end
 
