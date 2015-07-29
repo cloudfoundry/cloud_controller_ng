@@ -17,8 +17,8 @@ module VCAP::CloudController
       end
 
       def number_of_starting_and_running_instances_for_apps(apps)
-        stopped_apps = apps.select { |app| !app.started? }
-        stopped_apps.inject(healthy_instances_bulk(apps - stopped_apps)) do |result, app|
+        not_started_apps = apps.select { |app| !app.started? || app.staging_failed? || app.pending? }
+        not_started_apps.inject(healthy_instances_bulk(apps - not_started_apps)) do |result, app|
           result.update(app.guid => 0)
         end
       end
