@@ -103,8 +103,13 @@ resource 'Droplets (Experimental)', type: :api do
   end
 
   get '/v3/droplets' do
+    parameter :app_guids, 'Apps to filter by', valid_values: 'array of strings', example_values: 'app_guids[]=app_guid1&app_guids[]=app_guid2'
+    parameter :state, 'Droplet state to filter by', valid_values: 'array of strings', example_values: 'states[]=pending&states[]=staging'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
+    parameter :order_by, 'Value to sort by', valid_values: 'created_at, updated_at'
+    parameter :order_direction, 'Direction to sort by', valid_values: 'asc, desc'
+
     let(:space) { VCAP::CloudController::Space.make }
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
@@ -118,6 +123,7 @@ resource 'Droplets (Experimental)', type: :api do
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
         app_guid:              app_model.guid,
+        created_at: Time.at(1),
         package_guid:          package.guid,
         buildpack:             buildpack.name,
         buildpack_guid:        buildpack.guid,
@@ -127,6 +133,7 @@ resource 'Droplets (Experimental)', type: :api do
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
         app_guid:     app_model.guid,
+        created_at: Time.at(2),
         package_guid: package.guid,
         droplet_hash: 'my-hash',
         buildpack:    'https://github.com/cloudfoundry/my-buildpack.git',
@@ -137,6 +144,8 @@ resource 'Droplets (Experimental)', type: :api do
 
     let(:page) { 1 }
     let(:per_page) { 2 }
+    let(:order_by) { 'created_at' }
+    let(:order_direction) { 'asc' }
 
     before do
       space.organization.add_user user
@@ -148,8 +157,8 @@ resource 'Droplets (Experimental)', type: :api do
         {
           'pagination' => {
             'total_results' => 2,
-            'first'         => { 'href' => '/v3/droplets?page=1&per_page=2' },
-            'last'          => { 'href' => '/v3/droplets?page=1&per_page=2' },
+            'first'         => { 'href' => "/v3/droplets?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
+            'last'          => { 'href' => "/v3/droplets?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
             'next'          => nil,
             'previous'      => nil,
           },

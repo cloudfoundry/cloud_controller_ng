@@ -199,6 +199,38 @@ module VCAP::CloudController
         allow(droplets_controller).to receive(:check_read_permissions!)
       end
 
+      context 'query params' do
+        context 'invalid param format' do
+          let(:app_guids) { 'foo' }
+          let(:params) { { 'app_guids' => app_guids } }
+
+          it 'returns 400' do
+            expect {
+              droplets_controller.list
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to match('Invalid type')
+            end
+          end
+        end
+
+        context 'unknown query param' do
+          let(:bad_param) { 'foo' }
+          let(:params) { { 'bad_param' => bad_param } }
+
+          it 'returns 400' do
+            expect {
+              droplets_controller.list
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to match('Unknown query param')
+            end
+          end
+        end
+      end
+
       context 'when the user is an admin' do
         before do
           allow(membership).to receive(:admin?).and_return(true)
@@ -264,36 +296,6 @@ module VCAP::CloudController
           end
 
           expect(droplets_controller).to have_received(:check_read_permissions!)
-        end
-      end
-
-      context 'when parameters are invalid' do
-        context 'because there are unknown parameters' do
-          let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
-
-          it 'returns an 400 Bad Request' do
-            expect {
-              droplets_controller.list
-            }.to raise_error do |error|
-              expect(error.name).to eq 'BadQueryParameter'
-              expect(error.response_code).to eq 400
-              expect(error.message).to include("Unknown query param(s) 'invalid', 'bad'")
-            end
-          end
-        end
-
-        context 'because there are invalid values in parameters' do
-          let(:params) { { 'per_page' => 'foo' } }
-
-          it 'returns an 400 Bad Request' do
-            expect {
-              droplets_controller.list
-            }.to raise_error do |error|
-              expect(error.name).to eq 'BadQueryParameter'
-              expect(error.response_code).to eq 400
-              expect(error.message).to include('Per page must be between 1 and 5000')
-            end
-          end
         end
       end
     end
