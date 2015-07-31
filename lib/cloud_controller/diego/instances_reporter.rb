@@ -44,10 +44,13 @@ module VCAP::CloudController
         end
 
         result
-      rescue Errors::InstancesUnavailable => e
-        raise e
+      rescue Errors::InstancesUnavailable
+        apps.each { |application| result[application.guid] = -1 }
+        result
       rescue => e
-        raise Errors::InstancesUnavailable.new(e)
+        logger.error('tps.error', error: e.to_s)
+        apps.each { |application| result[application.guid] = -1 }
+        result
       end
 
       def number_of_starting_and_running_instances_for_app(app)
