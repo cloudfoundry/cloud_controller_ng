@@ -3,8 +3,9 @@ module VCAP::CloudController
     class Environment
       EXCLUDE = [:application_uris, :uris, :users]
 
-      def initialize(app)
+      def initialize(app, initial_env={})
         @app = app
+        @initial_env = initial_env || {}
       end
 
       def as_json(_={})
@@ -18,16 +19,8 @@ module VCAP::CloudController
         env << { 'name' => 'DATABASE_URL', 'value' => db_uri } if db_uri
 
         app_env_json = app.environment_json || {}
-        app_env_json.each do |k, v|
-          case v
-          when Array, Hash
-            v = MultiJson.dump(v)
-          else
-            v = v.to_s
-          end
-
-          env << { 'name' => k, 'value' => v }
-        end
+        add_hash_to_env(app_env_json, env)
+        add_hash_to_env(@initial_env, env)
 
         env
       end
@@ -40,6 +33,19 @@ module VCAP::CloudController
         env = app.vcap_application
         EXCLUDE.each { |k| env.delete(k) }
         env
+      end
+
+      def add_hash_to_env(hash, env)
+        hash.each do |k, v|
+          case v
+          when Array, Hash
+            v = MultiJson.dump(v)
+          else
+            v = v.to_s
+          end
+
+          env << { 'name' => k, 'value' => v }
+        end
       end
     end
   end
