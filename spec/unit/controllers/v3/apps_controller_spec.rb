@@ -1048,7 +1048,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'and the droplet is not associated to the application' do
+        context 'and the droplet is not associated with the application' do
           let(:req_body) { JSON.dump({ droplet_guid: 'bogus' }) }
 
           it 'returns a 404 ResourceNotFound' do
