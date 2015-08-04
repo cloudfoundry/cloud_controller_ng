@@ -44,10 +44,10 @@ module VCAP::CloudController
     end
 
     def setup_dashboard(broker_response, dashboard_client_info, service_instance)
-      if !broker_response[:instance].key?(:dashboard_url) ||
-        broker_response[:instance][:dashboard_url].nil?
-        e = InvalidDashboardInfo.new('Missing dashboard_url from broker while creating service instance')
-        mitigate_orphan(e, service_instance)
+      if !broker_response[:instance].key?(:dashboard_url) || broker_response[:instance][:dashboard_url].nil?
+        error_message = 'Missing dashboard_url from broker response while creating a service instance with dashboard_client'
+        e = VCAP::Errors::ApiError.new_from_details('ServiceDashboardClientMissingUrl', error_message)
+        mitigate_orphan(e, service_instance, message: error_message)
       end
       client_manager = VCAP::Services::SSO::DashboardClientManager.new(
         service_instance,
