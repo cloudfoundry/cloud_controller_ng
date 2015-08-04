@@ -17,6 +17,7 @@ describe DeserializationRetry do
       expect(job.locked_at).to be_nil
 
       expect(job.run_at).to be_within(1.second).of Delayed::Job.db_time_now + 5.minutes
+      expect(job.attempts).to eq(1)
     end
 
     context 'and we have been retrying for more than 24 hours' do
@@ -55,6 +56,28 @@ describe DeserializationRetry do
 
       successes, failures = Delayed::Worker.new.work_off
       expect([successes, failures]).to eq [1, 0]
+    end
+
+    context 'and the job blows up during execution' do
+      class BoomJob < VCAP::CloudController::Jobs::CCJob
+        def perform
+          raise 'BOOOM!'
+        end
+      end
+
+      it 'does not retry' do
+        handler = BoomJob.new
+        VCAP::CloudController::Jobs::Enqueuer.new(handler).enqueue
+
+        job = Delayed::Job.last
+        old_run_at = job.run_at
+
+        successes, failures = Delayed::Worker.new.work_off
+        expect([successes, failures]).to eq [0, 1]
+
+        expect(job.reload.run_at).to eq old_run_at
+        expect(job.reload.failed_at).not_to be_nil
+      end
     end
   end
 end
