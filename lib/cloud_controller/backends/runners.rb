@@ -87,6 +87,8 @@ module VCAP::CloudController
         where('deleted_at IS NULL').
         order(:id).
         where(diego: false).
+        where(state: 'STARTED').
+        exclude(package_state: 'FAILED').
         limit(batch_size).
         select_map([:id, :guid, :instances, :state, :memory, :package_state, :version, :created_at, :updated_at])
 
