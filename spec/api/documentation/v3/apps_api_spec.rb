@@ -577,7 +577,7 @@ resource 'Apps (Experimental)', type: :api do
 
     let(:raw_post) { body_parameters }
 
-    example 'Assigning a droplet as a an Apps current droplet' do
+    example 'Assigning a droplet as an App\'s current droplet' do
       do_request_with_error_handling
 
       expected_response = {

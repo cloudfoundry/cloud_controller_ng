@@ -23,7 +23,9 @@ resource 'Organizations', type: [:api, :legacy_api] do
 
     standard_model_list :organization, VCAP::CloudController::OrganizationsController
     standard_model_get :organization, nested_associations: [:quota_definition]
-    standard_model_delete :organization
+    standard_model_delete :organization do
+      parameter :recursive, 'Will delete all spaces and apps associated with the organization'
+    end
 
     post '/v2/organizations/' do
       include_context 'updatable_fields', required: true

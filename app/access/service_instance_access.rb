@@ -24,7 +24,8 @@ module VCAP::CloudController
     end
 
     def read_permissions?(service_instance)
-      read?(service_instance)
+      return true if admin_user?
+      service_instance.space.has_developer?(context.user)
     end
 
     def read_permissions_with_token?(service_instance)

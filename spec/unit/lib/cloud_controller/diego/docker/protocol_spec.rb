@@ -41,6 +41,8 @@ module VCAP::CloudController
         end
 
         describe '#stage_app_message' do
+          let(:staging_env) { { 'KEY' => 'staging_value' } }
+
           before do
             staging_override = {
               minimum_staging_memory_mb: 128,
@@ -50,6 +52,10 @@ module VCAP::CloudController
               auth: { user: 'user', password: 'password' },
             }
             TestConfig.override(staging: staging_override)
+
+            group = EnvironmentVariableGroup.staging
+            group.environment_json = staging_env
+            group.save
           end
 
           let(:message) { protocol.stage_app_message(app, staging_config) }
@@ -58,7 +64,7 @@ module VCAP::CloudController
             expect(message).to eq({
               app_id: app.guid,
               log_guid: app.guid,
-              environment: Environment.new(app).as_json,
+              environment: Environment.new(app, staging_env).as_json,
               memory_mb: app.memory,
               disk_mb: app.disk_quota,
               file_descriptors: app.file_descriptors,
@@ -142,6 +148,14 @@ module VCAP::CloudController
         end
 
         describe '#desire_app_message' do
+          let(:running_env) { { 'KEY' => 'running_value' } }
+
+          before do
+            group = EnvironmentVariableGroup.running
+            group.environment_json = running_env
+            group.save
+          end
+
           subject(:message) do
             protocol.desire_app_message(app, default_health_check_timeout)
           end
@@ -155,7 +169,7 @@ module VCAP::CloudController
               'stack' => app.stack.name,
               'start_command' => app.command,
               'execution_metadata' => app.execution_metadata,
-              'environment' => Environment.new(app).as_json,
+              'environment' => Environment.new(app, running_env).as_json,
               'num_instances' => app.desired_instances,
               'routes' => app.uris,
               'log_guid' => app.guid,

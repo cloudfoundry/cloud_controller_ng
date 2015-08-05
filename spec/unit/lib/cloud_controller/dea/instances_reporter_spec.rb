@@ -53,6 +53,18 @@ module VCAP::CloudController
           expect(health_manager_client).to have_received(:healthy_instances).with(app)
           expect(result).to eq(5)
         end
+
+        context 'and the app failed to stage' do
+          before do
+            app.package_state = 'FAILED'
+          end
+
+          it 'returns 0' do
+            result = subject.number_of_starting_and_running_instances_for_app(app)
+
+            expect(result).to eq(0)
+          end
+        end
       end
     end
 
@@ -155,6 +167,24 @@ module VCAP::CloudController
           result = subject.number_of_starting_and_running_instances_for_apps(running_apps)
           expect(result.length).to be(3)
           running_apps.each { |app| expect(result[app.guid]).to eq(3) }
+        end
+      end
+
+      describe 'started apps that failed to stage' do
+        let(:staging_failed_apps) do
+          3.times.map do
+            AppFactory.make(state: 'STARTED', package_state: 'FAILED', package_hash: 'abc')
+          end
+        end
+        before do
+        end
+
+        it 'should return 0 instances for apps that failed to stage' do
+          expect(health_manager_client).not_to receive(:healthy_instances_bulk)
+
+          result = subject.number_of_starting_and_running_instances_for_apps(staging_failed_apps)
+          expect(result.length).to be(3)
+          staging_failed_apps.each { |app| expect(result[app.guid]).to eq(0) }
         end
       end
     end

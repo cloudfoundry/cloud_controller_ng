@@ -46,7 +46,8 @@ module VCAP::CloudController
     end
 
     describe 'logging' do
-      let(:user) { User.make }
+      let(:app) { described_class.new({ https_required: true }, token_decoder, request_metrics) }
+      let(:token_decoder) { double(:token_decoder, decode_token: { 'user_id' => 'fake-user-id' }) }
 
       context 'get request' do
         before do
@@ -61,9 +62,9 @@ module VCAP::CloudController
         end
 
         it 'logs request id and user guid for all requests' do
-          get '/test_front_endpoint', '', headers_for(user)
+          get '/test_front_endpoint', '', {}
           request_id = last_response.headers['X-Vcap-Request-Id']
-          expect(fake_logger).to have_received(:info).with("Started request, Vcap-Request-Id: #{request_id}, User: #{user.guid}")
+          expect(fake_logger).to have_received(:info).with("Started request, Vcap-Request-Id: #{request_id}, User: fake-user-id")
         end
       end
     end

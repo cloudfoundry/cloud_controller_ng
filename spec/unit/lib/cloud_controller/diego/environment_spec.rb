@@ -34,6 +34,16 @@ module VCAP::CloudController::Diego
       ])
     end
 
+    context 'when an initial environment is provided' do
+      it 'appends them' do
+        initial_env = { 'a' => 'b', 'last' => 'one' }
+        expect(Environment.new(app, initial_env).as_json.slice(-2..-1)).to eq([
+          { 'name' => 'a', 'value' => 'b' },
+          { 'name' => 'last', 'value' => 'one' },
+        ])
+      end
+    end
+
     context 'when the app has a database_uri' do
       before do
         allow(app).to receive(:database_uri).and_return('fake-database-uri')

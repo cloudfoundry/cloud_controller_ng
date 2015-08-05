@@ -551,6 +551,33 @@ module VCAP::CloudController
 
         expect(batch).not_to include(deleted_app)
       end
+
+      it 'does not return stopped apps' do
+        stopped_app = make_dea_app(id: 6, state: 'STOPPED')
+
+        batch, _ = runners.dea_apps_hm9k(100, 0)
+
+        guids = batch.map { |entry| entry['id'] }
+        expect(guids).not_to include(stopped_app.guid)
+      end
+
+      it 'does not return apps that failed to stage' do
+        staging_failed_app = AppFactory.make(id: 6, state: 'STARTED', package_state: 'FAILED')
+
+        batch, _ = runners.dea_apps_hm9k(100, 0)
+
+        guids = batch.map { |entry| entry['id'] }
+        expect(guids).not_to include(staging_failed_app.guid)
+      end
+
+      it 'returns apps that have not yet been staged' do
+        staging_pending_app = AppFactory.make(id: 6, state: 'STARTED', package_state: 'PENDING')
+
+        batch, _ = runners.dea_apps_hm9k(100, 0)
+
+        guids = batch.map { |entry| entry['id'] }
+        expect(guids).to include(staging_pending_app.guid)
+      end
     end
   end
 end

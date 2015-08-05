@@ -108,6 +108,8 @@ resource 'Apps', type: [:api, :legacy_api] do
     example 'Downloads the bits for an App' do
       explanation <<-eos
         When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits.
+        If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be replayed on the new redirect request.
+        Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
       eos
 
       no_doc { client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers }
@@ -137,7 +139,9 @@ resource 'Apps', type: [:api, :legacy_api] do
 
     example 'Downloads the staged droplet for an App' do
       explanation <<-eos
-        When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the droplet.
+        When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits.
+        If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be replayed on the new redirect request.
+        Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
       eos
 
       client.get "/v2/apps/#{app_obj.guid}/droplet/download", {}, headers

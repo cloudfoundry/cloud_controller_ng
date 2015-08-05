@@ -34,7 +34,7 @@ module VCAP::CloudController
           staging_request = StagingRequest.new
           staging_request.app_id = app.guid
           staging_request.log_guid = app.guid
-          staging_request.environment = Environment.new(app).as_json
+          staging_request.environment = Environment.new(app, EnvironmentVariableGroup.staging.environment_json).as_json
           staging_request.memory_mb = [app.memory, staging_config[:minimum_staging_memory_mb]].max
           staging_request.disk_mb = [app.disk_quota, staging_config[:minimum_staging_disk_mb]].max
           staging_request.file_descriptors = [app.file_descriptors, staging_config[:minimum_staging_file_descriptor_limit]].max
@@ -56,7 +56,7 @@ module VCAP::CloudController
             'stack' => app.stack.name,
             'start_command' => app.command,
             'execution_metadata' => app.execution_metadata,
-            'environment' => Environment.new(app).as_json,
+            'environment' => Environment.new(app, EnvironmentVariableGroup.running.environment_json).as_json,
             'num_instances' => app.desired_instances,
             'routes' => app.uris,
             'log_guid' => app.guid,

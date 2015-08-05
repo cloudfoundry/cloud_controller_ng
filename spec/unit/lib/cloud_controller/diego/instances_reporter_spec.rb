@@ -256,27 +256,24 @@ module VCAP::CloudController
           expect(result).to eq({ app1.guid => 2, app2.guid => 3 })
         end
 
-        context 'when the tps client raises an instances unavailable error' do
+        context 'when diego is unavailable' do
           before do
-            allow(tps_client).to receive(:bulk_lrp_instances).and_raise(Errors::InstancesUnavailable.new(nil))
+            allow(tps_client).to receive(:bulk_lrp_instances).and_raise(StandardError.new('oh no'))
           end
 
-          it 're raises the exception' do
-            expect {
-              subject.number_of_starting_and_running_instances_for_apps([app1, app2])
-            }.to raise_error(Errors::InstancesUnavailable)
-          end
-        end
-
-        context 'when the tps client raises an different error' do
-          before do
-            allow(tps_client).to receive(:bulk_lrp_instances).and_raise('BOOM')
+          it 'returns -1 indicating not fresh' do
+            expect(subject.number_of_starting_and_running_instances_for_apps([app1, app2])).to eq({ app1.guid => -1, app2.guid => -1 })
           end
 
-          it 'wraps the exception and re raises the exception' do
-            expect {
-              subject.number_of_starting_and_running_instances_for_apps([app1, app2])
-            }.to raise_error(Errors::InstancesUnavailable)
+          context 'when its an InstancesUnavailable' do
+            let(:error) { Errors::InstancesUnavailable.new('oh my') }
+            before do
+              allow(tps_client).to receive(:bulk_lrp_instances).and_raise(error)
+            end
+
+            it 'returns -1 indicating not fresh' do
+              expect(subject.number_of_starting_and_running_instances_for_apps([app1, app2])).to eq({ app1.guid => -1, app2.guid => -1 })
+            end
           end
         end
       end
