@@ -53,6 +53,17 @@ module VCAP::CloudController
         expect(result['_links']['droplet']['href']).to eq('/v3/droplets/123')
       end
 
+      it 'includes a link to the droplets if present' do
+        app = AppModel.make
+        DropletModel.make(app_guid: app.guid, state: 'PENDING')
+        DropletModel.make(app_guid: app.guid, state: 'FAILED')
+
+        json_result = AppPresenter.new.present_json(app)
+        result      = MultiJson.load(json_result)
+
+        expect(result['_links']['droplets']['href']).to eq("/v3/apps/#{app.guid}/droplets")
+      end
+
       it 'includes start, stop, and assign_current_droplet links' do
         app = AppModel.make(environment_variables: { 'some' => 'stuff' }, desired_state: 'STOPPED')
 

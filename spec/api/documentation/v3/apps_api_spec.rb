@@ -79,6 +79,7 @@ resource 'Apps (Experimental)', type: :api do
               'processes' => { 'href' => "/v3/apps/#{app_model3.guid}/processes" },
               'packages'  => { 'href' => "/v3/apps/#{app_model3.guid}/packages" },
               'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
+              'droplets'  => { 'href' => "/v3/apps/#{app_model3.guid}/droplets" },
               'start'     => { 'href' => "/v3/apps/#{app_model3.guid}/start", 'method' => 'PUT' },
               'stop'      => { 'href' => "/v3/apps/#{app_model3.guid}/stop", 'method' => 'PUT' },
               'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model3.guid}/current_droplet", 'method' => 'PUT' }
@@ -98,6 +99,7 @@ resource 'Apps (Experimental)', type: :api do
               'processes' => { 'href' => "/v3/apps/#{app_model2.guid}/processes" },
               'packages'  => { 'href' => "/v3/apps/#{app_model2.guid}/packages" },
               'space'     => { 'href' => "/v2/spaces/#{space.guid}" },
+              'droplets'  => { 'href' => "/v3/apps/#{app_model2.guid}/droplets" },
               'start'     => { 'href' => "/v3/apps/#{app_model2.guid}/start", 'method' => 'PUT' },
               'stop'      => { 'href' => "/v3/apps/#{app_model2.guid}/stop", 'method' => 'PUT' },
               'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model2.guid}/current_droplet", 'method' => 'PUT' }
@@ -187,6 +189,7 @@ resource 'Apps (Experimental)', type: :api do
           'packages'        => { 'href' => "/v3/apps/#{guid}/packages" },
           'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
           'droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
+          'droplets' => { 'href' => "/v3/apps/#{guid}/droplets" },
           'start'           => { 'href' => "/v3/apps/#{guid}/start", 'method' => 'PUT' },
           'stop'           => { 'href' => "/v3/apps/#{guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -243,6 +246,7 @@ resource 'Apps (Experimental)', type: :api do
           'processes' => { 'href' => "/v3/apps/#{expected_guid}/processes" },
           'packages'  => { 'href' => "/v3/apps/#{expected_guid}/packages" },
           'space'     => { 'href' => "/v2/spaces/#{space_guid}" },
+          'droplets'  => { 'href' => "/v3/apps/#{expected_guid}/droplets" },
           'start'     => { 'href' => "/v3/apps/#{expected_guid}/start", 'method' => 'PUT' },
           'stop'      => { 'href' => "/v3/apps/#{expected_guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{expected_guid}/current_droplet", 'method' => 'PUT' }
@@ -315,6 +319,7 @@ resource 'Apps (Experimental)', type: :api do
           'processes'       => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
+          'droplets'  => { 'href' => "/v3/apps/#{app_model.guid}/droplets" },
           'start'     => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'      => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -410,6 +415,7 @@ resource 'Apps (Experimental)', type: :api do
           'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
           'droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
+          'droplets' => { 'href' => "/v3/apps/#{guid}/droplets" },
           'start'           => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'            => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -469,6 +475,7 @@ resource 'Apps (Experimental)', type: :api do
           'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
           'droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
+          'droplets' => { 'href' => "/v3/apps/#{guid}/droplets" },
           'start'           => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'            => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
@@ -595,6 +602,7 @@ resource 'Apps (Experimental)', type: :api do
           'packages'        => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
           'space'           => { 'href' => "/v2/spaces/#{space_guid}" },
           'droplet' => { 'href' => "/v3/droplets/#{droplet_guid}" },
+          'droplets' => { 'href' => "/v3/apps/#{guid}/droplets" },
           'start'     => { 'href' => "/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
           'stop'      => { 'href' => "/v3/apps/#{app_model.guid}/stop", 'method' => 'PUT' },
           'assign_current_droplet' => { 'href' => "/v3/apps/#{app_model.guid}/current_droplet", 'method' => 'PUT' }
