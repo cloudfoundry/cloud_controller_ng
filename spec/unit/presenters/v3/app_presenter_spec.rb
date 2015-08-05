@@ -74,6 +74,15 @@ module VCAP::CloudController
         expect(result['_links']['stop']['method']).to eq('PUT')
         expect(result['_links']['assign_current_droplet']['method']).to eq('PUT')
       end
+
+      it 'includes routes links' do
+        app = AppModel.make
+
+        json_result = AppPresenter.new.present_json(app)
+        result      = MultiJson.load(json_result)
+
+        expect(result['_links']['routes']['href']).to eq("/v3/apps/#{app.guid}/routes")
+      end
     end
 
     describe '#present_json_list' do

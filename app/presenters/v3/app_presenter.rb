@@ -48,9 +48,10 @@ module VCAP::CloudController
 
       links = {
         self:                   { href: "/v3/apps/#{app.guid}" },
-        processes:              { href: "/v3/apps/#{app.guid}/processes" },
-        packages:               { href: "/v3/apps/#{app.guid}/packages" },
         space:                  { href: "/v2/spaces/#{app.space_guid}" },
+        processes:              { href: "/v3/apps/#{app.guid}/processes" },
+        routes:                 { href: "/v3/apps/#{app.guid}/routes" },
+        packages:               { href: "/v3/apps/#{app.guid}/packages" },
         droplet:                droplet_link,
         droplets:               { href: "/v3/apps/#{app.guid}/droplets" },
         start:                  { href: "/v3/apps/#{app.guid}/start", method: 'PUT' },
