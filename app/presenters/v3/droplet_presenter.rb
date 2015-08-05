@@ -50,19 +50,11 @@ module VCAP::CloudController
         }
       end
 
-      assign_current_droplet_link = nil
-      if droplet.state == DropletModel::STAGED_STATE
-        assign_current_droplet_link = {
-          href:   "/v3/apps/#{droplet.app_guid}/current_droplet",
-          method: 'PUT',
-        }
-      end
-
       links = {
         self:                   { href: "/v3/droplets/#{droplet.guid}" },
         package:                { href: "/v3/packages/#{droplet.package_guid}" },
         app:                    { href: "/v3/apps/#{droplet.app_guid}" },
-        assign_current_droplet: assign_current_droplet_link,
+        assign_current_droplet: { href: "/v3/apps/#{droplet.app_guid}/current_droplet", method: 'PUT' },
         buildpack:              buildpack_link
       }
 

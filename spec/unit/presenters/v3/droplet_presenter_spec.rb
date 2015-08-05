@@ -38,25 +38,6 @@ module VCAP::CloudController
       end
     end
 
-    context 'when the droplet is not in the STAGED state' do
-      it 'does not include the assign_current_droplet link' do
-        droplet = DropletModel.make(
-          state:                  DropletModel::STAGING_STATE,
-          buildpack_guid:         'a-buildpack',
-          error:         'example error',
-          procfile: 'web: npm start',
-          environment_variables:  { 'elastic' => 'runtime' },
-          created_at: Time.at(1),
-          updated_at: Time.at(2),
-        )
-
-        json_result = DropletPresenter.new.present_json(droplet)
-        result      = MultiJson.load(json_result)
-
-        expect(result['_links']['assign_current_droplet']).to be_nil
-      end
-    end
-
     context 'when the buildpack_guid is not present' do
       let(:droplet) { DropletModel.make }
 
