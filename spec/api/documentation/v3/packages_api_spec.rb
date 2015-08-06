@@ -477,7 +477,11 @@ resource 'Packages (Experimental)', type: :api do
         '_links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{droplet.guid}" },
           'package' => { 'href' => "/v3/packages/#{guid}" },
-          'app'     => { 'href' => "/v3/apps/#{app_guid}" }
+          'app'     => { 'href' => "/v3/apps/#{app_guid}" },
+          'assign_current_droplet' => {
+            'href' => "/v3/apps/#{app_guid}/current_droplet",
+            'method' => 'PUT'
+          }
         }
       }
 

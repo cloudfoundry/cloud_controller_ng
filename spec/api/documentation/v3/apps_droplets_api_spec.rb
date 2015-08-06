@@ -91,7 +91,11 @@ resource 'App Droplets (Experimental)', type: :api do
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
                 'package'   => { 'href' => "/v3/packages/#{package.guid}" },
                 'buildpack' => { 'href' => "/v2/buildpacks/#{buildpack.guid}" },
-                'app'       => { 'href' => "/v3/apps/#{droplet1.app_guid}" }
+                'app'       => { 'href' => "/v3/apps/#{droplet1.app_guid}" },
+                'assign_current_droplet' => {
+                  'href' => "/v3/apps/#{droplet1.app_guid}/current_droplet",
+                  'method' => 'PUT'
+                }
               }
             },
             {
