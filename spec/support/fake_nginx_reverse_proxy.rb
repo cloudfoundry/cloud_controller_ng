@@ -9,7 +9,7 @@ class FakeNginxReverseProxy
   def call(env)
     tmpdir = nil
     if multipart?(env)
-      form_hash = Rack::Multipart::Parser.new(env.dup).parse
+      form_hash = Rack::Multipart.parse_multipart(env.dup)
       tmpdir = Dir.mktmpdir('ngx.uploads')
       offload_files!(form_hash, tmpdir)
       offload_staging!(form_hash, tmpdir)
