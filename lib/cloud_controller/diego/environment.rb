@@ -10,6 +10,8 @@ module VCAP::CloudController
 
       def as_json(_={})
         env = []
+        add_hash_to_env(@initial_env, env)
+
         env << { 'name' => 'VCAP_APPLICATION', 'value' => vcap_application.to_json }
         env << { 'name' => 'VCAP_SERVICES', 'value' => app.system_env_json['VCAP_SERVICES'].to_json }
         env << { 'name' => 'MEMORY_LIMIT', 'value' => "#{app.memory}m" }
@@ -20,7 +22,6 @@ module VCAP::CloudController
 
         app_env_json = app.environment_json || {}
         add_hash_to_env(app_env_json, env)
-        add_hash_to_env(@initial_env, env)
 
         env
       end

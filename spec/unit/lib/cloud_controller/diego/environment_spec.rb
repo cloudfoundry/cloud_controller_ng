@@ -35,9 +35,9 @@ module VCAP::CloudController::Diego
     end
 
     context 'when an initial environment is provided' do
-      it 'appends them' do
+      it 'is added first' do
         initial_env = { 'a' => 'b', 'last' => 'one' }
-        expect(Environment.new(app, initial_env).as_json.slice(-2..-1)).to eq([
+        expect(Environment.new(app, initial_env).as_json.slice(0..1)).to eq([
           { 'name' => 'a', 'value' => 'b' },
           { 'name' => 'last', 'value' => 'one' },
         ])
