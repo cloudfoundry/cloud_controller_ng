@@ -173,7 +173,7 @@ module LegacyApiDsl
 
         instance_eval(&block) if block_given?
 
-        request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'." unless options[:async] == false
+        request_parameter :async, "Will run the delete request in a background job. Recommended: 'true'.", valid_values: [true, false] unless options[:async] == false
 
         example_request "Delete a Particular #{title}" do
           expect(status).to eq 204
