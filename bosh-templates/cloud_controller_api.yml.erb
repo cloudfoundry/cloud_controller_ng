@@ -264,11 +264,11 @@ cloud_controller_username_lookup_client_name: "cloud_controller_username_lookup"
 cloud_controller_username_lookup_client_secret: <%= p("uaa.clients.cloud_controller_username_lookup.secret") %>
 
 users_can_select_backend: <%= p("cc.users_can_select_backend") %>
-diego_nsync_url: http://nsync.service.cf.internal:8787
-diego_stager_url: http://stager.service.cf.internal:8888
-diego_tps_url: http://tps.service.cf.internal:1518
 allow_app_ssh_access: <%= p("cc.allow_app_ssh_access") %>
 default_to_diego_backend: <%= p("cc.default_to_diego_backend") %>
+diego_nsync_url: <%= p("cc.diego.nsync_url") %>
+diego_stager_url: <%= p("cc.diego.stager_url") %>
+diego_tps_url: <%= p("cc.diego.tps_url") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>
