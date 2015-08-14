@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
-resource 'App Droplets (Experimental)', type: :api do
+resource 'Apps (Experimental)', type: :api do
   let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user)['HTTP_AUTHORIZATION'] }
@@ -18,11 +18,11 @@ resource 'App Droplets (Experimental)', type: :api do
   end
 
   get '/v3/apps/:guid/droplets' do
-    parameter :state, 'Droplet state to filter by', valid_values: 'array of strings', example_values: 'states[]=pending&states[]=staging'
+    parameter :states, 'Droplet state to filter by', valid_values: %w(PENDING STAGING STAGED FAILED), example_values: 'states[]=PENDING&states[]=STAGING'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
-    parameter :order_by, 'Value to sort by', valid_values: 'created_at, updated_at'
-    parameter :order_direction, 'Direction to sort by', valid_values: 'asc, desc'
+    parameter :order_by, 'Value to sort by', valid_values: %w(created_at updated_at)
+    parameter :order_direction, 'Direction to sort by', valid_values: %w(asc desc)
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
@@ -66,13 +66,13 @@ resource 'App Droplets (Experimental)', type: :api do
       space.add_developer(user)
     end
 
-    example 'List droplets' do
+    example 'List associated droplets' do
       expected_response =
         {
           'pagination' => {
             'total_results' => 2,
-            'first'         => { 'href' => "/v3/droplets?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
-            'last'          => { 'href' => "/v3/droplets?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
+            'first'         => { 'href' => "/v3/apps/#{guid}/droplets?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
+            'last'          => { 'href' => "/v3/apps/#{guid}/droplets?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
             'next'          => nil,
             'previous'      => nil,
           },

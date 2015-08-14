@@ -93,7 +93,7 @@ module VCAP::CloudController
             response_code, response_body = apps_droplets_controller.list(app_guid)
 
             expect(droplet_presenter).to have_received(:present_json_list).
-              with(an_instance_of(PaginatedResult), '/v3/droplets') do |result|
+              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets") do |result|
               expect(result.total).to eq(DropletModel.count)
             end
             expect(response_code).to eq(200)
@@ -135,7 +135,7 @@ module VCAP::CloudController
                     Membership::SPACE_AUDITOR,
                     Membership::ORG_MANAGER], space_guid, org_guid)
             expect(droplet_presenter).to have_received(:present_json_list).
-              with(an_instance_of(PaginatedResult), '/v3/droplets') do |result|
+              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets") do |result|
               expect(result.total).to eq(1)
             end
             expect(response_code).to eq(200)

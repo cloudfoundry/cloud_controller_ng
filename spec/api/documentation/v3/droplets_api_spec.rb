@@ -103,12 +103,12 @@ resource 'Droplets (Experimental)', type: :api do
   end
 
   get '/v3/droplets' do
-    parameter :app_guids, 'Apps to filter by', valid_values: 'array of strings', example_values: 'app_guids[]=app_guid1&app_guids[]=app_guid2'
-    parameter :state, 'Droplet state to filter by', valid_values: 'array of strings', example_values: 'states[]=pending&states[]=staging'
+    parameter :app_guids, 'Apps to filter by', valid_values: 'app guids', example_values: 'app_guids[]=app_guid1&app_guids[]=app_guid2'
+    parameter :states, 'Droplet state to filter by', valid_values: %w(PENDING STAGING STAGED FAILED), example_values: 'states[]=PENDING&states[]=STAGING'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
-    parameter :order_by, 'Value to sort by', valid_values: 'created_at, updated_at'
-    parameter :order_direction, 'Direction to sort by', valid_values: 'asc, desc'
+    parameter :order_by, 'Value to sort by', valid_values: %w(created_at updated_at)
+    parameter :order_direction, 'Direction to sort by', valid_values: %w(asc desc)
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
