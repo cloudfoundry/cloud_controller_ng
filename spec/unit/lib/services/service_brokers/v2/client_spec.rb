@@ -148,7 +148,8 @@ module VCAP::Services::ServiceBrokers::V2
                   id: 'client-id-1',
                   secret: 'secret-1',
                   redirect_uri: 'https://dashboard.service.com'
-              }
+              },
+              route_service_url: 'https://some-route-service-url.com'
           }
         end
 
@@ -159,6 +160,10 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'DEPRCATED: returns an empty credentials hash to satisfy the not null database constraint' do
           expect(attributes[:instance][:credentials]).to eq({})
+        end
+
+        it 'returns the route service url' do
+          expect(attributes[:instance][:route_service_url]).to eq('https://some-route-service-url.com')
         end
 
         it 'returns the dashboard url' do

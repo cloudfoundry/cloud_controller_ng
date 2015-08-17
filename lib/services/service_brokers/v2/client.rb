@@ -37,7 +37,8 @@ module VCAP::Services::ServiceBrokers::V2
       return_values = {
         instance: {
           credentials: {},
-          dashboard_url: parsed_response['dashboard_url']
+          dashboard_url: parsed_response['dashboard_url'],
+          route_service_url: parsed_response['route_service_url'],
         },
         dashboard_client: parsed_response['dashboard_client'],
         last_operation: {

@@ -122,7 +122,7 @@ module VCAP::CloudController
       end
 
       it 'creates a new last_operation object and associates it with the service instance' do
-        instance = { dashboard_url: 'a-different-url.com' }
+        instance = { dashboard_url: 'a-different-url.com', route_service_url: 'https://test.com' }
         last_operation = {
           state: 'in progress',
           description: '10%'
@@ -131,6 +131,7 @@ module VCAP::CloudController
 
         service_instance.reload
         expect(service_instance.dashboard_url).to eq 'a-different-url.com'
+        expect(service_instance.route_service_url).to eq 'https://test.com'
         expect(service_instance.last_operation.state).to eq 'in progress'
         expect(service_instance.last_operation.description).to eq '10%'
       end
@@ -176,12 +177,14 @@ module VCAP::CloudController
               state: 'in progress',
               description: '20%'
             },
-            dashboard_url: 'a-different-url.com'
+            dashboard_url: 'a-different-url.com',
+            route_service_url: 'https://test.com'
           }
           service_instance.save_and_update_operation(attrs)
 
           service_instance.reload
           expect(service_instance.dashboard_url).to eq 'a-different-url.com'
+          expect(service_instance.route_service_url).to eq 'https://test.com'
           expect(service_instance.last_operation.state).to eq 'in progress'
           expect(service_instance.last_operation.guid).to eq @old_guid
           expect(service_instance.last_operation.description).to eq '20%'
