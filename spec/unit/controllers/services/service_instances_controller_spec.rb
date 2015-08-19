@@ -282,7 +282,7 @@ module VCAP::CloudController
               to_return(status: 200, body: '', headers: {})
           end
 
-          it 'provisions a service instance with a UAA client' do
+          it 'provisions a service instance' do
             service_instance = create_managed_service_instance(
                     email: 'test@example.com',
                     accepts_incomplete: false
@@ -292,17 +292,6 @@ module VCAP::CloudController
 
             expect(decoded_response['entity']['dashboard_url']).to eq('the dashboard_url')
             expect(last_response).to have_status_code(201)
-          end
-
-          it 'creates a service_dashboard_client.create event' do
-            expect {
-              create_managed_service_instance(
-                email: 'test@example.com',
-                accepts_incomplete: false
-              )
-            }.to change {
-              VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.create').count
-            }.by 1
           end
 
           context 'dashboard_url is not passed' do
