@@ -3,8 +3,6 @@ require 'spec_helper'
 module VCAP::CloudController
   describe VCAP::CloudController::ServiceInstancesController, :services do
     let(:service_broker_url_regex) { %r{http://auth_username:auth_password@example.com/v2/service_instances/(.*)} }
-    let(:mock_orphan_mitigator) { double(:mock_orphan_mitigator, attempt_deprovision_instance: nil) }
-    let(:logger) { double(:logger) }
 
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
@@ -259,71 +257,6 @@ module VCAP::CloudController
           expect(event).to match_service_instance(instance)
         end
 
-        context 'create with a dashboard client' do
-          let(:response_body) do
-            {
-              dashboard_client: {
-                id: 'client-id-1',
-                secret: 'secret-1',
-                redirect_uri: 'https://dashboard.service.com'
-              },
-              dashboard_url: 'the dashboard_url'
-            }.to_json
-          end
-
-          before do
-            body = { token_type: '', access_token: '' }.to_json
-            stub_request(:post, 'http://cc-service-dashboards:some-sekret@localhost:8080/uaa/oauth/token').
-              to_return(status: 200, body: body, headers: { content_type: 'application/json' })
-            body2 = { id: '', client_id: '' }.to_json
-            stub_request(:get, 'http://localhost:8080/uaa/oauth/clients/client-id-1').
-              to_return(status: 200, body: body2, headers: { content_type: 'application/json' })
-            stub_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').
-              to_return(status: 200, body: '', headers: {})
-          end
-
-          it 'provisions a service instance' do
-            service_instance = create_managed_service_instance(
-                    email: 'test@example.com',
-                    accepts_incomplete: false
-            )
-
-            expect(service_instance.service_instance_dashboard_client.uaa_id).to eq('client-id-1')
-
-            expect(decoded_response['entity']['dashboard_url']).to eq('the dashboard_url')
-            expect(last_response).to have_status_code(201)
-          end
-
-          context 'dashboard_url is not passed' do
-            let(:response_body) do
-              {
-                dashboard_client: {
-                  'id' => 'client-id-1',
-                  'secret' => 'secret-1',
-                  'redirect_uri' => 'https://dashboard.service.com'
-                }
-              }.to_json
-            end
-
-            before do
-              allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
-              allow(logger).to receive(:error)
-            end
-
-            it 'provisions a service instance' do
-              service_instance = create_managed_service_instance(
-                email: 'test@example.com',
-                accepts_incomplete: false
-              )
-
-              expect(service_instance.service_instance_dashboard_client).to be_nil
-
-              expect(decoded_response['entity']).to be_nil
-              expect(last_response).to have_status_code(500)
-            end
-          end
-        end
-
         describe 'instance tags' do
           context 'when service instance tags are sent with the create request' do
             it 'saves the service instance tags' do
@@ -436,8 +369,6 @@ module VCAP::CloudController
               stub_request(:put, service_broker_url_regex).
                 with(headers: { 'Accept' => 'application/json' }).
                 to_return(status: 422, body: { error: 'AsyncRequired' }.to_json, headers: { 'Content-Type' => 'application/json' })
-              allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
-              allow(logger).to receive(:error)
             end
 
             it 'fails with an AsyncRequired error' do
@@ -625,22 +556,6 @@ module VCAP::CloudController
             )
           end
           let(:response_code) { 409 }
-          let(:mock_orphan_mitigator) { double(:mock_orphan_mitigator, attempt_deprovision_instance: nil) }
-          let(:body) do
-            {
-              dashboard_url: 'http://example-dashboard.com/9189kdfsk0vfnku',
-              dashboard_client: {
-                id: 'client-id-1',
-                secret: 'secret-1',
-                redirect_uri: 'https://dashboard.service.com'
-              }
-            }.to_json
-          end
-
-          before do
-            allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
-            allow(logger).to receive(:error)
-          end
 
           it "should return an error with broker's error message" do
             create_managed_service_instance(email: 'developer@example.com')
@@ -793,11 +708,6 @@ module VCAP::CloudController
               )
             end
 
-            before do
-              allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
-              allow(logger).to receive(:error)
-            end
-
             it 'mitigates orphans by deprovisioning the instance' do
               post '/v2/service_instances', req, headers_for(developer)
 
@@ -815,11 +725,6 @@ module VCAP::CloudController
 
             context 'and the broker returns a 202 for the follow up deletion request' do
               let(:delete_request_status) { 202 }
-
-              before do
-                allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
-                allow(logger).to receive(:error)
-              end
 
               it 'treats the 202 as a successful deletion and does not poll the last_operation endpoint' do
                 post '/v2/service_instances', req, json_headers(headers_for(developer))
@@ -1040,21 +945,10 @@ module VCAP::CloudController
               })
         end
 
-        it 'returns a 201 and updates to the new plan' do
+        it 'returns a 201' do
           put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
           expect(last_response).to have_status_code 201
           expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
-        end
-
-        it 'creates an UPDATED service usage event' do
-          expect {
-            put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
-          }.to change { ServiceUsageEvent.count }.by 1
-
-          expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
-          event = ServiceUsageEvent.last
-          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
-          expect(event).to match_service_instance(service_instance)
         end
 
         it 'does not set a Location header' do
@@ -1108,12 +1002,6 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(201)
               expect(a_request(:patch, service_broker_url_regex).with(body: hash_including(parameters: parameters))).to have_been_made.times(1)
             end
-
-            it 'does not create an UPDATED service usage event' do
-              expect {
-                put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
-              }.not_to change { ServiceUsageEvent.count }
-            end
           end
         end
 
@@ -1142,17 +1030,6 @@ module VCAP::CloudController
             put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
 
             expect(service_instance.reload.last_operation.state).to eq('succeeded')
-          end
-
-          it 'creates an UPDATED service usage event' do
-            expect {
-              put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
-            }.to change { ServiceUsageEvent.count }.by 1
-
-            expect(service_instance.reload.name).to eq('new-name')
-            event = ServiceUsageEvent.last
-            expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
-            expect(event).to match_service_instance(service_instance)
           end
 
           context 'when the updated service instance name is too long' do
@@ -1186,12 +1063,6 @@ module VCAP::CloudController
 
             expect(service_instance.last_operation.reload.state).to eq 'succeeded'
             expect(service_instance.last_operation.reload.description).to be_nil
-          end
-
-          it 'does not create an UPDATED service usage event' do
-            expect {
-              put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
-            }.not_to change { ServiceUsageEvent.count }
           end
         end
 
@@ -1518,15 +1389,6 @@ module VCAP::CloudController
 
               expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
               expect(a_request(:patch, /#{service_broker_url}/)).to have_been_made.times(1)
-            end
-
-            it 'creates an UPDATED service usage event' do
-              Delayed::Job.last.invoke_job
-
-              expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
-              event = ServiceUsageEvent.last
-              expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
-              expect(event).to match_service_instance(service_instance)
             end
 
             it 'creates a service audit event for updating the service instance' do
@@ -2800,6 +2662,7 @@ module VCAP::CloudController
       else
         post '/v2/service_instances', req, headers
       end
+
       ServiceInstance.last
     end
 

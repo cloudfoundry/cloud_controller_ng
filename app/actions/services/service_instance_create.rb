@@ -1,7 +1,6 @@
 require 'actions/services/synchronous_orphan_mitigate'
 
 module VCAP::CloudController
-  class InvalidDashboardInfo < StandardError; end
   class ServiceInstanceCreate
     def initialize(services_event_repository, logger)
       @services_event_repository = services_event_repository
@@ -13,27 +12,34 @@ module VCAP::CloudController
       arbitrary_params = request_attrs['parameters']
 
       service_instance = ManagedServiceInstance.new(request_params)
-
-      broker_response = service_instance.client.provision(
+      attributes_to_update = service_instance.client.provision(
         service_instance,
         accepts_incomplete: accepts_incomplete,
-        arbitrary_parameters: arbitrary_params
+        arbitrary_parameters: arbitrary_params,
       )
 
+      last_operation = attributes_to_update[:last_operation]
+      instance_attributes = attributes_to_update.slice(:credentials, :dashboard_url)
+
       begin
-        service_instance.save_with_new_operation(broker_response[:instance], broker_response[:last_operation])
+        service_instance.save_with_new_operation(instance_attributes, last_operation)
       rescue => e
-        mitigate_orphan(e, service_instance)
+        @logger.error "Failed to save while creating service instance #{service_instance.guid} with exception: #{e}."
+        orphan_mitigator = SynchronousOrphanMitigate.new(@logger)
+        orphan_mitigator.attempt_deprovision_instance(service_instance)
+        raise e
       end
 
       if service_instance.operation_in_progress?
-        setup_async_job(request_attrs, service_instance)
-      end
-
-      dashboard_client_info = broker_response[:dashboard_client]
-
-      if dashboard_client_info
-        setup_dashboard(broker_response, dashboard_client_info, service_instance)
+        job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
+          'service-instance-state-fetch',
+          service_instance.client.attrs,
+          service_instance.guid,
+          @services_event_repository,
+          request_attrs,
+        )
+        enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
+        enqueuer.enqueue
       end
 
       if !accepts_incomplete || service_instance.last_operation.state != 'in progress'
@@ -41,39 +47,6 @@ module VCAP::CloudController
       end
 
       service_instance
-    end
-
-    def setup_dashboard(broker_response, dashboard_client_info, service_instance)
-      if !broker_response[:instance].key?(:dashboard_url) ||
-        broker_response[:instance][:dashboard_url].nil?
-        e = InvalidDashboardInfo.new('Missing dashboard_url from broker while creating service instance')
-        mitigate_orphan(e, service_instance)
-      end
-      client_manager = VCAP::Services::SSO::DashboardClientManager.new(
-        service_instance,
-        @services_event_repository,
-        VCAP::CloudController::ServiceInstanceDashboardClient
-      )
-      client_manager.add_client_for_instance(dashboard_client_info)
-    end
-
-    def setup_async_job(request_attrs, service_instance)
-      job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-        'service-instance-state-fetch',
-        service_instance.client.attrs,
-        service_instance.guid,
-        @services_event_repository,
-        request_attrs,
-      )
-      enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
-      enqueuer.enqueue
-    end
-
-    def mitigate_orphan(e, service_instance, message: 'Failed to save while creating service instance')
-      @logger.error "#{message} #{service_instance.guid} with exception: #{e}."
-      orphan_mitigator = SynchronousOrphanMitigate.new(@logger)
-      orphan_mitigator.attempt_deprovision_instance(service_instance)
-      raise e
     end
   end
 end
