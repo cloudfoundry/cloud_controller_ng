@@ -80,15 +80,11 @@ module VCAP::Services::ServiceBrokers
     end
 
     def client_manager
-      @client_manager ||= VCAP::Services::SSO::DashboardClientManager.new(
-        broker,
-        @services_event_repository,
-        VCAP::CloudController::ServiceDashboardClient
-      )
+      @client_manager ||= VCAP::Services::SSO::DashboardClientManager.new(broker, @services_event_repository)
     end
 
     def catalog
-      @catalog ||= VCAP::Services::ServiceBrokers::V2::Catalog.new(broker, broker.client.catalog)
+      @catalog ||= V2::Catalog.new(broker, broker.client.catalog)
     end
 
     def formatter

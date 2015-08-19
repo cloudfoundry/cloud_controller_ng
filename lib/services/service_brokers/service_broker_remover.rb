@@ -5,11 +5,7 @@ module VCAP::Services::ServiceBrokers
     def initialize(broker, services_event_repository)
       @broker = broker
       @services_event_repository = services_event_repository
-      @client_manager = VCAP::Services::SSO::DashboardClientManager.new(
-        broker,
-        @services_event_repository,
-        VCAP::CloudController::ServiceDashboardClient
-      )
+      @client_manager = VCAP::Services::SSO::DashboardClientManager.new(broker, @services_event_repository)
     end
 
     def execute!
