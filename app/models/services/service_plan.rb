@@ -16,8 +16,6 @@ module VCAP::CloudController
 
     alias_method :active?, :active
 
-    alias_method :broker_provided_id, :unique_id
-
     def validate
       validates_presence :name,                message: 'is required'
       validates_presence :description,         message: 'is required'
@@ -45,8 +43,9 @@ module VCAP::CloudController
       service.bindable?
     end
 
-    def service_broker
-      service.service_broker
+    # The "unique_id" should really be called broker_provided_id because it's the id assigned by the broker
+    def broker_provided_id
+      unique_id
     end
 
     private
