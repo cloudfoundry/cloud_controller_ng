@@ -663,11 +663,6 @@
   http_code: 400
   message: "This service plan requires client support for asynchronous service operations."
 
-270015:
-  name: ServiceDashboardClientMissingUrl
-  http_code: 502
-  message: "Service broker returned dashboard client configuration without a dashboard URL"
-
 290001:
   name: BuildpackNameTaken
   http_code: 400

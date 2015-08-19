@@ -88,24 +88,17 @@ module VCAP::CloudController
               }
             }.to_json
           end
-          let(:client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager) }
 
           before do
             allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
-            allow(VCAP::Services::SSO::DashboardClientManager).to receive(:new).and_return(client_manager)
             allow(logger).to receive(:error)
           end
 
-          it 'attempts synchronous orphan mitigation and does not create a dashboard client' do
+          it 'attempts synchronous orphan mitigation' do
             expect {
               create_action.create(request_attrs, false)
-            }.to raise_error(VCAP::Errors::ApiError, 'Service broker returned dashboard client configuration without a dashboard URL')
+            }.to raise_error
             expect(mock_orphan_mitigator).to have_received(:attempt_deprovision_instance)
-            expect(VCAP::Services::SSO::DashboardClientManager).not_to have_received(:new).with(
-                anything,
-                event_repository,
-                VCAP::CloudController::ServiceInstanceDashboardClient
-              )
           end
         end
       end

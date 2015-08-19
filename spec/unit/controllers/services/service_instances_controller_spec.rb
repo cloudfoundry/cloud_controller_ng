@@ -321,18 +321,16 @@ module VCAP::CloudController
               allow(logger).to receive(:error)
             end
 
-            it 'rejects the service instance by initiating orphan mitigation' do
+            it 'provisions a service instance' do
               service_instance = create_managed_service_instance(
                 email: 'test@example.com',
                 accepts_incomplete: false
               )
 
               expect(service_instance.service_instance_dashboard_client).to be_nil
-              expect(mock_orphan_mitigator).to have_received(:attempt_deprovision_instance)
 
               expect(decoded_response['entity']).to be_nil
-              expect(last_response).to have_status_code(502)
-              expect(last_response.body).to include('Service broker returned dashboard client configuration without a dashboard URL')
+              expect(last_response).to have_status_code(500)
             end
           end
         end
@@ -649,15 +647,13 @@ module VCAP::CloudController
                 allow(logger).to receive(:error)
               end
 
-              it 'rejects the service instance by initiating orphan mitigation' do
+              it 'provisions a service instance' do
                 service_instance = create_managed_service_instance
 
                 expect(service_instance.service_instance_dashboard_client).to be_nil
-                expect(mock_orphan_mitigator).to have_received(:attempt_deprovision_instance)
 
                 expect(decoded_response['entity']).to be_nil
-                expect(last_response).to have_status_code(502)
-                expect(last_response.body).to include('Service broker returned dashboard client configuration without a dashboard URL')
+                expect(last_response).to have_status_code(500)
               end
             end
           end
