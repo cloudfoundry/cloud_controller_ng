@@ -20,11 +20,10 @@ module VCAP::CloudController
     one_to_one :service_instance_operation
 
     one_to_many :service_bindings, before_add: :validate_service_binding
-
     one_to_many :service_keys
+    one_to_many :routes
 
     many_to_one :space, after_set: :validate_space
-
     many_to_one :service_plan_sti_eager_load,
                 class: 'VCAP::CloudController::ServicePlan',
                 dataset: -> { raise 'Must be used for eager loading' },

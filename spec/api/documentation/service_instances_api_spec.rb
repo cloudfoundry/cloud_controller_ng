@@ -62,6 +62,8 @@ resource 'Service Instances', type: [:api, :legacy_api] do
     response_field 'space_url', 'The relative path to the space resource that this service instance belongs to.'
     response_field 'service_plan_url', 'The relative path to the service plan resource that this service instance belongs to.'
     response_field 'service_binding_url', 'The relative path to the service bindings that this service instance is bound to.'
+    response_field 'routes_url', 'Routes bound to the service instance. Requests to these routes will be forwarded to the service instance.',
+      experimental: true
     response_field 'tags', 'A list of tags for the service instance'
 
     standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
@@ -167,6 +169,18 @@ EOF
 
         expect(status).to eq 202
         after_standard_model_delete(guid) if respond_to?(:after_standard_model_delete)
+      end
+    end
+
+    put '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
+      let(:route) { VCAP::CloudController::Route.make }
+
+      example 'Binding a service instance to a route (experimental)' do
+        client.put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
+
+        expect(status).to eq(201)
+        expect(parsed_response['metadata']['guid']).to eq(service_instance.guid)
+        expect(parsed_response['entity']['routes_url']).to eq("/v2/service_instances/#{service_instance.guid}/routes")
       end
     end
   end

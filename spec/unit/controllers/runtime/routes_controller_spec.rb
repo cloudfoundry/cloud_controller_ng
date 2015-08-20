@@ -15,6 +15,7 @@ module VCAP::CloudController
           host:        { type: 'string', default: '' },
           domain_guid: { type: 'string', required: true },
           space_guid:  { type: 'string', required: true },
+          service_instance_guid:  { type: 'string' },
           app_guids:   { type: '[string]' },
           path:        { type: 'string' }
         })
@@ -25,6 +26,7 @@ module VCAP::CloudController
           host:        { type: 'string' },
           domain_guid: { type: 'string' },
           space_guid:  { type: 'string' },
+          service_instance_guid:  { type: 'string' },
           app_guids:   { type: '[string]' },
           path:        { type: 'string' }
         })
@@ -230,7 +232,6 @@ module VCAP::CloudController
 
           it 'associates the route with the app' do
             put "/v2/routes/#{route.guid}/apps/#{docker_app.guid}", MultiJson.dump(guid: route.guid), json_headers(admin_headers)
-
             expect(last_response.status).to eq(201)
           end
         end

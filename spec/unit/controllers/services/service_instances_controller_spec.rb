@@ -197,7 +197,11 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes({ service_bindings: [:get, :put, :delete], service_keys: [:get, :put, :delete] })
+        expect(described_class).to have_nested_routes(
+          service_bindings: [:get, :put, :delete],
+          service_keys: [:get, :put, :delete],
+          routes: [:get, :put]
+        )
       end
     end
 

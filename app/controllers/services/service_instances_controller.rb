@@ -16,6 +16,7 @@ module VCAP::CloudController
       to_one :service_plan
       to_many :service_bindings
       to_many :service_keys
+      to_many :routes, route_for: [:get, :put], exclude_in: [:create, :update]
     end
 
     query_parameters :name, :space_guid, :service_plan_guid, :service_binding_guid, :gateway_name, :organization_guid, :service_key_guid

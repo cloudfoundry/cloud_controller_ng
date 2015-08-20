@@ -11,6 +11,7 @@ module VCAP::CloudController
 
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
+    many_to_one :service_instance
 
     many_to_many :app_models, join_table: :apps_v3_routes
 
@@ -21,8 +22,8 @@ module VCAP::CloudController
 
     add_association_dependencies apps: :nullify
 
-    export_attributes :host, :path, :domain_guid, :space_guid
-    import_attributes :host, :path, :domain_guid, :space_guid, :app_guids
+    export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid
+    import_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :app_guids
 
     def fqdn
       host.empty? ? domain.name : "#{host}.#{domain.name}"
