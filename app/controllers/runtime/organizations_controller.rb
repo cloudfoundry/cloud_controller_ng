@@ -98,6 +98,13 @@ module VCAP::CloudController
       )
     end
 
+    get '/v2/organizations/:guid/instance_usage', :get_instance_usage
+    def get_instance_usage(guid)
+      org = find_guid_and_validate_access(:read, guid)
+      response = { instance_usage: OrganizationInstanceUsageCalculator.get_instance_usage(org) }
+      [HTTP::OK, MultiJson.dump(response)]
+    end
+
     get '/v2/organizations/:guid/memory_usage', :get_memory_usage
     def get_memory_usage(guid)
       org = find_guid_and_validate_access(:read, guid)

@@ -302,10 +302,37 @@ module VCAP::CloudController
       end
 
       it 'calls the organization memory usage calculator' do
-        allow(OrganizationMemoryCalculator).to receive(:get_memory_usage)
+        allow(OrganizationMemoryCalculator).to receive(:get_memory_usage).and_return(2)
         get "/v2/organizations/#{org.guid}/memory_usage", {}, admin_headers
         expect(last_response.status).to eq(200)
-        expect(OrganizationMemoryCalculator).to have_received(:get_memory_usage)
+        expect(OrganizationMemoryCalculator).to have_received(:get_memory_usage).with(org)
+        expect(MultiJson.load(last_response.body)).to eq({ 'memory_usage_in_mb' => 2 })
+      end
+    end
+
+    describe 'GET /v2/organizations/:guid/instance_usage' do
+      context 'for an organization that does not exist' do
+        it 'returns a 404' do
+          get '/v2/organizations/foobar/instance_usage', {}, admin_headers
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      context 'when the user does not have permissions to read' do
+        let(:user) { User.make }
+
+        it 'returns a 403' do
+          get "/v2/organizations/#{org.guid}/instance_usage", {}, headers_for(user)
+          expect(last_response.status).to eq(403)
+        end
+      end
+
+      it 'calls the organization instance usage calculator' do
+        allow(OrganizationInstanceUsageCalculator).to receive(:get_instance_usage).and_return(2)
+        get "/v2/organizations/#{org.guid}/instance_usage", {}, admin_headers
+        expect(last_response.status).to eq(200)
+        expect(OrganizationInstanceUsageCalculator).to have_received(:get_instance_usage).with(org)
+        expect(MultiJson.load(last_response.body)).to eq({ 'instance_usage' => 2 })
       end
     end
 

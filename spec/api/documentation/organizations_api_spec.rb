@@ -226,5 +226,19 @@ resource 'Organizations', type: [:api, :legacy_api] do
         end
       end
     end
+
+    describe 'Instance Usage (Experimental)' do
+      get '/v2/organizations/:guid/instance_usage' do
+        example 'Retrieving organization instance usage' do
+          space = VCAP::CloudController::Space.make(organization: organization)
+          VCAP::CloudController::AppFactory.make(space: space, state: 'STARTED', instances: 3)
+
+          client.get "/v2/organizations/#{guid}/instance_usage", {}, headers
+          expect(status).to eq(200)
+
+          expect(parsed_response['instance_usage']).to eq(3)
+        end
+      end
+    end
   end
 end
