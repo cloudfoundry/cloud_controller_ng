@@ -48,6 +48,10 @@ module VCAP::CloudController
       unique_id
     end
 
+    def service_broker
+      service.service_broker
+    end
+
     private
 
     def before_validation
