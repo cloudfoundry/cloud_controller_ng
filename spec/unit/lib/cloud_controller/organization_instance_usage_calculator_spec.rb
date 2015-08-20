@@ -13,7 +13,6 @@ module VCAP::CloudController
       let!(:stopped_app) { AppFactory.make(space: space1, instances: 2, state: 'STOPPED') }
       let!(:app2) { AppFactory.make(space: space2, instances: 5, state: 'STARTED') }
 
-
       it 'returns the number of instances for STARTED apps only in all spaces under the org' do
         result = OrganizationInstanceUsageCalculator.get_instance_usage(org)
 
