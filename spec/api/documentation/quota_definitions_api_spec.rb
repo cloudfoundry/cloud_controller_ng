@@ -18,7 +18,7 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
     field :total_routes, 'How many routes an organization can have.', required: opts[:required], example_values: [10, 23]
     field :total_private_domains,
       'How many private domains an organization can have. (-1 represents an unlimited amount)',
-      example_values: [-1, 10, 23], default: -1, experimental: true
+      example_values: [-1, 10, 23], default: -1
     field :memory_limit, 'How much memory in megabyte an organization can have.', required: opts[:required], example_values: [5_120, 9999]
 
     field :instance_memory_limit,
@@ -30,7 +30,7 @@ resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
     field :trial_db_allowed, 'If an organization can have a trial db.', deprecated: true
     field :app_instance_limit,
       'How many app instances an organization can create. (-1 represents an unlimited amount)',
-      example_values: [-1, 10, 23], default: -1, experimental: true
+      example_values: [-1, 10, 23], default: -1
   end
 
   standard_model_list(:quota_definition, VCAP::CloudController::QuotaDefinitionsController, title: 'Organization Quota Definitions')
