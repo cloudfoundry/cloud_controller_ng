@@ -34,24 +34,27 @@ module VCAP::Services::ServiceBrokers::V2
 
       parsed_response = @response_parser.parse_provision(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
-      attributes = {
-        # DEPRECATED, but needed because of not null constraint
-        credentials: {},
-        dashboard_url: parsed_response['dashboard_url'],
+      return_values = {
+        instance: {
+          credentials: {},
+          dashboard_url: parsed_response['dashboard_url'],
+          route_service_url: parsed_response['route_service_url'],
+        },
+        dashboard_client: parsed_response['dashboard_client'],
         last_operation: {
           type: 'create',
           description: last_operation_hash['description'] || '',
-        },
+        }
       }
 
       state = last_operation_hash['state']
       if state
-        attributes[:last_operation][:state] = state
+        return_values[:last_operation][:state] = state
       else
-        attributes[:last_operation][:state] = 'succeeded'
+        return_values[:last_operation][:state] = 'succeeded'
       end
 
-      attributes
+      return_values
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
       @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       raise e

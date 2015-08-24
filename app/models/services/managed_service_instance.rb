@@ -54,6 +54,7 @@ module VCAP::CloudController
     IN_PROGRESS_STRING = 'in progress'.freeze
 
     many_to_one :service_plan
+    one_to_many :service_instance_dashboard_client
 
     export_attributes :name, :credentials, :service_plan_guid,
       :space_guid, :gateway_data, :dashboard_url, :type, :last_operation,
@@ -102,6 +103,10 @@ module VCAP::CloudController
     def after_initialize
       super
       self.guid ||= SecureRandom.uuid
+    end
+
+    def service_instance_dashboard_client
+      super.first
     end
 
     def as_summary_json
