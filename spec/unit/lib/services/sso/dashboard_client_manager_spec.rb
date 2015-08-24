@@ -584,52 +584,6 @@ module VCAP::Services::SSO
           'redirect_uri' => 'https://dashboard.service.com'
         }
       end
-
-      describe '#add_client_for_instance' do
-        before do
-          allow(VCAP::Services::SSO::UAA::UaaClientManager).to receive(:new).and_return(client_manager)
-          allow(client_manager).to receive(:get_clients).and_return([])
-          allow(client_manager).to receive(:modify_transaction)
-        end
-
-        context 'when the client does not already exist in UAA' do
-          it 'creates a client in UAA' do
-            expect(client_manager).to receive(:modify_transaction) do |changeset|
-              expect(changeset.length).to eq 1
-              expect(changeset.first).to be_an_instance_of Commands::CreateClientCommand
-              expect(changeset[0].client_attrs).to eq client_info
-            end
-
-            manager.add_client_for_instance client_info
-          end
-
-          it 'claims the client for the service instance' do
-            expect {
-              manager.add_client_for_instance client_info
-            }.to change { VCAP::CloudController::ServiceInstanceDashboardClient.count }.by 1
-
-            expect(VCAP::CloudController::ServiceInstanceDashboardClient.find(uaa_id: client_info['id'])).to_not be_nil
-          end
-
-          it 'creates a service_dashboard_client.create event including the instance guid' do
-            manager.add_client_for_instance client_info
-
-            event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_id)
-            expect(event.actor_type).to eq('service_broker')
-            expect(event.actor).to eq(service_broker.guid)
-            expect(event.actor_name).to eq(service_broker.name)
-            expect(event.timestamp).to be
-            expect(event.actee).to eq(client_id)
-            expect(event.actee_type).to eq('service_dashboard_client')
-            expect(event.actee_name).to eq(client_id)
-            expect(event.space_guid).to eq('')
-            expect(event.organization_guid).to eq('')
-            expect(event.metadata).to include({
-              'service_instance_guid' => service_instance.guid
-            })
-          end
-        end
-      end
     end
   end
 end

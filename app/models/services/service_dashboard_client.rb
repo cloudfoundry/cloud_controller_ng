@@ -64,31 +64,4 @@ module VCAP::CloudController
       end
     end
   end
-
-  class ServiceInstanceDashboardClient < Sequel::Model
-    many_to_one :managed_service_instance
-
-    include DashboardClientValidation
-    extend DashboardClient
-
-    class << self
-      def find_claimed_client(instance)
-        where(managed_service_instance_id: instance.id)
-      end
-
-      private
-
-      def get_client(instance_id, uaa_id)
-        where(managed_service_instance_id: instance_id, uaa_id: uaa_id)
-      end
-
-      def update_resource(instance, unclaimed_client)
-        unclaimed_client.update(managed_service_instance_id: instance.id)
-      end
-
-      def create_resource(instance, uaa_id)
-        create(uaa_id: uaa_id, managed_service_instance: instance)
-      end
-    end
-  end
 end

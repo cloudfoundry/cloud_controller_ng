@@ -259,84 +259,6 @@ module VCAP::CloudController
           expect(event).to match_service_instance(instance)
         end
 
-        context 'create with a dashboard client' do
-          let(:response_body) do
-            {
-              dashboard_client: {
-                id: 'client-id-1',
-                secret: 'secret-1',
-                redirect_uri: 'https://dashboard.service.com'
-              },
-              dashboard_url: 'the dashboard_url'
-            }.to_json
-          end
-
-          before do
-            body = { token_type: '', access_token: '' }.to_json
-            stub_request(:post, 'http://cc-service-dashboards:some-sekret@localhost:8080/uaa/oauth/token').
-              to_return(status: 200, body: body, headers: { content_type: 'application/json' })
-            body2 = { id: '', client_id: '' }.to_json
-            stub_request(:get, 'http://localhost:8080/uaa/oauth/clients/client-id-1').
-              to_return(status: 200, body: body2, headers: { content_type: 'application/json' })
-            stub_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').
-              to_return(status: 200, body: '', headers: {})
-          end
-
-          it 'provisions a service instance with a UAA client' do
-            service_instance = create_managed_service_instance(
-                    email: 'test@example.com',
-                    accepts_incomplete: false
-            )
-
-            expect(service_instance.service_instance_dashboard_client.uaa_id).to eq('client-id-1')
-
-            expect(decoded_response['entity']['dashboard_url']).to eq('the dashboard_url')
-            expect(last_response).to have_status_code(201)
-          end
-
-          it 'creates a service_dashboard_client.create event' do
-            expect {
-              create_managed_service_instance(
-                email: 'test@example.com',
-                accepts_incomplete: false
-              )
-            }.to change {
-              VCAP::CloudController::Event.where(type: 'audit.service_dashboard_client.create').count
-            }.by 1
-          end
-
-          context 'dashboard_url is not passed' do
-            let(:response_body) do
-              {
-                dashboard_client: {
-                  'id' => 'client-id-1',
-                  'secret' => 'secret-1',
-                  'redirect_uri' => 'https://dashboard.service.com'
-                }
-              }.to_json
-            end
-
-            before do
-              allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
-              allow(logger).to receive(:error)
-            end
-
-            it 'rejects the service instance by initiating orphan mitigation' do
-              service_instance = create_managed_service_instance(
-                email: 'test@example.com',
-                accepts_incomplete: false
-              )
-
-              expect(service_instance.service_instance_dashboard_client).to be_nil
-              expect(mock_orphan_mitigator).to have_received(:attempt_deprovision_instance)
-
-              expect(decoded_response['entity']).to be_nil
-              expect(last_response).to have_status_code(502)
-              expect(last_response.body).to include('Service broker returned dashboard client configuration without a dashboard URL')
-            end
-          end
-        end
-
         describe 'instance tags' do
           context 'when service instance tags are sent with the create request' do
             it 'saves the service instance tags' do
@@ -599,68 +521,6 @@ module VCAP::CloudController
               expect(decoded_response['entity']['last_operation']['description']).to match /Service Broker failed to provision within the required time/
             end
           end
-
-          context 'create with a dashboard client' do
-            let(:response_body) do
-              {
-                dashboard_client: {
-                  id: 'client-id-1',
-                  secret: 'secret-1',
-                  redirect_uri: 'https://dashboard.service.com'
-                },
-                dashboard_url: 'the dashboard_url'
-              }.to_json
-            end
-
-            before do
-              body = { token_type: '', access_token: '' }.to_json
-              stub_request(:post, 'http://cc-service-dashboards:some-sekret@localhost:8080/uaa/oauth/token').
-                to_return(status: 200, body: body, headers: { content_type: 'application/json' })
-              body2 = { id: '', client_id: '' }.to_json
-              stub_request(:get, 'http://localhost:8080/uaa/oauth/clients/client-id-1').
-                to_return(status: 200, body: body2, headers: { content_type: 'application/json' })
-              stub_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').
-                to_return(status: 200, body: '', headers: {})
-            end
-
-            it 'provisions a service instance' do
-              service_instance = create_managed_service_instance
-
-              expect(service_instance.service_instance_dashboard_client.uaa_id).to eq('client-id-1')
-
-              expect(decoded_response['entity']['dashboard_url']).to eq('the dashboard_url')
-              expect(last_response).to have_status_code(202)
-            end
-
-            context 'dashboard_url is not passed' do
-              let(:logger) { double(:logger) }
-              let(:response_body) do
-                {
-                  dashboard_client: {
-                    'id' => 'client-id-1',
-                    'secret' => 'secret-1',
-                    'redirect_uri' => 'https://dashboard.service.com'
-                  }
-                }.to_json
-              end
-
-              before do
-                allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
-                allow(logger).to receive(:error)
-              end
-
-              it 'rejects the service instance by initiating orphan mitigation' do
-                service_instance = create_managed_service_instance
-
-                expect(service_instance.service_instance_dashboard_client).to be_nil
-                expect(mock_orphan_mitigator).to have_received(:attempt_deprovision_instance)
-
-                expect(decoded_response['entity']).to be_nil
-                expect(last_response).to have_status_code(502)
-                expect(last_response.body).to include('Service broker returned dashboard client configuration without a dashboard URL')
-              end
-            end
-          end
         end
 
         context 'when the client explicitly does not request accepts_incomplete provisioning' do
@@ -704,11 +564,6 @@ module VCAP::CloudController
           let(:body) do
             {
               dashboard_url: 'http://example-dashboard.com/9189kdfsk0vfnku',
-              dashboard_client: {
-                id: 'client-id-1',
-                secret: 'secret-1',
-                redirect_uri: 'https://dashboard.service.com'
-              }
             }.to_json
           end
 

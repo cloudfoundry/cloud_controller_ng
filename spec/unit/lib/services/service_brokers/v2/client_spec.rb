@@ -144,11 +144,6 @@ module VCAP::Services::ServiceBrokers::V2
         let(:response_data) do
           {
               dashboard_url: 'http://example-dashboard.com/9189kdfsk0vfnku',
-              dashboard_client: {
-                  id: 'client-id-1',
-                  secret: 'secret-1',
-                  redirect_uri: 'https://dashboard.service.com'
-              },
               route_service_url: 'https://some-route-service-url.com'
           }
         end
@@ -168,14 +163,6 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'returns the dashboard url' do
           expect(attributes[:instance][:dashboard_url]).to eq('http://example-dashboard.com/9189kdfsk0vfnku')
-        end
-
-        it 'returns the dashboard client credentials if present' do
-          expect(attributes[:dashboard_client]).to eq({
-            'id' => 'client-id-1',
-            'secret' => 'secret-1',
-            'redirect_uri' => 'https://dashboard.service.com'
-          })
         end
 
         describe 'last operation' do

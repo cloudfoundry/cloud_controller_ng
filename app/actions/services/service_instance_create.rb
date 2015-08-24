@@ -30,31 +30,11 @@ module VCAP::CloudController
         setup_async_job(request_attrs, service_instance)
       end
 
-      dashboard_client_info = broker_response[:dashboard_client]
-
-      if dashboard_client_info
-        setup_dashboard(broker_response, dashboard_client_info, service_instance)
-      end
-
       if !accepts_incomplete || service_instance.last_operation.state != 'in progress'
         @services_event_repository.record_service_instance_event(:create, service_instance, request_attrs)
       end
 
       service_instance
-    end
-
-    def setup_dashboard(broker_response, dashboard_client_info, service_instance)
-      if !broker_response[:instance].key?(:dashboard_url) || broker_response[:instance][:dashboard_url].nil?
-        error_message = 'Missing dashboard_url from broker response while creating a service instance with dashboard_client'
-        e = VCAP::Errors::ApiError.new_from_details('ServiceDashboardClientMissingUrl', error_message)
-        mitigate_orphan(e, service_instance, message: error_message)
-      end
-      client_manager = VCAP::Services::SSO::DashboardClientManager.new(
-        service_instance,
-        @services_event_repository,
-        VCAP::CloudController::ServiceInstanceDashboardClient
-      )
-      client_manager.add_client_for_instance(dashboard_client_info)
     end
 
     def setup_async_job(request_attrs, service_instance)

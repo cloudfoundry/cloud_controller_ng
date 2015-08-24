@@ -40,7 +40,6 @@ module VCAP::Services::ServiceBrokers::V2
           dashboard_url: parsed_response['dashboard_url'],
           route_service_url: parsed_response['route_service_url'],
         },
-        dashboard_client: parsed_response['dashboard_client'],
         last_operation: {
           type: 'create',
           description: last_operation_hash['description'] || '',
