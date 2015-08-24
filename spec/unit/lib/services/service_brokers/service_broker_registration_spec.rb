@@ -77,7 +77,11 @@ module VCAP::Services::ServiceBrokers
       it 'creates dashboard clients' do
         registration.create
 
-        expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(broker, services_event_repository)
+        expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(
+                                                                 broker,
+                                                                 services_event_repository,
+                                                                 VCAP::CloudController::ServiceDashboardClient
+                                                               )
         expect(client_manager).to have_received(:synchronize_clients_with_catalog).with(catalog)
       end
 
@@ -383,7 +387,11 @@ module VCAP::Services::ServiceBrokers
       it 'updates dashboard clients' do
         registration.update
 
-        expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(broker, services_event_repository)
+        expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(
+                                                                 broker,
+                                                                 services_event_repository,
+                                                                 VCAP::CloudController::ServiceDashboardClient
+                                                               )
         expect(client_manager).to have_received(:synchronize_clients_with_catalog).with(catalog)
       end
 

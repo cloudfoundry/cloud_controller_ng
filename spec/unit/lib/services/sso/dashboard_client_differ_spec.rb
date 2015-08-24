@@ -2,7 +2,8 @@ require 'spec_helper'
 
 module VCAP::Services::SSO
   describe DashboardClientDiffer do
-    let(:differ) { DashboardClientDiffer.new(service_broker) }
+    let(:client_model_class) { double(VCAP::CloudController::ServiceDashboardClient) }
+    let(:differ) { DashboardClientDiffer.new(service_broker, client_model_class) }
     let(:service_broker) { double(:service_broker, id: 'service-broker-1') }
     let(:dashboard_client) do
       {
@@ -110,6 +111,7 @@ module VCAP::Services::SSO
           expect(changeset.first).to be_a Commands::ClaimClientCommand
           expect(changeset.first.client_id).to eq(dashboard_client['id'])
           expect(changeset.first.service_broker).to eq(service_broker)
+          expect(changeset.first.client_model_class).to eq(client_model_class)
         end
       end
 
@@ -129,6 +131,7 @@ module VCAP::Services::SSO
           expect(changeset.first).to be_a Commands::ClaimClientCommand
           expect(changeset.first.client_id).to eq(dashboard_client['id'])
           expect(changeset.first.service_broker).to eq(service_broker)
+          expect(changeset.first.client_model_class).to eq(client_model_class)
         end
       end
 

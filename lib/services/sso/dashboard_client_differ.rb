@@ -1,14 +1,15 @@
 module VCAP::Services::SSO
   class DashboardClientDiffer
-    def initialize(broker)
+    def initialize(broker, client_model_class)
       @broker = broker
+      @client_model_class = client_model_class
     end
 
     def create_db_changeset(requested_clients, existing_cc_clients)
       requested_ids = requested_clients.map { |client| client.fetch('id') }
 
       create_and_update_commands = requested_clients.map do |requested_client|
-        Commands::ClaimClientCommand.new(requested_client.fetch('id'), broker)
+        Commands::ClaimClientCommand.new(requested_client.fetch('id'), broker, client_model_class)
       end
 
       delete_commands = existing_cc_clients.map do |client|
@@ -45,6 +46,6 @@ module VCAP::Services::SSO
 
     private
 
-    attr_reader :broker
+    attr_reader :broker, :client_model_class
   end
 end
