@@ -8,12 +8,12 @@ module VCAP::Services::SSO::Commands
 
     describe '#db_command' do
       before do
-        allow(VCAP::CloudController::ServiceDashboardClient).to receive(:remove_claim_on_client)
+        allow(VCAP::CloudController::ServiceDashboardClient).to receive(:release_client)
       end
 
       it 'claims the client in the DB' do
         command.db_command
-        expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:remove_claim_on_client).with(client_id)
+        expect(VCAP::CloudController::ServiceDashboardClient).to have_received(:release_client).with(client_id)
       end
     end
   end
