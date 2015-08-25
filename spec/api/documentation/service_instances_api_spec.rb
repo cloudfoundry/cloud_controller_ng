@@ -195,6 +195,14 @@ EOF
 
       standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :service_instance
     end
+
+    describe 'Routes' do
+      before do
+        VCAP::CloudController::Route.make(service_instance: service_instance)
+      end
+
+      standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :service_instance
+    end
   end
 
   get '/v2/service_instances/:guid/permissions' do
