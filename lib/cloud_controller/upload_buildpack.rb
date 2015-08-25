@@ -6,10 +6,10 @@ module VCAP::CloudController
       @buildpack_blobstore = blobstore
     end
 
-    def upload_buildpack(buildpack, bits_file, new_filename)
+    def upload_buildpack(buildpack, bits_file_path, new_filename)
       return false if buildpack.locked
 
-      sha1 = File.new(bits_file).hexdigest
+      sha1 = Digester.new.digest_path(bits_file_path)
       new_key = "#{buildpack.guid}_#{sha1}"
       missing_bits = buildpack.key && !buildpack_blobstore.exists?(buildpack.key)
 
@@ -17,7 +17,7 @@ module VCAP::CloudController
 
       # replace blob if new
       if missing_bits || new_bits?(buildpack, new_key)
-        buildpack_blobstore.cp_to_blobstore(bits_file, new_key)
+        buildpack_blobstore.cp_to_blobstore(bits_file_path, new_key)
       end
 
       old_buildpack_key = nil

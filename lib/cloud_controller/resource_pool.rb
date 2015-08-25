@@ -52,7 +52,7 @@ class VCAP::CloudController::ResourcePool
   end
 
   def add_path(path)
-    sha1 = Digest::SHA1.file(path).hexdigest
+    sha1 = Digester.new.digest_path(path)
     key = key_from_sha1(sha1)
     return if blobstore.files.head(sha1)
 

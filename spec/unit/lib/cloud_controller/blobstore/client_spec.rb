@@ -4,7 +4,7 @@ module CloudController
   module Blobstore
     describe Client do
       let(:content) { 'Some Nonsense' }
-      let(:sha_of_content) { Digest::SHA1.hexdigest(content) }
+      let(:sha_of_content) { Digester.new.digest(content) }
       let(:local_dir) { Dir.mktmpdir }
       let(:directory_key) { 'a-directory-key' }
       let(:connection_config) do
@@ -97,7 +97,7 @@ module CloudController
           describe 'a file existence' do
             it 'does not exist if not present' do
               different_content = 'foobar'
-              sha_of_different_content = Digest::SHA1.hexdigest(different_content)
+              sha_of_different_content = Digester.new.digest(different_content)
 
               expect(client.exists?(sha_of_different_content)).to be false
 
@@ -110,7 +110,7 @@ module CloudController
         end
 
         describe '#cp_r_to_blobstore' do
-          let(:sha_of_nothing) { Digest::SHA1.hexdigest('') }
+          let(:sha_of_nothing) { Digester.new.digest('') }
 
           it 'ensure that the sha of nothing and sha of content are different for subsequent tests' do
             expect(sha_of_nothing[0..1]).not_to eq(sha_of_content[0..1])

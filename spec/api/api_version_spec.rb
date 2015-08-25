@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'digest/sha1'
+require 'vcap/digester'
 
 describe 'Stable API warning system', api_version_check: true do
   API_FOLDER_CHECKSUM = 'ff819bddeece3817710c7b8c9945a426cbd147be'
@@ -13,10 +13,10 @@ describe 'Stable API warning system', api_version_check: true do
     filenames = Dir.glob("#{api_folder}/**/*").reject { |filename| File.directory?(filename) || filename == __FILE__ || filename.include?('v3') }.sort
 
     all_file_checksum = filenames.each_with_object('') do |filename, memo|
-      memo << Digest::SHA1.file(filename).hexdigest
+      memo << Digester.new.digest_path(filename)
     end
 
-    new_checksum = Digest::SHA1.hexdigest(all_file_checksum)
+    new_checksum = Digester.new.digest(all_file_checksum)
 
     expect(new_checksum).to eql(API_FOLDER_CHECKSUM),
       <<-END

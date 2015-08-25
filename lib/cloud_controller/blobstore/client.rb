@@ -41,7 +41,7 @@ module CloudController
           next unless File.file?(path)
           next unless within_limits?(File.size(path))
 
-          sha1 = Digest::SHA1.file(path).hexdigest
+          sha1 = Digester.new.digest_path(path)
           next if exists?(sha1)
 
           cp_to_blobstore(path, sha1)

@@ -14,7 +14,7 @@ module VCAP::CloudController
           droplet = DropletModel.find(guid: @droplet_guid)
 
           if droplet
-            digest = Digest::SHA1.file(@local_path).hexdigest
+            digest = Digester.new.digest_path(@local_path)
 
             blobstore.cp_to_blobstore(
               @local_path,

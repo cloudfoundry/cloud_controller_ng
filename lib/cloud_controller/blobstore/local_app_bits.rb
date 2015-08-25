@@ -1,5 +1,5 @@
 require 'cloud_controller/safe_zipper'
-require 'ext/file'
+require 'vcap/digester'
 
 module CloudController
   module Blobstore

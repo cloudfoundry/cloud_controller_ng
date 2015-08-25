@@ -224,8 +224,10 @@ module VCAP::CloudController
     end
 
     def check_file_md5
-      file_md5 = Digest::MD5.base64digest(File.read(upload_path))
+      digester = Digester.new(algorithm: Digest::MD5, type: :base64digest)
+      file_md5 = digester.digest_path(upload_path)
       header_md5 = env['HTTP_CONTENT_MD5']
+
       if header_md5.present? && file_md5 != header_md5
         raise ApiError.new_from_details('StagingError', 'content md5 did not match')
       end

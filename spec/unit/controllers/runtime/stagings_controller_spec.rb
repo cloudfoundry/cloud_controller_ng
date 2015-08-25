@@ -10,6 +10,7 @@ module VCAP::CloudController
     let(:blobstore) do
       CloudController::DependencyLocator.instance.droplet_blobstore
     end
+    let(:digester) { Digester.new(algorithm: Digest::MD5, type: :base64digest) }
 
     let(:buildpack_cache_blobstore) do
       CloudController::DependencyLocator.instance.buildpack_cache_blobstore
@@ -181,7 +182,7 @@ module VCAP::CloudController
             end
 
             it 'succeeds if the value matches the md5 of the body' do
-              content_md5 = Digest::MD5.base64digest(file_content)
+              content_md5 = digester.digest(file_content)
               post "/staging/droplets/#{app_obj.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => content_md5
               expect(last_response.status).to eq(200)
             end
@@ -391,7 +392,7 @@ module VCAP::CloudController
         end
 
         it 'succeeds if the value matches the md5 of the body' do
-          content_md5 = Digest::MD5.base64digest(file_content)
+          content_md5 = digester.digest(file_content)
           post "/staging/v3/droplets/#{droplet.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => content_md5
           expect(last_response.status).to eq(200)
         end
@@ -580,7 +581,7 @@ module VCAP::CloudController
           end
 
           it 'succeeds if the value matches the md5 of the body' do
-            content_md5 = Digest::MD5.base64digest(file_content)
+            content_md5 = digester.digest(file_content)
             post "/staging/buildpack_cache/#{app_obj.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => content_md5
             expect(last_response.status).to eq(200)
           end
@@ -739,7 +740,7 @@ module VCAP::CloudController
           end
 
           it 'succeeds if the value matches the md5 of the body' do
-            content_md5 = Digest::MD5.base64digest(file_content)
+            content_md5 = digester.digest(file_content)
             post "/staging/v3/buildpack_cache/#{stack}/#{app_model.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => content_md5
             expect(last_response.status).to eq(200)
           end
