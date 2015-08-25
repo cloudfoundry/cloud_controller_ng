@@ -326,7 +326,6 @@ module VCAP::CloudController
 
       describe '#record_service_dashboard_client_event' do
         let(:broker) { VCAP::CloudController::ServiceBroker.make }
-        let(:dashboard_owner) { VCAP::Services::SSO::DashboardOwner.new broker }
         let(:client_attrs) do
           {
             'id' => 'client-id',
@@ -336,7 +335,7 @@ module VCAP::CloudController
         end
 
         it 'creates an event' do
-          repository.record_service_dashboard_client_event(:create, client_attrs, dashboard_owner)
+          repository.record_service_dashboard_client_event(:create, client_attrs, broker)
 
           event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_attrs['id'])
           expect(event.actor_type).to eq('service_broker')
@@ -352,7 +351,7 @@ module VCAP::CloudController
         end
 
         it 'redacts the client secret' do
-          repository.record_service_dashboard_client_event(:create, client_attrs, dashboard_owner)
+          repository.record_service_dashboard_client_event(:create, client_attrs, broker)
 
           event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_attrs['id'])
           expect(event.metadata['secret']).to eq '[REDACTED]'
@@ -367,28 +366,10 @@ module VCAP::CloudController
           end
 
           it 'does not include client information in metadata field' do
-            repository.record_service_dashboard_client_event(:create, client_attrs, dashboard_owner)
+            repository.record_service_dashboard_client_event(:create, client_attrs, broker)
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_attrs['id'])
             expect(event.metadata).to be_empty
-          end
-        end
-
-        context 'when the event is for a service instance client' do
-          let(:service_instance) { ManagedServiceInstance.make }
-          let(:dashboard_owner) {  VCAP::Services::SSO::DashboardOwner.new service_instance }
-
-          before do
-            dashboard_owner.is_instance = true
-          end
-
-          it 'includes the service instance guid in the metadata' do
-            repository.record_service_dashboard_client_event(:create, client_attrs, dashboard_owner)
-
-            event = VCAP::CloudController::Event.first(type: 'audit.service_dashboard_client.create', actee_name: client_attrs['id'])
-            expect(event.metadata).to include({
-              'service_instance_guid' => service_instance.guid
-            })
           end
         end
       end
@@ -599,8 +580,7 @@ module VCAP::CloudController
 
         specify 'record_service_dashboard_client_event logs an error but does not propagate errors' do
           broker = VCAP::CloudController::ServiceBroker.make
-          dashboard_owner = VCAP::Services::SSO::DashboardOwner.new broker
-          repository.record_service_dashboard_client_event(:create, {}, dashboard_owner)
+          repository.record_service_dashboard_client_event(:create, {}, broker)
           expect(logger).to have_received(:error)
         end
 
