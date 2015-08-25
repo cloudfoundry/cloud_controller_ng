@@ -38,7 +38,7 @@ module VCAP::Services::ServiceBrokers::V2
         instance: {
           credentials: {},
           dashboard_url: parsed_response['dashboard_url'],
-          route_service_url: parsed_response['route_service_url'],
+          route_service_url: parsed_response['route_service_url']
         },
         last_operation: {
           type: 'create',

@@ -18,9 +18,12 @@ module VCAP::CloudController
             'dashboard_url' => 'test-dashboardurl.com'
         }
       end
+      let(:dashboard_url) { 'http://meow.com' }
+      let(:route_service_url) { 'https://meow.proxy.com' }
+      let(:broker_response_body) { { route_service_url: route_service_url, dashboard_url: dashboard_url } }
 
       before do
-        stub_provision(service_plan.service.service_broker)
+        stub_provision(service_plan.service.service_broker, body: broker_response_body.to_json)
       end
 
       it 'creates the service instance with the requested params' do
@@ -36,6 +39,14 @@ module VCAP::CloudController
       it 'creates a new service instance operation' do
         create_action.create(request_attrs, false)
         expect(ManagedServiceInstance.last.last_operation).to eq(ServiceInstanceOperation.last)
+      end
+
+      it 'saves service instance attributes returned by the broker' do
+        create_action.create(request_attrs, false)
+        instance = ManagedServiceInstance.last
+
+        expect(instance[:dashboard_url]).to eq(dashboard_url)
+        expect(instance.route_service_url).to eq(route_service_url)
       end
 
       it 'creates an audit event' do

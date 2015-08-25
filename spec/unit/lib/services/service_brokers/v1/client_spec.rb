@@ -58,14 +58,25 @@ module VCAP::Services
         allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
       end
 
-      it 'sets relevant attributes on the instance' do
+      it 'returns instance attributes' do
         attributes = client.provision(instance)
-        instance.save_with_new_operation(attributes[:instance], attributes[:last_operation])
 
-        expect(instance.broker_provided_id).to eq('123')
-        expect(instance.gateway_data).to eq('setting' => true)
-        expect(instance.credentials).to eq('user' => 'admin', 'pass' => 'secret')
-        expect(instance.dashboard_url).to eq('http://dashboard.example.com')
+        expect(attributes[:instance]).to eq({
+          broker_provided_id: '123',
+          gateway_data:       { 'setting' => true },
+          credentials:        { 'user' => 'admin', 'pass' => 'secret' },
+          dashboard_url:      'http://dashboard.example.com'
+        })
+      end
+
+      it 'returns a successful last operation' do
+        attributes = client.provision(instance)
+
+        expect(attributes[:last_operation]).to eq({
+          type: 'create',
+          state: 'succeeded',
+          description: ''
+        })
       end
 
       it 'translates duplicate service errors' do

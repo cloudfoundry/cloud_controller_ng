@@ -198,11 +198,11 @@ module VCAP::CloudController
       false
     end
 
-    def save_with_new_operation(instance_attributes_to_update, last_operation)
+    def save_with_new_operation(instance_attributes, last_operation)
       ManagedServiceInstance.db.transaction do
         lock!
 
-        update_attributes(instance_attributes_to_update)
+        update_attributes(instance_attributes)
 
         if self.last_operation
           self.last_operation.destroy
