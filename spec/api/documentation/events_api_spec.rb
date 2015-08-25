@@ -339,8 +339,7 @@ resource 'Events', type: [:api, :legacy_api] do
         service_broker: VCAP::CloudController::ServiceBroker.make
       ).save
 
-      dashboard_owner =  VCAP::Services::SSO::DashboardOwner.new test_broker
-      service_event_repository.record_service_dashboard_client_event(:create, client_attrs, dashboard_owner)
+      service_event_repository.record_service_dashboard_client_event(:create, client_attrs, test_broker)
 
       client.get '/v2/events?q=type:audit.service_dashboard_client.create', {}, headers
       expect(status).to eq(200)
@@ -368,8 +367,7 @@ resource 'Events', type: [:api, :legacy_api] do
         service_broker: VCAP::CloudController::ServiceBroker.make
       ).save
 
-      dashboard_owner = VCAP::Services::SSO::DashboardOwner.new test_broker
-      service_event_repository.record_service_dashboard_client_event(:delete, client_attrs, dashboard_owner)
+      service_event_repository.record_service_dashboard_client_event(:delete, client_attrs, test_broker)
 
       client.get '/v2/events?q=type:audit.service_dashboard_client.delete', {}, headers
       expect(status).to eq(200)

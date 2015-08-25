@@ -59,7 +59,7 @@ module VCAP::CloudController
           expect {
             ServiceDashboardClient.claim_client(uaa_id, service_broker)
           }.to change {
-              client_claimed? uaa_id, service_broker
+            client_claimed? uaa_id, service_broker
           }.to(true)
         end
       end

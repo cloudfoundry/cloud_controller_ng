@@ -8,14 +8,14 @@ module VCAP::Services::SSO
       'The broker catalog has been updated but its dashboard client configuration will be ignored.'
     ].join(' ').freeze
 
-    def initialize(broker, services_event_repository, dashboard_client)
+    def initialize(broker, services_event_repository)
       @broker   = broker
       @errors   = VCAP::Services::ValidationErrors.new
       @warnings = []
 
       @client_manager = VCAP::Services::SSO::UAA::UaaClientManager.new
 
-      @differ = DashboardClientDiffer.new(broker, dashboard_client)
+      @differ = DashboardClientDiffer.new(broker)
 
       @services_event_repository = services_event_repository
     end

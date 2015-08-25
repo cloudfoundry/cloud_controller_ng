@@ -10,8 +10,7 @@ module VCAP::Services::SSO
 
     context 'for service brokers' do
       let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
-      let(:dashboard_client) {  VCAP::CloudController::ServiceDashboardClient }
-      let(:manager) { DashboardClientManager.new(service_broker, services_event_repository, dashboard_client) }
+      let(:manager) { DashboardClientManager.new(service_broker, services_event_repository) }
 
       describe '#synchronize_clients_with_catalog' do
         let(:dashboard_client_attrs_1) do

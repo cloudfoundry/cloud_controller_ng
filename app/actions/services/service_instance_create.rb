@@ -1,7 +1,6 @@
 require 'actions/services/synchronous_orphan_mitigate'
 
 module VCAP::CloudController
-  class InvalidDashboardInfo < StandardError; end
   class ServiceInstanceCreate
     def initialize(services_event_repository, logger)
       @services_event_repository = services_event_repository
