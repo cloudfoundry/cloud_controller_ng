@@ -45,7 +45,7 @@ module VCAP::CloudController
           expect {
             ServiceDashboardClient.claim_client(uaa_id, service_broker)
           }.to change {
-            ServiceDashboardClient.client_claimed?(uaa_id, service_broker)
+            client_claimed? uaa_id, service_broker
           }.to(true)
         end
       end
@@ -59,7 +59,7 @@ module VCAP::CloudController
           expect {
             ServiceDashboardClient.claim_client(uaa_id, service_broker)
           }.to change {
-            ServiceDashboardClient.client_claimed?(uaa_id, service_broker)
+              client_claimed? uaa_id, service_broker
           }.to(true)
         end
       end
@@ -85,7 +85,7 @@ module VCAP::CloudController
           expect {
             ServiceDashboardClient.claim_client(uaa_id, service_broker)
           }.not_to change {
-            ServiceDashboardClient.client_claimed?(uaa_id, service_broker)
+            client_claimed? uaa_id, service_broker
           }
         end
       end
@@ -99,7 +99,7 @@ module VCAP::CloudController
       it 'removes the claim' do
         expect {
           ServiceDashboardClient.release_client(uaa_id)
-        }.to change { ServiceDashboardClient.client_claimed?(uaa_id, service_broker) }.to(false)
+        }.to change { client_claimed? uaa_id, service_broker }.to(false)
       end
     end
 
@@ -119,6 +119,10 @@ module VCAP::CloudController
           expect(ServiceDashboardClient.find_client_by_uaa_id('some-uaa-id')).to eq(client)
         end
       end
+    end
+
+    def client_claimed?(uaa_id, service_broker)
+      VCAP::CloudController::ServiceDashboardClient.where(service_broker_id: service_broker.id, uaa_id: uaa_id).any?
     end
   end
 end
