@@ -46,6 +46,13 @@ module VCAP::CloudController
         expect(hash['logging_endpoint']).to eq('loggregator_url')
       end
 
+      it 'includes the routing api endpoint when configured' do
+        TestConfig.override(routing_api: { url: 'some_routing_api' })
+        get '/v2/info', {}, {}
+        hash = MultiJson.load(last_response.body)
+        expect(hash['routing_endpoint']).to eq('some_routing_api')
+      end
+
       it 'includes the doppler_logging_endpoint when enabled' do
         TestConfig.override(doppler: { enabled: true, url: 'doppler_url' })
         get '/v2/info', {}, {}
