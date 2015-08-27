@@ -183,6 +183,15 @@ EOF
         expect(parsed_response['entity']['routes_url']).to eq("/v2/service_instances/#{service_instance.guid}/routes")
       end
     end
+
+    delete '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
+      let(:route) { VCAP::CloudController::Route.make }
+
+      example 'Unbinding a service instance from a route (experimental)' do
+        client.delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
+        expect(status).to eq(201)
+      end
+    end
   end
 
   describe 'Nested endpoints' do

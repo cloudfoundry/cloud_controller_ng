@@ -200,7 +200,7 @@ module VCAP::CloudController
         expect(described_class).to have_nested_routes(
           service_bindings: [:get, :put, :delete],
           service_keys: [:get, :put, :delete],
-          routes: [:get, :put]
+          routes: [:get, :put, :delete]
         )
       end
     end
@@ -2321,6 +2321,29 @@ module VCAP::CloudController
               expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
             end
           end
+        end
+      end
+    end
+
+    describe 'DELETE', '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:service_instance) { ManagedServiceInstance.make(space: space) }
+
+      context 'when a service has an associated route' do
+        let!(:route) { VCAP::CloudController::Route.make(space: space, service_instance: service_instance) }
+
+        it 'deletes the association between the route and the service instance' do
+          get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+          expect(last_response.status).to eq(200)
+          expect(JSON.parse(last_response.body)['total_results']).to eql(1)
+
+          delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response.status).to eq(201)
+
+          get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+          expect(last_response.status).to eq(200)
+          expect(JSON.parse(last_response.body)['total_results']).to eql(0)
         end
       end
     end
