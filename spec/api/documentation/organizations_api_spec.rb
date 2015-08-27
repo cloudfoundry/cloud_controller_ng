@@ -230,6 +230,9 @@ resource 'Organizations', type: [:api, :legacy_api] do
     describe 'Instance Usage (Experimental)' do
       get '/v2/organizations/:guid/instance_usage' do
         example 'Retrieving organization instance usage' do
+          explanation "This endpoint returns a count of started app instances under an organization.
+            Note that crashing apps are included in this count."
+
           space = VCAP::CloudController::Space.make(organization: organization)
           VCAP::CloudController::AppFactory.make(space: space, state: 'STARTED', instances: 3)
 
