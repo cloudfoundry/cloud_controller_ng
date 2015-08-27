@@ -19,6 +19,10 @@ module VCAP::CloudController
         app_ssh_host_key_fingerprint: @config[:info][:app_ssh_host_key_fingerprint]
       }
 
+      if @config[:routing_api] && @config[:routing_api][:url]
+        info[:routing_endpoint] = @config[:routing_api][:url]
+      end
+
       if @config[:loggregator] && @config[:loggregator][:url]
         info[:logging_endpoint] = @config[:loggregator][:url]
       end
