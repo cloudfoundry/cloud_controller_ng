@@ -189,7 +189,7 @@ hm9000:
 
 <% if p("routing_api.enabled") %>
 routing_api:
-  url: <%= p("routing_api.url") %>
+  url: <%= p("routing_api.url", "https://routing-api.#{domain}") %>
 <% end %>
 
 
