@@ -75,6 +75,9 @@ uaa:
 hm9000:
   url: "http://localhost:5155"
 
+routing_api:
+  url: "http://localhost:3000"
+
 cc_partition: ng
 
 bulk_api:
