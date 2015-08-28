@@ -19,8 +19,7 @@ module VCAP::CloudController
         }
       end
       let(:dashboard_url) { 'http://meow.com' }
-      let(:route_service_url) { 'https://meow.proxy.com' }
-      let(:broker_response_body) { { route_service_url: route_service_url, dashboard_url: dashboard_url } }
+      let(:broker_response_body) { { dashboard_url: dashboard_url } }
 
       before do
         stub_provision(service_plan.service.service_broker, body: broker_response_body.to_json)
@@ -46,7 +45,6 @@ module VCAP::CloudController
         instance = ManagedServiceInstance.last
 
         expect(instance[:dashboard_url]).to eq(dashboard_url)
-        expect(instance.route_service_url).to eq(route_service_url)
       end
 
       it 'creates an audit event' do

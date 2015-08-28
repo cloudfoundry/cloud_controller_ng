@@ -149,23 +149,6 @@ module VCAP::Services
           }
         end
 
-        def self.with_valid_route_service_url
-          {
-            'route_service_url' => 'https://route-service.cf-apps.io'
-          }
-        end
-
-        def self.with_http_route_service_url
-          {
-            'route_service_url' => 'http://route-service.cf-apps.io'
-          }
-        end
-
-        def self.with_invalid_route_service_url
-          {
-              'route_service_url' => 'http:/route-service.cf apps.io'
-          }
-        end
         def self.with_credentials
           {
             'credentials' => {
@@ -238,26 +221,17 @@ module VCAP::Services
         test_case(:provision, 200, broker_malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))
         test_case(:provision, 200, broker_empty_json,                                result: client_result_with_state('succeeded'))
         test_case(:provision, 200, with_dashboard_url.to_json,                       result: client_result_with_state('succeeded').merge(with_dashboard_url))
-        test_case(:provision, 200, with_valid_route_service_url.to_json,             result: client_result_with_state('succeeded').merge(with_valid_route_service_url))
-        test_case(:provision, 200, with_invalid_route_service_url.to_json,           error: Errors::ServiceBrokerBadResponse)
-        test_case(:provision, 200, with_http_route_service_url.to_json,              error: Errors::ServiceBrokerBadResponse)
         test_pass_through(:provision, 200, with_dashboard_url,                       expected_state: 'succeeded')
         test_case(:provision, 201, broker_partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
         test_case(:provision, 201, broker_malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))
         test_case(:provision, 201, broker_empty_json,                                result: client_result_with_state('succeeded'))
         test_case(:provision, 201, with_dashboard_url.to_json,                       result: client_result_with_state('succeeded').merge(with_dashboard_url))
-        test_case(:provision, 201, with_valid_route_service_url.to_json,             result: client_result_with_state('succeeded').merge(with_valid_route_service_url))
-        test_case(:provision, 201, with_invalid_route_service_url.to_json,           error: Errors::ServiceBrokerBadResponse)
-        test_case(:provision, 201, with_http_route_service_url.to_json,              error: Errors::ServiceBrokerBadResponse)
         test_pass_through(:provision, 201, with_dashboard_url,                       expected_state: 'succeeded')
         test_case(:provision, 202, broker_partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
         test_case(:provision, 202, broker_malformed_json,                            error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))
         test_case(:provision, 202, broker_empty_json,                                result: client_result_with_state('in progress'))
         test_case(:provision, 202, broker_non_empty_json,                            result: client_result_with_state('in progress'))
         test_case(:provision, 202, with_dashboard_url.to_json,                       result: client_result_with_state('in progress').merge(with_dashboard_url))
-        test_case(:provision, 202, with_valid_route_service_url.to_json,             result: client_result_with_state('in progress').merge(with_valid_route_service_url))
-        test_case(:provision, 202, with_invalid_route_service_url.to_json,           error: Errors::ServiceBrokerBadResponse)
-        test_case(:provision, 202, with_http_route_service_url.to_json,              error: Errors::ServiceBrokerBadResponse)
         test_pass_through(:provision, 202, with_dashboard_url,                       expected_state: 'in progress')
         test_case(:provision, 204, broker_partial_json,                              error: Errors::ServiceBrokerBadResponse)
         test_case(:provision, 204, broker_malformed_json,                            error: Errors::ServiceBrokerBadResponse)
