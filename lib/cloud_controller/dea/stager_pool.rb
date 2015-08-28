@@ -7,6 +7,7 @@ module VCAP::CloudController
 
       def initialize(config, message_bus, blobstore_url_generator)
         @advertise_timeout = config[:dea_advertisement_timeout_in_seconds]
+        @percentage_of_top_stagers = (config[:placement_top_stager_percentage] || 0) / 100.0
         @message_bus = message_bus
         @stager_advertisements = []
         @blobstore_url_generator = blobstore_url_generator
@@ -28,7 +29,7 @@ module VCAP::CloudController
           validate_stack_availability(stack)
 
           prune_stale_advertisements
-          best_ad = top_5_stagers_for(memory, disk, stack).sample
+          best_ad = top_n_stagers_for(memory, disk, stack).sample
           best_ad && best_ad.stager_id
         end
       end
@@ -59,12 +60,12 @@ module VCAP::CloudController
         end
       end
 
-      def top_5_stagers_for(memory, disk, stack)
+      def top_n_stagers_for(memory, disk, stack)
         @stager_advertisements.select do |advertisement|
           advertisement.meets_needs?(memory, stack) && advertisement.has_sufficient_disk?(disk)
         end.sort do |advertisement_a, advertisement_b|
           advertisement_a.available_memory <=> advertisement_b.available_memory
-        end.last(5)
+        end.last([5, @percentage_of_top_stagers * @stager_advertisements.size].max.to_i)
       end
 
       def prune_stale_advertisements

@@ -38,6 +38,27 @@ module VCAP::CloudController
         end
       end
 
+      context 'placement percentage' do
+        let(:placement_percentage) { 15 }
+        before { TestConfig.override({ placement_top_stager_percentage: placement_percentage }) }
+
+        it 'samples out of the top 15% stagers' do
+          (0..99).to_a.shuffle.each do |i|
+            subject.process_advertise_message(
+              'id' => "staging-id-#{i}",
+              'stacks' => ['stack-name'],
+              'available_memory' => 1024 * i,
+            )
+          end
+
+          samples = []
+          100.times do
+            samples.push(subject.find_stager('stack-name', 1024, 0))
+          end
+          expect(samples.uniq.size).to be == placement_percentage
+        end
+      end
+
       describe 'staging advertisement expiration' do
         it 'purges expired DEAs' do
           Timecop.freeze do

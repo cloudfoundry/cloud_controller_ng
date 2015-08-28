@@ -71,6 +71,10 @@ module VCAP::CloudController
           expect(config[:dea_advertisement_timeout_in_seconds]).to eq(10)
         end
 
+        it 'sets a default value for placement_top_stager_percentage' do
+          expect(config[:placement_top_stager_percentage]).to eq(10)
+        end
+
         it 'sets a default value for broker_timeout_seconds' do
           expect(config[:broker_client_timeout_seconds]).to eq(60)
         end

@@ -227,6 +227,7 @@ module VCAP::CloudController
         optional(:allowed_cors_domains) => [String],
 
         optional(:dea_advertisement_timeout_in_seconds) => Integer,
+        optional(:placement_top_stager_percentage) => Integer,
 
         optional(:diego_stager_url) => String,
         optional(:diego_tps_url) => String,
@@ -332,6 +333,7 @@ module VCAP::CloudController
         config[:allowed_cors_domains] ||= []
         config[:default_to_diego_backend] ||= false
         config[:dea_advertisement_timeout_in_seconds] ||= 10
+        config[:placement_top_stager_percentage] ||= 10
         config[:staging][:minimum_staging_memory_mb] ||= 1024
         config[:staging][:minimum_staging_disk_mb] ||= 4096
         config[:staging][:minimum_staging_file_descriptor_limit] ||= 16384
