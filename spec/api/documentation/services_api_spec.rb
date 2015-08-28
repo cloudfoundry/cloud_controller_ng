@@ -36,9 +36,9 @@ resource 'Services', type: [:api, :legacy_api] do
     field :unique_id, 'A guid that identifies the service with the broker (not the same as the guid above)', required: false, default: nil
     field :tags, 'A list of tags for the service', required: false, default: [], example_values: ['database', 'mysql']
     field :requires, 'A list of dependencies for services. The presence of "syslog_drain" indicates that on binding an instance of the service to an application,
-                      logs for the app will be streamed to a url provided by the service. The presence of "route" indicates that on binding an instance of the
+                      logs for the app will be streamed to a url provided by the service. The presence of "route_forwarding" indicates that on binding an instance of the
                       service to a route, requests for the route may be processed by the service before being forwarded to an application mapped to the route.',
-                      required: false, default: [], example_values: ['syslog_drain', 'route']
+                      required: false, default: [], example_values: ['syslog_drain', 'route_forwarding']
 
     field :provider, 'The name of the service provider (used only by v1 service gateways)', required: true, deprecated: true, example_values: ['MySql Provider']
     field :version, 'The version of the service (used only by v1 service gateways)', required: true, deprecated: true, example_values: ['2.0']
