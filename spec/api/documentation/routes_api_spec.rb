@@ -7,7 +7,7 @@ resource 'Routes', type: [:api, :legacy_api] do
   let(:space) { VCAP::CloudController::Space.make(organization: organization) }
   let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: organization) }
   let(:route_path) { '/apps/v1/path' }
-  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing) }
   let!(:route) { VCAP::CloudController::Route.make(domain: domain, space: space, service_instance: service_instance) }
   let(:guid) { route.guid }
 
@@ -61,7 +61,7 @@ resource 'Routes', type: [:api, :legacy_api] do
       include_context 'updatable_fields', required: false
 
       let(:new_host) { 'new_host' }
-      let(:new_service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:new_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing) }
 
       example 'Update a Route' do
         body = MultiJson.dump(

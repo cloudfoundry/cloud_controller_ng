@@ -333,6 +333,21 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'service instance binding' do
+        it 'errors if the service instance is not a route service' do
+          service_instance = ManagedServiceInstance.make
+          routing_service_instance = ManagedServiceInstance.make(:routing)
+
+          route.service_instance = service_instance
+
+          expect(route).to_not be_valid
+
+          route.service_instance = routing_service_instance
+
+          expect(route).to be_valid
+        end
+      end
     end
 
     describe 'Serialization' do

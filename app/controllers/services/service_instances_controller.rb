@@ -28,6 +28,7 @@ module VCAP::CloudController
       space_and_name_errors = errors_on(e, [:space_id, :name])
       quota_errors = errors_on(e, :quota)
       service_plan_errors = errors_on(e, :service_plan)
+      service_instance_errors = errors_on(e, :service_instance)
       service_instance_name_errors = errors_on(e, :name)
       service_instance_tags_errors = errors_on(e, :tags)
 
@@ -47,6 +48,8 @@ module VCAP::CloudController
         return Errors::ApiError.new_from_details('ServiceInstanceNameEmpty', attributes['name'])
       elsif service_instance_tags_errors.include?(:too_long)
         return Errors::ApiError.new_from_details('ServiceInstanceTagsTooLong')
+      elsif service_instance_errors.include?(:route_binding_not_allowed)
+        return Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
       end
 
       Errors::ApiError.new_from_details('ServiceInstanceInvalid', e.errors.full_messages)

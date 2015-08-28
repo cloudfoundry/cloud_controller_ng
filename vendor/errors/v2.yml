@@ -383,6 +383,11 @@
   http_code: 400
   message: "The number of private domains exceeds the quota for organization: %s"
 
+130006:
+  name: ServiceDoesNotSupportRoutes
+  http_code: 400
+  message: This service does not support route binding.
+
 140001:
   name: LegacyApiWithoutDefaultSpace
   http_code: 400

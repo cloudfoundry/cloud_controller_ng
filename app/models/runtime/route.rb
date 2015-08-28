@@ -70,6 +70,8 @@ module VCAP::CloudController
       validate_domain
       validate_total_routes
       errors.add(:host, :domain_conflict) if domains_match?
+
+      validate_service_instance
     end
 
     def validate_path
@@ -185,6 +187,14 @@ module VCAP::CloudController
 
       if !org_routes_policy.allow_more_routes?(1)
         errors.add(:organization, :total_routes_exceeded)
+      end
+    end
+
+    def validate_service_instance
+      return unless service_instance
+
+      unless service_instance.service.requires.include? 'route_forwarding'
+        errors.add(:service_instance, :route_binding_not_allowed)
       end
     end
   end

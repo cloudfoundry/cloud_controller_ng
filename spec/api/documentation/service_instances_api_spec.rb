@@ -175,6 +175,11 @@ EOF
     put '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
       let(:route) { VCAP::CloudController::Route.make }
 
+      before do
+        service_instance.service.requires = ['route_forwarding']
+        service_instance.service.save
+      end
+
       example 'Binding a service instance to a route (experimental)' do
         client.put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
 
@@ -207,6 +212,8 @@ EOF
 
     describe 'Routes' do
       before do
+        service_instance.service.requires = ['route_forwarding']
+
         VCAP::CloudController::Route.make(service_instance: service_instance)
       end
 

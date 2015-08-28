@@ -130,6 +130,10 @@ module VCAP::CloudController
   Service.blueprint(:v2) do
   end
 
+  Service.blueprint(:routing) do
+    requires { ['route_forwarding'] }
+  end
+
   ServiceInstance.blueprint do
     name              { Sham.name }
     credentials       { Sham.service_credentials }
@@ -155,6 +159,10 @@ module VCAP::CloudController
   end
 
   ManagedServiceInstance.blueprint(:v2) do
+  end
+
+  ManagedServiceInstance.blueprint(:routing) do
+    service_plan      { ServicePlan.make(:routing) }
   end
 
   UserProvidedServiceInstance.blueprint do
@@ -231,6 +239,10 @@ module VCAP::CloudController
   end
 
   ServicePlan.blueprint(:v2) do
+  end
+
+  ServicePlan.blueprint(:routing) do
+    service { Service.make(:routing) }
   end
 
   ServicePlanVisibility.blueprint do

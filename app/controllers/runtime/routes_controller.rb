@@ -37,6 +37,11 @@ module VCAP::CloudController
         return path_errors(path_error, attributes)
       end
 
+      service_instance_errors = e.errors.on(:service_instance)
+      if service_instance_errors && service_instance_errors.include?(:route_binding_not_allowed)
+        return Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
+      end
+
       Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
     end
 

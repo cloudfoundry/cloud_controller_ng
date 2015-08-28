@@ -2328,7 +2328,7 @@ module VCAP::CloudController
     describe 'DELETE', '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:service_instance) { ManagedServiceInstance.make(space: space) }
+      let(:service_instance) { ManagedServiceInstance.make(:routing, space: space) }
 
       context 'when a service has an associated route' do
         let!(:route) { VCAP::CloudController::Route.make(space: space, service_instance: service_instance) }
@@ -2624,6 +2624,17 @@ module VCAP::CloudController
           expect(decoded_response['description']).to match(/invalid.*space.*/)
         end
       end
+
+      it 'returns service does not support routes message correctly' do
+        route = Route.make
+        service_instance = ManagedServiceInstance.make
+
+        put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['description']).to include('This service does not support route binding')
+        expect(decoded_response['code']).to eq(130006)
+      end
     end
 
     describe '.translate_validation_exception' do
@@ -2636,6 +2647,7 @@ module VCAP::CloudController
       let(:service_plan_errors) { nil }
       let(:service_instance_name_errors) { nil }
       let(:service_instance_tags_errors) { nil }
+      let(:service_instance_errors) { nil }
       let(:full_messages) { 'Service instance invalid message' }
 
       before do
@@ -2645,6 +2657,7 @@ module VCAP::CloudController
         allow(errors).to receive(:on).with(:service_plan).and_return(service_plan_errors)
         allow(errors).to receive(:on).with(:name).and_return(service_instance_name_errors)
         allow(errors).to receive(:on).with(:tags).and_return(service_instance_tags_errors)
+        allow(errors).to receive(:on).with(:service_instance).and_return(service_instance_errors)
         allow(errors).to receive(:full_messages).and_return(full_messages)
       end
 
