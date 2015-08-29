@@ -73,7 +73,7 @@ module VCAP::CloudController
 
       filtered_dataset = Query.filtered_dataset_from_query_params(
         associated_model,
-        associated_model.organization_visible(space.organization),
+        associated_model.space_or_organizational_visible_for_user(space, SecurityContext.current_user),
         associated_controller.query_parameters,
         @opts,
       )

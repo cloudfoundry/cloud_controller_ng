@@ -450,9 +450,7 @@ module VCAP::CloudController
       let(:space_one) { Space.make(organization: organization_one) }
       let(:space_two) { Space.make(organization: organization_two) }
       let(:user) { make_developer_for_space(space_one) }
-      let(:headers) do
-        headers_for(user)
-      end
+      let(:headers) { headers_for(user)  }
 
       before do
         user.add_organization(organization_two)
@@ -461,6 +459,60 @@ module VCAP::CloudController
 
       def decoded_guids
         decoded_response['resources'].map { |r| r['metadata']['guid'] }
+      end
+
+      context 'when there is a private service broker in a space' do
+        before(:each) do
+          @broker       = ServiceBroker.make(space: space_one)
+          @service      = Service.make(service_broker: @broker, active: true)
+          @service_plan = ServicePlan.make(service: @service, public: false)
+          # ServicePlanVisibility.make(service_plan: @service.service_plans.first, organization: organization_one)
+        end
+
+        let(:developer) { user }
+        let(:outside_developer) { make_developer_for_space(space_two) }
+
+        let(:auditor) { make_auditor_for_space(space_one) }
+        let(:outside_auditor) { make_auditor_for_space(space_two) }
+
+        let(:manager) { make_manager_for_space(space_one) }
+        let(:outside_manager) { make_manager_for_space(space_two) }
+
+        it 'should be visible to SpaceDevelopers' do
+          developer_headers = headers_for(developer)
+          get "v2/spaces/#{space_one.guid}/services", {}, developer_headers
+          expect(decoded_guids).to include(@service.guid)
+        end
+
+        it 'should not be visible to outside SpaceDevelopers, even in their own space' do
+          developer_headers = headers_for(outside_developer)
+          get "v2/spaces/#{space_two.guid}/services", {}, developer_headers
+          expect(decoded_guids).not_to include(@service.guid)
+        end
+
+        it 'should be visible to SpaceManagers ' do
+          manager_headers = headers_for(manager)
+          get "v2/spaces/#{space_one.guid}/services", {}, manager_headers
+          expect(decoded_guids).to include(@service.guid)
+        end
+
+        it 'should be visible to SpaceManagers' do
+          manager_headers = headers_for(outside_manager)
+          get "v2/spaces/#{space_one.guid}/services", {}, manager_headers
+          expect(last_response).not_to be_ok
+        end
+
+        it 'should be visible to SpaceAuditor' do
+          auditor_headers = headers_for(auditor)
+          get "v2/spaces/#{space_one.guid}/services", {}, auditor_headers
+          expect(decoded_guids).to include(@service.guid)
+        end
+
+        it 'should be visible to SpaceManagers' do
+          auditor_headers = headers_for(outside_auditor)
+          get "v2/spaces/#{space_one.guid}/services", {}, auditor_headers
+          expect(last_response).not_to be_ok
+        end
       end
 
       context 'with an offering that has private plans' do

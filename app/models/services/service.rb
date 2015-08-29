@@ -40,6 +40,16 @@ module VCAP::CloudController
     alias_method :bindable?, :bindable
     alias_method :active?, :active
 
+    def self.space_or_organizational_visible_for_user(space, user)
+      organization_visible(space.organization).union space_visible(space, user)
+    end
+
+    def self.space_visible(space, user)
+      all_user_spaces = user.managed_spaces.map(&:id) | user.spaces.map(&:id) | user.audited_spaces.map(&:id)
+      return dataset.filter(id: nil) unless all_user_spaces.include? space.id
+      dataset.filter(service_broker: (ServiceBroker.filter(space_id: space.id)))
+    end
+
     def self.organization_visible(organization)
       service_ids = ServicePlan.
           organization_visible(organization).

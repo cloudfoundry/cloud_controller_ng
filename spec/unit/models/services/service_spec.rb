@@ -116,8 +116,8 @@ module VCAP::CloudController
         expect {
           subject
         }.to_not change {
-          ServiceAuthToken.count(label: service.label, provider: service.provider)
-        }
+                   ServiceAuthToken.count(label: service.label, provider: service.provider)
+                 }
       end
     end
 
@@ -348,6 +348,36 @@ module VCAP::CloudController
       end
     end
 
+    describe '.space_visible' do
+      context 'when a user is part of the space requested' do
+        let(:org) { Organization.make }
+        let(:space) { Space.make(organization: org) }
+        let(:dev) { make_developer_for_space(space) }
+        let(:outside_dev) { User.make(admin: false, active: true) }
+
+        before(:each) do
+          @broker_a = ServiceBroker.make(space: space)
+          @service_a = Service.make(service_broker: @broker_a, active: true)
+          @service_aa = Service.make(service_broker: @broker_a, active: true)
+
+          @broker_b = ServiceBroker.make(space: space)
+          @service_b = Service.make(service_broker: @broker_b, active: true)
+
+          @broker_c = ServiceBroker.make
+          @service_c = Service.make(service_broker: @broker_c, active: true)
+
+          ServicePlan.make(service: @service_a, public: false)
+          ServicePlan.make(service: @service_b, public: false)
+          ServicePlan.make(service: @service_c, public: false)
+        end
+
+        it 'returns plans that are visible to a given user in that space' do
+          visible_services = Service.space_visible(space, dev).all
+          expect(visible_services).to eq [@service_a, @service_aa, @service_b]
+        end
+      end
+    end
+
     describe '.public_visible' do
       it 'returns services that have a plan that is public and active' do
         public_active_service = Service.make(active: true)
@@ -387,12 +417,12 @@ module VCAP::CloudController
           expect(client).to eq(v1_client)
 
           expect(VCAP::Services::ServiceBrokers::V1::Client).to have_received(:new).with(
-            hash_including(
-              url: service.url,
-              auth_token: service.service_auth_token.token,
-              timeout: service.timeout
+              hash_including(
+                url: service.url,
+                auth_token: service.service_auth_token.token,
+                timeout: service.timeout
+              )
             )
-          )
         end
       end
 
