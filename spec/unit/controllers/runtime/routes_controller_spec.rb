@@ -265,7 +265,7 @@ module VCAP::CloudController
       end
 
       context 'when associating with a service instance that is not a route service' do
-        let(:service_instance) { service_instance = ManagedServiceInstance.make }
+        let(:service_instance) { ManagedServiceInstance.make }
 
         before do
           req[:service_instance_guid] = service_instance.guid
