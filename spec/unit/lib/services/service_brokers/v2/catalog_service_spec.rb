@@ -154,6 +154,14 @@ module VCAP::Services::ServiceBrokers::V2
         expect(service.errors.messages).to include 'Service "requires" field must be an array of strings, but has value [123]'
       end
 
+      it 'validates @requires contains only supported values' do
+        attrs = build_valid_service_attrs(requires: ['foo'])
+
+        service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        expect(service).not_to be_valid
+        expect(service.errors.messages).to include 'Service "requires" field contains unsupported value "foo"'
+      end
+
       it 'validates that @metadata is a hash' do
         attrs = build_valid_service_attrs(metadata: ['list', 'of', 'strings'])
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)

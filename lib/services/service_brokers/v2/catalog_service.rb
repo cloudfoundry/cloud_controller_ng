@@ -2,6 +2,8 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogService
     include CatalogValidationHelper
 
+    SUPPORTED_REQUIRES_VALUES = ['syslog_drain', 'route_forwarding']
+
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
       :description, :bindable, :tags, :plans, :requires, :dashboard_client, :errors, :plan_updateable
 
@@ -54,6 +56,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       validate_hash!(:metadata, metadata) if metadata
       validate_dashboard_client!
+      validate_requires
     end
 
     def validate_plans
@@ -78,6 +81,13 @@ module VCAP::Services::ServiceBrokers::V2
       plans.each do |plan|
         errors.add_nested(plan, plan.errors) unless plan.valid?
       end
+    end
+
+    def validate_requires
+      return unless requires.is_a? Enumerable
+      requires.
+        reject { |v| SUPPORTED_REQUIRES_VALUES.include? v }.
+        each { |v| errors.add(%(Service "requires" field contains unsupported value "#{v}")) }
     end
 
     def build_plans
