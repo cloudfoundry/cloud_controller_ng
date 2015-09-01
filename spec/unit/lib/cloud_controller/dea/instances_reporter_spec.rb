@@ -81,7 +81,19 @@ module VCAP::CloudController
         end
       end
 
-      let(:apps) { running_apps + stopped_apps }
+      let(:failed_apps) do
+        1.times.map do
+          AppFactory.make(state: 'STARTED', package_state: 'FAILED', package_hash: 'def')
+        end
+      end
+
+      let(:pending_apps) do
+        1.times.map do
+          AppFactory.make(state: 'STARTED', package_state: 'PENDING', package_hash: 'def')
+        end
+      end
+
+      let(:apps) { running_apps + stopped_apps + failed_apps + pending_apps }
 
       describe 'stopped apps' do
         before do
@@ -99,6 +111,44 @@ module VCAP::CloudController
           result = subject.number_of_starting_and_running_instances_for_apps(stopped_apps)
           expect(result.length).to be(3)
           stopped_apps.each { |app| expect(result[app.guid]).to eq(0) }
+        end
+      end
+
+      describe 'failed apps' do
+        before do
+          allow(health_manager_client).to receive(:healthy_instances_bulk) do |args|
+            failed_apps.each { |failed| expect(args).not_to include(failed) }
+            {}
+          end
+        end
+
+        it 'should not ask the health manager about active instances for failed apps' do
+          subject.number_of_starting_and_running_instances_for_apps(failed_apps)
+        end
+
+        it 'should return 0 instances for apps that are failed' do
+          result = subject.number_of_starting_and_running_instances_for_apps(failed_apps)
+          expect(result.length).to be(1)
+          failed_apps.each { |app| expect(result[app.guid]).to eq(0) }
+        end
+      end
+
+      describe 'pending apps' do
+        before do
+          allow(health_manager_client).to receive(:healthy_instances_bulk) do |args|
+            pending_apps.each { |pending| expect(args).not_to include(pending) }
+            {}
+          end
+        end
+
+        it 'should not ask the health manager about active instances for pending apps' do
+          subject.number_of_starting_and_running_instances_for_apps(pending_apps)
+        end
+
+        it 'should return 0 instances for apps that are pending' do
+          result = subject.number_of_starting_and_running_instances_for_apps(pending_apps)
+          expect(result.length).to be(1)
+          pending_apps.each { |app| expect(result[app.guid]).to eq(0) }
         end
       end
 
