@@ -81,6 +81,7 @@ module VCAP::CloudController
 
         optional(:stacks_file) => String,
         optional(:newrelic_enabled) => bool,
+        optional(:hostname) => String,
 
         optional(:db) => {
           optional(:database)         => String,     # db connection string for sequel
@@ -302,6 +303,7 @@ module VCAP::CloudController
         run_initializers_in_directory(config, '../../../config/initializers/*.rb')
         if config[:newrelic_enabled]
           require 'newrelic_rpm'
+          ENV['DYNO'] = config[:hostname]
           run_initializers_in_directory(config, '../../../config/newrelic/initializers/*.rb')
         end
         @initialized = true
