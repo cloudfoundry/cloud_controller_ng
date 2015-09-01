@@ -69,12 +69,10 @@ module VCAP::CloudController
 
       space = find_guid_and_validate_access(:read, guid)
 
-      associated_controller, associated_model = ServicesController, Service
-
       filtered_dataset = Query.filtered_dataset_from_query_params(
-        associated_model,
-        associated_model.space_or_organizational_visible_for_user(space, SecurityContext.current_user),
-        associated_controller.query_parameters,
+        Service,
+        Service.space_or_org_visible_for_user(space, SecurityContext.current_user),
+        ServicesController.query_parameters,
         @opts,
       )
 
@@ -87,7 +85,7 @@ module VCAP::CloudController
       )
 
       collection_renderer.render_json(
-        associated_controller,
+        ServicesController,
         filtered_dataset,
         associated_path,
         opts,

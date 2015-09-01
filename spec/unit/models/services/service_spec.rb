@@ -348,33 +348,47 @@ module VCAP::CloudController
       end
     end
 
-    describe '.space_visible' do
-      context 'when a user is part of the space requested' do
-        let(:org) { Organization.make }
-        let(:space) { Space.make(organization: org) }
-        let(:dev) { make_developer_for_space(space) }
-        let(:outside_dev) { User.make(admin: false, active: true) }
+    describe '.space_or_org_visible_for_user' do
+      let(:org) { Organization.make }
+      let(:space) { Space.make(organization: org) }
+      let(:dev) { make_developer_for_space(space) }
+      let(:outside_dev) { User.make(admin: false, active: true) }
 
-        before(:each) do
-          @broker_a = ServiceBroker.make(space: space)
-          @service_a = Service.make(service_broker: @broker_a, active: true)
-          @service_aa = Service.make(service_broker: @broker_a, active: true)
+      before(:each) do
+        @private_broker = ServiceBroker.make(space: space)
+        @private_service = Service.make(service_broker: @private_broker, active: true, label: 'Private Service')
+        @private_plan = ServicePlan.make(service: @private_service, public: false, name: 'Private Plan')
 
-          @broker_b = ServiceBroker.make(space: space)
-          @service_b = Service.make(service_broker: @broker_b, active: true)
+        @public_broker = ServiceBroker.make
+        @visible_service = Service.make(service_broker: @public_broker, active: true, label: 'Visible Service')
+        @visible_plan = ServicePlan.make(service: @visible_service, name: 'Visible Plan')
+        @hidden_service = Service.make(service_broker: @public_broker, active: true, label: 'Hidden Service')
+        @hidden_plan = ServicePlan.make(service: @hidden_service, public: false, name: 'Hidden Plan')
+      end
 
-          @broker_c = ServiceBroker.make
-          @service_c = Service.make(service_broker: @broker_c, active: true)
+      it 'returns services that are visible to the spaces org and to the user in that space' do
+        visible_services = Service.space_or_org_visible_for_user(space, dev).all
+        expected_service_names = [@private_service, @visible_service].map(&:label)
+        expect(visible_services.map(&:label)).to match_array expected_service_names
+      end
 
-          ServicePlan.make(service: @service_a, public: false)
-          ServicePlan.make(service: @service_b, public: false)
-          ServicePlan.make(service: @service_c, public: false)
-        end
+      it 'only returns private broker services to Space<Managers/Auditors/Developers>' do
+        expected_service_names = [@private_service, @visible_service].map(&:label)
 
-        it 'returns plans that are visible to a given user in that space' do
-          visible_services = Service.space_visible(space, dev).all
-          expect(visible_services).to eq [@service_a, @service_aa, @service_b]
-        end
+        visible_services = Service.space_or_org_visible_for_user(space, dev).all
+        expect(visible_services.map(&:label)).to match_array expected_service_names
+
+        auditor = make_developer_for_space(space)
+        visible_services = Service.space_or_org_visible_for_user(space, auditor).all
+        expect(visible_services.map(&:label)).to match_array expected_service_names
+
+        manager = make_manager_for_space(space)
+        visible_services = Service.space_or_org_visible_for_user(space, manager).all
+        expect(visible_services.map(&:label)).to match_array expected_service_names
+
+        user = make_user_for_org(space.organization)
+        visible_services = Service.space_or_org_visible_for_user(space, user).all
+        expect(visible_services.map(&:label)).to match_array [@visible_service.label]
       end
     end
 

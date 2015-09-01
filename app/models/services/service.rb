@@ -40,36 +40,40 @@ module VCAP::CloudController
     alias_method :bindable?, :bindable
     alias_method :active?, :active
 
-    def self.space_or_organizational_visible_for_user(space, user)
-      organization_visible(space.organization).union space_visible(space, user)
-    end
+    class << self
+      def public_visible
+        public_active_plans = ServicePlan.where(active: true, public: true).all
+        service_ids = public_active_plans.map(&:service_id).uniq
+        dataset.filter(id: service_ids)
+      end
 
-    def self.space_visible(space, user)
-      all_user_spaces = user.managed_spaces.map(&:id) | user.spaces.map(&:id) | user.audited_spaces.map(&:id)
-      return dataset.filter(id: nil) unless all_user_spaces.include? space.id
-      dataset.filter(service_broker: (ServiceBroker.filter(space_id: space.id)))
-    end
+      def user_visibility_filter(current_user)
+        plans_i_can_see = ServicePlan.user_visible(current_user)
+        { id: plans_i_can_see.map(&:service_id).uniq }
+      end
 
-    def self.organization_visible(organization)
-      service_ids = ServicePlan.
+      def unauthenticated_visibility_filter
+        { id: self.public_visible.map(&:id) }
+      end
+
+      def space_or_org_visible_for_user(space, user)
+        organization_visible(space.organization).union space_visible(space, user)
+      end
+
+      def organization_visible(organization)
+        service_ids = ServicePlan.
           organization_visible(organization).
           inject([]) { |ids_so_far, service_plan| ids_so_far << service_plan.service_id }
-      dataset.filter(id: service_ids)
-    end
+        dataset.filter(id: service_ids)
+      end
 
-    def self.public_visible
-      public_active_plans = ServicePlan.where(active: true, public: true).all
-      service_ids = public_active_plans.map(&:service_id).uniq
-      dataset.filter(id: service_ids)
-    end
+      private
 
-    def self.user_visibility_filter(current_user)
-      plans_i_can_see = ServicePlan.user_visible(current_user)
-      { id: plans_i_can_see.map(&:service_id).uniq }
-    end
-
-    def self.unauthenticated_visibility_filter
-      { id: self.public_visible.map(&:id) }
+      def space_visible(space, user)
+        all_user_spaces = user.managed_spaces.map(&:id) | user.spaces.map(&:id) | user.audited_spaces.map(&:id)
+        return dataset.filter(id: nil) unless all_user_spaces.include? space.id
+        dataset.filter(service_broker: (ServiceBroker.filter(space_id: space.id)))
+      end
     end
 
     def provider
