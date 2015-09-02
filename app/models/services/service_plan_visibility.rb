@@ -10,7 +10,7 @@ module VCAP::CloudController
       validates_presence :service_plan
       validates_presence :organization
       validates_unique [:organization_id, :service_plan_id]
-      validate_plan_is_public
+      validate_plan_is_not_private
     end
 
     def self.visible_private_plan_ids_for_user(user)
@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     private
 
-    def validate_plan_is_public
+    def validate_plan_is_not_private
       if service_plan && service_plan.private?
         errors.add(:service_plan, 'is from a private broker')
       end
