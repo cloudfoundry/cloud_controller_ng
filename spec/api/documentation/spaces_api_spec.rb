@@ -207,16 +207,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         VCAP::CloudController::ServicePlanVisibility.make(service_plan: some_service.service_plans.first, organization: space.organization)
       end
 
-
-      get '/v2/spaces/:guid/services' do
-        example 'Listing Services' do
-          explanation 'This endpoint returns all services available to this space.  This includes private-broker services if you are assigned a role in the space, as well as public-broker services.'
-
-          expect(status).to eq 200
-          standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :space, path: :service
-        end
-      end
-
+      standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :space, path: :service
     end
 
     describe 'Events' do

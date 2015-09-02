@@ -141,5 +141,30 @@ module VCAP::CloudController
         specify { expect(service_plan).not_to be_bindable }
       end
     end
+
+    describe '#private?' do
+      it 'returns true if the plan belongs to a service that belongs to a private broker' do
+        space = Space.make
+        broker = ServiceBroker.make space: space
+        service = Service.make service_broker: broker
+        plan = ServicePlan.make service: service
+
+        expect(plan.private?).to be_truthy
+      end
+
+      it 'returns false if the plan belongs to a service that belongs to a public broker' do
+        plan = ServicePlan.make
+
+        expect(plan.private?).to be_falsey
+      end
+
+      context 'for v1 services' do
+        it 'is false' do
+          plan = ServicePlan.make(:v1)
+
+          expect(plan.private?).to be_falsey
+        end
+      end
+    end
   end
 end

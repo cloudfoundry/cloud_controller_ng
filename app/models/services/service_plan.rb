@@ -49,8 +49,8 @@ module VCAP::CloudController
       service.service_broker
     end
 
-    def service_broker
-      service.service_broker
+    def private?
+      service_broker.private? if service_broker
     end
 
     private

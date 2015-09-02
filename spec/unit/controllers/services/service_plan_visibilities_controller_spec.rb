@@ -70,6 +70,21 @@ module VCAP::CloudController
         expect(visibility.service_plan_guid).to eq service_plan.guid
       end
 
+      context 'for a plan that belongs to a private broker' do
+        it 'returns a validation error' do
+          space = Space.make organization: organization
+          private_broker = ServiceBroker.make space: space
+          service = Service.make service_broker: private_broker, active: true
+          plan = ServicePlan.make service: service
+
+          params = { organization_guid: organization.guid, service_plan_guid: plan.guid }
+          post '/v2/service_plan_visibilities', MultiJson.dump(params), headers
+
+          expect(last_response.status).to eq 400
+          expect(decoded_response['description']).to include 'service_plan is from a private broker'
+        end
+      end
+
       it "creates an 'audit.service_plan_visibility.create' event" do
         email = 'some-email-address@example.com'
         params = { 'organization_guid' => organization.guid, 'service_plan_guid' => service_plan.guid }
