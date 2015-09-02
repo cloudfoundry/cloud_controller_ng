@@ -293,6 +293,22 @@ module VCAP::CloudController
           expect(decoded_response.fetch('code')).to eql(110001)
         end
       end
+
+      context 'for plans belonging to private brokers' do
+        it 'does not allow the plan to be made public' do
+          space = Space.make
+          private_broker = ServiceBroker.make space: space
+          service = Service.make service_broker: private_broker
+          service_plan = ServicePlan.make service: service
+
+          payload = MultiJson.dump({ 'public' => true })
+
+          put "/v2/service_plans/#{service_plan.guid}", payload, headers_for(admin_user)
+
+          expect(last_response.status).to eq 400
+          expect(decoded_response['description']).to include 'public may not be true for private plans'
+        end
+      end
     end
 
     describe 'DELETE', '/v2/service_plans/:guid' do
