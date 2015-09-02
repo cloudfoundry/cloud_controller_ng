@@ -466,7 +466,6 @@ module VCAP::CloudController
           @broker       = ServiceBroker.make(space: space_one)
           @service      = Service.make(service_broker: @broker, active: true)
           @service_plan = ServicePlan.make(service: @service, public: false)
-          # ServicePlanVisibility.make(service_plan: @service.service_plans.first, organization: organization_one)
         end
 
         let(:developer) { user }

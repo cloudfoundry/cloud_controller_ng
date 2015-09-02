@@ -414,5 +414,32 @@ module VCAP::CloudController
         expect(space.has_developer?(user)).to be_falsey
       end
     end
+
+    describe '#has_member?' do
+      subject(:space) { Space.make }
+      let(:user) { User.make }
+
+      it 'returns true if the given user is a space developer' do
+        space.organization.add_user user
+        space.add_developer user
+        expect(space.has_member?(user)).to be_truthy
+      end
+
+      it 'returns true if the given user is a space auditor' do
+        space.organization.add_user user
+        space.add_auditor user
+        expect(space.has_member?(user)).to be_truthy
+      end
+
+      it 'returns true if the given user is a space manager' do
+        space.organization.add_user user
+        space.add_manager user
+        expect(space.has_member?(user)).to be_truthy
+      end
+
+      it 'returns false if the given user is not a manager, auditor, or developer' do
+        expect(space.has_member?(user)).to be_falsey
+      end
+    end
   end
 end

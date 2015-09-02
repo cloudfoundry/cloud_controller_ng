@@ -70,9 +70,12 @@ module VCAP::CloudController
       private
 
       def space_visible(space, user)
-        all_user_spaces = user.managed_spaces.map(&:id) | user.spaces.map(&:id) | user.audited_spaces.map(&:id)
-        return dataset.filter(id: nil) unless all_user_spaces.include? space.id
-        dataset.filter(service_broker: (ServiceBroker.filter(space_id: space.id)))
+        if space.has_member? user
+          private_brokers_for_space = ServiceBroker.filter(space_id: space.id)
+          dataset.filter(service_broker: (private_brokers_for_space))
+        else
+          dataset.filter(id: nil)
+        end
       end
     end
 

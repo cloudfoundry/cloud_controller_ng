@@ -100,6 +100,11 @@ module VCAP::CloudController
       developers.include?(user)
     end
 
+    def has_member?(user)
+      members = developers | managers | auditors
+      members.include?(user)
+    end
+
     def in_organization?(user)
       organization && organization.users.include?(user)
     end
