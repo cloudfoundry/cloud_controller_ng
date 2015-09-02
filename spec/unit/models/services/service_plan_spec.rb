@@ -30,6 +30,18 @@ module VCAP::CloudController
             to raise_error(Sequel::ValidationFailed, 'Plan ids must be unique')
         end
       end
+
+      context 'for plans belonging to private brokers' do
+        it 'does not allow the plan to be public' do
+          space = Space.make
+          private_broker = ServiceBroker.make space: space
+          service = Service.make service_broker: private_broker
+
+          expect {
+            ServicePlan.make service: service, public: true
+          }.to raise_error Sequel::ValidationFailed, 'public may not be true for private plans'
+        end
+      end
     end
 
     describe 'Serialization' do
