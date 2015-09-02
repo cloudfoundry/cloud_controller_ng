@@ -388,6 +388,3 @@ DEPENDENCIES
   vcap_common (~> 4.0)
   webmock
   yajl-ruby
-
-BUNDLED WITH
-   1.10.6

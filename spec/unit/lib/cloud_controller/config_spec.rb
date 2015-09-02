@@ -378,7 +378,7 @@ module VCAP::CloudController
 
       context 'when newrelic is enabled' do
         let(:config) do
-          @test_config.merge(newrelic_enabled: true, hostname: "api_test")
+          @test_config.merge(newrelic_enabled: true, name: "test_0", index: 2)
         end
 
         before do
@@ -394,7 +394,7 @@ module VCAP::CloudController
         it 'reports the correct hostname' do
           require 'newrelic_rpm'
           Config.configure_components(config)
-          expect(::NewRelic::Agent::Hostname.get).to eq("api_test")
+          expect(::NewRelic::Agent::Hostname.get).to eq("test_0-2")
         end
       end
 
