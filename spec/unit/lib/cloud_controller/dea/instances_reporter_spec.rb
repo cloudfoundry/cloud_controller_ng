@@ -82,15 +82,11 @@ module VCAP::CloudController
       end
 
       let(:failed_apps) do
-        1.times.map do
-          AppFactory.make(state: 'STARTED', package_state: 'FAILED', package_hash: 'def')
-        end
+        [AppFactory.make(state: 'STARTED', package_state: 'FAILED', package_hash: 'def')]
       end
 
       let(:pending_apps) do
-        1.times.map do
-          AppFactory.make(state: 'STARTED', package_state: 'PENDING', package_hash: 'def')
-        end
+        [AppFactory.make(state: 'STARTED', package_state: 'PENDING', package_hash: 'def')]
       end
 
       let(:apps) { running_apps + stopped_apps + failed_apps + pending_apps }
