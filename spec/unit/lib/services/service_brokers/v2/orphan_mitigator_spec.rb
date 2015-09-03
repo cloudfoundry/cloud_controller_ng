@@ -62,9 +62,8 @@ module VCAP::Services
             expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding
             expect(job.name).to eq 'service-instance-unbind'
             expect(job.client_attrs).to eq client_attrs
-            expect(job.binding_guid).to eq service_binding.guid
-            expect(job.service_instance_guid).to eq service_binding.service_instance.guid
-            expect(job.app_guid).to eq service_binding.app.guid
+            expect(job.binding_info.guid).to eq service_binding.guid
+            expect(job.binding_info.service_instance_guid).to eq service_binding.service_instance.guid
           end
 
           expect(mock_enqueuer).to have_received(:enqueue)

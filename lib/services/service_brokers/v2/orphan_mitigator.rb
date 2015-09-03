@@ -19,12 +19,11 @@ module VCAP::Services
         end
 
         def cleanup_failed_bind(client_attrs, service_binding)
+          binding_info = VCAP::CloudController::Jobs::Services::OrphanedBindingInfo.new(service_binding)
           unbind_job = VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding.new(
             'service-instance-unbind',
             client_attrs,
-            service_binding.guid,
-            service_binding.service_instance.guid,
-            service_binding.app.guid
+            binding_info
           )
 
           opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }

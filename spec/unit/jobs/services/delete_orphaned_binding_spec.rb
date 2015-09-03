@@ -4,21 +4,15 @@ module VCAP::CloudController
   module Jobs::Services
     describe DeleteOrphanedBinding do
       let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
-      let(:service_instance_guid) { 'fake-instance-guid' }
-      let(:app_guid) { 'fake-app-guid' }
-      let(:binding_guid) { 'fake-binding-guid' }
-
-      let(:service_binding) { instance_double('VCAP::CloudController::ServiceBinding') }
-      before do
-        allow(VCAP::CloudController::ServiceBinding).to receive(:new).and_return(service_binding)
-      end
+      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
+      let(:binding_info) { OrphanedBindingInfo.new(service_binding) }
 
       let(:name) { 'fake-name' }
-      subject(:job) { VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding.new(name, {}, binding_guid, service_instance_guid, app_guid) }
+      subject(:job) { VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding.new(name, {}, binding_info) }
 
       describe '#perform' do
         before do
-          allow(client).to receive(:unbind).with(service_binding)
+          allow(client).to receive(:unbind)
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
         end
 
@@ -26,7 +20,13 @@ module VCAP::CloudController
           Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
           expect(Delayed::Worker.new.work_off).to eq [1, 0]
 
-          expect(client).to have_received(:unbind).with(service_binding)
+          expect(client).to have_received(:unbind) do |binding|
+            expect(binding.guid).to eq(service_binding.guid)
+            expect(binding.service_instance.guid).to eq(service_binding.service_instance.guid)
+            expect(binding.service_instance.name).to eq(service_binding.service_instance.name)
+            expect(binding.service.broker_provided_id).to eq(service_binding.service.broker_provided_id)
+            expect(binding.service_plan.broker_provided_id).to eq(service_binding.service_plan.broker_provided_id)
+          end
         end
       end
 

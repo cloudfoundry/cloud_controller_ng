@@ -51,6 +51,8 @@ module VCAP::CloudController
         return Errors::ApiError.new_from_details('ServiceInstanceTagsTooLong')
       elsif service_instance_errors.include?(:route_binding_not_allowed)
         return Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
+      elsif service_instance_errors.include?(:space_mismatch)
+        return Errors::ApiError.new_from_details('ServiceInstanceRouteBindingSpaceMismatch')
       end
 
       Errors::ApiError.new_from_details('ServiceInstanceInvalid', e.errors.full_messages)
@@ -231,6 +233,34 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    def add_related(guid, name, other_guid)
+      return super(guid, name, other_guid) if name != :routes
+
+      bind_route(guid, other_guid)
+    end
+
+    def bind_route(instance_guid, route_guid)
+      logger.debug 'cc.association.add', guid: instance_guid, assocation: :routes, other_guid: route_guid
+      @request_attrs = { route: route_guid }
+
+      route = Route.where(guid: route_guid).eager(:service_instance).all.first
+      raise Errors::ApiError.new_from_details('RouteNotFound', route_guid) if route.nil?
+      raise Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance') unless route.service_instance.nil?
+
+      instance = find_guid(instance_guid)
+
+      before_update(instance)
+
+      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
+      binding_manager.create_route_service_instance_binding(route, instance)
+
+      after_update(instance)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, instance, @opts)]
+    rescue ServiceInstanceBindingManager::ServiceInstanceNotBindable
+      raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
+    end
 
     private
 

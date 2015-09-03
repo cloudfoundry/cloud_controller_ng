@@ -7,7 +7,7 @@ resource 'Routes', type: [:api, :legacy_api] do
   let(:space) { VCAP::CloudController::Space.make(organization: organization) }
   let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: organization) }
   let(:route_path) { '/apps/v1/path' }
-  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing) }
+  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
   let!(:route) { VCAP::CloudController::Route.make(domain: domain, space: space, service_instance: service_instance) }
   let(:guid) { route.guid }
 
@@ -19,15 +19,12 @@ resource 'Routes', type: [:api, :legacy_api] do
     path_description += ' 2) Paths must start with a /'
     path_description += ' 3) Paths must not contain a "?"'
 
-    service_instance_guid_description = 'Guid of the bound service instance. Requests for the route will be forwarded to this service instance.'
-
     shared_context 'updatable_fields' do |opts|
       field :guid, 'The guid of the route.'
       field :domain_guid, 'The guid of the associated domain', required: opts[:required], example_values: [Sham.guid]
       field :space_guid, 'The guid of the associated space', required: opts[:required], example_values: [Sham.guid]
       field :host, 'The host portion of the route'
       field :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
-      field :service_instance_guid, service_instance_guid_description, required: false, experimental: true
     end
 
     standard_model_list :route, VCAP::CloudController::RoutesController
@@ -43,7 +40,6 @@ resource 'Routes', type: [:api, :legacy_api] do
             domain_guid: domain.guid,
             space_guid: space.guid,
             path: route_path,
-            service_instance_guid: service_instance.guid
           ), pretty: true
         )
         client.post '/v2/routes', body, headers
@@ -53,7 +49,6 @@ resource 'Routes', type: [:api, :legacy_api] do
         standard_entity_response parsed_response, :route
         expect(parsed_response['entity']['path']).to eq(route_path)
         expect(parsed_response['entity']['space_guid']).to eq(space.guid)
-        expect(parsed_response['entity']['service_instance_guid']).to eq(service_instance.guid)
       end
     end
 
@@ -61,14 +56,12 @@ resource 'Routes', type: [:api, :legacy_api] do
       include_context 'updatable_fields', required: false
 
       let(:new_host) { 'new_host' }
-      let(:new_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing) }
 
       example 'Update a Route' do
         body = MultiJson.dump(
           {
             host: new_host,
             path: route_path,
-            service_instance_guid: new_service_instance.guid
           }, pretty: true
         )
         client.put "/v2/routes/#{guid}", body, headers
@@ -76,7 +69,6 @@ resource 'Routes', type: [:api, :legacy_api] do
         expect(status).to eq 201
         standard_entity_response parsed_response, :route, host: new_host
         expect(parsed_response['entity']['path']).to eq(route_path)
-        expect(parsed_response['entity']['service_instance_guid']).to eq(new_service_instance.guid)
       end
     end
   end

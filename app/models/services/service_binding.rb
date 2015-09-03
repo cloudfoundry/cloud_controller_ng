@@ -95,6 +95,10 @@ module VCAP::CloudController
       val
     end
 
+    def required_parameters
+      { app_guid: app_guid }
+    end
+
     def logger
       @logger ||= Steno.logger('cc.models.service_binding')
     end

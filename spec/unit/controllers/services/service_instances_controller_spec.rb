@@ -2395,6 +2395,243 @@ module VCAP::CloudController
       end
     end
 
+    describe 'PUT', '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:service_instance) { ManagedServiceInstance.make(:routing, space: space) }
+      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let(:opts) { {} }
+
+      before do
+        stub_bind(service_instance, opts)
+      end
+
+      it 'associates the route and the service instance' do
+        get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+        expect(last_response.status).to eq(200)
+        expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+
+        put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+        expect(last_response.status).to eq(201)
+
+        get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+        expect(last_response.status).to eq(200)
+        expect(JSON.parse(last_response.body)['total_results']).to eql(1)
+      end
+
+      it 'sends a bind request to the service broker' do
+        put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+        expect(last_response.status).to eq(201)
+
+        binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
+        service_plan        = binding.service_plan
+        service             = binding.service
+        service_binding_uri = service_binding_url(binding)
+        expected_body       = { service_id: service.broker_provided_id, plan_id: service_plan.broker_provided_id, app_guid: nil, hooks: { route: route.uri } }
+        expect(a_request(:put, service_binding_uri).with(body: expected_body)).to have_been_made
+      end
+
+      context 'when the service instance is not a route service' do
+        let(:service_instance) { ManagedServiceInstance.make(space: space) }
+
+        it 'raises an error' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response.status).to eq(400)
+          expect(JSON.parse(last_response.body)['description']).
+            to include('This service does not support route binding')
+        end
+
+        it 'does NOT send a bind request to the service broker' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+          binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
+          service_binding_uri = service_binding_url(binding)
+          expect(a_request(:put, service_binding_uri)).not_to have_been_made
+        end
+      end
+
+      context 'when the route does not exist' do
+        it 'raises an error' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/random-guid", {}, headers_for(developer)
+          expect(last_response.status).to eq(404)
+          expect(JSON.parse(last_response.body)['description']).
+            to include('route could not be found')
+        end
+      end
+
+      context 'when the route has an associated service instance' do
+        before do
+          route.service_instance = ManagedServiceInstance.make(:routing, space: space)
+          route.save
+        end
+
+        it 'raises RouteAlreadyBoundToServiceInstance' do
+          get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+          expect(last_response.status).to eq(200)
+          expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response.status).to eq(400)
+          expect(JSON.parse(last_response.body)['description']).
+            to eq('A route may only be bound to a single service instance')
+
+          get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+          expect(last_response.status).to eq(200)
+          expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+        end
+      end
+
+      context 'when attempting to bind to an unbindable service' do
+        before do
+          service_instance.service.bindable = false
+          service_instance.service.save
+
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+        end
+
+        it 'raises UnbindableService error' do
+          hash_body = JSON.parse(last_response.body)
+          expect(hash_body['error_code']).to eq('CF-UnbindableService')
+          expect(last_response).to have_status_code(400)
+        end
+
+        it 'does not send a bind request to broker' do
+          binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
+          service_binding_uri = service_binding_url(binding)
+
+          expect(a_request(:put, service_binding_uri)).to_not have_been_made
+        end
+      end
+
+      context 'when the instance operation is in progress' do
+        before do
+          service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+        end
+
+        it 'does not send a bind request to broker' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+          binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
+          service_binding_uri = service_binding_url(binding)
+          expect(a_request(:put, service_binding_uri)).to_not have_been_made
+        end
+
+        it 'does not trigger orphan mitigation' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+          orphan_mitigation_job = Delayed::Job.first
+          expect(orphan_mitigation_job).to be_nil
+
+          binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
+          service_binding_uri = service_binding_url(binding)
+          expect(a_request(:delete, service_binding_uri)).not_to have_been_made
+        end
+
+        it 'should show an error message for create bind operation' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response).to have_status_code 409
+          expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
+        end
+      end
+
+      context 'when the route and service_instance are not in the same space' do
+        let(:other_space) { Space.make(organization: space.organization) }
+        let(:service_instance) { ManagedServiceInstance.make(:routing, space: other_space) }
+
+        before do
+          other_space.add_developer(developer)
+          other_space.save
+        end
+
+        it 'raises an error' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response.status).to eq(400)
+          expect(JSON.parse(last_response.body)['description']).
+            to include('The service instance and the route are in different spaces.')
+        end
+
+        it 'does NOT send a bind request to the service broker' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+          binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
+          service_binding_uri = service_binding_url(binding)
+          expect(a_request(:put, service_binding_uri)).not_to have_been_made
+        end
+      end
+
+      describe 'binding errors' do
+        subject(:make_request) do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+        end
+
+        let(:opts) do
+          {
+            status: bind_status,
+            body:   bind_body.to_json
+          }
+        end
+
+        context 'when the v2 broker returns a 409' do
+          let(:bind_status) { 409 }
+          let(:bind_body) { {} }
+
+          it 'returns a 409' do
+            make_request
+            expect(last_response).to have_status_code 409
+          end
+
+          it 'returns a ServiceBrokerConflict error' do
+            make_request
+            expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerConflict'
+          end
+        end
+
+        context 'when the v2 broker returns any other error' do
+          let(:bind_status) { 500 }
+          let(:bind_body) { { description: 'ERROR MESSAGE HERE' } }
+
+          it 'passes through the error message' do
+            make_request
+            expect(last_response).to have_status_code 502
+            expect(decoded_response['description']).to match /ERROR MESSAGE HERE/
+            expect(service_instance.refresh.last_operation).to be_nil
+          end
+
+          context 'when the instance has a last_operation' do
+            before do
+              service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+            end
+
+            it 'rolls back the last_operation of the service instance' do
+              make_request
+              expect(service_instance.refresh.last_operation.state).to eq 'succeeded'
+              expect(service_instance.refresh.last_operation.type).to eq 'create'
+            end
+          end
+        end
+
+        context 'when the broker returns a syslog_drain_url and the service does not require one' do
+          let(:bind_status) { 200 }
+          let(:bind_body) { { 'syslog_drain_url' => 'http://syslog.com/drain' } }
+
+          it 'returns ServiceBrokerInvalidSyslogDrainUrl error to the user' do
+            make_request
+            expect(last_response).to have_status_code 502
+            expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerInvalidSyslogDrainUrl'
+          end
+
+          it 'triggers orphan mitigation' do
+            make_request
+            expect(last_response).to have_status_code 502
+
+            orphan_mitigation_job = Delayed::Job.first
+            expect(orphan_mitigation_job).not_to be_nil
+            expect(orphan_mitigation_job).to be_a_fully_wrapped_job_of Jobs::Services::DeleteOrphanedBinding
+          end
+        end
+      end
+    end
+
     describe 'DELETE', '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }

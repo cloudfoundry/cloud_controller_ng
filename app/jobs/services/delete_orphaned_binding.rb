@@ -1,15 +1,33 @@
 module VCAP::CloudController
   module Jobs
     module Services
-      class DeleteOrphanedBinding < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :name, :client_attrs, :binding_guid, :service_instance_guid, :app_guid
+      class OrphanedBindingInfo
+        attr_accessor :guid, :service_instance_guid, :app_guid
 
-        def initialize(name, client_attrs, binding_guid, service_instance_guid, app_guid)
-          @name = name
-          @client_attrs = client_attrs
-          @binding_guid = binding_guid
-          @service_instance_guid = service_instance_guid
-          @app_guid = app_guid
+        def initialize(binding)
+          @guid                  = binding.guid
+          @service_instance_guid = binding.service_instance.guid
+          @service_instance_name = binding.service_instance.name
+          @service_id            = binding.service.broker_provided_id
+          @plan_id               = binding.service_plan.broker_provided_id
+        end
+
+        def to_binding
+          binding                  = OpenStruct.new(guid: @guid)
+          binding.service_instance = OpenStruct.new(guid: @service_instance_guid, name: @service_instance_name)
+          binding.service          = OpenStruct.new(broker_provided_id: @service_id)
+          binding.service_plan     = OpenStruct.new(broker_provided_id: @plan_id)
+          binding
+        end
+      end
+
+      class DeleteOrphanedBinding < VCAP::CloudController::Jobs::CCJob
+        attr_accessor :name, :client_attrs, :binding_info
+
+        def initialize(name, client_attrs, binding_info)
+          @name                  = name
+          @client_attrs          = client_attrs
+          @binding_info          = binding_info
         end
 
         def perform
@@ -17,11 +35,7 @@ module VCAP::CloudController
           logger.info('There was an error during service binding creation. Attempting to delete potentially orphaned binding.')
 
           client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
-          app = VCAP::CloudController::App.first(guid: app_guid)
-          service_instance = VCAP::CloudController::ServiceInstance.first(guid: service_instance_guid)
-
-          service_binding = VCAP::CloudController::ServiceBinding.new(guid: binding_guid, app: app, service_instance: service_instance)
-          client.unbind(service_binding)
+          client.unbind(binding_info.to_binding)
         end
 
         def job_name_in_configuration

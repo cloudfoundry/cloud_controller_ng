@@ -30,9 +30,14 @@ module VCAP::CloudController
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
       raise InvalidRequest unless request_attrs
 
-      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
-      service_binding = binding_manager.create_service_instance_binding(@request_attrs)
+      service_instance_guid = request_attrs['service_instance_guid']
+      app_guid              = request_attrs['app_guid']
+      binding_attrs         = request_attrs.except('parameters')
+      arbitrary_parameters  = request_attrs['parameters']
 
+      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
+
+      service_binding = binding_manager.create_app_service_instance_binding(service_instance_guid, app_guid, binding_attrs, arbitrary_parameters)
       @services_event_repository.record_service_binding_event(:create, service_binding)
 
       [HTTP::CREATED,

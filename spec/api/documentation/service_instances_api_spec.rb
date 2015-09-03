@@ -178,11 +178,12 @@ EOF
     end
 
     put '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
-      let(:route) { VCAP::CloudController::Route.make }
+      let(:route) { VCAP::CloudController::Route.make(space: service_instance.space) }
 
       before do
         service_instance.service.requires = ['route_forwarding']
         service_instance.service.save
+        stub_bind(service_instance)
       end
 
       example 'Binding a service instance to a route (experimental)' do
@@ -219,7 +220,7 @@ EOF
       before do
         service_instance.service.requires = ['route_forwarding']
 
-        VCAP::CloudController::Route.make(service_instance: service_instance)
+        VCAP::CloudController::Route.make(service_instance: service_instance, space: service_instance.space)
       end
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :service_instance

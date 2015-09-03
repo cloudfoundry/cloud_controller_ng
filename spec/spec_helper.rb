@@ -23,7 +23,7 @@ require 'cf_message_bus/mock_message_bus'
 require 'cloud_controller'
 require 'allowy/rspec'
 
-require 'pry'
+# require 'pry'
 require 'posix/spawn'
 
 require 'rspec_api_documentation'

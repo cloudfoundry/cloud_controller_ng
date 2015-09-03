@@ -81,7 +81,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def create_service_key(key, arbitrary_parameters: {})
-      path = service_binding_resource_path(key)
+      path = service_binding_resource_path(key.guid, key.service_instance.guid)
       body = {
           service_id:  key.service.broker_provided_id,
           plan_id:     key.service_plan.broker_provided_id
@@ -103,11 +103,12 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def bind(binding, arbitrary_parameters: {})
-      path = service_binding_resource_path(binding)
+      path = service_binding_resource_path(binding.guid, binding.service_instance.guid)
       body = {
-          service_id:  binding.service.broker_provided_id,
-          plan_id:     binding.service_plan.broker_provided_id,
-          app_guid:    binding.app_guid
+        service_id: binding.service.broker_provided_id,
+        plan_id:    binding.service_plan.broker_provided_id,
+        app_guid:   binding.try(:app_guid),
+        hooks:      binding.required_parameters
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
@@ -131,7 +132,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def unbind(binding)
-      path = service_binding_resource_path(binding)
+      path = service_binding_resource_path(binding.guid, binding.service_instance.guid)
 
       body = {
         service_id: binding.service.broker_provided_id,
@@ -233,8 +234,8 @@ module VCAP::Services::ServiceBrokers::V2
       "#{service_instance_resource_path(instance)}/last_operation"
     end
 
-    def service_binding_resource_path(binding)
-      "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}"
+    def service_binding_resource_path(binding_guid, service_instance_guid)
+      "/v2/service_instances/#{service_instance_guid}/service_bindings/#{binding_guid}"
     end
 
     def service_instance_resource_path(instance, opts={})

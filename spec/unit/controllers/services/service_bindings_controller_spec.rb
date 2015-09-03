@@ -230,6 +230,21 @@ module VCAP::CloudController
           expect(binding.credentials).to eq(credentials)
         end
 
+        it 'sends a bind request to the broker' do
+          post '/v2/service_bindings', req.to_json, headers_for(developer)
+          expect(last_response).to have_status_code(201)
+
+          binding_endpoint = %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
+          expected_body    = {
+            service_id: instance.service.broker_provided_id,
+            plan_id: instance.service_plan.broker_provided_id,
+            app_guid: app_obj.guid,
+            hooks: { app_guid: app_obj.guid }
+          }
+
+          expect(a_request(:put, binding_endpoint).with(body: expected_body)).to have_been_made
+        end
+
         it 'creates an audit event upon binding' do
           email = 'email@example.com'
           post '/v2/service_bindings', req.to_json, headers_for(developer, email: email)

@@ -15,7 +15,6 @@ module VCAP::CloudController
           host:        { type: 'string', default: '' },
           domain_guid: { type: 'string', required: true },
           space_guid:  { type: 'string', required: true },
-          service_instance_guid:  { type: 'string' },
           app_guids:   { type: '[string]' },
           path:        { type: 'string' }
         })
@@ -26,7 +25,6 @@ module VCAP::CloudController
           host:        { type: 'string' },
           domain_guid: { type: 'string' },
           space_guid:  { type: 'string' },
-          service_instance_guid:  { type: 'string' },
           app_guids:   { type: '[string]' },
           path:        { type: 'string' }
         })
@@ -261,22 +259,6 @@ module VCAP::CloudController
           expect(last_response.status).to eq(403)
           expect(decoded_response['error_code']).to match(/FeatureDisabled/)
           expect(decoded_response['description']).to match(/route_creation/)
-        end
-      end
-
-      context 'when associating with a service instance that is not a route service' do
-        let(:service_instance) { ManagedServiceInstance.make }
-
-        before do
-          req[:service_instance_guid] = service_instance.guid
-        end
-
-        it 'returns an error that the binding is not allowed' do
-          post '/v2/routes', MultiJson.dump(req), headers_for(user)
-
-          expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to include('This service does not support route binding')
-          expect(decoded_response['code']).to eq(130006)
         end
       end
     end

@@ -228,6 +228,11 @@
   http_code: 409
   message: "An operation for service instance %s is in progress."
 
+60017:
+  name: ServiceInstanceRouteBindingSpaceMismatch
+  http_code: 400
+  message: "The service instance and the route are in different spaces."
+
 70001:
   name: RuntimeInvalid
   http_code: 400
@@ -387,6 +392,11 @@
   name: ServiceDoesNotSupportRoutes
   http_code: 400
   message: This service does not support route binding.
+
+130007:
+  name: RouteAlreadyBoundToServiceInstance
+  http_code: 400
+  message: A route may only be bound to a single service instance
 
 140001:
   name: LegacyApiWithoutDefaultSpace

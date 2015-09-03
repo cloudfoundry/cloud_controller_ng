@@ -824,7 +824,8 @@ module VCAP::Services::ServiceBrokers::V2
           with(anything,
              plan_id:    binding.service_plan.broker_provided_id,
              service_id: binding.service.broker_provided_id,
-             app_guid:   binding.app_guid
+             app_guid:   binding.app_guid,
+             hooks:      binding.required_parameters
         )
       end
 
@@ -845,12 +846,13 @@ module VCAP::Services::ServiceBrokers::V2
           arbitrary_parameters = { 'name' => 'value' }
           client.bind(binding, arbitrary_parameters: arbitrary_parameters)
           expect(http_client).to have_received(:put).
-            with(anything,
-                 plan_id:    binding.service_plan.broker_provided_id,
-                 service_id: binding.service.broker_provided_id,
-                 app_guid:   binding.app_guid,
-                 parameters: arbitrary_parameters
-            )
+              with(anything,
+                plan_id:    binding.service_plan.broker_provided_id,
+                service_id: binding.service.broker_provided_id,
+                app_guid:   binding.app_guid,
+                parameters: arbitrary_parameters,
+                hooks:      binding.required_parameters
+              )
         end
       end
 

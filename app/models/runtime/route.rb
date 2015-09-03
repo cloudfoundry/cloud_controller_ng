@@ -23,10 +23,14 @@ module VCAP::CloudController
     add_association_dependencies apps: :nullify
 
     export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid
-    import_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :app_guids
+    import_attributes :host, :path, :domain_guid, :space_guid, :app_guids
 
     def fqdn
       host.empty? ? domain.name : "#{host}.#{domain.name}"
+    end
+
+    def uri
+      "#{fqdn}#{path}"
     end
 
     def as_summary_json
@@ -195,6 +199,10 @@ module VCAP::CloudController
 
       unless service_instance.service.requires.include? 'route_forwarding'
         errors.add(:service_instance, :route_binding_not_allowed)
+      end
+
+      unless service_instance.space == self.space
+        errors.add(:service_instance, :space_mismatch)
       end
     end
   end
