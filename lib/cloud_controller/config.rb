@@ -232,6 +232,9 @@ module VCAP::CloudController
         optional(:diego_tps_url) => String,
         optional(:users_can_select_backend) => bool,
         optional(:default_to_diego_backend) => bool,
+        optional(:routing_api) => {
+          url: String
+        },
       }
     end
 
