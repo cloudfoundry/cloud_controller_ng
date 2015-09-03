@@ -6,6 +6,8 @@ module VCAP::CloudController
     let(:config_file) { File.new(valid_config_file_path) }
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:registrar) { Cf::Registrar.new({}) }
+    let(:diagnostics) { instance_double(VCAP::CloudController::Diagnostics) }
+    let(:periodic_updater) { instance_double(VCAP::CloudController::Metrics::PeriodicUpdater) }
 
     let(:argv) { [] }
 
@@ -15,10 +17,13 @@ module VCAP::CloudController
       allow(VCAP::Component).to receive(:register)
       allow(EM).to receive(:run).and_yield
       allow(EM).to receive(:add_timer).and_yield
-      allow_any_instance_of(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:setup_updates)
+      allow(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:new).and_return(periodic_updater)
+      allow(periodic_updater).to receive(:setup_updates)
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
       allow(registrar).to receive_messages(message_bus: message_bus)
       allow(registrar).to receive(:register_with_router)
+      allow(VCAP::CloudController::Diagnostics).to receive(:new).and_return(diagnostics)
+      allow(diagnostics).to receive(:collect)
     end
 
     subject do
@@ -106,7 +111,7 @@ module VCAP::CloudController
         end
 
         it 'sets up varz updates' do
-          expect_any_instance_of(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:setup_updates)
+          expect(periodic_updater).to receive(:setup_updates)
           subject.run!
         end
 
@@ -392,7 +397,7 @@ module VCAP::CloudController
         it 'uses a temporary directory' do
           expect(Dir).to receive(:mktmpdir).and_return('some/tmp/dir')
           expect(subject).to receive(:collect_diagnostics).and_call_original
-          expect(::VCAP::CloudController::Diagnostics).to receive(:collect).with('some/tmp/dir')
+          expect(diagnostics).to receive(:collect).with('some/tmp/dir', periodic_updater)
 
           callback.call
         end
@@ -400,7 +405,7 @@ module VCAP::CloudController
         it 'memoizes the temporary directory' do
           expect(Dir).to receive(:mktmpdir).and_return('some/tmp/dir')
           expect(subject).to receive(:collect_diagnostics).twice.and_call_original
-          expect(::VCAP::CloudController::Diagnostics).to receive(:collect).with('some/tmp/dir').twice
+          expect(diagnostics).to receive(:collect).with('some/tmp/dir', periodic_updater).twice
 
           callback.call
           callback.call
@@ -421,7 +426,7 @@ module VCAP::CloudController
         it 'uses the configured directory' do
           expect(Dir).not_to receive(:mktmpdir)
           expect(subject).to receive(:collect_diagnostics).and_call_original
-          expect(::VCAP::CloudController::Diagnostics).to receive(:collect).with('diagnostics/dir')
+          expect(diagnostics).to receive(:collect).with('diagnostics/dir', periodic_updater)
 
           callback.call
         end

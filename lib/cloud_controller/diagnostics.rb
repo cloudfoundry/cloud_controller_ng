@@ -1,10 +1,10 @@
 module VCAP::CloudController
   class Diagnostics
-    def self.collect(output_directory)
+    def collect(output_directory, updater)
       data = {
         time: Time.now.utc,
         threads: thread_data,
-        varz: varz_data
+        varz: varz_data(updater)
       }
 
       FileUtils.mkdir_p(output_directory)
@@ -17,15 +17,17 @@ module VCAP::CloudController
       output_file
     end
 
-    def self.request_received(request)
+    def request_received(request)
       Thread.current[:current_request] = request_info(request)
     end
 
-    def self.request_complete
+    def request_complete
       Thread.current[:current_request] = nil
     end
 
-    def self.request_info(request)
+    private
+
+    def request_info(request)
       {
         start_time: Time.now.utc.to_f,
         request_id: ::VCAP::Request.current_id,
@@ -34,12 +36,12 @@ module VCAP::CloudController
       }
     end
 
-    def self.request_uri(request)
+    def request_uri(request)
       return request.path if request.query_string.empty?
       "#{request.path}?#{request.query_string}"
     end
 
-    def self.thread_data
+    def thread_data
       Thread.list.map do |thread|
         {
           object_id: thread.object_id,
@@ -51,12 +53,12 @@ module VCAP::CloudController
       end
     end
 
-    def self.varz_data
-      ::VCAP::CloudController::Varz.update! if EM.reactor_running?
+    def varz_data(updater)
+      updater.update!
       ::VCAP::Component.varz.synchronize { VCAP::Component.varz.clone }
     end
 
-    def self.output_file_name
+    def output_file_name
       Time.now.utc.strftime("diag-#{Process.pid}-%Y%m%d-%H:%M:%S.%L.json")
     end
   end

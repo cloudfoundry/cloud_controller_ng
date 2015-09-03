@@ -94,9 +94,8 @@ module VCAP::CloudController
 
           VCAP::Component.varz.threadsafe! # initialize varz
 
-          statsd_client   = create_statsd_client(@config)
           request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
-          gather_periodic_metrics(statsd_client, message_bus)
+          gather_periodic_metrics(message_bus)
 
           builder = RackAppBuilder.new
           app     = builder.build(@config, request_metrics)
@@ -111,26 +110,14 @@ module VCAP::CloudController
       end
     end
 
-    def create_statsd_client(config)
-      logger.info("configuring statsd server at #{config[:statsd_host]}:#{config[:statsd_port]}")
-      Statsd.logger = Steno.logger('statsd.client')
-      Statsd.new(config[:statsd_host], config[:statsd_port].to_i)
-    end
-
-    def gather_periodic_metrics(statsd_client, message_bus)
+    def gather_periodic_metrics(message_bus)
       logger.info('setting up metrics')
 
       logger.info('registering with collector')
       register_with_collector(message_bus)
 
       logger.info('starting periodic metrics updater')
-      VCAP::CloudController::Metrics::PeriodicUpdater.new(
-        ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:start] },  # this can become Time.now.utc after we remove varz
-        @log_counter,
-        [
-          VCAP::CloudController::Metrics::VarzUpdater.new,
-          VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client)
-        ]).setup_updates
+      periodic_updater.setup_updates
     end
 
     def trap_signals
@@ -245,10 +232,28 @@ module VCAP::CloudController
       )
     end
 
+    def periodic_updater
+      @periodic_updater ||= VCAP::CloudController::Metrics::PeriodicUpdater.new(
+        ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:start] }, # this can become Time.now.utc after we remove varz
+        @log_counter,
+        [
+          VCAP::CloudController::Metrics::VarzUpdater.new,
+          VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client)
+        ])
+    end
+
+    def statsd_client
+      @statsd_client ||= (
+        logger.info("configuring statsd server at #{@config[:statsd_host]}:#{@config[:statsd_port]}")
+        Statsd.logger = Steno.logger('statsd.client')
+        Statsd.new(@config[:statsd_host], @config[:statsd_port].to_i)
+      )
+    end
+
     def collect_diagnostics
       @diagnostics_dir ||= @config[:directories][:diagnostics]
       @diagnostics_dir ||= Dir.mktmpdir
-      file = VCAP::CloudController::Diagnostics.collect(@diagnostics_dir)
+      file = VCAP::CloudController::Diagnostics.new.collect(@diagnostics_dir, periodic_updater)
       logger.warn("Diagnostics written to #{file}")
     rescue => e
       logger.warn("Failed to capture diagnostics: #{e}")
