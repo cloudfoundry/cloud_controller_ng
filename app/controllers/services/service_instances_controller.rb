@@ -128,15 +128,35 @@ module VCAP::CloudController
     def delete(guid)
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
       async = convert_flag_to_bool(params['async'])
+      purge = convert_flag_to_bool(params['purge'])
 
       service_instance = find_guid(guid, ServiceInstance)
 
       validate_access(:delete, service_instance)
-      association_not_empty!(:service_bindings) if has_bindings?(service_instance) && !recursive?
-      association_not_empty!(:service_keys) if has_keys?(service_instance) && !recursive?
 
+      if purge && !SecurityContext.admin?
+        raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+      end
+
+      if (!purge && !recursive?)
+        association_not_empty!(:service_bindings) if has_bindings?(service_instance)
+        association_not_empty!(:service_keys) if has_keys?(service_instance)
+      end
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
-      delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+      if !purge
+        delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+      end
+
+      if (purge)
+        service_instance.service_bindings.each do |binding|
+          binding.destroy
+        end
+        service_instance.service_keys.each do |key|
+          key.destroy
+        end
+        service_instance.destroy
+
+      end
 
       if delete_job
         [

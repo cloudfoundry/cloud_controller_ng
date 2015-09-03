@@ -2236,6 +2236,77 @@ module VCAP::CloudController
             expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
           end
         end
+
+        context 'with ?purge=true' do
+
+          it 'deletes the service instance without request to broker' do
+            expect(ManagedServiceInstance.find(guid: service_instance.guid)).not_to be_nil
+
+            delete "/v2/service_instances/#{service_instance.guid}?purge=true", {}, admin_headers
+
+            expect(last_response.status).to eq(204)
+            expect(ManagedServiceInstance.find(guid: service_instance.guid)).to be_nil
+          end
+
+          context 'when the user is not an admin' do
+            it 'raises an authentication error and does not delete the instance' do
+              expect(ManagedServiceInstance.find(guid: service_instance.guid)).not_to be_nil
+
+              delete "/v2/service_instances/#{service_instance.guid}?purge=true", {}, headers_for(developer)
+
+              expect(last_response.status).to eq(403)
+              expect(ManagedServiceInstance.find(guid: service_instance.guid)).not_to be_nil
+            end
+          end
+
+          context 'when the service instance has service bindings' do
+            let!(:service_binding_1) { ServiceBinding.make(service_instance: service_instance) }
+            let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance) }
+
+            it 'deletes the service instance and all of its service bindings' do
+              expect(ManagedServiceInstance.find(guid: service_instance.guid)).not_to be_nil
+
+              delete "/v2/service_instances/#{service_instance.guid}?purge=true", {}, admin_headers
+
+              expect(ServiceBinding.find(guid: service_binding_1.guid)).to be_nil
+              expect(ServiceBinding.find(guid: service_binding_2.guid)).to be_nil
+              expect(ManagedServiceInstance.find(guid: service_instance.guid)).to be_nil
+              expect(last_response.status).to eq(204)
+            end
+          end
+
+          context 'when the service instance as service keys' do
+            let!(:service_key_1) { ServiceKey.make(service_instance: service_instance) }
+            let!(:service_key_2) { ServiceKey.make(service_instance: service_instance) }
+
+            it 'deletes the service instance and all of its service keys' do
+              expect(ManagedServiceInstance.find(guid: service_instance.guid)).not_to be_nil
+
+              delete "/v2/service_instances/#{service_instance.guid}?purge=true", {}, admin_headers
+
+              expect(ServiceKey.find(guid: service_key_1.guid)).to be_nil
+              expect(ServiceKey.find(guid: service_key_2.guid)).to be_nil
+              expect(ManagedServiceInstance.find(guid: service_instance.guid)).to be_nil
+              expect(last_response.status).to eq(204)
+            end
+          end
+
+          context 'when the service instance has an operation in progress' do
+            before do
+              service_instance.save_with_new_operation({}, { type: 'type', state: 'in progress' })
+            end
+
+            it 'deletes the service instance without request to broker' do
+              expect(service_instance.last_operation.state).to eq('in progress')
+              expect(ManagedServiceInstance.find(guid: service_instance.guid)).not_to be_nil
+
+              delete "/v2/service_instances/#{service_instance.guid}?purge=true", {}, admin_headers
+
+              expect(last_response.status).to eq(204)
+              expect(ManagedServiceInstance.find(guid: service_instance.guid)).to be_nil
+            end
+          end
+        end
       end
 
       context 'with a v1 service instance' do
