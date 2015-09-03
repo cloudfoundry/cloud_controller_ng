@@ -1,7 +1,7 @@
 # deployment cloudcontroller nginx.conf
 user  vcap vcap;
 
-error_log /var/vcap/sys/log/nginx_cc/nginx.error.log;
+error_log <%= p("cc.nginx_error_log_destination") %> <%= p("cc.nginx_error_log_level") %>;
 pid       /var/vcap/sys/run/nginx_cc/nginx.pid;
 
 events {
@@ -14,13 +14,9 @@ http {
   default_type  text/html;
   server_tokens off;
 
-  log_format main  '$host - [$time_local] '
-                   '"$request" $status $bytes_sent '
-                   '"$http_referer" "$http_user_agent" '
-                   '$proxy_add_x_forwarded_for vcap_request_id:$upstream_http_x_vcap_request_id '
-                   'response_time:$upstream_response_time';
+  log_format main  '<%= p("cc.nginx_access_log_format").chomp %>';
 
-  access_log  /var/vcap/sys/log/nginx_cc/nginx.access.log  main;
+  access_log  <%= p("cc.nginx_access_log_destination") %>  main;
 
   sendfile             on;  #enable use of sendfile()
   tcp_nopush           on;
@@ -45,14 +41,14 @@ http {
 
     # proxy and log all CC traffic
     location / {
-      access_log /var/vcap/sys/log/nginx_cc/nginx.access.log  main;
+      access_log                  <%= p("cc.nginx_access_log_destination") %>  main;
       proxy_buffering             off;
       proxy_set_header            Host $host;
       proxy_set_header            X-Real_IP $remote_addr;
       proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_redirect              off;
       proxy_connect_timeout       10;
-      proxy_pass                 http://cloud_controller;
+      proxy_pass                  http://cloud_controller;
     }
 
 <% if p("cc.droplets.fog_connection.provider", "local").downcase == "local" %>
@@ -174,6 +170,5 @@ http {
       allow 127.0.0.1;
       deny all;
     }
-
   }
 }
