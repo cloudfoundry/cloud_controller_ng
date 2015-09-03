@@ -3,6 +3,7 @@ require 'jobs/audit_event_job'
 require 'actions/services/service_instance_create'
 require 'actions/services/service_instance_update'
 require 'controllers/services/lifecycle/service_instance_deprovisioner'
+require 'controllers/services/lifecycle/service_instance_purger'
 require 'queries/service_instance_fetcher'
 
 module VCAP::CloudController
@@ -131,32 +132,19 @@ module VCAP::CloudController
       purge = convert_flag_to_bool(params['purge'])
 
       service_instance = find_guid(guid, ServiceInstance)
-
       validate_access(:delete, service_instance)
 
-      if purge && !SecurityContext.admin?
-        raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+      if purge
+        raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') if !SecurityContext.admin?
+        ServiceInstancePurger.new.purge(service_instance)
+        return [HTTP::NO_CONTENT, nil]
       end
 
-      if (!purge && !recursive?)
-        association_not_empty!(:service_bindings) if has_bindings?(service_instance)
-        association_not_empty!(:service_keys) if has_keys?(service_instance)
-      end
+      association_not_empty!(:service_bindings) if has_bindings?(service_instance) && !recursive?
+      association_not_empty!(:service_keys) if has_keys?(service_instance) && !recursive?
+
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
-      if !purge
-        delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-      end
-
-      if (purge)
-        service_instance.service_bindings.each do |binding|
-          binding.destroy
-        end
-        service_instance.service_keys.each do |key|
-          key.destroy
-        end
-        service_instance.destroy
-
-      end
+      delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
 
       if delete_job
         [

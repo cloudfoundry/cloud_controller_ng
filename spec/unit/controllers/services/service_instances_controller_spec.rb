@@ -2238,7 +2238,6 @@ module VCAP::CloudController
         end
 
         context 'with ?purge=true' do
-
           it 'deletes the service instance without request to broker' do
             expect(ManagedServiceInstance.find(guid: service_instance.guid)).not_to be_nil
 
