@@ -40,6 +40,7 @@ module VCAP::CloudController
     end
 
     def logger
+      setup_logging unless @logger
       @logger ||= Steno.logger('cc.runner')
     end
 
@@ -214,7 +215,7 @@ module VCAP::CloudController
           port: @config[:external_port],
           uri: @config[:external_domain],
           tags: { component: 'CloudController' },
-          index: @config[:index],
+          index: @config[:index]
       )
     end
 

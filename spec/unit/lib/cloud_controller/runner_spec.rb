@@ -231,6 +231,28 @@ module VCAP::CloudController
           subject.run!
         end
       end
+
+      it 'sets up logging before creating a logger' do
+        steno_configurer = instance_double(StenoConfigurer)
+        logger = Steno.logger('logger')
+        allow(StenoConfigurer).to receive(:new).and_return(steno_configurer)
+
+        logging_configuration_time = nil
+        logger_creation_time = nil
+
+        allow(steno_configurer).to receive(:configure) do
+          logging_configuration_time ||= Time.now
+        end
+
+        allow(Steno).to receive(:logger) do |_|
+          logger_creation_time ||= Time.now
+          logger
+        end
+
+        subject.run!
+
+        expect(logging_configuration_time).to be < logger_creation_time
+      end
     end
 
     describe '#stop!' do
