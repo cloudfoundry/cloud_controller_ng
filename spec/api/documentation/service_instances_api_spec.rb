@@ -151,10 +151,15 @@ EOF
     end
 
     delete '/v2/service_instances/:guid' do
-      param_description = <<EOF
+      accepts_incomplete_description = <<EOF
 Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
 EOF
-      parameter :accepts_incomplete, param_description, valid_values: [true, false], experimental: true
+      purge_description = <<EOF
+Recursively remove a service instance and child objects from Cloud Foundry database without making requests to a service broker
+EOF
+
+      parameter :accepts_incomplete, accepts_incomplete_description, valid_values: [true, false], experimental: true
+      parameter :purge, purge_description, valid_values: [true, false], experimental: true
 
       before do
         uri = URI(service_broker.broker_url)

@@ -45,6 +45,14 @@ module VCAP::CloudController
       end
     end
 
+    def purge?(_)
+      admin_user?
+    end
+
+    def purge_with_token?(instance)
+      purge?(instance)
+    end
+
     private
 
     def has_read_permissions_scope?

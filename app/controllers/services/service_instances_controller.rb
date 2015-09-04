@@ -132,13 +132,14 @@ module VCAP::CloudController
       purge = convert_flag_to_bool(params['purge'])
 
       service_instance = find_guid(guid, ServiceInstance)
-      validate_access(:delete, service_instance)
 
       if purge
-        raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') if !SecurityContext.admin?
-        ServiceInstancePurger.new.purge(service_instance)
+        validate_access(:purge, service_instance)
+        ServiceInstancePurger.new(@services_event_repository).purge(service_instance)
         return [HTTP::NO_CONTENT, nil]
       end
+
+      validate_access(:delete, service_instance)
 
       association_not_empty!(:service_bindings) if has_bindings?(service_instance) && !recursive?
       association_not_empty!(:service_keys) if has_keys?(service_instance) && !recursive?

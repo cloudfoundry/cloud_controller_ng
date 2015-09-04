@@ -51,6 +51,10 @@ module VCAP::CloudController
 
         it_behaves_like :full_access
       end
+
+      it 'returns true for purge' do
+        expect(subject).to allow_op_on_object(:purge, object)
+      end
     end
 
     context 'space developer' do
@@ -67,6 +71,10 @@ module VCAP::CloudController
 
       it 'allows the user to read the permissions of the service instance' do
         expect(subject).to allow_op_on_object(:read_permissions, object)
+      end
+
+      it 'returns false for purge' do
+        expect(subject).not_to allow_op_on_object(:purge, object)
       end
 
       context 'when the service_instance_creation feature flag is not set' do
@@ -91,6 +99,10 @@ module VCAP::CloudController
       it 'does not allow the user to read the permissions of the service instance' do
         expect(subject).to_not allow_op_on_object(:read_permissions, object)
       end
+
+      it 'returns false for purge' do
+        expect(subject).not_to allow_op_on_object(:purge, object)
+      end
     end
 
     context 'organization manager (defensive)' do
@@ -99,6 +111,10 @@ module VCAP::CloudController
 
       it 'does not allow the user to read the permissions of the service instance' do
         expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
+
+      it 'returns false for purge' do
+        expect(subject).not_to allow_op_on_object(:purge, object)
       end
     end
 
@@ -109,6 +125,10 @@ module VCAP::CloudController
       it 'does not allow the user to read the permissions of the service instance' do
         expect(subject).to_not allow_op_on_object(:read_permissions, object)
       end
+
+      it 'returns false for purge' do
+        expect(subject).not_to allow_op_on_object(:purge, object)
+      end
     end
 
     context 'organization auditor (defensive)' do
@@ -117,6 +137,10 @@ module VCAP::CloudController
 
       it 'does not allow the user to read the permissions of the service instance' do
         expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
+
+      it 'returns false for purge' do
+        expect(subject).not_to allow_op_on_object(:purge, object)
       end
     end
 
@@ -131,6 +155,10 @@ module VCAP::CloudController
       it 'does not allow the user to read the permissions of the service instance' do
         expect(subject).to_not allow_op_on_object(:read_permissions, object)
       end
+
+      it 'returns false for purge' do
+        expect(subject).not_to allow_op_on_object(:purge, object)
+      end
     end
 
     context 'organization user (defensive)' do
@@ -139,6 +167,10 @@ module VCAP::CloudController
 
       it 'does not allow the user to read the permissions of the service instance' do
         expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
+
+      it 'returns false for purge' do
+        expect(subject).not_to allow_op_on_object(:purge, object)
       end
     end
 
@@ -153,6 +185,10 @@ module VCAP::CloudController
       it 'does not allow the user to read the permissions of the service instance' do
         expect(subject).to_not allow_op_on_object(:read_permissions, object)
       end
+
+      it 'returns false for purge' do
+        expect(subject).not_to allow_op_on_object(:purge, object)
+      end
     end
 
     context 'manager in a different organization (defensive)' do
@@ -162,6 +198,10 @@ module VCAP::CloudController
       end
 
       it_behaves_like :no_access
+
+      it 'returns false for purge' do
+        expect(subject).not_to allow_op_on_object(:purge, object)
+      end
     end
 
     context 'a user that isnt logged in (defensive)' do
@@ -172,6 +212,10 @@ module VCAP::CloudController
 
       it 'does not allow the user to read the permissions of the service instance' do
         expect(subject).to_not allow_op_on_object(:read_permissions, object)
+      end
+
+      it 'returns false for purge' do
+        expect(subject).not_to allow_op_on_object(:purge, object)
       end
     end
 
