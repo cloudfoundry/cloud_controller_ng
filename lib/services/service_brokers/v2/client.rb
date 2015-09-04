@@ -105,10 +105,10 @@ module VCAP::Services::ServiceBrokers::V2
     def bind(binding, arbitrary_parameters: {})
       path = service_binding_resource_path(binding.guid, binding.service_instance.guid)
       body = {
-        service_id: binding.service.broker_provided_id,
-        plan_id:    binding.service_plan.broker_provided_id,
-        app_guid:   binding.try(:app_guid),
-        hooks:      binding.required_parameters
+        service_id:    binding.service.broker_provided_id,
+        plan_id:       binding.service_plan.broker_provided_id,
+        app_guid:      binding.try(:app_guid),
+        bind_resource: binding.required_parameters
       }
       body = body.reject { |_, v| v.nil? }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?

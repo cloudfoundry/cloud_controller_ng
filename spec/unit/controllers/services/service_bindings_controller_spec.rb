@@ -239,7 +239,7 @@ module VCAP::CloudController
             service_id: instance.service.broker_provided_id,
             plan_id: instance.service_plan.broker_provided_id,
             app_guid: app_obj.guid,
-            hooks: { app_guid: app_obj.guid }
+            bind_resource: { app_guid: app_obj.guid }
           }
 
           expect(a_request(:put, binding_endpoint).with(body: expected_body)).to have_been_made
