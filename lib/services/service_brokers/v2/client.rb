@@ -110,7 +110,7 @@ module VCAP::Services::ServiceBrokers::V2
         app_guid:   binding.try(:app_guid),
         hooks:      binding.required_parameters
       }
-
+      body = body.reject { |_, v| v.nil? }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
       response = @http_client.put(path, body)

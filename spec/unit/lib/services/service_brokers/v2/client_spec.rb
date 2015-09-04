@@ -856,6 +856,22 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'when the binding does not have an app_guid' do
+        let(:route) { VCAP::CloudController::Route.make }
+        let(:binding) { VCAP::CloudController::RouteBinding.new(route, instance) }
+
+        it 'does not send the app_guid in the request' do
+          client.bind(binding)
+
+          expect(http_client).to have_received(:put).
+              with(anything,
+                plan_id:    binding.service_plan.broker_provided_id,
+                service_id: binding.service.broker_provided_id,
+                hooks:      binding.required_parameters
+              )
+        end
+      end
+
       context 'with a syslog drain url' do
         before do
           instance.service_plan.service.update_from_hash(requires: ['syslog_drain'])
