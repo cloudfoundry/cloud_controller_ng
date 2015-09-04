@@ -11,18 +11,6 @@ module VCAP::CloudController
 
     query_parameters :host, :domain_guid, :organization_guid, :path
 
-    # def after_create(route)
-    #   create_service_binding(route) if route.service_instance
-    # end
-    #
-    # def create_service_binding(route)
-    #   binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
-    #   service_binding = binding_manager.create_route_service_instance_binding(route, route.service_instance)
-    #   #@services_event_repository.record_service_binding_event(:create, service_binding)
-    # rescue ServiceInstanceBindingManager::ServiceInstanceNotBindable
-    #   raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
-    # end
-
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:host, :domain_id])
       if name_errors && name_errors.include?(:unique)
