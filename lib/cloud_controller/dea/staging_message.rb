@@ -67,47 +67,5 @@ module VCAP::CloudController
         msg
       end
     end
-
-    class PackageDEAStagingMessage < StagingMessage
-      attr_reader :stack, :memory_limit, :disk_limit, :buildpack_key, :buildpack_git_url, :log_id, :droplet_guid
-
-      def initialize(package, droplet_guid, log_id, stack, memory_limit,
-                     disk_limit, buildpack_key, buildpack_git_url, config,
-                     environment_variables, blobstore_url_generator)
-        @app_guid              = package.app_guid
-        @package               = package
-        @stack                 = stack
-        @memory_limit          = memory_limit
-        @disk_limit            = disk_limit
-        @buildpack_key         = buildpack_key
-        @buildpack_git_url     = buildpack_git_url
-        @environment_variables = environment_variables
-        @droplet_guid          = droplet_guid
-        @log_id                = log_id
-        super(config, blobstore_url_generator)
-      end
-
-      def staging_request
-        {
-          app_id:                       log_id,
-          stack:                        stack,
-          task_id:                      droplet_guid,
-          # All url generation should go to blobstore_url_generator
-          download_uri:                 @blobstore_url_generator.package_download_url(@package),
-          upload_uri:                   @blobstore_url_generator.package_droplet_upload_url(droplet_guid),
-          buildpack_cache_upload_uri:   @blobstore_url_generator.v3_app_buildpack_cache_upload_url(@app_guid, @stack),
-          buildpack_cache_download_uri: @blobstore_url_generator.v3_app_buildpack_cache_download_url(@app_guid, @stack),
-          admin_buildpacks:             admin_buildpacks,
-          memory_limit:                 memory_limit,
-          disk_limit:                   disk_limit,
-          egress_network_rules:         staging_egress_rules,
-          properties:                   {
-            environment:       @environment_variables.map { |k, v| "#{k}=#{v}" },
-            buildpack_key:     buildpack_key,
-            buildpack_git_url: buildpack_git_url,
-          }
-        }
-      end
-    end
   end
 end
