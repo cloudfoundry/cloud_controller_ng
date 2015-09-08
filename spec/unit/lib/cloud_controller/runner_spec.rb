@@ -253,6 +253,16 @@ module VCAP::CloudController
 
         expect(logging_configuration_time).to be < logger_creation_time
       end
+
+      it 'only sets up logging once' do
+        steno_configurer = instance_double(StenoConfigurer)
+        allow(StenoConfigurer).to receive(:new).and_return(steno_configurer)
+        allow(steno_configurer).to receive(:configure).once
+
+        subject.run!
+
+        expect(steno_configurer).to have_received(:configure).once
+      end
     end
 
     describe '#stop!' do

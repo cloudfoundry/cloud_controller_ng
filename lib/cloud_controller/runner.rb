@@ -40,7 +40,7 @@ module VCAP::CloudController
     end
 
     def logger
-      setup_logging unless @logger
+      setup_logging
       @logger ||= Steno.logger('cc.runner')
     end
 
@@ -168,6 +168,9 @@ module VCAP::CloudController
     end
 
     def setup_logging
+      return if @setup_logging
+      @setup_logging = true
+
       StenoConfigurer.new(@config[:logging]).configure do |steno_config_hash|
         steno_config_hash[:sinks] << @log_counter
       end
