@@ -102,7 +102,7 @@ module VCAP::CloudController
 
             it 'validates and stages the app' do
               expect(stagers).to receive(:validate_app).with(app)
-              expect(stager).to receive(:stage_app)
+              expect(stager).to receive(:stage)
               subject
             end
           end
@@ -148,7 +148,7 @@ module VCAP::CloudController
 
             it 'validates and stages the app' do
               expect(stagers).to receive(:validate_app).with(app)
-              expect(stager).to receive(:stage_app)
+              expect(stager).to receive(:stage)
               subject
             end
           end
@@ -194,7 +194,7 @@ module VCAP::CloudController
 
             it 'validates and stages the app' do
               expect(stagers).to receive(:validate_app).with(app)
-              expect(stager).to receive(:stage_app)
+              expect(stager).to receive(:stage)
               subject
             end
           end

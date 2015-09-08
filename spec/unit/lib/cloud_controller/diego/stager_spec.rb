@@ -17,7 +17,7 @@ module VCAP::CloudController
 
       it_behaves_like 'a stager'
 
-      describe '#stage_app' do
+      describe '#stage' do
         before do
           allow(messenger).to receive(:send_stage_request)
           allow(messenger).to receive(:send_stop_staging_request)
@@ -26,7 +26,7 @@ module VCAP::CloudController
         it 'notifies Diego that the app needs staging' do
           expect(app).to receive(:mark_for_restaging)
           expect(messenger).to receive(:send_stage_request).with(app, staging_config)
-          stager.stage_app
+          stager.stage
         end
 
         context 'when there is a pending stage' do
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
             it 'attempts to stop the outstanding stage request' do
               expect(messenger).to_not receive(:send_stop_staging_request)
-              stager.stage_app
+              stager.stage
             end
           end
 
@@ -48,7 +48,7 @@ module VCAP::CloudController
 
             it 'attempts to stop the outstanding stage request' do
               expect(messenger).to receive(:send_stop_staging_request).with(app)
-              stager.stage_app
+              stager.stage
             end
           end
         end
@@ -64,7 +64,7 @@ module VCAP::CloudController
           end
 
           it 'attempts to stop the outstanding stage request' do
-            expect { stager.stage_app }.to raise_error(Errors::ApiError)
+            expect { stager.stage }.to raise_error(Errors::ApiError)
             app.reload
             expect(stager).to have_received(:staging_complete).with(StagingGuid.from_app(app), error)
           end

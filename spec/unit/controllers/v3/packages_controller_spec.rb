@@ -619,7 +619,7 @@ module VCAP::CloudController
       before do
         allow(packages_controller).to receive(:check_write_permissions!).and_return(nil)
         allow(droplet_presenter).to receive(:present_json).and_return(droplet_response)
-        allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage_package: nil))
+        allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
       end
 
       it 'returns a 201 Created response' do
@@ -826,10 +826,10 @@ module VCAP::CloudController
       end
 
       describe 'handling action errors' do
-        let(:package_stage_action) { double(:package_stage_action) }
+        let(:package_stage_action) { double(PackageStageAction.new) }
 
         before do
-          allow(packages_controller).to receive(:package_stage_action).and_return(package_stage_action)
+          allow(PackageStageAction).to receive(:new).and_return(package_stage_action)
         end
 
         context 'when the request package is invalid' do

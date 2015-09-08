@@ -11,10 +11,10 @@ module VCAP::CloudController
         def self.success_parser
           @staging_response_schema ||= Membrane::SchemaParser.parse do
             {
-              execution_metadata: String,
+              execution_metadata:     String,
               detected_start_command: Hash,
-              lifecycle_data: {
-                buildpack_key: String,
+              lifecycle_data:         {
+                buildpack_key:      String,
                 detected_buildpack: String,
               }
             }

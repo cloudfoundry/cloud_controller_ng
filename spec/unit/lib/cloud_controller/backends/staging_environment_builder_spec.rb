@@ -22,28 +22,30 @@ module VCAP::CloudController
         environment_variables = builder.build(app, space, stack, memory_limit, disk_limit)
 
         expect(environment_variables).to match({
-          'another'          => 'override',
-          'APP_VAR'          => 'is here',
-          'STAGING_ENV'      => 'staging_value',
-          'CF_STACK'         => stack,
-          'VCAP_APPLICATION' => {
-            'limits'              => {
-              'mem'  => memory_limit,
-              'disk' => disk_limit,
-              'fds'  => 16384
-            },
-            'application_id'    => app.guid,
-            'application_name'    => app.name,
-            'name'                => app.name,
-            'application_uris'    => [],
-            'uris'                => [],
-            'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-            'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
-            'space_name'          => space.name,
-            'space_id'            => space.guid,
-            'users'               => nil
-          }
-        })
+              'another'          => 'override',
+              'APP_VAR'          => 'is here',
+              'STAGING_ENV'      => 'staging_value',
+              'CF_STACK'         => stack,
+              'MEMORY_LIMIT'     => memory_limit,
+              'VCAP_SERVICES'    => {},
+              'VCAP_APPLICATION' => {
+                'limits'              => {
+                  'mem'  => memory_limit,
+                  'disk' => disk_limit,
+                  'fds'  => 16384
+                },
+                'application_id'      => app.guid,
+                'application_name'    => app.name,
+                'name'                => app.name,
+                'application_uris'    => [],
+                'uris'                => [],
+                'application_version' => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
+                'space_name'          => space.name,
+                'space_id'            => space.guid,
+                'users'               => nil
+              }
+            })
       end
 
       context 'when the app has a route associated with it' do

@@ -33,5 +33,13 @@ module VCAP::CloudController
     def blobstore_key
       File.join(guid, droplet_hash) if droplet_hash
     end
+
+    def staged?
+      self.state == STAGED_STATE
+    end
+
+    def mark_as_staged
+      self.state = STAGED_STATE
+    end
   end
 end

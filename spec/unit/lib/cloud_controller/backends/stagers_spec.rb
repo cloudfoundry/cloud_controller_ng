@@ -4,22 +4,22 @@ module VCAP::CloudController
   describe Stagers do
     let(:config) { TestConfig.config }
 
-    let(:message_bus)  { instance_double(CfMessageBus::MessageBus) }
-    let(:dea_pool)     { instance_double(Dea::Pool) }
-    let(:stager_pool)  { instance_double(Dea::StagerPool) }
-    let(:runners)      { Runners.new(config, message_bus, dea_pool, stager_pool) }
+    let(:message_bus) { instance_double(CfMessageBus::MessageBus) }
+    let(:dea_pool) { instance_double(Dea::Pool) }
+    let(:stager_pool) { instance_double(Dea::StagerPool) }
+    let(:runners) { Runners.new(config, message_bus, dea_pool, stager_pool) }
     let(:package_hash) { 'fake-package-hash' }
-    let(:buildpack)    { instance_double(AutoDetectionBuildpack, custom?: false) }
+    let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: false) }
     let(:docker_image) { nil }
     let(:custom_buildpacks_enabled?) { true }
 
     let(:app) do
       instance_double(App,
-        docker_image: docker_image,
-        package_hash: package_hash,
-        buildpack: buildpack,
+        docker_image:               docker_image,
+        package_hash:               package_hash,
+        buildpack:                  buildpack,
         custom_buildpacks_enabled?: custom_buildpacks_enabled?,
-        buildpack_specified?: false,
+        buildpack_specified?:       false,
       )
     end
 
@@ -82,7 +82,7 @@ module VCAP::CloudController
       end
 
       context 'with a docker app' do
-        let(:buildpack)    { instance_double(AutoDetectionBuildpack, custom?: true) }
+        let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: true) }
         let(:docker_image) do
           'fake-docker-image'
         end
@@ -186,12 +186,12 @@ module VCAP::CloudController
     end
 
     describe '#stager_for_package' do
-      let(:package) { double(:package) }
+      let(:package) { double(:package, app: app) }
 
-      context 'when staging with the DEA' do
-        it 'finds a DEA backend' do
+      context 'when staging with Diego' do
+        it 'finds a Diego backend' do
           stager = stagers.stager_for_package(package)
-          expect(stager).to be_a(Dea::Stager)
+          expect(stager).to be_a(Diego::V3::Stager)
         end
       end
     end

@@ -16,7 +16,7 @@ module VCAP::CloudController
 
         let(:default_health_check_timeout) { 99 }
         let(:staging_config) { TestConfig.config[:staging] }
-        let(:common_protocol) { double(:common_protocol) }
+        let(:egress_rules) { double(:egress_rules) }
         let(:app) do
           AppFactory.make(
             health_check_timeout: default_health_check_timeout,
@@ -25,12 +25,12 @@ module VCAP::CloudController
         end
 
         subject(:protocol) do
-          Protocol.new(blobstore_url_generator, common_protocol)
+          Protocol.new(blobstore_url_generator, egress_rules)
         end
 
         before do
-          allow(common_protocol).to receive(:staging_egress_rules).and_return(['staging_egress_rule'])
-          allow(common_protocol).to receive(:running_egress_rules).with(app).and_return(['running_egress_rule'])
+          allow(egress_rules).to receive(:staging).and_return(['staging_egress_rule'])
+          allow(egress_rules).to receive(:running).with(app).and_return(['running_egress_rule'])
         end
 
         describe '#stage_app_request' do
@@ -65,24 +65,24 @@ module VCAP::CloudController
 
           it 'contains the correct payload for staging a traditional app' do
             expect(message).to eq({
-              app_id: app.guid,
-              log_guid: app.guid,
-              memory_mb: app.memory,
-              disk_mb: app.disk_quota,
-              file_descriptors: app.file_descriptors,
-              environment: Environment.new(app, staging_env).as_json,
-              egress_rules: ['staging_egress_rule'],
-              timeout: 90,
-              lifecycle: 'buildpack',
-              lifecycle_data: {
-                build_artifacts_cache_download_uri: 'http://buildpack-artifacts-cache.com',
-                build_artifacts_cache_upload_uri: 'http://buildpack-artifacts-cache.up.com',
-                app_bits_download_uri: 'http://app-package.com',
-                droplet_upload_uri: 'http://droplet-upload-uri',
-                buildpacks: buildpack_generator.buildpack_entries(app),
-                stack: app.stack.name,
-              },
-            })
+                  app_id: app.guid,
+                  log_guid: app.guid,
+                  memory_mb: app.memory,
+                  disk_mb: app.disk_quota,
+                  file_descriptors: app.file_descriptors,
+                  environment: Environment.new(app, staging_env).as_json,
+                  egress_rules: ['staging_egress_rule'],
+                  timeout: 90,
+                  lifecycle: 'buildpack',
+                  lifecycle_data: {
+                    build_artifacts_cache_download_uri: 'http://buildpack-artifacts-cache.com',
+                    build_artifacts_cache_upload_uri: 'http://buildpack-artifacts-cache.up.com',
+                    app_bits_download_uri: 'http://app-package.com',
+                    droplet_upload_uri: 'http://droplet-upload-uri',
+                    buildpacks: buildpack_generator.buildpack_entries(app),
+                    stack: app.stack.name,
+                  },
+                })
           end
 
           describe 'buildpack payload' do
@@ -189,24 +189,24 @@ module VCAP::CloudController
 
           it 'is a messsage with the information nsync needs to desire the app' do
             expect(message).to eq({
-              'disk_mb' => app.disk_quota,
-              'droplet_uri' => 'fake-droplet_uri',
-              'environment' => Environment.new(app, running_env).as_json,
-              'file_descriptors' => app.file_descriptors,
-              'health_check_type' => app.health_check_type,
-              'health_check_timeout_in_seconds' => app.health_check_timeout,
-              'log_guid' => app.guid,
-              'memory_mb' => app.memory,
-              'num_instances' => app.desired_instances,
-              'process_guid' => ProcessGuid.from_app(app),
-              'stack' => app.stack.name,
-              'start_command' => app.command,
-              'execution_metadata' => app.execution_metadata,
-              'routes' => app.uris,
-              'egress_rules' => ['running_egress_rule'],
-              'etag' => app.updated_at.to_f.to_s,
-              'allow_ssh' => true,
-            })
+                  'disk_mb' => app.disk_quota,
+                  'droplet_uri' => 'fake-droplet_uri',
+                  'environment' => Environment.new(app, running_env).as_json,
+                  'file_descriptors' => app.file_descriptors,
+                  'health_check_type' => app.health_check_type,
+                  'health_check_timeout_in_seconds' => app.health_check_timeout,
+                  'log_guid' => app.guid,
+                  'memory_mb' => app.memory,
+                  'num_instances' => app.desired_instances,
+                  'process_guid' => ProcessGuid.from_app(app),
+                  'stack' => app.stack.name,
+                  'start_command' => app.command,
+                  'execution_metadata' => app.execution_metadata,
+                  'routes' => app.uris,
+                  'egress_rules' => ['running_egress_rule'],
+                  'etag' => app.updated_at.to_f.to_s,
+                  'allow_ssh' => true,
+                })
           end
 
           context 'when the app health check timeout is not set' do

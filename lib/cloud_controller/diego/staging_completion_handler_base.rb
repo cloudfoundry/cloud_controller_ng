@@ -7,13 +7,13 @@ module VCAP::CloudController
         @logger_prefix = logger_prefix
       end
 
-      def staging_complete(staging_guid, payload)
+      def staging_complete(entity_or_id, payload)
         logger.info(@logger_prefix + 'finished', response: payload)
 
         if payload[:error]
-          handle_failure(staging_guid, payload)
+          handle_failure(entity_or_id, payload)
         else
-          handle_success(staging_guid, payload)
+          handle_success(entity_or_id, payload)
         end
       end
 
@@ -30,8 +30,8 @@ module VCAP::CloudController
         app = get_app(staging_guid)
         return if app.nil?
 
-        error = payload[:error]
-        id = error[:id] || 'StagingError'
+        error   = payload[:error]
+        id      = error[:id] || 'StagingError'
         message = error[:message]
         app.mark_as_failed_to_stage(id)
         Loggregator.emit_error(app.guid, "Failed to stage application: #{message}")

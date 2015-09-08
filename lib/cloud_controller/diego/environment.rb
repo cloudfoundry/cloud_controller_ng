@@ -36,8 +36,8 @@ module VCAP::CloudController
         env
       end
 
-      def add_hash_to_env(hash, env)
-        hash.each do |k, v|
+      def self.hash_to_diego_env(hash)
+        hash.map do |k, v|
           case v
           when Array, Hash
             v = MultiJson.dump(v)
@@ -45,8 +45,12 @@ module VCAP::CloudController
             v = v.to_s
           end
 
-          env << { 'name' => k, 'value' => v }
+          { 'name' => k, 'value' => v }
         end
+      end
+
+      def add_hash_to_env(hash, env)
+        env.concat(self.class.hash_to_diego_env(hash))
       end
     end
   end

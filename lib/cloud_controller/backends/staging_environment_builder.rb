@@ -9,10 +9,12 @@ module VCAP::CloudController
         merge(app_env).
         merge(vars_from_message).
         merge(
-        {
-          'VCAP_APPLICATION' => vcap_application(app, space, memory_limit, disk_limit),
-          'CF_STACK'         => stack
-        })
+          {
+            'VCAP_APPLICATION' => vcap_application(app, space, memory_limit, disk_limit),
+            'CF_STACK'         => stack,
+            'MEMORY_LIMIT'     => memory_limit,
+            'VCAP_SERVICES'    => {}
+          })
     end
 
     private
@@ -26,7 +28,7 @@ module VCAP::CloudController
           'disk' => disk_limit,
           'fds'  => Config.config[:instance_file_descriptor_limit] || 16384,
         },
-        'application_id' => app.guid,
+        'application_id'      => app.guid,
         'application_version' => version,
         'application_name'    => app.name,
         'application_uris'    => uris,

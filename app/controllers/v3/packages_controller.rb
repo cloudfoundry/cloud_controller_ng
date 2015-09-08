@@ -112,20 +112,19 @@ module VCAP::CloudController
       check_write_permissions!
 
       request = parse_and_validate_json(body)
-      message = DropletCreateMessage.create_from_http_request(request)
-      unprocessable!(message.errors.full_messages) unless message.valid?
+      staging_message = DropletCreateMessage.create_from_http_request(request)
+      unprocessable!(staging_message.errors.full_messages) unless staging_message.valid?
 
       package = PackageModel.where(guid: package_guid).eager(:app, :space, space: :organization).all.first
       package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
 
       unauthorized! unless can_stage?(package.space.guid)
 
-      buildpack_to_use    = message.buildpack.nil? ? package.app.buildpack : message.buildpack
-      buildpack_validator = BuildpackRequestValidator.new({ buildpack: buildpack_to_use })
-      unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
+      buildpack_to_use    = staging_message.buildpack.nil? ? package.app.buildpack : staging_message.buildpack
+      buildpack_info = BuildpackRequestValidator.new(buildpack: buildpack_to_use)
+      unprocessable!(buildpack_info.errors.full_messages) unless buildpack_info.valid?
 
-      droplet = package_stage_action.stage(
-        package, package.app, package.space, package.space.organization, buildpack_validator, message, @stagers)
+      droplet = PackageStageAction.new.stage(package, buildpack_info, staging_message, @stagers)
 
       [HTTP::CREATED, @droplet_presenter.present_json(droplet)]
     rescue PackageStageAction::InvalidPackage => e
@@ -136,14 +135,6 @@ module VCAP::CloudController
       unable_to_perform!('Staging request', "organization's memory limit exceeded")
     rescue PackageStageAction::DiskLimitExceeded
       unable_to_perform!('Staging request', 'disk limit exceeded')
-    end
-
-    def package_stage_action
-      PackageStageAction.new
-    end
-
-    def package_stage_fetcher
-      PackageStageFetcher.new
     end
 
     def membership

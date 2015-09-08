@@ -9,7 +9,6 @@ module VCAP::CloudController
       [:stagers]
     end
 
-    # Endpoint does its own (non-standard) auth
     allow_unauthenticated_access
 
     def initialize(*)
@@ -36,6 +35,27 @@ module VCAP::CloudController
 
       begin
         stagers.stager_for_app(app).staging_complete(staging_guid, staging_response)
+      rescue Errors::ApiError => api_err
+        raise api_err
+      rescue => e
+        logger.error('diego.staging.completion-controller-error', error: e)
+        raise Errors::ApiError.new_from_details('ServerError')
+      end
+
+      [200, '{}']
+    end
+
+    post '/internal/v3/staging/:staging_guid/droplet_completed', :droplet_completed
+
+    def droplet_completed(staging_guid)
+      staging_response = read_body
+      droplet = DropletModel.find(guid: staging_guid)
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found') if droplet.nil?
+      package = PackageModel.find(guid: droplet.package_guid)
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if package.nil?
+
+      begin
+        stagers.stager_for_package(package).staging_complete(droplet, staging_response)
       rescue Errors::ApiError => api_err
         raise api_err
       rescue => e

@@ -8,11 +8,7 @@ module VCAP::CloudController
         @staging_config = staging_config
       end
 
-      def stage_package(_, _, _, _, _, _)
-        raise NotImplementedError
-      end
-
-      def stage_app
+      def stage
         if @app.pending? && @app.staging_task_id
           @messenger.send_stop_staging_request(@app)
         end

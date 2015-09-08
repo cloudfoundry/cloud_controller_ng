@@ -33,7 +33,7 @@ module VCAP::CloudController
           staging_request.memory_mb = [app.memory, staging_config[:minimum_staging_memory_mb]].max
           staging_request.disk_mb = [app.disk_quota, staging_config[:minimum_staging_disk_mb]].max
           staging_request.file_descriptors = [app.file_descriptors, staging_config[:minimum_staging_file_descriptor_limit]].max
-          staging_request.egress_rules = @common_protocol.staging_egress_rules
+          staging_request.egress_rules = @common_protocol.staging
           staging_request.timeout = staging_config[:timeout_in_seconds]
           staging_request.lifecycle = 'docker'
           staging_request.lifecycle_data = lifecycle_data.message
@@ -63,7 +63,7 @@ module VCAP::CloudController
             'docker_image' => cached_docker_image || app.docker_image,
             'health_check_type' => app.health_check_type,
             'health_check_timeout_in_seconds' => app.health_check_timeout || default_health_check_timeout,
-            'egress_rules' => @common_protocol.running_egress_rules(app),
+            'egress_rules' => @common_protocol.running(app),
             'etag' => app.updated_at.to_f.to_s,
             'allow_ssh' => app.enable_ssh,
           }

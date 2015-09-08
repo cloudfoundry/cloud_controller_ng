@@ -412,37 +412,33 @@ resource 'Packages (Experimental)', type: :api do
       )
     end
     let(:guid) { package_model.guid }
-
-    let(:raw_post) { body_parameters }
-
-    let(:stager_id) { 'abc123' }
-    let(:stager_subject) { "staging.#{stager_id}.start" }
     let(:stack) { 'cflinuxfs2' }
-    let(:advertisment) do
+    let(:diego_staging_response) do
       {
-        'id'               => stager_id,
-        'stacks'           => [stack],
-        'available_memory' => 2048,
-        'app_id_to_count'  => {},
+        execution_metadata:     'String',
+        detected_start_command: {},
+        lifecycle_data:         {
+          buildpack_key:      'String',
+          detected_buildpack: 'String',
+        }
       }
     end
-    let(:message_bus) { VCAP::CloudController::Config.message_bus }
+
+    let(:raw_post) { body_parameters }
 
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      allow(EM).to receive(:add_timer)
-      allow(EM).to receive(:defer).and_yield
-      allow(EM).to receive(:schedule_sync) do |&blk|
-        blk.call
-      end
+      allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_download_url).and_return('some-string')
+      allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_upload_url).and_return('some-string')
+      allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_download_url).and_return('some-string')
+      allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_droplet_upload_url).and_return('some-string')
+      stub_request(:put, "#{TestConfig.config[:diego_stager_url]}/v1/staging/whatuuid").
+           to_return(status: 202, body: diego_staging_response.to_json)
     end
 
     example 'Stage a package' do
       stub_const('SecureRandom', double(:sr, uuid: 'whatuuid', hex: '8-octetx'))
-      VCAP::CloudController::Dea::Client.dea_pool.register_subscriptions
-      message_bus.publish('dea.advertise', advertisment)
-      message_bus.publish('staging.advertise', advertisment)
 
       expect {
         do_request_with_error_handling
@@ -450,36 +446,38 @@ resource 'Packages (Experimental)', type: :api do
 
       droplet           = VCAP::CloudController::DropletModel.last
       expected_response = {
-        'guid'                   => droplet.guid,
-        'state'                  => 'PENDING',
-        'hash'                   => { 'type' => 'sha1', 'value' => nil },
-        'buildpack'              => 'http://github.com/myorg/awesome-buildpack',
-        'error'                  => nil,
-        'procfile'               => nil,
-        'created_at'             => iso8601,
-        'updated_at'             => nil,
-        'environment_variables'  => {
-          'CF_STACK' => stack,
-          'CUSTOM_ENV_VAR' => custom_env_var_val,
+        'guid'                  => droplet.guid,
+        'state'                 => 'PENDING',
+        'hash'                  => { 'type' => 'sha1', 'value' => nil },
+        'buildpack'             => 'http://github.com/myorg/awesome-buildpack',
+        'error'                 => nil,
+        'procfile'              => nil,
+        'created_at'            => iso8601,
+        'updated_at'            => nil,
+        'environment_variables' => {
+          'CF_STACK'         => stack,
+          'CUSTOM_ENV_VAR'   => custom_env_var_val,
+          'MEMORY_LIMIT'     => 1024,
+          'VCAP_SERVICES'    => {},
           'VCAP_APPLICATION' => {
-            'limits' => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
-            'application_id' => app_guid,
+            'limits'              => { 'mem' => 1024, 'disk' => 4096, 'fds' => 16384 },
+            'application_id'      => app_guid,
             'application_version' => 'whatuuid',
-            'application_name' => app_model.name, 'application_uris' => [],
-            'version' => 'whatuuid',
-            'name' => app_model.name,
-            'space_name' => space.name,
-            'space_id' => space.guid,
-            'uris' => [],
-            'users' => nil
+            'application_name'    => app_model.name, 'application_uris' => [],
+            'version'             => 'whatuuid',
+            'name'                => app_model.name,
+            'space_name'          => space.name,
+            'space_id'            => space.guid,
+            'uris'                => [],
+            'users'               => nil
           }
         },
-        '_links'                 => {
-          'self'    => { 'href' => "/v3/droplets/#{droplet.guid}" },
-          'package' => { 'href' => "/v3/packages/#{guid}" },
-          'app'     => { 'href' => "/v3/apps/#{app_guid}" },
+        '_links'                => {
+          'self'                   => { 'href' => "/v3/droplets/#{droplet.guid}" },
+          'package'                => { 'href' => "/v3/packages/#{guid}" },
+          'app'                    => { 'href' => "/v3/apps/#{app_guid}" },
           'assign_current_droplet' => {
-            'href' => "/v3/apps/#{app_guid}/current_droplet",
+            'href'   => "/v3/apps/#{app_guid}/current_droplet",
             'method' => 'PUT'
           }
         }
@@ -490,26 +488,5 @@ resource 'Packages (Experimental)', type: :api do
       parsed_response = MultiJson.load(response_body)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
-  end
-end
-
-def stub_schedule_sync(&before_resolve)
-  allow(EM).to receive(:schedule_sync) do |&blk|
-    promise = VCAP::Concurrency::Promise.new
-
-    begin
-      if blk.arity > 0
-        blk.call(promise)
-      else
-        promise.deliver(blk.call)
-      end
-    rescue => e
-      promise.fail(e)
-    end
-
-    # Call before_resolve block before trying to resolve the promise
-    before_resolve.call
-
-    promise.resolve
   end
 end
