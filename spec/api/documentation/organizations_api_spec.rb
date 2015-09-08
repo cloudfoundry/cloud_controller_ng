@@ -148,6 +148,19 @@ resource 'Organizations', type: [:api, :legacy_api] do
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization
       nested_model_associate :user, :organization
       nested_model_remove :user, :organization
+
+      put 'v2/organizations/:guid/users' do
+        example 'Associate User with the Organization by Username (experimental)' do
+          uaa_client = double(:uaa_client)
+          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+          allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
+
+          client.put "v2/organizations/#{organization.guid}/users", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
+          expect(status).to eq(201)
+
+          standard_entity_response parsed_response, :organization
+        end
+      end
     end
 
     describe 'Managers' do
@@ -167,6 +180,19 @@ resource 'Organizations', type: [:api, :legacy_api] do
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :managers
       nested_model_associate :manager, :organization
       nested_model_remove :manager, :organization
+
+      put 'v2/organizations/:guid/managers' do
+        example 'Associate Manager with the Organization by Username (experimental)' do
+          uaa_client = double(:uaa_client)
+          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+          allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
+
+          client.put "v2/organizations/#{organization.guid}/managers", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
+          expect(status).to eq(201)
+
+          standard_entity_response parsed_response, :organization
+        end
+      end
     end
 
     describe 'Billing Managers' do
@@ -185,6 +211,19 @@ resource 'Organizations', type: [:api, :legacy_api] do
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :billing_managers
       nested_model_associate :billing_manager, :organization
       nested_model_remove :billing_manager, :organization
+
+      put 'v2/organizations/:guid/billing_managers' do
+        example 'Associate Billing Manager with the Organization by Username (experimental)' do
+          uaa_client = double(:uaa_client)
+          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+          allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
+
+          client.put "v2/organizations/#{organization.guid}/billing_managers", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
+          expect(status).to eq(201)
+
+          standard_entity_response parsed_response, :organization
+        end
+      end
     end
 
     describe 'Auditors' do
@@ -203,6 +242,19 @@ resource 'Organizations', type: [:api, :legacy_api] do
       standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :auditors
       nested_model_associate :auditor, :organization
       nested_model_remove :auditor, :organization
+
+      put 'v2/organizations/:guid/auditors' do
+        example 'Associate Auditor with the Organization by Username (experimental)' do
+          uaa_client = double(:uaa_client)
+          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+          allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
+
+          client.put "v2/organizations/#{organization.guid}/auditors", MultiJson.dump({username: 'user@example.com'}, pretty: true), headers
+          expect(status).to eq(201)
+
+          standard_entity_response parsed_response, :organization
+        end
+      end
     end
 
     describe 'Services' do
