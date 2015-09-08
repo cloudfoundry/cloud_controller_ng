@@ -88,6 +88,16 @@
   http_code: 404
   message: "The user could not be found: %s"
 
+20004:
+  name: UaaUnavailable
+  http_code: 503
+  message: "The UAA service is currently unavailable"
+
+20005:
+  name: UaaEndpointDisabled
+  http_code: 501
+  message: "The UAA endpoint needed is disabled"
+
 30001:
   name: OrganizationInvalid
   http_code: 400
