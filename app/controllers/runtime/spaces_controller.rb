@@ -4,7 +4,7 @@ require 'queries/space_user_roles_fetcher'
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
-      [:space_event_repository, :username_and_roles_populating_collection_renderer]
+      [:space_event_repository, :username_and_roles_populating_collection_renderer, :username_lookup_uaa_client]
     end
 
     define_attributes do
@@ -42,6 +42,7 @@ module VCAP::CloudController
       super
       @space_event_repository = dependencies.fetch(:space_event_repository)
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
+      @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
     end
 
     get '/v2/spaces/:guid/user_roles', :enumerate_user_roles
@@ -138,6 +139,32 @@ module VCAP::CloudController
       delete_action = SpaceDelete.new(current_user.guid, current_user_email)
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, guid, delete_action)
       enqueue_deletion_job(deletion_job)
+    end
+
+    [:manager, :developer, :auditor].each do |role|
+      plural_role = role.to_s.pluralize
+
+      put "/v2/spaces/:guid/#{plural_role}", "add_#{role}_by_username".to_sym
+
+      define_method("add_#{role}_by_username") do |guid|
+        username = parse_and_validate_json(body)['username']
+
+        begin
+          user_id = @username_lookup_uaa_client.id_for_username(username)
+        rescue UaaUnavailable
+          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
+        rescue UaaEndpointDisabled
+          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
+        end
+        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
+
+        user = User.where(guid: user_id).first || User.create(guid: user_id)
+
+        space = find_guid_and_validate_access(:update, guid)
+        space.send("add_#{role}", user)
+
+        [HTTP::CREATED, object_renderer.render_json(self.class, space, @opts)]
+      end
     end
 
     private
