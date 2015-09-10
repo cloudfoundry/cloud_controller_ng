@@ -29,7 +29,7 @@ module VCAP::CloudController
         app_not_found!
       end
 
-      [HTTP::OK, @droplet_presenter.present_json_list(paginated_result, "/v3/apps/#{app_guid}/droplets")]
+      [HTTP::OK, @droplet_presenter.present_json_list(paginated_result, "/v3/apps/#{app_guid}/droplets", params)]
     rescue InvalidParam => e
       invalid_param!(e.message)
     end

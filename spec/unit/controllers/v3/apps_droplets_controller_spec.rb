@@ -41,6 +41,7 @@ module VCAP::CloudController
       let(:page) { 1 }
       let(:per_page) { 2 }
       let(:params) { { 'page' => page, 'per_page' => per_page } }
+      let(:non_presentational_params) { params.reject { |k| ['per_page', 'page'].include? k } }
       let(:expected_response) { 'im a response' }
 
       before do
@@ -93,7 +94,7 @@ module VCAP::CloudController
             response_code, response_body = apps_droplets_controller.list(app_guid)
 
             expect(droplet_presenter).to have_received(:present_json_list).
-              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets") do |result|
+              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets", non_presentational_params) do |result|
               expect(result.total).to eq(DropletModel.count)
             end
             expect(response_code).to eq(200)
@@ -135,7 +136,7 @@ module VCAP::CloudController
                     Membership::SPACE_AUDITOR,
                     Membership::ORG_MANAGER], space_guid, org_guid)
             expect(droplet_presenter).to have_received(:present_json_list).
-              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets") do |result|
+              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets", non_presentational_params) do |result|
               expect(result.total).to eq(1)
             end
             expect(response_code).to eq(200)

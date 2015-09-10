@@ -192,110 +192,135 @@ module VCAP::CloudController
       let(:page) { 1 }
       let(:per_page) { 2 }
       let(:params) { { 'page' => page, 'per_page' => per_page } }
-      let(:expected_response) { 'im a response' }
+      let(:non_presentational_params) { params.reject { |k| ['per_page', 'page'].include? k } }
 
       before do
-        allow(droplet_presenter).to receive(:present_json_list).and_return(expected_response)
         allow(droplets_controller).to receive(:check_read_permissions!)
       end
 
-      context 'query params' do
-        context 'invalid param format' do
-          let(:app_guids) { 'foo' }
-          let(:params) { { 'app_guids' => app_guids } }
+      context 'authorization and request validation' do
+        let(:expected_response) { 'im a response' }
 
-          it 'returns 400' do
-            expect {
-              droplets_controller.list
-            }.to raise_error do |error|
-              expect(error.name).to eq 'BadQueryParameter'
-              expect(error.response_code).to eq 400
-              expect(error.message).to match('Invalid type')
+        before do
+          allow(droplet_presenter).to receive(:present_json_list).and_return(expected_response)
+        end
+
+        context 'query params' do
+          context 'invalid param format' do
+            let(:app_guids) { 'foo' }
+            let(:params) { { 'app_guids' => app_guids } }
+
+            it 'returns 400' do
+              expect {
+                droplets_controller.list
+              }.to raise_error do |error|
+                expect(error.name).to eq 'BadQueryParameter'
+                expect(error.response_code).to eq 400
+                expect(error.message).to match('Invalid type')
+              end
+            end
+          end
+
+          context 'unknown query param' do
+            let(:bad_param) { 'foo' }
+            let(:params) { { 'bad_param' => bad_param } }
+
+            it 'returns 400' do
+              expect {
+                droplets_controller.list
+              }.to raise_error do |error|
+                expect(error.name).to eq 'BadQueryParameter'
+                expect(error.response_code).to eq 400
+                expect(error.message).to match('Unknown query param')
+              end
             end
           end
         end
 
-        context 'unknown query param' do
-          let(:bad_param) { 'foo' }
-          let(:params) { { 'bad_param' => bad_param } }
+        context 'when the user is an admin' do
+          before do
+            allow(membership).to receive(:admin?).and_return(true)
+          end
 
-          it 'returns 400' do
+          it 'returns all droplets' do
+            DropletModel.make
+            DropletModel.make
+            DropletModel.make
+
+            response_code, response_body = droplets_controller.list
+
+            expect(droplet_presenter).to have_received(:present_json_list).
+                with(an_instance_of(PaginatedResult), '/v3/droplets', non_presentational_params) do |result|
+              expect(result.total).to eq(DropletModel.count)
+            end
+            expect(response_code).to eq(200)
+            expect(response_body).to eq(expected_response)
+          end
+        end
+
+        context 'when the user is not an admin' do
+          let(:viewable_droplet) { DropletModel.make }
+
+          before do
+            allow(membership).to receive(:admin?).and_return(false)
+            allow(membership).to receive(:space_guids_for_roles).and_return([viewable_droplet.space.guid])
+          end
+
+          it 'returns packages the user has roles to see' do
+            DropletModel.make
+            DropletModel.make
+
+            response_code, response_body = droplets_controller.list
+
+            expect(droplet_presenter).to have_received(:present_json_list).
+                with(an_instance_of(PaginatedResult), '/v3/droplets', non_presentational_params) do |result|
+              expect(result.total).to be < DropletModel.count
+              expect(result.total).to eq(1)
+            end
+            expect(response_code).to eq(200)
+            expect(response_body).to eq(expected_response)
+            expect(membership).to have_received(:space_guids_for_roles).
+                with([Membership::SPACE_DEVELOPER,
+                      Membership::SPACE_MANAGER,
+                      Membership::SPACE_AUDITOR,
+                      Membership::ORG_MANAGER])
+          end
+        end
+
+        context 'when the user has incorrect scope' do
+          before do
+            allow(droplets_controller).to receive(:check_read_permissions!).
+                and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+          end
+
+          it 'returns a 403 Not Authorized error' do
             expect {
               droplets_controller.list
             }.to raise_error do |error|
-              expect(error.name).to eq 'BadQueryParameter'
-              expect(error.response_code).to eq 400
-              expect(error.message).to match('Unknown query param')
+              expect(error.name).to eq 'NotAuthorized'
+              expect(error.response_code).to eq 403
             end
+
+            expect(droplets_controller).to have_received(:check_read_permissions!)
           end
         end
       end
 
-      context 'when the user is an admin' do
+      context 'when a query param is provided' do
+        let(:params) { { order_by: 'created_at', states: ['FAILED'] } }
+        let(:droplet_presenter) { DropletPresenter.new }
+
         before do
           allow(membership).to receive(:admin?).and_return(true)
         end
 
-        it 'returns all droplets' do
-          DropletModel.make
-          DropletModel.make
-          DropletModel.make
+        it 'returns pagination links with that param' do
+          _, response_body = droplets_controller.list
 
-          response_code, response_body = droplets_controller.list
+          parsed_response = MultiJson.load(response_body)
+          query_params = CGI.parse(URI(parsed_response['pagination']['first']['href']).query)
 
-          expect(droplet_presenter).to have_received(:present_json_list).
-            with(an_instance_of(PaginatedResult), '/v3/droplets') do |result|
-              expect(result.total).to eq(DropletModel.count)
-            end
-          expect(response_code).to eq(200)
-          expect(response_body).to eq(expected_response)
-        end
-      end
-
-      context 'when the user is not an admin' do
-        let(:viewable_droplet) { DropletModel.make }
-
-        before do
-          allow(membership).to receive(:admin?).and_return(false)
-          allow(membership).to receive(:space_guids_for_roles).and_return([viewable_droplet.space.guid])
-        end
-
-        it 'returns packages the user has roles to see' do
-          DropletModel.make
-          DropletModel.make
-
-          response_code, response_body = droplets_controller.list
-
-          expect(droplet_presenter).to have_received(:present_json_list).
-            with(an_instance_of(PaginatedResult), '/v3/droplets') do |result|
-              expect(result.total).to be < DropletModel.count
-              expect(result.total).to eq(1)
-            end
-          expect(response_code).to eq(200)
-          expect(response_body).to eq(expected_response)
-          expect(membership).to have_received(:space_guids_for_roles).
-              with([Membership::SPACE_DEVELOPER,
-                    Membership::SPACE_MANAGER,
-                    Membership::SPACE_AUDITOR,
-                    Membership::ORG_MANAGER])
-        end
-      end
-
-      context 'when the user has incorrect scope' do
-        before do
-          allow(droplets_controller).to receive(:check_read_permissions!).
-              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
-        end
-
-        it 'returns a 403 Not Authorized error' do
-          expect {
-            droplets_controller.list
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
-
-          expect(droplets_controller).to have_received(:check_read_permissions!)
+          expect(query_params['states[]']).to eq(['FAILED'])
         end
       end
     end

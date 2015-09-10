@@ -50,7 +50,7 @@ module VCAP::CloudController
     end
 
     describe '#present_json_list' do
-      let(:pagination_presenter) { double(:pagination_presenter) }
+      let(:pagination_presenter) { instance_double(PaginationPresenter) }
       let(:droplet1) { DropletModel.make }
       let(:droplet2) { DropletModel.make }
       let(:droplets) { [droplet1, droplet2] }
@@ -60,6 +60,9 @@ module VCAP::CloudController
       let(:options) { { page: page, per_page: per_page } }
       let(:total_results) { 2 }
       let(:paginated_result) { PaginatedResult.new(droplets, total_results, PaginationOptions.new(options)) }
+      let(:params) { { 'states' => ['foo'] } }
+      let(:base_url) { 'bazooka' }
+
       before do
         allow(pagination_presenter).to receive(:present_pagination_hash) do |_, url|
           "pagination-#{url}"
@@ -67,7 +70,7 @@ module VCAP::CloudController
       end
 
       it 'presents the droplets as a json array under resources' do
-        json_result = presenter.present_json_list(paginated_result, 'potato')
+        json_result = presenter.present_json_list(paginated_result, base_url, params)
         result      = MultiJson.load(json_result)
 
         guids = result['resources'].collect { |droplet_json| droplet_json['guid'] }
@@ -75,10 +78,16 @@ module VCAP::CloudController
       end
 
       it 'includes pagination section' do
-        json_result = presenter.present_json_list(paginated_result, 'bazooka')
+        json_result = presenter.present_json_list(paginated_result, base_url, params)
         result      = MultiJson.load(json_result)
 
         expect(result['pagination']).to eq('pagination-bazooka')
+      end
+
+      it 'passes the parameters to the pagination presenter' do
+        expect(pagination_presenter).to receive(:present_pagination_hash).with(paginated_result, base_url, params)
+
+        presenter.present_json_list(paginated_result, base_url, params)
       end
     end
   end

@@ -8,12 +8,12 @@ module VCAP::CloudController
       MultiJson.dump(droplet_hash(droplet), pretty: true)
     end
 
-    def present_json_list(paginated_result, base_url)
+    def present_json_list(paginated_result, base_url, params)
       droplets       = paginated_result.records
       droplet_hashes = droplets.collect { |droplet| droplet_hash(droplet) }
 
       paginated_response = {
-        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url),
+        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url, params),
         resources:  droplet_hashes
       }
 

@@ -33,7 +33,7 @@ module VCAP::CloudController
         paginated_result = DropletListFetcher.new.fetch(pagination_options, space_guids, params)
       end
 
-      [HTTP::OK, @droplet_presenter.present_json_list(paginated_result, '/v3/droplets')]
+      [HTTP::OK, @droplet_presenter.present_json_list(paginated_result, '/v3/droplets', params)]
     rescue InvalidParam => e
       invalid_param!(e.message)
     end
