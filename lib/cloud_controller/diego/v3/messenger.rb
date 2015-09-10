@@ -8,11 +8,11 @@ module VCAP::CloudController
           @protocol      = protocol
         end
 
-        def send_stage_request(package, staging_config, staging_details)
+        def send_stage_request(package, config, staging_details)
           logger.info('staging.begin', package_guid: package.guid)
 
           staging_guid    = staging_details.droplet.guid
-          staging_message = @protocol.stage_package_request(package, staging_config, staging_details)
+          staging_message = @protocol.stage_package_request(package, config, staging_details)
           @stager_client.stage(staging_guid, staging_message)
         end
 

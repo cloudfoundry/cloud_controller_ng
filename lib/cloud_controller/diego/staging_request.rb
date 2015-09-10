@@ -2,21 +2,22 @@ module VCAP::CloudController
   module Diego
     class StagingRequest
       attr_accessor :app_id, :file_descriptors, :memory_mb, :disk_mb, :environment
-      attr_accessor :egress_rules, :timeout, :log_guid, :lifecycle, :lifecycle_data
+      attr_accessor :egress_rules, :timeout, :log_guid, :lifecycle, :lifecycle_data, :completion_callback
 
       def message
         message = {
-          app_id: app_id,
-          file_descriptors: file_descriptors,
-          memory_mb: memory_mb,
-          disk_mb: disk_mb,
-          environment: environment,
-          timeout: timeout,
-          log_guid: log_guid,
-          lifecycle: lifecycle,
+          app_id:              app_id,
+          file_descriptors:    file_descriptors,
+          memory_mb:           memory_mb,
+          disk_mb:             disk_mb,
+          environment:         environment,
+          timeout:             timeout,
+          log_guid:            log_guid,
+          lifecycle:           lifecycle,
+          completion_callback: completion_callback
         }
         message[:lifecycle_data] = lifecycle_data if lifecycle_data
-        message[:egress_rules] = egress_rules if egress_rules
+        message[:egress_rules]   = egress_rules if egress_rules
 
         schema.validate(message)
         message
@@ -27,18 +28,19 @@ module VCAP::CloudController
       def schema
         @schema ||= Membrane::SchemaParser.parse do
           {
-            app_id: String,
-            file_descriptors: Fixnum,
-            memory_mb: Fixnum,
-            disk_mb: Fixnum,
-            environment: [
+            app_id:                   String,
+            file_descriptors:         Fixnum,
+            memory_mb:                Fixnum,
+            disk_mb:                  Fixnum,
+            environment:              [
               { 'name' => String, 'value' => String },
             ],
-            optional(:egress_rules) => Array,
-            timeout: Fixnum,
-            log_guid: String,
-            lifecycle: String,
+            optional(:egress_rules)   => Array,
+            timeout:                  Fixnum,
+            log_guid:                 String,
+            lifecycle:                String,
             optional(:lifecycle_data) => Hash,
+            completion_callback:      String,
           }
         end
       end

@@ -15,7 +15,7 @@ module VCAP::CloudController
         end
 
         let(:default_health_check_timeout) { 99 }
-        let(:staging_config) { TestConfig.config[:staging] }
+        let(:config) { TestConfig.config }
         let(:egress_rules) { double(:egress_rules) }
         let(:app) do
           AppFactory.make(
@@ -34,10 +34,10 @@ module VCAP::CloudController
         end
 
         describe '#stage_app_request' do
-          let(:request) { protocol.stage_app_request(app, staging_config) }
+          let(:request) { protocol.stage_app_request(app, config) }
 
           it 'returns the staging request message to be used by the stager client' do
-            expect(request).to eq(protocol.stage_app_message(app, staging_config).to_json)
+            expect(request).to eq(protocol.stage_app_message(app, config).to_json)
           end
         end
 
@@ -45,43 +45,58 @@ module VCAP::CloudController
           let(:staging_env) { { 'KEY' => 'staging_value' } }
 
           before do
-            staging_override = {
-              minimum_staging_memory_mb: 128,
-              minimum_staging_disk_mb: 128,
-              minimum_staging_file_descriptor_limit: 128,
-              timeout_in_seconds: 90,
-              auth: { user: 'user', password: 'password' },
+            override = {
+              external_port:             external_port,
+              internal_service_hostname: internal_service_hostname,
+              internal_api:              {
+                auth_user:     user,
+                auth_password: password
+              },
+              staging:                   {
+                minimum_staging_memory_mb:             128,
+                minimum_staging_disk_mb:               128,
+                minimum_staging_file_descriptor_limit: 128,
+                timeout_in_seconds:                    90,
+                auth:                                  { user: 'user', password: 'password' },
+              }
             }
-            TestConfig.override(staging: staging_override)
+            TestConfig.override(override)
 
             group = EnvironmentVariableGroup.staging
             group.environment_json = staging_env
             group.save
           end
 
-          let(:message) { protocol.stage_app_message(app, staging_config) }
+          let(:internal_service_hostname) { 'internal.awesome.sauce' }
+          let(:external_port) { '7777' }
+          let(:staging_guid) { StagingGuid.from_app(app) }
+          let(:user) { 'user' }
+          let(:password) { 'password' }
+
+          let(:message) { protocol.stage_app_message(app, config) }
           let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id') }
           let(:buildpack_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
 
           it 'contains the correct payload for staging a traditional app' do
             expect(message).to eq({
-                  app_id: app.guid,
-                  log_guid: app.guid,
-                  memory_mb: app.memory,
-                  disk_mb: app.disk_quota,
-                  file_descriptors: app.file_descriptors,
-                  environment: Environment.new(app, staging_env).as_json,
-                  egress_rules: ['staging_egress_rule'],
-                  timeout: 90,
-                  lifecycle: 'buildpack',
-                  lifecycle_data: {
+                  app_id:              app.guid,
+                  log_guid:            app.guid,
+                  memory_mb:           app.memory,
+                  disk_mb:             app.disk_quota,
+                  file_descriptors:    app.file_descriptors,
+                  environment:         Environment.new(app, staging_env).as_json,
+                  egress_rules:        ['staging_egress_rule'],
+                  timeout:             90,
+                  lifecycle:           'buildpack',
+                  lifecycle_data:      {
                     build_artifacts_cache_download_uri: 'http://buildpack-artifacts-cache.com',
-                    build_artifacts_cache_upload_uri: 'http://buildpack-artifacts-cache.up.com',
-                    app_bits_download_uri: 'http://app-package.com',
-                    droplet_upload_uri: 'http://droplet-upload-uri',
-                    buildpacks: buildpack_generator.buildpack_entries(app),
-                    stack: app.stack.name,
+                    build_artifacts_cache_upload_uri:   'http://buildpack-artifacts-cache.up.com',
+                    app_bits_download_uri:              'http://app-package.com',
+                    droplet_upload_uri:                 'http://droplet-upload-uri',
+                    buildpacks:                         buildpack_generator.buildpack_entries(app),
+                    stack:                              app.stack.name,
                   },
+                  completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/staging/#{staging_guid}/completed"
                 })
           end
 
@@ -132,11 +147,11 @@ module VCAP::CloudController
             let(:app) { AppFactory.make(memory: 127) }
 
             subject(:message) do
-              protocol.stage_app_message(app, staging_config)
+              protocol.stage_app_message(app, config)
             end
 
             it 'uses the minimum staging memory' do
-              expect(message[:memory_mb]).to eq(staging_config[:minimum_staging_memory_mb])
+              expect(message[:memory_mb]).to eq(config[:staging][:minimum_staging_memory_mb])
             end
           end
 
@@ -144,11 +159,11 @@ module VCAP::CloudController
             let(:app) { AppFactory.make(disk_quota: 127) }
 
             subject(:message) do
-              protocol.stage_app_message(app, staging_config)
+              protocol.stage_app_message(app, config)
             end
 
             it 'includes the fields needed to stage a Docker app' do
-              expect(message[:disk_mb]).to eq(staging_config[:minimum_staging_disk_mb])
+              expect(message[:disk_mb]).to eq(config[:staging][:minimum_staging_disk_mb])
             end
           end
 
@@ -156,11 +171,11 @@ module VCAP::CloudController
             let(:app) { AppFactory.make(file_descriptors: 127) }
 
             subject(:message) do
-              protocol.stage_app_message(app, staging_config)
+              protocol.stage_app_message(app, config)
             end
 
             it 'includes the fields needed to stage a Docker app' do
-              expect(message[:file_descriptors]).to eq(staging_config[:minimum_staging_file_descriptor_limit])
+              expect(message[:file_descriptors]).to eq(config[:staging][:minimum_staging_file_descriptor_limit])
             end
           end
         end

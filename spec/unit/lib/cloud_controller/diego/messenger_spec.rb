@@ -5,7 +5,7 @@ module VCAP::CloudController
     describe Messenger do
       let(:stager_client) { instance_double(StagerClient) }
       let(:nsync_client) { instance_double(NsyncClient) }
-      let(:staging_config) { TestConfig.config[:staging] }
+      let(:config) { TestConfig.config }
       let(:protocol) { instance_double('Traditional::Protocol') }
       let(:instances) { 3 }
       let(:default_health_check_timeout) { 9999 }
@@ -29,9 +29,9 @@ module VCAP::CloudController
         end
 
         it 'sends the staging message to the stager' do
-          messenger.send_stage_request(app, staging_config)
+          messenger.send_stage_request(app, config)
 
-          expect(protocol).to have_received(:stage_app_request).with(app, staging_config)
+          expect(protocol).to have_received(:stage_app_request).with(app, config)
           expect(stager_client).to have_received(:stage).with(staging_guid, message)
         end
       end

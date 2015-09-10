@@ -27,6 +27,7 @@ module VCAP::CloudController::Diego
         lifecycle_data: {
           whatever: 'we want',
         },
+        completion_callback: 'http://awesome.done/baller'
       }
     end
 
@@ -44,6 +45,7 @@ module VCAP::CloudController::Diego
       request.lifecycle_data = {
         whatever: 'we want',
       }
+      request.completion_callback = 'http://awesome.done/baller'
       request
     end
 

@@ -5,14 +5,14 @@ module VCAP::CloudController
     describe Stager do
       let(:messenger) { instance_double(Messenger, send_desire_request: nil) }
       let(:app) { AppFactory.make }
-      let(:staging_config) { TestConfig.config[:stager] }
+      let(:config) { TestConfig.config }
 
       let(:completion_handler) do
         instance_double(Diego::Traditional::StagingCompletionHandler, staging_complete: nil)
       end
 
       subject(:stager) do
-        Stager.new(app, messenger, completion_handler, staging_config)
+        Stager.new(app, messenger, completion_handler, config)
       end
 
       it_behaves_like 'a stager'
@@ -25,7 +25,7 @@ module VCAP::CloudController
 
         it 'notifies Diego that the app needs staging' do
           expect(app).to receive(:mark_for_restaging)
-          expect(messenger).to receive(:send_stage_request).with(app, staging_config)
+          expect(messenger).to receive(:send_stage_request).with(app, config)
           stager.stage
         end
 

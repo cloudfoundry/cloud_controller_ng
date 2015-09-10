@@ -62,7 +62,7 @@ module VCAP::CloudController
       protocol = Diego::Docker::Protocol.new(Diego::EgressRules.new)
       messenger = Diego::Messenger.new(stager_client, @message_bus, protocol)
       completion_handler = Diego::Docker::StagingCompletionHandler.new(@runners)
-      Diego::Stager.new(app, messenger, completion_handler, staging_opts)
+      Diego::Stager.new(app, messenger, completion_handler, @config)
     end
 
     def diego_traditional_stager(app)
@@ -71,7 +71,7 @@ module VCAP::CloudController
       stager_client = dependency_locator.stager_client
       messenger = Diego::Messenger.new(stager_client, @message_bus, protocol)
       completion_handler = Diego::Traditional::StagingCompletionHandler.new(@runners)
-      Diego::Stager.new(app, messenger, completion_handler, staging_opts)
+      Diego::Stager.new(app, messenger, completion_handler, @config)
     end
 
     def diego_package_stager(package)
@@ -80,11 +80,7 @@ module VCAP::CloudController
       stager_client = dependency_locator.stager_client
       messenger = Diego::V3::Messenger.new(stager_client, @message_bus, protocol)
       completion_handler = Diego::Traditional::V3::StagingCompletionHandler.new(@runners)
-      Diego::V3::Stager.new(package, messenger, completion_handler, staging_opts)
-    end
-
-    def staging_opts
-      @config[:staging]
+      Diego::V3::Stager.new(package, messenger, completion_handler, @config)
     end
   end
 end

@@ -96,7 +96,7 @@ module VCAP::CloudController
 
                 it 'records the error' do
                   handle_staging_result(fail_response)
-                  expect(staged_droplet.reload.error).to eq('NoCompatibleCell')
+                  expect(staged_droplet.reload.error).to eq('NoCompatibleCell - Found no compatible cell')
                 end
 
                 it 'should emit a loggregator error' do

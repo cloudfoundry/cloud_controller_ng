@@ -26,12 +26,13 @@ module VCAP::CloudController
 
           def handle_failure(droplet, payload)
             error = payload[:error][:id] || 'StagingError'
+            message = payload[:error][:message]
 
             droplet.class.db.transaction do
               droplet.lock!
 
               droplet.state = DropletModel::FAILED_STATE
-              droplet.error = error
+              droplet.error = "#{error} - #{message}"
               droplet.save
             end
 

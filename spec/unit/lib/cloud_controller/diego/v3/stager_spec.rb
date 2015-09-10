@@ -9,13 +9,13 @@ module VCAP::CloudController
       describe Stager do
         let(:messenger) { instance_double(Diego::V3::Messenger) }
         let(:package) { PackageModel.make }
-        let(:staging_config) { TestConfig.config[:stager] }
+        let(:config) { TestConfig.config }
         let(:completion_handler) do
           instance_double(Diego::Traditional::V3::StagingCompletionHandler)
         end
 
         subject(:stager) do
-          Stager.new(package, messenger, completion_handler, staging_config)
+          Stager.new(package, messenger, completion_handler, config)
         end
 
         describe '#stage' do
@@ -41,7 +41,7 @@ module VCAP::CloudController
           end
 
           it 'notifies Diego that the package needs staging' do
-            expect(messenger).to receive(:send_stage_request).with(package, staging_config, staging_details)
+            expect(messenger).to receive(:send_stage_request).with(package, config, staging_details)
             stager.stage(staging_details)
           end
 

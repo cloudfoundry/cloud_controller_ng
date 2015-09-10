@@ -11,11 +11,11 @@ module VCAP::CloudController
           @common_protocol = common_protocol
         end
 
-        def stage_app_request(app, staging_config)
-          stage_app_message(app, staging_config).to_json
+        def stage_app_request(app, config)
+          stage_app_message(app, config).to_json
         end
 
-        def stage_app_message(app, staging_config)
+        def stage_app_message(app, config)
           lifecycle_data = LifecycleData.new
           lifecycle_data.docker_image = app.docker_image
           docker_credentials = app.docker_credentials_json
@@ -30,13 +30,14 @@ module VCAP::CloudController
           staging_request.app_id = app.guid
           staging_request.log_guid = app.guid
           staging_request.environment = Environment.new(app, EnvironmentVariableGroup.staging.environment_json).as_json
-          staging_request.memory_mb = [app.memory, staging_config[:minimum_staging_memory_mb]].max
-          staging_request.disk_mb = [app.disk_quota, staging_config[:minimum_staging_disk_mb]].max
-          staging_request.file_descriptors = [app.file_descriptors, staging_config[:minimum_staging_file_descriptor_limit]].max
+          staging_request.memory_mb = [app.memory, config[:staging][:minimum_staging_memory_mb]].max
+          staging_request.disk_mb = [app.disk_quota, config[:staging][:minimum_staging_disk_mb]].max
+          staging_request.file_descriptors = [app.file_descriptors, config[:staging][:minimum_staging_file_descriptor_limit]].max
           staging_request.egress_rules = @common_protocol.staging
-          staging_request.timeout = staging_config[:timeout_in_seconds]
+          staging_request.timeout = config[:staging][:timeout_in_seconds]
           staging_request.lifecycle = 'docker'
           staging_request.lifecycle_data = lifecycle_data.message
+          staging_request.completion_callback = completion_callback(app, config)
 
           staging_request.message
         end
@@ -67,6 +68,15 @@ module VCAP::CloudController
             'etag' => app.updated_at.to_f.to_s,
             'allow_ssh' => app.enable_ssh,
           }
+        end
+
+        private
+
+        def completion_callback(app, config)
+          auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
+          host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
+          path      = "/internal/staging/#{StagingGuid.from_app(app)}/completed"
+          "http://#{auth}@#{host_port}#{path}"
         end
       end
     end

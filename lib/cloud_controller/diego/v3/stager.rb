@@ -2,11 +2,11 @@ module VCAP::CloudController
   module Diego
     module V3
       class Stager
-        def initialize(package, messenger, completion_handler, staging_config)
-          @package = package
+        def initialize(package, messenger, completion_handler, config)
+          @package            = package
           @messenger          = messenger
           @completion_handler = completion_handler
-          @staging_config     = staging_config
+          @config             = config
         end
 
         def stage(staging_details)
@@ -29,7 +29,7 @@ module VCAP::CloudController
         end
 
         def send_stage_package_request(staging_details)
-          @messenger.send_stage_request(@package, @staging_config, staging_details)
+          @messenger.send_stage_request(@package, @config, staging_details)
         rescue Errors::ApiError => e
           raise e
         rescue => e

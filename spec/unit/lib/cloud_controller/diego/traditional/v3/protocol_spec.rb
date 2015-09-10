@@ -17,7 +17,6 @@ module VCAP::CloudController
           end
 
           let(:default_health_check_timeout) { 99 }
-          let(:staging_config) { TestConfig.config[:staging] }
           let(:egress_rules) { double(:egress_rules) }
 
           subject(:protocol) do
@@ -35,17 +34,13 @@ module VCAP::CloudController
             let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: app.guid) }
             let(:buildpack_info) { BuildpackRequestValidator.new({ buildpack: 'http://awesome-pack.io' }) }
             let(:staging_details) { instance_double(StagingDetails) }
-            let(:staging_config) do
-              {
-                minimum_staging_file_descriptor_limit: 30,
-                timeout_in_seconds:                    90
-              }
-            end
+            let(:config) { 'the-config' }
+
             before do
               allow(protocol).to receive(:stage_package_message).and_return(hello: 'goodbye')
             end
 
-            let(:request) { protocol.stage_package_request(package, staging_config, staging_details) }
+            let(:request) { protocol.stage_package_request(package, config, staging_details) }
 
             it 'returns the staging request message to be used by the stager client as json' do
               expect(request).to eq('{"hello":"goodbye"}')
@@ -67,10 +62,19 @@ module VCAP::CloudController
               details.buildpack_info        = buildpack_info
               details
             end
-            let(:staging_config) do
+            let(:config) do
               {
-                minimum_staging_file_descriptor_limit: 30,
-                timeout_in_seconds:                    90
+                external_port:             external_port,
+                internal_service_hostname: internal_service_hostname,
+                internal_api:              {
+                  auth_user:     user,
+                  auth_password: password
+                },
+                staging:                   {
+                  minimum_staging_memory_mb:             128,
+                  minimum_staging_file_descriptor_limit: 30,
+                  timeout_in_seconds:                    90,
+                }
               }
             end
             let(:blobstore_url_generator) do
@@ -81,6 +85,10 @@ module VCAP::CloudController
                 package_droplet_upload_url:          'droplet-upload-url'
               )
             end
+            let(:internal_service_hostname) { 'internal.awesome.sauce' }
+            let(:external_port) { '7777' }
+            let(:user) { 'user' }
+            let(:password) { 'password' }
 
             let(:buildpack_generator) { V3::BuildpackEntryGenerator.new(blobstore_url_generator) }
 
@@ -89,7 +97,7 @@ module VCAP::CloudController
             end
 
             it 'contains the correct payload for staging a package' do
-              result = protocol.stage_package_message(package, staging_config, staging_details)
+              result = protocol.stage_package_message(package, config, staging_details)
 
               expect(result).to eq({
                     app_id:           staging_details.droplet.guid,
@@ -109,6 +117,7 @@ module VCAP::CloudController
                       buildpacks:                         buildpack_generator.buildpack_entries(buildpack_info),
                       stack:                              'potato-stack',
                     },
+                    completion_callback:    "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/v3/staging/#{droplet.guid}/droplet_completed"
                   })
             end
 
@@ -125,7 +134,7 @@ module VCAP::CloudController
                 let(:buildpack) { nil }
 
                 it 'sends buildpacks without skip_detect' do
-                  message = protocol.stage_package_message(package, staging_config, staging_details)
+                  message = protocol.stage_package_message(package, config, staging_details)
 
                   expect(message[:lifecycle_data][:buildpacks]).to have(1).items
                   bp = message[:lifecycle_data][:buildpacks][0]
@@ -138,7 +147,7 @@ module VCAP::CloudController
                 let(:buildpack) { 'ruby' }
 
                 it 'sends buildpacks with skip detect' do
-                  message = protocol.stage_package_message(package, staging_config, staging_details)
+                  message = protocol.stage_package_message(package, config, staging_details)
 
                   expect(message[:lifecycle_data][:buildpacks]).to have(1).items
                   bp = message[:lifecycle_data][:buildpacks][0]
@@ -150,7 +159,7 @@ module VCAP::CloudController
                 let(:buildpack) { 'http://custom.com' }
 
                 it 'sends buildpacks with skip detect' do
-                  message = protocol.stage_package_message(package, staging_config, staging_details)
+                  message = protocol.stage_package_message(package, config, staging_details)
 
                   expect(message[:lifecycle_data][:buildpacks]).to have(1).items
                   bp = message[:lifecycle_data][:buildpacks][0]
