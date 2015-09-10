@@ -122,8 +122,6 @@ module VCAP::CloudController
     end
 
     def read(guid)
-      logger.debug 'cc.read', model: :ServiceInstance, guid: guid
-
       service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
       object_renderer.render_json(self.class, service_instance, @opts)
     end

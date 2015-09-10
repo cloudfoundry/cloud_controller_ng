@@ -66,8 +66,6 @@ module VCAP::CloudController
 
     get '/v2/spaces/:guid/services', :enumerate_services
     def enumerate_services(guid)
-      logger.debug 'cc.enumerate.related', guid: guid, association: 'services'
-
       space = find_guid_and_validate_access(:read, guid)
 
       filtered_dataset = Query.filtered_dataset_from_query_params(
