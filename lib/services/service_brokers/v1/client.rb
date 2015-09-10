@@ -27,10 +27,12 @@ module VCAP::Services
       )
 
       {
-        broker_provided_id: response.fetch('service_id'),
-        gateway_data: response.fetch('configuration'),
-        credentials: response.fetch('credentials'),
-        dashboard_url: response.fetch('dashboard_url', nil),
+        instance: {
+          broker_provided_id: response.fetch('service_id'),
+          gateway_data: response.fetch('configuration'),
+          credentials: response.fetch('credentials'),
+          dashboard_url: response.fetch('dashboard_url', nil),
+        },
         last_operation: {
           type: 'create',
           state: 'succeeded',
@@ -45,7 +47,7 @@ module VCAP::Services
       end
     end
 
-    def bind(binding)
+    def bind(binding, arbitrary_parameters: {})
       instance = binding.service_instance
       service = instance.service_plan.service
 
@@ -79,6 +81,11 @@ module VCAP::Services
       broker_instance_id = instance.broker_provided_id
 
       @http_client.deprovision(broker_instance_id)
+      {
+        last_operation: {
+          state: 'succeeded'
+        }
+      }
     rescue HttpResponseError => e
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
     end

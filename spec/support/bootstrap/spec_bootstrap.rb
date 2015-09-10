@@ -17,10 +17,12 @@ module VCAP::CloudController
         steno_config_hash[:sinks] = [Steno::Sink::IO.for_file(log_filename)]
       end
 
-      db_resetter = TableRecreator.new(DbConfig.connection)
+      db_config = DbConfig.new
+
+      db_resetter = TableRecreator.new(db_config.connection)
       db_resetter.recreate_tables
 
-      DB.load_models(DbConfig.config, DbConfig.db_logger)
+      DB.load_models(db_config.config, db_config.db_logger)
       Config.run_initializers(TestConfig.config)
 
       Seeds.write_seed_data(TestConfig.config)

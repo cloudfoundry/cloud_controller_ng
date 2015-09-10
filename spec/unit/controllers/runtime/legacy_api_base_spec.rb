@@ -53,7 +53,7 @@ module VCAP::CloudController
         api = LegacyApiBase.new(TestConfig.config, logger, {}, {}, fake_req)
         expect {
           api.default_space
-        }.to raise_error(Errors::ApiError, /legacy api call requring a default app space was called/)
+        }.to raise_error(Errors::ApiError, /legacy api call requiring a default app space was called/)
       end
 
       context 'with app spaces' do

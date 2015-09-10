@@ -37,7 +37,7 @@ module VCAP::CloudController
       describe '#perform' do
         before do
           Delayed::Worker.destroy_failed_jobs = false
-          @delayed_job = Delayed::Job.enqueue(the_job, run_at: run_at, queue: worker.name)
+          @delayed_job = Delayed::Job.enqueue(the_job, run_at: run_at, queue: worker.name, created_at: (Time.now.utc - 1.day))
           worker.work_off 1
         end
 

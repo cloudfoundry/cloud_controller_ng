@@ -37,7 +37,7 @@ export LANG=en_US.UTF-8
 
 export NEWRELIC_ENABLE=<%= !!properties.cc.newrelic.license_key || p("cc.development_mode") %>
 export NRCONFIG=$CONFIG_DIR/newrelic.yml
-export RACK_ENV=<%= p("cc.newrelic.environment_name") %>
+export NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>
 
 source /var/vcap/packages/common/utils.sh
 
@@ -54,6 +54,25 @@ case $1 in
 
     pid_guard $PIDFILE "Cloud controller ng"
 
+    <% if properties.nfs_server.address %>
+    export NFS_SHARE=<%= p('nfs_server.share_path') %>
+
+    echo "Checking for nfs to be mounted"
+
+    nfs_check_attempts=0
+    while [[ ! -f $NFS_SHARE/shared/.nfs_test ]]; do
+      sleep 0.1
+      nfs_check_attempts=$((nfs_check_attempts+1))
+
+      if [[ $nfs_check_attempts -eq 300 ]]; then
+        echo "Failed to find nfs mount"
+        exit 1
+      fi
+    done
+
+    echo "nfs is mounted"
+    <% end %>
+
     <% if_p("cc.directories.diagnostics") do |diag_dir| %>
     mkdir -p <%= diag_dir %>
     chown vcap:vcap <%= diag_dir %>
@@ -68,22 +87,13 @@ case $1 in
 
     ulimit -c unlimited
 
-    # Run the migrations only on the first CC launch
+    # TODO: remove the -m when we have a stand alone utility for loading
+    # frameworks etc, and call those utilities here.  See corresponding
+    # comments in cc runner.
     <% if spec.index.to_i == 0 %>
-      cd $CC_PACKAGE_DIR/cloud_controller_ng
-      chpst -u vcap:vcap bundle exec rake db:migrate
-
-      if [ $? != 0 ]; then
-        echo "Migrations failed"
-        exit 1
-      fi
-
-      # TODO: remove the -m when we have a stand alone utility for loading
-      # frameworks etc, and call those utilities here.  See corresponding
-      # comments in cc runner.
-      exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller -m \<% else %>
-      exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller \<% end %>
-        -c $CLOUD_CONTROLLER_NG_CONFIG
+    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller -m \<% else %>
+    exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller \<% end %>
+      -c $CLOUD_CONTROLLER_NG_CONFIG
     ;;
 
   stop)

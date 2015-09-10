@@ -27,10 +27,6 @@ module VCAP::CloudController
           expect(config[:directories]).to eq({})
         end
 
-        it 'enables writing billing events' do
-          expect(config[:billing_event_writing_enabled]).to be true
-        end
-
         it 'sets a default request_timeout_in_seconds value' do
           expect(config[:request_timeout_in_seconds]).to eq(900)
         end
@@ -49,10 +45,6 @@ module VCAP::CloudController
 
         it 'sets a default value for allowed_cors_domains' do
           expect(config[:allowed_cors_domains]).to eq([])
-        end
-
-        it 'disables docker images on diego' do
-          expect(config[:diego_docker]).to eq(false)
         end
 
         it 'allows users to select the backend for their apps' do
@@ -86,6 +78,10 @@ module VCAP::CloudController
         it 'sets a default value for broker_client_default_async_poll_interval_seconds' do
           expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(60)
         end
+
+        it 'does not set a default value for internal_service_hostname' do
+          expect(config[:internal_service_hostname]).to be_nil
+        end
       end
 
       context 'when config values are provided' do
@@ -115,10 +111,6 @@ module VCAP::CloudController
 
           it 'preserves the external_protocol value from the file' do
             expect(config[:external_protocol]).to eq('http')
-          end
-
-          it 'preserves the billing_event_writing_enabled value from the file' do
-            expect(config[:billing_event_writing_enabled]).to be false
           end
 
           it 'preserves the request_timeout_in_seconds value from the file' do
@@ -152,12 +144,12 @@ module VCAP::CloudController
             expect(config[:users_can_select_backend]).to eq(false)
           end
 
-          it 'preserves the diego configuration from the file' do
-            expect(config[:diego_docker]).to eq(true)
-          end
-
           it 'runs apps on diego' do
             expect(config[:default_to_diego_backend]).to eq(true)
+          end
+
+          it 'preserves the enable allow ssh configuration from the file' do
+            expect(config[:allow_app_ssh_access]).to eq(true)
           end
 
           it 'preserves the default_health_check_timeout value from the file' do
@@ -174,6 +166,10 @@ module VCAP::CloudController
 
           it 'preserves the broker_client_default_async_poll_interval_seconds value from the file' do
             expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(120)
+          end
+
+          it 'preserves the internal_service_hostname value from the file' do
+            expect(config[:internal_service_hostname]).to eq('cloud_controller_ng.service.cf.internal')
           end
 
           context 'when the staging auth is already url encoded' do
@@ -382,7 +378,7 @@ module VCAP::CloudController
 
       context 'when newrelic is enabled' do
         let(:config) do
-          @test_config.merge(newrelic_enabled: true)
+          @test_config.merge(newrelic_enabled: true, name: 'test_0', index: 2)
         end
 
         before do
@@ -393,6 +389,12 @@ module VCAP::CloudController
         it 'enables GC profiling' do
           Config.configure_components(config)
           expect(GC::Profiler.enabled?).to eq(true)
+        end
+
+        it 'reports the correct hostname' do
+          require 'newrelic_rpm'
+          Config.configure_components(config)
+          expect(::NewRelic::Agent::Hostname.get).to eq('test_0-2')
         end
       end
 

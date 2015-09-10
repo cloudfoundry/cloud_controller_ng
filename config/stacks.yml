@@ -1,7 +1,5 @@
-# lucid64 stack is just a default stack that was made
-# in the create_stacks_table migration
-default: "lucid64"
+default: "cflinuxfs2"
 
 stacks:
-  - name: "lucid64"
-    description: "test lucid entry"
+  - name: "cflinuxfs2"
+    description: "test cflinuxfs2 entry"

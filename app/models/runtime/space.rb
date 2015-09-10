@@ -16,9 +16,10 @@ module VCAP::CloudController
     many_to_one :organization, before_set: :validate_change_organization
     one_to_many :apps
     one_to_many :app_models, primary_key: :guid, key: :space_guid
-    one_to_many :events
+    one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances
     one_to_many :managed_service_instances
+    one_to_many :service_brokers
     one_to_many :routes
     many_to_many :security_groups,
     dataset: -> {
@@ -78,13 +79,12 @@ module VCAP::CloudController
       default_users: :nullify,
       apps: :destroy,
       routes: :destroy,
-      events: :nullify,
       security_groups: :nullify,
     )
 
-    export_attributes :name, :organization_guid, :space_quota_definition_guid
+    export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh
 
-    import_attributes :name, :organization_guid, :developer_guids,
+    import_attributes :name, :organization_guid, :developer_guids, :allow_ssh,
       :manager_guids, :auditor_guids, :security_group_guids, :space_quota_definition_guid
 
     strip_attributes :name
@@ -94,6 +94,15 @@ module VCAP::CloudController
         join(:spaces_developers, spaces_developers__space_id: :spaces__id).
           where(spaces_developers__user_id: users.map(&:id)).select_all(:spaces)
       end
+    end
+
+    def has_developer?(user)
+      developers.include?(user)
+    end
+
+    def has_member?(user)
+      members = developers | managers | auditors
+      members.include?(user)
     end
 
     def in_organization?(user)
@@ -128,12 +137,15 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      Sequel.or(
-        organization: user.managed_organizations_dataset,
-        developers: [user],
-        managers: [user],
-        auditors: [user]
-      )
+      {
+        id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
+            Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)
+          ).union(
+            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)
+          ).union(
+            Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
+          ).select(:id)
+      }
     end
 
     def has_remaining_memory(mem)

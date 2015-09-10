@@ -18,7 +18,7 @@ describe 'Staging an app', type: :integration do
     let(:advertisment) do
       {
         'id' => stager_id,
-        'stacks' => ['lucid64'],
+        'stacks' => ['cflinuxfs2'],
         'available_memory' => 2048,
       }.to_json
     end
@@ -54,8 +54,8 @@ describe 'Staging an app', type: :integration do
       )
 
       @expected_buildpack_shas = [
-        "#{@buildpack_response_2.json_body['metadata']['guid']}_#{valid_zip.hexdigest}",
-        "#{@buildpack_response_1.json_body['metadata']['guid']}_#{valid_zip(4).hexdigest}",
+        "#{@buildpack_response_2.json_body['metadata']['guid']}_#{Digester.new.digest_path(valid_zip)}",
+        "#{@buildpack_response_1.json_body['metadata']['guid']}_#{Digester.new.digest_path(valid_zip(4))}",
       ]
 
       org = make_post_request(

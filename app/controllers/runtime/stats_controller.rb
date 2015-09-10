@@ -12,13 +12,16 @@ module VCAP::CloudController
       app = find_guid_and_validate_access(:read, guid)
 
       if app.stopped?
-        msg = "Request failed for app: #{app.name}"
-        msg << ' as the app is in stopped state.'
-
-        raise ApiError.new_from_details('StatsError', msg)
+        raise ApiError.new_from_details('AppStoppedStatsError', app.name)
       end
 
-      [HTTP::OK, MultiJson.dump(instances_reporters.stats_for_app(app))]
+      begin
+        [HTTP::OK, MultiJson.dump(instances_reporters.stats_for_app(app))]
+      rescue Errors::InstancesUnavailable
+        raise ApiError.new_from_details('StatsUnavailable', 'Stats server temporarily unavailable.')
+      rescue StandardError => e
+        raise ApiError.new_from_details('StatsError', e)
+      end
     end
 
     protected

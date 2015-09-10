@@ -96,7 +96,68 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :domain }
       it { is_expected.to validate_presence :space }
       it { is_expected.to validate_presence :host }
-      it { is_expected.to validate_uniqueness [:host, :domain_id] }
+
+      context 'unescaped paths' do
+        it 'validates uniqueness' do
+          r = Route.make(path: '/a')
+
+          expect {
+            Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id, path: r.path)
+          }.to raise_error(Sequel::ValidationFailed)
+
+          expect {
+            Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id, path: '/b')
+          }.not_to raise_error
+        end
+
+        it 'does not allow two blank paths with same host and domain' do
+          r = Route.make
+
+          expect {
+            Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id)
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+
+        it 'is case-insensitive' do
+          r = Route.make(path: '/path')
+
+          expect {
+            Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id, path: '/PATH')
+          }.to raise_error(Sequel::ValidationFailed)
+        end
+      end
+
+      context 'escaped paths' do
+        it 'validates uniqueness' do
+          path = '/a%20path'
+          r = Route.make(path: path)
+
+          expect {
+            Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id, path: path)
+          }.to raise_error(Sequel::ValidationFailed)
+
+          expect {
+            Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id, path: '/b%20path')
+          }.not_to raise_error
+        end
+
+        it 'allows another route with same host and domain but no path' do
+          path = '/a%20path'
+          r = Route.make(path: path)
+
+          expect {
+            Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id)
+          }.not_to raise_error
+        end
+
+        it 'allows a route with same host and domain with a path' do
+          r = Route.make
+
+          expect {
+            Route.make(host: r.host, space_guid: r.space_guid, domain_id: r.domain_id, path: '/a/path')
+          }.not_to raise_error
+        end
+      end
 
       describe 'host' do
         let(:space) { Space.make }
@@ -167,9 +228,10 @@ module VCAP::CloudController
           space.space_quota_definition = space_quota
         end
 
-        subject(:route) { Route.new(space: space) }
+        let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+        subject(:route) { Route.new(space: space, domain: domain, host: 'bar') }
 
-        context 'for organizatin quotas' do
+        context 'for organization quotas' do
           context 'on create' do
             context 'when not exceeding total allowed routes' do
               before do
@@ -198,12 +260,14 @@ module VCAP::CloudController
 
           context 'on update' do
             it 'should not validate the total routes limit if already existing' do
-              expect {
-                org_quota.total_routes = 0
-                org_quota.save
-              }.not_to change {
-                subject.valid?
-              }
+              subject.save
+
+              expect(subject).to be_valid
+
+              org_quota.total_routes = 0
+              org_quota.save
+
+              expect(subject).to be_valid
             end
           end
         end
@@ -239,12 +303,14 @@ module VCAP::CloudController
 
           context 'on update' do
             it 'should not validate the total routes limit if already existing' do
-              expect {
-                space_quota.total_routes = 0
-                space_quota.save
-              }.not_to change {
-                subject.valid?
-              }
+              subject.save
+
+              expect(subject).to be_valid
+
+              space_quota.total_routes = 0
+              space_quota.save
+
+              expect(subject).to be_valid
             end
           end
         end
@@ -267,11 +333,27 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'service instance binding' do
+        it 'errors if the service instance is not a route service' do
+          service_instance = ManagedServiceInstance.make
+          routing_service_instance = ManagedServiceInstance.make(:routing)
+          routing_service_instance.space = route.space
+
+          route.service_instance = service_instance
+
+          expect(route).to_not be_valid
+
+          route.service_instance = routing_service_instance
+
+          expect(route).to be_valid
+        end
+      end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :host, :domain_guid, :space_guid }
-      it { is_expected.to import_attributes :host, :domain_guid, :space_guid, :app_guids }
+      it { is_expected.to export_attributes :host, :domain_guid, :space_guid, :path, :service_instance_guid }
+      it { is_expected.to import_attributes :host, :domain_guid, :space_guid, :app_guids, :path }
     end
 
     describe 'instance methods' do
@@ -284,25 +366,64 @@ module VCAP::CloudController
       end
 
       describe '#fqdn' do
-        context 'for a non-nil host' do
+        context 'for a non-nil path' do
           it 'should return the fqdn for the route' do
             r = Route.make(
               host: 'www',
               domain: domain,
               space: space,
+              path: '/path'
             )
             expect(r.fqdn).to eq("www.#{domain.name}")
           end
         end
 
-        context 'for a nil host' do
-          it 'should return the fqdn for the route' do
+        context 'for a nil path' do
+          context 'for a non-nil host' do
+            it 'should return the fqdn for the route' do
+              r = Route.make(
+                host: 'www',
+                domain: domain,
+                space: space,
+              )
+              expect(r.fqdn).to eq("www.#{domain.name}")
+            end
+          end
+
+          context 'for a nil host' do
+            it 'should return the fqdn for the route' do
+              r = Route.make(
+                host: '',
+                domain: domain,
+                space: space,
+              )
+              expect(r.fqdn).to eq(domain.name)
+            end
+          end
+        end
+      end
+
+      describe '#uri' do
+        context 'for a non-nil path' do
+          it 'should return the fqdn with path' do
             r = Route.make(
-              host: '',
+              host: 'www',
               domain: domain,
               space: space,
+              path: '/path'
             )
-            expect(r.fqdn).to eq(domain.name)
+            expect(r.uri).to eq("www.#{domain.name}/path")
+          end
+        end
+
+        context 'for a nil path' do
+          it 'should return the fqdn' do
+            r = Route.make(
+              host: 'www',
+              domain: domain,
+              space: space
+            )
+            expect(r.uri).to eq("www.#{domain.name}")
           end
         end
       end
@@ -373,6 +494,28 @@ module VCAP::CloudController
           )
         }.to raise_error Sequel::ValidationFailed
       end
+
+      context 'when docker is disabled' do
+        subject(:route) { Route.make(space: space_a, domain: domain_a) }
+
+        context 'when docker app is added to a route' do
+          before do
+            FeatureFlag.create(name: 'diego_docker', enabled: true)
+          end
+
+          let!(:docker_app) do
+            AppFactory.make(space: space_a, docker_image: 'some-image', state: 'STARTED')
+          end
+
+          before do
+            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
+          end
+
+          it 'should associate with the docker app' do
+            expect { route.add_app(docker_app) }.not_to raise_error
+          end
+        end
+      end
     end
 
     describe '#destroy' do
@@ -418,6 +561,84 @@ module VCAP::CloudController
             route.remove_app(app)
           }.to change { Event.count }.by(1)
         end
+      end
+    end
+
+    def assert_valid_path(path)
+      r = Route.make(path: path)
+      expect(r).to be_valid
+    end
+
+    def assert_invalid_path(path)
+      expect {
+        Route.make(path: path)
+      }.to raise_error(Sequel::ValidationFailed)
+    end
+
+    context 'decoded paths' do
+      it 'should not allow a path of just slash' do
+        assert_invalid_path('/')
+      end
+
+      it 'should allow a blank path' do
+        assert_valid_path('') # kinda weird but it's like not having a path
+      end
+
+      it 'should not allow path that does not start with a slash' do
+        assert_invalid_path('bar')
+      end
+
+      it 'should allow a path starting with a slash' do
+        assert_valid_path('/foo')
+      end
+
+      it 'should allow a multi-part path' do
+        assert_valid_path('/foo/bar')
+      end
+
+      it 'should allow a multi-part path ending with a slash' do
+        assert_valid_path('/foo/bar/')
+      end
+
+      it 'should allow equal sign as part of the path' do
+        assert_valid_path('/foo=bar')
+      end
+
+      it 'should not allow question mark' do
+        assert_invalid_path('/foo?a=b')
+      end
+
+      it 'should not allow trailing question mark' do
+        assert_invalid_path('/foo?')
+      end
+
+      it 'should not allow non-ASCII characters in the path' do
+        assert_invalid_path('/barΩ')
+      end
+    end
+
+    context 'encoded paths' do
+      it 'should not allow a path of just slash' do
+        assert_invalid_path('%2F')
+      end
+      it 'should allow a path of just slash' do
+        assert_invalid_path('%2F')
+      end
+
+      it 'should not allow a path that does not start with slash' do
+        assert_invalid_path('%20space')
+      end
+
+      it 'should allow a path that contains ?' do
+        assert_valid_path('/%3F')
+      end
+
+      it 'should allow a path that begins with an escaped slash' do
+        assert_invalid_path('%2Fpath')
+      end
+
+      it 'should allow  all other escaped chars in a proper url' do
+        assert_valid_path('/a%20space')
       end
     end
   end

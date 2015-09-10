@@ -73,7 +73,7 @@ module TestConfig
             },
         },
 
-        db: DbConfig.config
+        db: DbConfig.new.config
     )
 
     config_hash

@@ -45,7 +45,7 @@ module VCAP::CloudController
 
       context 'for an unauthenticated user' do
         it 'requires authentication' do
-          post '/v2/snapshots', payload, json_headers({})
+          post '/v2/snapshots', payload, {}
           expect(last_response.status).to eq(401)
           expect(a_request(:any, %r{http://horsemeat.com})).not_to have_been_made
         end
@@ -53,7 +53,7 @@ module VCAP::CloudController
 
       context 'for an admin' do
         it 'should allow them to create a snapshot' do
-          post '/v2/snapshots', payload, json_headers(admin_headers)
+          post '/v2/snapshots', payload, headers_for(admin_user)
           expect(last_response.status).to eq(201)
         end
       end
@@ -62,7 +62,7 @@ module VCAP::CloudController
         let(:another_space) { Space.make }
         let(:developer) { make_developer_for_space(another_space) }
         it 'denies access' do
-          post '/v2/snapshots', payload, json_headers(headers_for(developer))
+          post '/v2/snapshots', payload, headers_for(developer)
           expect(last_response.status).to eq 403
           expect(a_request(:any, %r{http://horsemeat.com})).not_to have_been_made
         end
@@ -73,13 +73,13 @@ module VCAP::CloudController
 
         context 'without service_instance_id' do
           it 'returns a 400 status code' do
-            post '/v2/snapshots', '{}', json_headers(headers_for(developer))
+            post '/v2/snapshots', '{}', headers_for(developer)
             expect(last_response.status).to eq(400)
           end
 
           it 'does not create a snapshot' do
             expect_any_instance_of(ManagedServiceInstance).not_to receive(:create_snapshot)
-            post '/v2/snapshots', '{}', json_headers(headers_for(developer))
+            post '/v2/snapshots', '{}', headers_for(developer)
             expect(a_request(:any, %r{http://horsemeat.com})).not_to have_been_made
           end
         end
@@ -89,7 +89,7 @@ module VCAP::CloudController
 
           it 'returns a 400 status code and does not create a snapshot' do
             expect_any_instance_of(ManagedServiceInstance).not_to receive(:create_snapshot)
-            post '/v2/snapshots', payload, json_headers(headers_for(developer))
+            post '/v2/snapshots', payload, headers_for(developer)
             expect(last_response.status).to eq(400)
             expect(a_request(:any, %r{http://horsemeat.com})).not_to have_been_made
           end
@@ -98,7 +98,7 @@ module VCAP::CloudController
         context 'with a blank name' do
           let(:new_name) { '' }
           it 'returns a 400 status code and does not create a snapshot' do
-            post '/v2/snapshots', payload, json_headers(headers_for(developer))
+            post '/v2/snapshots', payload, headers_for(developer)
             expect(last_response.status).to eq(400)
             expect(a_request(:any, %r{http://horsemeat.com})).not_to have_been_made
           end
@@ -112,12 +112,12 @@ module VCAP::CloudController
             with(new_name).
             and_return(VCAP::Services::Api::SnapshotV2.new)
 
-          post '/v2/snapshots', payload, json_headers(headers_for(developer))
+          post '/v2/snapshots', payload, headers_for(developer)
         end
 
         context 'when the gateway successfully creates the snapshot' do
           it 'returns the details of the new snapshot' do
-            post '/v2/snapshots', payload, json_headers(headers_for(developer))
+            post '/v2/snapshots', payload, headers_for(developer)
             expect(last_response.status).to eq(201)
             snapguid = "#{service_instance.guid}_1"
             expect(decoded_response['metadata']).to eq({

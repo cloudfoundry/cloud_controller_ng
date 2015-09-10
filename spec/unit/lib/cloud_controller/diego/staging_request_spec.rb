@@ -16,7 +16,6 @@ module VCAP::CloudController::Diego
     let(:staging_payload) do
       {
         app_id: app.guid,
-        stack: app.stack.name,
         file_descriptors: app.file_descriptors,
         memory_mb: app.memory,
         disk_mb: app.disk_quota,
@@ -28,13 +27,13 @@ module VCAP::CloudController::Diego
         lifecycle_data: {
           whatever: 'we want',
         },
+        completion_callback: 'http://awesome.done/baller'
       }
     end
 
     let(:staging_request) do
       request = StagingRequest.new
       request.app_id = app.guid
-      request.stack = app.stack.name
       request.file_descriptors = app.file_descriptors
       request.memory_mb = app.memory
       request.disk_mb = app.disk_quota
@@ -46,6 +45,7 @@ module VCAP::CloudController::Diego
       request.lifecycle_data = {
         whatever: 'we want',
       }
+      request.completion_callback = 'http://awesome.done/baller'
       request
     end
 

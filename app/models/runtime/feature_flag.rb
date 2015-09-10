@@ -12,6 +12,9 @@ module VCAP::CloudController
       app_scaling: true,
       route_creation: true,
       service_instance_creation: true,
+      diego_docker: false,
+      set_roles_by_username: true,
+      unset_roles_by_username: true,
     }.freeze
 
     export_attributes :name, :enabled, :error_message
@@ -33,6 +36,10 @@ module VCAP::CloudController
 
     rescue KeyError
       raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"
+    end
+
+    def self.disabled?(feature_flag_name)
+      !FeatureFlag.enabled?(feature_flag_name)
     end
 
     def self.raise_unless_enabled!(feature_flag_name)

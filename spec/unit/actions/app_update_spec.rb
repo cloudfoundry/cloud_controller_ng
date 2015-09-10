@@ -3,80 +3,88 @@ require 'actions/app_update'
 
 module VCAP::CloudController
   describe AppUpdate do
-    let(:app_update) { AppUpdate }
-    let(:app_model) { AppModel.make }
+    let(:app) { AppModel.make(name: app_name, environment_variables: environment_variables, buildpack: buildpack) }
+    let(:user) { double(:user, guid: '1337') }
+    let(:user_email) { 'cool_dude@hoopy_frood.com' }
+    let(:app_update) { AppUpdate.new(user, user_email) }
+    let(:buildpack) { 'http://original.com' }
+    let(:app_name) { 'original name' }
+    let(:environment_variables) { { 'original' => 'value' } }
 
-    describe '.update' do
-      context 'when the desired_droplet does not exist' do
-        let(:message) { { 'desired_droplet_guid' => 'not_a_guid' } }
-
-        it 'raises a DropletNotFound exception' do
-          expect {
-            app_update.update(app_model, message)
-          }.to raise_error(AppUpdate::DropletNotFound)
-        end
+    describe '#update' do
+      let(:message) do
+        AppUpdateMessage.new({
+            name:                  'new name',
+            environment_variables: { 'MYVAL' => 'new-val' },
+          })
       end
 
-      context 'when the desired_droplet exists' do
-        let(:droplet) { DropletModel.make }
-        let(:droplet_guid) { droplet.guid }
-        let(:message) { { 'desired_droplet_guid' => droplet_guid } }
+      it 'creates an audit event' do
+        expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_update).with(
+            app,
+            app.space,
+            user.guid,
+            user_email,
+            {
+              'name'                  => 'new name',
+              'environment_variables' => {},
+            })
 
-        context 'the droplet is not associated with the app' do
-          it 'raises a DropletNotFound exception' do
-            expect {
-              app_update.update(app_model, message)
-            }.to raise_error(AppUpdate::DropletNotFound)
-          end
-        end
-
-        context 'the droplet is associated with the app' do
-          before do
-            app_model.add_droplet_by_guid(droplet_guid)
-          end
-
-          it 'sets the desired droplet guid' do
-            updated_app = app_update.update(app_model, message)
-
-            expect(updated_app.desired_droplet_guid).to eq(droplet_guid)
-          end
-        end
+        app_update.update(app, message)
       end
 
-      context 'when given a new name' do
-        let(:name) { 'new name' }
-        let(:message) { { 'name' => name } }
+      it 'updates the apps name' do
+        message = AppUpdateMessage.new({ name: 'new name' })
 
-        it 'updates the app name' do
-          app_update.update(app_model, message)
-          app_model.reload
+        expect(app.name).to eq('original name')
+        expect(app.environment_variables).to eq({ 'original' => 'value' })
+        expect(app.buildpack).to eq('http://original.com')
 
-          expect(app_model.name).to eq(name)
-        end
+        app_update.update(app, message)
+        app.reload
+
+        expect(app.name).to eq('new name')
+        expect(app.environment_variables).to eq({ 'original' => 'value' })
+        expect(app.buildpack).to eq('http://original.com')
       end
 
-      context 'when updating the environment variables' do
-        let(:environment_variables) { { 'VARIABLE' => 'VALUE' } }
-        let(:message) { { 'environment_variables' => environment_variables } }
+      it 'updates the apps environment_variables' do
+        message = AppUpdateMessage.new({ environment_variables: { 'MYVAL' => 'new-val' } })
 
-        it 'updates the app name' do
-          app_update.update(app_model, message)
-          app_model.reload
+        expect(app.name).to eq('original name')
+        expect(app.environment_variables).to eq({ 'original' => 'value' })
+        expect(app.buildpack).to eq('http://original.com')
 
-          expect(app_model.environment_variables).to eq(environment_variables)
-        end
+        app_update.update(app, message)
+        app.reload
+
+        expect(app.name).to eq('original name')
+        expect(app.environment_variables).to eq({ 'MYVAL' => 'new-val' })
+        expect(app.buildpack).to eq('http://original.com')
+      end
+
+      it 'updates the apps buildpack' do
+        message = AppUpdateMessage.new({ buildpack: 'http://new-buildpack.url' })
+
+        expect(app.name).to eq('original name')
+        expect(app.environment_variables).to eq({ 'original' => 'value' })
+        expect(app.buildpack).to eq('http://original.com')
+
+        app_update.update(app, message)
+        app.reload
+
+        expect(app.name).to eq('original name')
+        expect(app.environment_variables).to eq({ 'original' => 'value' })
+        expect(app.buildpack).to eq('http://new-buildpack.url')
       end
 
       context 'when the app is invalid' do
-        let(:name) { 'new name' }
-        let(:message) { { 'name' => name } }
-
         before do
-          allow(app_model).to receive(:save).and_raise(Sequel::ValidationFailed.new('something'))
+          allow(app).to receive(:save).and_raise(Sequel::ValidationFailed.new('something'))
         end
 
         it 'raises an invalid app error' do
-          expect { app_update.update(app_model, message) }.to raise_error(AppUpdate::InvalidApp)
+          expect { app_update.update(app, message) }.to raise_error(AppUpdate::InvalidApp)
         end
       end
     end

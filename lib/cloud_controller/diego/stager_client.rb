@@ -29,7 +29,7 @@ module VCAP::CloudController
         logger.info('stage.response', staging_guid: staging_guid, response_code: response.code)
 
         if response.code != '202'
-          raise Errors::ApiError.new_from_details('StagerError', "staging failed: #{response.code}")
+          raise Errors::ApiError.new_from_details('StagerError', "staging failed: #{error_message(response)}")
         end
 
         nil
@@ -75,6 +75,12 @@ module VCAP::CloudController
 
       def logger
         @logger ||= Steno.logger('cc.stager.client')
+      end
+
+      def error_message(response)
+        JSON.parse(response.body).fetch('error', {})['message'] || response.code
+      rescue JSON::ParserError
+        response.code
       end
     end
   end

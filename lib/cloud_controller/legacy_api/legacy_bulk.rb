@@ -75,13 +75,12 @@ module VCAP::CloudController
       dependency_locator = ::CloudController::DependencyLocator.instance
       runners = dependency_locator.runners
 
-      apps = runners.dea_apps(batch_size, last_id)
-      app_hashes = apps.each_with_object({}) { |app, acc| acc[app.guid] = runners.runner_for_app(app).desired_app_info }
-      id_for_next_token = apps.empty? ? nil : apps.last.id
+      apps_hm9k, next_last_id = runners.dea_apps_hm9k(batch_size, last_id)
+      app_hashes = apps_hm9k.each_with_object({}) { |app, acc| acc[app['id']] = app }
 
       BulkResponse.new(
         results: app_hashes,
-        bulk_token: { 'id' => id_for_next_token }
+        bulk_token: { 'id' => next_last_id }
       ).encode
     rescue IndexError => e
       raise ApiError.new_from_details('BadQueryParameter', e.message)

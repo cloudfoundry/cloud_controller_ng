@@ -75,5 +75,21 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'Validation messages' do
+      let(:organization) { Organization.make }
+
+      it 'returns the OrgQuotaTotalPrivateDomainExceed message' do
+        quota_definition = organization.quota_definition
+        quota_definition.total_private_domains = 0
+        quota_definition.save
+
+        post '/v2/private_domains', MultiJson.dump(name: 'foo.com', owning_organization_guid: organization.guid), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(130005)
+        expect(decoded_response['description']).to include(organization.name)
+      end
+    end
   end
 end

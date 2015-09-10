@@ -13,6 +13,7 @@ module VCAP::CloudController
               service_instance: instance
           )
           app.add_service_binding(binding)
+          app.type = 'worker'
         end
       end
     end
@@ -124,7 +125,12 @@ module VCAP::CloudController
 
         it 'includes app environment variables' do
           request = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          expect(request[:env]).to eq(['KEY=value'])
+          expect(request[:env]).to include('KEY=value')
+        end
+
+        it 'includes app type variable' do
+          request = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
+          expect(request[:env]).to include('CF_PROCESS_TYPE=worker')
         end
 
         it 'includes environment variables from running environment variable group' do
@@ -133,7 +139,7 @@ module VCAP::CloudController
           group.save
 
           request = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          expect(request[:env]).to match_array(['KEY=value', 'RUNNINGKEY=running_value'])
+          expect(request[:env]).to include('KEY=value', 'RUNNINGKEY=running_value')
         end
 
         it 'prefers app environment variables when they conflict with running group variables' do
@@ -142,16 +148,16 @@ module VCAP::CloudController
           group.save
 
           request = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-          expect(request[:env]).to match_array(['KEY=value'])
+          expect(request[:env]).to include('KEY=value')
         end
       end
 
       context 'when the app is associated with a v3 app' do
         let(:app_model) { AppModel.make }
-        let(:droplet) { DropletModel.make(droplet_hash: 'foobar') }
+        let(:droplet) { DropletModel.make(droplet_hash: 'foobar', state: DropletModel::STAGED_STATE) }
 
         before do
-          app_model.update(desired_droplet_guid: droplet.guid)
+          app_model.update(droplet_guid: droplet.guid)
           app_model.add_process(app)
         end
 

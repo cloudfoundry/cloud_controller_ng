@@ -43,6 +43,102 @@ module VCAP::CloudController
             expect(runner).to have_received(:start)
           end
 
+          context 'when it receives lifecycle_data in response' do
+            let(:payload) do
+              {
+                execution_metadata: '"{\"cmd\":[\"start\"]}"',
+                detected_start_command: { web: 'start' },
+                lifecycle_data: { docker_image: docker_image_name }
+              }
+            end
+            let(:droplet) { app.reload.current_droplet }
+
+            context 'with cached image' do
+              let(:docker_image_name) { '10.244.2.6:8080/generated_id:latest' }
+
+              it 'updates the app with the new image' do
+                handler.staging_complete(staging_guid, payload)
+
+                expect(droplet.cached_docker_image).to eq(docker_image_name)
+              end
+            end
+
+            context 'with empty cached image' do
+              let(:docker_image_name) { '' }
+
+              it 'does not update the cached image' do
+                handler.staging_complete(staging_guid, payload)
+
+                expect(droplet.cached_docker_image).to be_nil
+              end
+            end
+          end
+
+          context 'when it receives no lifecycle_data in response' do
+            let(:payload) do
+              {
+                execution_metadata: '"{\"cmd\":[\"start\"]}"',
+                detected_start_command: { web: 'start' },
+              }
+            end
+            let(:droplet) { app.reload.current_droplet }
+
+            it 'does not update the cached image' do
+              expect {
+                handler.staging_complete(staging_guid, payload)
+              }.not_to change {
+                droplet.cached_docker_image
+              }
+            end
+          end
+
+          context 'when it receives empty lifecycle_data in response' do
+            let(:payload) do
+              {
+                execution_metadata: '"{\"cmd\":[\"start\"]}"',
+                detected_start_command: { web: 'start' },
+                lifecycle_data: {}
+              }
+            end
+            let(:droplet) { app.reload.current_droplet }
+
+            it 'does not update the cached image' do
+              expect {
+                handler.staging_complete(staging_guid, payload)
+              }.not_to change {
+                droplet.cached_docker_image
+              }
+            end
+          end
+
+          context 'when the app is restaged and user opted-out from caching' do
+            let(:payload) do
+              {
+                execution_metadata: '"{\"cmd\":[\"start\"]}"',
+                detected_start_command: { web: 'start' },
+                lifecycle_data: {}
+              }
+            end
+            let(:droplet) { app.reload.current_droplet }
+
+            before do
+              FeatureFlag.create(name: 'diego_docker', enabled: true)
+            end
+
+            context 'when image was cached' do
+              let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id', docker_image: 'user_provided') }
+
+              before { app.current_droplet.cached_docker_image = 'cached' }
+
+              it 'clears the cached_docker_image' do
+                handler.staging_complete(staging_guid, payload)
+
+                app.reload
+                expect(droplet.cached_docker_image).to be_nil
+              end
+            end
+          end
+
           context 'when it receives execution metadata' do
             it 'creates a droplet with the metadata' do
               handler.staging_complete(staging_guid, payload)

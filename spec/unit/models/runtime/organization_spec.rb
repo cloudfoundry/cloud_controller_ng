@@ -80,47 +80,6 @@ module VCAP::CloudController
         end
       end
 
-      describe 'managers' do
-        subject(:org) { Organization.make }
-
-        it 'allows creating an org with no managers' do
-          expect {
-            org.save
-          }.to_not raise_error
-        end
-
-        it 'allows deleting a manager but leaving at least one manager behind' do
-          u1, u2 = [User.make, User.make]
-          org.manager_guids = [u1.guid, u2.guid]
-          org.save
-
-          org.manager_guids = [u1.guid]
-          expect {
-            org.save
-          }.not_to raise_error
-        end
-
-        it 'disallows removing all the managers' do
-          u1, u2 = [User.make, User.make]
-          org.manager_guids = [u1.guid]
-          org.save
-
-          expect {
-            org.manager_guids = [u2.guid]
-          }.not_to raise_error
-        end
-
-        it 'disallows removing all the managers' do
-          u1, u2 = [User.make, User.make]
-          org.manager_guids = [u1.guid, u2.guid]
-          org.save
-
-          expect {
-            org.manager_guids = []
-          }.to raise_error(Sequel::HookFailed)
-        end
-      end
-
       describe 'space_quota_definitions' do
         it 'adds when in this org' do
           org = Organization.make
@@ -230,59 +189,6 @@ module VCAP::CloudController
     describe 'billing' do
       it 'should not be enabled for billing when first created' do
         expect(Organization.make.billing_enabled).to eq(false)
-      end
-
-      context 'enabling billing' do
-        before do
-          TestConfig.override({ billing_event_writing_enabled: true })
-        end
-
-        let(:org) do
-          o = Organization.make
-          2.times do
-            space = Space.make(
-              organization: o,
-            )
-            2.times do
-              AppFactory.make(
-                space: space,
-                state: 'STARTED',
-                package_hash: 'abc',
-                package_state: 'STAGED',
-              )
-              AppFactory.make(
-                space: space,
-                state: 'STOPPED',
-              )
-              ManagedServiceInstance.make(space: space)
-            end
-          end
-          o
-        end
-
-        it 'should call OrganizationStartEvent.create_from_org' do
-          expect(OrganizationStartEvent).to receive(:create_from_org)
-          org.billing_enabled = true
-          org.save(validate: false)
-        end
-
-        it 'should emit start events for running apps' do
-          ds = AppStartEvent.filter(
-            organization_guid: org.guid,
-          )
-          org.billing_enabled = true
-          org.save(validate: false)
-          expect(ds.count).to eq(4)
-        end
-
-        it 'should emit create events for provisioned services' do
-          ds = ServiceCreateEvent.filter(
-            organization_guid: org.guid,
-          )
-          org.billing_enabled = true
-          org.save(validate: false)
-          expect(ds.count).to eq(4)
-        end
       end
     end
 

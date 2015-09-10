@@ -30,4 +30,10 @@ module VCAP::CloudController
       'The UAA returned an unexpected error'
     end
   end
+
+  class UaaEndpointDisabled < UaaError
+    def message
+      'The UAA endpoint is disabled'
+    end
+  end
 end

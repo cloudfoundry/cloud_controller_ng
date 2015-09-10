@@ -3,7 +3,11 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe FeatureFlag, type: :model do
-    let(:valid_flags) { [:user_org_creation, :private_domain_creation, :app_bits_upload, :app_scaling, :route_creation, :service_instance_creation] }
+    let(:valid_flags) do
+      [:user_org_creation, :private_domain_creation, :app_bits_upload,
+       :app_scaling, :route_creation, :service_instance_creation,
+       :diego_docker, :set_roles_by_username, :unset_roles_by_username]
+    end
     let(:feature_flag) { FeatureFlag.make }
 
     it { is_expected.to have_timestamp_columns }
@@ -100,12 +104,14 @@ module VCAP::CloudController
 
         it 'should return the override value' do
           expect(FeatureFlag.enabled?(key)).to eq(!default_value)
+          expect(FeatureFlag.disabled?(key)).to eq(default_value)
         end
       end
 
       context 'when the feature flag is not overridden' do
         it 'should return the default value' do
           expect(FeatureFlag.enabled?(key)).to eq(default_value)
+          expect(FeatureFlag.disabled?(key)).to_not eq(default_value)
         end
       end
 
@@ -113,6 +119,9 @@ module VCAP::CloudController
         it 'blows up somehow' do
           expect {
             FeatureFlag.enabled?('bogus_feature_flag')
+          }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
+          expect {
+            FeatureFlag.disabled?('bogus_feature_flag')
           }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
         end
       end

@@ -5,9 +5,13 @@ require 'cgi'
 resource 'Events', type: [:api, :legacy_api] do
   DOCUMENTED_EVENT_TYPES = %w(
     app.crash
+    audit.app.start
+    audit.app.stop
     audit.app.update
     audit.app.create
     audit.app.delete-request
+    audit.app.ssh-authorized
+    audit.app.ssh-unauthorized
     audit.space.create
     audit.space.update
     audit.space.delete-request
@@ -33,6 +37,8 @@ resource 'Events', type: [:api, :legacy_api] do
     audit.user_provided_service_instance.delete
     audit.service_binding.create
     audit.service_binding.delete
+    audit.service_key.create
+    audit.service_key.delete
   )
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
@@ -51,7 +57,7 @@ resource 'Events', type: [:api, :legacy_api] do
   field :actor_type, 'The actor type.', required: false, readonly: true, example_values: %w(user app)
   field :actor_name, 'The name of the actor.', required: false, readonly: true
   field :actee, 'The GUID of the actee.', required: false, readonly: true
-  field :actee_type, 'The actee type.', required: false, readonly: true, example_values: %w(space app)
+  field :actee_type, 'The actee type.', required: false, readonly: true, example_values: %w(space app v3-app)
   field :actee_name, 'The name of the actee.', required: false, readonly: true
   field :timestamp, 'The event creation time.', required: false, readonly: true
   field :metadata, 'The additional information about event.', required: false, readonly: true, default: {}
@@ -65,8 +71,9 @@ resource 'Events', type: [:api, :legacy_api] do
     standard_list_parameters VCAP::CloudController::EventsController
 
     let(:test_app) { VCAP::CloudController::App.make }
+    let(:test_v3app) { VCAP::CloudController::AppModel.make }
     let(:test_user) { VCAP::CloudController::User.make }
-    let(:test_user_email) { 'user@email.com' }
+    let(:test_user_email) { 'user@example.com' }
     let(:test_space) { VCAP::CloudController::Space.make }
     let(:test_organization) { VCAP::CloudController::Organization.make }
 
@@ -83,7 +90,12 @@ resource 'Events', type: [:api, :legacy_api] do
         'instances' => 1,
         'memory' => 84,
         'state' => 'STOPPED',
-        'environment_json' => { 'super' => 'secret' }
+        'environment_json' => { 'super' => 'secret' },
+        'docker_credentials_json' => {
+          'docker_user' => 'user',
+          'docker_password' => 'password',
+          'docker_email' => 'email'
+        }
       }
     end
     let(:space_request) do
@@ -103,6 +115,7 @@ resource 'Events', type: [:api, :legacy_api] do
     let(:expected_app_request) do
       expected_request = app_request
       expected_request['environment_json'] = 'PRIVATE DATA HIDDEN'
+      expected_request['docker_credentials_json'] = 'PRIVATE DATA HIDDEN'
       expected_request
     end
 
@@ -119,7 +132,7 @@ resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App Create Events' do
-      app_event_repository.record_app_create(test_app, test_app.space, test_user, test_user_email, app_request)
+      app_event_repository.record_app_create(test_app, test_app.space, test_user.guid, test_user_email, app_request)
 
       client.get '/v2/events?q=type:audit.app.create', {}, headers
       expect(status).to eq(200)
@@ -132,6 +145,38 @@ resource 'Events', type: [:api, :legacy_api] do
                                actee_name: test_app.name,
                                space_guid: test_app.space.guid,
                                metadata: { 'request' => expected_app_request }
+    end
+
+    example 'List App Start Events' do
+      app_event_repository.record_app_start(test_v3app, test_user.guid, test_user_email)
+
+      client.get '/v2/events?q=type:audit.app.start', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'v3-app',
+                               actee: test_v3app.guid,
+                               actee_name: test_v3app.name,
+                               space_guid: test_v3app.space.guid,
+                               metadata: {}
+    end
+
+    example 'List App Stop Events' do
+      app_event_repository.record_app_stop(test_v3app, test_user.guid, test_user_email)
+
+      client.get '/v2/events?q=type:audit.app.stop', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                              actor_type: 'user',
+                              actor: test_user.guid,
+                              actor_name: test_user_email,
+                              actee_type: 'v3-app',
+                              actee: test_v3app.guid,
+                              actee_name: test_v3app.name,
+                              space_guid: test_v3app.space.guid,
+                              metadata: {}
     end
 
     example 'List App Exited Events' do
@@ -151,7 +196,7 @@ resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App Update Events' do
-      app_event_repository.record_app_update(test_app, test_app.space, test_user, test_user_email, app_request)
+      app_event_repository.record_app_update(test_app, test_app.space, test_user.guid, test_user_email, app_request)
 
       client.get '/v2/events?q=type:audit.app.update', {}, headers
       expect(status).to eq(200)
@@ -169,7 +214,7 @@ resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App Delete Events' do
-      app_event_repository.record_app_delete_request(test_app, test_app.space, test_user, test_user_email, false)
+      app_event_repository.record_app_delete_request(test_app, test_app.space, test_user.guid, test_user_email, false)
 
       client.get '/v2/events?q=type:audit.app.delete-request', {}, headers
       expect(status).to eq(200)
@@ -184,10 +229,42 @@ resource 'Events', type: [:api, :legacy_api] do
                                metadata: { 'request' => { 'recursive' => false } }
     end
 
+    example 'List App SSH Authorized Events' do
+      app_event_repository.record_app_ssh_authorized(test_app, test_user.guid, test_user_email)
+
+      client.get '/v2/events?q=type:audit.app.ssh-authorized', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'app',
+                               actee: test_app.guid,
+                               actee_name: test_app.name,
+                               space_guid: test_app.space.guid,
+                               metadata: {}
+    end
+
+    example 'List App SSH Unauthorized Events' do
+      app_event_repository.record_app_ssh_unauthorized(test_app, test_user.guid, test_user_email)
+
+      client.get '/v2/events?q=type:audit.app.ssh-unauthorized', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'app',
+                               actee: test_app.guid,
+                               actee_name: test_app.name,
+                               space_guid: test_app.space.guid,
+                               metadata: {}
+    end
+
     example 'List events associated with an App since January 1, 2014' do
-      app_event_repository.record_app_create(test_app, test_app.space, test_user, test_user_email, app_request)
-      app_event_repository.record_app_update(test_app, test_app.space, test_user, test_user_email, app_request)
-      app_event_repository.record_app_delete_request(test_app, test_app.space, test_user, test_user_email, false)
+      app_event_repository.record_app_create(test_app, test_app.space, test_user.guid, test_user_email, app_request)
+      app_event_repository.record_app_update(test_app, test_app.space, test_user.guid, test_user_email, app_request)
+      app_event_repository.record_app_delete_request(test_app, test_app.space, test_user.guid, test_user_email, false)
 
       client.get "/v2/events?q=actee:#{test_app.guid}&q=#{CGI.escape('timestamp>2014-01-01 00:00:00-04:00')}", {}, headers
       expect(status).to eq(200)
@@ -775,6 +852,53 @@ resource 'Events', type: [:api, :legacy_api] do
                                metadata: {
                                  'request' => {}
                                }
+    end
+
+    example 'List Service Key Create Events' do
+      space = VCAP::CloudController::Space.make
+      instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+      service_key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
+
+      service_event_repository.record_service_key_event(:create, service_key)
+
+      client.get '/v2/events?q=type:audit.service_key.create', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+        actor_type: 'user',
+        actor: test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'service_key',
+        actee: service_key.guid,
+        actee_name: service_key.name,
+        space_guid: instance.space_guid,
+        metadata: {
+          'request' => {
+            'service_instance_guid' => instance.guid,
+            'name' => service_key.name,
+          }
+        }
+    end
+
+    example 'List Service Key Delete Events' do
+      space = VCAP::CloudController::Space.make
+      instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+      service_key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
+
+      service_event_repository.record_service_key_event(:delete, service_key)
+
+      client.get '/v2/events?q=type:audit.service_key.delete', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+        actor_type: 'user',
+        actor: test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'service_key',
+        actee: service_key.guid,
+        actee_name: service_key.name,
+        space_guid: instance.space_guid,
+        metadata: {
+          'request' => {}
+        }
     end
   end
 end

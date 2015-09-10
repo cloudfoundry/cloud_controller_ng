@@ -1,13 +1,13 @@
 namespace :jobs do
   desc "Clear the delayed_job queue."
   task :clear do
-    BackgroundJobEnvironment.new(config).setup_environment
+    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
     Delayed::Job.delete_all
   end
 
   desc "Start a delayed_job worker that works on jobs that require access to local resources."
   task :local, [:name] do |t, args|
-    CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::LocalQueue.new(config).to_s],
+    CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::LocalQueue.new(RakeConfig.config).to_s],
                                        name: args.name).start_working
   end
 
@@ -29,9 +29,10 @@ namespace :jobs do
     end
 
     def start_working
-      BackgroundJobEnvironment.new(config).setup_environment
+      BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
       Delayed::Worker.destroy_failed_jobs = false
       Delayed::Worker.max_attempts = 3
+      Delayed::Worker.plugins << DeserializationRetry
       logger = Steno.logger("cc-worker")
       logger.info("Starting job with options #{@queue_options}")
       worker = Delayed::Worker.new(@queue_options)

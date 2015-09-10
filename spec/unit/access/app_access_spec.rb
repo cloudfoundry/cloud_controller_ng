@@ -61,7 +61,7 @@ module VCAP::CloudController
 
       context 'when the organization is suspended' do
         before { object.space.organization.status = 'suspended' }
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
 
       context 'when the space changes' do
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
     context 'organization manager' do
       before { org.add_manager(user) }
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
@@ -145,7 +145,7 @@ module VCAP::CloudController
         org.add_user(user)
         space.add_manager(user)
       end
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
@@ -157,7 +157,7 @@ module VCAP::CloudController
         org.add_user(user)
         space.add_auditor(user)
       end
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
 
       it 'does not allow user to :read_env' do
         expect(subject).not_to allow_op_on_object(:read_env, object)
@@ -177,7 +177,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'any user using client without cloud_controller.read' do

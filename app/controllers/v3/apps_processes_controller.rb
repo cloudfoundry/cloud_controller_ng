@@ -1,102 +1,115 @@
 require 'presenters/v3/process_presenter'
-require 'handlers/processes_handler'
-require 'handlers/procfile_handler'
-require 'handlers/apps_handler'
+require 'cloud_controller/index_stopper'
 require 'cloud_controller/paging/pagination_options'
-require 'cloud_controller/procfile'
 
 module VCAP::CloudController
   class AppsProcessesController < RestController::BaseController
     def self.dependencies
-      [:processes_handler, :process_presenter, :apps_handler, :procfile_handler]
-    end
-
-    def inject_dependencies(dependencies)
-      @app_handler       = dependencies[:apps_handler]
-      @processes_handler = dependencies[:processes_handler]
-      @process_presenter = dependencies[:process_presenter]
-      @procfile_handler  = dependencies[:procfile_handler]
+      [:process_presenter, :index_stopper]
     end
 
     get '/v3/apps/:guid/processes', :list_processes
     def list_processes(guid)
-      app = @app_handler.show(guid, @access_context)
-      app_not_found! if app.nil?
+      check_read_permissions!
 
       pagination_options = PaginationOptions.from_params(params)
-      paginated_result   = @processes_handler.list(pagination_options, @access_context, app_guid: app.guid)
+      invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
+      invalid_param!("Unknown query param(s) '#{params.keys.join("', '")}'") if params.any?
+
+      app = AppModel.where(guid: guid).eager(:space, space: :organization).all.first
+      app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
+
+      paginated_result = SequelPaginator.new.get_page(app.processes_dataset, pagination_options)
 
       [HTTP::OK, @process_presenter.present_json_list(paginated_result, "/v3/apps/#{guid}/processes")]
     end
 
-    put '/v3/apps/:guid/processes', :add_process
-    def add_process(guid)
-      opts = MultiJson.load(body)
+    get '/v3/apps/:guid/processes/:type', :show
+    def show(app_guid, type)
+      check_read_permissions!
 
-      app = @app_handler.show(guid, @access_context)
-      app_not_found! if app.nil?
+      app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
+      app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
 
-      process = @processes_handler.show(opts['process_guid'], @access_context)
+      process = app.processes_dataset.where(type: type).first
       process_not_found! if process.nil?
 
-      @app_handler.add_process(app, process, @access_context)
-
-      [HTTP::NO_CONTENT]
-    rescue MultiJson::ParseError => e
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
-    rescue AppsHandler::DuplicateProcessType
-      invalid_process_type!(process.type)
-    rescue AppsHandler::Unauthorized
-      app_not_found!
-    rescue AppsHandler::IncorrectProcessSpace
-      unable_to_perform!('Process addition', 'Process and App are not in the same space')
+      [HTTP::OK, @process_presenter.present_json(process)]
     end
 
-    delete '/v3/apps/:guid/processes', :remove_process
-    def remove_process(guid)
-      opts = MultiJson.load(body)
+    put '/v3/apps/:guid/processes/:type/scale', :scale
+    def scale(app_guid, type)
+      check_write_permissions!
 
-      app = @app_handler.show(guid, @access_context)
-      app_not_found! if app.nil?
+      FeatureFlag.raise_unless_enabled!('app_scaling') unless membership.admin?
 
-      process = @processes_handler.show(opts['process_guid'], @access_context)
+      request = parse_and_validate_json(body)
+      message = ProcessScaleMessage.create_from_http_request(request)
+      unprocessable!(message.errors.full_messages) if message.invalid?
+
+      app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
+      app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
+
+      process = app.processes_dataset.where(type: type).first
       process_not_found! if process.nil?
+      unauthorized! if !can_scale?(app.space.guid)
 
-      @app_handler.remove_process(app, process, @access_context)
+      ProcessScale.new(current_user, current_user_email).scale(process, message)
 
-      [HTTP::NO_CONTENT]
-    rescue MultiJson::ParseError => e
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
-    rescue AppsHandler::Unauthorized
-      app_not_found!
+      [HTTP::OK, @process_presenter.present_json(process)]
+    rescue ProcessScale::InvalidProcess => e
+      unprocessable!(e.message)
     end
 
-    put '/v3/apps/:guid/procfile', :process_procfile
-    def process_procfile(guid)
-      app = @app_handler.show(guid, @access_context)
-      app_not_found! if app.nil?
+    delete '/v3/apps/:guid/processes/:type/instances/:index', :terminate
+    def terminate(app_guid, process_type, process_index)
+      check_write_permissions!
 
-      procfile = Procfile.load(body)
-      @procfile_handler.process_procfile(app, procfile, @access_context)
+      app = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
+      app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
 
-      pagination_options = PaginationOptions.from_params(params)
-      paginated_result   = @processes_handler.list(pagination_options, @access_context, app_guid: app.guid)
+      process = app.processes_dataset.where(type: process_type).first
+      process_not_found! if process.nil?
+      unauthorized! if !can_terminate?(app.space.guid)
 
-      [HTTP::OK, @process_presenter.present_json_list(paginated_result, "/v3/apps/#{guid}/processes")]
-    rescue Procfile::ParseError => e
-      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', e.message)
-    rescue ProcfileHandler::Unauthorized
-      app_not_found!
-    rescue ProcessesHandler::Unauthorized
-      app_not_found!
-    rescue AppsHandler::Unauthorized
-      app_not_found!
+      instance_not_found! unless process_index.to_i < process.instances && process_index.to_i >= 0
+
+      index_stopper.stop_index(process, process_index.to_i)
+      [HTTP::NO_CONTENT, nil]
+    end
+
+    protected
+
+    attr_reader :index_stopper
+
+    def inject_dependencies(dependencies)
+      @process_presenter = dependencies[:process_presenter]
+      @index_stopper = dependencies.fetch(:index_stopper)
     end
 
     private
 
-    def unable_to_perform!(msg, details)
-      raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', msg, details)
+    def instance_not_found!
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Instance not found')
+    end
+
+    def membership
+      @membership ||= Membership.new(current_user)
+    end
+
+    def can_read?(space_guid, org_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER,
+                                 Membership::SPACE_MANAGER,
+                                 Membership::SPACE_AUDITOR,
+                                 Membership::ORG_MANAGER], space_guid, org_guid)
+    end
+
+    def can_scale?(space_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+    end
+
+    def can_terminate?(space_guid)
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 
     def app_not_found!
@@ -105,10 +118,6 @@ module VCAP::CloudController
 
     def process_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
-    end
-
-    def invalid_process_type!(type)
-      raise VCAP::Errors::ApiError.new_from_details('ProcessInvalid', "Type '#{type}' is already in use")
     end
   end
 end

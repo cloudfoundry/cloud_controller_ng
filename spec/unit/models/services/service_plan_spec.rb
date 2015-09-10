@@ -30,6 +30,18 @@ module VCAP::CloudController
             to raise_error(Sequel::ValidationFailed, 'Plan ids must be unique')
         end
       end
+
+      context 'for plans belonging to private brokers' do
+        it 'does not allow the plan to be public' do
+          space = Space.make
+          private_broker = ServiceBroker.make space: space
+          service = Service.make service_broker: private_broker
+
+          expect {
+            ServicePlan.make service: service, public: true
+          }.to raise_error Sequel::ValidationFailed, 'public may not be true for private plans'
+        end
+      end
     end
 
     describe 'Serialization' do
@@ -139,6 +151,31 @@ module VCAP::CloudController
       context 'when the service is unbindable' do
         let(:service) { Service.make(bindable: false) }
         specify { expect(service_plan).not_to be_bindable }
+      end
+    end
+
+    describe '#private?' do
+      it 'returns true if the plan belongs to a service that belongs to a private broker' do
+        space = Space.make
+        broker = ServiceBroker.make space: space
+        service = Service.make service_broker: broker
+        plan = ServicePlan.make service: service
+
+        expect(plan.private?).to be_truthy
+      end
+
+      it 'returns false if the plan belongs to a service that belongs to a public broker' do
+        plan = ServicePlan.make
+
+        expect(plan.private?).to be_falsey
+      end
+
+      context 'for v1 services' do
+        it 'is false' do
+          plan = ServicePlan.make(:v1)
+
+          expect(plan.private?).to be_falsey
+        end
       end
     end
   end

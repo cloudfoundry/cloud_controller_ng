@@ -1,4 +1,3 @@
-require 'bcrypt'
 require 'sinatra'
 require 'sequel'
 require 'thin'
@@ -22,11 +21,13 @@ require 'active_support/core_ext/object/to_query'
 require 'active_support/json/encoding'
 
 Sequel.default_timezone = :utc
+ActiveSupport::JSON::Encoding.time_precision = 0
 
 module VCAP::CloudController; end
 
 require 'vcap/errors/invalid_relation'
 require 'vcap/errors/missing_required_scope_error'
+require 'delayed_job_plugins/deserialization_retry'
 require 'sequel_plugins/sequel_plugins'
 require 'vcap/sequel_add_association_dependencies_monkeypatch'
 require 'access/access'
@@ -46,12 +47,12 @@ require 'cloud_controller/runner'
 require 'cloud_controller/app_observer'
 require 'cloud_controller/dea/staging_response'
 require 'cloud_controller/dea/staging_message'
-require 'cloud_controller/dea/package_stager_task'
 require 'cloud_controller/dea/app_stager_task'
 require 'cloud_controller/collection_transformers'
 require 'cloud_controller/controllers'
 require 'cloud_controller/roles'
 require 'cloud_controller/encryptor'
+require 'cloud_controller/membership'
 require 'cloud_controller/serializer'
 require 'cloud_controller/blobstore/client'
 require 'cloud_controller/blobstore/url_generator'
@@ -64,6 +65,7 @@ require 'cloud_controller/dea/start_app_message'
 require 'cloud_controller/egress_network_rules_presenter'
 require 'cloud_controller/admin_buildpacks_presenter'
 require 'cloud_controller/organization_memory_calculator'
+require 'cloud_controller/organization_instance_usage_calculator'
 
 require 'cloud_controller/legacy_api/legacy_api_base'
 require 'cloud_controller/legacy_api/legacy_info'

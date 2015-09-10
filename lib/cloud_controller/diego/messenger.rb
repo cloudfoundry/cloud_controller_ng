@@ -7,11 +7,11 @@ module VCAP::CloudController
         @protocol = protocol
       end
 
-      def send_stage_request(app, staging_config)
+      def send_stage_request(app, config)
         logger.info('staging.begin', app_guid: app.guid)
 
         staging_guid = StagingGuid.from_app(app)
-        staging_message = @protocol.stage_app_request(app, staging_config)
+        staging_message = @protocol.stage_app_request(app, config)
         @stager_client.stage(staging_guid, staging_message)
       end
 
@@ -35,6 +35,13 @@ module VCAP::CloudController
 
         process_guid = ProcessGuid.from_app(app)
         @nsync_client.stop_index(process_guid, index)
+      end
+
+      def send_stop_app_request(app)
+        logger.info('stop.app', app_guid: app.guid)
+
+        process_guid = ProcessGuid.from_app(app)
+        @nsync_client.stop_app(process_guid)
       end
 
       private

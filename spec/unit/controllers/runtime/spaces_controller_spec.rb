@@ -16,6 +16,7 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_creatable_attributes({
           name:                   { type: 'string', required: true },
+          allow_ssh:              { type: 'bool', default: true },
           organization_guid:      { type: 'string', required: true },
           developer_guids:        { type: '[string]' },
           manager_guids:          { type: '[string]' },
@@ -30,6 +31,7 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_updatable_attributes({
           name:                   { type: 'string' },
+          allow_ssh:              { type: 'bool' },
           organization_guid:      { type: 'string' },
           developer_guids:        { type: '[string]' },
           manager_guids:          { type: '[string]' },
@@ -170,6 +172,24 @@ module VCAP::CloudController
           get "/v2/spaces/#{space.guid}?inline-relations-depth=1", {}, json_headers(admin_headers)
           expect(entity).to have_key('events_url')
           expect(entity).to_not have_key('events')
+        end
+      end
+    end
+
+    describe 'GET /v2/spaces/:guid/user_roles' do
+      context 'for an space that does not exist' do
+        it 'returns a 404' do
+          get '/v2/spaces/foobar/user_roles', {}, admin_headers
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      context 'when the user does not have permissions to read' do
+        let(:user) { User.make }
+
+        it 'returns a 403' do
+          get "/v2/spaces/#{space_one.guid}/user_roles", {}, headers_for(user)
+          expect(last_response.status).to eq(403)
         end
       end
     end
@@ -374,7 +394,7 @@ module VCAP::CloudController
           describe 'SpaceManager' do
             it_behaves_like(
               'enumerating service instances', 'SpaceManager',
-              expected: 0,
+              expected: 1,
             ) do
               let(:member_a) { @space_a_manager }
               let(:member_b) { @space_b_manager }
@@ -430,9 +450,7 @@ module VCAP::CloudController
       let(:space_one) { Space.make(organization: organization_one) }
       let(:space_two) { Space.make(organization: organization_two) }
       let(:user) { make_developer_for_space(space_one) }
-      let(:headers) do
-        headers_for(user)
-      end
+      let(:headers) { headers_for(user)  }
 
       before do
         user.add_organization(organization_two)
@@ -441,6 +459,59 @@ module VCAP::CloudController
 
       def decoded_guids
         decoded_response['resources'].map { |r| r['metadata']['guid'] }
+      end
+
+      context 'when there is a private service broker in a space' do
+        before(:each) do
+          @broker       = ServiceBroker.make(space: space_one)
+          @service      = Service.make(service_broker: @broker, active: true)
+          @service_plan = ServicePlan.make(service: @service, public: false)
+        end
+
+        let(:developer) { user }
+        let(:outside_developer) { make_developer_for_space(space_two) }
+
+        let(:auditor) { make_auditor_for_space(space_one) }
+        let(:outside_auditor) { make_auditor_for_space(space_two) }
+
+        let(:manager) { make_manager_for_space(space_one) }
+        let(:outside_manager) { make_manager_for_space(space_two) }
+
+        it 'should be visible to SpaceDevelopers' do
+          developer_headers = headers_for(developer)
+          get "v2/spaces/#{space_one.guid}/services", {}, developer_headers
+          expect(decoded_guids).to include(@service.guid)
+        end
+
+        it 'should not be visible to outside SpaceDevelopers, even in their own space' do
+          developer_headers = headers_for(outside_developer)
+          get "v2/spaces/#{space_two.guid}/services", {}, developer_headers
+          expect(decoded_guids).not_to include(@service.guid)
+        end
+
+        it 'should be visible to SpaceManagers ' do
+          manager_headers = headers_for(manager)
+          get "v2/spaces/#{space_one.guid}/services", {}, manager_headers
+          expect(decoded_guids).to include(@service.guid)
+        end
+
+        it 'should be visible to SpaceManagers' do
+          manager_headers = headers_for(outside_manager)
+          get "v2/spaces/#{space_one.guid}/services", {}, manager_headers
+          expect(last_response).not_to be_ok
+        end
+
+        it 'should be visible to SpaceAuditor' do
+          auditor_headers = headers_for(auditor)
+          get "v2/spaces/#{space_one.guid}/services", {}, auditor_headers
+          expect(decoded_guids).to include(@service.guid)
+        end
+
+        it 'should be visible to SpaceManagers' do
+          auditor_headers = headers_for(outside_auditor)
+          get "v2/spaces/#{space_one.guid}/services", {}, auditor_headers
+          expect(last_response).not_to be_ok
+        end
       end
 
       context 'with an offering that has private plans' do
@@ -519,7 +590,7 @@ module VCAP::CloudController
         event = Event.find(type: 'audit.space.create', actee: new_space_guid)
         expect(event).not_to be_nil
         expect(event.actor_name).to eq(SecurityContext.current_user_email)
-        expect(event.metadata['request']).to eq('organization_guid' => organization.guid, 'name' => 'space_name')
+        expect(event.metadata['request']).to include('organization_guid' => organization.guid, 'name' => 'space_name')
       end
 
       it 'logs audit.space.update when updating a space' do
@@ -581,22 +652,22 @@ module VCAP::CloudController
         let!(:route_guid) { Route.make(space_guid: space_guid).guid }
         let!(:service_instance) { ManagedServiceInstance.make(space_guid: space_guid) }
         let!(:service_instance_guid) { service_instance.guid }
+        let!(:user) { make_manager_for_org(org) }
 
         before do
-          stub_deprovision(service_instance)
+          stub_deprovision(service_instance, accepts_incomplete: true)
         end
 
-        it 'successfully deletes spaces with v3 app associations or service instances' do
+        it 'successfully deletes spaces with v3 app associations' do
           delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
 
           expect(last_response).to have_status_code(204)
           expect(Space.find(guid: space_guid)).to be_nil
           expect(AppModel.find(guid: app_guid)).to be_nil
-          expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
           expect(Route.find(guid: route_guid)).to be_nil
         end
 
-        it 'successfully deletes the space asynchronously when async=true' do
+        it 'successfully deletes the space in a background job when async=true' do
           delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
 
           expect(last_response).to have_status_code(202)
@@ -614,17 +685,72 @@ module VCAP::CloudController
           expect(Route.find(guid: route_guid)).to be_nil
         end
 
+        it 'records an audit event for the deletion of any nested resources' do
+          delete "/v2/spaces/#{space_guid}?recursive=true", '', headers_for(user, email: 'user@email.com')
+
+          event = Event.find(type: 'audit.app.delete-request', actee: app_guid)
+          expect(event).not_to be_nil
+          expect(event.actor).to eq user.guid
+          expect(event.actor_name).to eq 'user@email.com'
+        end
+
+        context 'when the async job times out' do
+          before do
+            fake_config = {
+              jobs: {
+                global: {
+                  timeout_in_seconds: 0.1
+                }
+              }
+            }
+            allow(VCAP::CloudController::Config).to receive(:config).and_return(fake_config)
+            stub_deprovision(service_instance, accepts_incomplete: true) do
+              sleep 0.11
+              { status: 200, body: {}.to_json }
+            end
+          end
+
+          it 'fails the job with a SpaceDeleteTimeout error' do
+            delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+            expect(last_response).to have_status_code(202)
+            job_guid = decoded_response['metadata']['guid']
+
+            expect(Delayed::Worker.new.work_off).to eq([0, 1])
+
+            get "/v2/jobs/#{job_guid}", {}, json_headers(admin_headers)
+            expect(decoded_response['entity']['status']).to eq 'failed'
+            expect(decoded_response['entity']['error_details']['error_code']).to eq 'CF-SpaceDeleteTimeout'
+          end
+        end
+
         describe 'deleting service instances' do
           let(:app_model) { AppFactory.make(space_guid: space_guid) }
 
-          let(:service_instance_1) { ManagedServiceInstance.make(space_guid: space_guid) }
-          let(:service_instance_2) { ManagedServiceInstance.make(space_guid: space_guid) }
-          let(:service_instance_3) { ManagedServiceInstance.make(space_guid: space_guid) }
+          let!(:service_instance_1) { ManagedServiceInstance.make(space_guid: space_guid) }
+          let!(:service_instance_2) { ManagedServiceInstance.make(space_guid: space_guid) }
+          let!(:service_instance_3) { ManagedServiceInstance.make(space_guid: space_guid) }
+          let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(space_guid: space_guid) }
 
           before do
-            stub_deprovision(service_instance_1)
-            stub_deprovision(service_instance_2)
-            stub_deprovision(service_instance_3)
+            stub_deprovision(service_instance_1, accepts_incomplete: true)
+            stub_deprovision(service_instance_2, accepts_incomplete: true)
+            stub_deprovision(service_instance_3, accepts_incomplete: true)
+          end
+
+          it 'successfully deletes spaces with managed service instances' do
+            delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+
+            expect(last_response).to have_status_code(204)
+            expect(service_instance_1.exists?).to be_falsey
+            expect(service_instance_2.exists?).to be_falsey
+            expect(service_instance_3.exists?).to be_falsey
+          end
+
+          it 'successfully deletes spaces with user_provided service instances' do
+            delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+
+            expect(last_response).to have_status_code(204)
+            expect(user_provided_service_instance.exists?).to be_falsey
           end
 
           context 'when the second of three bindings fails to delete' do
@@ -652,17 +778,29 @@ module VCAP::CloudController
               expect { binding_2.refresh }.not_to raise_error
               expect { binding_3.refresh }.to raise_error Sequel::Error, 'Record not found'
             end
+
+            it 'does not delete any of the v2 apps' do
+              expect {
+                delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+              }.to_not change { App.count }
+            end
+
+            it 'deletes all the v3 apps' do
+              expect {
+                delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+              }.to change { AppModel.count }.by(-1)
+            end
           end
 
           context 'when the second of three service instances fails to delete' do
             before do
-              stub_deprovision(service_instance_2, status: 500)
+              stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
 
-              instance_url = remove_basic_auth(service_instance_deprovision_url(service_instance_2))
+              instance_url = remove_basic_auth(deprovision_url(service_instance_2))
 
               @expected_description = "Deletion of space #{space.name} failed because one or more resources within could not be deleted.
 
-The service broker returned an invalid response for the request to #{instance_url}. Status Code: 500 Internal Server Error, Body: {}"
+\tService instance #{service_instance_2.name}: The service broker returned an invalid response for the request to #{instance_url}. Status Code: 500 Internal Server Error, Body: {}"
             end
 
             context 'synchronous' do
@@ -679,7 +817,7 @@ The service broker returned an invalid response for the request to #{instance_ur
               end
             end
 
-            context 'asynchronous (async=true)' do
+            context 'when async=true' do
               it 'deletes the first and third instances and returns an error' do
                 delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
                 expect(last_response).to have_status_code 202
@@ -705,37 +843,71 @@ The service broker returned an invalid response for the request to #{instance_ur
               end
             end
           end
-        end
 
-        context 'when the user does not exist when the job runs' do
-          it 'returns an UserNotFound error' do
-            user = User.make
-            org.add_user(user)
-            org.add_manager(user)
-            space.add_manager(user)
+          context 'when an instance has an operation in progress' do
+            let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
 
-            delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(headers_for(user))
-            user.destroy
+            before do
+              service_instance_1.service_instance_operation = last_operation
+            end
 
-            job = Delayed::Job.first
-            expect {
-              job.invoke_job
-            }.to raise_error VCAP::CloudController::DeletionError, /user could not be found/
+            it 'returns an error to the user' do
+              delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+              expect(last_response).to have_status_code 502
+              expect(decoded_response['error_code']).to eq 'CF-SpaceDeletionFailed'
+              expect(last_response.body).to match /An operation for service instance #{service_instance_1.name} is in progress./
+            end
+
+            it 'does not delete that instance' do
+              delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+              expect(space.exists?).to be_truthy
+              expect(service_instance_1.exists?).to be_truthy
+            end
+
+            it 'deletes the other service instances' do
+              delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
+              expect(service_instance_2.exists?).to be_falsey
+              expect(service_instance_3.exists?).to be_falsey
+              expect(user_provided_service_instance.exists?).to be_falsey
+            end
+
+            context 'when async=true' do
+              it 'returns an error to the user' do
+                delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+                expect(last_response).to have_status_code 202
+
+                successes, failures = Delayed::Worker.new.work_off
+                expect(successes).to eq 0
+                expect(failures).to eq 1
+
+                job_url = decoded_response['metadata']['url']
+
+                get job_url, {}, json_headers(admin_headers)
+                expect(last_response).to have_status_code 200
+                expect(decoded_response['entity']['error_details']['error_code']).to eq 'CF-SpaceDeletionFailed'
+                expect(decoded_response['entity']['error_details']['description']).to match /An operation for service instance #{service_instance_1.name} is in progress./
+              end
+
+              it 'does not delete that instance' do
+                delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+
+                expect(Delayed::Worker.new.work_off).to eq([0, 1])
+
+                expect(space.exists?).to be_truthy
+                expect(service_instance_1.exists?).to be_truthy
+              end
+
+              it 'deletes the other service instances' do
+                delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
+
+                expect(Delayed::Worker.new.work_off).to eq([0, 1])
+
+                expect(service_instance_2.exists?).to be_falsey
+                expect(service_instance_3.exists?).to be_falsey
+                expect(user_provided_service_instance.exists?).to be_falsey
+              end
+            end
           end
-        end
-
-        it 'does not rollback any changes if recursive deletion fails halfway through' do
-          service_instance_2 = ManagedServiceInstance.make(space_guid: space_guid)
-          stub_deprovision(service_instance_2, status: 500)
-
-          delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
-
-          expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
-          expect(ServiceInstance.find(guid: service_instance_2.guid)).not_to be_nil
-          expect(Space.find(guid: space_guid)).not_to be_nil
-
-          expect(last_response).to have_status_code 502
-          expect(decoded_response['error_code']).to eq 'CF-SpaceDeletionFailed'
         end
       end
     end
@@ -757,6 +929,161 @@ The service broker returned an invalid response for the request to #{instance_ur
       it 'allows space developers' do
         get "/v2/spaces/#{space.guid}/developers", '', headers_for(user)
         expect(last_response).to have_status_code(200)
+      end
+    end
+
+    describe 'adding user roles by username' do
+      [:manager, :developer, :auditor].each do |role|
+        plural_role = role.to_s.pluralize
+        describe "PUT /v2/spaces/:guid/#{plural_role}" do
+          let(:user) { User.make(username: 'larry_the_user') }
+
+          before do
+            allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
+            organization_one.add_user(user)
+          end
+
+          it "makes the user a space #{role}" do
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+            expect(last_response.status).to eq(201)
+            expect(space_one.send(plural_role)).to include(user)
+            expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+          end
+
+          it 'verifies the user has update access to the space' do
+            expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+          end
+
+          it 'returns a 404 when the user does not exist in UAA' do
+            expect_any_instance_of(UaaClient).to receive(:id_for_username).with('fake@example.com').and_return(nil)
+
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' }), admin_headers
+
+            expect(last_response.status).to eq(404)
+            expect(decoded_response['code']).to eq(20003)
+          end
+
+          it 'returns an error when UAA is not available' do
+            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaUnavailable)
+
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+            expect(last_response.status).to eq(503)
+            expect(decoded_response['code']).to eq(20004)
+          end
+
+          it 'returns an error when UAA endpoint is disabled' do
+            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
+
+            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+            expect(last_response.status).to eq(501)
+            expect(decoded_response['code']).to eq(20005)
+          end
+
+          context 'when the feature flag "set_roles_by_username" is disabled' do
+            before do
+              FeatureFlag.new(name: 'set_roles_by_username', enabled: false).save
+            end
+
+            it 'raises a feature flag error for non-admins' do
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), headers_for(user)
+
+              expect(last_response.status).to eq(403)
+              expect(decoded_response['code']).to eq(330002)
+            end
+
+            it 'succeeds for admins' do
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+              expect(last_response.status).to eq(201)
+              expect(space_one.send(plural_role)).to include(user)
+              expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+            end
+          end
+        end
+      end
+    end
+
+    describe 'removing user roles by username' do
+      [:manager, :developer, :auditor].each do |role|
+        plural_role = role.to_s.pluralize
+        describe "DELETE /v2/spaces/:guid/#{plural_role}" do
+          let(:user) { User.make(username: 'larry_the_user') }
+
+          before do
+            allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
+            organization_one.add_user(user)
+            space_one.send("add_#{role}", user)
+          end
+
+          it "unsets the user as a space #{role}" do
+            expect(space_one.send(plural_role)).to include(user)
+
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+            expect(last_response.status).to eq(200)
+            expect(space_one.reload.send(plural_role)).to_not include(user)
+            expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+          end
+
+          it 'verifies the user has update access to the space' do
+            expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+          end
+
+          it 'returns a 404 when the user does not exist in CC' do
+            expect_any_instance_of(UaaClient).to receive(:id_for_username).with('fake@example.com').and_return('not-a-real-guid')
+
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' }), admin_headers
+
+            expect(last_response.status).to eq(404)
+            expect(decoded_response['code']).to eq(20003)
+          end
+
+          it 'returns an error when UAA is not available' do
+            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaUnavailable)
+
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+            expect(last_response.status).to eq(503)
+            expect(decoded_response['code']).to eq(20004)
+          end
+
+          it 'returns an error when UAA endpoint is disabled' do
+            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
+
+            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+            expect(last_response.status).to eq(501)
+            expect(decoded_response['code']).to eq(20005)
+          end
+
+          context 'when the feature flag "unset_roles_by_username" is disabled' do
+            before do
+              FeatureFlag.new(name: 'unset_roles_by_username', enabled: false).save
+            end
+
+            it 'raises a feature flag error for non-admins' do
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), headers_for(user)
+
+              expect(last_response.status).to eq(403)
+              expect(decoded_response['code']).to eq(330002)
+            end
+
+            it 'succeeds for admins' do
+              expect(space_one.send(plural_role)).to include(user)
+
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username }), admin_headers
+
+              expect(last_response.status).to eq(200)
+              expect(space_one.reload.send(plural_role)).to_not include(user)
+              expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+            end
+          end
+        end
       end
     end
 

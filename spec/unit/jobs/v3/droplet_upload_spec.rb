@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       describe '#perform' do
         it 'updates the droplet hash' do
-          digest = Digest::SHA1.file(local_file.path).hexdigest
+          digest = Digester.new.digest_file(local_file)
           job.perform
           expect(droplet.refresh.droplet_hash).to eq(digest)
         end
@@ -50,7 +50,7 @@ module VCAP::CloudController
           subject(:job) { DropletUpload.new(local_file.path, 'bad-guid') }
 
           it 'should not try to upload the droplet' do
-            digest = Digest::SHA1.file(local_file.path).hexdigest
+            digest = Digester.new.digest_file(local_file)
             job.perform
 
             downloaded_file = Tempfile.new('downloaded_file')

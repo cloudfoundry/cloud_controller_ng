@@ -8,8 +8,11 @@ describe 'Broker API Versions' do
       'broker_api_v2.2_spec.rb' => '29d240c39137cc654c1aeff6e0e2abf1',
       'broker_api_v2.3_spec.rb' => '784b3ca4f7afbac4428c55a37b82b7e4',
       'broker_api_v2.4_spec.rb' => '9be296cb6ce21259cafa15c9a6f06004',
+      'broker_api_v2.5_spec.rb' => '5babf49a7cee063016bb6bc024b8d290',
+      'broker_api_v2.6_spec.rb' => '13f4c11e90402cf4ca4c32e3f1145771',
     }
   end
+  let(:digester) { Digester.new(algorithm: Digest::MD5) }
 
   it 'verifies that there is a broker API test for each minor version' do
     stub_request(:get, 'http://username:password@broker-url/v2/catalog').to_return do |request|
@@ -36,7 +39,7 @@ describe 'Broker API Versions' do
       expect(current_directory_list).to include(spec)
 
       filename = "#{current_directory}/#{spec}"
-      actual_checksums[spec] = Digest::MD5.hexdigest(File.read(filename))
+      actual_checksums[spec] = digester.digest(File.read(filename))
     end
 
     # These tests are not meant to be changed since they help ensure backwards compatibility.

@@ -3,9 +3,11 @@ module VCAP::CloudController
     one_to_many :organizations
 
     export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-                      :memory_limit, :trial_db_allowed, :instance_memory_limit
+      :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
+      :app_instance_limit
     import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
-                      :memory_limit, :trial_db_allowed, :instance_memory_limit
+      :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
+      :app_instance_limit
 
     def validate
       validates_presence :name
@@ -17,6 +19,8 @@ module VCAP::CloudController
 
       errors.add(:memory_limit, :less_than_zero) if memory_limit && memory_limit < 0
       errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < -1
+      errors.add(:total_private_domains, :invalid_total_private_domains) if total_private_domains && total_private_domains < -1
+      errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < -1
     end
 
     def before_destroy

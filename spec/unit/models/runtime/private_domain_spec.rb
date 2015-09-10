@@ -47,6 +47,11 @@ module VCAP::CloudController
         expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
       end
 
+      it 'denies private foo.com when there is a shared foo.com' do
+        SharedDomain.make name: 'foo.com'
+        expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /name unique/)
+      end
+
       it 'allows private bar.foo.com a when private baz.bar.foo.com has the same owner and shared foo.com exist' do
         private_domain = PrivateDomain.make name: 'baz.bar.foo.com'
         SharedDomain.make name: 'foo.com'
@@ -63,6 +68,52 @@ module VCAP::CloudController
         SharedDomain.make name: 'baz.bar.foo.com'
         SharedDomain.make name: 'foo.com'
         expect { PrivateDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+      end
+
+      describe 'total allowed private domains' do
+        let(:organization) { Organization.make }
+        let(:org_quota) { organization.quota_definition }
+
+        subject(:domain) { PrivateDomain.new(name: 'foo.com', owning_organization: organization) }
+
+        context 'on create' do
+          context 'when not exceeding total private domains' do
+            before do
+              org_quota.total_private_domains = 10
+              org_quota.save
+            end
+
+            it 'does not have an error on organization' do
+              subject.valid?
+              expect(subject.errors.on(:organization)).to be_nil
+            end
+          end
+
+          context 'when exceeding total private domains' do
+            before do
+              org_quota.total_private_domains = 0
+              org_quota.save
+            end
+
+            it 'has the error on organization' do
+              subject.valid?
+              expect(subject.errors.on(:organization)).to include :total_private_domains_exceeded
+            end
+          end
+        end
+
+        context 'on update' do
+          it 'should not validate the total private domains limit if already existing' do
+            subject.save
+
+            expect(subject).to be_valid
+
+            org_quota.total_private_domains = 0
+            org_quota.save
+
+            expect(subject).to be_valid
+          end
+        end
       end
     end
 

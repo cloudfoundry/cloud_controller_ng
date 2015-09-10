@@ -4,6 +4,7 @@ module VCAP::CloudController
       class ServiceUsageEventRepository
         DELETED_EVENT_STATE = 'DELETED'.freeze
         CREATED_EVENT_STATE = 'CREATED'.freeze
+        UPDATED_EVENT_STATE = 'UPDATED'.freeze
 
         def find(guid)
           ServiceUsageEvent.find(guid: guid)
@@ -41,6 +42,10 @@ module VCAP::CloudController
 
         def deleted_event_from_service_instance(service_instance)
           create_from_service_instance(service_instance, DELETED_EVENT_STATE)
+        end
+
+        def updated_event_from_service_instance(service_instance)
+          create_from_service_instance(service_instance, UPDATED_EVENT_STATE)
         end
 
         def purge_and_reseed_service_instances!

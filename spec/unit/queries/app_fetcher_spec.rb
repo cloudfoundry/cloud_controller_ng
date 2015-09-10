@@ -4,31 +4,23 @@ require 'queries/app_fetcher'
 module VCAP::CloudController
   describe AppFetcher do
     describe '#fetch' do
-      let(:space) { Space.make }
-      let(:app_model) { AppModel.make(space_guid: space.guid) }
-      let(:user) { User.make(admin: admin) }
-      let(:admin) { false }
+      let(:app) { AppModel.make }
+      let(:space) { app.space }
+      let(:org) { space.organization }
 
-      context 'as an admin' do
-        let(:admin) { true }
-
-        it 'should return the desired app' do
-          expect(AppFetcher.new(user).fetch(app_model.guid)).to eq(app_model)
-        end
+      it 'returns the desired app, space, org' do
+        returned_app, returned_space, returned_org = AppFetcher.new.fetch(app.guid)
+        expect(returned_app).to eq(app)
+        expect(returned_space).to eq(space)
+        expect(returned_org).to eq(org)
       end
 
-      context 'as a user with correct permissions' do
-        it 'should return the desired app' do
-          space.organization.add_user(user)
-          space.add_developer(user)
-
-          expect(AppFetcher.new(user).fetch(app_model.guid)).to eq(app_model)
-        end
-      end
-
-      context 'as a user without correct permission' do
-        it 'should return nil' do
-          expect(AppFetcher.new(user).fetch(app_model.guid)).to eq(nil)
+      context 'when the app is not found' do
+        it 'returns nil' do
+          returned_app, returned_space, returned_org = AppFetcher.new.fetch('bogus-guid')
+          expect(returned_app).to be_nil
+          expect(returned_space).to be_nil
+          expect(returned_org).to be_nil
         end
       end
     end

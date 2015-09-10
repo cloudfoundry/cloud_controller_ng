@@ -9,6 +9,7 @@ module VCAP::CloudController
       end
 
       def scale
+        raise VCAP::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @app.started?
         @messenger.send_desire_request(@app, @default_health_check_timeout)
       end
 
@@ -16,11 +17,8 @@ module VCAP::CloudController
         @messenger.send_desire_request(@app, @default_health_check_timeout)
       end
 
-      def stop
-        @messenger.send_desire_request(@app, @default_health_check_timeout)
-      end
-
       def update_routes
+        raise VCAP::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @app.started?
         @messenger.send_desire_request(@app, @default_health_check_timeout)
       end
 
@@ -28,8 +26,8 @@ module VCAP::CloudController
         @protocol.desire_app_message(@app, @default_health_check_timeout)
       end
 
-      def desired_app_info
-        raise NotImplementedError
+      def stop
+        @messenger.send_stop_app_request(@app)
       end
 
       def stop_index(index)

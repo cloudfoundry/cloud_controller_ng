@@ -184,6 +184,30 @@ module VCAP::CloudController::RestController
       SecurityContext.current_user_email
     end
 
+    def parse_and_validate_json(body)
+      parsed = body && MultiJson.load(body)
+      raise MultiJson::ParseError.new('invalid request body') unless parsed.is_a?(Hash)
+      parsed
+    rescue MultiJson::ParseError => e
+      bad_request!(e.message)
+    end
+
+    def bad_request!(message)
+      raise VCAP::Errors::ApiError.new_from_details('MessageParseError', message)
+    end
+
+    def invalid_param!(message)
+      raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', message)
+    end
+
+    def unprocessable!(message)
+      raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+    end
+
+    def unauthorized!
+      raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
+    end
+
     attr_reader :config, :logger, :env, :params, :body, :request_attrs
 
     class << self
@@ -237,9 +261,9 @@ module VCAP::CloudController::RestController
       # @return [Set] If called with no arguments, returns the list
       # of preserve query parameters.
       def preserve_query_parameters(*args)
-        @perserved_query_params ||= Set.new
-        @perserved_query_params |= args.map(&:to_s) unless args.empty?
-        @perserved_query_params
+        @preserved_query_params ||= Set.new
+        @preserved_query_params |= args.map(&:to_s) unless args.empty?
+        @preserved_query_params
       end
 
       def deprecated_endpoint(path, message='Endpoint deprecated')
@@ -278,7 +302,7 @@ module VCAP::CloudController::RestController
         msg[0] = msg[0] + ':'
         msg.concat(e.backtrace).join('\\n')
         logger.warn(msg.join('\\n'))
-        Errors::ApiError.new_from_details('InvalidRequest')
+        Errors::ApiError.new_from_details('DatabaseError')
       end
     end
   end

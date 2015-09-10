@@ -4,7 +4,17 @@ module VCAP::CloudController
 
     def self.load(body)
       body = body.read if body.is_a? StringIO
-      processes = body.gsub("\r\n", "\n").split("\n").each_with_object({}) do |line, hash|
+      process(body)
+    end
+
+    def self.validate(body)
+      body = body.read if body.is_a? StringIO
+      process(body)
+      body
+    end
+
+    def self.process(procfile)
+      processes = procfile.gsub("\r\n", "\n").split("\n").each_with_object({}) do |line, hash|
         matches = line.match(/^(?<type>[A-Za-z0-9_-]+):\s*(?<command>.+)$/)
         hash[matches[:type].to_sym] = matches[:command] if matches
       end

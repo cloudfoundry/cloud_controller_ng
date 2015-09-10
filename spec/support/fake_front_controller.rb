@@ -5,6 +5,7 @@ class FakeFrontController < VCAP::CloudController::FrontController
 
   def initialize(config)
     token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
-    super(config, token_decoder)
+    request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new
+    super(config, token_decoder, request_metrics)
   end
 end

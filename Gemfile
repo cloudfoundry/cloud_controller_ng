@@ -2,9 +2,8 @@
 source 'http://rubygems.org'
 
 gem 'addressable'
-gem 'activesupport', '~> 3.0' # It looks like this is required for DelayedJob, even with the DJ-Sequel extension
+gem 'activesupport'
 gem 'rake'
-gem 'bcrypt'
 gem 'eventmachine', '~> 1.0.0'
 gem 'fog'
 gem 'i18n'
@@ -26,8 +25,10 @@ gem 'allowy'
 gem 'loggregator_emitter', '~> 4.0'
 gem 'delayed_job_sequel', git: 'https://github.com/cloudfoundry/delayed_job_sequel.git'
 gem 'thin', '~> 1.6.0'
-gem 'newrelic_rpm', '3.7.3.204'
+gem 'newrelic_rpm', '3.12.0.288'
 gem 'clockwork', require: false
+gem 'activemodel'
+gem 'statsd-ruby'
 
 # We need to use https for git urls as the git protocol is blocked by various
 # firewalls
@@ -42,7 +43,7 @@ group :db do
 end
 
 group :operations do
-  gem 'pry'
+  gem 'pry-byebug'
   gem 'awesome_print'
 end
 
@@ -65,4 +66,6 @@ end
 
 group :development do
   gem 'roodi'
+  gem 'ruby-debug-ide'
+  gem 'byebug'
 end

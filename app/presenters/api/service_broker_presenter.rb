@@ -6,6 +6,7 @@ class ServiceBrokerPresenter < ApiPresenter
       name: @object.name,
       broker_url: @object.broker_url,
       auth_username: @object.auth_username,
+      space_guid: @object.space_guid
     }
   end
 

@@ -16,47 +16,43 @@ module VCAP::Services::ServiceBrokers::V2
 
     def catalog
       response = @http_client.get(CATALOG_PATH)
-      @response_parser.parse(:get, CATALOG_PATH, response)
+      @response_parser.parse_catalog(CATALOG_PATH, response)
     end
 
-    # The broker is expected to guarantee uniqueness of instance_id.
-    # raises ServiceBrokerConflict if the id is already in use
-    def provision(instance, event_repository_opts:, request_attrs:, accepts_incomplete: false)
+    def provision(instance, arbitrary_parameters: {}, accepts_incomplete: false)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
-      body_parameters = {
+      body = {
         service_id: instance.service.broker_provided_id,
         plan_id: instance.service_plan.broker_provided_id,
         organization_guid: instance.organization.guid,
         space_guid: instance.space.guid,
       }
-      body_parameters[:parameters] = request_attrs['parameters'] if request_attrs['parameters']
-      response = @http_client.put(path, body_parameters)
 
-      parsed_response = @response_parser.parse(:put, path, response)
+      body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
+      response = @http_client.put(path, body)
+
+      parsed_response = @response_parser.parse_provision(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
-      poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i)
-      attributes = {
-        # DEPRECATED, but needed because of not null constraint
-        credentials: {},
-        dashboard_url: parsed_response['dashboard_url'],
+      return_values = {
+        instance: {
+          credentials: {},
+          dashboard_url: parsed_response['dashboard_url']
+        },
         last_operation: {
           type: 'create',
           description: last_operation_hash['description'] || '',
-        },
+        }
       }
 
       state = last_operation_hash['state']
       if state
-        attributes[:last_operation][:state] = state
-        if attributes[:last_operation][:state] == 'in progress'
-          enqueue_state_fetch_job(instance.guid, event_repository_opts, request_attrs, poll_interval_seconds)
-        end
+        return_values[:last_operation][:state] = state
       else
-        attributes[:last_operation][:state] = 'succeeded'
+        return_values[:last_operation][:state] = 'succeeded'
       end
 
-      attributes
+      return_values
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
       @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       raise e
@@ -66,38 +62,59 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def fetch_service_instance_state(instance)
-      path = service_instance_resource_path(instance)
+      path = service_instance_last_operation_path(instance)
       response = @http_client.get(path)
-      parsed_response = @response_parser.parse_fetch_state(:get, path, response)
-      last_operation_hash = parsed_response['last_operation'] || {}
+      parsed_response = @response_parser.parse_fetch_state(path, response)
+      last_operation_hash = parsed_response.delete('last_operation') || {}
 
-      if parsed_response.empty?
-        state = (instance.last_operation.type == 'delete' ? 'succeeded' : 'failed')
-        {
-          last_operation: {
-            state: state,
-            description: ''
+      state = extract_state(instance, last_operation_hash)
+
+      result = {
+        last_operation:
+          {
+            state: state
           }
-        }
-      else
-        {
-          dashboard_url:  parsed_response['dashboard_url'],
-          last_operation: {
-            state:        last_operation_hash['state'],
-            description:  last_operation_hash['description'],
-          }
-        }
-      end
+      }
+
+      result[:last_operation][:description] = last_operation_hash['description'] if last_operation_hash['description']
+      result.merge(parsed_response.symbolize_keys)
     end
 
-    def bind(binding)
-      path = service_binding_resource_path(binding)
-      response = @http_client.put(path, {
-        service_id:  binding.service.broker_provided_id,
-        plan_id:     binding.service_plan.broker_provided_id,
-        app_guid:    binding.app_guid
-      })
-      parsed_response = @response_parser.parse(:put, path, response)
+    def create_service_key(key, arbitrary_parameters: {})
+      path = service_binding_resource_path(key.guid, key.service_instance.guid)
+      body = {
+          service_id:  key.service.broker_provided_id,
+          plan_id:     key.service_plan.broker_provided_id
+      }
+
+      body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
+
+      response = @http_client.put(path, body)
+      parsed_response = @response_parser.parse_bind(path, response, service_guid: key.service.guid)
+
+      attributes = {
+        credentials: parsed_response['credentials']
+      }
+
+      attributes
+    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
+      @orphan_mitigator.cleanup_failed_key(@attrs, key)
+      raise e
+    end
+
+    def bind(binding, arbitrary_parameters: {})
+      path = service_binding_resource_path(binding.guid, binding.service_instance.guid)
+      body = {
+        service_id:    binding.service.broker_provided_id,
+        plan_id:       binding.service_plan.broker_provided_id,
+        app_guid:      binding.try(:app_guid),
+        bind_resource: binding.required_parameters
+      }
+      body = body.reject { |_, v| v.nil? }
+      body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
+
+      response = @http_client.put(path, body)
+      parsed_response = @response_parser.parse_bind(path, response, service_guid: binding.service.guid)
 
       attributes = {
         credentials: parsed_response['credentials']
@@ -107,40 +124,40 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       attributes
-    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
+    rescue Errors::ServiceBrokerApiTimeout,
+           Errors::ServiceBrokerBadResponse,
+           Errors::ServiceBrokerInvalidSyslogDrainUrl => e
       @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
       raise e
     end
 
     def unbind(binding)
-      path = service_binding_resource_path(binding)
+      path = service_binding_resource_path(binding.guid, binding.service_instance.guid)
 
-      response = @http_client.delete(path, {
+      body = {
         service_id: binding.service.broker_provided_id,
-        plan_id:    binding.service_plan.broker_provided_id,
-      })
+        plan_id: binding.service_plan.broker_provided_id,
+      }
+      response = @http_client.delete(path, body)
 
-      @response_parser.parse(:delete, path, response)
+      @response_parser.parse_unbind(path, response)
+    rescue => e
+      raise e.exception("Service instance #{binding.service_instance.name}: #{e.message}")
     end
 
-    def deprovision(instance, event_repository_opts: nil, request_attrs: nil, accepts_incomplete: false)
+    def deprovision(instance, accepts_incomplete: false)
       path = service_instance_resource_path(instance)
 
-      request_params = {
+      body = {
         service_id: instance.service.broker_provided_id,
         plan_id:    instance.service_plan.broker_provided_id,
       }
-      request_params.merge!(accepts_incomplete: true) if accepts_incomplete
-      response = @http_client.delete(path, request_params)
+      body.merge!(accepts_incomplete: true) if accepts_incomplete
+      response = @http_client.delete(path, body)
 
-      parsed_response = @response_parser.parse(:delete, path, response) || {}
+      parsed_response = @response_parser.parse_deprovision(path, response) || {}
       last_operation_hash = parsed_response['last_operation'] || {}
-      poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i)
       state = last_operation_hash['state']
-
-      if state == 'in progress'
-        enqueue_state_fetch_job(instance.guid, event_repository_opts, request_attrs, poll_interval_seconds)
-      end
 
       {
         last_operation: {
@@ -151,24 +168,23 @@ module VCAP::Services::ServiceBrokers::V2
       }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
+    rescue => e
+      raise e.exception("Service instance #{instance.name}: #{e.message}")
     end
 
-    def update_service_plan(instance, plan, event_repository_opts:, request_attrs:, accepts_incomplete: false)
+    def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {})
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
-      response = @http_client.patch(path, {
-          plan_id:	plan.broker_provided_id,
-          previous_values: {
-            plan_id: instance.service_plan.broker_provided_id,
-            service_id: instance.service.broker_provided_id,
-            organization_id: instance.organization.guid,
-            space_id: instance.space.guid
-          }
-      })
+      body = {
+        service_id: instance.service.broker_provided_id,
+        plan_id: plan.broker_provided_id,
+        previous_values: previous_values
+      }
+      body[:parameters] = arbitrary_parameters if arbitrary_parameters
+      response = @http_client.patch(path, body)
 
-      parsed_response = @response_parser.parse(:patch, path, response)
+      parsed_response = @response_parser.parse_update(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
-      poll_interval_seconds = last_operation_hash['async_poll_interval_seconds'].try(:to_i)
       state = last_operation_hash['state'] || 'succeeded'
 
       attributes = {
@@ -183,7 +199,6 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:service_plan] = plan
       elsif state == 'in progress'
         attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
-        enqueue_state_fetch_job(instance.guid, event_repository_opts, request_attrs, poll_interval_seconds)
       end
 
       return attributes, nil
@@ -205,8 +220,22 @@ module VCAP::Services::ServiceBrokers::V2
 
     private
 
-    def service_binding_resource_path(binding)
-      "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}"
+    def extract_state(instance, last_operation_hash)
+      return last_operation_hash['state'] unless last_operation_hash.empty?
+
+      if instance.last_operation.type == 'delete'
+        'succeeded'
+      else
+        'failed'
+      end
+    end
+
+    def service_instance_last_operation_path(instance)
+      "#{service_instance_resource_path(instance)}/last_operation"
+    end
+
+    def service_binding_resource_path(binding_guid, service_instance_guid)
+      "/v2/service_instances/#{service_instance_guid}/service_bindings/#{binding_guid}"
     end
 
     def service_instance_resource_path(instance, opts={})
@@ -215,18 +244,6 @@ module VCAP::Services::ServiceBrokers::V2
         path += '?accepts_incomplete=true'
       end
       path
-    end
-
-    def enqueue_state_fetch_job(service_instance_guid, event_repository_opts, request_attrs, poll_interval_seconds)
-      job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-        'service-instance-state-fetch',
-        @attrs,
-        service_instance_guid,
-        event_repository_opts,
-        request_attrs,
-        poll_interval_seconds,
-      )
-      job.enqueue
     end
   end
 end

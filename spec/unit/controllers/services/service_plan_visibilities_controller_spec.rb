@@ -52,8 +52,9 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:service_plan_guid) }
     end
 
+    let(:headers) { headers_for(admin_user) }
+
     describe 'POST /v2/service_plan_visibilities' do
-      let(:headers) { json_headers(admin_headers) }
       let!(:organization) { Organization.make }
       let!(:service_plan) { ServicePlan.make }
 
@@ -91,7 +92,6 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/service_plan_visibilities/:guid' do
-      let(:headers) { json_headers(admin_headers) }
       let!(:organization) { Organization.make }
       let!(:new_organization) { Organization.make }
       let!(:service_plan) { ServicePlan.make }
@@ -125,7 +125,6 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/service_plan_visibilities/:guid' do
-      let(:headers) { json_headers(admin_headers) }
       let!(:organization) { Organization.make }
       let!(:service_plan) { ServicePlan.make }
       let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }

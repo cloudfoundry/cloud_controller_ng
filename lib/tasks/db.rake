@@ -20,19 +20,42 @@ end
     end
   end
 
-  desc "Perform Sequel migration to database"
-  task :migrate do
+  def for_each_database
+    if ENV['DB'] || ENV['DB_CONNECTION_STRING']
+      RakeConfig.config[:db][:database] = DbConfig.new.connection_string
+      yield
+    else
+      %w(postgres mysql).each do |db_type|
+        RakeConfig.config[:db][:database] = DbConfig.new(db_type: db_type).connection_string
+        puts "Using #{db_type}"
+        yield
+
+        DbConfig.reset_environment
+      end
+    end
+  end
+
+  def migrate
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger("cc.db.migrations")
-    DBMigrator.from_config(config, db_logger).apply_migrations
+    DBMigrator.from_config(RakeConfig.config, db_logger).apply_migrations
+  end
+
+  desc "Perform Sequel migration to database"
+  task :migrate do
+    migrate
+  end
+
+  def rollback(number_to_rollback)
+    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
+    db_logger = Steno.logger("cc.db.migrations")
+    DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
   end
 
   desc "Rollback migrations to the database (one migration by default)"
   task :rollback, [:number_to_rollback] do |_, args|
     number_to_rollback = (args[:number_to_rollback] || 1).to_i
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
-    db_logger = Steno.logger("cc.db.migrations")
-    DBMigrator.from_config(config, db_logger).rollback(number_to_rollback)
+    rollback(number_to_rollback)
   end
 
   namespace :migrate do
@@ -41,57 +64,60 @@ end
   end
 
   namespace :dev do
+    desc "Migrate the database set in spec/support/bootstrap/db_config"
     task :migrate do
       require_relative "../../spec/support/bootstrap/db_config"
-
-      config[:db][:database] = DbConfig.connection_string
-      Rake::Task["db:migrate"].invoke
+      for_each_database { migrate }
     end
 
+    desc "Rollback the database migration set in spec/support/bootstrap/db_config"
     task :rollback, [:number_to_rollback] do |_, args|
       require_relative "../../spec/support/bootstrap/db_config"
-
-      config[:db][:database] = DbConfig.connection_string
-      Rake::Task["db:rollback"].invoke(args[:number_to_rollback])
+      number_to_rollback = (args[:number_to_rollback] || 1).to_i
+      for_each_database { rollback(number_to_rollback) }
     end
   end
 
   task :pick do
-    unless ENV["DB_CONNECTION_STRING"] || ENV["DB_CONNECTION"]
+    unless ENV["DB_CONNECTION_STRING"]
       ENV["DB"] ||= %w[mysql postgres].sample
       puts "Using #{ENV["DB"]}"
     end
   end
 
+  desc "Create the database set in spec/support/bootstrap/db_config"
   task :create do
     require_relative "../../spec/support/bootstrap/db_config"
+    db_config = DbConfig.new
 
     case ENV["DB"]
       when "postgres"
-        sh "psql -U postgres -c 'create database #{DbConfig.name};'"
-        sh "psql -U postgres -d #{DbConfig.name} -c 'CREATE EXTENSION IF NOT EXISTS citext'"
+        sh "psql -U postgres -c 'create database #{db_config.name};'"
+        sh "psql -U postgres -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
-          sh "mysql -e 'create database #{DbConfig.name};' -u root"
+          sh "mysql -e 'create database #{db_config.name};' -u root"
         else
-          sh "mysql -e 'create database #{DbConfig.name};' -u root --password=password"
+          sh "mysql -e 'create database #{db_config.name};' -u root --password=password"
         end
       else
         puts "rake db:create requires DB to be set to create a database"
     end
   end
 
+  desc "Drop the database set in spec/support/bootstrap/db_config"
   task :drop do
     require_relative "../../spec/support/bootstrap/db_config"
+    db_config = DbConfig.new
 
     case ENV["DB"]
       when "postgres"
-        sh "psql -U postgres -c 'drop database if exists #{DbConfig.name};'"
+        sh "psql -U postgres -c 'drop database if exists #{db_config.name};'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
-          sh "mysql -e 'drop database if exists #{DbConfig.name};' -u root"
+          sh "mysql -e 'drop database if exists #{db_config.name};' -u root"
         else
-          sh "mysql -e 'drop database if exists #{DbConfig.name};' -u root --password=password"
+          sh "mysql -e 'drop database if exists #{db_config.name};' -u root --password=password"
         end
       else
         puts "rake db:drop requires DB to be set to create a database"

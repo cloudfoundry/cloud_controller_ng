@@ -4,6 +4,7 @@ module VCAP::CloudController
   class ServiceInstance < Sequel::Model
     class InvalidServiceBinding < StandardError; end
 
+    plugin :serialization
     plugin :single_table_inheritance, :is_gateway_service,
            model_map: lambda { |is_gateway_service|
              if is_gateway_service
@@ -19,9 +20,10 @@ module VCAP::CloudController
     one_to_one :service_instance_operation
 
     one_to_many :service_bindings, before_add: :validate_service_binding
+    one_to_many :service_keys
+    one_to_many :routes
 
     many_to_one :space, after_set: :validate_space
-
     many_to_one :service_plan_sti_eager_load,
                 class: 'VCAP::CloudController::ServicePlan',
                 dataset: -> { raise 'Must be used for eager loading' },
@@ -50,7 +52,8 @@ module VCAP::CloudController
     def self.user_visibility_filter(user)
       Sequel.or([
         [:space, user.spaces_dataset],
-        [:space, user.audited_spaces_dataset]
+        [:space, user.audited_spaces_dataset],
+        [:space, user.managed_spaces_dataset],
       ])
     end
 
@@ -95,7 +98,7 @@ module VCAP::CloudController
     end
 
     def to_hash(opts={})
-      if !VCAP::CloudController::SecurityContext.admin? && !space.developers.include?(VCAP::CloudController::SecurityContext.current_user)
+      if !VCAP::CloudController::SecurityContext.admin? && !space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
         opts.merge!({ redact: ['credentials'] })
       end
       super(opts)
@@ -125,6 +128,21 @@ module VCAP::CloudController
     def after_destroy
       super
       service_instance_usage_event_repository.deleted_event_from_service_instance(self)
+    end
+
+    def after_update
+      super
+      if @columns_updated.key?(:service_plan_id) || @columns_updated.key?(:name)
+        service_instance_usage_event_repository.updated_event_from_service_instance(self)
+      end
+    end
+
+    def last_operation
+      nil
+    end
+
+    def operation_in_progress?
+      false
     end
 
     private

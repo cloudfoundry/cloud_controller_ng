@@ -5,19 +5,19 @@ module VCAP::CloudController
     describe Stager do
       let(:messenger) { instance_double(Messenger, send_desire_request: nil) }
       let(:app) { AppFactory.make }
-      let(:staging_config) { TestConfig.config[:stager] }
+      let(:config) { TestConfig.config }
 
       let(:completion_handler) do
         instance_double(Diego::Traditional::StagingCompletionHandler, staging_complete: nil)
       end
 
       subject(:stager) do
-        Stager.new(app, messenger, completion_handler, staging_config)
+        Stager.new(app, messenger, completion_handler, config)
       end
 
       it_behaves_like 'a stager'
 
-      describe '#stage_app' do
+      describe '#stage' do
         before do
           allow(messenger).to receive(:send_stage_request)
           allow(messenger).to receive(:send_stop_staging_request)
@@ -25,8 +25,8 @@ module VCAP::CloudController
 
         it 'notifies Diego that the app needs staging' do
           expect(app).to receive(:mark_for_restaging)
-          expect(messenger).to receive(:send_stage_request).with(app, staging_config)
-          stager.stage_app
+          expect(messenger).to receive(:send_stage_request).with(app, config)
+          stager.stage
         end
 
         context 'when there is a pending stage' do
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
             it 'attempts to stop the outstanding stage request' do
               expect(messenger).to_not receive(:send_stop_staging_request)
-              stager.stage_app
+              stager.stage
             end
           end
 
@@ -48,23 +48,23 @@ module VCAP::CloudController
 
             it 'attempts to stop the outstanding stage request' do
               expect(messenger).to receive(:send_stop_staging_request).with(app)
-              stager.stage_app
+              stager.stage
             end
           end
         end
 
         context 'when the stage fails' do
           let(:error) do
-            { error: { id: 'StagingError', message: 'staging failed' } }
+            { error: { id: 'StagingError', message: 'Stager error: staging failed' } }
           end
 
           before do
-            allow(messenger).to receive(:send_stage_request).and_raise Errors::ApiError.new_from_details('StagerError')
+            allow(messenger).to receive(:send_stage_request).and_raise Errors::ApiError.new_from_details('StagerError', 'staging failed')
             allow(stager).to receive(:staging_complete)
           end
 
           it 'attempts to stop the outstanding stage request' do
-            expect { stager.stage_app }.to raise_error(Errors::ApiError)
+            expect { stager.stage }.to raise_error(Errors::ApiError)
             app.reload
             expect(stager).to have_received(:staging_complete).with(StagingGuid.from_app(app), error)
           end

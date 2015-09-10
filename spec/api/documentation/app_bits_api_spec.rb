@@ -108,6 +108,8 @@ resource 'Apps', type: [:api, :legacy_api] do
     example 'Downloads the bits for an App' do
       explanation <<-eos
         When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits.
+        If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be replayed on the new redirect request.
+        Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
       eos
 
       no_doc { client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers }
@@ -117,12 +119,45 @@ resource 'Apps', type: [:api, :legacy_api] do
     end
   end
 
+  get '/v2/apps/:guid/droplet/download' do
+    let(:async) { false }
+    let(:blobstore) do
+      CloudController::DependencyLocator.instance.droplet_blobstore
+    end
+
+    before do
+      app_obj.droplet_hash = 'abcdef'
+      app_obj.save
+
+      droplet_file = Tempfile.new(app_obj.guid)
+      droplet_file.write('droplet contents')
+      droplet_file.close
+
+      droplet = CloudController::DropletUploader.new(app_obj, blobstore)
+      droplet.upload(droplet_file.path)
+    end
+
+    example 'Downloads the staged droplet for an App' do
+      explanation <<-eos
+        When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits.
+        If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be replayed on the new redirect request.
+        Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
+      eos
+
+      client.get "/v2/apps/#{app_obj.guid}/droplet/download", {}, headers
+      expect(status).to eq(302)
+      expect(response_headers['Location']).to include('cc-droplets.s3.amazonaws.com')
+    end
+  end
+
   post '/v2/apps/:guid/copy_bits' do
     let(:src_app) { VCAP::CloudController::AppFactory.make }
     let(:dest_app) { VCAP::CloudController::AppFactory.make }
     let(:json_payload) { { source_app_guid: src_app.guid }.to_json }
 
     field :source_app_guid, 'The guid for the source app', required: true
+
+    let(:raw_post) { body_parameters }
 
     example 'Copy the app bits for an App' do
       explanation <<-eos

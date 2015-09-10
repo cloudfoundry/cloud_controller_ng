@@ -3,6 +3,7 @@ require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
 resource 'Droplets (Experimental)', type: :api do
+  let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user)['HTTP_AUTHORIZATION'] }
   header 'AUTHORIZATION', :user_header
@@ -20,17 +21,19 @@ resource 'Droplets (Experimental)', type: :api do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
     let(:guid) { droplet_model.guid }
+    let(:buildpack_git_url) { 'http://buildpack.git.url.com' }
 
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
 
     let(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        package_guid: package_model.guid,
-        failure_reason: 'example failure reason',
-        detected_start_command: 'run -c all_the_things',
-        environment_variables: { 'cloud' => 'foundry' },
+        state:                  VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid:               app_model.guid,
+        package_guid:           package_model.guid,
+        buildpack:              buildpack_git_url,
+        error:                  'example error',
+        environment_variables:  { 'cloud' => 'foundry' },
       )
     end
 
@@ -45,16 +48,22 @@ resource 'Droplets (Experimental)', type: :api do
       expected_response = {
         'guid'                   => droplet_model.guid,
         'state'                  => droplet_model.state,
-        'hash'                   => droplet_model.droplet_hash,
-        'buildpack_git_url'      => droplet_model.buildpack_git_url,
-        'failure_reason'         => droplet_model.failure_reason,
+        'hash'                   => { 'type' => 'sha1', 'value' => droplet_model.droplet_hash },
+        'buildpack'              => buildpack_git_url,
+        'error'                  => droplet_model.error,
+        'procfile'               => droplet_model.procfile,
         'detected_start_command' => droplet_model.detected_start_command,
         'environment_variables'  => droplet_model.environment_variables,
-        'created_at'             => droplet_model.created_at.as_json,
+        'created_at'             => iso8601,
+        'updated_at'             => nil,
         '_links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{guid}" },
           'package' => { 'href' => "/v3/packages/#{package_model.guid}" },
           'app'     => { 'href' => "/v3/apps/#{app_guid}" },
+          'assign_current_droplet' => {
+            'href' => "/v3/apps/#{app_guid}/current_droplet",
+            'method' => 'PUT'
+          }
         }
       }
 
@@ -62,7 +71,7 @@ resource 'Droplets (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 
@@ -94,8 +103,13 @@ resource 'Droplets (Experimental)', type: :api do
   end
 
   get '/v3/droplets' do
+    parameter :app_guids, 'Apps to filter by', valid_values: 'app guids', example_values: 'app_guids[]=app_guid1&app_guids[]=app_guid2'
+    parameter :states, 'Droplet state to filter by', valid_values: %w(PENDING STAGING STAGED FAILED), example_values: 'states[]=PENDING&states[]=STAGING'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
+    parameter :order_by, 'Value to sort by', valid_values: %w(created_at updated_at)
+    parameter :order_direction, 'Direction to sort by', valid_values: %w(asc desc)
+
     let(:space) { VCAP::CloudController::Space.make }
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
@@ -108,25 +122,30 @@ resource 'Droplets (Experimental)', type: :api do
 
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        package_guid: package.guid,
-        buildpack_guid: buildpack.guid,
+        app_guid:              app_model.guid,
+        created_at: Time.at(1),
+        package_guid:          package.guid,
+        buildpack:             buildpack.name,
+        buildpack_guid:        buildpack.guid,
         environment_variables: { 'yuu' => 'huuu' }
       )
     end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
+        app_guid:     app_model.guid,
+        created_at: Time.at(2),
         package_guid: package.guid,
         droplet_hash: 'my-hash',
-        buildpack_git_url: 'https://github.com/cloudfoundry/my-buildpack.git',
-        state: VCAP::CloudController::DropletModel::STAGED_STATE
+        buildpack:    'https://github.com/cloudfoundry/my-buildpack.git',
+        state:        VCAP::CloudController::DropletModel::STAGED_STATE
       )
     end
     let!(:droplet3) { VCAP::CloudController::DropletModel.make(package_guid: VCAP::CloudController::PackageModel.make.guid) }
 
     let(:page) { 1 }
     let(:per_page) { 2 }
+    let(:order_by) { 'created_at' }
+    let(:order_direction) { 'asc' }
 
     before do
       space.organization.add_user user
@@ -138,8 +157,8 @@ resource 'Droplets (Experimental)', type: :api do
         {
           'pagination' => {
             'total_results' => 2,
-            'first'         => { 'href' => '/v3/droplets?page=1&per_page=2' },
-            'last'          => { 'href' => '/v3/droplets?page=1&per_page=2' },
+            'first'         => { 'href' => "/v3/droplets?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
+            'last'          => { 'href' => "/v3/droplets?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
             'next'          => nil,
             'previous'      => nil,
           },
@@ -147,32 +166,42 @@ resource 'Droplets (Experimental)', type: :api do
             {
               'guid'                   => droplet1.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGING_STATE,
-              'hash'                   => nil,
-              'buildpack_git_url'      => nil,
-              'failure_reason'         => droplet1.failure_reason,
-              'detected_start_command' => droplet1.detected_start_command,
+              'hash'                   => { 'type' => 'sha1', 'value' => nil },
+              'buildpack'              => buildpack.name,
+              'error'                  => droplet1.error,
               'environment_variables'  => droplet1.environment_variables,
-              'created_at'             => droplet1.created_at.as_json,
+              'procfile'               => droplet1.procfile,
+              'created_at'             => iso8601,
+              'updated_at'             => nil,
               '_links'                 => {
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
                 'package'   => { 'href' => "/v3/packages/#{package.guid}" },
                 'buildpack' => { 'href' => "/v2/buildpacks/#{buildpack.guid}" },
                 'app'       => { 'href' => "/v3/apps/#{droplet1.app_guid}" },
+                'assign_current_droplet' => {
+                  'href' => "/v3/apps/#{droplet1.app_guid}/current_droplet",
+                  'method' => 'PUT'
+                }
               }
             },
             {
               'guid'                   => droplet2.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGED_STATE,
-              'hash'                   => 'my-hash',
-              'buildpack_git_url'      => 'https://github.com/cloudfoundry/my-buildpack.git',
-              'failure_reason'         => droplet2.failure_reason,
-              'detected_start_command' => droplet2.detected_start_command,
+              'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
+              'buildpack'              => 'https://github.com/cloudfoundry/my-buildpack.git',
+              'error'                  => droplet2.error,
+              'procfile'               => droplet2.procfile,
               'environment_variables'  => {},
-              'created_at'             => droplet2.created_at.as_json,
+              'created_at'             => iso8601,
+              'updated_at'             => nil,
               '_links'                 => {
                 'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },
                 'package' => { 'href' => "/v3/packages/#{package.guid}" },
                 'app'     => { 'href' => "/v3/apps/#{droplet2.app_guid}" },
+                'assign_current_droplet' => {
+                  'href' => "/v3/apps/#{droplet2.app_guid}/current_droplet",
+                  'method' => 'PUT'
+                }
               }
             },
           ]
@@ -182,7 +211,7 @@ resource 'Droplets (Experimental)', type: :api do
 
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
-      expect(parsed_response).to match(expected_response)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 end

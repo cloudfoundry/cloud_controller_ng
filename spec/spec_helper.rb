@@ -23,7 +23,7 @@ require 'cf_message_bus/mock_message_bus'
 require 'cloud_controller'
 require 'allowy/rspec'
 
-require 'pry'
+# require 'pry'
 require 'posix/spawn'
 
 require 'rspec_api_documentation'
@@ -46,7 +46,8 @@ RSpec.configure do |rspec_config|
   rspec_config.include ControllerHelpers, type: :controller, file_path: EscapedPath.join(%w(spec unit controllers))
   rspec_config.include ControllerHelpers, type: :api
   rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec acceptance))
-  rspec_config.include ApiDsl, type: :legacy_api
+  rspec_config.include ApiDsl, type: :api
+  rspec_config.include LegacyApiDsl, type: :legacy_api
 
   rspec_config.include IntegrationHelpers, type: :integration
   rspec_config.include IntegrationHttp, type: :integration
@@ -58,6 +59,8 @@ RSpec.configure do |rspec_config|
   rspec_config.after(:all, type: :integration) { WebMock.disable_net_connect!(allow: 'codeclimate.com') }
 
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
+
+  Delayed::Worker.plugins << DeserializationRetry
 
   rspec_config.before :each do
     Fog::Mock.reset
@@ -72,7 +75,7 @@ RSpec.configure do |rspec_config|
   end
 
   rspec_config.around :each do |example|
-    isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config, DbConfig.connection)
+    isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config, DbConfig.new.connection)
     isolation.cleanly { example.run }
   end
 

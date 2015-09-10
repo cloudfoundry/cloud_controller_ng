@@ -26,7 +26,7 @@ class AppBitsPackage
 
       package = local_app_bits.create_package
       package_blobstore.cp_to_blobstore(package.path, app.guid)
-      app.package_hash = package.hexdigest
+      app.package_hash = Digester.new.digest_file(package)
       app.save
     end
   ensure
@@ -40,19 +40,19 @@ class AppBitsPackage
     raise PackageNotFound if package.nil?
 
     begin
-      package_file = File.new(package_path)
       raise ZipSizeExceeded if @max_package_size && package_size(package_path) > @max_package_size
 
       package_blobstore.cp_to_blobstore(package_path, package_guid)
 
       package.db.transaction do
         package.lock!
-        package.package_hash = package_file.hexdigest
+        package.package_hash = Digester.new.digest_path(package_path)
         package.state = VCAP::CloudController::PackageModel::READY_STATE
         package.save
       end
     rescue => e
       package.db.transaction do
+        package.lock!
         package.state = VCAP::CloudController::PackageModel::FAILED_STATE
         package.error = e.message
         package.save

@@ -67,4 +67,31 @@ module VCAP::CloudController
       end
     end
   end
+
+  describe '#staged?' do
+    context 'when the droplet has been staged' do
+      let!(:droplet_model) { DropletModel.make(state: 'STAGED') }
+
+      it 'returns true' do
+        expect(droplet_model.staged?).to be true
+      end
+    end
+
+    context 'when the droplet has not been staged' do
+      let!(:droplet_model) { DropletModel.make(state: 'PENDING') }
+
+      it 'returns false' do
+        expect(droplet_model.staged?).to be false
+      end
+    end
+  end
+
+  describe '#mark_as_staged' do
+    let!(:droplet_model) { DropletModel.make }
+
+    it 'changes the droplet state to STAGED' do
+      droplet_model.mark_as_staged
+      expect(droplet_model.state).to be DropletModel::STAGED_STATE
+    end
+  end
 end

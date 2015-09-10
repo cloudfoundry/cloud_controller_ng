@@ -18,6 +18,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :services }
+      it { is_expected.to have_associated :space }
 
       it 'has associated service_plans' do
         service = Service.make(:v2)
@@ -53,7 +54,7 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :broker_url, :auth_username }
+      it { is_expected.to export_attributes :name, :broker_url, :auth_username, :space_guid }
       it { is_expected.to import_attributes :name, :broker_url, :auth_username, :auth_password }
     end
 
@@ -98,7 +99,7 @@ module VCAP::CloudController
 
       context 'when associated with a dashboard client' do
         before do
-          ServiceDashboardClient.claim_client_for_broker('some-uaa-id', service_broker)
+          ServiceDashboardClient.claim_client('some-uaa-id', service_broker)
         end
 
         it 'successfully destroys the broker' do
@@ -107,11 +108,34 @@ module VCAP::CloudController
         end
 
         it 'sets the broker_id of the dashboard client to nil' do
-          client = ServiceDashboardClient.find_clients_claimed_by_broker(service_broker).first
+          client = ServiceDashboardClient.find_claimed_client(service_broker).first
           expect(client.service_broker_id).to eq(service_broker.id)
           service_broker.destroy
           expect(client.reload.service_broker_id).to be_nil
         end
+      end
+    end
+
+    describe 'private?' do
+      context 'when the broker has an associated space' do
+        let(:space) { Space.make }
+        let(:broker) do
+          ServiceBroker.new(
+              name: name,
+              broker_url: broker_url,
+              auth_username: auth_username,
+              auth_password: auth_password,
+              space_id: space.id
+          )
+        end
+
+        it 'is true' do
+          expect(broker.private?).to be_truthy
+        end
+      end
+
+      it 'is false if the broker does not have a space id' do
+        expect(broker.private?).to be_falsey
       end
     end
   end

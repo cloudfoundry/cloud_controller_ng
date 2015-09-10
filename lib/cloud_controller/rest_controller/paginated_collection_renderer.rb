@@ -97,7 +97,8 @@ module VCAP::CloudController::RestController
 
       dataset_records = dataset.all
 
-      collection_transformer.transform(dataset_records) if collection_transformer
+      transform_opts = opts[:transform_opts] || {}
+      collection_transformer.transform(dataset_records, transform_opts) if collection_transformer
 
       dataset_records.map { |obj| @serializer.serialize(controller, obj, opts, orphans) }
     end
@@ -126,8 +127,8 @@ module VCAP::CloudController::RestController
       params['exclude-relations'] = opts[:exclude_relations] if opts[:exclude_relations]
       params['include-relations'] = opts[:include_relations] if opts[:include_relations]
 
-      controller.preserve_query_parameters.each do |preseved_param|
-        params[preseved_param] = request_params[preseved_param] if request_params[preseved_param]
+      controller.preserve_query_parameters.each do |preserved_param|
+        params[preserved_param] = request_params[preserved_param] if request_params[preserved_param]
       end
 
       uri = Addressable::URI.parse(path)

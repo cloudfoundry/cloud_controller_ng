@@ -34,6 +34,31 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :space }
       it { is_expected.to validate_uniqueness [:space_id, :name] }
       it { is_expected.to strip_whitespace :name }
+      let(:max_tags) { build_max_tags }
+
+      it 'accepts user-provided tags where combined length of all tags is exactly 255 characters' do
+        expect {
+          ManagedServiceInstance.make tags: max_tags
+        }.not_to raise_error
+      end
+
+      it 'accepts user-provided tags where combined length of all tags is less than 255 characters' do
+        expect {
+          ManagedServiceInstance.make tags: max_tags[0..50]
+        }.not_to raise_error
+      end
+
+      it 'does not accept user-provided tags with combined length of over 255 characters' do
+        expect {
+          ManagedServiceInstance.make tags: max_tags + ['z']
+        }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
+      end
+
+      it 'does not accept a single user-provided tag of length greater than 255 characters' do
+        expect {
+          ManagedServiceInstance.make tags: ['a' * 256]
+        }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
+      end
 
       it 'should not bind an app and a service instance from different app spaces' do
         AppFactory.make(space: service_instance.space)
@@ -63,7 +88,7 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type, :last_operation }
+      it { is_expected.to export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type, :last_operation, :tags }
       it { is_expected.to import_attributes :name, :service_plan_guid, :space_guid, :gateway_data }
     end
 
@@ -88,165 +113,101 @@ module VCAP::CloudController
       end
     end
 
-    describe '#lock_by_blocking_other_operations' do
-      it 'locks the service instance' do
-        allow(service_instance).to receive(:lock!).and_call_original
+    describe '#save_with_new_operation'  do
+      let(:service_instance) { ManagedServiceInstance.make }
+      let(:developer) { make_developer_for_space(service_instance.space) }
 
-        service_instance.lock_by_blocking_other_operations {}
-
-        expect(service_instance).to have_received(:lock!)
+      before do
+        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
       end
 
-      context 'when the instance has a last_operation' do
-        let(:last_operation) { ServiceInstanceOperation.make(state: 'succeeded') }
-        before do
-          allow(service_instance).to receive(:last_operation).and_return(last_operation)
-        end
+      it 'creates a new last_operation object and associates it with the service instance' do
+        instance = { dashboard_url: 'a-different-url.com' }
+        last_operation = {
+          state: 'in progress',
+          description: '10%'
+        }
+        service_instance.save_with_new_operation(instance, last_operation)
 
-        it 'locks the last_operation' do
-          allow(last_operation).to receive(:lock!).and_call_original
-
-          service_instance.lock_by_blocking_other_operations {}
-
-          expect(last_operation).to have_received(:lock!)
-        end
-      end
-
-      context 'when there is an operation in progress' do
-        before do
-          service_instance.save_with_operation({
-            last_operation: {
-              state: 'in progress'
-            }
-          })
-        end
-
-        it 'raises an error' do
-          expect {
-            service_instance.lock_by_blocking_other_operations {}
-          }.to raise_error(Errors::ApiError)
-        end
-      end
-    end
-
-    describe '#lock_by_failing_other_operations' do
-      it 'locks the service instance' do
-        allow(service_instance).to receive(:lock!).and_call_original
-
-        service_instance.lock_by_failing_other_operations('update') {}
-
-        expect(service_instance).to have_received(:lock!).twice
-      end
-
-      context 'when the instance has a last_operation' do
-        let(:last_operation) { ServiceInstanceOperation.make(state: 'succeeded') }
-        before do
-          allow(service_instance).to receive(:last_operation).and_return(last_operation)
-        end
-
-        it 'locks the last_operation' do
-          allow(last_operation).to receive(:lock!).and_call_original
-
-          service_instance.lock_by_failing_other_operations('update') {}
-
-          expect(last_operation).to have_received(:lock!)
-        end
-      end
-
-      it 'initially saves the last_operation state as `in progress`' do
-        service_instance.lock_by_failing_other_operations('update') {}
-
-        service_instance.reload.last_operation.reload
-        expect(service_instance.last_operation.type).to eq 'update'
+        service_instance.reload
+        expect(service_instance.dashboard_url).to eq 'a-different-url.com'
         expect(service_instance.last_operation.state).to eq 'in progress'
+        expect(service_instance.last_operation.description).to eq '10%'
       end
 
-      context 'when there is an operation in progress' do
+      context 'when the instance already has a last operation' do
         before do
-          service_instance.save_with_operation({
-            last_operation: {
-              state: 'in progress'
-            }
-          })
+          last_operation = { state: 'finished' }
+          service_instance.save_with_new_operation({}, last_operation)
+          service_instance.reload
+          @old_guid = service_instance.last_operation.guid
         end
 
-        it 'raises an error' do
-          expect {
-            service_instance.lock_by_failing_other_operations('update') {}
-          }.to raise_error(Errors::ApiError)
-        end
-      end
+        it 'creates a new operation' do
+          last_operation = { state: 'in progress' }
+          service_instance.save_with_new_operation({}, last_operation)
 
-      context 'when the block fails' do
-        it 'updates the last_operation to state `failed`' do
-          expect {
-            service_instance.lock_by_failing_other_operations('update') { raise 'BOOO' }
-          }.to raise_error(StandardError, /BOOO/)
-
-          service_instance.reload.last_operation.reload
-          expect(service_instance.last_operation.type).to eq 'update'
-          expect(service_instance.last_operation.state).to eq 'failed'
+          service_instance.reload
+          expect(service_instance.last_operation.guid).not_to eq(@old_guid)
         end
       end
     end
 
-    describe '#save_with_operation' do
-      context 'when the operation does not exist' do
-        it 'also creates a last_operation object and assoicates it with the service instance' do
-          service_instance = ManagedServiceInstance.make
+    describe '#save_and_update_operation' do
+      let(:service_instance) { ManagedServiceInstance.make }
+      let(:developer) { make_developer_for_space(service_instance.space) }
+      let(:manager) { make_manager_for_space(service_instance.space) }
+
+      before do
+        last_operation = { state: 'in progress', description: '10%' }
+        service_instance.save_with_new_operation({}, last_operation)
+        service_instance.reload
+        @old_guid = service_instance.last_operation.guid
+      end
+
+      context 'developer' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
+        end
+
+        it 'updates the existing last_operation object' do
           attrs = {
             last_operation: {
               state: 'in progress',
-              description: '10%'
+              description: '20%'
             },
             dashboard_url: 'a-different-url.com'
           }
-          service_instance.save_with_operation(attrs)
+          service_instance.save_and_update_operation(attrs)
 
           service_instance.reload
           expect(service_instance.dashboard_url).to eq 'a-different-url.com'
           expect(service_instance.last_operation.state).to eq 'in progress'
-          expect(service_instance.last_operation.description).to eq '10%'
+          expect(service_instance.last_operation.guid).to eq @old_guid
+          expect(service_instance.last_operation.description).to eq '20%'
         end
       end
 
-      context 'when the operation already exists' do
-        it 'updates the existing operation associated with the service instance' do
-          operation = ServiceInstanceOperation.make
-          service_instance = ManagedServiceInstance.make
-          service_instance.service_instance_operation = operation
+      context 'manager' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
+        end
+
+        it 'updates the existing last_operation object without displaying the dashboard url' do
           attrs = {
             last_operation: {
               state: 'in progress',
-              description: '10%'
+              description: '20%'
             },
-            dashboard_url: 'a-different-url.com'
+            dashboard_url: 'this.should.not.appear.com'
           }
-          service_instance.save_with_operation(attrs)
+          service_instance.save_and_update_operation(attrs)
 
           service_instance.reload
-          expect(service_instance.dashboard_url).to eq 'a-different-url.com'
+          expect(service_instance.dashboard_url).to eq ''
           expect(service_instance.last_operation.state).to eq 'in progress'
-          expect(service_instance.last_operation.description).to eq '10%'
-        end
-      end
-    end
-
-    context 'billing' do
-      context 'creating a service instance' do
-        it 'should call ServiceCreateEvent.create_from_service_instance' do
-          expect(ServiceCreateEvent).to receive(:create_from_service_instance)
-          expect(ServiceDeleteEvent).not_to receive(:create_from_service_instance)
-          service_instance
-        end
-      end
-
-      context 'destroying a service instance' do
-        it 'should call ServiceDeleteEvent.create_from_service_instance' do
-          service_instance
-          expect(ServiceCreateEvent).not_to receive(:create_from_service_instance)
-          expect(ServiceDeleteEvent).to receive(:create_from_service_instance).with(service_instance)
-          service_instance.destroy
+          expect(service_instance.last_operation.guid).to eq @old_guid
+          expect(service_instance.last_operation.description).to eq '20%'
         end
       end
     end
@@ -255,43 +216,92 @@ module VCAP::CloudController
       let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ', provider: 'Bill Gates', version: '1.2.3') }
       let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service) }
       subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+      let(:developer)       { make_developer_for_space(service_instance.space) }
+      let(:manager)       { make_manager_for_space(service_instance.space) }
 
-      it 'returns detailed summary' do
-        last_operation = ServiceInstanceOperation.make(
-          state: 'in progress',
-          description: '50% all the time',
-          type: 'create',
-        )
-        service_instance.service_instance_operation = last_operation
+      context 'developer' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
+        end
 
-        service_instance.dashboard_url = 'http://dashboard.example.com'
+        it 'returns detailed summary' do
+          last_operation = ServiceInstanceOperation.make(
+            state: 'in progress',
+            description: '50% all the time',
+            type: 'create',
+          )
+          service_instance.service_instance_operation = last_operation
 
-        expect(service_instance.as_summary_json).to include({
-          'guid' => subject.guid,
-          'name' => subject.name,
-          'bound_app_count' => 0,
-          'dashboard_url' => 'http://dashboard.example.com',
-          'service_plan' => {
-            'guid' => '12763abc',
-            'name' => 'Gold Plan',
-            'service' => {
-              'guid' => '9876XZ',
-              'label' => 'YourSQL',
-              'provider' => 'Bill Gates',
-              'version' => '1.2.3',
+          service_instance.dashboard_url = 'http://dashboard.example.com'
+
+          expect(service_instance.as_summary_json).to include({
+            'guid' => subject.guid,
+            'name' => subject.name,
+            'bound_app_count' => 0,
+            'dashboard_url' => 'http://dashboard.example.com',
+            'service_plan' => {
+              'guid' => '12763abc',
+              'name' => 'Gold Plan',
+              'service' => {
+                'guid' => '9876XZ',
+                'label' => 'YourSQL',
+                'provider' => 'Bill Gates',
+                'version' => '1.2.3',
+              }
             }
-          }
-        })
+          })
 
-        expect(service_instance.as_summary_json['last_operation']).to include(
-          {
-            'state' => 'in progress',
-            'description' => '50% all the time',
-            'type' => 'create',
-          }
-        )
+          expect(service_instance.as_summary_json['last_operation']).to include(
+            {
+              'state' => 'in progress',
+              'description' => '50% all the time',
+              'type' => 'create',
+            }
+          )
+        end
       end
 
+      context 'manager' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
+        end
+
+        it 'returns detailed summary without dashboard url' do
+          last_operation = ServiceInstanceOperation.make(
+            state: 'in progress',
+            description: '50% all the time',
+            type: 'create',
+          )
+          service_instance.service_instance_operation = last_operation
+
+          service_instance.dashboard_url = 'http://dashboard.example.com'
+
+          expect(service_instance.as_summary_json).to include({
+                'guid' => subject.guid,
+                'name' => subject.name,
+                'bound_app_count' => 0,
+                'dashboard_url' => '',
+                'service_plan' => {
+                  'guid' => '12763abc',
+                  'name' => 'Gold Plan',
+                  'service' => {
+                    'guid' => '9876XZ',
+                    'label' => 'YourSQL',
+                    'provider' => 'Bill Gates',
+                    'version' => '1.2.3',
+                  }
+                }
+              })
+
+          expect(service_instance.as_summary_json['last_operation']).to include(
+              {
+                'state' => 'in progress',
+                'description' => '50% all the time',
+                'type' => 'create',
+              }
+            )
+        end
+      end
       context 'when the last_operation does not exist' do
         it 'sets the field to nil' do
           expect(service_instance.as_summary_json['last_operation']).to be_nil
@@ -550,13 +560,79 @@ module VCAP::CloudController
       end
     end
 
-    describe '#tags' do
-      let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+    describe 'tags' do
+      let(:instance_tags) { %w(a b c) }
+      let(:service_tags) { %w(relational mysql) }
+      let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, tags: instance_tags) }
       let(:service_plan) { ServicePlan.make(service: service) }
-      let(:service) { Service.make(tags: %w(relational mysql)) }
+      let(:service) { Service.make(tags: service_tags) }
 
-      it 'gets tags from the service' do
-        expect(service_instance.tags).to eq %w(relational mysql)
+      describe '#tags' do
+        it 'returns the instance tags' do
+          expect(service_instance.tags).to eq instance_tags
+        end
+
+        context 'when there are no tags' do
+          let(:instance_tags) { nil }
+          it 'returns an empty array' do
+            expect(service_instance.tags).to eq []
+          end
+        end
+      end
+
+      describe '#merged_tags' do
+        it 'returns the service tags merged with the instance tags' do
+          expect(service_instance.merged_tags).to eq(service_tags + instance_tags)
+        end
+
+        context 'when the instance tags are not set' do
+          let(:service_instance) { ManagedServiceInstance.make service_plan: service_plan }
+
+          it 'returns only the service tags' do
+            expect(service_instance.merged_tags).to eq(service_tags)
+          end
+        end
+
+        context 'when the service tags are not set' do
+          let(:service_plan) { ServicePlan.make }
+
+          it 'returns only the instance tags' do
+            expect(service_instance.merged_tags).to eq(instance_tags)
+          end
+        end
+
+        context 'when no service or instance tags are set' do
+          let(:instance_tags) { nil }
+          let(:service_tags) { nil }
+
+          it 'returns an empty array' do
+            expect(service_instance.merged_tags).to eq([])
+          end
+        end
+
+        context 'when there are duplicate service tags' do
+          let(:service_tags) { %w(relational mysql mysql) }
+
+          it 'does not display duplicate tags' do
+            expect(service_instance.merged_tags).to match_array(%w(a b c relational mysql))
+          end
+        end
+
+        context 'when there are duplicate instance tags' do
+          let(:instance_tags) { %w(a a b c) }
+
+          it 'does not display duplicate tags' do
+            expect(service_instance.merged_tags).to match_array(%w(a b c relational mysql))
+          end
+        end
+
+        context 'when there are instance tags which are duplicates of a service tag' do
+          let(:instance_tags) { %w(mysql a b c) }
+
+          it 'does not display duplicate tags' do
+            expect(service_instance.merged_tags).to match_array(%w(a b c relational mysql))
+          end
+        end
       end
     end
 
@@ -625,6 +701,7 @@ module VCAP::CloudController
       let(:developer)       { make_developer_for_space(service_instance.space) }
       let(:auditor)         { make_auditor_for_space(service_instance.space) }
       let(:user)            { make_user_for_space(service_instance.space) }
+      let(:manager)         { make_manager_for_space(service_instance.space) }
 
       it 'includes the last operation hash' do
         updated_at_time = Time.now.utc
@@ -644,6 +721,46 @@ module VCAP::CloudController
 
         expect(service_instance.to_hash['last_operation']['updated_at']).to be
       end
+
+      context 'dashboard_url' do
+        before do
+          service_instance.dashboard_url = 'http://meow.com?username:password'
+        end
+
+        it 'returns a dashboard_url for an admin' do
+          allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
+          expect(service_instance.to_hash['dashboard_url']).to eq(service_instance.dashboard_url)
+        end
+
+        it 'returns a dashboard_url for a space developer' do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
+          expect(service_instance.to_hash['dashboard_url']).to eq(service_instance.dashboard_url)
+        end
+
+        it 'returns a blank dashboard_url for a space auditor' do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(auditor)
+          expect(service_instance.to_hash['dashboard_url']).to eq('')
+        end
+
+        it 'returns a blank dashboard_url for a space user' do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user)
+          expect(service_instance.to_hash['dashboard_url']).to eq('')
+        end
+
+        it 'returns a blank dashboard_url for a space manager' do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
+          expect(service_instance.to_hash['dashboard_url']).to eq('')
+        end
+      end
+    end
+
+    # Construct an array of unique tags with 255 characters total
+    def build_max_tags
+      tags = []
+      (10..94).each do |i|
+        tags.push('a' + i.to_s)
+      end
+      tags
     end
   end
 end

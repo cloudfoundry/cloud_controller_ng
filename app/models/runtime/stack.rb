@@ -14,7 +14,6 @@ module VCAP::CloudController
 
     def validate
       validates_presence :name
-      validates_presence :description
       validates_unique :name
     end
 

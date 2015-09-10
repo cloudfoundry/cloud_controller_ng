@@ -7,7 +7,7 @@ module VCAP::Services::SSO::Commands
     end
 
     def db_command
-      VCAP::CloudController::ServiceDashboardClient.remove_claim_on_client(client_id)
+      VCAP::CloudController::ServiceDashboardClient.release_client(client_id)
     end
   end
 end

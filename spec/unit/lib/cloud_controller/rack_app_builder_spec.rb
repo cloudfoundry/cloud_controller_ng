@@ -19,9 +19,11 @@ module VCAP::CloudController
     end
 
     describe '#build' do
+      let(:request_metrics) { nil }
+
       context 'when nginx is disabled' do
         it 'uses Rack::CommonLogger' do
-          builder.build(TestConfig.config).to_app
+          builder.build(TestConfig.config, request_metrics).to_app
           expect(Rack::CommonLogger).to have_received(:new).with(anything, instance_of(File))
         end
       end
@@ -30,14 +32,14 @@ module VCAP::CloudController
         let(:use_nginx) { true }
 
         it 'does not use Rack::CommonLogger' do
-          builder.build(TestConfig.config).to_app
+          builder.build(TestConfig.config, request_metrics).to_app
           expect(Rack::CommonLogger).to_not have_received(:new)
         end
       end
 
       it 'returns a Rack application' do
-        expect(builder.build(TestConfig.config)).to be_a(Rack::Builder)
-        expect(builder.build(TestConfig.config)).to respond_to(:call)
+        expect(builder.build(TestConfig.config, request_metrics)).to be_a(Rack::Builder)
+        expect(builder.build(TestConfig.config, request_metrics)).to respond_to(:call)
       end
     end
   end

@@ -43,7 +43,7 @@ Sequel::Mysql2::Database.class_eval do
   end
 
   def case_insensitive_string_column_opts
-    { collate: 'latin1_general_ci' }
+    { collate: 'utf8_general_ci' }
   end
 end
 

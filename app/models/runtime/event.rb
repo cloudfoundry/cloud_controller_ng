@@ -2,7 +2,7 @@ module VCAP::CloudController
   class Event < Sequel::Model
     plugin :serialization
 
-    many_to_one :space, without_guid_generation: true
+    many_to_one :space, primary_key: :guid, key: :space_guid, without_guid_generation: true
 
     def validate
       validates_presence :type

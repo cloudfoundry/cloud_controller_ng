@@ -35,6 +35,10 @@ module VCAP::CloudController
           expect(entity.fetch(:auth_username)).to eq(broker.auth_username)
         end
 
+        it 'includes the space_guid' do
+          expect(entity).to have_key(:space_guid)
+        end
+
         it 'does not include the auth_password' do
           expect(entity).to_not have_key(:auth_password)
         end

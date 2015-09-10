@@ -22,7 +22,7 @@ export LANG=en_US.UTF-8
 
 export NEWRELIC_ENABLE=<%= !!properties.cc.newrelic.license_key %>
 export NRCONFIG=$CONFIG_DIR/newrelic.yml
-export RACK_ENV=<%= p("cc.newrelic.environment_name") %>_background
+export NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>_background
 export NEW_RELIC_DISPATCHER=delayed_job
 
 source /var/vcap/packages/common/utils.sh
@@ -31,6 +31,25 @@ case $1 in
 
   start)
     pid_guard $PIDFILE "Cloud controller worker"
+
+    <% if properties.nfs_server.address %>
+      export NFS_SHARE=<%= p('nfs_server.share_path') %>
+
+      echo "Checking for nfs to be mounted"
+
+      nfs_check_attempts=0
+      while [[ ! -f $NFS_SHARE/shared/.nfs_test ]]; do
+        sleep 0.1
+        nfs_check_attempts=$((nfs_check_attempts+1))
+
+        if [[ $nfs_check_attempts -eq 300 ]]; then
+          echo "Failed to find nfs mount"
+          exit 1
+        fi
+      done
+
+      echo "nfs is mounted"
+    <% end %>
 
     mkdir -p $RUN_DIR
     mkdir -p $LOG_DIR

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  module Jobs::Runtime
+  module Jobs::V3
     describe PackageBits do
       let(:uploaded_path) { 'tmp/uploaded.zip' }
       let(:package_guid) { SecureRandom.uuid }

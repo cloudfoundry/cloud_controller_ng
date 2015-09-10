@@ -27,13 +27,13 @@ module VCAP::CloudController
 
     describe '.find_clients_claimed_by_broker' do
       before do
-        ServiceDashboardClient.claim_client_for_broker('client-1', service_broker)
-        ServiceDashboardClient.claim_client_for_broker('client-2', other_broker)
-        ServiceDashboardClient.claim_client_for_broker('client-3', service_broker)
+        ServiceDashboardClient.claim_client('client-1', service_broker)
+        ServiceDashboardClient.claim_client('client-2', other_broker)
+        ServiceDashboardClient.claim_client('client-3', service_broker)
       end
 
       it 'returns all clients claimed by the broker' do
-        results = ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
+        results = ServiceDashboardClient.find_claimed_client(service_broker)
         expect(results).to have(2).entries
         expect(results.map(&:uaa_id)).to match_array ['client-1', 'client-3']
       end
@@ -43,9 +43,9 @@ module VCAP::CloudController
       context 'when the client is unclaimed' do
         it 'claims the client for the broker' do
           expect {
-            ServiceDashboardClient.claim_client_for_broker(uaa_id, service_broker)
+            ServiceDashboardClient.claim_client(uaa_id, service_broker)
           }.to change {
-            ServiceDashboardClient.client_claimed_by_broker?(uaa_id, service_broker)
+            client_claimed? uaa_id, service_broker
           }.to(true)
         end
       end
@@ -57,35 +57,35 @@ module VCAP::CloudController
 
         it 'claims the client for the broker' do
           expect {
-            ServiceDashboardClient.claim_client_for_broker(uaa_id, service_broker)
+            ServiceDashboardClient.claim_client(uaa_id, service_broker)
           }.to change {
-            ServiceDashboardClient.client_claimed_by_broker?(uaa_id, service_broker)
+            client_claimed? uaa_id, service_broker
           }.to(true)
         end
       end
 
       context 'when the client is already claimed by another broker' do
         before do
-          ServiceDashboardClient.claim_client_for_broker(uaa_id, other_broker)
+          ServiceDashboardClient.claim_client(uaa_id, other_broker)
         end
 
         it 'raises an exception' do
           expect {
-            ServiceDashboardClient.claim_client_for_broker(uaa_id, service_broker)
+            ServiceDashboardClient.claim_client(uaa_id, service_broker)
           }.to raise_exception(Sequel::ValidationFailed)
         end
       end
 
       context 'when the client is already claimed by the specified broker' do
         before do
-          ServiceDashboardClient.claim_client_for_broker(uaa_id, service_broker)
+          ServiceDashboardClient.claim_client(uaa_id, service_broker)
         end
 
         it 'does not change the fact that the client is claimed by the broker' do
           expect {
-            ServiceDashboardClient.claim_client_for_broker(uaa_id, service_broker)
+            ServiceDashboardClient.claim_client(uaa_id, service_broker)
           }.not_to change {
-            ServiceDashboardClient.client_claimed_by_broker?(uaa_id, service_broker)
+            client_claimed? uaa_id, service_broker
           }
         end
       end
@@ -93,13 +93,13 @@ module VCAP::CloudController
 
     describe '.remove_claim_on_client' do
       before do
-        ServiceDashboardClient.claim_client_for_broker(uaa_id, service_broker)
+        ServiceDashboardClient.claim_client(uaa_id, service_broker)
       end
 
       it 'removes the claim' do
         expect {
-          ServiceDashboardClient.remove_claim_on_client(uaa_id)
-        }.to change { ServiceDashboardClient.client_claimed_by_broker?(uaa_id, service_broker) }.to(false)
+          ServiceDashboardClient.release_client(uaa_id)
+        }.to change { client_claimed? uaa_id, service_broker }.to(false)
       end
     end
 
@@ -119,6 +119,10 @@ module VCAP::CloudController
           expect(ServiceDashboardClient.find_client_by_uaa_id('some-uaa-id')).to eq(client)
         end
       end
+    end
+
+    def client_claimed?(uaa_id, service_broker)
+      VCAP::CloudController::ServiceDashboardClient.where(service_broker_id: service_broker.id, uaa_id: uaa_id).any?
     end
   end
 end

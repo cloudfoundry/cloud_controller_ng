@@ -52,6 +52,17 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the name is blank' do
+        let(:blank_name) { '' }
+        let(:service_instance) { ServiceInstance.new(service_instance_attrs) }
+
+        it 'returns a ServiceInstanceNameEmpty error' do
+          service_instance_attrs[:name] = blank_name
+          service_instance.validate
+          expect(service_instance.errors.on(:name)).to eq([:presence])
+        end
+      end
+
       describe 'when is_gateway_service is false' do
         it 'returns a UserProvidedServiceInstance' do
           service_instance_attrs[:is_gateway_service] = false
@@ -107,14 +118,48 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
+      let!(:service_instance) { ServiceInstance.create(service_instance_attrs) }
+
       it 'creates a DELETED service usage event' do
-        service_instance
         expect {
           service_instance.destroy
         }.to change { ServiceUsageEvent.count }.by(1)
         event = ServiceUsageEvent.last
         expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(service_instance)
+      end
+    end
+
+    describe '#update' do
+      let!(:service_instance) { ManagedServiceInstance.make }
+
+      context 'updating service_plan' do
+        let!(:service_plan) { ServicePlan.make }
+
+        it 'creates an UPDATE service usage event' do
+          expect {
+            service_instance.set_all(service_plan: service_plan)
+            service_instance.save_changes
+          }.to change { ServiceUsageEvent.count }.by 1
+
+          event = ServiceUsageEvent.last
+          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+          expect(event).to match_service_instance(service_instance)
+        end
+      end
+
+      context 'updating the service instance name' do
+        let(:new_name) { 'some-new-name' }
+        it 'creates an UPDATE service usage event' do
+          expect {
+            service_instance.set_all(name: new_name)
+            service_instance.save_changes
+          }.to change { ServiceUsageEvent.count }.by 1
+
+          event = ServiceUsageEvent.last
+          expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::UPDATED_EVENT_STATE)
+          expect(event).to match_service_instance(service_instance)
+        end
       end
     end
 

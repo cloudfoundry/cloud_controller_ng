@@ -27,13 +27,20 @@ module VCAP::CloudController
         app.restage!
       end
 
-      @app_event_repository.record_app_restage(app, SecurityContext.current_user, SecurityContext.current_user_email)
+      @app_event_repository.record_app_restage(app, SecurityContext.current_user.guid, SecurityContext.current_user_email)
 
       [
         HTTP::CREATED,
         { 'Location' => "#{self.class.path}/#{app.guid}" },
         object_renderer.render_json(self.class, app, @opts)
       ]
+    end
+
+    def self.translate_validation_exception(e, attributes)
+      docker_errors = e.errors.on(:docker)
+      return Errors::ApiError.new_from_details('DockerDisabled') if docker_errors
+
+      Errors::ApiError.new_from_details('StagingError', e.errors.full_messages)
     end
   end
 end

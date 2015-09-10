@@ -1,4 +1,5 @@
 require 'cloud_controller/rest_controller'
+require 'actions/services/propagate_instance_credentials'
 
 module VCAP::CloudController
   class UserProvidedServiceInstancesController < RestController::ModelController
@@ -30,17 +31,10 @@ module VCAP::CloudController
     end
 
     def create
-      json_msg = self.class::CreateMessage.decode(body)
-      @request_attrs = json_msg.extract(stringify_keys: true)
+      @request_attrs = decode_create_request_attrs
 
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
-
-      service_instance = nil
-      UserProvidedServiceInstance.db.transaction do
-        service_instance = UserProvidedServiceInstance.create_from_hash(request_attrs)
-        validate_access(:create, service_instance, request_attrs)
-      end
-
+      service_instance = create_instance(request_attrs)
       @services_event_repository.record_user_provided_service_instance_event(:create, service_instance, request_attrs)
 
       [
@@ -51,8 +45,7 @@ module VCAP::CloudController
     end
 
     def update(guid)
-      json_msg = self.class::UpdateMessage.decode(body)
-      request_attrs = json_msg.extract(stringify_keys: true)
+      request_attrs = decode_update_request_attrs
 
       logger.debug 'cc.update', guid: guid, attributes: request_attrs
       raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs
@@ -61,14 +54,9 @@ module VCAP::CloudController
       validate_access(:read_for_update, service_instance)
       validate_access(:update, service_instance)
 
-      if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
-        raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
-      end
-
-      ServiceInstance.db.transaction do
-        service_instance.lock!
-        service_instance.update_from_hash(request_attrs)
-      end
+      validate_space_not_changed(request_attrs, service_instance)
+      update_instance(request_attrs, service_instance)
+      propagate_instance_credentials(service_instance)
 
       @services_event_repository.record_user_provided_service_instance_event(:update, service_instance, request_attrs)
 
@@ -85,7 +73,8 @@ module VCAP::CloudController
         @services_event_repository,
         :record_user_provided_service_instance_event,
         :delete,
-        service_instance,
+        service_instance.class,
+        service_instance.guid,
         {}
       )
 
@@ -94,5 +83,43 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+  end
+
+  private
+
+  def decode_create_request_attrs
+    json_msg = self.class::CreateMessage.decode(body)
+    json_msg.extract(stringify_keys: true)
+  end
+
+  def create_instance(request_attrs)
+    service_instance = nil
+    UserProvidedServiceInstance.db.transaction do
+      service_instance = UserProvidedServiceInstance.create_from_hash(request_attrs)
+      validate_access(:create, service_instance, request_attrs)
+    end
+    service_instance
+  end
+
+  def decode_update_request_attrs
+    json_msg = self.class::UpdateMessage.decode(body)
+    json_msg.extract(stringify_keys: true)
+  end
+
+  def validate_space_not_changed(request_attrs, service_instance)
+    if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
+      raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
+    end
+  end
+
+  def update_instance(request_attrs, service_instance)
+    ServiceInstance.db.transaction do
+      service_instance.lock!
+      service_instance.update_from_hash(request_attrs)
+    end
+  end
+
+  def propagate_instance_credentials(service_instance)
+    PropagateInstanceCredentials.new.execute service_instance
   end
 end

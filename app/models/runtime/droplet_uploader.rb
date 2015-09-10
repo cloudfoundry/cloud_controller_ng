@@ -6,7 +6,7 @@ module CloudController
     end
 
     def upload(source_path, droplets_to_keep=2)
-      digest = Digest::SHA1.file(source_path).hexdigest
+      digest = Digester.new.digest_path(source_path)
       blobstore.cp_to_blobstore(
         source_path,
         VCAP::CloudController::Droplet.droplet_key(app.guid, digest)

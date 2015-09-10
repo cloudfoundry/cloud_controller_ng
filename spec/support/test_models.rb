@@ -83,4 +83,20 @@ module VCAP::CloudController
 
   class TestModelSecondLevelsController < RestController::ModelController
   end
+
+  class TestModelRedact < Sequel::Model
+    import_attributes :redacted
+    export_attributes :redacted
+  end
+
+  class TestModelRedactAccess < BaseAccess; end
+
+  class TestModelRedactController < RestController::ModelController
+    define_attributes do
+      attribute :redacted, Hash, redact_in: [:create, :update]
+    end
+
+    define_messages
+    define_routes
+  end
 end

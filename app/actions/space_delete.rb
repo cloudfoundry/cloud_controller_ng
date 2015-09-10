@@ -1,30 +1,29 @@
-require 'actions/service_instance_delete'
+require 'actions/services/service_instance_delete'
 
 module VCAP::CloudController
   class SpaceDelete
-    def initialize(user_id, user_email)
-      @user_id = user_id
+    def initialize(user_guid, user_email)
+      @user_guid = user_guid
       @user_email = user_email
     end
 
     def delete(dataset)
-      return [UserNotFoundDeletionError.new(@user_id)] if user.nil?
-
-      errors = []
-      dataset.each do |space_model|
-        errs = ServiceInstanceDelete.new.delete(space_model.service_instances_dataset)
-        unless errs.empty?
-          error_message = errs.map(&:message).join("\n\n")
-          errors.push VCAP::Errors::ApiError.new_from_details('SpaceDeletionFailed', dataset.first.name, error_message)
-          return errors
+      dataset.inject([]) do |errors, space_model|
+        service_instance_deleter = ServiceInstanceDelete.new(
+            accepts_incomplete: true,
+            multipart_delete: true
+        )
+        instance_delete_errors = service_instance_deleter.delete(space_model.service_instances_dataset)
+        unless instance_delete_errors.empty?
+          error_message = instance_delete_errors.map { |error| "\t#{error.message}" }.join("\n\n")
+          errors.push VCAP::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
         end
 
-        AppDelete.new(user, user_email).delete(space_model.app_models_dataset)
+        AppDelete.new(user_guid, user_email).delete(space_model.app_models)
 
-        space_model.destroy
+        space_model.destroy if instance_delete_errors.empty?
+        errors
       end
-
-      errors
     end
 
     def timeout_error(dataset)
@@ -34,10 +33,6 @@ module VCAP::CloudController
 
     private
 
-    attr_reader :user_id, :user_email
-
-    def user
-      @user ||= User.find(id: @user_id)
-    end
+    attr_reader :user_guid, :user_email
   end
 end

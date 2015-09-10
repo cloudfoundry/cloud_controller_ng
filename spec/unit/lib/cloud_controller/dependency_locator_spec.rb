@@ -175,8 +175,10 @@ describe CloudController::DependencyLocator do
   end
 
   describe '#blobstore_url_generator' do
+    let(:internal_service_hostname) { 'internal.service.hostname' }
     let(:my_config) do
       {
+        internal_service_hostname: internal_service_hostname,
         external_host: 'external.host',
         external_port: 8282,
         staging: {
@@ -192,21 +194,87 @@ describe CloudController::DependencyLocator do
       TestConfig.override(my_config)
     end
 
-    it 'creates blobstore_url_generator with the host, port, and blobstores' do
-      connection_options = {
-        blobstore_host: 'external.host',
-        blobstore_port: 8282,
-        user: 'username',
-        password: 'password'
-      }
-      expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
-        with(hash_including(connection_options),
-             instance_of(CloudController::Blobstore::Client),
-             instance_of(CloudController::Blobstore::Client),
-             instance_of(CloudController::Blobstore::Client),
-             instance_of(CloudController::Blobstore::Client)
-      )
-      locator.blobstore_url_generator
+    context 'when called without an argument' do
+      it 'creates blobstore_url_generator with the external host, port, and blobstores' do
+        connection_options = {
+          blobstore_host: 'external.host',
+          blobstore_port: 8282,
+          user: 'username',
+          password: 'password'
+        }
+        expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
+            with(hash_including(connection_options),
+              instance_of(CloudController::Blobstore::Client),
+              instance_of(CloudController::Blobstore::Client),
+              instance_of(CloudController::Blobstore::Client),
+              instance_of(CloudController::Blobstore::Client)
+            )
+        locator.blobstore_url_generator
+      end
+    end
+
+    context 'when the internal_service_hostname is nil' do
+      let(:internal_service_hostname) { nil }
+
+      it 'creates blobstore_url_generator with the external host, port, and blobstores' do
+        connection_options = {
+          blobstore_host: 'external.host',
+          blobstore_port: 8282,
+          user: 'username',
+          password: 'password'
+        }
+        expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
+            with(hash_including(connection_options),
+              instance_of(CloudController::Blobstore::Client),
+              instance_of(CloudController::Blobstore::Client),
+              instance_of(CloudController::Blobstore::Client),
+              instance_of(CloudController::Blobstore::Client)
+            ).twice
+        locator.blobstore_url_generator(true)
+        locator.blobstore_url_generator(false)
+      end
+    end
+
+    context 'when the internal_service_hostname is not nil' do
+      let(:internal_service_hostname) { 'internal.service.hostname' }
+
+      context 'and use_service_dns is true' do
+        it 'creates blobstore_url_generator with the internal service hostname, port, and blobstores' do
+          connection_options = {
+            blobstore_host: 'internal.service.hostname',
+            blobstore_port: 8282,
+            user: 'username',
+            password: 'password'
+          }
+          expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
+              with(hash_including(connection_options),
+                instance_of(CloudController::Blobstore::Client),
+                instance_of(CloudController::Blobstore::Client),
+                instance_of(CloudController::Blobstore::Client),
+                instance_of(CloudController::Blobstore::Client)
+              )
+          locator.blobstore_url_generator(true)
+        end
+      end
+
+      context 'and use_service_dns is false' do
+        it 'creates blobstore_url_generator with the external host, port, and blobstores' do
+          connection_options = {
+            blobstore_host: 'external.host',
+            blobstore_port: 8282,
+            user: 'username',
+            password: 'password'
+          }
+          expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
+              with(hash_including(connection_options),
+                instance_of(CloudController::Blobstore::Client),
+                instance_of(CloudController::Blobstore::Client),
+                instance_of(CloudController::Blobstore::Client),
+                instance_of(CloudController::Blobstore::Client)
+              )
+          locator.blobstore_url_generator(false)
+        end
+      end
     end
   end
 
@@ -224,12 +292,6 @@ describe CloudController::DependencyLocator do
     subject { locator.space_event_repository }
 
     it { is_expected.to be_a(VCAP::CloudController::Repositories::Runtime::SpaceEventRepository) }
-  end
-
-  describe '#process_repository' do
-    subject { locator.process_repository }
-
-    it { is_expected.to be_a(VCAP::CloudController::ProcessRepository) }
   end
 
   describe '#object_renderer' do

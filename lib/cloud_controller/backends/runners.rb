@@ -3,7 +3,7 @@ require 'cloud_controller/diego/runner'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/traditional/protocol'
 require 'cloud_controller/diego/docker/protocol'
-require 'cloud_controller/diego/common/protocol'
+require 'cloud_controller/diego/egress_rules'
 
 module VCAP::CloudController
   class Runners
@@ -50,13 +50,14 @@ module VCAP::CloudController
     end
 
     def diego_apps_cache_data(batch_size, last_id)
-      App.select(:id, :guid, :version, :updated_at).
+      diego_apps = App.select(:id, :guid, :version, :updated_at).
         where('id > ?', last_id).
         where(state: 'STARTED').
         where(package_state: 'STAGED').
         where('deleted_at IS NULL').
-        where(diego: true).
-        order(:id).
+        where(diego: true)
+      diego_apps = filter_docker_apps(diego_apps) unless FeatureFlag.enabled?('diego_docker')
+      diego_apps.order(:id).
         limit(batch_size).
         select_map([:id, :guid, :version, :updated_at])
     end
@@ -70,6 +71,38 @@ module VCAP::CloudController
         limit(batch_size)
 
       query.all
+    end
+
+    EXPORT_ATTRIBUTES = [
+      :instances,
+      :state,
+      :memory,
+      :package_state,
+      :version
+    ]
+
+    def dea_apps_hm9k(batch_size, last_id)
+      query = App.
+        where('id > ?', last_id).
+        where('deleted_at IS NULL').
+        order(:id).
+        where(diego: false).
+        where(state: 'STARTED').
+        exclude(package_state: 'FAILED').
+        limit(batch_size).
+        select_map([:id, :guid, :instances, :state, :memory, :package_state, :version, :created_at, :updated_at])
+
+      app_hashes = query.map do |row|
+        hash = {}
+        EXPORT_ATTRIBUTES.each_with_index { |obj, i| hash[obj.to_s] = row[i + 2] }
+
+        hash['id'] = row[1]
+        hash['updated_at'] = row[8] || row[7]
+        hash
+      end
+
+      id_for_next_token = app_hashes.empty? ? nil : query.last[0]
+      [app_hashes, id_for_next_token]
     end
 
     private
@@ -86,7 +119,7 @@ module VCAP::CloudController
       dependency_locator = CloudController::DependencyLocator.instance
       nsync_client = dependency_locator.nsync_client
       stager_client = dependency_locator.stager_client
-      protocol = Diego::Docker::Protocol.new(Diego::Common::Protocol.new)
+      protocol = Diego::Docker::Protocol.new(Diego::EgressRules.new)
       messenger = Diego::Messenger.new(stager_client, nsync_client, protocol)
       Diego::Runner.new(app, messenger, protocol, @config[:default_health_check_timeout])
     end
@@ -95,13 +128,17 @@ module VCAP::CloudController
       dependency_locator = CloudController::DependencyLocator.instance
       nsync_client = dependency_locator.nsync_client
       stager_client = dependency_locator.stager_client
-      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator, Diego::Common::Protocol.new)
+      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator(true), Diego::EgressRules.new)
       messenger = Diego::Messenger.new(stager_client, nsync_client, protocol)
       Diego::Runner.new(app, messenger, protocol, @config[:default_health_check_timeout])
     end
 
     def staging_timeout
       @config[:staging][:timeout_in_seconds]
+    end
+
+    def filter_docker_apps(query)
+      query.where(docker_image: nil)
     end
   end
 end

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe ServiceBrokersController, :services do
-    let(:headers) { json_headers(admin_headers) }
+    let(:headers) { headers_for(admin_user) }
     let(:broker) { ServiceBroker.make }
     let(:catalog_json) do
       {
@@ -51,8 +51,9 @@ module VCAP::CloudController
       build_broker_url(attributes, '/v2/catalog')
     end
 
-    def stub_catalog
-      stub_request(:get, broker_catalog_url).
+    def stub_catalog(broker_url: nil)
+      url = broker_url || broker_catalog_url
+      stub_request(:get, url).
           to_return(status: 200, body: catalog_json.to_json)
     end
 
@@ -71,7 +72,8 @@ module VCAP::CloudController
           name: { type: 'string', required: true },
           broker_url: { type: 'string', required: true },
           auth_username: { type: 'string', required: true },
-          auth_password: { type: 'string', required: true }
+          auth_password: { type: 'string', required: true },
+          space_guid: { type: 'string', required: false }
         })
       end
 
@@ -82,6 +84,77 @@ module VCAP::CloudController
           auth_username: { type: 'string' },
           auth_password: { type: 'string' }
         })
+      end
+    end
+
+    describe 'GET /v2/service_brokers' do
+      let(:space_a) { Space.make }
+      let(:space_b) { Space.make }
+      let(:user) { User.make }
+      let!(:public_broker) { ServiceBroker.make }
+      let!(:space_a_broker) { ServiceBroker.make space: space_a }
+      let!(:space_b_broker) { ServiceBroker.make space: space_b }
+
+      it 'can filter brokers by name' do
+        get "/v2/service_brokers?q=name:#{public_broker.name}", {}, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(decoded_response['total_results']).to eq(1)
+        expect(decoded_response['resources'].first['metadata']['guid']).to eq(public_broker.guid)
+        expect(decoded_response['resources'].first['entity']['name']).to eq(public_broker.name)
+      end
+
+      it 'can filter brokers by space_guid' do
+        get "/v2/service_brokers?q=space_guid:#{space_a_broker.space_guid}", {}, admin_headers
+
+        expect(last_response).to have_status_code(200)
+        expect(decoded_response['total_results']).to eq(1)
+        expect(decoded_response['resources'].first['metadata']['guid']).to eq(space_a_broker.guid)
+        expect(decoded_response['resources'].first['entity']['space_guid']).to eq(space_a_broker.space_guid)
+      end
+
+      context 'as an Admin' do
+        it 'sees all brokers' do
+          get '/v2/service_brokers', {}, admin_headers
+
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['total_results']).to eq(3)
+        end
+      end
+
+      context 'as a SpaceDeveloper for space_a' do
+        before do
+          space_a.organization.add_user user
+          space_a.add_developer user
+        end
+
+        it 'sees only private brokers in space_a' do
+          get '/v2/service_brokers', {}, headers_for(user)
+
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['total_results']).to eq(1)
+          expect(decoded_response['resources'].first['metadata']['guid']).to eq(space_a_broker.guid)
+        end
+
+        it 'sees only private broker in space_a when filtering' do
+          get "/v2/service_brokers?q=name:#{public_broker.name}", {}, headers_for(user)
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['total_results']).to eq(0)
+
+          get "/v2/service_brokers?q=name:#{space_a_broker.name}", {}, headers_for(user)
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['total_results']).to eq(1)
+        end
+      end
+
+      context 'as an unaffiliated user' do
+        it 'sees no brokers' do
+          get '/v2/service_brokers', {}, headers_for(user)
+
+          expect(last_response).to have_status_code(200)
+          expect(decoded_response['total_results']).to eq(0)
+          expect(decoded_response['resources']).to eq([])
+        end
       end
     end
 
@@ -150,9 +223,10 @@ module VCAP::CloudController
             'url' => "/v2/service_brokers/#{service_broker.guid}",
           },
           'entity' =>  {
-              'name' => name,
-              'broker_url' => broker_url,
-              'auth_username' => auth_username,
+            'name' => name,
+            'broker_url' => broker_url,
+            'auth_username' => auth_username,
+            'space_guid' => nil,
           },
         )
       end
@@ -164,6 +238,92 @@ module VCAP::CloudController
         headers = last_response.original_headers
         broker = ServiceBroker.last
         expect(headers.fetch('Location')).to eq("/v2/service_brokers/#{broker.guid}")
+      end
+
+      describe 'adding a broker to a space only' do
+        let(:space) { Space.make }
+        let(:body) { body_hash.merge({ space_guid: space.guid }).to_json }
+
+        it 'creates a broker with an associated space' do
+          stub_catalog
+
+          post '/v2/service_brokers', body, headers
+
+          expect(last_response).to have_status_code(201)
+          parsed_body = JSON.load(last_response.body)
+          expect(parsed_body['entity']).to include({ 'space_guid' => space.guid })
+          expect(a_request(:get, broker_catalog_url)).to have_been_made
+
+          broker = ServiceBroker.last
+          expect(broker.space).to eq(space)
+        end
+
+        it 'returns a 403 if a user is not a SpaceDeveloper for the space' do
+          user = User.make
+
+          post '/v2/service_brokers', body, headers_for(user)
+          expect(last_response.status).to eq(403)
+        end
+
+        it 'returns a 400 if a another broker (private or public) exists with that name' do
+          stub_catalog broker_url: 'http://me:abc123@cf-service-broker.example-2.com/v2/catalog'
+
+          public_body = {
+            name:          name,
+            broker_url:    'http://cf-service-broker.example-2.com',
+            auth_username: auth_username,
+            auth_password: auth_password,
+          }.to_json
+
+          post '/v2/service_brokers', public_body, headers
+          expect(last_response).to have_status_code(201)
+
+          post '/v2/service_brokers', body, headers
+          expect(last_response).to have_status_code(400)
+        end
+
+        it 'returns a 400 if a another broker (private or public) exists with that url' do
+          stub_catalog
+
+          public_body = {
+            name:          'other-name',
+            broker_url:    broker_url,
+            auth_username: auth_username,
+            auth_password: auth_password,
+          }.to_json
+
+          post '/v2/service_brokers', public_body, headers
+          expect(last_response).to have_status_code(201)
+
+          post '/v2/service_brokers', body, headers
+          expect(last_response).to have_status_code(400)
+        end
+
+        it 'returns a 404 if the space does not exist' do
+          space.destroy
+          stub_catalog
+
+          post '/v2/service_brokers', body, headers
+
+          expect(last_response).to have_status_code(404)
+          parsed_body = JSON.load(last_response.body)
+          expect(parsed_body['description']).to include('Space not found')
+        end
+      end
+
+      context 'when the user is a SpaceDeveloper' do
+        let(:user) { User.make }
+        let(:space) { Space.make }
+
+        before do
+          space.organization.add_user user
+          space.add_developer user
+        end
+
+        it 'returns a 403 if the SpaceDeveloper does not include a space_guid' do
+          post '/v2/service_brokers', body, headers_for(user)
+          expect(last_response.status).to eq(403)
+        end
       end
 
       context 'when the fields for creating the broker is invalid' do
@@ -251,7 +411,7 @@ module VCAP::CloudController
       it 'deletes the service broker' do
         delete "/v2/service_brokers/#{broker.guid}", {}, headers
 
-        expect(last_response.status).to eq(204)
+        expect(last_response).to have_status_code(204)
 
         get '/v2/service_brokers', {}, headers
         expect(decoded_response).to include('total_results' => 0)
@@ -383,6 +543,7 @@ module VCAP::CloudController
               'name' => 'My Updated Service',
               'broker_url' => broker.broker_url,
               'auth_username' => 'new-username',
+              'space_guid' => nil,
             },
           })
         end

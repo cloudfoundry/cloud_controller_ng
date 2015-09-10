@@ -27,7 +27,7 @@ module VCAP::CloudController
 
     describe 'GET', '/v2/service_auth_tokens' do
       it 'adds the X-Cf-Warning with the right message to the response' do
-        get '/v2/service_auth_tokens', {}, admin_headers
+        get '/v2/service_auth_tokens', {}, headers_for(admin_user)
         expect(last_response.status).to eq 200
         expect(last_response).to have_warning_message(VCAP::CloudController::ServiceAuthTokensController::DEPRECATION_MESSAGE)
       end
@@ -41,7 +41,7 @@ module VCAP::CloudController
           token: 'some-token'
         }.to_json
 
-        post '/v2/service_auth_tokens', req, admin_headers
+        post '/v2/service_auth_tokens', req, headers_for(admin_user)
         expect(last_response.status).to eq 201
         expect(last_response).to have_warning_message(VCAP::CloudController::ServiceAuthTokensController::DEPRECATION_MESSAGE)
       end
@@ -57,7 +57,7 @@ module VCAP::CloudController
           token: 'some-token'
         }.to_json
 
-        put "/v2/service_auth_tokens/#{token.guid}", req, admin_headers
+        put "/v2/service_auth_tokens/#{token.guid}", req, headers_for(admin_user)
         expect(last_response.status).to eq 201
         expect(last_response).to have_warning_message(VCAP::CloudController::ServiceAuthTokensController::DEPRECATION_MESSAGE)
       end
@@ -67,7 +67,7 @@ module VCAP::CloudController
       let(:token) { ServiceAuthToken.make }
 
       it 'adds the X-Cf-Warning with the right message to the response' do
-        delete "/v2/service_auth_tokens/#{token.guid}", {}, admin_headers
+        delete "/v2/service_auth_tokens/#{token.guid}", {}, headers_for(admin_user)
         expect(last_response.status).to eq 204
         expect(last_response).to have_warning_message(VCAP::CloudController::ServiceAuthTokensController::DEPRECATION_MESSAGE)
       end

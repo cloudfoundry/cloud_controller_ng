@@ -2,9 +2,9 @@ require 'services/api'
 
 module VCAP::CloudController
   class ServiceUsageEventsController < RestController::ModelController
-    query_parameters :service_instance_type
+    query_parameters :service_instance_type, :service_guid
 
-    preserve_query_parameters :after_guid, :service_instance_type
+    preserve_query_parameters :after_guid
 
     get '/v2/service_usage_events', :enumerate
 

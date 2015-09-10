@@ -14,10 +14,10 @@ module VCAP::CloudController
     STAGING_PATH = '/staging'
 
     DROPLET_PATH                 = "#{STAGING_PATH}/droplets"
-    PACKAGE_DROPLET_PATH         = "#{STAGING_PATH}/packages/droplets"
-    PACKAGE_BUILDPACK_CACHE_PATH = "#{STAGING_PATH}/packages/buildpack_cache"
     BUILDPACK_CACHE_PATH         = "#{STAGING_PATH}/buildpack_cache"
-    V3_DROPLET_PATH              = "#{STAGING_PATH}/v3_droplets"
+
+    V3_APP_BUILDPACK_CACHE_PATH  = "#{STAGING_PATH}/v3/buildpack_cache"
+    V3_DROPLET_PATH              = "#{STAGING_PATH}/v3/droplets"
 
     # Endpoint does its own basic auth
     allow_unauthenticated_access
@@ -95,7 +95,7 @@ module VCAP::CloudController
       check_file_was_uploaded(app)
       check_file_md5
 
-      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, app.guid, :buildpack_cache_blobstore)
+      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, app.buildpack_cache_key, :buildpack_cache_blobstore)
       Jobs::Enqueuer.new(blobstore_upload, queue: Jobs::LocalQueue.new(config)).enqueue
       HTTP::OK
     end
@@ -105,7 +105,7 @@ module VCAP::CloudController
       app = App.find(guid: guid)
       check_app_exists(app, guid)
 
-      blob = buildpack_cache_blobstore.blob(app.guid)
+      blob = buildpack_cache_blobstore.blob(app.buildpack_cache_key)
       blob_name = 'buildpack cache'
 
       @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless blob
@@ -129,7 +129,7 @@ module VCAP::CloudController
       @blob_sender.send_blob(guid, 'Package', blob, self)
     end
 
-    post "#{PACKAGE_DROPLET_PATH}/:guid/upload", :upload_package_droplet
+    post "#{V3_DROPLET_PATH}/:guid/upload", :upload_package_droplet
     def upload_package_droplet(guid)
       droplet = DropletModel.find(guid: guid)
 
@@ -145,25 +145,27 @@ module VCAP::CloudController
       [HTTP::OK, StagingJobPresenter.new(job).to_json]
     end
 
-    post "#{PACKAGE_BUILDPACK_CACHE_PATH}/:guid/upload", :upload_package_buildpack_cache
-    def upload_package_buildpack_cache(guid)
-      package = PackageModel.find(guid: guid)
+    post "#{V3_APP_BUILDPACK_CACHE_PATH}/:stack_name/:guid/upload", :upload_v3_app_buildpack_cache
+    def upload_v3_app_buildpack_cache(stack_name, guid)
+      app_model = AppModel.find(guid: guid)
 
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if package.nil?
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found') if app_model.nil?
       raise ApiError.new_from_details('StagingError', "malformed buildpack cache upload request for #{guid}") unless upload_path
       check_file_md5
 
-      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, guid, :buildpack_cache_blobstore)
+      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, "#{guid}-#{stack_name}", :buildpack_cache_blobstore)
       Jobs::Enqueuer.new(blobstore_upload, queue: Jobs::LocalQueue.new(config)).enqueue
       HTTP::OK
     end
 
-    get "#{PACKAGE_BUILDPACK_CACHE_PATH}/:guid/download", :download_package_buildpack_cache
-    def download_package_buildpack_cache(guid)
-      package = PackageModel.find(guid: guid)
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if package.nil?
+    get "#{V3_APP_BUILDPACK_CACHE_PATH}/:stack/:guid/download", :download_v3_app_buildpack_cache
+    def download_v3_app_buildpack_cache(stack, guid)
+      app_model = AppModel.find(guid: guid)
+      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found') if app_model.nil?
 
-      blob = buildpack_cache_blobstore.blob(guid)
+      logger.info 'v3-droplet.begin-download', app_guid: guid, stack: stack
+
+      blob = buildpack_cache_blobstore.blob("#{guid}-#{stack}")
       blob_name = 'buildpack cache'
 
       @missing_blob_handler.handle_missing_blob!(guid, blob_name) unless blob
@@ -222,8 +224,10 @@ module VCAP::CloudController
     end
 
     def check_file_md5
-      file_md5 = Digest::MD5.base64digest(File.read(upload_path))
+      digester = Digester.new(algorithm: Digest::MD5, type: :base64digest)
+      file_md5 = digester.digest_path(upload_path)
       header_md5 = env['HTTP_CONTENT_MD5']
+
       if header_md5.present? && file_md5 != header_md5
         raise ApiError.new_from_details('StagingError', 'content md5 did not match')
       end

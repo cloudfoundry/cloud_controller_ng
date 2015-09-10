@@ -1,13 +1,15 @@
 require 'actions/space_delete'
+require 'queries/space_user_roles_fetcher'
 
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
-      [:space_event_repository]
+      [:space_event_repository, :username_and_roles_populating_collection_renderer, :username_lookup_uaa_client]
     end
 
     define_attributes do
       attribute :name, String
+      attribute :allow_ssh, Message::Boolean, default: true
 
       to_one :organization
       to_many :developers
@@ -39,6 +41,27 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @space_event_repository = dependencies.fetch(:space_event_repository)
+      @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
+      @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
+    end
+
+    get '/v2/spaces/:guid/user_roles', :enumerate_user_roles
+    def enumerate_user_roles(guid)
+      logger.debug('cc.enumerate.related', guid: guid, association: 'user_roles')
+
+      space = find_guid_and_validate_access(:read, guid)
+
+      associated_controller = UsersController
+      associated_path = "#{self.class.url_for_guid(guid)}/user_roles"
+      opts = @opts.merge(transform_opts: { space_id: space.id })
+
+      @user_roles_collection_renderer.render_json(
+        associated_controller,
+        SpaceUserRolesFetcher.new.fetch(space),
+        associated_path,
+        opts,
+        {},
+      )
     end
 
     get '/v2/spaces/:guid/services', :enumerate_services
@@ -47,12 +70,10 @@ module VCAP::CloudController
 
       space = find_guid_and_validate_access(:read, guid)
 
-      associated_controller, associated_model = ServicesController, Service
-
       filtered_dataset = Query.filtered_dataset_from_query_params(
-        associated_model,
-        associated_model.organization_visible(space.organization),
-        associated_controller.query_parameters,
+        Service,
+        Service.space_or_org_visible_for_user(space, SecurityContext.current_user),
+        ServicesController.query_parameters,
         @opts,
       )
 
@@ -65,7 +86,7 @@ module VCAP::CloudController
       )
 
       collection_renderer.render_json(
-        associated_controller,
+        ServicesController,
         filtered_dataset,
         associated_path,
         opts,
@@ -85,7 +106,8 @@ module VCAP::CloudController
         relation_name = :managed_service_instances
       end
 
-      service_instances = Query.filtered_dataset_from_query_params(model_class,
+      service_instances = Query.filtered_dataset_from_query_params(
+        model_class,
         space.user_visible_relationship_dataset(relation_name, SecurityContext.current_user, SecurityContext.admin?),
         ServiceInstancesController.query_parameters,
         @opts)
@@ -114,9 +136,67 @@ module VCAP::CloudController
 
       @space_event_repository.record_space_delete_request(space, SecurityContext.current_user, SecurityContext.current_user_email, recursive?)
 
-      delete_action = SpaceDelete.new(current_user.id, current_user_email)
+      delete_action = SpaceDelete.new(current_user.guid, current_user_email)
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, guid, delete_action)
       enqueue_deletion_job(deletion_job)
+    end
+
+    [:manager, :developer, :auditor].each do |role|
+      plural_role = role.to_s.pluralize
+
+      put "/v2/spaces/:guid/#{plural_role}", "add_#{role}_by_username".to_sym
+
+      define_method("add_#{role}_by_username") do |guid|
+        FeatureFlag.raise_unless_enabled!('set_roles_by_username') unless SecurityContext.admin?
+
+        username = parse_and_validate_json(body)['username']
+
+        begin
+          user_id = @username_lookup_uaa_client.id_for_username(username)
+        rescue UaaUnavailable
+          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
+        rescue UaaEndpointDisabled
+          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
+        end
+        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
+
+        user = User.where(guid: user_id).first || User.create(guid: user_id)
+
+        space = find_guid_and_validate_access(:update, guid)
+        space.send("add_#{role}", user)
+
+        [HTTP::CREATED, object_renderer.render_json(self.class, space, @opts)]
+      end
+    end
+
+    [:manager, :developer, :auditor].each do |role|
+      plural_role = role.to_s.pluralize
+
+      delete "/v2/spaces/:guid/#{plural_role}", "remove_#{role}_by_username".to_sym
+
+      define_method("remove_#{role}_by_username") do |guid|
+        FeatureFlag.raise_unless_enabled!('unset_roles_by_username') unless SecurityContext.admin?
+
+        username = parse_and_validate_json(body)['username']
+
+        begin
+          user_id = @username_lookup_uaa_client.id_for_username(username)
+        rescue UaaUnavailable
+          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
+        rescue UaaEndpointDisabled
+          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
+        end
+        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
+
+        user = User.where(guid: user_id).first
+
+        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user
+
+        space = find_guid_and_validate_access(:update, guid)
+        space.send("remove_#{role}", user)
+
+        [HTTP::OK, object_renderer.render_json(self.class, space, @opts)]
+      end
     end
 
     private

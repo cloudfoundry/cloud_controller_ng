@@ -6,6 +6,7 @@ resource 'Service Brokers', type: [:api, :legacy_api] do
   let!(:service_brokers) { 3.times { VCAP::CloudController::ServiceBroker.make } }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.first }
   let(:guid) { service_broker.guid }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:broker_catalog) do
     {
       'services' => [
@@ -37,6 +38,7 @@ resource 'Service Brokers', type: [:api, :legacy_api] do
     field :broker_url, 'The URL of the service broker.', required: true, example_values: %w(https://broker.example.com)
     field :auth_username, 'The username with which to authenticate against the service broker.', required: true, example_values: %w(admin)
     field :auth_password, 'The password with which to authenticate against the service broker.', required: true, example_values: %w(secretpassw0rd)
+    field :space_guid, 'Guid of a space the broker is scoped to. Space developers are able to create service brokers scoped to a space.', required: false, experimental: true
   end
 
   shared_context 'updatable_fields' do
@@ -47,6 +49,11 @@ resource 'Service Brokers', type: [:api, :legacy_api] do
   end
 
   describe 'Standard endpoints' do
+    before do
+      service_broker.space = space
+      service_broker.save
+    end
+
     standard_model_list :service_broker, VCAP::CloudController::ServiceBrokersController
     standard_model_get :service_broker
     standard_model_delete :service_broker, async: false
@@ -67,6 +74,19 @@ resource 'Service Brokers', type: [:api, :legacy_api] do
         expect(parsed_response['entity']['name']).to eq('service-broker-name')
         expect(parsed_response['entity']['broker_url']).to eq('https://broker.example.com')
         expect(parsed_response['entity']['auth_username']).to eq('admin')
+
+        document_warning_header(response_headers)
+      end
+
+      it 'can create a Private Service Broker' do
+        client.post '/v2/service_brokers', fields_json({ space_guid: space.guid }), headers
+
+        expect(status).to eq 201
+        validate_response VCAP::RestAPI::MetadataMessage, parsed_response['metadata']
+        expect(parsed_response['entity']['name']).to eq('service-broker-name')
+        expect(parsed_response['entity']['broker_url']).to eq('https://broker.example.com')
+        expect(parsed_response['entity']['auth_username']).to eq('admin')
+        expect(parsed_response['entity']['space_guid']).to eq(space.guid)
 
         document_warning_header(response_headers)
       end

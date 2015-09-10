@@ -11,12 +11,16 @@ module VCAP::Services::ServiceBrokers::V2
     let(:url) { 'http://broker.example.com' }
     let(:full_url) { "http://#{auth_username}:#{auth_password}@broker.example.com#{path}" }
     let(:path) { '/the/path' }
+    let(:fake_logger) { nil }
 
     subject(:client) do
       HttpClient.new(
-        url: url,
-        auth_username: auth_username,
-        auth_password: auth_password
+        {
+          url: url,
+          auth_username: auth_username,
+          auth_password: auth_password,
+        },
+        fake_logger
       )
     end
 
@@ -25,6 +29,8 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     shared_examples 'a basic successful request' do
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
+
       describe 'returning a correct response object' do
         subject { make_request }
 
@@ -36,7 +42,7 @@ module VCAP::Services::ServiceBrokers::V2
         make_request
         expect(a_request(http_method, full_url).
           with(query: hash_including({})).
-          with(headers: { 'X-Broker-Api-Version' => '2.4' })).
+          with(headers: { 'X-Broker-Api-Version' => '2.6' })).
           to have_been_made
       end
 
@@ -54,6 +60,22 @@ module VCAP::Services::ServiceBrokers::V2
           with(query: hash_including({})).
           with(headers: { 'Accept' => 'application/json' })).
           to have_been_made
+      end
+
+      it 'sets the X-Api-Info-Location header to the /v2/info endpoint at the external address' do
+        make_request
+        expect(a_request(http_method, full_url).
+          with(query: hash_including({})).
+          with(headers: { 'X-Api-Info-Location' => "#{TestConfig.config[:external_domain]}/v2/info" })).
+          to have_been_made
+      end
+
+      it 'logs the default headers' do
+        make_request
+        expect(fake_logger).to have_received(:debug).with(match(/Accept"=>"application\/json/))
+        expect(fake_logger).to have_received(:debug).with(match(/X-VCAP-Request-ID"=>"[[:alnum:]-]+/))
+        expect(fake_logger).to have_received(:debug).with(match(/X-Broker-Api-Version"=>"2\.6/))
+        expect(fake_logger).to have_received(:debug).with(match(%r{X-Api-Info-Location"=>"api2\.vcap\.me/v2/info}))
       end
 
       context 'when an https URL is used' do
@@ -74,6 +96,7 @@ module VCAP::Services::ServiceBrokers::V2
               :receive_timeout= => nil,
               :send_timeout= => nil,
               :set_auth => nil,
+              :default_header= => nil,
               :default_header => {},
               :ssl_config => ssl_config,
               :request => response)
@@ -165,6 +188,7 @@ module VCAP::Services::ServiceBrokers::V2
           :receive_timeout= => nil,
           :send_timeout= => nil,
           :set_auth => nil,
+          :default_header= => nil,
           :default_header => {},
           :ssl_config => ssl_config,
           :request => response)
@@ -323,6 +347,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#put' do
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
       let(:http_method) { :put }
       let(:message) do
         {
@@ -348,6 +373,11 @@ module VCAP::Services::ServiceBrokers::V2
           expect(a_request(:put, full_url).
             with(headers: { 'Content-Type' => 'application/json' })).
             to have_been_made
+        end
+
+        it 'logs the Content-Type Header' do
+          make_request
+          expect(fake_logger).to have_received(:debug).with(match(/"Content-Type"=>"application\/json"/))
         end
 
         it 'has a content body' do
@@ -379,6 +409,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#patch' do
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
       let(:http_method) { :patch }
       let(:message) do
         {
@@ -404,6 +435,11 @@ module VCAP::Services::ServiceBrokers::V2
           expect(a_request(:patch, full_url).
             with(headers: { 'Content-Type' => 'application/json' })).
             to have_been_made
+        end
+
+        it 'logs the Content-Type Header' do
+          make_request
+          expect(fake_logger).to have_received(:debug).with(match(/"Content-Type"=>"application\/json"/))
         end
 
         it 'has a content body' do

@@ -1,0 +1,60 @@
+#!/bin/bash
+
+export CC_JOB_DIR=/var/vcap/jobs/cloud_controller_ng
+source $CC_JOB_DIR/bin/ruby_version.sh
+
+CC_PACKAGE_DIR=/var/vcap/packages/cloud_controller_ng
+
+RUN_DIR=/var/vcap/sys/run/cloud_controller_migration
+LOG_DIR=/var/vcap/sys/log/cloud_controller_migration
+PIDFILE=$RUN_DIR/cloud_controller_migration.pid
+
+export CONFIG_DIR=$CC_JOB_DIR/config
+export CLOUD_CONTROLLER_NG_CONFIG=$CONFIG_DIR/cloud_controller_ng.yml
+export BUNDLE_GEMFILE=$CC_PACKAGE_DIR/cloud_controller_ng/Gemfile
+export HOME=/home/vcap # rake needs it to be set to run tasks
+
+export C_INCLUDE_PATH=/var/vcap/packages/libpq/include:$C_INCLUDE_PATH
+export LIBRARY_PATH=/var/vcap/packages/libpq/lib:$LIBRARY_PATH
+export LANG=en_US.UTF-8
+
+source /var/vcap/packages/common/utils.sh
+
+case $1 in
+
+  start)
+    mkdir -p $RUN_DIR
+    mkdir -p $LOG_DIR
+
+    chown vcap:vcap $RUN_DIR
+    chown vcap:vcap $LOG_DIR
+
+    pid_guard $PIDFILE "Cloud controller migration"
+
+    echo "$$" > $PIDFILE
+    chown vcap:vcap $PIDFILE
+
+    cd $CC_PACKAGE_DIR/cloud_controller_ng
+
+    # Run the migrations only on the first CC launch
+    <% if spec.index.to_i == 0 %>
+    chpst -u vcap:vcap bundle exec rake db:migrate
+
+    if [ $? != 0 ]; then
+      echo "Migrations failed"
+      exit 1
+    fi
+    <% end %>
+
+    exec sleep 100000d
+    ;;
+
+  stop)
+    kill_and_wait $PIDFILE
+    ;;
+
+  *)
+    echo "Usage: cloud_controller_ng_ctl {start|stop}"
+    ;;
+
+esac

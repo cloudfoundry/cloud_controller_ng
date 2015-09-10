@@ -1,6 +1,6 @@
 module VCAP::Services::SSO
   class DashboardClientManager
-    attr_reader :errors, :service_broker, :warnings
+    attr_reader :errors, :warnings
 
     REQUESTED_FEATURE_DISABLED_WARNING = [
       'Warning: This broker includes configuration for a dashboard client.',
@@ -8,13 +8,15 @@ module VCAP::Services::SSO
       'The broker catalog has been updated but its dashboard client configuration will be ignored.'
     ].join(' ').freeze
 
-    def initialize(service_broker, services_event_repository)
-      @service_broker = service_broker
-      @errors         = VCAP::Services::ValidationErrors.new
-      @warnings       = []
+    def initialize(broker, services_event_repository)
+      @broker   = broker
+      @errors   = VCAP::Services::ValidationErrors.new
+      @warnings = []
 
       @client_manager = VCAP::Services::SSO::UAA::UaaClientManager.new
-      @differ         = DashboardClientDiffer.new(service_broker)
+
+      @differ = DashboardClientDiffer.new(broker)
+
       @services_event_repository = services_event_repository
     end
 
@@ -29,7 +31,7 @@ module VCAP::Services::SSO
 
       return false unless all_clients_can_be_claimed_in_db?(catalog)
 
-      existing_ccdb_clients    = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
+      existing_ccdb_clients    = VCAP::CloudController::ServiceDashboardClient.find_claimed_client(broker)
       existing_ccdb_client_ids = existing_ccdb_clients.map(&:uaa_id)
 
       existing_uaa_client_ids  = fetch_clients_from_uaa(requested_client_ids | existing_ccdb_client_ids).map { |c| c['client_id'] }
@@ -42,8 +44,8 @@ module VCAP::Services::SSO
     def remove_clients_for_broker
       return unless cc_configured_to_modify_uaa_clients?
 
-      requested_clients       = [] # request no clients
-      existing_db_clients     = VCAP::CloudController::ServiceDashboardClient.find_clients_claimed_by_broker(service_broker)
+      requested_clients       = []
+      existing_db_clients     = VCAP::CloudController::ServiceDashboardClient.find_claimed_client(broker)
       existing_db_client_ids  = existing_db_clients.map(&:uaa_id)
       existing_uaa_client_ids = fetch_clients_from_uaa(existing_db_client_ids).map { |client| client['client_id'] }
 
@@ -51,12 +53,12 @@ module VCAP::Services::SSO
     end
 
     def has_warnings?
-      warnings.empty? == false
+      !warnings.empty?
     end
 
     private
 
-    attr_reader :client_manager, :differ
+    attr_reader :client_manager, :differ, :broker
 
     def all_clients_can_be_claimed_in_db?(catalog)
       requested_clients = catalog.services.map(&:dashboard_client).compact
@@ -97,7 +99,7 @@ module VCAP::Services::SSO
     def client_claimable_by_broker?(existing_client_in_ccdb)
       existing_client_in_ccdb.nil? ||
         existing_client_in_ccdb.service_broker.nil? ||
-        existing_client_in_ccdb.service_broker.id == service_broker.id
+        existing_client_in_ccdb.service_broker.id == broker.id
     end
 
     def claim_clients_and_update_uaa(requested_clients, existing_db_clients, existing_uaa_clients)
@@ -105,7 +107,7 @@ module VCAP::Services::SSO
       uaa_changeset = differ.create_uaa_changeset(requested_clients, existing_uaa_clients)
 
       begin
-        service_broker.db.transaction do
+        broker.db.transaction do
           db_changeset.each(&:db_command)
           client_manager.modify_transaction(uaa_changeset)
         end
@@ -116,9 +118,11 @@ module VCAP::Services::SSO
       uaa_changeset.each do |uaa_cmd|
         case uaa_cmd.uaa_command[:action]
         when 'add'
-          @services_event_repository.record_service_dashboard_client_event(:create, uaa_cmd.client_attrs, service_broker)
+          @services_event_repository.record_service_dashboard_client_event(
+            :create, uaa_cmd.client_attrs, broker)
         when 'delete'
-          @services_event_repository.record_service_dashboard_client_event(:delete, uaa_cmd.client_attrs, service_broker)
+          @services_event_repository.record_service_dashboard_client_event(
+            :delete, uaa_cmd.client_attrs, broker)
         end
       end
     end

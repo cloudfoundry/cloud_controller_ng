@@ -4,22 +4,22 @@ module VCAP::CloudController
   describe Stagers do
     let(:config) { TestConfig.config }
 
-    let(:message_bus)  { instance_double(CfMessageBus::MessageBus) }
-    let(:dea_pool)     { instance_double(Dea::Pool) }
-    let(:stager_pool)  { instance_double(Dea::StagerPool) }
-    let(:runners)      { Runners.new(config, message_bus, dea_pool, stager_pool) }
+    let(:message_bus) { instance_double(CfMessageBus::MessageBus) }
+    let(:dea_pool) { instance_double(Dea::Pool) }
+    let(:stager_pool) { instance_double(Dea::StagerPool) }
+    let(:runners) { Runners.new(config, message_bus, dea_pool, stager_pool) }
     let(:package_hash) { 'fake-package-hash' }
-    let(:buildpack)    { instance_double(AutoDetectionBuildpack, custom?: false) }
+    let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: false) }
     let(:docker_image) { nil }
     let(:custom_buildpacks_enabled?) { true }
 
     let(:app) do
       instance_double(App,
-        docker_image: docker_image,
-        package_hash: package_hash,
-        buildpack: buildpack,
+        docker_image:               docker_image,
+        package_hash:               package_hash,
+        buildpack:                  buildpack,
         custom_buildpacks_enabled?: custom_buildpacks_enabled?,
-        buildpack_specified?: false,
+        buildpack_specified?:       false,
       )
     end
 
@@ -81,20 +81,31 @@ module VCAP::CloudController
         end
       end
 
-      context 'if diego docker support is not enabled' do
-        before do
-          config[:diego_docker] = false
+      context 'with a docker app' do
+        let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: true) }
+        let(:docker_image) do
+          'fake-docker-image'
         end
 
-        context 'and the app has a docker_image' do
-          let(:docker_image) do
-            'fake-docker-image'
+        context 'and Docker disabled' do
+          before do
+            FeatureFlag.create(name: 'diego_docker', enabled: false)
           end
 
           it 'raises' do
             expect {
               subject.validate_app(app)
             }.to raise_error(Errors::ApiError, /Docker support has not been enabled/)
+          end
+        end
+
+        context 'and Docker enabled' do
+          before do
+            FeatureFlag.create(name: 'diego_docker', enabled: true)
+          end
+
+          it 'does not raise' do
+            expect { subject.validate_app(app) }.not_to raise_error
           end
         end
       end
@@ -136,8 +147,20 @@ module VCAP::CloudController
 
         it 'finds a diego stager' do
           expect(stagers).to receive(:diego_stager).with(app).and_call_original
-
           expect(stager).to be_a(Diego::Stager)
+        end
+
+        context 'when the app is a traditional buildpack app' do
+          let(:docker_image) { nil }
+
+          before do
+            locator = CloudController::DependencyLocator.instance
+            expect(locator).to receive(:blobstore_url_generator).with(true).and_call_original
+          end
+
+          it 'uses a service dns name blobstore url generator' do
+            expect(stager).to_not be_nil
+          end
         end
 
         context 'when the app has a docker image' do
@@ -145,7 +168,6 @@ module VCAP::CloudController
 
           it 'finds a diego stager' do
             expect(stagers).to receive(:diego_stager).with(app).and_call_original
-
             expect(stager).to be_a(Diego::Stager)
           end
         end
@@ -164,12 +186,12 @@ module VCAP::CloudController
     end
 
     describe '#stager_for_package' do
-      let(:package) { double(:package) }
+      let(:package) { double(:package, app: app) }
 
-      context 'when staging with the DEA' do
-        it 'finds a DEA backend' do
+      context 'when staging with Diego' do
+        it 'finds a Diego backend' do
           stager = stagers.stager_for_package(package)
-          expect(stager).to be_a(Dea::Stager)
+          expect(stager).to be_a(Diego::V3::Stager)
         end
       end
     end

@@ -56,7 +56,8 @@ module VCAP::CloudController
     many_to_one :service_plan
 
     export_attributes :name, :credentials, :service_plan_guid,
-      :space_guid, :gateway_data, :dashboard_url, :type, :last_operation
+      :space_guid, :gateway_data, :dashboard_url, :type, :last_operation,
+      :tags
 
     import_attributes :name, :service_plan_guid,
       :space_guid, :gateway_data
@@ -64,6 +65,8 @@ module VCAP::CloudController
     strip_attributes :name
 
     plugin :after_initialize
+
+    serialize_attributes :json, :tags
 
     # This only applies to V1 services
     alias_attribute :broker_provided_id, :gateway_name
@@ -89,21 +92,11 @@ module VCAP::CloudController
       super
       validates_presence :service_plan
       validation_policies.map(&:validate)
+      validate_tags_length
     end
 
     def last_operation
       service_instance_operation
-    end
-
-    def after_create
-      super
-      ServiceCreateEvent.create_from_service_instance(self)
-    end
-
-    def after_destroy
-      super
-
-      ServiceDeleteEvent.create_from_service_instance(self)
     end
 
     def after_initialize
@@ -154,6 +147,10 @@ module VCAP::CloudController
       service_plan.service
     end
 
+    def service_broker
+      service_plan.service_broker
+    end
+
     def create_snapshot(name)
       NGServiceGatewayClient.new(service, gateway_name).create_snapshot(name)
     end
@@ -171,7 +168,18 @@ module VCAP::CloudController
     end
 
     def tags
-      service.tags
+      super || []
+    end
+
+    def dashboard_url
+      unless VCAP::CloudController::SecurityContext.admin? || space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
+        return ''
+      end
+      super
+    end
+
+    def merged_tags
+      (service.tags + tags).uniq
     end
 
     def terminal_state?
@@ -185,84 +193,60 @@ module VCAP::CloudController
       false
     end
 
-    def lock_by_blocking_other_operations(&block)
+    def save_with_new_operation(instance_attributes, last_operation)
       ManagedServiceInstance.db.transaction do
         lock!
-        last_operation.lock! if last_operation
 
-        if operation_in_progress?
-          raise Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress')
+        update_attributes(instance_attributes)
+
+        if self.last_operation
+          self.last_operation.destroy
         end
 
-        block.call
+        self.service_instance_operation = ServiceInstanceOperation.create(last_operation)
       end
     end
 
-    # It is the caller's responsibility to save the operation state as 'succeeded' or 'failed'
-    def lock_by_failing_other_operations(type, &block)
+    def update_service_instance(attributes_to_update)
       ManagedServiceInstance.db.transaction do
         lock!
-        last_operation.lock! if last_operation
 
-        if operation_in_progress?
-          raise Errors::ApiError.new_from_details('ServiceInstanceOperationInProgress')
-        end
-
-        save_with_operation(
-          last_operation: {
-            type: type,
-            state: 'in progress'
-          }
-        )
-      end
-
-      begin
-        block.call
-      rescue
-        save_with_operation(
-          last_operation: {
-            type: type,
-            state: 'failed',
-          },
-        )
-        raise
+        update_attributes(attributes_to_update)
       end
     end
 
-    def save_with_operation(attributes_to_update)
+    def save_and_update_operation(attributes_to_update)
       ManagedServiceInstance.db.transaction do
         lock!
 
-        last_operation_attributes = attributes_to_update.delete(:last_operation)
+        instance_attrs, operation_attrs = extract_operation_attrs(attributes_to_update)
+        update_attributes(instance_attrs)
 
-        set_all(attributes_to_update)
-        save
-
-        if last_operation_attributes
-          if self.service_instance_operation
-            self.service_instance_operation.set_all(last_operation_attributes)
-            self.service_instance_operation.save
-          else
-            operation = ServiceInstanceOperation.create(last_operation_attributes)
-            self.service_instance_operation = operation
-          end
+        if operation_attrs
+          update_last_operation(operation_attrs)
         end
       end
     end
 
-    def update_from_broker_response(attributes_to_update)
-      return unless attributes_to_update
-      attributes_to_update = attributes_to_update.clone
-      ManagedServiceInstance.db.transaction do
-        lock!
+    def extract_operation_attrs(attributes_to_update)
+      operation_attrs = attributes_to_update.delete(:last_operation)
+      [attributes_to_update, operation_attrs]
+    end
 
-        last_operation_attributes = attributes_to_update.delete(:last_operation)
+    def update_last_operation(operation_attrs)
+      self.last_operation.update_attributes operation_attrs
+    end
 
-        update_from_hash(attributes_to_update)
+    private
 
-        if last_operation_attributes
-          self.service_instance_operation.update_from_hash(last_operation_attributes)
-        end
+    def update_attributes(instance_attrs)
+      set_all(instance_attrs)
+      save_changes
+    end
+
+    def validate_tags_length
+      if tags.join('').length > 255
+        @errors[:tags] = [:too_long]
       end
     end
   end

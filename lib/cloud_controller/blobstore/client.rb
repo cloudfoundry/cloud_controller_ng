@@ -41,7 +41,7 @@ module CloudController
           next unless File.file?(path)
           next unless within_limits?(File.size(path))
 
-          sha1 = Digest::SHA1.file(path).hexdigest
+          sha1 = Digester.new.digest_path(path)
           next if exists?(sha1)
 
           cp_to_blobstore(path, sha1)
@@ -104,6 +104,38 @@ module CloudController
         dest_file.save
       end
 
+      def delete_all(page_size=1000)
+        logger.info("Attempting to delete all files in #{@directory_key}/#{@root_dir} blobstore")
+
+        files_to_destroy = []
+
+        files.each do |blobstore_file|
+          next unless /#{@root_dir}/.match(blobstore_file.key)
+
+          files_to_destroy << blobstore_file
+          if files_to_destroy.length == page_size
+            delete_files(files_to_destroy)
+            files_to_destroy = []
+          end
+        end
+
+        if files_to_destroy.length > 0
+          delete_files(files_to_destroy)
+        end
+      end
+
+      def delete_files(files_to_delete)
+        if connection.respond_to?(:delete_multiple_objects)
+          # AWS needs the file key to work; other providers with multiple delete
+          # are currently not supported. When support is added this code may
+          # need an update.
+          keys = files_to_delete.collect(&:key)
+          connection.delete_multiple_objects(@directory_key, keys)
+        else
+          files_to_delete.each { |f| delete_file(f) }
+        end
+      end
+
       def delete(key)
         blob_file = file(key)
         delete_file(blob_file) if blob_file
@@ -158,7 +190,7 @@ module CloudController
       def connection
         options = @connection_config
         options = options.merge(endpoint: '') if local?
-        Fog::Storage.new(options)
+        @connection ||= Fog::Storage.new(options)
       end
 
       def logger

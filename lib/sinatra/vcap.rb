@@ -94,9 +94,6 @@ module Sinatra
       end
 
       before do
-        ::VCAP::Component.varz.synchronize do
-          varz[:requests][:outstanding] += 1
-        end
         logger_name = opts[:logger_name] || 'vcap.api'
         env['rack.logger'] = Steno.logger(logger_name)
 
@@ -113,18 +110,13 @@ module Sinatra
         end
 
         ::VCAP::Request.current_id = @request_guid
-        ::VCAP::CloudController::Diagnostics.request_received(request)
+        ::VCAP::CloudController::Diagnostics.new.request_received(request)
       end
 
       after do
-        ::VCAP::Component.varz.synchronize do
-          varz[:requests][:outstanding] -= 1
-          varz[:requests][:completed] += 1
-          varz[:http_status][response.status] += 1
-        end
         headers['Content-Type'] = 'application/json;charset=utf-8'
         headers[::VCAP::Request::HEADER_NAME] = @request_guid
-        ::VCAP::CloudController::Diagnostics.request_complete
+        ::VCAP::CloudController::Diagnostics.new.request_complete
         ::VCAP::Request.current_id = nil
         nil
       end
@@ -133,21 +125,9 @@ module Sinatra
     private
 
     def self.init_varz
-      ::VCAP::Component.varz.threadsafe!
-
-      requests = { outstanding: 0, completed: 0 }
-      http_status = {}
-      [(100..101), (200..206), (300..307), (400..417), (500..505)].each do |r|
-        r.each { |c| http_status[c] = 0 }
-      end
-      recent_errors = ::VCAP::RingBuffer.new(50)
-      vcap_sinatra = {
-        requests: requests,
-        http_status: http_status,
-        recent_errors: recent_errors
-      }
       ::VCAP::Component.varz.synchronize do
-        ::VCAP::Component.varz[:vcap_sinatra] ||= vcap_sinatra
+        ::VCAP::Component.varz[:vcap_sinatra] ||= {}
+        ::VCAP::Component.varz[:vcap_sinatra][:recent_errors] = ::VCAP::RingBuffer.new(50)
       end
     end
   end

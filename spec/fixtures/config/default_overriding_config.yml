@@ -36,7 +36,7 @@ default_health_check_timeout: 30 #seconds
 maximum_health_check_timeout: 90 #seconds
 
 broker_client_default_async_poll_interval_seconds: 60
-broker_client_max_async_poll_attempts: 25
+broker_client_max_async_poll_duration_minutes: 10080
 
 hm9000:
   url: "http://localhost:5155"
@@ -56,6 +56,7 @@ bulk_api:
   auth_user: bulk_user
   auth_password: bulk_password
 
+internal_service_hostname: cloud_controller_ng.service.cf.internal
 internal_api:
   auth_user: internal_user
   auth_password: internal_password
@@ -125,7 +126,6 @@ default_app_disk_in_mb: 512
 maximum_app_disk_in_mb: 3
 directories:
   some: "value"
-billing_event_writing_enabled: false
 request_timeout_in_seconds: 600
 skip_cert_verify: true
 app_bits_upload_grace_period_in_seconds: 600
@@ -146,8 +146,8 @@ allowed_cors_domains:
 - http://sharon.corr
 
 users_can_select_backend: false
-diego_docker: true
 default_to_diego_backend: true
+allow_app_ssh_access: true
 
 broker_client_timeout_seconds: 120
 broker_client_default_async_poll_interval_seconds: 120

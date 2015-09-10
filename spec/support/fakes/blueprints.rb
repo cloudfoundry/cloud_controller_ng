@@ -130,6 +130,10 @@ module VCAP::CloudController
   Service.blueprint(:v2) do
   end
 
+  Service.blueprint(:routing) do
+    requires { ['route_forwarding'] }
+  end
+
   ServiceInstance.blueprint do
     name              { Sham.name }
     credentials       { Sham.service_credentials }
@@ -157,6 +161,10 @@ module VCAP::CloudController
   ManagedServiceInstance.blueprint(:v2) do
   end
 
+  ManagedServiceInstance.blueprint(:routing) do
+    service_plan      { ServicePlan.make(:routing) }
+  end
+
   UserProvidedServiceInstance.blueprint do
     name              { Sham.name }
     credentials       { Sham.service_credentials }
@@ -167,7 +175,7 @@ module VCAP::CloudController
 
   ServiceInstanceOperation.blueprint do
     type                      { 'create' }
-    state                     { 'in progress' }
+    state                     { 'succeeded' }
     description               { 'description goes here' }
     updated_at                { Time.now.utc }
   end
@@ -192,6 +200,12 @@ module VCAP::CloudController
     service_instance  { ManagedServiceInstance.make }
     app               { AppFactory.make(space: service_instance.space) }
     syslog_drain_url  { nil }
+  end
+
+  ServiceKey.blueprint do
+    credentials       { Sham.service_credentials }
+    service_instance  { ManagedServiceInstance.make }
+    name               { Sham.name }
   end
 
   ServiceBroker.blueprint do
@@ -227,15 +241,13 @@ module VCAP::CloudController
   ServicePlan.blueprint(:v2) do
   end
 
+  ServicePlan.blueprint(:routing) do
+    service { Service.make(:routing) }
+  end
+
   ServicePlanVisibility.blueprint do
     service_plan { ServicePlan.make }
     organization { Organization.make }
-  end
-
-  BillingEvent.blueprint do
-    timestamp         { Time.now.utc }
-    organization_guid { Sham.guid }
-    organization_name { Sham.name }
   end
 
   Event.blueprint do
@@ -250,31 +262,6 @@ module VCAP::CloudController
     space      { Space.make }
   end
 
-  OrganizationStartEvent.blueprint do
-    BillingEvent.blueprint
-  end
-
-  AppStartEvent.blueprint do
-    BillingEvent.blueprint
-    space_guid        { Sham.guid }
-    space_name        { Sham.name }
-    app_guid          { Sham.guid }
-    app_name          { Sham.name }
-    app_run_id        { Sham.guid }
-    app_plan_name     { 'free' }
-    app_memory        { 256 }
-    app_instance_count { 1 }
-  end
-
-  AppStopEvent.blueprint do
-    BillingEvent.blueprint
-    space_guid        { Sham.guid }
-    space_name        { Sham.name }
-    app_guid          { Sham.guid }
-    app_name          { Sham.name }
-    app_run_id        { Sham.guid }
-  end
-
   AppEvent.blueprint do
     app               { AppFactory.make }
     instance_guid     { Sham.guid }
@@ -282,28 +269,6 @@ module VCAP::CloudController
     exit_status       { Random.rand(256) }
     exit_description  { Sham.description }
     timestamp         { Time.now.utc }
-  end
-
-  ServiceCreateEvent.blueprint do
-    BillingEvent.blueprint
-    space_guid        { Sham.guid }
-    space_name        { Sham.name }
-    service_instance_guid { Sham.guid }
-    service_instance_name { Sham.name }
-    service_guid      { Sham.guid }
-    service_label     { Sham.label }
-    service_provider  { Sham.provider }
-    service_version   { Sham.version }
-    service_plan_guid { Sham.guid }
-    service_plan_name { Sham.name }
-  end
-
-  ServiceDeleteEvent.blueprint do
-    BillingEvent.blueprint
-    space_guid        { Sham.guid }
-    space_name        { Sham.name }
-    service_instance_guid { Sham.guid }
-    service_instance_name { Sham.name }
   end
 
   QuotaDefinition.blueprint do
@@ -335,6 +300,7 @@ module VCAP::CloudController
     space_name { Sham.name }
     buildpack_guid { Sham.guid }
     buildpack_name { Sham.name }
+    process_type { 'web' }
   end
 
   ServiceUsageEvent.blueprint do
@@ -401,5 +367,8 @@ module VCAP::CloudController
   end
 
   TestModelSecondLevel.blueprint do
+  end
+
+  TestModelRedact.blueprint do
   end
 end

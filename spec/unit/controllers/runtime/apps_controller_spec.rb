@@ -10,6 +10,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:space_guid) }
       it { expect(described_class).to be_queryable_by(:organization_guid) }
       it { expect(described_class).to be_queryable_by(:diego) }
+      it { expect(described_class).to be_queryable_by(:stack_guid) }
     end
 
     describe 'query by org_guid' do
@@ -21,56 +22,74 @@ module VCAP::CloudController
       end
     end
 
+    describe 'querying by stack guid' do
+      let(:stack1) { Stack.make }
+      let(:stack2) { Stack.make }
+      let!(:app1) { App.make(stack_id: stack1.id) }
+      let!(:app2) { App.make(stack_id: stack2.id) }
+
+      it 'filters apps by stack guid' do
+        get "/v2/apps?q=stack_guid:#{stack1.guid}", {}, json_headers(admin_headers)
+        expect(last_response.status).to eq(200)
+        expect(decoded_response['resources'].length).to eq(1)
+        expect(decoded_response['resources'][0]['entity']['name']).to eq(app1.name)
+      end
+    end
+
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes(
           {
-            buildpack:            { type: 'string' },
-            command:              { type: 'string' },
-            console:              { type: 'bool', default: false },
-            debug:                { type: 'string' },
-            disk_quota:           { type: 'integer' },
-            environment_json:     { type: 'hash', default: {} },
-            health_check_timeout: { type: 'integer' },
-            health_check_type:    { type: 'string', default: 'port' },
-            instances:            { type: 'integer', default: 1 },
-            memory:               { type: 'integer' },
-            name:                 { type: 'string', required: true },
-            production:           { type: 'bool', default: false },
-            state:                { type: 'string', default: 'STOPPED' },
-            event_guids:          { type: '[string]' },
-            route_guids:          { type: '[string]' },
-            space_guid:           { type: 'string', required: true },
-            stack_guid:           { type: 'string' },
-            diego:                { type: 'bool' },
-            docker_image:         { type: 'string', required: false },
+            enable_ssh:              { type: 'bool' },
+            buildpack:               { type: 'string' },
+            command:                 { type: 'string' },
+            console:                 { type: 'bool', default: false },
+            debug:                   { type: 'string' },
+            disk_quota:              { type: 'integer' },
+            environment_json:        { type: 'hash', default: {} },
+            health_check_timeout:    { type: 'integer' },
+            health_check_type:       { type: 'string', default: 'port' },
+            instances:               { type: 'integer', default: 1 },
+            memory:                  { type: 'integer' },
+            name:                    { type: 'string', required: true },
+            production:              { type: 'bool', default: false },
+            state:                   { type: 'string', default: 'STOPPED' },
+            event_guids:             { type: '[string]' },
+            route_guids:             { type: '[string]' },
+            space_guid:              { type: 'string', required: true },
+            stack_guid:              { type: 'string' },
+            diego:                   { type: 'bool' },
+            docker_image:            { type: 'string', required: false },
+            docker_credentials_json: { type: 'hash', default: {} },
           })
       end
 
       it do
         expect(described_class).to have_updatable_attributes(
           {
-            buildpack:             { type: 'string' },
-            command:               { type: 'string' },
-            console:               { type: 'bool' },
-            debug:                 { type: 'string' },
-            disk_quota:            { type: 'integer' },
-            environment_json:      { type: 'hash' },
-            health_check_timeout:  { type: 'integer' },
-            health_check_type:     { type: 'string' },
-            instances:             { type: 'integer' },
-            memory:                { type: 'integer' },
-            name:                  { type: 'string' },
-            production:            { type: 'bool' },
-            state:                 { type: 'string' },
-            event_guids:           { type: '[string]' },
-            route_guids:           { type: '[string]' },
-            service_binding_guids: { type: '[string]' },
-            space_guid:            { type: 'string' },
-            stack_guid:            { type: 'string' },
-            diego:                 { type: 'bool' },
-            docker_image:          { type: 'string' },
-          })
+            enable_ssh:              { type: 'bool' },
+            buildpack:               { type: 'string' },
+            command:                 { type: 'string' },
+            console:                 { type: 'bool' },
+            debug:                   { type: 'string' },
+            disk_quota:              { type: 'integer' },
+            environment_json:        { type: 'hash' },
+            health_check_timeout:    { type: 'integer' },
+            health_check_type:       { type: 'string' },
+            instances:               { type: 'integer' },
+            memory:                  { type: 'integer' },
+            name:                    { type: 'string' },
+            production:              { type: 'bool' },
+            state:                   { type: 'string' },
+            event_guids:             { type: '[string]' },
+            route_guids:             { type: '[string]' },
+            service_binding_guids:   { type: '[string]' },
+            space_guid:              { type: 'string' },
+            stack_guid:              { type: 'string' },
+            diego:                   { type: 'bool' },
+            docker_image:            { type: 'string' },
+            docker_credentials_json: { type: 'hash' },
+        })
       end
     end
 
@@ -121,7 +140,7 @@ module VCAP::CloudController
           post '/v2/apps', MultiJson.dump(initial_hash), json_headers(admin_headers)
 
           app = App.last
-          expect(app_event_repository).to have_received(:record_app_create).with(app, app.space, admin_user, SecurityContext.current_user_email, expected_attrs)
+          expect(app_event_repository).to have_received(:record_app_create).with(app, app.space, admin_user.guid, SecurityContext.current_user_email, expected_attrs)
         end
       end
 
@@ -133,6 +152,190 @@ module VCAP::CloudController
         it 'does not allow user to create new app (spot check)' do
           post '/v2/apps', MultiJson.dump(initial_hash), json_headers(headers_for(make_developer_for_space(space)))
           expect(last_response.status).to eq(403)
+        end
+      end
+
+      context 'when allow_ssh is enabled globally' do
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return true
+        end
+
+        context 'when allow_ssh is enabled on the space' do
+          before do
+            space.allow_ssh = true
+            space.save
+          end
+
+          it 'allows enable_ssh to be set to true' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(admin_headers)
+            expect(last_response.status).to eq(201)
+          end
+
+          it 'allows enable_ssh to be set to false' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false)), json_headers(admin_headers)
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        context 'when allow_ssh is disabled on the space' do
+          before do
+            space.allow_ssh = false
+            space.save
+          end
+
+          it 'errors when attempting to set enable_ssh to true' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(admin_headers)
+            expect(last_response.status).to eq(400)
+          end
+
+          it 'allows enable_ssh to be set to false' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false)), json_headers(admin_headers)
+            expect(last_response.status).to eq(201)
+          end
+        end
+      end
+
+      context 'when allow_ssh is disabled globally' do
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return false
+        end
+
+        context 'when allow_ssh is enabled on the space' do
+          before do
+            space.allow_ssh = true
+            space.save
+          end
+
+          it 'errors when attempting to set enable_ssh to true' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(admin_headers)
+            expect(last_response.status).to eq(400)
+          end
+
+          it 'allows enable_ssh to be set to false' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false)), json_headers(admin_headers)
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        context 'when allow_ssh is disabled on the space' do
+          before do
+            space.allow_ssh = false
+            space.save
+          end
+
+          it 'errors when attempting to set enable_ssh to true' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(admin_headers)
+            expect(last_response.status).to eq(400)
+          end
+
+          it 'allows enable_ssh to be set to false' do
+            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false)), json_headers(admin_headers)
+            expect(last_response.status).to eq(201)
+          end
+        end
+      end
+    end
+
+    describe 'docker image credentials' do
+      let(:space) { Space.make }
+      let(:space_guid) { space.guid.to_s }
+      let(:initial_hash) do
+        {
+          name: 'maria',
+          space_guid: space_guid
+        }
+      end
+      let(:decoded_response) { MultiJson.load(last_response.body) }
+
+      let(:login_server) { 'https://index.docker.io/v1' }
+      let(:user) { 'user' }
+      let(:password) { 'password' }
+      let(:email) { 'email@example.com' }
+      let(:docker_credentials) do
+        {
+          docker_login_server: login_server,
+          docker_user: user,
+          docker_password: password,
+          docker_email: email
+        }
+      end
+      let(:body) do
+        MultiJson.dump(initial_hash.merge(docker_credentials_json: docker_credentials))
+      end
+
+      let(:user_headers) { json_headers(admin_headers) }
+      let(:redacted_message) { { 'redacted_message' => '[PRIVATE DATA HIDDEN]' } }
+
+      def create_app
+        post '/v2/apps', body, user_headers
+        expect(last_response.status).to eq(201)
+        decoded_response['metadata']['guid']
+      end
+
+      def read_app
+        app_guid = create_app
+        get "/v2/apps/#{app_guid}", '{}', user_headers
+        expect(last_response.status).to eq(200)
+      end
+
+      def update_app
+        app_guid = create_app
+        put "/v2/apps/#{app_guid}", body, user_headers
+        expect(last_response.status).to eq(201)
+      end
+
+      context 'create app' do
+        context 'by admin' do
+          it 'redacts the credentials' do
+            create_app
+          end
+        end
+
+        context 'by developer' do
+          let(:user_headers) { json_headers(headers_for(make_developer_for_space(space))) }
+
+          it 'redacts the credentials' do
+            create_app
+            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
+          end
+        end
+      end
+
+      context 'read app' do
+        context 'by admin' do
+          it 'redacts the credentials' do
+            read_app
+            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
+          end
+        end
+
+        context 'by developer' do
+          let(:user_headers) { json_headers(headers_for(make_developer_for_space(space))) }
+
+          it 'redacts the credentials' do
+            read_app
+            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
+          end
+        end
+      end
+
+      context 'update app' do
+        context 'by admin' do
+          it 'redacts the credentials' do
+            update_app
+            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
+          end
+        end
+
+        context 'by developer' do
+          let(:user_headers) { json_headers(headers_for(make_developer_for_space(space))) }
+
+          it 'redacts the credentials' do
+            update_app
+            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
+          end
         end
       end
     end
@@ -170,6 +373,88 @@ module VCAP::CloudController
         end
       end
 
+      context 'when allow_ssh is enabled globally' do
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return true
+        end
+
+        context 'when allow_ssh is enabled on the space' do
+          before do
+            app_obj.space.allow_ssh = true
+            app_obj.space.save
+          end
+
+          it 'allows enable_ssh to be set to true' do
+            put "/v2/apps/#{app_obj.guid}", '{ "allow_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+            expect(last_response.status).to eq(201)
+          end
+
+          it 'allows enable_ssh to be set to false' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        context 'when allow_ssh is disabled on the space' do
+          before do
+            app_obj.space.allow_ssh = false
+            app_obj.space.save
+          end
+
+          it 'errors when attempting to set allow_ssh to true' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+            expect(last_response.status).to eq(400)
+          end
+
+          it 'allows allow_ssh to be set to false' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+            expect(last_response.status).to eq(201)
+          end
+        end
+      end
+
+      context 'when allow_ssh is disabled globally' do
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return false
+        end
+
+        context 'when allow_ssh is enabled on the space' do
+          before do
+            app_obj.space.allow_ssh = true
+            app_obj.space.save
+          end
+
+          it 'errors when attempting to set enable_ssh to true' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+            expect(last_response.status).to eq(400)
+          end
+
+          it 'allows enable_ssh to be set to false' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        context 'when allow_ssh is disabled on the space' do
+          before do
+            app_obj.space.allow_ssh = false
+            app_obj.space.save
+          end
+
+          it 'errors when attempting to set enable_ssh to true' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": true }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+            expect(last_response.status).to eq(400)
+          end
+
+          it 'allows enable_ssh to be set to false' do
+            put "/v2/apps/#{app_obj.guid}", '{ "enable_ssh": false }', json_headers(headers_for(make_developer_for_space(app_obj.space)))
+            expect(last_response.status).to eq(201)
+          end
+        end
+      end
+
       describe 'events' do
         let(:update_hash) { { instances: 2, foo: 'foo_value' } }
 
@@ -177,10 +462,10 @@ module VCAP::CloudController
           it 'records app update with whitelisted attributes' do
             allow(app_event_repository).to receive(:record_app_update).and_call_original
 
-            expect(app_event_repository).to receive(:record_app_update) do |recorded_app, recorded_space, user, user_name, attributes|
+            expect(app_event_repository).to receive(:record_app_update) do |recorded_app, recorded_space, user_guid, user_name, attributes|
               expect(recorded_app.guid).to eq(app_obj.guid)
               expect(recorded_app.instances).to eq(2)
-              expect(user).to eq(admin_user)
+              expect(user_guid).to eq(admin_user.guid)
               expect(user_name).to eq(SecurityContext.current_user_email)
               expect(attributes).to eq({ 'instances' => 2 })
             end
@@ -258,7 +543,7 @@ module VCAP::CloudController
 
           delete_app
 
-          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, app_obj.space, admin_user, SecurityContext.current_user_email, false)
+          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, app_obj.space, admin_user.guid, SecurityContext.current_user_email, false)
         end
 
         it 'records the recursive query parameter when recursive'  do
@@ -266,7 +551,7 @@ module VCAP::CloudController
 
           delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
 
-          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, app_obj.space, admin_user, SecurityContext.current_user_email, true)
+          expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, app_obj.space, admin_user.guid, SecurityContext.current_user_email, true)
         end
 
         it 'does not record when the destroy fails' do
@@ -472,6 +757,144 @@ module VCAP::CloudController
       end
     end
 
+    describe 'downloading the droplet' do
+      let(:blobstore) do
+        CloudController::DependencyLocator.instance.droplet_blobstore
+      end
+      let(:app_obj) { AppFactory.make droplet_hash: nil } # explicitly unstaged app
+
+      before do
+        Fog.unmock!
+        TestConfig.config
+      end
+
+      context 'with a local blobstore' do
+        context 'with a valid droplet' do
+          before do
+            app_obj.droplet_hash = 'abcdef'
+            app_obj.save
+          end
+
+          context 'with nginx' do
+            let(:droplets_config) do
+              { droplet_directory_key: 'cc-droplets',
+                fog_connection: {
+                provider: 'Local',
+                local_root: Dir.mktmpdir('droplets', workspace)
+              } }
+            end
+            let(:packages_config) do
+              { fog_connection: {
+                  provider: 'Local',
+                  local_root: Dir.mktmpdir('packages', workspace)
+                },
+                app_package_directory_key: 'cc-packages' }
+            end
+            let(:workspace) { Dir.mktmpdir }
+
+            before do
+              TestConfig.override(droplets: droplets_config, packages: packages_config)
+            end
+
+            it 'redirects nginx to serve staged droplet' do
+              droplet_file = Tempfile.new(app_obj.guid)
+              droplet_file.write('droplet contents')
+              droplet_file.close
+
+              droplet = CloudController::DropletUploader.new(app_obj, blobstore)
+              droplet.upload(droplet_file.path)
+
+              get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+              expect(last_response.status).to eq(200)
+              expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{app_obj.guid}")
+            end
+
+            context 'with a valid app but no droplet' do
+              it 'raises an error' do
+                get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+                expect(last_response.status).to eq(404)
+                expect(decoded_response['description']).to eq("Droplet not found for app with guid #{app_obj.guid}")
+              end
+            end
+          end
+
+          context 'without nginx' do
+            let(:droplets_config) do
+              { droplet_directory_key: 'cc-droplets',
+                fog_connection: {
+                provider: 'Local',
+                local_root: Dir.mktmpdir('droplets', workspace)
+              } }
+            end
+            let(:packages_config) do
+              { fog_connection: {
+                provider: 'Local',
+                local_root: Dir.mktmpdir('packages', workspace)
+              },
+                app_package_directory_key: 'cc-packages' }
+            end
+            let(:workspace) { Dir.mktmpdir }
+
+            before do
+              TestConfig.override(droplets: droplets_config, packages: packages_config)
+              TestConfig.config[:nginx][:use_nginx] = false
+            end
+
+            it 'should return the droplet' do
+              Tempfile.create(app_obj.guid) do |f|
+                f.write('droplet contents')
+                f.close
+                CloudController::DropletUploader.new(app_obj, blobstore).upload(f.path)
+
+                get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+                expect(last_response.status).to eq(200)
+                expect(last_response.body).to eq('droplet contents')
+              end
+            end
+
+            context 'with a valid app but no droplet' do
+              it 'should return an error' do
+                get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+                expect(last_response.status).to eq(404)
+                expect(decoded_response['description']).to eq("Droplet not found for app with guid #{app_obj.guid}")
+              end
+            end
+          end
+        end
+
+        context 'with an invalid app' do
+          it 'should return an error' do
+            get '/v2/apps/bad/droplet/download', MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+            expect(last_response.status).to eq(404)
+          end
+        end
+      end
+
+      context 'when the blobstore is not local' do
+        before do
+          allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+        end
+
+        it 'should redirect to the url provided by the blobstore_url_generator' do
+          allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('http://example.com/somewhere/else')
+          get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+          expect(last_response).to be_redirect
+          expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
+        end
+
+        it 'should return an error for non-existent apps' do
+          get '/v2/apps/bad/droplet/download', MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+          expect(last_response.status).to eq(404)
+        end
+
+        it 'should return an error for an app without a droplet' do
+          allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return(nil)
+          get "/v2/apps/#{app_obj.guid}/droplet/download", MultiJson.dump({}), json_headers(admin_headers) # don't forget headers for developer / user
+          expect(last_response.status).to eq(404)
+        end
+      end
+    end
+
     describe 'on route change' do
       let(:space) { Space.make }
       let(:domain) do
@@ -506,6 +929,53 @@ module VCAP::CloudController
         expect(last_response.status).to eq(201)
       end
 
+      context 'with Docker app' do
+        let(:route) { domain.add_route(host: 'app', space: space) }
+        let(:pre_mapped_route) { domain.add_route(host: 'pre_mapped_route', space: space) }
+        let(:docker_app) do
+          AppFactory.make(
+            space: space,
+            state: 'STARTED',
+            package_hash: 'abc',
+            droplet_hash: 'def',
+            package_state: 'STAGED',
+            diego: true,
+            docker_image: 'some-image',
+          )
+        end
+
+        before do
+          FeatureFlag.create(name: 'diego_docker', enabled: true)
+          put "/v2/apps/#{docker_app.guid}/routes/#{pre_mapped_route.guid}", {}, json_headers(@headers_for_user)
+        end
+
+        context 'when Docker is disabled' do
+          before do
+            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
+          end
+
+          context 'and a route is mapped' do
+            before do
+              put "/v2/apps/#{docker_app.guid}/routes/#{route.guid}", nil, json_headers(@headers_for_user)
+            end
+
+            it 'succeeds' do
+              expect(last_response.status).to eq(201)
+            end
+          end
+
+          context 'and a previously mapped route is unmapped' do
+            before do
+              delete "/v2/apps/#{docker_app.guid}/routes/#{pre_mapped_route.guid}", nil, json_headers(@headers_for_user)
+            end
+
+            it 'succeeds' do
+              expect(last_response.status).to eq(201)
+            end
+          end
+        end
+      end
+
       it 'tells the dea client to update when we remove a url through PUT /v2/apps/:guid' do
         bar_route = @app.add_route(
           host: 'bar',
@@ -529,6 +999,61 @@ module VCAP::CloudController
         put @app_url, MultiJson.dump({ route_guids: [route.guid] }), json_headers(@headers_for_user)
 
         expect(last_response.status).to eq(201)
+      end
+    end
+
+    describe 'on instance number change' do
+      before do
+        FeatureFlag.create(name: 'diego_docker', enabled: true)
+      end
+
+      context 'when docker is disabled' do
+        let(:space) { Space.make }
+        let!(:started_app) do
+          App.make(space: space, state: 'STARTED', package_hash: 'made-up-package-hash', docker_image: 'docker-image')
+        end
+
+        before do
+          FeatureFlag.find(name: 'diego_docker').update(enabled: false)
+        end
+
+        it 'does not return docker disabled message' do
+          put "/v2/apps/#{started_app.guid}", MultiJson.dump(instances: 2), json_headers(admin_headers)
+
+          expect(last_response.status).to eq(201)
+        end
+      end
+    end
+
+    describe 'on state change' do
+      before do
+        FeatureFlag.create(name: 'diego_docker', enabled: true)
+      end
+
+      context 'when docker is disabled' do
+        let(:space) { Space.make }
+        let!(:stopped_app) { App.make(space: space, state: 'STOPPED', package_hash: 'made-up-package-hash', docker_image: 'docker-image') }
+        let!(:started_app) do
+          App.make(space: space, state: 'STARTED', package_hash: 'made-up-package-hash', docker_image: 'docker-image')
+        end
+
+        before do
+          FeatureFlag.find(name: 'diego_docker').update(enabled: false)
+        end
+
+        it 'returns docker disabled message on start' do
+          put "/v2/apps/#{stopped_app.guid}", MultiJson.dump(state: 'STARTED'), json_headers(admin_headers)
+
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match /Docker support has not been enabled/
+          expect(decoded_response['code']).to eq(320003)
+        end
+
+        it 'does not return docker disabled message on stop' do
+          put "/v2/apps/#{started_app.guid}", MultiJson.dump(state: 'STOPPED'), json_headers(admin_headers)
+
+          expect(last_response.status).to eq(201)
+        end
       end
     end
 
@@ -686,6 +1211,16 @@ module VCAP::CloudController
         expect(decoded_response['code']).to eq(310004)
       end
 
+      it 'returns app instance limit exceeded error correctly' do
+        space.organization.quota_definition = QuotaDefinition.make(app_instance_limit: 4)
+        space.organization.save(validate: false)
+
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(instances: 5), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(100008)
+      end
+
       it 'validates space quota instance memory limit before organization quotas' do
         space.organization.quota_definition = QuotaDefinition.make(instance_memory_limit: 100)
         space.organization.save(validate: false)
@@ -702,7 +1237,7 @@ module VCAP::CloudController
         put "/v2/apps/#{app_obj.guid}", MultiJson.dump(instances: -1), json_headers(admin_headers)
 
         expect(last_response.status).to eq(400)
-        expect(last_response.body).to match /instances less than 1/
+        expect(last_response.body).to match /instances less than 0/
         expect(decoded_response['code']).to eq(100001)
       end
 

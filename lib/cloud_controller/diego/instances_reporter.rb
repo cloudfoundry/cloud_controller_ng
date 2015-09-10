@@ -14,6 +14,7 @@ module VCAP::CloudController
         for_each_desired_instance(instances, app) do |instance|
           info = {
             state: instance[:state],
+            uptime: instance[:uptime],
             since: instance[:since],
           }
           info[:details] = instance[:details] if instance[:details]
@@ -28,9 +29,28 @@ module VCAP::CloudController
       end
 
       def number_of_starting_and_running_instances_for_apps(apps)
-        apps.each_with_object({}) do |app, result|
-          result.update(app.guid => number_of_starting_and_running_instances_for_app(app))
+        result = {}
+
+        instances_map = tps_client.bulk_lrp_instances(apps)
+        apps.each do |application|
+          running_indices = Set.new
+
+          for_each_desired_instance(instances_map[application.guid.to_sym] || [], application) do |instance|
+            next unless instance[:state] == 'RUNNING' || instance[:state] == 'STARTING'
+            running_indices.add(instance[:index])
+          end
+
+          result[application.guid] = running_indices.length
         end
+
+        result
+      rescue Errors::InstancesUnavailable
+        apps.each { |application| result[application.guid] = -1 }
+        result
+      rescue => e
+        logger.error('tps.error', error: e.to_s)
+        apps.each { |application| result[application.guid] = -1 }
+        result
       end
 
       def number_of_starting_and_running_instances_for_app(app)
@@ -45,10 +65,11 @@ module VCAP::CloudController
         end
 
         running_indices.length
-      rescue Errors::InstancesUnavailable => e
-        raise e
+      rescue Errors::InstancesUnavailable
+        return -1
       rescue => e
-        raise Errors::InstancesUnavailable.new(e)
+        logger.error('tps.error', error: e.to_s)
+        return -1
       end
 
       def crashed_instances_for_app(app)
@@ -59,7 +80,8 @@ module VCAP::CloudController
           if instance[:state] == 'CRASHED'
             result << {
                 'instance' => instance[:instance_guid],
-                'since'    => instance[:since],
+                'uptime' => instance[:uptime],
+                'since' => instance[:since],
             }
           end
         end
@@ -72,21 +94,28 @@ module VCAP::CloudController
         raise Errors::InstancesUnavailable.new(e)
       end
 
-      # TODO: this is only a stub. stats are not yet available from diego.
       def stats_for_app(app)
         result    = {}
-        instances = tps_client.lrp_instances(app)
+        instances = tps_client.lrp_instances_stats(app)
 
         for_each_desired_instance(instances, app) do |instance|
+          usage = instance[:stats] || {}
           info = {
             'state' => instance[:state],
             'stats' => {
-              'mem_quota'  => 0,
-              'disk_quota' => 0,
+              'name' => app.name,
+              'uris' => app.uris,
+              'host' => instance[:host],
+              'port' => instance[:port],
+              'uptime' => instance[:uptime],
+              'mem_quota'  => app[:memory] * 1024 * 1024,
+              'disk_quota' => app[:disk_quota] * 1024 * 1024,
+              'fds_quota' => app.file_descriptors,
               'usage'      => {
-                  'cpu'  => 0,
-                  'mem'  => 0,
-                  'disk' => 0,
+                  'time'  => usage[:time] || Time.now.utc.to_s,
+                  'cpu'  => usage[:cpu] || 0,
+                  'mem'  => usage[:mem] || 0,
+                  'disk' => usage[:disk] || 0,
               }
             }
           }
@@ -120,12 +149,16 @@ module VCAP::CloudController
           unless reported_instances[i]
             reported_instances[i] = {
                 state: 'DOWN',
-                since: Time.now.utc.to_i,
+                uptime: 0,
             }
           end
         end
 
         reported_instances
+      end
+
+      def logger
+        @logger ||= Steno.logger('cc.diego.instances_reporter')
       end
     end
   end

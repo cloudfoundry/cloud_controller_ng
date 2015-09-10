@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   describe VCAP::CloudController::LegacyService, :services do
     describe 'User facing apis' do
-      let(:user) { make_user_with_default_space(admin: true) }
+      let(:developer) { make_user_with_default_space }
       let(:guid_pattern) { '[[:alnum:]-]+' }
 
       describe 'GET /services' do
@@ -13,23 +13,23 @@ module VCAP::CloudController
           3.times.map do |i|
             ManagedServiceInstance.make(:v1,
               name: "core-#{i}",
-              space: user.default_space,
+              space: developer.default_space,
               service_plan: core_plan,
             )
           end
           2.times do |i|
             ManagedServiceInstance.make(:v1,
               name: "noncore-#{i}",
-              space: user.default_space,
+              space: developer.default_space,
             )
           end
 
           3.times do
-            space = make_space_for_user(user)
+            space = make_space_for_user(developer)
             ManagedServiceInstance.make(space: space)
           end
 
-          get '/services', {}, headers_for(user)
+          get '/services', {}, headers_for(developer)
         end
 
         it 'should return an array' do
@@ -69,7 +69,7 @@ module VCAP::CloudController
         end
 
         it 'should return service offerings' do
-          get '/services/v1/offerings', {}, headers_for(user)
+          get '/services/v1/offerings', {}, headers_for(developer)
           expect(last_response.status).to eq(200)
           expect(decoded_response['generic']['foo']['core']['1.0']['label']).to eq('foo-1.0')
           expect(decoded_response['generic']['foo']['core']['1.0']['url']).to eq('http://localhost:56789')
@@ -86,9 +86,9 @@ module VCAP::CloudController
         before do
           svc = Service.make(:v1, label: 'postgres', version: '9.0')
           ServicePlan.make(:v1, service: svc, name: LegacyService::LEGACY_PLAN_OVERIDE)
-          ManagedServiceInstance.make(:v1, space: user.default_space, name: 'duplicate')
+          ManagedServiceInstance.make(:v1, space: developer.default_space, name: 'duplicate')
 
-          3.times { ManagedServiceInstance.make(:v1, space: user.default_space) }
+          3.times { ManagedServiceInstance.make(:v1, space: developer.default_space) }
           @num_instances_before = ManagedServiceInstance.count
           @req = {
             type: 'database',
@@ -102,19 +102,19 @@ module VCAP::CloudController
 
         context 'with all required parameters' do
           before do
-            post '/services', MultiJson.dump(@req), json_headers(headers_for(user))
+            post '/services', MultiJson.dump(@req), headers_for(developer)
           end
 
           it 'should add the service the default app space' do
             expect(last_response.status).to eq(200)
-            svc = user.default_space.service_instances.find(name: 'instance_name')
+            svc = developer.default_space.service_instances.find(name: 'instance_name')
             expect(svc).not_to be_nil
             expect(ManagedServiceInstance.count).to eq(@num_instances_before + 1)
           end
 
           it 'sets the last operation' do
             expect(last_response.status).to eq(200)
-            svc = user.default_space.service_instances.select { |instance| instance.name == 'instance_name' }.first
+            svc = developer.default_space.service_instances.select { |instance| instance.name == 'instance_name' }.first
             op_state = svc.last_operation
 
             expect(op_state.type).to eq 'create'
@@ -127,7 +127,7 @@ module VCAP::CloudController
         context 'with an invalid vendor' do
           it 'should return bad request' do
             @req[:vendor] = 'invalid'
-            post '/services', MultiJson.dump(@req), json_headers(headers_for(user))
+            post '/services', MultiJson.dump(@req), headers_for(developer)
 
             expect(last_response.status).to eq(400)
             expect(ManagedServiceInstance.count).to eq(@num_instances_before)
@@ -139,7 +139,7 @@ module VCAP::CloudController
         context 'with an invalid version' do
           it 'should return bad request' do
             @req[:version] = 'invalid'
-            post '/services', MultiJson.dump(@req), json_headers(headers_for(user))
+            post '/services', MultiJson.dump(@req), headers_for(developer)
 
             expect(last_response.status).to eq(400)
             expect(ManagedServiceInstance.count).to eq(@num_instances_before)
@@ -151,12 +151,12 @@ module VCAP::CloudController
 
       describe 'GET /services/:name' do
         before do
-          @svc = ManagedServiceInstance.make(:v1, space: user.default_space)
+          @svc = ManagedServiceInstance.make(:v1, space: developer.default_space)
         end
 
         describe 'with a valid name' do
           it 'should return the service info' do
-            get "/services/#{@svc.name}", {}, headers_for(user)
+            get "/services/#{@svc.name}", {}, headers_for(developer)
 
             plan = @svc.service_plan
             service = plan.service
@@ -172,7 +172,7 @@ module VCAP::CloudController
 
         describe 'with an invalid name' do
           it 'should return not found' do
-            get '/services/invalid_name', {}, headers_for(user)
+            get '/services/invalid_name', {}, headers_for(developer)
 
             expect(last_response.status).to eq(404)
             expect(decoded_response['code']).to eq(60004)
@@ -183,9 +183,9 @@ module VCAP::CloudController
 
       describe 'DELETE /services/:name' do
         before do
-          3.times { ManagedServiceInstance.make(:v2, space: user.default_space) }
+          3.times { ManagedServiceInstance.make(:v2, space: developer.default_space) }
 
-          @svc = ManagedServiceInstance.make(:v2, space: user.default_space)
+          @svc = ManagedServiceInstance.make(:v2, space: developer.default_space)
           service_broker = @svc.service.service_broker
           uri = URI(service_broker.broker_url)
           broker_url = uri.host + uri.path
@@ -196,7 +196,7 @@ module VCAP::CloudController
 
         describe 'with a valid name' do
           it 'should reduce the services count by 1' do
-            delete "/services/#{@svc.name}", {}, headers_for(user)
+            delete "/services/#{@svc.name}", {}, headers_for(developer)
             expect(last_response.status).to eq(200)
             expect(ManagedServiceInstance.count).to eq(@num_instances_before - 1)
           end
@@ -204,7 +204,7 @@ module VCAP::CloudController
 
         describe 'with an invalid name' do
           it 'should return not found' do
-            delete '/services/invalid_name', {}, headers_for(user)
+            delete '/services/invalid_name', {}, headers_for(developer)
 
             expect(last_response.status).to eq(404)
             expect(decoded_response['code']).to eq(60004)

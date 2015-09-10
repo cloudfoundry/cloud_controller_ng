@@ -52,8 +52,6 @@ module VCAP::CloudController
       end
 
       describe 'App Space Level Permissions' do
-        user_sees_empty_enumerate('SpaceManager', :@space_a_manager, :@space_b_manager)
-
         describe 'Developer' do
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
@@ -72,6 +70,16 @@ module VCAP::CloudController
                            name: 'user provided service instance',
                            path: '/v2/user_provided_service_instances',
                            enumerate: 1
+        end
+
+        describe 'SpaceManager' do
+          let(:member_a) { @space_a_manager }
+          let(:member_b) { @space_b_manager }
+
+          include_examples 'permission enumeration', 'SpaceManager',
+            name: 'user provided service instance',
+            path: '/v2/user_provided_service_instances',
+            enumerate: 1
         end
       end
     end
@@ -177,18 +185,18 @@ module VCAP::CloudController
       describe 'the space_guid parameter' do
         let(:org) { Organization.make }
         let(:space) { Space.make(organization: org) }
-        let(:user) { make_developer_for_space(space) }
+        let(:developer) { make_developer_for_space(space) }
         let(:instance) { UserProvidedServiceInstance.make(space: space) }
 
         it 'prevents a developer from moving the service instance to a space for which he is also a space developer' do
           space2 = Space.make(organization: org)
-          space2.add_developer(user)
+          space2.add_developer(developer)
 
           move_req = MultiJson.dump(
             space_guid: space2.guid,
           )
 
-          put "/v2/user_provided_service_instances/#{instance.guid}", move_req, json_headers(headers_for(user))
+          put "/v2/user_provided_service_instances/#{instance.guid}", move_req, headers_for(developer)
 
           expect(last_response.status).to eq(400)
           expect(decoded_response['description']).to match /cannot change space for service instance/
@@ -196,13 +204,23 @@ module VCAP::CloudController
 
         it 'succeeds when the space_guid does not change' do
           req = MultiJson.dump(space_guid: instance.space.guid)
-          put "/v2/user_provided_service_instances/#{instance.guid}", req, json_headers(headers_for(user))
+          put "/v2/user_provided_service_instances/#{instance.guid}", req, headers_for(developer)
           expect(last_response.status).to eq 201
         end
 
         it 'succeeds when the space_guid is not provided' do
-          put "/v2/user_provided_service_instances/#{instance.guid}", {}.to_json, json_headers(headers_for(user))
+          put "/v2/user_provided_service_instances/#{instance.guid}", {}.to_json, headers_for(developer)
           expect(last_response.status).to eq 201
+        end
+      end
+
+      context 'when the service instance has a binding' do
+        let!(:binding) { ServiceBinding.make service_instance: service_instance }
+
+        it 'propagates the updated credentials to the binding' do
+          put "/v2/user_provided_service_instances/#{service_instance.guid}", req.to_json, headers_for(developer)
+
+          expect(binding.reload.credentials).to eq({ 'uri' => 'https://user:password@service-location.com:port/db' })
         end
       end
     end

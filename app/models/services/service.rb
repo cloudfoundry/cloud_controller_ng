@@ -40,26 +40,43 @@ module VCAP::CloudController
     alias_method :bindable?, :bindable
     alias_method :active?, :active
 
-    def self.organization_visible(organization)
-      service_ids = ServicePlan.
+    class << self
+      def public_visible
+        public_active_plans = ServicePlan.where(active: true, public: true).all
+        service_ids = public_active_plans.map(&:service_id).uniq
+        dataset.filter(id: service_ids)
+      end
+
+      def user_visibility_filter(current_user)
+        plans_i_can_see = ServicePlan.user_visible(current_user)
+        { id: plans_i_can_see.map(&:service_id).uniq }
+      end
+
+      def unauthenticated_visibility_filter
+        { id: self.public_visible.map(&:id) }
+      end
+
+      def space_or_org_visible_for_user(space, user)
+        organization_visible(space.organization).union space_visible(space, user)
+      end
+
+      def organization_visible(organization)
+        service_ids = ServicePlan.
           organization_visible(organization).
           inject([]) { |ids_so_far, service_plan| ids_so_far << service_plan.service_id }
-      dataset.filter(id: service_ids)
-    end
+        dataset.filter(id: service_ids)
+      end
 
-    def self.public_visible
-      public_active_plans = ServicePlan.where(active: true, public: true).all
-      service_ids = public_active_plans.map(&:service_id).uniq
-      dataset.filter(id: service_ids)
-    end
+      private
 
-    def self.user_visibility_filter(current_user)
-      plans_i_can_see = ServicePlan.user_visible(current_user)
-      { id: plans_i_can_see.map(&:service_id).uniq }
-    end
-
-    def self.unauthenticated_visibility_filter
-      { id: self.public_visible.map(&:id) }
+      def space_visible(space, user)
+        if space.has_member? user
+          private_brokers_for_space = ServiceBroker.filter(space_id: space.id)
+          dataset.filter(service_broker: (private_brokers_for_space))
+        else
+          dataset.filter(id: nil)
+        end
+      end
     end
 
     def provider
@@ -104,7 +121,8 @@ module VCAP::CloudController
       db.transaction do
         self.update(purging: true)
         service_plans.each do |plan|
-          ServiceInstanceDelete.new.delete(plan.service_instances_dataset)
+          errors = ServiceInstanceDelete.new.delete(plan.service_instances_dataset)
+          raise errors.first if errors.any?
         end
         self.destroy
       end

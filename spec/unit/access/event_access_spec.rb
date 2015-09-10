@@ -26,7 +26,7 @@ module VCAP::CloudController
         space.add_developer(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'space auditor' do
@@ -35,7 +35,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'organization manager (defensive)' do
@@ -45,7 +45,7 @@ module VCAP::CloudController
 
     context 'organization auditor (defensive)' do
       before { org.add_auditor(user) }
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'space manager (defensive)' do
@@ -129,7 +129,7 @@ module VCAP::CloudController
           space.destroy
         end
 
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
 
       context 'space manager (defensive)' do
@@ -194,7 +194,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'any user using client without cloud_controller.read' do

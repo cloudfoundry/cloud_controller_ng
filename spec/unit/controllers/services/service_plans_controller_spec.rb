@@ -141,7 +141,7 @@ module VCAP::CloudController
       end
 
       it 'is visible to cf admin' do
-        get '/v2/service_plans', {}, admin_headers
+        get '/v2/service_plans', {}, headers_for(admin_user)
         expect(plan_guids).to include(private_plan.guid)
       end
     end
@@ -163,7 +163,7 @@ module VCAP::CloudController
 
       context 'as an admin' do
         it 'displays all service plans' do
-          get '/v2/service_plans', {}, admin_headers
+          get '/v2/service_plans', {}, headers_for(admin_user)
           expect(last_response.status).to eq 200
 
           plans = ServicePlan.all
@@ -184,7 +184,7 @@ module VCAP::CloudController
 
         it 'can query by service plan guid' do
           service = @services[:public][0].service
-          get "/v2/service_plans?q=service_guid:#{service.guid}", {}, admin_headers
+          get "/v2/service_plans?q=service_guid:#{service.guid}", {}, headers_for(admin_user)
           expect(last_response.status).to eq 200
 
           expected_plan_guids = service.service_plans.map(&:guid)
@@ -204,7 +204,7 @@ module VCAP::CloudController
 
         it 'can query by service broker guid' do
           service = @services[:public][0].service
-          get "/v2/service_plans?q=service_broker_guid:#{service.service_broker.guid}", {}, admin_headers
+          get "/v2/service_plans?q=service_broker_guid:#{service.service_broker.guid}", {}, headers_for(admin_user)
           expect(last_response.status).to eq 200
 
           expected_plan_guids = service.service_plans.map(&:guid)
@@ -287,7 +287,7 @@ module VCAP::CloudController
           other_service_plan = ServicePlan.make
           payload = MultiJson.dump({ 'unique_id' => other_service_plan.unique_id })
 
-          put "/v2/service_plans/#{service_plan.guid}", payload, json_headers(admin_headers)
+          put "/v2/service_plans/#{service_plan.guid}", payload, headers_for(admin_user)
 
           expect(last_response.status).to be == 400
           expect(decoded_response.fetch('code')).to eql(110001)
@@ -300,7 +300,7 @@ module VCAP::CloudController
 
       it 'should prevent recursive deletions if there are any instances' do
         ManagedServiceInstance.make(service_plan: service_plan)
-        delete "/v2/service_plans/#{service_plan.guid}?recursive=true", {}, admin_headers
+        delete "/v2/service_plans/#{service_plan.guid}?recursive=true", {}, headers_for(admin_user)
         expect(last_response.status).to eq(400)
 
         expect(decoded_response.fetch('code')).to eq(10006)

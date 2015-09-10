@@ -1,11 +1,13 @@
 module VCAP::CloudController
   class PackageDelete
-    def delete(package_dataset)
-      package_dataset.select(:"#{PackageModel.table_name}__guid").each do |package|
+    def delete(packages)
+      packages = [packages] unless packages.is_a?(Array)
+
+      packages.each do |package|
         blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore, nil)
         Jobs::Enqueuer.new(blobstore_delete, queue: 'cc-generic').enqueue
+        package.destroy
       end
-      package_dataset.destroy
     end
   end
 end

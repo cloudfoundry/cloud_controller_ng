@@ -65,6 +65,8 @@ resource 'Space Quota Definitions', type: [:api, :legacy_api] do
       let(:associated_space) { VCAP::CloudController::Space.make(organization_guid: space_quota_definition.organization_guid) }
       let(:associated_space_guid) { associated_space.guid }
 
+      parameter :space_guid, 'The guid of the space'
+
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :space_quota_definition
       nested_model_associate :space, :space_quota_definition
       nested_model_remove :space, :space_quota_definition

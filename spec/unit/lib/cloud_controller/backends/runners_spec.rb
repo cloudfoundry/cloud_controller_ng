@@ -5,7 +5,6 @@ module VCAP::CloudController
   describe Runners do
     let(:config) do
       {
-          diego_docker: true,
           staging: {
               timeout_in_seconds: 90
           }
@@ -84,6 +83,19 @@ module VCAP::CloudController
         it 'finds a diego backend' do
           expect(runners).to receive(:diego_runner).with(app).and_call_original
           expect(runner).to be_a(Diego::Runner)
+        end
+
+        context 'when the app is a traditional buildpack app' do
+          let(:docker_image) { nil }
+
+          before do
+            locator = CloudController::DependencyLocator.instance
+            expect(locator).to receive(:blobstore_url_generator).with(true).and_call_original
+          end
+
+          it 'uses a service dns name blobstore url generator' do
+            expect(runner).to_not be_nil
+          end
         end
 
         context 'when the app has a docker image' do
@@ -416,13 +428,47 @@ module VCAP::CloudController
       it 'acquires the data in one select' do
         expect {
           runners.diego_apps_cache_data(100, 0)
-        }.to have_queried_db_times(/SELECT/, 1)
+        }.to have_queried_db_times(/SELECT.*FROM.*apps.*/, 1)
+      end
+
+      context 'with Docker app' do
+        before do
+          FeatureFlag.create(name: 'diego_docker', enabled: true)
+        end
+
+        let!(:docker_app) do
+          make_diego_app(docker_image: 'some-image', state: 'STARTED')
+        end
+
+        context 'when docker is enabled' do
+          before do
+            FeatureFlag.find(name: 'diego_docker').update(enabled: true)
+          end
+
+          it 'returns docker apps' do
+            batch = runners.diego_apps_cache_data(100, 0)
+            app_ids = batch.map { |data| data[0] }
+
+            expect(app_ids).to include(docker_app.id)
+          end
+        end
+
+        context 'when docker is disabled' do
+          before do
+            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
+          end
+
+          it 'does not return docker apps' do
+            batch = runners.diego_apps_cache_data(100, 0)
+            app_ids = batch.map { |data| data[0] }
+
+            expect(app_ids).not_to include(docker_app.id)
+          end
+        end
       end
     end
 
-    describe '#dea_apps' do
-      let!(:diego_app) { make_diego_app(id: 99, state: 'STARTED') }
-
+    describe '#dea_apps_hm9k' do
       before do
         allow(runners).to receive(:diego_running_optional?).and_return(true)
 
@@ -468,26 +514,31 @@ module VCAP::CloudController
         last_app.version = 'app-version-6'
         last_app.save
 
-        apps = runners.dea_apps(100, 0)
-
+        apps, _ = runners.dea_apps_hm9k(100, 0)
         expect(apps.count).to eq(6)
 
-        expect(apps.last.to_json).to match_object(last_app.to_json)
+        expect(apps.last).to include(
+          'id' => last_app.guid, 'instances' => last_app.instances,
+          'state' => last_app.state, 'memory' => last_app.memory,
+          'package_state' => last_app.package_state, 'version' => last_app.version,
+        )
+
+        expect(apps.last).to have_key('updated_at')
       end
 
       it 'respects the batch_size' do
         app_counts = [3, 5].map do |batch_size|
-          runners.dea_apps(batch_size, 0).count
+          runners.dea_apps_hm9k(batch_size, 0)[0].count
         end
 
         expect(app_counts).to eq([3, 5])
       end
 
       it 'returns non-intersecting apps across subsequent batches' do
-        first_batch = runners.dea_apps(3, 0)
+        first_batch, next_id = runners.dea_apps_hm9k(3, 0)
         expect(first_batch.count).to eq(3)
 
-        second_batch = runners.dea_apps(3, first_batch.last.id)
+        second_batch, _ = runners.dea_apps_hm9k(3, next_id)
         expect(second_batch.count).to eq(2)
 
         expect(second_batch & first_batch).to eq([])
@@ -496,9 +547,36 @@ module VCAP::CloudController
       it 'does not return deleted apps' do
         deleted_app = make_dea_app(id: 6, state: 'STARTED', deleted_at: DateTime.now.utc)
 
-        batch = runners.dea_apps(100, 0)
+        batch, _ = runners.dea_apps_hm9k(100, 0)
 
         expect(batch).not_to include(deleted_app)
+      end
+
+      it 'does not return stopped apps' do
+        stopped_app = make_dea_app(id: 6, state: 'STOPPED')
+
+        batch, _ = runners.dea_apps_hm9k(100, 0)
+
+        guids = batch.map { |entry| entry['id'] }
+        expect(guids).not_to include(stopped_app.guid)
+      end
+
+      it 'does not return apps that failed to stage' do
+        staging_failed_app = AppFactory.make(id: 6, state: 'STARTED', package_state: 'FAILED')
+
+        batch, _ = runners.dea_apps_hm9k(100, 0)
+
+        guids = batch.map { |entry| entry['id'] }
+        expect(guids).not_to include(staging_failed_app.guid)
+      end
+
+      it 'returns apps that have not yet been staged' do
+        staging_pending_app = AppFactory.make(id: 6, state: 'STARTED', package_state: 'PENDING')
+
+        batch, _ = runners.dea_apps_hm9k(100, 0)
+
+        guids = batch.map { |entry| entry['id'] }
+        expect(guids).to include(staging_pending_app.guid)
       end
     end
   end

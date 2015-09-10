@@ -25,7 +25,7 @@ module VCAP::CloudController
       end
 
       describe '#create_from_app' do
-        let(:app) { App.make }
+        let(:app) { AppFactory.make }
 
         it 'will create an event which matches the app' do
           event = repository.create_from_app(app)
@@ -130,6 +130,25 @@ module VCAP::CloudController
             expect {
               repository.create_from_app(app)
             }.to raise_error
+          end
+        end
+
+        context 'when the app is a v3 process' do
+          let(:app_name) { 'v3_app_name' }
+          let(:v3_app) { AppModel.make(name: 'v3_app_name') }
+          let(:app_guid) { v3_app.guid }
+
+          before do
+            v3_app.add_process_by_guid(app.guid)
+            app.reload
+          end
+
+          it 'records information about the parent app' do
+            event = repository.create_from_app(app)
+
+            expect(event.parent_app_name).to eq(app_name)
+            expect(event.parent_app_guid).to eq(app_guid)
+            expect(event.process_type).to eq(app.type)
           end
         end
       end

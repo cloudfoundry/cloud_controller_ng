@@ -17,7 +17,7 @@ module VCAP::CloudController
       has_write_scope = SecurityContext.scopes.include?('cloud_controller.write')
 
       space = Space.find(guid: desired_app.space_guid)
-      is_space_developer = space && space.developers.include?(context.user)
+      is_space_developer = space && space.has_developer?(context.user)
 
       org_active = space && space.organization.active?
 

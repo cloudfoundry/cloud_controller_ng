@@ -13,7 +13,7 @@ module VCAP::CloudController
           droplet_download_url = blobstore_url_generator.droplet_download_url(app)
           droplet_hash = app.droplet_hash
         else
-          droplet = DropletModel.find(guid: app.app.desired_droplet_guid)
+          droplet = DropletModel.find(guid: app.app.droplet_guid)
           droplet_download_url = blobstore_url_generator.v3_droplet_download_url(droplet)
           droplet_hash = droplet.droplet_hash
         end
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
         staging_env = EnvironmentVariableGroup.running.environment_json
         app_env     = app.environment_json || {}
-        env         = staging_env.merge(app_env).map { |k, v| "#{k}=#{v}" }
+        env         = staging_env.merge(app_env).merge({ 'CF_PROCESS_TYPE' => app.type }).map { |k, v| "#{k}=#{v}" }
         self[:env]  = env
 
         self[:cc_partition]         = config[:cc_partition]

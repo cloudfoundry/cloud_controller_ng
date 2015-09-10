@@ -29,7 +29,7 @@ module VCAP::CloudController
         @multi_message_bus_request = MultiResponseMessageBusRequest.new(@message_bus, subject)
 
         # Save the current staging task
-        @app.update(staging_task_id: task_id)
+        @app.update(package_state: 'PENDING', staging_task_id: task_id)
 
         # Attempt to stop any in-flight staging for this app
         @message_bus.publish('staging.stop', app_id: @app.guid)
@@ -40,6 +40,8 @@ module VCAP::CloudController
         @stager_pool.reserve_app_memory(@stager_id, staging_task_memory_mb)
 
         logger.info('staging.begin', app_guid: @app.guid)
+        staging_msg = staging_request
+
         staging_result = EM.schedule_sync do |promise|
           # First response is blocking stage_app.
           @multi_message_bus_request.on_response(staging_timeout) do |response, error|
@@ -55,7 +57,7 @@ module VCAP::CloudController
             handle_second_response(response, error)
           end
 
-          @multi_message_bus_request.request(staging_request)
+          @multi_message_bus_request.request(staging_msg)
         end
 
         staging_result

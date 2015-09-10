@@ -73,8 +73,9 @@ class SafeZipper
   end
 
   def any_outside_relative_paths?
-    zip_info.split("\n")[3..-3].find do |line|
-      is_outside?(line.match(/([^\s]+)$/)[1])
+    zip_info.split("\n")[3..-3].any? do |line|
+      match = line.match(/^\s*\d+\s+[\d-]+\s+[\d:]+\s+(.*)$/)
+      match && is_outside?(match[1])
     end
   end
 

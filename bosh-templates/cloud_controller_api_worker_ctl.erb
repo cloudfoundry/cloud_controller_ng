@@ -21,7 +21,7 @@ export LANG=en_US.UTF-8
 
 export NEWRELIC_ENABLE=<%= !!properties.cc.newrelic.license_key %>
 export NRCONFIG=$CONFIG_DIR/newrelic.yml
-export RACK_ENV=<%= p("cc.newrelic.environment_name") %>_background
+export NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>_background
 export NEW_RELIC_DISPATCHER=delayed_job
 
 source /var/vcap/packages/common/utils.sh

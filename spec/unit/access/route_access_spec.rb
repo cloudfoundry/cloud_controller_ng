@@ -50,17 +50,17 @@ module VCAP::CloudController
 
     context 'organization manager' do
       before { org.add_manager(user) }
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
 
       context 'when the organization is suspended' do
         before { allow(object).to receive(:in_suspended_org?).and_return(true) }
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
     end
 
     context 'organization auditor' do
       before { org.add_auditor(user) }
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'organization billing manager' do
@@ -74,7 +74,17 @@ module VCAP::CloudController
         space.add_manager(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
+
+      it 'cant create wildcard routes' do
+        object.host = '*'
+        expect(subject.create?(object)).to be_falsey
+      end
+
+      it 'cant update wildcard routes' do
+        object.host = '*'
+        expect(subject.update?(object)).to be_falsey
+      end
     end
 
     context 'space developer' do
@@ -87,12 +97,28 @@ module VCAP::CloudController
 
       it 'can create wildcard routes' do
         object.host = '*'
-        expect(subject.create?(object)).to be_falsey
+        expect(subject.create?(object)).to be_truthy
       end
 
       it 'can update wildcard routes' do
         object.host = '*'
-        expect(subject.update?(object)).to be_falsey
+        expect(subject.update?(object)).to be_truthy
+      end
+
+      context 'in a shared domain' do
+        before do
+          object.domain = SharedDomain.make
+        end
+
+        it 'cant create wildcard routes for shared domain' do
+          object.host = '*'
+          expect(subject.create?(object)).to be_falsey
+        end
+
+        it 'cant update wildcard routes for shared domain' do
+          object.host = '*'
+          expect(subject.update?(object)).to be_falsey
+        end
       end
 
       context 'changing the space' do
@@ -133,7 +159,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'organization user (defensive)' do
@@ -179,7 +205,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
       it { is_expected.to allow_op_on_object :reserved, nil }
     end
 

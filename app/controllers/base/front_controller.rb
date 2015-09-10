@@ -12,19 +12,32 @@ module VCAP::CloudController
 
     vcap_configure(logger_name: 'cc.api', reload_path: File.dirname(__FILE__))
 
-    def initialize(config, token_decoder)
+    def initialize(config, token_decoder, request_metrics)
       @config = config
       @token_decoder = token_decoder
+      @request_metrics = request_metrics
       super()
     end
 
     before do
+      @request_metrics.start_request
+
       auth_token = env['HTTP_AUTHORIZATION']
       I18n.locale = env['HTTP_ACCEPT_LANGUAGE']
 
       process_cors_headers
+
       VCAP::CloudController::Security::SecurityContextConfigurer.new(@token_decoder).configure(auth_token)
+      user_guid = VCAP::CloudController::SecurityContext.current_user.nil? ? nil : VCAP::CloudController::SecurityContext.current_user.guid
+
+      logger.info("Started request, Vcap-Request-Id: #{VCAP::Request.current_id}, User: #{user_guid}")
+
       validate_scheme
+    end
+
+    after do
+      @request_metrics.complete_request(status)
+      logger.info("Completed request, Vcap-Request-Id: #{headers['X-Vcap-Request-Id']}, Status: #{status}")
     end
 
     private

@@ -4,7 +4,7 @@ module CloudController
   module Blobstore
     describe Client do
       let(:content) { 'Some Nonsense' }
-      let(:sha_of_content) { Digest::SHA1.hexdigest(content) }
+      let(:sha_of_content) { Digester.new.digest(content) }
       let(:local_dir) { Dir.mktmpdir }
       let(:directory_key) { 'a-directory-key' }
       let(:connection_config) do
@@ -97,7 +97,7 @@ module CloudController
           describe 'a file existence' do
             it 'does not exist if not present' do
               different_content = 'foobar'
-              sha_of_different_content = Digest::SHA1.hexdigest(different_content)
+              sha_of_different_content = Digester.new.digest(different_content)
 
               expect(client.exists?(sha_of_different_content)).to be false
 
@@ -110,7 +110,7 @@ module CloudController
         end
 
         describe '#cp_r_to_blobstore' do
-          let(:sha_of_nothing) { Digest::SHA1.hexdigest('') }
+          let(:sha_of_nothing) { Digester.new.digest('') }
 
           it 'ensure that the sha of nothing and sha of content are different for subsequent tests' do
             expect(sha_of_nothing[0..1]).not_to eq(sha_of_content[0..1])
@@ -471,6 +471,102 @@ module CloudController
           end
         end
 
+        describe '#delete_all' do
+          let(:connection_config) { { provider: 'Local', local_root: local_dir } }
+
+          before do
+            Fog.unmock!
+          end
+
+          after do
+            Fog.mock!
+          end
+
+          it 'deletes all the files' do
+            first_path = File.join(local_dir, 'first_empty_file')
+            FileUtils.touch(first_path)
+            path = File.join(local_dir, 'empty_file')
+            FileUtils.touch(path)
+
+            client.cp_to_blobstore(first_path, 'ab56')
+            expect(client.exists?('ab56')).to be true
+            client.cp_to_blobstore(path, 'abcdef123456')
+            expect(client.exists?('abcdef123456')).to be true
+
+            client.delete_all
+
+            expect(client.exists?('ab56')).to be false
+            expect(client.exists?('abcdef123456')).to be false
+          end
+
+          it 'should be ok if there are no files' do
+            expect(client.files).to have(0).items
+            expect {
+              client.delete_all
+            }.to_not raise_error
+          end
+
+          context 'when the underlying blobstore allows multiple deletes in a single request' do
+            let(:connection_config) do
+              {
+                provider: 'AWS',
+                aws_access_key_id: 'fake_access_key_id',
+                aws_secret_access_key: 'fake_secret_access_key',
+              }
+            end
+
+            it 'should be ok if there are no files' do
+              Fog.mock!
+              expect(client.files).to have(0).items
+              expect {
+                client.delete_all
+              }.to_not raise_error
+            end
+
+            it 'deletes in groups of the page_size' do
+              allow(client).to receive(:delete_files).and_call_original
+
+              Fog.mock!
+              file = File.join(local_dir, 'empty_file')
+              FileUtils.touch(file)
+
+              client.cp_to_blobstore(file, 'abcdef1')
+              client.cp_to_blobstore(file, 'abcdef2')
+              client.cp_to_blobstore(file, 'abcdef3')
+              expect(client.exists?('abcdef1')).to be_truthy
+              expect(client.exists?('abcdef2')).to be_truthy
+              expect(client.exists?('abcdef3')).to be_truthy
+
+              page_size = 2
+              client.delete_all(page_size)
+
+              expect(client).to have_received(:delete_files).twice
+            end
+          end
+
+          context 'when a root dir is provided' do
+            let(:client_with_root) do
+              Client.new(connection_config, directory_key, nil, 'root-dir')
+            end
+
+            it 'only deletes files at the root' do
+              allow(client_with_root).to receive(:delete_files).and_call_original
+
+              file = File.join(local_dir, 'empty_file')
+              FileUtils.touch(file)
+
+              client.cp_to_blobstore(file, 'abcdef1')
+              client_with_root.cp_to_blobstore(file, 'abcdef2')
+
+              client_with_root.delete_all
+
+              expect(client_with_root).to have_received(:delete_files) do |files|
+                expect(files.length).to eq(1)
+              end
+            end
+          end
+        end
+
         describe '#delete' do
           it 'deletes the file' do
             path = File.join(local_dir, 'empty_file')
@@ -509,6 +605,59 @@ module CloudController
             expect {
               client.delete_blob(blob)
             }.to_not raise_error
+          end
+        end
+
+        describe '#delete_files' do
+          let(:connection_config) { { provider: 'Local', local_root: local_dir } }
+
+          it 'deletes all the files' do
+            Fog.unmock!
+
+            path = File.join(local_dir, 'empty_file')
+            FileUtils.touch(path)
+
+            client.cp_to_blobstore(path, 'ab56')
+            client.cp_to_blobstore(path, 'abcdef123456')
+            expect(client.exists?('ab56')).to be true
+            expect(client.exists?('abcdef123456')).to be true
+
+            client.delete_files([client.blob('abcdef123456').file, client.blob('ab56').file])
+
+            expect(client.exists?('ab56')).to be false
+            expect(client.exists?('abcdef123456')).to be false
+          end
+
+          context 'when the blobstore backing allows deleting multiple files' do
+            let(:connection_config) do
+              {
+                provider: 'AWS',
+                aws_access_key_id: 'fake_access_key_id',
+                aws_secret_access_key: 'fake_secret_access_key',
+              }
+            end
+
+            it 'only makes one request' do
+              Fog.mock!
+
+              path = File.join(local_dir, 'empty_file')
+              FileUtils.touch(path)
+
+              client.cp_to_blobstore(path, 'ab56')
+              client.cp_to_blobstore(path, 'abcdef123456')
+              expect(client.exists?('ab56')).to be true
+              expect(client.exists?('abcdef123456')).to be true
+
+              files = [client.blob('abcdef123456').file, client.blob('ab56').file]
+
+              connection = client.send(:connection)
+              allow(connection).to receive(:delete_multiple_objects).and_call_original
+
+              delete_response = client.delete_files(files)
+
+              expect(delete_response[:body]['DeleteResult'].length).to eq(files.length)
+              expect(connection).to have_received(:delete_multiple_objects).with(directory_key, ['ab/cd/abcdef123456', 'ab/56/ab56'])
+            end
           end
         end
       end

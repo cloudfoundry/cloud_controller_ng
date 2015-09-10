@@ -8,7 +8,7 @@ describe 'Sequel::Plugins::VcapRelations' do
     end
     self.class.send(:remove_const, name) if self.class.const_defined?(name)
     self.class.const_set(name, model_klass)
-    model_klass.set_dataset(DbConfig.connection["#{name.downcase}s".to_sym])
+    model_klass.set_dataset(DbConfig.new.connection["#{name.downcase}s".to_sym])
   end
 
   let!(:owner_klass)  { define_model(:Owner) }

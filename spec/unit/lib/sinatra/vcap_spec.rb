@@ -62,35 +62,6 @@ describe 'Sinatra::VCAP', type: :controller do
     VCAP::Component.varz.synchronize do
       # always start with an empty list of errors so we can check size later
       VCAP::Component.varz[:vcap_sinatra][:recent_errors].clear
-
-      @orig_varz = VCAP::Component.varz[:vcap_sinatra].dup
-    end
-    @orig_requests = @orig_varz[:requests].dup
-    @orig_completed = @orig_requests[:completed]
-    @orig_http_status = @orig_varz[:http_status].dup
-  end
-
-  shared_examples 'vcap sinatra varz stats' do |expected_response|
-    it 'should increment the number of completed ops' do
-      completed = nil
-      VCAP::Component.varz.synchronize do
-        completed = VCAP::Component.varz[:vcap_sinatra][:requests][:completed]
-      end
-
-      expect(completed).to eq(@orig_completed + 1)
-    end
-
-    it "should increment the number of #{expected_response}s" do
-      http_status = nil
-      VCAP::Component.varz.synchronize do
-        http_status = VCAP::Component.varz[:vcap_sinatra][:http_status]
-      end
-
-      http_status.each do |code, num|
-        expected_num = @orig_http_status[code]
-        expected_num += 1 if code == expected_response
-        expect(num).to eq(expected_num)
-      end
     end
   end
 
@@ -116,7 +87,6 @@ describe 'Sinatra::VCAP', type: :controller do
       expect(last_response.body).to eq('ok')
     end
 
-    include_examples 'vcap sinatra varz stats', 200
     include_examples 'vcap request id'
     include_examples 'http header content type'
   end
@@ -133,7 +103,6 @@ describe 'Sinatra::VCAP', type: :controller do
       expect(decoded_response['description']).to match(/Unknown request/)
     end
 
-    include_examples 'vcap sinatra varz stats', 404
     include_examples 'vcap request id'
     include_examples 'http header content type'
   end
@@ -162,7 +131,6 @@ describe 'Sinatra::VCAP', type: :controller do
       expect(recent_errors[0]).to be_an_instance_of(Hash)
     end
 
-    include_examples 'vcap sinatra varz stats', 500
     include_examples 'vcap request id'
     include_examples 'http header content type'
   end

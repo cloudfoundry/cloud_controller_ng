@@ -7,7 +7,7 @@ describe ServiceInstancePresenter do
 
     context 'for a managed service instance' do
       let(:service_instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(:v1, service_plan: service_plan)
+        VCAP::CloudController::ManagedServiceInstance.make(:v1, service_plan: service_plan, tags: ['meow'])
       end
 
       let(:service_plan) do
@@ -33,7 +33,7 @@ describe ServiceInstancePresenter do
         expect(subject.fetch(:vendor)).to eq(service_instance.service.label)
         expect(subject.fetch(:plan)).to eq(service_instance.service_plan.name)
         expect(subject.fetch(:name)).to eq(service_instance.name)
-        expect(subject.fetch(:tags)).to eq(['relational', 'mysql'])
+        expect(subject.fetch(:tags)).to eq(['relational', 'mysql', 'meow'])
       end
 
       context 'when the service does not have a version' do

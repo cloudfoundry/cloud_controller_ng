@@ -16,6 +16,8 @@ module VCAP::CloudController
 
     alias_method :active?, :active
 
+    alias_method :broker_provided_id, :unique_id
+
     def validate
       validates_presence :name,                message: 'is required'
       validates_presence :description,         message: 'is required'
@@ -24,6 +26,7 @@ module VCAP::CloudController
       validates_presence :unique_id,           message: 'is required'
       validates_unique [:service_id, :name], message: Sequel.lit('Plan names must be unique within a service')
       validates_unique :unique_id,           message: Sequel.lit('Plan ids must be unique')
+      validate_not_public_and_private
     end
 
     def_dataset_method(:organization_visible) do |organization|
@@ -43,12 +46,21 @@ module VCAP::CloudController
       service.bindable?
     end
 
-    # The "unique_id" should really be called broker_provided_id because it's the id assigned by the broker
-    def broker_provided_id
-      unique_id
+    def service_broker
+      service.service_broker if service
+    end
+
+    def private?
+      service_broker.private? if service_broker
     end
 
     private
+
+    def validate_not_public_and_private
+      if private? && self.public
+        errors.add(:public, 'may not be true for private plans')
+      end
+    end
 
     def before_validation
       generate_unique_id if new?

@@ -134,13 +134,16 @@ module CloudController
       )
     end
 
-    def blobstore_url_generator
+    def blobstore_url_generator(use_service_dns=false)
+      hostname = use_service_dns && @config[:internal_service_hostname] || @config[:external_host]
+
       connection_options = {
-        blobstore_host: @config[:external_host],
+        blobstore_host: hostname,
         blobstore_port: @config[:external_port],
         user: @config[:staging][:auth][:user],
         password: @config[:staging][:auth][:password]
       }
+
       Blobstore::UrlGenerator.new(
         connection_options,
         package_blobstore,
@@ -165,44 +168,20 @@ module CloudController
       VCAP::Services::ServiceBrokers::ServiceManager.new(services_event_repository)
     end
 
-    def process_repository
-      ProcessRepository.new
-    end
-
     def app_repository
       AppRepository.new
-    end
-
-    def processes_handler
-      ProcessesHandler.new(process_repository, app_event_repository)
-    end
-
-    def procfile_handler
-      ProcfileHandler.new(apps_handler, processes_handler)
     end
 
     def process_presenter
       ProcessPresenter.new
     end
 
-    def apps_handler
-      AppsHandler.new(packages_handler, droplets_handler, processes_handler)
-    end
-
     def app_presenter
       AppPresenter.new
     end
 
-    def packages_handler
-      PackagesHandler.new(@config)
-    end
-
     def package_presenter
       PackagePresenter.new
-    end
-
-    def droplets_handler
-      DropletsHandler.new(@config, stagers)
     end
 
     def droplet_presenter
@@ -232,6 +211,10 @@ module CloudController
 
     def username_populating_collection_renderer
       create_paginated_collection_renderer(collection_transformer: UsernamePopulator.new(username_lookup_uaa_client))
+    end
+
+    def username_and_roles_populating_collection_renderer
+      create_paginated_collection_renderer(collection_transformer: UsernamesAndRolesPopulator.new(username_lookup_uaa_client))
     end
 
     def username_lookup_uaa_client

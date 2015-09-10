@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class RackAppBuilder
-    def build(config)
+    def build(config, request_metrics)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
 
       logger = access_log(config)
@@ -15,7 +15,7 @@ module VCAP::CloudController
         end
 
         map '/' do
-          run FrontController.new(config, token_decoder)
+          run FrontController.new(config, token_decoder, request_metrics)
         end
       end
     end

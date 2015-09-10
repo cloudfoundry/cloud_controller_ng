@@ -33,7 +33,6 @@ module IntegrationSetup
     if !opts[:preserve_database]
       env = {
         'DB_CONNECTION_STRING' => db_connection_string,
-        'DB' => ENV['DB'] || 'postgres',
       }.merge(opts[:env] || {})
       run_cmd('bundle exec rake db:recreate db:migrate', wait: true, env: env)
     end

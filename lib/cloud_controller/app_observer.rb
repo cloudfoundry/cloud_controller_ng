@@ -23,7 +23,7 @@ module VCAP::CloudController
         changes = app.previous_changes
         return unless changes
 
-        if changes.key?(:state) || changes.key?(:diego)
+        if changes.key?(:state) || changes.key?(:diego) || changes.key?(:enable_ssh)
           react_to_state_change(app)
         elsif changes.key?(:instances)
           react_to_instances_change(app)
@@ -31,13 +31,13 @@ module VCAP::CloudController
       end
 
       def routes_changed(app)
-        @runners.runner_for_app(app).update_routes
+        @runners.runner_for_app(app).update_routes if app.started? && app.active?
       end
 
       private
 
       def delete_buildpack_cache(app)
-        delete_job = Jobs::Runtime::BlobstoreDelete.new(app.guid, :buildpack_cache_blobstore)
+        delete_job = Jobs::Runtime::BlobstoreDelete.new(app.buildpack_cache_key, :buildpack_cache_blobstore)
         Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
       end
 
@@ -54,14 +54,14 @@ module VCAP::CloudController
 
         if app.needs_staging?
           @stagers.validate_app(app)
-          @stagers.stager_for_app(app).stage_app
+          @stagers.stager_for_app(app).stage
         else
           @runners.runner_for_app(app).start
         end
       end
 
       def react_to_instances_change(app)
-        @runners.runner_for_app(app).scale if app.started?
+        @runners.runner_for_app(app).scale if app.started? && app.active?
       end
     end
   end

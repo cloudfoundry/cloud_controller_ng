@@ -77,11 +77,12 @@ module VCAP::Services
     class HttpClient
       attr_reader :url
 
-      def initialize(attrs)
+      def initialize(attrs, logger=nil)
         @url = attrs.fetch(:url)
         @auth_username = attrs.fetch(:auth_username)
         @auth_password = attrs.fetch(:auth_password)
         @broker_client_timeout = VCAP::CloudController::Config.config[:broker_client_timeout_seconds] || 60
+        @logger = logger || Steno.logger('cc.service_broker.v2.http_client')
       end
 
       def get(path)
@@ -105,7 +106,7 @@ module VCAP::Services
 
       private
 
-      attr_reader :auth_username, :auth_password, :broker_client_timeout, :extra_path
+      attr_reader :auth_username, :auth_password, :broker_client_timeout, :extra_path, :logger
 
       def uri_for(path)
         URI(url + path)
@@ -115,23 +116,20 @@ module VCAP::Services
         client = HTTPClient.new(force_basic_auth: true)
         client.set_auth(uri, auth_username, auth_password)
 
-        client.default_header[VCAP::Request::HEADER_BROKER_API_VERSION] = '2.4'
-        client.default_header[VCAP::Request::HEADER_NAME] = VCAP::Request.current_id
-        client.default_header['Accept'] = 'application/json'
-
         client.ssl_config.verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
         client.connect_timeout = broker_client_timeout
         client.receive_timeout = broker_client_timeout
         client.send_timeout = broker_client_timeout
 
-        opts = { body: body }
-        opts[:header] = { 'Content-Type' => content_type } if content_type
+        opts = { body: body, header: {} }
 
-        headers = client.default_header.merge(opts[:header]) if opts[:header]
+        client.default_header = default_headers
+        opts[:header]['Content-Type'] = content_type if content_type
+        headers = default_headers.merge(opts[:header])
+
         logger.debug "Sending #{method} to #{uri}, BODY: #{body.inspect}, HEADERS: #{headers}"
 
         response = client.request(method, uri, opts)
-
         logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{response.body.inspect}, HEADERS: #{response.headers.inspect}"
 
         HttpResponse.from_http_client_response(response)
@@ -143,12 +141,17 @@ module VCAP::Services
         raise HttpRequestError.new(error.message, uri.to_s, method, error)
       end
 
-      def verify_certs?
-        !VCAP::CloudController::Config.config[:skip_cert_verify]
+      def default_headers
+        {
+          VCAP::Request::HEADER_BROKER_API_VERSION => '2.6',
+          VCAP::Request::HEADER_NAME => VCAP::Request.current_id,
+          'Accept' => 'application/json',
+          VCAP::Request::HEADER_API_INFO_LOCATION => "#{VCAP::CloudController::Config.config[:external_domain]}/v2/info"
+        }
       end
 
-      def logger
-        @logger ||= Steno.logger('cc.service_broker.v2.http_client')
+      def verify_certs?
+        !VCAP::CloudController::Config.config[:skip_cert_verify]
       end
     end
   end

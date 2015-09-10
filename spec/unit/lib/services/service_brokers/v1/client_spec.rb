@@ -10,6 +10,7 @@ module VCAP::Services
     end
 
     let(:http_client) { double('http_client') }
+    let(:developer) { make_developer_for_space(instance.space) }
 
     before do
       allow(ServiceBrokers::V1::HttpClient).to receive(:new).
@@ -53,16 +54,29 @@ module VCAP::Services
             organization_guid: space.organization_guid
           }
         ).and_return(response)
+
+        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
       end
 
-      it 'sets relevant attributes on the instance' do
+      it 'returns instance attributes' do
         attributes = client.provision(instance)
-        instance.save_with_operation(attributes)
 
-        expect(instance.broker_provided_id).to eq('123')
-        expect(instance.gateway_data).to eq('setting' => true)
-        expect(instance.credentials).to eq('user' => 'admin', 'pass' => 'secret')
-        expect(instance.dashboard_url).to eq('http://dashboard.example.com')
+        expect(attributes[:instance]).to eq({
+          broker_provided_id: '123',
+          gateway_data:       { 'setting' => true },
+          credentials:        { 'user' => 'admin', 'pass' => 'secret' },
+          dashboard_url:      'http://dashboard.example.com'
+        })
+      end
+
+      it 'returns a successful last operation' do
+        attributes = client.provision(instance)
+
+        expect(attributes[:last_operation]).to eq({
+          type: 'create',
+          state: 'succeeded',
+          description: ''
+        })
       end
 
       it 'translates duplicate service errors' do
@@ -172,6 +186,14 @@ module VCAP::Services
         client.deprovision(instance)
 
         expect(http_client).to have_received(:deprovision)
+      end
+
+      it 'returns a successful synchronous response' do
+        expect(client.deprovision(instance)).to eq({
+          last_operation: {
+            state: 'succeeded'
+          }
+        })
       end
     end
   end

@@ -29,5 +29,7 @@ class StructuredError < StandardError
     else
       source.to_s
     end
+  rescue TypeError
+    source.to_s
   end
 end

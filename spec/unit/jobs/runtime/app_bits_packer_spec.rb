@@ -4,7 +4,8 @@ module VCAP::CloudController
   module Jobs::Runtime
     describe AppBitsPacker do
       let(:uploaded_path) { 'tmp/uploaded.zip' }
-      let(:app_guid) { SecureRandom.uuid }
+      let(:app) { App.make }
+      let(:app_guid) { app.guid }
 
       subject(:job) do
         AppBitsPacker.new(app_guid, uploaded_path, [:fingerprints])
@@ -13,7 +14,6 @@ module VCAP::CloudController
       it { is_expected.to be_a_valid_job }
 
       describe '#perform' do
-        let(:app) { double(:app) }
         let(:fingerprints) { double(:fingerprints) }
         let(:package_blobstore) { double(:package_blobstore) }
         let(:global_app_bits_cache) { double(:global_app_bits_cache) }
@@ -24,13 +24,7 @@ module VCAP::CloudController
           TestConfig.override({ directories: { tmpdir: tmpdir }, packages: TestConfig.config[:packages].merge(max_package_size: max_package_size) })
 
           allow(CloudController::Blobstore::FingerprintsCollection).to receive(:new) { fingerprints }
-          allow(App).to receive(:find) { app }
           allow(AppBitsPackage).to receive(:new) { double(:packer, create: 'done') }
-        end
-
-        it 'finds the app from the guid' do
-          expect(App).to receive(:find).with(guid: app_guid)
-          job.perform
         end
 
         it 'creates blob stores' do
@@ -51,6 +45,17 @@ module VCAP::CloudController
 
         it 'knows its job name' do
           expect(job.job_name_in_configuration).to equal(:app_bits_packer)
+        end
+
+        it 'logs an error if the app cannot be found' do
+          app.destroy
+
+          logger = double(:logger, error: nil, info: nil)
+          allow(job).to receive(:logger).and_return(logger)
+
+          job.perform
+
+          expect(logger).to have_received(:error).with("App not found: #{app_guid}")
         end
       end
     end

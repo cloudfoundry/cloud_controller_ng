@@ -15,6 +15,12 @@ module VCAP::CloudController
             'memory' => 84,
             'state' => 'STOPPED',
             'environment_json' => { 'foo' => 1 },
+            'docker_credentials_json' => {
+              'docker_login_server' => 'server',
+              'docker_user' => 'user',
+              'docker_password' => 'password',
+              'docker_email' => 'email'
+            }
           }
         end
 
@@ -30,11 +36,12 @@ module VCAP::CloudController
            'memory' => 84,
            'state' => 'STOPPED',
            'environment_json' => 'PRIVATE DATA HIDDEN',
+           'docker_credentials_json' => 'PRIVATE DATA HIDDEN',
           }
 
           expect(Loggregator).to receive(:emit).with(app.guid, "Updated app with guid #{app.guid} (#{expected_request_field})")
 
-          event = app_event_repository.record_app_update(app, space, user, user_email, attrs).reload
+          event = app_event_repository.record_app_update(app, space, user.guid, user_email, attrs).reload
 
           expect(event.space).to eq space
           expect(event.type).to eq 'audit.app.update'
@@ -57,7 +64,13 @@ module VCAP::CloudController
             'instances' => 1,
             'memory' => 84,
             'state' => 'STOPPED',
-            'environment_json' => { 'super' => 'secret ' }
+            'environment_json' => { 'super' => 'secret ' },
+            'docker_credentials_json' => {
+              'docker_login_server' => 'server',
+              'docker_user' => 'user',
+              'docker_password' => 'password',
+              'docker_email' => 'email'
+            }
           }
         end
 
@@ -66,7 +79,7 @@ module VCAP::CloudController
         let(:user_email) { 'user email' }
 
         it 'records the event fields and metadata' do
-          event = app_event_repository.record_app_create(app, app.space, user, user_email, request_attrs)
+          event = app_event_repository.record_app_create(app, app.space, user.guid, user_email, request_attrs)
           event.reload
           expect(event.type).to eq('audit.app.create')
           expect(event.actee).to eq(app.guid)
@@ -82,13 +95,14 @@ module VCAP::CloudController
                                'memory' => 84,
                                'state' => 'STOPPED',
                                'environment_json' => 'PRIVATE DATA HIDDEN',
+                               'docker_credentials_json' => 'PRIVATE DATA HIDDEN',
                              )
         end
 
         it 'logs the event' do
           expect(Loggregator).to receive(:emit).with(app.guid, "Created app with guid #{app.guid}")
 
-          app_event_repository.record_app_create(app, app.space, user, user_email, request_attrs)
+          app_event_repository.record_app_create(app, app.space, user.guid, user_email, request_attrs)
         end
       end
 
@@ -98,8 +112,8 @@ module VCAP::CloudController
         let(:user) { User.make }
         let(:user_email) { 'user email' }
 
-        it 'records an empty changes in metadata' do
-          event = app_event_repository.record_app_delete_request(app, space, user, user_email, false)
+        it 'creates a new audit.app.delete-request event' do
+          event = app_event_repository.record_app_delete_request(app, space, user.guid, user_email, false)
           event.reload
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
@@ -111,10 +125,36 @@ module VCAP::CloudController
           expect(event.metadata['request']['recursive']).to eq(false)
         end
 
+        it 'does not record metadata when recursive is not passed' do
+          event = app_event_repository.record_app_delete_request(app, space, user.guid, user_email)
+          event.reload
+          expect(event.metadata).to be_empty
+        end
+
         it 'logs the event' do
           expect(Loggregator).to receive(:emit).with(app.guid, "Deleted app with guid #{app.guid}")
 
-          app_event_repository.record_app_delete_request(app, space, user, user_email, false)
+          app_event_repository.record_app_delete_request(app, space, user.guid, user_email, false)
+        end
+      end
+
+      describe '#record_app_set_current_droplet' do
+        let(:space) { Space.make }
+        let(:app) { AppFactory.make(space: space) }
+        let(:user) { User.make }
+        let(:user_email) { 'user email' }
+
+        it 'creates a new audit.app.delete-request event' do
+          event = app_event_repository.record_app_set_current_droplet(app, space, user.guid, user_email, { a: 1 })
+          event.reload
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq(user_email)
+          expect(event.type).to eq('audit.app.update')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('app')
+          expect(event.actee_name).to eq(app.name)
+          expect(event.metadata).to eq({ 'request' => { 'a' => 1 } })
         end
       end
 
@@ -164,7 +204,7 @@ module VCAP::CloudController
           let(:user_email) { 'foo@example.com' }
 
           it 'creates a new app.map_route audit event' do
-            event = app_event_repository.record_map_route(app, route, user, user_email)
+            event = app_event_repository.record_map_route(app, route, user.guid, user_email)
             expect(event.type).to eq('audit.app.map-route')
             expect(event.actor).to eq(user.guid)
             expect(event.actor_type).to eq('user')
@@ -175,11 +215,10 @@ module VCAP::CloudController
         end
 
         context 'and the actor is nil' do
-          let(:user) { nil }
           let(:user_email) { '' }
 
           it 'creates a new app.map_route audit event with system as the actor' do
-            event = app_event_repository.record_map_route(app, route, user, user_email)
+            event = app_event_repository.record_map_route(app, route, nil, user_email)
             expect(event.type).to eq('audit.app.map-route')
             expect(event.actor).to eq('system')
             expect(event.actor_type).to eq('system')
@@ -200,7 +239,7 @@ module VCAP::CloudController
           let(:user_email) { 'foo@example.com' }
 
           it 'creates a new app.unmap_route audit event' do
-            event = app_event_repository.record_unmap_route(app, route, user, user_email)
+            event = app_event_repository.record_unmap_route(app, route, user.guid, user_email)
             expect(event.type).to eq('audit.app.unmap-route')
             expect(event.actor).to eq(user.guid)
             expect(event.actor_type).to eq('user')
@@ -211,11 +250,10 @@ module VCAP::CloudController
         end
 
         context 'and the actor is nil' do
-          let(:user) { nil }
           let(:user_email) { '' }
 
           it 'creates a new app.unmap_route audit event with system as the actor' do
-            event = app_event_repository.record_unmap_route(app, route, user, user_email)
+            event = app_event_repository.record_unmap_route(app, route, nil, user_email)
             expect(event.type).to eq('audit.app.unmap-route')
             expect(event.actor).to eq('system')
             expect(event.actor_type).to eq('system')
@@ -233,7 +271,7 @@ module VCAP::CloudController
         let(:user_email) { 'user@example.com' }
 
         it 'creates a new app.restage event' do
-          event = app_event_repository.record_app_restage(app, user, user_email)
+          event = app_event_repository.record_app_restage(app, user.guid, user_email)
           expect(event.type).to eq('audit.app.restage')
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
@@ -250,7 +288,7 @@ module VCAP::CloudController
         let(:user_email) { 'user@example.com' }
 
         it 'creates a new app.copy_bits event for the source app' do
-          event = app_event_repository.record_src_copy_bits(dest_app, src_app, user, user_email)
+          event = app_event_repository.record_src_copy_bits(dest_app, src_app, user.guid, user_email)
 
           expect(event.type).to eq('audit.app.copy-bits')
           expect(event.actor).to eq(user.guid)
@@ -269,7 +307,7 @@ module VCAP::CloudController
         let(:user_email) { 'user@example.com' }
 
         it 'creates a new app.copy_bits event for the destination app' do
-          event = app_event_repository.record_dest_copy_bits(dest_app, src_app, user, user_email)
+          event = app_event_repository.record_dest_copy_bits(dest_app, src_app, user.guid, user_email)
 
           expect(event.type).to eq('audit.app.copy-bits')
           expect(event.actor).to eq(user.guid)
@@ -278,6 +316,112 @@ module VCAP::CloudController
           expect(event.actor_name).to eq('user@example.com')
           expect(event.actee_type).to eq('app')
           expect(event.metadata[:source_guid]).to eq(src_app.guid)
+        end
+      end
+
+      describe '#record_app_ssh_unauthorized' do
+        let(:app) { AppFactory.make }
+        let(:user) { User.make }
+        let(:user_email) { 'user@example.com' }
+
+        it 'creates a new app.ssh-unauthorized event for the app' do
+          event = app_event_repository.record_app_ssh_unauthorized(app, user.guid, user_email)
+
+          expect(event.type).to eq('audit.app.ssh-unauthorized')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actor_name).to eq('user@example.com')
+          expect(event.actee_type).to eq('app')
+        end
+      end
+
+      describe '#record_app_ssh_authorized' do
+        let(:app) { AppFactory.make }
+        let(:user) { User.make }
+        let(:user_email) { 'user@example.com' }
+
+        it 'creates a new app.ssh-authorized event for the app' do
+          event = app_event_repository.record_app_ssh_authorized(app, user.guid, user_email)
+
+          expect(event.type).to eq('audit.app.ssh-authorized')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actor_name).to eq('user@example.com')
+          expect(event.actee_type).to eq('app')
+        end
+      end
+
+      context 'with a v3 app' do
+        describe '#record_app_create' do
+          let(:app) { AppModel.make }
+          let(:user) { User.make }
+          let(:request_attrs) do
+            {
+              'name'             => 'new',
+              'space_guid'       => 'space-guid',
+              'environment_variables' => { 'super' => 'secret ' }
+            }
+          end
+
+          it 'records the actee_type and metadata correctly' do
+            event = app_event_repository.record_app_create(app, app.space, user, 'email', request_attrs)
+            event.reload
+
+            expect(event.type).to eq('audit.app.create')
+            expect(event.actee_type).to eq('v3-app')
+            request = event.metadata.fetch('request')
+            expect(request).to eq(
+                'name' => 'new',
+                'space_guid' => 'space-guid',
+                'environment_variables' => 'PRIVATE DATA HIDDEN',
+              )
+          end
+        end
+
+        describe '#record_app_start' do
+          let(:app) { AppModel.make }
+          let(:user) { User.make }
+          let(:email) { 'user-email' }
+
+          it 'creates a new audit.app.start event' do
+            event = app_event_repository.record_app_start(app, user.guid, email)
+
+            expect(event.type).to eq('audit.app.start')
+
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq(email)
+
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('v3-app')
+
+            expect(event.space).to eq(app.space)
+            expect(event.space_guid).to eq(app.space.guid)
+          end
+        end
+
+        describe '#record_app_stop' do
+          let(:app) { AppModel.make }
+          let(:user) { User.make }
+          let(:email) { 'user-email' }
+
+          it 'creates a new audit.app.stop event' do
+            event = app_event_repository.record_app_stop(app, user.guid, email)
+
+            expect(event.type).to eq('audit.app.stop')
+
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq(email)
+
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('v3-app')
+
+            expect(event.space).to eq(app.space)
+            expect(event.space_guid).to eq(app.space.guid)
+          end
         end
       end
     end

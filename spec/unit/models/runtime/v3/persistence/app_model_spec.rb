@@ -159,6 +159,27 @@ module VCAP::CloudController
           }.to raise_error(Sequel::ValidationFailed, /cannot set PORT/)
         end
       end
+
+      describe 'droplet' do
+        let(:droplet) { DropletModel.make(app: app_model) }
+
+        it 'does not allow droplets that are not STAGED' do
+          states = DropletModel::DROPLET_STATES - [DropletModel::STAGED_STATE]
+          states.each do |state|
+            droplet.state = state
+            expect {
+              app_model.droplet = droplet
+              app_model.save
+            }.to raise_error(Sequel::ValidationFailed, /must be in staged state/)
+          end
+        end
+
+        it 'is valid with droplets that are STAGED' do
+          droplet.state = DropletModel::STAGED_STATE
+          app_model.droplet = droplet
+          expect(app_model).to be_valid
+        end
+      end
     end
   end
 end

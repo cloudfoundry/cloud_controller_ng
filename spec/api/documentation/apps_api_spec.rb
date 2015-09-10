@@ -24,7 +24,7 @@ resource 'Apps', type: [:api, :legacy_api] do
 
     field :disk_quota, 'The maximum amount of disk available to an instance of an app. In megabytes.', example_values: [1_204, 2_048]
     field :space_guid, 'The guid of the associated space.', required: opts[:required], example_values: [Sham.guid]
-    field :stack_guid, 'The guid of the associated stack.', default: 'Uses the default system stack.'
+    field :stack_guid, 'The guid of the associated stack.', default: 'Uses the default system stack.', example_values: [Sham.guid]
     field :state, 'The current desired state of the app. One of STOPPED or STARTED.', default: 'STOPPED', valid_values: %w(STOPPED STARTED)
     field :detected_start_command, 'The command detected by the buildpack during staging.', read_only: true
     field :command, "The command to start an app after it is staged, maximum length: 4096 (e.g. 'rails s -p $PORT' or 'java com.org.Server $PORT')."
@@ -43,11 +43,21 @@ resource 'Apps', type: [:api, :legacy_api] do
       default: nil,
       experimental: true,
       example_values: ['cloudfoundry/helloworld', 'registry.example.com:5000/user/repository/tag']
+    field :docker_credentials_json, 'Docker credentials for pulling docker image.',
+      default: {},
+      experimental: true,
+      example_values: [{ 'docker_user' => 'user name',
+                         'docker_password' => 's3cr3t',
+                         'docker_email' => 'email@example.com',
+                         'docker_login_server' => 'https://index.docker.io/v1/' }]
 
     field :environment_json, 'Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables.'
     field :production, 'Deprecated.', deprecated: true, default: true, valid_values: [true, false]
     field :console, 'Open the console port for the app (at $CONSOLE_PORT).', deprecated: true, default: false, valid_values: [true, false]
     field :debug, 'Open the debug port for the app (at $DEBUG_PORT).', deprecated: true, default: false, valid_values: [true, false]
+
+    field :staging_failed_reason, 'Reason for application staging failures', default: nil
+    field :staging_failed_description, 'Detailed description for the staging_failed_reason', default: nil
   end
 
   describe 'Standard endpoints' do
@@ -62,7 +72,6 @@ resource 'Apps', type: [:api, :legacy_api] do
         staging: 'optional',
         running: 'optional',
       )
-      allow(VCAP::CloudController::Config.config).to receive(:[]).with(:diego_docker).and_return true
     end
 
     def after_standard_model_delete(guid)
@@ -124,6 +133,8 @@ resource 'Apps', type: [:api, :legacy_api] do
       let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: associated_service_instance) }
       let(:associated_service_binding_guid) { associated_service_binding.guid }
 
+      parameter :service_binding_guid, 'The guid of the service binding'
+
       before do
         service_broker = associated_service_binding.service.service_broker
         instance_guid = associated_service_instance.guid
@@ -149,6 +160,8 @@ resource 'Apps', type: [:api, :legacy_api] do
       let(:route_guid) { route.guid }
       let(:associated_route) { VCAP::CloudController::Route.make(space: app_obj.space) }
       let(:associated_route_guid) { associated_route.guid }
+
+      parameter :route_guid, 'The guid of the route'
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :app
       nested_model_associate :route, :app

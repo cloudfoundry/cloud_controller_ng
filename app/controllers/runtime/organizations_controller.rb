@@ -1,7 +1,18 @@
 require 'actions/organization_delete'
+require 'queries/organization_user_roles_fetcher'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
+    def self.dependencies
+      [:username_and_roles_populating_collection_renderer, :username_lookup_uaa_client]
+    end
+
+    def inject_dependencies(dependencies)
+      super
+      @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
+      @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
+    end
+
     define_attributes do
       attribute :name,            String
       attribute :billing_enabled, Message::Boolean, default: false
@@ -37,6 +48,25 @@ module VCAP::CloudController
       end
     end
 
+    get '/v2/organizations/:guid/user_roles', :enumerate_user_roles
+    def enumerate_user_roles(guid)
+      logger.debug('cc.enumerate.related', guid: guid, association: 'user_roles')
+
+      org = find_guid_and_validate_access(:read, guid)
+
+      associated_controller = UsersController
+      associated_path = "#{self.class.url_for_guid(guid)}/user_roles"
+      opts = @opts.merge(transform_opts: { organization_id: org.id })
+
+      @user_roles_collection_renderer.render_json(
+        associated_controller,
+        OrganizationUserRolesFetcher.new.fetch(org),
+        associated_path,
+        opts,
+        {},
+      )
+    end
+
     get '/v2/organizations/:guid/services', :enumerate_services
     def enumerate_services(guid)
       logger.debug 'cc.enumerate.related', guid: guid, association: 'services'
@@ -69,10 +99,75 @@ module VCAP::CloudController
       )
     end
 
+    get '/v2/organizations/:guid/instance_usage', :get_instance_usage
+    def get_instance_usage(guid)
+      org = find_guid_and_validate_access(:read, guid)
+      response = { instance_usage: OrganizationInstanceUsageCalculator.get_instance_usage(org) }
+      [HTTP::OK, MultiJson.dump(response)]
+    end
+
     get '/v2/organizations/:guid/memory_usage', :get_memory_usage
     def get_memory_usage(guid)
       org = find_guid_and_validate_access(:read, guid)
       [HTTP::OK, MultiJson.dump({ memory_usage_in_mb: OrganizationMemoryCalculator.get_memory_usage(org) })]
+    end
+
+    [:user, :manager, :billing_manager, :auditor].each do |role|
+      plural_role = role.to_s.pluralize
+
+      put "/v2/organizations/:guid/#{plural_role}", "add_#{role}_by_username".to_sym
+
+      define_method("add_#{role}_by_username") do |guid|
+        FeatureFlag.raise_unless_enabled!('set_roles_by_username') unless SecurityContext.admin?
+
+        username = parse_and_validate_json(body)['username']
+
+        begin
+          user_id = @username_lookup_uaa_client.id_for_username(username)
+        rescue UaaUnavailable
+          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
+        rescue UaaEndpointDisabled
+          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
+        end
+        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
+
+        user = User.where(guid: user_id).first || User.create(guid: user_id)
+
+        org = find_guid_and_validate_access(:update, guid)
+        org.send("add_#{role}", user)
+
+        [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
+      end
+    end
+
+    [:user, :manager, :billing_manager, :auditor].each do |role|
+      plural_role = role.to_s.pluralize
+
+      delete "/v2/organizations/:guid/#{plural_role}", "remove_#{role}_by_username".to_sym
+
+      define_method("remove_#{role}_by_username") do |guid|
+        FeatureFlag.raise_unless_enabled!('unset_roles_by_username') unless SecurityContext.admin?
+
+        username = parse_and_validate_json(body)['username']
+
+        begin
+          user_id = @username_lookup_uaa_client.id_for_username(username)
+        rescue UaaUnavailable
+          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
+        rescue UaaEndpointDisabled
+          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
+        end
+        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
+
+        user = User.where(guid: user_id).first
+
+        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user
+
+        org = find_guid_and_validate_access(:update, guid)
+        org.send("remove_#{role}", user)
+
+        [HTTP::OK, object_renderer.render_json(self.class, org, @opts)]
+      end
     end
 
     def delete(guid)
@@ -83,7 +178,7 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 
-      delete_action = OrganizationDelete.new(SpaceDelete.new(current_user.id, current_user_email))
+      delete_action = OrganizationDelete.new(SpaceDelete.new(current_user.guid, current_user_email))
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end

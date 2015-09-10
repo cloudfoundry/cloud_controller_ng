@@ -5,7 +5,7 @@ module VCAP::CloudController
   describe PackagePresenter do
     describe '#present_json' do
       it 'presents the package as json' do
-        package = PackageModel.make(type: 'package_type', url: 'foobar')
+        package = PackageModel.make(type: 'package_type', url: 'foobar', created_at: Time.at(1), updated_at: Time.at(2))
 
         json_result = PackagePresenter.new.present_json(package)
         result      = MultiJson.load(json_result)
@@ -14,9 +14,10 @@ module VCAP::CloudController
         expect(result['type']).to eq(package.type)
         expect(result['state']).to eq(package.state)
         expect(result['error']).to eq(package.error)
-        expect(result['hash']).to eq(package.package_hash)
+        expect(result['hash']).to eq({ 'type' => 'sha1', 'value' => package.package_hash })
         expect(result['url']).to eq(package.url)
-        expect(result['created_at']).to eq(package.created_at.as_json)
+        expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
+        expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
         expect(result['_links']).to include('self')
         expect(result['_links']).to include('app')
       end
@@ -24,11 +25,15 @@ module VCAP::CloudController
       context 'when the package type is bits' do
         let(:package) { PackageModel.make(type: 'bits', url: 'foobar') }
 
-        it 'includes a link to upload' do
+        it 'includes links to upload and stage' do
           json_result = PackagePresenter.new.present_json(package)
           result      = MultiJson.load(json_result)
 
           expect(result['_links']['upload']['href']).to eq("/v3/packages/#{package.guid}/upload")
+          expect(result['_links']['upload']['method']).to eq('POST')
+
+          expect(result['_links']['stage']['href']).to eq("/v3/packages/#{package.guid}/droplets")
+          expect(result['_links']['stage']['method']).to eq('POST')
         end
       end
 

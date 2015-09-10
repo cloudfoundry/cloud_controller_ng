@@ -1,7 +1,27 @@
+<%
+  def discover_external_ip
+    networks = spec.networks.marshal_dump
+
+    _, network = networks.find do |_name, network_spec|
+      network_spec.default
+    end
+
+    if !network
+      _, network = networks.first
+    end
+
+    if !network
+      raise "Could not determine IP via network spec: #{networks}"
+    end
+
+    network.ip
+  end
+%>
 ---
 #Actually NGX host and port
-local_route: <%= spec.networks.send(properties.networks.apps).ip %>
+local_route: <%= discover_external_ip %>
 external_port: <%= p("cc.external_port") %>
+internal_service_hostname: cloud-controller-ng.service.cf.internal
 
 pid_filename: /var/vcap/sys/run/cloud_controller_clock/cloud_controller_ng.pid
 newrelic_enabled: false
@@ -13,8 +33,7 @@ message_bus_servers:
 <% end %>
 
 external_protocol: <%= p("cc.external_protocol") %>
-external_domain:
-  - <%= p("cc.external_host") %>.<%= p("domain") %>
+external_domain: <%= p("cc.external_host") %>.<%= p("domain") %>
 
 system_domain_organization: <%= p("system_domain_organization") %>
 system_domain: <%= p("system_domain") %>
@@ -71,8 +90,6 @@ failed_jobs:
 pending_packages:
   frequency_in_seconds: <%= p("cc.pending_packages.frequency_in_seconds") %>
   expiration_in_seconds: <%= p("cc.pending_packages.expiration_in_seconds") %>
-
-billing_event_writing_enabled: <%= p("cc.billing_event_writing_enabled") %>
 
 default_app_memory: <%= p("cc.default_app_memory") %>
 default_app_disk_in_mb: <%= p("cc.default_app_disk_in_mb") %>
@@ -241,11 +258,11 @@ uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 <% end %>
 
 users_can_select_backend: <%= p("cc.users_can_select_backend") %>
-diego_docker: <%= p("cc.diego_docker") %>
-diego_nsync_url: http://nsync.service.consul:8787
-diego_stager_url: http://stager.service.consul:8888
-diego_tps_url: http://tps.service.consul:1518
+allow_app_ssh_access: <%= p("cc.allow_app_ssh_access") %>
 default_to_diego_backend: <%= p("cc.default_to_diego_backend") %>
+diego_nsync_url: <%= p("cc.diego.nsync_url") %>
+diego_stager_url: <%= p("cc.diego.stager_url") %>
+diego_tps_url: <%= p("cc.diego.tps_url") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>

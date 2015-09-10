@@ -64,20 +64,14 @@ mysql: mysql2://root:password@localhost:3306/cc_test
 rake db:create will create the above database when the `DB` environment variable is set to postgres or mysql.
 You should run this before running rake in order to ensure that the `cc_test` database exists.
 
-You can specify a connection string via `DB_CONNECTION` environment variable to test against postgres
-or mysql. You will need to have a database with `cc_test` as the name. Examples:
-
-    DB_CONNECTION="postgres://postgres@localhost:5432" rake
-    DB_CONNECTION="mysql2://root:password@localhost:3306" rake
-
-You can also specify the full connection string via the `DB_CONNECTION_STRING`
+You can specify the full connection string via the `DB_CONNECTION_STRING`
 environment variable. Examples:
 
     DB_CONNECTION_STRING="postgres://postgres@localhost:5432/cc_test" rake
     DB_CONNECTION_STRING="mysql2://root:password@localhost:3306/cc_test" rake
 
 If you are running the integration specs (which are included in the full rake),
-and you are specifying DB_CONNECTION or DB_CONNECTION_STRING, you will also
+and you are specifying DB_CONNECTION_STRING, you will also
 need to have a second test database with `_integration_cc` as the name suffix.
 
 For example, if you are using:
@@ -145,3 +139,4 @@ Cloud Foundry's OAuth 2.0 server.
 ## Contributing
 
 Please read the [contributors' guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/master/CONTRIBUTING.md)
+

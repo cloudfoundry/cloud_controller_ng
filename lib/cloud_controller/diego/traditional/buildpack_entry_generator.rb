@@ -36,8 +36,8 @@ module VCAP::CloudController
         def admin_buildpack_entry(buildpack)
           {
             name: buildpack.name,
-            key: buildpack.key,
-            url: @blobstore_url_generator.admin_buildpack_download_url(buildpack)
+            key:  buildpack.key,
+            url:  @blobstore_url_generator.admin_buildpack_download_url(buildpack)
           }
         end
       end

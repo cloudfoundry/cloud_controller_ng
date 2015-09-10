@@ -84,7 +84,7 @@ module VCAP::Services::ServiceBrokers
     end
 
     def catalog
-      @catalog ||= V2::Catalog.new(broker, broker.client.catalog)
+      @catalog ||= VCAP::Services::ServiceBrokers::V2::Catalog.new(broker, broker.client.catalog)
     end
 
     def formatter

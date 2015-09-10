@@ -23,7 +23,7 @@ module VCAP::CloudController
 
     context 'organization manager' do
       before { org.add_manager(user) }
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'organization user' do
@@ -46,7 +46,7 @@ module VCAP::CloudController
         org.add_user(user)
         space.add_developer(user)
       end
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'space manager' do
@@ -54,7 +54,7 @@ module VCAP::CloudController
         org.add_user(user)
         space.add_manager(user)
       end
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'space auditor' do
@@ -62,7 +62,7 @@ module VCAP::CloudController
         org.add_user(user)
         space.add_auditor(user)
       end
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'user in a different organization (defensive)' do
@@ -100,7 +100,7 @@ module VCAP::CloudController
         space.add_auditor(user)
       end
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'any user using client without cloud_controller.read' do

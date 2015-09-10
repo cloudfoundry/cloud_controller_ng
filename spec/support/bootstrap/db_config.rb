@@ -1,51 +1,69 @@
-module DbConfig
-  def self.name
-    if ENV['DB_CONNECTION_STRING']
-      ENV['DB_CONNECTION_STRING'].split('/').last
-    elsif ENV['TEST_ENV_NUMBER']
-      "cc_test_#{ENV['TEST_ENV_NUMBER']}"
-    else
-      'cc_test'
-    end
+class DbConfig
+  def initialize(connection_string: ENV['DB_CONNECTION_STRING'], db_type: ENV['DB'])
+    @connection_string = connection_string || default_connection_string(db_type || 'postgres')
+    initialize_environment_for_cc_spawning
   end
 
-  def self.connection_string
-    ENV['DB_CONNECTION_STRING'] ||= "#{connection_prefix}/#{name}"
+  attr_reader :connection_string
+
+  def name
+    connection_string.split('/').last
   end
 
-  def self.connection_prefix
-    default_connection_prefix = {
-        'mysql' => 'mysql2://root:password@localhost:3306',
-        'postgres' => 'postgres://postgres@localhost:5432'
-    }
-
-    if ENV['TRAVIS'] == 'true'
-      default_connection_prefix['mysql'] = 'mysql2://root@localhost:3306'
-    end
-
-    db_type = ENV['DB'] || 'postgres'
-    ENV['DB_CONNECTION'] ||= default_connection_prefix[db_type]
-  end
-
-  def self.config
+  def config
     {
       log_level: 'debug',
-      database: DbConfig.connection_string,
+      database: connection_string,
       pool_timeout: 10
     }
   end
 
-  def self.connection
+  def connection
     Thread.current[:db] ||= VCAP::CloudController::DB.connect(config, db_logger)
   end
 
-  def self.db_logger
+  def db_logger
     return @db_logger if @db_logger
+
     @db_logger = Steno.logger('cc.db')
     if ENV['DB_LOG_LEVEL']
       level = ENV['DB_LOG_LEVEL'].downcase.to_sym
       @db_logger.level = level if Steno::Logger::LEVELS.include? level
     end
     @db_logger
+  end
+
+  def self.reset_environment
+    ENV.delete('DB_CONNECTION_STRING')
+  end
+
+  private
+
+  def initialize_environment_for_cc_spawning
+    ENV['DB_CONNECTION_STRING'] = connection_string
+  end
+
+  def default_connection_string(db_type)
+    "#{default_connection_prefix(db_type)}/#{default_name}"
+  end
+
+  def default_connection_prefix(db_type)
+    default_connection_prefixes = {
+      'mysql' => 'mysql2://root:password@localhost:3306',
+      'mysql_travis' => 'mysql2://root@localhost:3306',
+      'postgres' => 'postgres://postgres@localhost:5432'
+    }
+
+    db_type = 'mysql_travis' if ENV['TRAVIS'] == 'true' && db_type == 'mysql'
+
+    default_connection_prefixes[db_type]
+  end
+
+  def default_name
+    if ENV['TEST_ENV_NUMBER']
+      "cc_test_#{ENV['TEST_ENV_NUMBER']}"
+    else
+      'cc_test'
+    end
   end
 end

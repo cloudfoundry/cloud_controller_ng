@@ -74,6 +74,10 @@ module VCAP::CloudController
       allow_any_instance_of(TestController).to receive(:logger).and_return(logger)
     end
 
+    after(:all) do
+      I18n.locale = nil # reset locale after running tests that change it
+    end
+
     describe '#dispatch' do
       context 'when the dispatch is successful' do
         let(:token_decoder) { double(:decoder) }
@@ -105,7 +109,7 @@ module VCAP::CloudController
         it 'logs the error when a Sequel Database Error occurs' do
           expect(logger).to receive(:warn).with(/exception not translated/)
           get '/test_database_error', '', headers_for(user)
-          expect(decoded_response['code']).to eq 10004
+          expect(decoded_response['code']).to eq 10011
         end
 
         it 'logs an error when a JSON error occurs' do

@@ -77,11 +77,57 @@ module VCAP::CloudController::Diego
       end
     end
 
+    describe '#stop_app' do
+      let(:stop_app_url) { "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}" }
+
+      context 'when there is an nsync url configured' do
+        context 'when the endpoint is available' do
+          before do
+            stub_request(:delete, stop_app_url).to_return(status: 202)
+          end
+
+          it 'calls the nsync with a delete request' do
+            expect(client.stop_app(process_guid)).to be_nil
+            expect(a_request(:delete, stop_app_url).with(body: nil, headers: content_type_header)).to have_been_made.once
+          end
+
+          context 'when nsync returns a 404' do
+            before do
+              stub_request(:delete, stop_app_url).to_return(status: 404)
+            end
+
+            it 'does not raise an error' do
+              expect { client.stop_app(process_guid) }.to_not raise_error
+            end
+          end
+        end
+
+        context 'when the endpoint is unavailable' do
+          it 'retries and eventually raises RunnerUnavailable' do
+            stub = stub_request(:delete, stop_app_url).to_raise(Errno::ECONNREFUSED)
+
+            expect { client.stop_app(process_guid) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect(stub).to have_been_requested.times(3)
+          end
+        end
+
+        context 'when the endpoint fails' do
+          before do
+            stub_request(:delete, stop_app_url).to_return(status: 500, body: '')
+          end
+
+          it 'raises RunnerError' do
+            expect { client.stop_app(process_guid) }.to raise_error(VCAP::Errors::ApiError, /stop app failed: 500/i)
+          end
+        end
+      end
+    end
+
     describe '#stop_index' do
       let(:index) { 1 }
       let(:stop_index_url) { "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}/index/#{index}" }
 
-      context 'when there is a stop_index url configured' do
+      context 'when there is an nsync url configured' do
         context 'when the endpoint is available' do
           before do
             stub_request(:delete, stop_index_url).to_return(status: 202)

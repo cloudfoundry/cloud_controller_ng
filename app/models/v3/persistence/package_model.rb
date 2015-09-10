@@ -4,7 +4,8 @@ module VCAP::CloudController
       PENDING_STATE = 'PROCESSING_UPLOAD',
       READY_STATE   = 'READY',
       FAILED_STATE  = 'FAILED',
-      CREATED_STATE = 'AWAITING_UPLOAD'
+      CREATED_STATE = 'AWAITING_UPLOAD',
+      COPYING_STATE = 'COPYING'
     ].map(&:freeze).freeze
 
     PACKAGE_TYPES = [

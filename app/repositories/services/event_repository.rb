@@ -49,7 +49,7 @@ module VCAP::CloudController
         end
 
         def record_service_plan_event(type, plan)
-          broker = plan.service.service_broker
+          broker = plan.service_broker
 
           actee = {
             actee: plan.guid,
@@ -64,7 +64,7 @@ module VCAP::CloudController
           if client_attrs.key?('redirect_uri')
             metadata = {
               secret: '[REDACTED]',
-              redirect_uri: client_attrs['redirect_uri']
+              redirect_uri: client_attrs['redirect_uri'],
             }
           end
 
@@ -73,6 +73,7 @@ module VCAP::CloudController
             actee_type: 'service_dashboard_client',
             actee_name: client_attrs['id']
           }
+
           create_event("audit.service_dashboard_client.#{type}", broker_actor(broker), actee, metadata)
         end
 
@@ -119,6 +120,23 @@ module VCAP::CloudController
           create_event("audit.service_binding.#{type}", user_actor, actee, metadata, space_data)
         end
 
+        def record_service_key_event(type, service_key, params=nil)
+          metadata = { request: {} }
+
+          unless type == :delete
+            metadata[:request][:service_instance_guid] = service_key.service_instance.guid
+            metadata[:request][:name] = service_key.name
+          end
+
+          actee = {
+              actee: service_key.guid,
+              actee_type: 'service_key',
+              actee_name: service_key.name,
+          }
+          space_data = { space: service_key.space }
+          create_event("audit.service_key.#{type}", user_actor, actee, metadata, space_data)
+        end
+
         def record_service_purge_event(service)
           metadata = {
             request: {
@@ -147,7 +165,7 @@ module VCAP::CloudController
             actee_type: 'service_plan',
             actee_name: plan.name,
           }
-          actor = broker_actor(plan.service.service_broker)
+          actor = broker_actor(plan.service_broker)
           with_audit_event(plan, actor, actee, &saveBlock)
         end
 

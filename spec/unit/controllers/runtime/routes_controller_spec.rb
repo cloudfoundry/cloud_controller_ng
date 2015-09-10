@@ -6,6 +6,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:host) }
       it { expect(described_class).to be_queryable_by(:domain_guid) }
       it { expect(described_class).to be_queryable_by(:organization_guid) }
+      it { expect(described_class).to be_queryable_by(:path) }
     end
 
     describe 'Attributes' do
@@ -14,7 +15,8 @@ module VCAP::CloudController
           host:        { type: 'string', default: '' },
           domain_guid: { type: 'string', required: true },
           space_guid:  { type: 'string', required: true },
-          app_guids:   { type: '[string]' }
+          app_guids:   { type: '[string]' },
+          path:        { type: 'string' }
         })
       end
 
@@ -23,7 +25,8 @@ module VCAP::CloudController
           host:        { type: 'string' },
           domain_guid: { type: 'string' },
           space_guid:  { type: 'string' },
-          app_guids:   { type: '[string]' }
+          app_guids:   { type: '[string]' },
+          path:        { type: 'string' }
         })
       end
     end
@@ -120,7 +123,7 @@ module VCAP::CloudController
       let(:domain) { SharedDomain.make }
       let(:space) { Space.make }
 
-      it 'returns the RouteHostTaken message' do
+      it 'returns the RouteHostTaken message when no paths are used' do
         taken_host = 'someroute'
         Route.make(host: taken_host, domain: domain)
 
@@ -128,6 +131,17 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(210003)
+      end
+
+      it 'returns the RoutePathTaken message when paths conflict' do
+        taken_host = 'someroute'
+        path = '/%2Fsome%20path'
+        post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: domain.guid, space_guid: space.guid, path: path), json_headers(admin_headers)
+
+        post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: domain.guid, space_guid: space.guid, path: path), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(210004)
       end
 
       it 'returns the SpaceQuotaTotalRoutesExceeded message' do
@@ -158,11 +172,67 @@ module VCAP::CloudController
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(210001)
       end
+
+      it 'returns the a path cannot contain only "/"' do
+        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid, path: '/'), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(130004)
+        expect(decoded_response['description']).to include('the path cannot be a single slash')
+      end
+
+      it 'returns the a path must start with a "/"' do
+        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid, path: 'a/'), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(130004)
+        expect(decoded_response['description']).to include('the path must start with a "/"')
+      end
+
+      it 'returns the a path cannot contain "?" message for paths' do
+        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid, path: '/v2/zak?'), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(130004)
+        expect(decoded_response['description']).to include('illegal "?" character')
+      end
+
+      it 'returns the PathInvalid message' do
+        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: domain.guid, space_guid: space.guid, path: '/v2/zak?'), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(130004)
+      end
     end
 
     describe 'Associations' do
       it do
         expect(described_class).to have_nested_routes({ apps: [:get, :put, :delete] })
+      end
+
+      context 'with Docker app' do
+        before do
+          FeatureFlag.create(name: 'diego_docker', enabled: true)
+        end
+
+        let(:organization) { Organization.make }
+        let(:domain) { PrivateDomain.make(owning_organization: organization) }
+        let(:space) { Space.make(organization: organization) }
+        let(:route) { Route.make(domain: domain, space: space) }
+        let!(:docker_app) do
+          AppFactory.make(space: space, docker_image: 'some-image', state: 'STARTED')
+        end
+
+        context 'and Docker disabled' do
+          before do
+            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
+          end
+
+          it 'associates the route with the app' do
+            put "/v2/routes/#{route.guid}/apps/#{docker_app.guid}", MultiJson.dump(guid: route.guid), json_headers(admin_headers)
+            expect(last_response.status).to eq(201)
+          end
+        end
       end
     end
 
@@ -291,6 +361,38 @@ module VCAP::CloudController
           it 'returns a NO_CONTENT (204)' do
             get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}", nil, headers_for(user)
             expect(last_response.status).to eq(204)
+          end
+        end
+
+        context 'when a path is provided as a param' do
+          context 'when the path does not exist' do
+            it 'returns a NOT_FOUND (404)' do
+              get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}?path=not_mypath", nil, headers_for(user)
+              expect(last_response.status).to eq(404)
+            end
+          end
+
+          context ' when the path does exist' do
+            context 'when the path does not contain url encoding' do
+              let(:path) { '/my_path' }
+              let(:route) { Route.make(path: path) }
+
+              it 'returns a NO_CONTENT (204)' do
+                get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}?path=#{path}", nil, headers_for(user)
+                expect(last_response.status).to eq(204)
+              end
+            end
+
+            context 'when the path is url encoded' do
+              let(:path) { '/my%20path' }
+              let(:route) { Route.make(path: path) }
+
+              it 'returns a NO_CONTENT' do
+                uri_encoded_path = '%2Fmy%2520path'
+                get "/v2/routes/reserved/domain/#{route.domain_guid}/host/#{route.host}?path=#{uri_encoded_path}", nil, headers_for(user)
+                expect(last_response.status).to eq(204)
+              end
+            end
           end
         end
       end

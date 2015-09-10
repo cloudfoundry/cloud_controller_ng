@@ -15,12 +15,15 @@ module VCAP::CloudController
       {
         :external_port => Integer,
         :external_protocol => String,
+        optional(:internal_service_hostname) => String,
         :info => {
           name: String,
           build: String,
           version: Fixnum,
           support_address: String,
           description: String,
+          optional(:app_ssh_endpoint) => String,
+          optional(:app_ssh_host_key_fingerprint) => String
         },
 
         :system_domain => String,
@@ -38,7 +41,6 @@ module VCAP::CloudController
         :failed_jobs => {
           cutoff_age_in_days: Fixnum
         },
-        optional(:billing_event_writing_enabled) => bool,
         :default_app_memory => Fixnum,
         :default_app_disk_in_mb => Fixnum,
         optional(:maximum_app_disk_in_mb) => Fixnum,
@@ -79,6 +81,7 @@ module VCAP::CloudController
 
         optional(:stacks_file) => String,
         optional(:newrelic_enabled) => bool,
+        optional(:hostname) => String,
 
         optional(:db) => {
           optional(:database)         => String,     # db connection string for sequel
@@ -181,7 +184,7 @@ module VCAP::CloudController
         optional(:disable_custom_buildpacks) => bool,
         optional(:broker_client_timeout_seconds) => Integer,
         optional(:broker_client_default_async_poll_interval_seconds) => Integer,
-        optional(:broker_client_max_async_poll_attempts) => Integer,
+        optional(:broker_client_max_async_poll_duration_minutes) => Integer,
         optional(:uaa_client_name) => String,
         optional(:uaa_client_secret) => String,
         optional(:uaa_client_scope) => String,
@@ -197,6 +200,11 @@ module VCAP::CloudController
         optional(:loggregator) => {
           optional(:router) => String,
           optional(:shared_secret) => String,
+        },
+
+        optional(:doppler) => {
+          enabled: bool,
+          optional(:url) => String
         },
 
         optional(:request_timeout_in_seconds) => Integer,
@@ -220,7 +228,6 @@ module VCAP::CloudController
 
         optional(:dea_advertisement_timeout_in_seconds) => Integer,
 
-        optional(:diego_docker) => bool,
         optional(:diego_stager_url) => String,
         optional(:diego_tps_url) => String,
         optional(:users_can_select_backend) => bool,
@@ -296,6 +303,9 @@ module VCAP::CloudController
         run_initializers_in_directory(config, '../../../config/initializers/*.rb')
         if config[:newrelic_enabled]
           require 'newrelic_rpm'
+          if config[:name] && config[:index]
+            ENV['DYNO'] = config[:name] + '-' + config[:index].to_s
+          end
           run_initializers_in_directory(config, '../../../config/newrelic/initializers/*.rb')
         end
         @initialized = true
@@ -314,14 +324,12 @@ module VCAP::CloudController
         config[:maximum_app_disk_in_mb] ||= 2048
         config[:request_timeout_in_seconds] ||= 900
         config[:directories] ||= {}
-        config[:billing_event_writing_enabled] = true if config[:billing_event_writing_enabled].nil?
         config[:skip_cert_verify] = false if config[:skip_cert_verify].nil?
         config[:app_bits_upload_grace_period_in_seconds] ||= 0
         config[:db] ||= {}
         config[:db][:database] ||= ENV['DB_CONNECTION_STRING']
         config[:default_locale] ||= 'en_US'
         config[:allowed_cors_domains] ||= []
-        config[:diego_docker] ||= false
         config[:default_to_diego_backend] ||= false
         config[:dea_advertisement_timeout_in_seconds] ||= 10
         config[:staging][:minimum_staging_memory_mb] ||= 1024

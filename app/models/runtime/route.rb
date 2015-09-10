@@ -2,12 +2,16 @@ require 'cloud_controller/dea/client'
 
 module VCAP::CloudController
   class Route < Sequel::Model
+    ROUTE_REGEX = /\A#{URI.regexp}\Z/.freeze
+
     class InvalidDomainRelation < VCAP::Errors::InvalidRelation; end
     class InvalidAppRelation < VCAP::Errors::InvalidRelation; end
     class InvalidOrganizationRelation < VCAP::Errors::InvalidRelation; end
+    class DockerDisabled < VCAP::Errors::InvalidRelation; end
 
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
+    many_to_one :service_instance
 
     many_to_many :app_models, join_table: :apps_v3_routes
 
@@ -18,11 +22,15 @@ module VCAP::CloudController
 
     add_association_dependencies apps: :nullify
 
-    export_attributes :host, :domain_guid, :space_guid
-    import_attributes :host, :domain_guid, :space_guid, :app_guids
+    export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid
+    import_attributes :host, :path, :domain_guid, :space_guid, :app_guids
 
     def fqdn
       host.empty? ? domain.name : "#{host}.#{domain.name}"
+    end
+
+    def uri
+      "#{fqdn}#{path}"
     end
 
     def as_summary_json
@@ -36,6 +44,11 @@ module VCAP::CloudController
       }
     end
 
+    alias_method :old_path, :path
+    def path
+      old_path.nil? ? '' : old_path
+    end
+
     def organization
       space.organization if space
     end
@@ -47,11 +60,42 @@ module VCAP::CloudController
       errors.add(:host, :presence) if host.nil?
 
       validates_format /^([\w\-]+|\*)$/, :host if host && !host.empty?
-      validates_unique [:host, :domain_id]
+
+      if path.empty?
+        validates_unique [:host, :domain_id]  do |ds|
+          ds.where(path: '')
+        end
+      else
+        validates_unique [:host, :domain_id, :path]
+      end
+
+      validate_path
 
       validate_domain
       validate_total_routes
       errors.add(:host, :domain_conflict) if domains_match?
+
+      validate_service_instance
+    end
+
+    def validate_path
+      return if path == ''
+
+      if !ROUTE_REGEX.match("pathcheck://#{host}#{path}")
+        errors.add(:path, :invalid_path)
+      end
+
+      if path == '/'
+        errors.add(:path, :single_slash)
+      end
+
+      if path[0] != '/'
+        errors.add(:path, :missing_beginning_slash)
+      end
+
+      if path =~ /\?/
+        errors.add(:path, :path_contains_question)
+      end
     end
 
     def domains_match?
@@ -77,19 +121,17 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      orgs = Organization.filter(Sequel.or(
-        managers: [user],
-        auditors: [user],
-      ))
-
-      spaces = Space.filter(Sequel.or(
-        developers:   [user],
-        auditors:     [user],
-        managers:     [user],
-        organization: orgs,
-      ))
-
-      { space: spaces }
+      {
+        space_id: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).union(
+            Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__id)
+          ).union(
+            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__id)
+          ).union(
+            Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
+          ).union(
+            Space.dataset.join_table(:inner, :organizations_auditors, organization_id: :organization_id, user_id: user.id).select(:spaces__id)
+          ).select(:id)
+      }
     end
 
     def in_suspended_org?
@@ -149,6 +191,18 @@ module VCAP::CloudController
 
       if !org_routes_policy.allow_more_routes?(1)
         errors.add(:organization, :total_routes_exceeded)
+      end
+    end
+
+    def validate_service_instance
+      return unless service_instance
+
+      unless service_instance.service.requires.include? 'route_forwarding'
+        errors.add(:service_instance, :route_binding_not_allowed)
+      end
+
+      unless service_instance.space == self.space
+        errors.add(:service_instance, :space_mismatch)
       end
     end
   end

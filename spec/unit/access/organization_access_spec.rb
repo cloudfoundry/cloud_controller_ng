@@ -58,7 +58,7 @@ module VCAP::CloudController
       context 'with a suspended organization' do
         before { object.status = 'suspended' }
 
-        it_behaves_like :read_only
+        it_behaves_like :read_only_access
       end
 
       it 'cannot set billing_enabled' do
@@ -75,7 +75,7 @@ module VCAP::CloudController
     context 'a user in the organization' do
       before { object.add_user(user) }
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'a user not in the organization' do
@@ -95,13 +95,13 @@ module VCAP::CloudController
     context 'a billing manager for the organization' do
       before { object.add_billing_manager(user) }
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'an auditor for the organization' do
       before { object.add_auditor(user) }
 
-      it_behaves_like :read_only
+      it_behaves_like :read_only_access
     end
 
     context 'any user using client without cloud_controller.write' do

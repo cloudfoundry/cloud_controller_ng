@@ -11,9 +11,9 @@ module VCAP::CloudController
 
         user = user_from_token(token_information)
 
-        VCAP::CloudController::SecurityContext.set(user, token_information)
+        VCAP::CloudController::SecurityContext.set(user, token_information, header_token)
       rescue VCAP::UaaTokenDecoder::BadToken
-        VCAP::CloudController::SecurityContext.set(nil, :invalid_token)
+        VCAP::CloudController::SecurityContext.set(nil, :invalid_token, header_token)
       end
 
       private
