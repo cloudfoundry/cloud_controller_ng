@@ -188,10 +188,8 @@ uaa:
 hm9000:
   url: <%= p("hm9000.url", "https://hm9000.#{domain}") %>
 
-<% if p("routing_api.enabled") %>
 routing_api:
-  url: <%= "https://routing-api.#{domain}" %>
-<% end %>
+  url: <%= "https://api.#{domain}/routing" %>
 
 
 # App staging parameters
