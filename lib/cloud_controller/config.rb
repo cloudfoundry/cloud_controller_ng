@@ -304,9 +304,6 @@ module VCAP::CloudController
         run_initializers_in_directory(config, '../../../config/initializers/*.rb')
         if config[:newrelic_enabled]
           require 'newrelic_rpm'
-          if config[:name] && config[:index]
-            ENV['DYNO'] = config[:name] + '-' + config[:index].to_s
-          end
           run_initializers_in_directory(config, '../../../config/newrelic/initializers/*.rb')
         end
         @initialized = true
