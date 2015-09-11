@@ -92,8 +92,8 @@ end
 
     case ENV["DB"]
       when "postgres"
-        sh "psql -U postgres -h localhost -p 5432 -c 'create database #{db_config.name};'"
-        sh "psql -U postgres -h localhost -p 5432 -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext'"
+        sh "psql -U postgres -c 'create database #{db_config.name};'"
+        sh "psql -U postgres -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
           sh "mysql -e 'create database #{db_config.name};' -u root"
@@ -112,7 +112,7 @@ end
 
     case ENV["DB"]
       when "postgres"
-        sh "psql -U postgres -h localhost -p 5432 -c 'drop database if exists #{db_config.name};'"
+        sh "psql -U postgres -c 'drop database if exists #{db_config.name};'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
           sh "mysql -e 'drop database if exists #{db_config.name};' -u root"
