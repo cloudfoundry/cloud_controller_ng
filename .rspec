@@ -1,2 +1,4 @@
---color
+--backtrace
+--colour
+--profile
 --order rand
