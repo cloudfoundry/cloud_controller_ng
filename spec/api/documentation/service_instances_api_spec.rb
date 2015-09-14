@@ -216,7 +216,8 @@ EOF
 
         example 'Unbinding a service instance from a route (experimental)' do
           client.delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
-          expect(status).to eq(201)
+          expect(status).to eq(204)
+          expect(response_body).to be_empty
         end
       end
 

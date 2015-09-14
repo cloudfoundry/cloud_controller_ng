@@ -279,7 +279,7 @@ module VCAP::CloudController
       binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
       binding_manager.delete_route_service_instance_binding(binding)
 
-      [HTTP::CREATED, {}.to_json]
+      [HTTP::NO_CONTENT]
     end
 
     private

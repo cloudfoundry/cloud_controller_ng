@@ -212,6 +212,22 @@ module VCAP::CloudController
       end
     end
 
+    describe '#route_service?' do
+      context 'when the service instance is not a route service' do
+        let!(:service_instance) { ManagedServiceInstance.make }
+        it 'returns false' do
+          expect(service_instance.route_service?).to be_falsey
+        end
+      end
+
+      context 'when the service instance is a route service' do
+        let!(:service_instance) { ManagedServiceInstance.make(:routing) }
+        it 'returns false' do
+          expect(service_instance.route_service?).to be_truthy
+        end
+      end
+    end
+
     describe '#as_summary_json' do
       let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ', provider: 'Bill Gates', version: '1.2.3') }
       let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service) }

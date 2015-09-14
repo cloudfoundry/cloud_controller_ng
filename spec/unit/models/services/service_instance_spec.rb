@@ -204,6 +204,12 @@ module VCAP::CloudController
       end
     end
 
+    describe '#route_service?' do
+      it 'returns false' do
+        expect(service_instance.route_service?).to be_falsey
+      end
+    end
+
     describe '#bindable?' do
       it { is_expected.to be_bindable }
     end

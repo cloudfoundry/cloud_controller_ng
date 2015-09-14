@@ -2448,18 +2448,18 @@ module VCAP::CloudController
           end
 
           context 'when the user is a SpaceManager' do
-          it 'returns the routes that belong to the service instance' do
-            get "/v2/service_instances/#{instance_a.guid}/routes", {}, headers_for(manager)
-            expect(last_response.status).to eql(200)
-            expect(decoded_response.fetch('total_results')).to eq(2)
-            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(route_a.guid)
-            expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(route_b.guid)
+            it 'returns the routes that belong to the service instance' do
+              get "/v2/service_instances/#{instance_a.guid}/routes", {}, headers_for(manager)
+              expect(last_response.status).to eql(200)
+              expect(decoded_response.fetch('total_results')).to eq(2)
+              expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(route_a.guid)
+              expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(route_b.guid)
 
-            get "/v2/service_instances/#{instance_b.guid}/routes", {}, headers_for(manager)
-            expect(last_response.status).to eql(200)
-            expect(decoded_response.fetch('total_results')).to eq(1)
-            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(route_c.guid)
-          end
+              get "/v2/service_instances/#{instance_b.guid}/routes", {}, headers_for(manager)
+              expect(last_response.status).to eql(200)
+              expect(decoded_response.fetch('total_results')).to eq(1)
+              expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(route_c.guid)
+            end
           end
         end
 
@@ -2726,7 +2726,8 @@ module VCAP::CloudController
           expect(JSON.parse(last_response.body)['total_results']).to eql(1)
 
           delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
-          expect(last_response.status).to eq(201)
+          expect(last_response.status).to eq(204)
+          expect(last_response.body).to be_empty
 
           get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
           expect(last_response.status).to eq(200)
@@ -2735,7 +2736,8 @@ module VCAP::CloudController
 
         it 'sends an unbind request to the broker' do
           delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
-          expect(last_response.status).to eq(201)
+          expect(last_response.status).to eq(204)
+          expect(last_response.body).to be_empty
 
           service_plan        = route_binding.service_plan
           service             = route_binding.service

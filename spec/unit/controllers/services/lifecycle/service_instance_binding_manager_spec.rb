@@ -215,10 +215,10 @@ module VCAP::CloudController
       end
 
       it 'sends an unbind request to the service broker' do
-          manager.delete_route_service_instance_binding(route_binding)
+        manager.delete_route_service_instance_binding(route_binding)
 
-          route_binding_url_pattern = /#{service_binding_url_pattern}#{route_binding.guid}/
-          expect(a_request(:delete, route_binding_url_pattern)).to have_been_made
+        route_binding_url_pattern = /#{service_binding_url_pattern}#{route_binding.guid}/
+        expect(a_request(:delete, route_binding_url_pattern)).to have_been_made
       end
 
       it 'deletes the binding and removes associations from routes and service_instances' do

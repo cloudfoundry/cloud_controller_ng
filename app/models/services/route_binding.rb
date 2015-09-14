@@ -1,6 +1,5 @@
 module VCAP::CloudController
   class RouteBinding < Sequel::Model
-
     plugin :after_initialize
 
     many_to_one :route
@@ -29,7 +28,7 @@ module VCAP::CloudController
     def validate_routing_service
       return unless service_instance
 
-      unless service_instance.service.requires.include? 'route_forwarding' # TODO: service_instance.route_service?
+      unless service_instance.route_service?
         errors.add(:service_instance, :route_binding_not_allowed)
       end
     end

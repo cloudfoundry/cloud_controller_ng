@@ -151,6 +151,10 @@ module VCAP::CloudController
       service_plan.service_broker
     end
 
+    def route_service?
+      service.requires.include? 'route_forwarding'
+    end
+
     def create_snapshot(name)
       NGServiceGatewayClient.new(service, gateway_name).create_snapshot(name)
     end
