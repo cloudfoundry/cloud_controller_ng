@@ -19,6 +19,14 @@ module VCAP::CloudController
       requested_keys.include?(key)
     end
 
+    def audit_hash
+      request = {}
+      requested_keys.each do |key|
+        request[key.to_s] = self.try(key)
+      end
+      request
+    end
+
     private
 
     def allowed_keys

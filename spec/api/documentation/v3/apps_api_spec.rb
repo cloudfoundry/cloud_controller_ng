@@ -217,7 +217,8 @@ resource 'Apps (Experimental)', type: :api do
     end
 
     body_parameter :name, 'Name of the App', required: true
-    body_parameter :space_guid, 'GUID of associated Space', required: true
+    body_parameter :"relationships[space][guid]", 'Guid for a particular space', scope: [:relationships, :space], required: true
+
     body_parameter :environment_variables, 'Environment variables to be used for the App when running', required: false
     body_parameter :buildpack, 'Default buildpack to use when staging the application packages.
     Note: a null value will use autodetection',
@@ -225,9 +226,23 @@ resource 'Apps (Experimental)', type: :api do
       valid_values: ['null', 'buildpack name', 'git url'],
       required: false
 
-    let(:raw_post) { body_parameters }
+    let(:raw_post) do
+      MultiJson.load(body_parameters).
+        merge(
+          {
+            relationships: {
+              space: { guid: space_guid }
+            }
+          }).to_json
+    end
 
     example 'Create an App' do
+      explanation <<-eos
+        Creates an app in v3 of the Cloud Controller API.
+        Apps must have a valid space guid for creation, which is namespaced under {"relationships": {"space": "your-space-guid"} }.
+        See the example below for more information.
+      eos
+
       expect {
         do_request_with_error_handling
       }.to change { VCAP::CloudController::AppModel.count }.by(1)

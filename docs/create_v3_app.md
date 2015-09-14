@@ -6,7 +6,7 @@
 
 1. Create an empty app ([docs](http://apidocs.cloudfoundry.org/release-candidate/apps_(experimental)/create_an_app.html)):
 
-  `cf curl /v3/apps -X POST -d '{"name":"app-name","space_guid":"[your-space-guid]"}'`
+  `cf curl /v3/apps -X POST -d '{"name":"app-name","relationships": {"space": "[your-space-guid]"} }'`
 
   Note: The output of this command includes your new app's GUID
 

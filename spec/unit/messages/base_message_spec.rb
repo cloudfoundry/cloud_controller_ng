@@ -18,6 +18,28 @@ module VCAP::CloudController
       end
     end
 
+    describe '#audit_hash' do
+      class AuditMessage < BaseMessage
+        attr_accessor :field1, :field2
+
+        def allowed_keys
+          [:field1, :field2]
+        end
+      end
+
+      it 'returns only requested keys in a json object' do
+        message  = AuditMessage.new({ field1: 'value1' })
+        response = message.audit_hash
+        expect(response).to eq({ 'field1' => 'value1' })
+      end
+
+      it 'recursively includes keys' do
+        message  = AuditMessage.new({ field1: 'value1', field2: { 'subfield' => 'subfield' } })
+        response = message.audit_hash
+        expect(response).to eq({ 'field1' => 'value1', 'field2' => { 'subfield' => 'subfield' } })
+      end
+    end
+
     describe 'additional keys validation' do
       let(:fake_class) do
         Class.new(BaseMessage) do

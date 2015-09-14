@@ -47,4 +47,68 @@ module VCAP::CloudController::Validators
       end
     end
   end
+
+  class RelationshipValidator < ActiveModel::Validator
+    def validate(record)
+      return if !record.relationships.is_a?(Hash)
+
+      rel = record.class::Relationships.new(record.relationships.symbolize_keys)
+
+      if !rel.valid?
+        record.errors[:relationships].concat rel.errors.full_messages
+      end
+    end
+  end
+
+  class ToOneRelationshipValidator < ActiveModel::EachValidator
+    def error_message(attribute)
+      "must be structured like this: \"#{attribute}: {\"guid\": \"valid-guid\"}\""
+    end
+
+    def validate_each(record, attribute, value)
+      if has_correct_structure?(value)
+        validate_guid(record, attribute, value)
+      else
+        record.errors.add(attribute, error_message(attribute))
+      end
+    end
+
+    def validate_guid(record, attribute, value)
+      VCAP::CloudController::BaseMessage::GuidValidator.new({ attributes: 'blah' }).validate_each(record, "#{attribute} Guid", value.values.first)
+    end
+
+    def has_correct_structure?(value)
+      (value.is_a?(Hash) && (value.keys.map(&:to_sym) == [:guid]))
+    end
+  end
+
+  class ToManyRelationshipValidator < ActiveModel::EachValidator
+    def error_message(attribute)
+      "must be structured like this: \"#{attribute}: [{\"guid\": \"valid-guid\"},{\"guid\": \"valid-guid\"}]\""
+    end
+
+    def validate_each(record, attribute, value)
+      if has_correct_structure?(value)
+        validate_guids(record, attribute, value)
+      else
+        record.errors.add(attribute, error_message(attribute))
+      end
+    end
+
+    def validate_guids(record, attribute, value)
+      guids     = value.map(&:values).flatten
+      validator = VCAP::CloudController::BaseMessage::GuidValidator.new({ attributes: 'blah' })
+      guids.each_with_index do |guid, idx|
+        validator.validate_each(record, "#{attribute} Guid #{idx}", guid)
+      end
+    end
+
+    def has_correct_structure?(value)
+      (value.is_a?(Array) && value.all? { |hsh| is_a_guid_hash?(hsh) })
+    end
+
+    def is_a_guid_hash?(hsh)
+      (hsh.keys.map(&:to_sym) == [:guid])
+    end
+  end
 end

@@ -6,11 +6,13 @@ module VCAP::CloudController
     describe '.create_from_http_request' do
       let(:body) {
         {
-          'name' => 'some-name',
-          'space_guid' => 'some-guid',
-          'buildpack' => 'some-buildpack',
+          'name'                  => 'some-name',
+          'buildpack'             => 'some-buildpack',
           'environment_variables' => {
             'ENVVAR' => 'env-val'
+          },
+          'relationships'         => {
+            'space' => { 'guid' => 'some-guid' }
           }
         }
       }
@@ -23,13 +25,14 @@ module VCAP::CloudController
         expect(message.space_guid).to eq('some-guid')
         expect(message.buildpack).to eq('some-buildpack')
         expect(message.environment_variables).to eq({ 'ENVVAR' => 'env-val' })
+        expect(message.relationships).to eq({ 'space' => { 'guid' => 'some-guid' } })
       end
 
       it 'converts requested keys to symbols' do
         message = AppCreateMessage.create_from_http_request(body)
 
         expect(message.requested?(:name)).to be_truthy
-        expect(message.requested?(:space_guid)).to be_truthy
+        expect(message.requested?(:relationships)).to be_truthy
         expect(message.requested?(:buildpack)).to be_truthy
         expect(message.requested?(:environment_variables)).to be_truthy
       end
@@ -58,19 +61,14 @@ module VCAP::CloudController
         end
       end
 
-      context 'when space_guid is not a guid' do
-        let(:params) { { name: 'name', space_guid: 34 } }
-
-        it 'is not valid' do
-          message = AppCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors_on(:space_guid)).not_to be_empty
-        end
-      end
-
       context 'when environment_variables is not a hash' do
-        let(:params) { { name: 'name', space_guid: 'guid', environment_variables: 'potato' } }
+        let(:params) do
+          {
+            name:                  'name',
+            environment_variables: 'potato',
+            relationships:         { space: { guid: 'guid' } }
+          }
+        end
 
         it 'is not valid' do
           message = AppCreateMessage.new(params)
@@ -88,6 +86,97 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors_on(:buildpack)).to include('must be a string')
+        end
+      end
+
+      describe 'relationships' do
+        context 'when relationships is malformed' do
+          let(:params) { { name: 'name', relationships: 'malformed shizzle' } }
+
+          it 'is not valid' do
+            message = AppCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include('must be a hash')
+          end
+        end
+
+        context 'when relationships is missing' do
+          let(:params) { { name: 'name' } }
+
+          it 'is not valid' do
+            message = AppCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include("can't be blank")
+          end
+        end
+
+        context 'when space is missing' do
+          let(:params) do
+            {
+              name:          'name',
+              relationships: {}
+            }
+          end
+
+          it 'is not valid' do
+            message = AppCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include("can't be blank")
+          end
+        end
+
+        context 'when space has an invalid guid' do
+          let(:params) do
+            {
+              name:          'name',
+              relationships: { space: { guid: 32 } }
+            }
+          end
+
+          it 'is not valid' do
+            message = AppCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships).any? { |e| e.include?('Space guid') }).to be(true)
+          end
+        end
+
+        context 'when space is malformed' do
+          let(:params) do
+            {
+              name:          'name',
+              relationships: { space: 'asdf' }
+            }
+          end
+
+          it 'is not valid' do
+            message = AppCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships).any? { |e| e.include?('Space must be structured like') }).to be(true)
+          end
+        end
+
+        context 'when additional keys are present' do
+          let(:params) do
+            {
+              name:          'name',
+              relationships: {
+                space: { guid: 'guid' },
+                other: 'stuff'
+              }
+            }
+          end
+
+          it 'is not valid' do
+            message = AppCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:relationships]).to include("Unknown field(s): 'other'")
+          end
         end
       end
     end

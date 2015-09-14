@@ -12,9 +12,14 @@ module VCAP::CloudController
       let(:space_guid) { space.guid }
       let(:environment_variables) { { 'BAKED' => 'POTATO' } }
       let(:buildpack) { Buildpack.make }
+      let(:relationships) do
+        {
+          'space' => { 'guid' => space_guid }
+        }
+      end
 
       it 'create an app' do
-        message = AppCreateMessage.new(name: 'my-app', space_guid: space_guid, environment_variables: environment_variables, buildpack: buildpack.name)
+        message = AppCreateMessage.new(name: 'my-app', relationships: relationships, environment_variables: environment_variables, buildpack: buildpack.name)
         app     = app_create.create(message)
         expect(app.name).to eq('my-app')
         expect(app.space).to eq(space)
@@ -23,14 +28,14 @@ module VCAP::CloudController
       end
 
       it 're-raises validation errors' do
-        message = AppCreateMessage.new('name' => '', 'space_guid' => space_guid)
+        message = AppCreateMessage.new('name' => '', relationships: relationships)
         expect {
           app_create.create(message)
         }.to raise_error(AppCreate::InvalidApp)
       end
 
       it 'creates an audit event' do
-        message = AppCreateMessage.new(name: 'my-app', space_guid: space_guid, environment_variables: environment_variables, buildpack: buildpack.name)
+        message = AppCreateMessage.new(name: 'my-app', relationships: relationships, environment_variables: environment_variables, buildpack: buildpack.name)
 
         expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_create).with(
             instance_of(AppModel),
@@ -39,8 +44,8 @@ module VCAP::CloudController
             user_email,
             {
               'name'                  => 'my-app',
-              'space_guid'            => space_guid,
-              'environment_variables' => {},
+              'relationships'         => { 'space' => { 'guid' => space_guid } },
+              'environment_variables' => { 'BAKED' => 'POTATO' },
               'buildpack'             => buildpack.name
             }
           )

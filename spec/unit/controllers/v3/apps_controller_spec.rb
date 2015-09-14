@@ -182,7 +182,7 @@ module VCAP::CloudController
       let(:req_body) do
         {
           name: 'some-name',
-          space_guid: space_guid,
+          relationships: { space: { guid: space_guid } },
           buildpack: 'http://some.url',
         }.to_json
       end
@@ -277,7 +277,7 @@ module VCAP::CloudController
         let(:req_body) do
           {
             name:       'some-name',
-            space_guid: space_guid,
+            relationships: { space: { guid: space_guid } },
             buildpack:  'blagow!'
           }.to_json
         end

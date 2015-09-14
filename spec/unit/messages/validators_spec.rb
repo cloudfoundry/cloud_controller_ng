@@ -179,5 +179,83 @@ module VCAP::CloudController::Validators
         expect(fake_class.errors[:field]).to include 'cannot set PORT'
       end
     end
+
+    describe 'RelationshipValidator' do
+      class RelationshipMessage < VCAP::CloudController::BaseMessage
+        attr_accessor :relationships
+
+        def allowed_keys
+          [:relationships]
+        end
+
+        validates_with RelationshipValidator
+
+        class Relationships < VCAP::CloudController::BaseMessage
+          attr_accessor :foo
+
+          def allowed_keys
+            [:foo]
+          end
+
+          validates :foo, numericality: true
+        end
+      end
+
+      it "adds relationships' error message to the base class" do
+        message = RelationshipMessage.new({ relationships: { foo: 'not a number' } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:relationships)).to include('Foo is not a number')
+      end
+
+      it 'returns early when base class relationships is not a hash' do
+        message = RelationshipMessage.new({ relationships: 'not a hash' })
+        expect(message).to be_valid
+        expect(message.errors_on(:relationships)).to be_empty
+      end
+    end
+
+    describe 'ToOneRelationshipValidator' do
+      class FooMessage < VCAP::CloudController::BaseMessage
+        attr_accessor :bar
+
+        def allowed_keys
+          [:bar]
+        end
+
+        validates :bar, to_one_relationship: true
+      end
+
+      it 'ensures that the data has the correct structure' do
+        invalid_one = FooMessage.new({ bar: { not_a_guid: 1234 } })
+        invalid_two = FooMessage.new({ bar: { guid: { woah: 1234 } } })
+        valid       = FooMessage.new(bar: { guid: '123' })
+
+        expect(invalid_one).not_to be_valid
+        expect(invalid_two).not_to be_valid
+        expect(valid).to be_valid
+      end
+    end
+
+    describe 'ToManyRelationshipValidator' do
+      class BarMessage < VCAP::CloudController::BaseMessage
+        attr_accessor :routes
+
+        def allowed_keys
+          [:routes]
+        end
+
+        validates :routes, to_many_relationship: true
+      end
+
+      it 'ensures that the data has the correct structure' do
+        valid       = BarMessage.new({ routes: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] })
+        invalid_one = BarMessage.new({ routes: { guid: '1234' } })
+        invalid_two = BarMessage.new({ routes: [{ guid: 1234 }, { guid: 1234 }] })
+
+        expect(valid).to be_valid
+        expect(invalid_one).not_to be_valid
+        expect(invalid_two).not_to be_valid
+      end
+    end
   end
 end
