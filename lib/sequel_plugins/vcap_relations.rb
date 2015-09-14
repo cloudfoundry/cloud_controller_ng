@@ -46,6 +46,11 @@ module Sequel::Plugins::VcapRelations
       super
     end
 
+    def one_through_one(name, opts={})
+      define_guid_reader(name)
+      super
+    end
+
     # Override many_to_many in order to add an override the default Sequel
     # methods for many_to_many relationships.
     #
@@ -97,23 +102,32 @@ module Sequel::Plugins::VcapRelations
     private
 
     def define_guid_accessors(name)
-      guid_attr = "#{name}_guid"
+      define_guid_reader(name)
+      define_guid_writer(name)
+    end
 
-      define_method(guid_attr) do
-        other = send(name)
-        other.guid unless other.nil?
-      end
-
-      define_method("#{guid_attr}=") do |val|
+    def define_guid_writer(name)
+      define_method("#{guid_attr(name)}=") do |val|
         other = nil
 
-        if !val.nil?
-          ar = self.class.association_reflection(name)
+        if val
+          ar    = self.class.association_reflection(name)
           other = ar.associated_class[guid: val]
           raise VCAP::Errors::ApiError.new_from_details('InvalidRelation', "Could not find #{ar.associated_class.name} with guid: #{val}") if other.nil?
         end
         send("#{name}=", other)
       end
+    end
+
+    def define_guid_reader(name)
+      define_method(guid_attr(name)) do
+        other = send(name)
+        other.guid unless other.nil?
+      end
+    end
+
+    def guid_attr(name)
+      "#{name}_guid"
     end
 
     def define_to_many_methods(name, singular_name, ids_attr, guids_attr)

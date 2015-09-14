@@ -8,7 +8,7 @@ resource 'Routes', type: [:api, :legacy_api] do
   let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: organization) }
   let(:route_path) { '/apps/v1/path' }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
-  let!(:route) { VCAP::CloudController::Route.make(domain: domain, space: space, service_instance: service_instance) }
+  let(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
   let(:guid) { route.guid }
 
   authenticated_request
@@ -27,8 +27,15 @@ resource 'Routes', type: [:api, :legacy_api] do
       field :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
     end
 
-    standard_model_list :route, VCAP::CloudController::RoutesController
-    standard_model_get :route, nested_associations: [:domain, :space]
+    context 'with a route binding' do
+      before do
+        VCAP::CloudController::RouteBinding.make(service_instance: service_instance, route: route)
+      end
+
+      standard_model_list :route, VCAP::CloudController::RoutesController
+      standard_model_get :route, nested_associations: [:domain, :space, :service_instance]
+    end
+
     standard_model_delete :route
 
     post '/v2/routes/' do

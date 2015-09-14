@@ -857,8 +857,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the binding does not have an app_guid' do
-        let(:route) { VCAP::CloudController::Route.make }
-        let(:binding) { VCAP::CloudController::RouteBinding.new(route, instance) }
+        let(:binding) { VCAP::CloudController::RouteBinding.make }
 
         it 'does not send the app_guid in the request' do
           client.bind(binding)

@@ -15,16 +15,18 @@ module VCAP::CloudController
       before do
         service_instance.service.requires = ['route_forwarding']
         service_instance.service.save
-        allow(access_validator).to receive(:validate_access).and_return(true)
+        allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
         stub_bind(service_instance)
       end
 
       it 'creates a binding' do
         expect(route.service_instance).to be_nil
+        expect(service_instance.routes).to be_empty
 
         manager.create_route_service_instance_binding(route, service_instance)
 
-        expect(route.reload.service_instance).to eq(service_instance)
+        expect(route.reload.service_instance).to eq service_instance
+        expect(service_instance.reload.routes).to include route
       end
 
       it 'fails if the instance has another operation in progress' do
@@ -52,7 +54,7 @@ module VCAP::CloudController
 
       context 'when the user does not have access' do
         before do
-          allow(access_validator).to receive(:validate_access).and_raise('blah')
+          allow(access_validator).to receive(:validate_access).with(:update, anything).and_raise('blah')
         end
 
         it 're-raises the error' do
@@ -62,9 +64,9 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the route is invalid' do
+      context 'when the route_binding is invalid' do
         before do
-          allow_any_instance_of(Route).to receive(:valid?).and_return(false)
+          allow_any_instance_of(RouteBinding).to receive(:valid?).and_return(false)
         end
 
         it 'raises Sequel::ValidationFailed' do
@@ -88,6 +90,7 @@ module VCAP::CloudController
             expect(e.message).to include('not registered as a logging service')
           end
           expect(route.reload.service_instance).to be_nil
+          expect(service_instance.reload.routes).to be_empty
         end
 
         it 'creates a binding for services that require syslog_drain' do
@@ -96,7 +99,8 @@ module VCAP::CloudController
 
           manager.create_route_service_instance_binding(route, service_instance)
 
-          expect(route.reload.service_instance).to eq(service_instance)
+          expect(route.reload.service_instance).to eq service_instance
+          expect(service_instance.reload.routes).to include route
         end
       end
 
@@ -122,7 +126,7 @@ module VCAP::CloudController
           it 'enqueues a DeleteOrphanedBinding job' do
             expect {
               manager.create_route_service_instance_binding(route, service_instance)
-            }.to raise_error
+            }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidSyslogDrainUrl)
 
             expect(Delayed::Job.count).to eq 1
 
@@ -142,14 +146,15 @@ module VCAP::CloudController
           it 'does not create a binding' do
             expect {
               manager.create_route_service_instance_binding(route, service_instance)
-            }.to raise_error
+            }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
+            expect(service_instance.reload.routes).to be_empty
             expect(route.reload.service_instance).to be_nil
           end
 
           it 'enqueues a DeleteOrphanedBinding job' do
             expect {
               manager.create_route_service_instance_binding(route, service_instance)
-            }.to raise_error
+            }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
 
             expect(Delayed::Job.count).to eq 1
 
@@ -166,7 +171,7 @@ module VCAP::CloudController
             stub_bind(service_instance)
             stub_request(:delete, service_binding_url_pattern)
 
-            allow_any_instance_of(Route).to receive(:save).and_raise('meow')
+            allow_any_instance_of(RouteBinding).to receive(:save).and_raise('meow')
             allow(logger).to receive(:error)
             allow(logger).to receive(:info)
 
@@ -196,6 +201,76 @@ module VCAP::CloudController
               expect(logger).to have_received(:error).with /Unable to delete orphaned service binding/
             end
           end
+        end
+      end
+    end
+
+    describe '#delete_route_service_binding' do
+      let(:route_binding) { RouteBinding.make }
+      let(:service_instance) { route_binding.service_instance }
+      let(:route) { route_binding.route }
+      before do
+        stub_unbind(route_binding)
+        allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
+      end
+
+      it 'sends an unbind request to the service broker' do
+          manager.delete_route_service_instance_binding(route_binding)
+
+          route_binding_url_pattern = /#{service_binding_url_pattern}#{route_binding.guid}/
+          expect(a_request(:delete, route_binding_url_pattern)).to have_been_made
+      end
+
+      it 'deletes the binding and removes associations from routes and service_instances' do
+        expect(route.service_instance).to eq service_instance
+        expect(service_instance.routes).to include route
+
+        manager.delete_route_service_instance_binding(route_binding)
+
+        expect(route_binding.exists?).to be_falsey
+        expect(route.reload.service_instance).to be_nil
+        expect(service_instance.reload.routes).to be_empty
+      end
+
+      context 'when the user does not have authority to delete a binding' do
+        before do
+          allow(access_validator).to receive(:validate_access).with(:update, anything).and_raise('blah')
+        end
+
+        it 'raises an error' do
+          expect {
+            manager.delete_route_service_instance_binding(route_binding)
+          }.to raise_error('blah')
+        end
+      end
+
+      it 'fails if the instance has another operation in progress' do
+        allow(logger).to receive(:error)
+
+        service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
+        expect {
+          manager.delete_route_service_instance_binding(route_binding)
+        }.to raise_error do |e|
+          expect(e).to be_a(Errors::ApiError)
+          expect(e.message).to include('in progress')
+        end
+
+        expect(logger).to have_received(:error).with /in progress/
+      end
+
+      context 'when service broker returns a 500 on unbind' do
+        before do
+          stub_unbind(route_binding, status: 500)
+          allow(logger).to receive(:error)
+        end
+
+        it 'does not delete the binding' do
+          expect {
+            manager.delete_route_service_instance_binding(route_binding)
+          }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
+
+          expect(route_binding.exists?).to be_truthy
+          expect(logger).to have_received(:error).with /Failed to delete/
         end
       end
     end
@@ -321,7 +396,7 @@ module VCAP::CloudController
           it 'enqueues a DeleteOrphanedBinding job' do
             expect {
               manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
-            }.to raise_error
+            }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidSyslogDrainUrl
 
             expect(Delayed::Job.count).to eq 1
 
@@ -341,14 +416,14 @@ module VCAP::CloudController
           it 'does not create a binding' do
             expect {
               manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
-            }.to raise_error
+            }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
             expect(ServiceBinding.count).to eq 0
           end
 
           it 'enqueues a DeleteOrphanedBinding job' do
             expect {
               manager.create_app_service_instance_binding(service_instance.guid, app.guid, binding_attrs, arbitrary_parameters)
-            }.to raise_error
+            }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
 
             expect(Delayed::Job.count).to eq 1
 

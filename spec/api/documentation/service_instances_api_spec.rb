@@ -176,33 +176,6 @@ EOF
         after_standard_model_delete(guid) if respond_to?(:after_standard_model_delete)
       end
     end
-
-    put '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
-      let(:route) { VCAP::CloudController::Route.make(space: service_instance.space) }
-
-      before do
-        service_instance.service.requires = ['route_forwarding']
-        service_instance.service.save
-        stub_bind(service_instance)
-      end
-
-      example 'Binding a service instance to a route (experimental)' do
-        client.put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
-
-        expect(status).to eq(201)
-        expect(parsed_response['metadata']['guid']).to eq(service_instance.guid)
-        expect(parsed_response['entity']['routes_url']).to eq("/v2/service_instances/#{service_instance.guid}/routes")
-      end
-    end
-
-    delete '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
-      let(:route) { VCAP::CloudController::Route.make }
-
-      example 'Unbinding a service instance from a route (experimental)' do
-        client.delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
-        expect(status).to eq(201)
-      end
-    end
   end
 
   describe 'Nested endpoints' do
@@ -217,10 +190,34 @@ EOF
     end
 
     describe 'Routes' do
-      before do
-        service_instance.service.requires = ['route_forwarding']
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing) }
+      let(:route) { VCAP::CloudController::Route.make(space: service_instance.space) }
+      let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance: service_instance) }
 
-        VCAP::CloudController::Route.make(service_instance: service_instance, space: service_instance.space)
+      put '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
+        before do
+          stub_bind(service_instance)
+        end
+
+        example 'Binding a service instance to a route (experimental)' do
+          client.put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
+
+          expect(status).to eq(201)
+          expect(parsed_response['metadata']['guid']).to eq(service_instance.guid)
+          expect(parsed_response['entity']['routes_url']).to eq("/v2/service_instances/#{service_instance.guid}/routes")
+        end
+      end
+
+      delete '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
+        before do
+          binding = VCAP::CloudController::RouteBinding.make(service_instance: service_instance, route: route)
+          stub_unbind(binding)
+        end
+
+        example 'Unbinding a service instance from a route (experimental)' do
+          client.delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
+          expect(status).to eq(201)
+        end
       end
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :service_instance

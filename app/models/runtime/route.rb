@@ -11,7 +11,6 @@ module VCAP::CloudController
 
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
-    many_to_one :service_instance
 
     many_to_many :app_models, join_table: :apps_v3_routes
 
@@ -19,6 +18,8 @@ module VCAP::CloudController
       before_add:   :validate_app,
       after_add:    :handle_add_app,
       after_remove: :handle_remove_app
+
+    one_through_one :service_instance, join_table: :route_bindings
 
     add_association_dependencies apps: :nullify
 
@@ -74,8 +75,6 @@ module VCAP::CloudController
       validate_domain
       validate_total_routes
       errors.add(:host, :domain_conflict) if domains_match?
-
-      validate_service_instance
     end
 
     def validate_path
@@ -191,18 +190,6 @@ module VCAP::CloudController
 
       if !org_routes_policy.allow_more_routes?(1)
         errors.add(:organization, :total_routes_exceeded)
-      end
-    end
-
-    def validate_service_instance
-      return unless service_instance
-
-      unless service_instance.service.requires.include? 'route_forwarding'
-        errors.add(:service_instance, :route_binding_not_allowed)
-      end
-
-      unless service_instance.space == self.space
-        errors.add(:service_instance, :space_mismatch)
       end
     end
   end

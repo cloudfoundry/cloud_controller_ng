@@ -2395,12 +2395,98 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET', '/v2/service_instances/:service_instance_guid/routes' do
+      let(:space)   { Space.make }
+      let(:manager) { make_manager_for_space(space) }
+      let(:auditor) { make_auditor_for_space(space) }
+      let(:developer) { make_developer_for_space(space) }
+
+      context 'when the user is not a member of the space this instance exists in' do
+        let(:space_a)   { Space.make }
+        let(:instance)  { ManagedServiceInstance.make(space: space_a) }
+
+        def verify_forbidden(user)
+          get "/v2/service_instances/#{instance.guid}/routes", {}, headers_for(user)
+          expect(last_response.status).to eql(403)
+        end
+
+        it 'returns the forbidden code for developers' do
+          verify_forbidden developer
+        end
+
+        it 'returns the forbidden code for managers' do
+          verify_forbidden manager
+        end
+
+        it 'returns the forbidden code for auditors' do
+          verify_forbidden auditor
+        end
+      end
+
+      context 'when the user is a member of the space this instance exists in' do
+        let(:instance_a)  { ManagedServiceInstance.make(:routing, space: space) }
+        let(:instance_b)  { ManagedServiceInstance.make(:routing, space: space) }
+        let(:route_a) { Route.make(space: space) }
+        let(:route_b) { Route.make(space: space) }
+        let(:route_c) { Route.make(space: space) }
+        let!(:route_binding_a) { RouteBinding.make(route: route_a, service_instance: instance_a) }
+        let!(:route_binding_b) { RouteBinding.make(route: route_b, service_instance: instance_a) }
+        let!(:route_binding_c) { RouteBinding.make(route: route_c, service_instance: instance_b) }
+
+        context 'when the user is a SpaceAuditor' do
+          it 'returns the routes that belong to the service instance' do
+            get "/v2/service_instances/#{instance_a.guid}/routes", {}, headers_for(auditor)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(2)
+            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(route_a.guid)
+            expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(route_b.guid)
+
+            get "/v2/service_instances/#{instance_b.guid}/routes", {}, headers_for(auditor)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(1)
+            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(route_c.guid)
+          end
+
+          context 'when the user is a SpaceManager' do
+          it 'returns the routes that belong to the service instance' do
+            get "/v2/service_instances/#{instance_a.guid}/routes", {}, headers_for(manager)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(2)
+            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(route_a.guid)
+            expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(route_b.guid)
+
+            get "/v2/service_instances/#{instance_b.guid}/routes", {}, headers_for(manager)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(1)
+            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(route_c.guid)
+          end
+          end
+        end
+
+        context 'when the user is a SpaceDeveloper' do
+          it 'returns the routes that belong to the service instance' do
+            get "/v2/service_instances/#{instance_a.guid}/routes", {}, headers_for(developer)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(2)
+            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(route_a.guid)
+            expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(route_b.guid)
+
+            get "/v2/service_instances/#{instance_b.guid}/routes", {}, headers_for(developer)
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(1)
+            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(route_c.guid)
+          end
+        end
+      end
+    end
+
     describe 'PUT', '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
       let(:service_instance) { ManagedServiceInstance.make(:routing, space: space) }
       let(:route) { VCAP::CloudController::Route.make(space: space) }
       let(:opts) { {} }
+      let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
 
       before do
         stub_bind(service_instance, opts)
@@ -2423,7 +2509,7 @@ module VCAP::CloudController
         put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
         expect(last_response.status).to eq(201)
 
-        binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
+        binding             = RouteBinding.last
         service_plan        = binding.service_plan
         service             = binding.service
         service_binding_uri = service_binding_url(binding)
@@ -2438,15 +2524,13 @@ module VCAP::CloudController
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
           expect(last_response.status).to eq(400)
           expect(JSON.parse(last_response.body)['description']).
-            to include('This service does not support route binding')
+            to include('does not support route binding')
         end
 
         it 'does NOT send a bind request to the service broker' do
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
 
-          binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
-          service_binding_uri = service_binding_url(binding)
-          expect(a_request(:put, service_binding_uri)).not_to have_been_made
+          expect(a_request(:put, service_binding_url_pattern)).not_to have_been_made
         end
       end
 
@@ -2461,8 +2545,8 @@ module VCAP::CloudController
 
       context 'when the route has an associated service instance' do
         before do
-          route.service_instance = ManagedServiceInstance.make(:routing, space: space)
-          route.save
+          service_instance = ManagedServiceInstance.make(:routing, space: space)
+          RouteBinding.make service_instance: service_instance, route: route
         end
 
         it 'raises RouteAlreadyBoundToServiceInstance' do
@@ -2496,10 +2580,7 @@ module VCAP::CloudController
         end
 
         it 'does not send a bind request to broker' do
-          binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
-          service_binding_uri = service_binding_url(binding)
-
-          expect(a_request(:put, service_binding_uri)).to_not have_been_made
+          expect(a_request(:put, service_binding_url_pattern)).to_not have_been_made
         end
       end
 
@@ -2511,9 +2592,7 @@ module VCAP::CloudController
         it 'does not send a bind request to broker' do
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
 
-          binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
-          service_binding_uri = service_binding_url(binding)
-          expect(a_request(:put, service_binding_uri)).to_not have_been_made
+          expect(a_request(:put, bind_url(service_instance))).to_not have_been_made
         end
 
         it 'does not trigger orphan mitigation' do
@@ -2522,9 +2601,7 @@ module VCAP::CloudController
           orphan_mitigation_job = Delayed::Job.first
           expect(orphan_mitigation_job).to be_nil
 
-          binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
-          service_binding_uri = service_binding_url(binding)
-          expect(a_request(:delete, service_binding_uri)).not_to have_been_made
+          expect(a_request(:delete, service_binding_url_pattern)).not_to have_been_made
         end
 
         it 'should show an error message for create bind operation' do
@@ -2553,9 +2630,7 @@ module VCAP::CloudController
         it 'does NOT send a bind request to the service broker' do
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
 
-          binding             = VCAP::CloudController::RouteBinding.new(route, service_instance)
-          service_binding_uri = service_binding_url(binding)
-          expect(a_request(:put, service_binding_uri)).not_to have_been_made
+          expect(a_request(:put, service_binding_url_pattern)).not_to have_been_made
         end
       end
 
@@ -2636,9 +2711,14 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
       let(:service_instance) { ManagedServiceInstance.make(:routing, space: space) }
+      let(:route) { Route.make(space: space) }
 
       context 'when a service has an associated route' do
-        let!(:route) { VCAP::CloudController::Route.make(space: space, service_instance: service_instance) }
+        let!(:route_binding) { RouteBinding.make(route: route, service_instance: service_instance) }
+
+        before do
+          stub_unbind(route_binding)
+        end
 
         it 'deletes the association between the route and the service instance' do
           get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
@@ -2651,6 +2731,39 @@ module VCAP::CloudController
           get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
           expect(last_response.status).to eq(200)
           expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+        end
+
+        it 'sends an unbind request to the broker' do
+          delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response.status).to eq(201)
+
+          service_plan        = route_binding.service_plan
+          service             = route_binding.service
+          query               = "plan_id=#{service_plan.broker_provided_id}&service_id=#{service.broker_provided_id}"
+          service_binding_uri = service_binding_url(route_binding, query)
+          expect(a_request(:delete, service_binding_uri)).to have_been_made
+        end
+      end
+
+      context 'when the service_instance does not exist' do
+        it 'returns a 404' do
+          delete "/v2/service_instances/fake-guid/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      context 'when the route does not exist' do
+        it 'returns a 404' do
+          delete "/v2/service_instances/#{service_instance.guid}/routes/fake-guid", {}, headers_for(developer)
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      context 'when the route and service are not bound' do
+        it 'returns a 400 InvalidRelation error' do
+          delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response.status).to eq(400)
+          expect(JSON.parse(last_response.body)['description']).to include('Invalid relation')
         end
       end
     end

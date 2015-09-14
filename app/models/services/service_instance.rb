@@ -21,7 +21,7 @@ module VCAP::CloudController
 
     one_to_many :service_bindings, before_add: :validate_service_binding
     one_to_many :service_keys
-    one_to_many :routes
+    many_to_many :routes, join_table: :route_bindings
 
     many_to_one :space, after_set: :validate_space
     many_to_one :service_plan_sti_eager_load,
@@ -57,6 +57,7 @@ module VCAP::CloudController
       ])
     end
 
+
     def type
       self.class.name.demodulize.underscore
     end
@@ -73,10 +74,10 @@ module VCAP::CloudController
       validates_presence :name
       validates_presence :space
       validates_unique [:space_id, :name], where: (proc do |_, obj, arr|
-                                                     vals = arr.map { |x| obj.send(x) }
-                                                     next if vals.any?(&:nil?)
-                                                     ServiceInstance.where(arr.zip(vals))
-                                                   end)
+          vals = arr.map { |x| obj.send(x) }
+          next if vals.any?(&:nil?)
+          ServiceInstance.where(arr.zip(vals))
+        end)
       validates_max_length 50, :name
     end
 
@@ -101,7 +102,8 @@ module VCAP::CloudController
       if !VCAP::CloudController::SecurityContext.admin? && !space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
         opts.merge!({ redact: ['credentials'] })
       end
-      super(opts)
+      hash = super(opts)
+      hash
     end
 
     def credentials_with_serialization=(val)

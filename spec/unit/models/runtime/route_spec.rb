@@ -9,6 +9,16 @@ module VCAP::CloudController
       it { is_expected.to have_associated :space, associated_instance: ->(route) { Space.make(organization: route.domain.owning_organization) } }
       it { is_expected.to have_associated :apps, associated_instance: ->(route) { App.make(space: route.space) } }
 
+      context 'when bound to a service instance' do
+        let(:route) { Route.make }
+        let(:service_instance) { ManagedServiceInstance.make(:routing, space: route.space) }
+        let!(:route_binding) { RouteBinding.make(route: route, service_instance: service_instance) }
+
+        it 'has a service instance' do
+          expect(route.service_instance).to eq service_instance
+        end
+      end
+
       context 'changing space' do
         context 'apps' do
           it 'succeeds with no mapped apps' do
@@ -68,7 +78,7 @@ module VCAP::CloudController
           it "fails if it's different" do
             route        = Route.make(domain: SharedDomain.make)
             route.domain = SharedDomain.make
-            expect { route.save }.to raise_error
+            expect(route.valid?).to be_falsey
           end
         end
 
@@ -84,7 +94,7 @@ module VCAP::CloudController
           it 'fails if its a different domain' do
             route        = Route.make(space: space, domain: domain)
             route.domain = PrivateDomain.make(owning_organization: space.organization)
-            expect { route.save }.to raise_error
+            expect(route.valid?).to be_falsey
           end
         end
       end
@@ -331,22 +341,6 @@ module VCAP::CloudController
             expect(subject.errors.on(:space)).to be_nil
             expect(subject.errors.on(:organization)).to include :total_routes_exceeded
           end
-        end
-      end
-
-      describe 'service instance binding' do
-        it 'errors if the service instance is not a route service' do
-          service_instance = ManagedServiceInstance.make
-          routing_service_instance = ManagedServiceInstance.make(:routing)
-          routing_service_instance.space = route.space
-
-          route.service_instance = service_instance
-
-          expect(route).to_not be_valid
-
-          route.service_instance = routing_service_instance
-
-          expect(route).to be_valid
         end
       end
     end

@@ -244,9 +244,9 @@ module VCAP::CloudController
       logger.debug 'cc.association.add', guid: instance_guid, assocation: :routes, other_guid: route_guid
       @request_attrs = { route: route_guid }
 
-      route = Route.where(guid: route_guid).eager(:service_instance).all.first
-      raise Errors::ApiError.new_from_details('RouteNotFound', route_guid) if route.nil?
-      raise Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance') unless route.service_instance.nil?
+      route = Route.find(guid: route_guid)
+      raise Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
+      raise Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance') if route.service_instance
 
       instance = find_guid(instance_guid)
 
@@ -260,6 +260,26 @@ module VCAP::CloudController
       [HTTP::CREATED, object_renderer.render_json(self.class, instance, @opts)]
     rescue ServiceInstanceBindingManager::ServiceInstanceNotBindable
       raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
+    end
+
+    def remove_related(guid, name, other_guid)
+      return super(guid, name, other_guid) if name != :routes
+
+      unbind_route(guid, other_guid)
+    end
+
+    def unbind_route(instance_guid, route_guid)
+      logger.debug 'cc.association.remove', guid: instance_guid, association: :routes, other_guid: route_guid
+
+      instance = find_guid(instance_guid)
+      route = find_guid(route_guid, Route)
+      binding = RouteBinding.find(service_instance: instance, route: route)
+      invalid_relation!("Route #{route_guid} is not bound to service instance #{instance_guid}.") if binding.nil?
+
+      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
+      binding_manager.delete_route_service_instance_binding(binding)
+
+      [HTTP::CREATED, {}.to_json]
     end
 
     private
@@ -282,7 +302,7 @@ module VCAP::CloudController
       requested_plan_guid = request_attrs['service_plan_guid']
       if plan_update_requested?(requested_plan_guid, current_plan)
         plan_not_updateable! if service_disallows_plan_update?(service)
-        invalid_relation! if invalid_plan?(requested_plan_guid, service)
+        invalid_relation!('Plan') if invalid_plan?(requested_plan_guid, service)
       end
     end
 
@@ -310,8 +330,8 @@ module VCAP::CloudController
       raise Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
     end
 
-    def invalid_relation!
-      raise Errors::ApiError.new_from_details('InvalidRelation', 'Plan')
+    def invalid_relation!(message)
+      raise Errors::ApiError.new_from_details('InvalidRelation', message)
     end
 
     def invalid_request!
