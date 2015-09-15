@@ -1,5 +1,7 @@
+require 'messages/validators'
+
 module VCAP::CloudController
-  class AppsListParameters
+  class AppsListMessage
     include ActiveModel::Model
     include VCAP::CloudController::Validators
 

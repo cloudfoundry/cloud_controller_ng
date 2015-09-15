@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'messages/validators'
 
 module VCAP::CloudController::Validators
   describe ArrayValidator do

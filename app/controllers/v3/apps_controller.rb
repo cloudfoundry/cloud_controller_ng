@@ -14,6 +14,7 @@ require 'actions/set_current_droplet'
 require 'messages/app_create_message'
 require 'messages/app_update_message'
 require 'messages/buildpack_request_validator'
+require 'messages/apps_list_message'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
@@ -239,7 +240,7 @@ module VCAP::CloudController
     end
 
     def validate_allowed_params(params)
-      apps_parameters = VCAP::CloudController::AppsListParameters.new params
+      apps_parameters = VCAP::CloudController::AppsListMessage.new params
       apps_parameters.valid?
       apps_parameters.errors.each do |key, value|
         raise InvalidParam.new("Invalid type for param #{key}") if value.present?
