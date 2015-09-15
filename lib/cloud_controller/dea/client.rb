@@ -302,7 +302,6 @@ module VCAP::CloudController
         end
 
         def dea_request_find_droplet(args, opts={})
-          logger.debug "sending dea.find.droplet with args: '#{args}' and opts: '#{opts}'"
           message_bus.synchronous_request('dea.find.droplet', args, opts)
         end
 
