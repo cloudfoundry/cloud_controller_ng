@@ -8,8 +8,7 @@ module VCAP::CloudController
         {
           'page'            => 4,
           'per_page'        => 56,
-          'order_by'        => 'updated_at',
-          'order_direction' => 'desc',
+          'order_by'        => '+updated_at',
           'extra'           => 'stuff'
         }
       end
@@ -20,7 +19,32 @@ module VCAP::CloudController
         expect(result.page).to eq(4)
         expect(result.per_page).to eq(56)
         expect(result.order_by).to eq('updated_at')
-        expect(result.order_direction).to eq('desc')
+        expect(result.order_direction).to eq('asc')
+      end
+
+      describe 'order direction' do
+        it 'ascending if order by is prepended with "+"' do
+          result = PaginationOptions.from_params(params)
+
+          expect(result.order_by).to eq('updated_at')
+          expect(result.order_direction).to eq('asc')
+        end
+
+        it 'descending if order by is prepended with "-"' do
+          params.merge!({'order_by' => '-updated_at'})
+          result = PaginationOptions.from_params(params)
+
+          expect(result.order_by).to eq('updated_at')
+          expect(result.order_direction).to eq('desc')
+        end
+
+        it 'defaults to ascending' do
+          params.merge!({'order_by' => 'updated_at'})
+          result = PaginationOptions.from_params(params)
+
+          expect(result.order_by).to eq('updated_at')
+          expect(result.order_direction).to eq('asc')
+        end
       end
 
       it 'removes pagination options from params' do

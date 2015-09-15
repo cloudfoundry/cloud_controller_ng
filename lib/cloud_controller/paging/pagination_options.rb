@@ -37,15 +37,47 @@ module VCAP::CloudController
       @order_direction ||= DIRECTION_DEFAULT
     end
 
-    def self.from_params(params)
-      page            = params.delete('page')
-      page            = page.to_i if !page.nil?
-      per_page        = params.delete('per_page')
-      per_page        = per_page.to_i if !per_page.nil?
-      order_by        = params.delete('order_by')
-      order_direction = params.delete('order_direction')
-      options         = { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction }
-      PaginationOptions.new(options)
+    class << self
+      def from_params(params)
+        page                      = params.delete('page')
+        page                      = page.to_i unless page.nil?
+        per_page                  = params.delete('per_page')
+        per_page                  = per_page.to_i unless per_page.nil?
+        order_by, order_direction = parse_order(params.delete('order_by'))
+        options                   = { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction }
+        PaginationOptions.new(options)
+      end
+
+      private
+
+      def parse_order(raw_order_by)
+        return unless raw_order_by
+
+        first_character = raw_order_by[0]
+
+        if user_provided_direction?(first_character)
+          order_by = remove_prefix(raw_order_by)
+          order_direction = parse_order_direction(first_character)
+        else
+          order_by = raw_order_by
+          order_direction = nil
+        end
+
+        return order_by, order_direction
+      end
+
+      ORDER_PREFIXES = %w(+ -)
+      def user_provided_direction?(first_character)
+        ORDER_PREFIXES.include? first_character
+      end
+
+      def parse_order_direction(first_character)
+        first_character == '+' ? 'asc' : 'desc'
+      end
+
+      def remove_prefix(order_by)
+        order_by[1..-1]
+      end
     end
 
     def keys

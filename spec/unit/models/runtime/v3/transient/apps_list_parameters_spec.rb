@@ -13,7 +13,6 @@ module VCAP::CloudController
               page: 1,
               per_page: 5,
               order_by: 'created_at',
-              order_direction: 'asc',
             })
         }.not_to raise_error
       end
@@ -110,32 +109,24 @@ module VCAP::CloudController
               params = AppsListParameters.new order_by: 'updated_at'
               expect(params.valid?).to be_truthy
             end
+
+            describe 'order direction' do
+              it 'accepts valid values prefixed with "-"' do
+                params = AppsListParameters.new order_by: '-updated_at'
+                expect(params.valid?).to be_truthy
+              end
+
+              it 'accepts valid values prefixed with "+"' do
+                params = AppsListParameters.new order_by: '+updated_at'
+                expect(params.valid?).to be_truthy
+              end
+            end
           end
 
           it 'is invalid otherwise' do
-            params = AppsListParameters.new order_by: 'foobar'
+            params = AppsListParameters.new order_by: '+foobar'
             expect(params.valid?).to be_falsey
             expect(params.errors[:order_by].length).to eq 1
-          end
-        end
-
-        describe 'order_direction' do
-          describe 'valid values' do
-            it 'asc' do
-              params = AppsListParameters.new order_direction: 'asc'
-              expect(params.valid?).to be_truthy
-            end
-
-            it 'desc' do
-              params = AppsListParameters.new order_direction: 'desc'
-              expect(params.valid?).to be_truthy
-            end
-          end
-
-          it 'is invalid otherwise' do
-            params = AppsListParameters.new order_direction: 'foobar'
-            expect(params.valid?).to be_falsey
-            expect(params.errors[:order_direction].length).to eq 1
           end
         end
       end

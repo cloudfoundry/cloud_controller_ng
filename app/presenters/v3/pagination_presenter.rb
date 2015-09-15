@@ -35,8 +35,9 @@ module VCAP::CloudController
     end
 
     def present_pagination_hash(paginated_result, base_url, facets={})
-      page          = paginated_result.pagination_options.page
-      per_page      = paginated_result.pagination_options.per_page
+      pagination_options = paginated_result.pagination_options
+      page          = pagination_options.page
+      per_page      = pagination_options.per_page
       total_results = paginated_result.total
 
       last_page     = (total_results.to_f / per_page.to_f).ceil
@@ -44,10 +45,10 @@ module VCAP::CloudController
       previous_page = page - 1
       next_page     = page + 1
 
-      order = paginated_order(paginated_result.pagination_options)
+      order = paginated_order(pagination_options.order_by, pagination_options.order_direction)
 
       serialized_facets = DataToQueryParamsSerializer.new.serialize(facets)
-      serialized_facets += '&' if !serialized_facets.empty?
+      serialized_facets += '&' unless serialized_facets.empty?
 
       {
         total_results: total_results,
@@ -60,23 +61,13 @@ module VCAP::CloudController
 
     private
 
-    def paginated_order(pagination_options)
-      order_by        = pagination_options.order_by
-      order_direction = pagination_options.order_direction
-
-      order = ''
-
-      if order_by != 'id'
-        order += "order_by=#{order_by}&"
+    def paginated_order(order_by, order_direction)
+      if order_by == 'id'
+        ''
+      else
+        prefix = order_direction == 'asc' ? '+' : '-'
+        "order_by=#{prefix}#{order_by}&"
       end
-
-      if order_by != 'id'
-        order += "order_direction=#{order_direction}&"
-      elsif order_direction != 'asc'
-        order += "order_direction=#{order_direction}&"
-      end
-
-      order
     end
   end
 end
