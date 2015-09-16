@@ -5,15 +5,13 @@ module VCAP::CloudController
     include ActiveModel::Model
     include VCAP::CloudController::Validators
 
-    VALID_ORDER_BY_KEYS = %w(created_at updated_at)
-    VALID_ORDER_DIRECTIONS = %w(asc desc)
+    VALID_ORDER_BY_KEYS = /created_at|updated_at/
 
-    attr_accessor :states, :page, :per_page, :order_by, :order_direction
+    attr_accessor :states, :page, :per_page, :order_by
 
     validates :states, array: true, allow_blank: true
     validates_numericality_of :page, greater_than: 0, allow_blank: true
     validates_numericality_of :per_page, greater_than: 0, allow_blank: true
-    validates_inclusion_of :order_by, in: VALID_ORDER_BY_KEYS, allow_blank: true
-    validates_inclusion_of :order_direction, in: VALID_ORDER_DIRECTIONS, allow_blank: true
+    validates_format_of :order_by, with: /[+-]?(#{VALID_ORDER_BY_KEYS})/, allow_blank: true
   end
 end

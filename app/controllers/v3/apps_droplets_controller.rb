@@ -61,9 +61,5 @@ module VCAP::CloudController
     rescue NoMethodError => e
       raise InvalidParam.new("Unknown query param #{e.name[0...-1]}")
     end
-
-    def build_facets(params)
-      params.except('order_direction')
-    end
   end
 end

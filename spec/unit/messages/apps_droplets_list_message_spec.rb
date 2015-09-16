@@ -90,29 +90,24 @@ module VCAP::CloudController
               message = AppsDropletsListMessage.new order_by: 'updated_at'
               expect(message).to be_valid
             end
+
+            describe 'order direction' do
+              it 'accepts valid values prefixed with "-"' do
+                message = AppsDropletsListMessage.new order_by: '-updated_at'
+                expect(message).to be_valid
+              end
+
+              it 'accepts valid values prefixed with "+"' do
+                message = AppsDropletsListMessage.new order_by: '+updated_at'
+                expect(message).to be_valid
+              end
+            end
           end
 
           it 'is invalid otherwise' do
-            message = AppsDropletsListMessage.new order_by: 'foobar'
+            message = AppsDropletsListMessage.new order_by: '+foobar'
             expect(message).to be_invalid
             expect(message.errors[:order_by].length).to eq 1
-          end
-        end
-
-        describe 'order direction' do
-          it 'accepts "asc"' do
-            message = AppsDropletsListMessage.new order_direction: 'desc'
-            expect(message).to be_valid
-          end
-
-          it 'accepts "desc"' do
-            message = AppsDropletsListMessage.new order_direction: 'asc'
-            expect(message).to be_valid
-          end
-
-          it 'is invalid otherwise' do
-            message = AppsDropletsListMessage.new order_direction: 'meh'
-            expect(message).to be_invalid
           end
         end
       end
