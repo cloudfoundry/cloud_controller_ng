@@ -101,39 +101,46 @@ resource 'Spaces', type: [:api, :legacy_api] do
       end
 
       let!(:associated_developer) { VCAP::CloudController::User.make }
-      let(:associated_developer_guid) { associated_developer.guid }
       let(:developer) { VCAP::CloudController::User.make }
-      let(:developer_guid) { developer.guid }
 
-      parameter :developer_guid, 'The guid of the developer'
+      context 'by user guid' do
+        let(:associated_developer_guid) { associated_developer.guid }
+        let(:developer_guid) { developer.guid }
 
-      standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :developers
-      nested_model_associate :developer, :space
-      nested_model_remove :developer, :space
+        parameter :developer_guid, 'The guid of the developer'
 
-      put 'v2/spaces/:guid/developers' do
-        example 'Associate Developer with the Space by Username (experimental)' do
-          uaa_client = double(:uaa_client)
-          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:id_for_username).and_return(developer.guid)
-
-          client.put "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
-          expect(status).to eq(201)
-
-          standard_entity_response parsed_response, :space
-        end
+        standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :developers
+        nested_model_associate :developer, :space
+        nested_model_remove :developer, :space
       end
 
-      delete 'v2/spaces/:guid/developers' do
-        example 'Disassociate Developer with the Space by Username (experimental)' do
-          uaa_client = double(:uaa_client)
-          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:id_for_username).and_return(associated_developer.guid)
+      context 'by username' do
+        body_parameter :username, "The user's name", required: true, example_values: ['user@example.com']
 
-          client.delete "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'developer@example.com' }, pretty: true), headers
-          expect(status).to eq(200)
+        put 'v2/spaces/:guid/developers' do
+          example 'Associate Developer with the Space by Username (experimental)' do
+            uaa_client = double(:uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(uaa_client).to receive(:id_for_username).and_return(developer.guid)
 
-          standard_entity_response parsed_response, :space
+            client.put "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
+            expect(status).to eq(201)
+
+            standard_entity_response parsed_response, :space
+          end
+        end
+
+        delete 'v2/spaces/:guid/developers' do
+          example 'Disassociate Developer with the Space by Username (experimental)' do
+            uaa_client = double(:uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(uaa_client).to receive(:id_for_username).and_return(associated_developer.guid)
+
+            client.delete "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'developer@example.com' }, pretty: true), headers
+            expect(status).to eq(200)
+
+            standard_entity_response parsed_response, :space
+          end
         end
       end
     end
@@ -147,39 +154,46 @@ resource 'Spaces', type: [:api, :legacy_api] do
       end
 
       let!(:associated_manager) { VCAP::CloudController::User.make }
-      let(:associated_manager_guid) { associated_manager.guid }
       let(:manager) { VCAP::CloudController::User.make }
-      let(:manager_guid) { manager.guid }
 
-      parameter :manager_guid, 'The guid of the manager'
+      context 'by user guid' do
+        let(:associated_manager_guid) { associated_manager.guid }
+        let(:manager_guid) { manager.guid }
 
-      standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :managers
-      nested_model_associate :manager, :space
-      nested_model_remove :manager, :space
+        parameter :manager_guid, 'The guid of the manager'
 
-      put 'v2/spaces/:guid/managers' do
-        example 'Associate Manager with the Space by Username (experimental)' do
-          uaa_client = double(:uaa_client)
-          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:id_for_username).and_return(manager.guid)
-
-          client.put "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
-          expect(status).to eq(201)
-
-          standard_entity_response parsed_response, :space
-        end
+        standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :managers
+        nested_model_associate :manager, :space
+        nested_model_remove :manager, :space
       end
 
-      delete 'v2/spaces/:guid/managers' do
-        example 'Disassociate Manager with the Space by Username (experimental)' do
-          uaa_client = double(:uaa_client)
-          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:id_for_username).and_return(associated_manager.guid)
+      context 'by username' do
+        body_parameter :username, "The user's name", required: true, example_values: ['user@example.com']
 
-          client.delete "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'manager@example.com' }, pretty: true), headers
-          expect(status).to eq(200)
+        put 'v2/spaces/:guid/managers' do
+          example 'Associate Manager with the Space by Username (experimental)' do
+            uaa_client = double(:uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(uaa_client).to receive(:id_for_username).and_return(manager.guid)
 
-          standard_entity_response parsed_response, :space
+            client.put "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
+            expect(status).to eq(201)
+
+            standard_entity_response parsed_response, :space
+          end
+        end
+
+        delete 'v2/spaces/:guid/managers' do
+          example 'Disassociate Manager with the Space by Username (experimental)' do
+            uaa_client = double(:uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(uaa_client).to receive(:id_for_username).and_return(associated_manager.guid)
+
+            client.delete "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'manager@example.com' }, pretty: true), headers
+            expect(status).to eq(200)
+
+            standard_entity_response parsed_response, :space
+          end
         end
       end
     end
@@ -193,39 +207,46 @@ resource 'Spaces', type: [:api, :legacy_api] do
       end
 
       let!(:associated_auditor) { VCAP::CloudController::User.make }
-      let(:associated_auditor_guid) { associated_auditor.guid }
       let(:auditor) { VCAP::CloudController::User.make }
-      let(:auditor_guid) { auditor.guid }
 
-      parameter :auditor_guid, 'The guid of the auditor'
+      context 'by user guid' do
+        let(:associated_auditor_guid) { associated_auditor.guid }
+        let(:auditor_guid) { auditor.guid }
 
-      standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :auditors
-      nested_model_associate :auditor, :space
-      nested_model_remove :auditor, :space
+        parameter :auditor_guid, 'The guid of the auditor'
 
-      put 'v2/spaces/:guid/auditors' do
-        example 'Associate Auditor with the Space by Username (experimental)' do
-          uaa_client = double(:uaa_client)
-          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:id_for_username).and_return(auditor.guid)
-
-          client.put "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
-          expect(status).to eq(201)
-
-          standard_entity_response parsed_response, :space
-        end
+        standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :auditors
+        nested_model_associate :auditor, :space
+        nested_model_remove :auditor, :space
       end
 
-      delete 'v2/spaces/:guid/auditors' do
-        example 'Disassociate Auditor with the Space by Username (experimental)' do
-          uaa_client = double(:uaa_client)
-          allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:id_for_username).and_return(associated_auditor.guid)
+      context 'by username' do
+        body_parameter :username, "The user's name", required: true, example_values: ['user@example.com']
 
-          client.delete "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'auditor@example.com' }, pretty: true), headers
-          expect(status).to eq(200)
+        put 'v2/spaces/:guid/auditors' do
+          example 'Associate Auditor with the Space by Username (experimental)' do
+            uaa_client = double(:uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(uaa_client).to receive(:id_for_username).and_return(auditor.guid)
 
-          standard_entity_response parsed_response, :space
+            client.put "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
+            expect(status).to eq(201)
+
+            standard_entity_response parsed_response, :space
+          end
+        end
+
+        delete 'v2/spaces/:guid/auditors' do
+          example 'Disassociate Auditor with the Space by Username (experimental)' do
+            uaa_client = double(:uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(uaa_client).to receive(:id_for_username).and_return(associated_auditor.guid)
+
+            client.delete "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'auditor@example.com' }, pretty: true), headers
+            expect(status).to eq(200)
+
+            standard_entity_response parsed_response, :space
+          end
         end
       end
     end
@@ -290,7 +311,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
 
     describe 'Events' do
       before do
-        user = VCAP::CloudController::User.make
+        user                   = VCAP::CloudController::User.make
         space_event_repository = VCAP::CloudController::Repositories::Runtime::SpaceEventRepository.new
         space_event_repository.record_space_update(space, user, 'user@example.com', { 'name' => 'new_name' })
       end
