@@ -749,51 +749,13 @@ module VCAP::CloudController
           end
         end
         context 'when the environment variables are not valid' do
-          context 'because they are not a hash' do
-            let(:req_body) { '{"environment_variables":"invalid_param"}' }
-            it 'returns a 422' do
-              expect {
-                packages_controller.stage(package.guid)
-              }.to raise_error do |error|
-                expect(error.name).to eq 'UnprocessableEntity'
-                expect(error.response_code).to eq 422
-              end
-            end
-          end
-
-          context 'because a key begins with "CF_"' do
-            let(:req_body) { '{"environment_variables":{"CF_bad_key": "should_fail"}}' }
-            it 'returns a 422' do
-              expect {
-                packages_controller.stage(package.guid)
-              }.to raise_error do |error|
-                expect(error.name).to eq 'UnprocessableEntity'
-                expect(error.response_code).to eq 422
-              end
-            end
-          end
-
-          context 'because a key begins with "VCAP_"' do
-            let(:req_body) { '{"environment_variables":{"VCAP_bad_key": "should_fail"}}' }
-            it 'returns a 422' do
-              expect {
-                packages_controller.stage(package.guid)
-              }.to raise_error do |error|
-                expect(error.name).to eq 'UnprocessableEntity'
-                expect(error.response_code).to eq 422
-              end
-            end
-          end
-
-          context 'because a key is "PORT"' do
-            let(:req_body) { '{"environment_variables":{"PORT": "should_fail"}}' }
-            it 'returns a 422' do
-              expect {
-                packages_controller.stage(package.guid)
-              }.to raise_error do |error|
-                expect(error.name).to eq 'UnprocessableEntity'
-                expect(error.response_code).to eq 422
-              end
+          let(:req_body) { '{"environment_variables":"invalid_param"}' }
+          it 'returns a 422' do
+            expect {
+              packages_controller.stage(package.guid)
+            }.to raise_error do |error|
+              expect(error.name).to eq 'UnprocessableEntity'
+              expect(error.response_code).to eq 422
             end
           end
         end

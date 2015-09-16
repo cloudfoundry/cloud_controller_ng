@@ -44,21 +44,8 @@ module VCAP::CloudController
 
     def validate_environment_variables
       return unless environment_variables
-      unless environment_variables.is_a?(Hash)
-        errors.add(:environment_variables, 'must be a JSON hash')
-        return
-      end
-      keys = environment_variables.keys
-      keys.each do |key|
-        key = key.to_s
-        if key =~ /^CF_/i
-          errors.add(:environment_variables, 'cannot start with CF_')
-        elsif key =~ /^VCAP_/i
-          errors.add(:environment_variables, 'cannot start with VCAP_')
-        elsif key == 'PORT'
-          errors.add(:environment_variables, 'cannot set PORT')
-        end
-      end
+      validator = VCAP::CloudController::Validators::EnvironmentVariablesValidator.new({ attributes: [:environment_variables] })
+      validator.validate_each(self, :environment_variables, environment_variables)
     end
 
     def validate_droplet_is_staged

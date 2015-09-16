@@ -119,44 +119,10 @@ module VCAP::CloudController
       end
 
       describe 'environment_variables' do
-        it 'validates that the input is a hash' do
+        it 'validates them' do
           expect {
             AppModel.make(environment_variables: '')
-          }.to raise_error(Sequel::ValidationFailed, /must be a JSON hash/)
-
-          expect {
-            AppModel.make(environment_variables: 3)
-          }.to raise_error(Sequel::ValidationFailed, /must be a JSON hash/)
-        end
-
-        it 'does not allow variables that start with CF_' do
-          expect {
-            AppModel.make(environment_variables: { CF_POTATO: 'muy bueno' })
-          }.to raise_error(Sequel::ValidationFailed, /cannot start with CF_/)
-        end
-
-        it 'does not allow variables that start with cf_' do
-          expect {
-            AppModel.make(environment_variables: { cf_potato: 'muy bueno' })
-          }.to raise_error(Sequel::ValidationFailed, /cannot start with CF_/)
-        end
-
-        it 'does not allow variables that start with VCAP_' do
-          expect {
-            AppModel.make(environment_variables: { VCAP_BANANA: 'no bueno' })
-          }.to raise_error(Sequel::ValidationFailed, /cannot start with VCAP_/)
-        end
-
-        it 'does not allow variables that start with vcap_' do
-          expect {
-            AppModel.make(environment_variables: { vcap_banana: 'no bueno' })
-          }.to raise_error(Sequel::ValidationFailed, /cannot start with VCAP_/)
-        end
-
-        it 'does not allow PORT' do
-          expect {
-            AppModel.make(environment_variables: { PORT: 'el martes nos ponemos camisetas naranjas' })
-          }.to raise_error(Sequel::ValidationFailed, /cannot set PORT/)
+          }.to raise_error(Sequel::ValidationFailed, /must be a hash/)
         end
       end
 

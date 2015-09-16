@@ -1,4 +1,5 @@
 require 'messages/base_message'
+require 'messages/validators'
 
 module VCAP::CloudController
   class DropletCreateMessage < BaseMessage
@@ -8,11 +9,11 @@ module VCAP::CloudController
       [:memory_limit, :disk_limit, :stack, :buildpack, :environment_variables]
     end
 
-    validates_with NoAdditionalKeysValidator, EnvironmentVariablesValidator
+    validates_with NoAdditionalKeysValidator
 
     validates :memory_limit, numericality: { only_integer: true }, allow_nil: true
-
     validates :disk_limit, numericality: { only_integer: true }, allow_nil: true
+    validates :environment_variables, environment_variables: true, allow_nil: true
 
     validates :stack,
       string: true,
