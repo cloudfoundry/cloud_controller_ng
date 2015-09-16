@@ -47,7 +47,7 @@ module VCAP::CloudController
       check_write_permissions!
 
       request = parse_and_validate_json(body)
-      message = ProcessUpdateMessage.create_from_http_request(guid, request)
+      message = ProcessUpdateMessage.create_from_http_request(request)
       unprocessable!(message.errors.full_messages) unless message.valid?
 
       process = App.where(guid: guid).eager(:space, :organization).all.first

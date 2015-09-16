@@ -24,7 +24,7 @@ module VCAP::CloudController
           app.space,
           @user.guid,
           @user_email,
-          message.as_json({ only: (message.requested_keys).map(&:to_s) })
+          message.audit_hash
         )
       end
 

@@ -20,7 +20,7 @@ module VCAP::CloudController
           process.space,
           @user.guid,
           @user_email,
-          message.as_json({ only: (message.requested_keys - [:guid]).map(&:to_s) })
+          message.audit_hash
         )
       end
     rescue Sequel::ValidationFailed => e

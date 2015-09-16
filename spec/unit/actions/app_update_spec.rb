@@ -27,7 +27,7 @@ module VCAP::CloudController
             user_email,
             {
               'name'                  => 'new name',
-              'environment_variables' => {},
+              'environment_variables' => { 'MYVAL' => 'new-val' },
             })
 
         app_update.update(app, message)

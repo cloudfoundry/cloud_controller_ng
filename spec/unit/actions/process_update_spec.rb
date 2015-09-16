@@ -4,7 +4,7 @@ require 'actions/process_update'
 module VCAP::CloudController
   describe ProcessUpdate do
     subject(:process_update) { ProcessUpdate.new(user, user_email) }
-    let(:message) { ProcessUpdateMessage.new({ command: 'new', guid: 'potato' }) }
+    let(:message) { ProcessUpdateMessage.new({ command: 'new' }) }
     let!(:process) { AppFactory.make }
     let(:user) { User.make }
     let(:user_email) { 'user@example.com' }
