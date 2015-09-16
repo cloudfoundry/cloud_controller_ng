@@ -11,7 +11,6 @@ module VCAP::CloudController
               page: 1,
               per_page: 5,
               order_by: 'created_at',
-              order_direction: 'asc',
             })
         }.not_to raise_error
       end
