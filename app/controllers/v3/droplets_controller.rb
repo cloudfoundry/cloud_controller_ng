@@ -2,6 +2,7 @@ require 'presenters/v3/droplet_presenter'
 require 'queries/droplet_delete_fetcher'
 require 'actions/droplet_delete'
 require 'queries/droplet_list_fetcher'
+require 'messages/droplets_list_message'
 
 module VCAP::CloudController
   class DropletsController < RestController::BaseController
@@ -93,19 +94,13 @@ module VCAP::CloudController
     end
 
     def validate_allowed_params(params)
-      schema = {
-        'app_guids' => ->(v) { v.is_a? Array },
-        'states' => ->(v) { v.is_a? Array },
-        'page' => ->(v) { v.to_i > 0 },
-        'per_page' => ->(v) { v.to_i > 0 },
-        'order_by' => ->(v) { %w(created_at updated_at).include?(v) },
-        'order_direction' => ->(v) { %w(asc desc).include?(v) }
-      }
-      params.each do |key, value|
-        validator = schema[key]
-        raise InvalidParam.new("Unknown query param #{key}") if validator.nil?
-        raise InvalidParam.new("Invalid type for param #{key}") if !validator.call(value)
+      droplets_parameters = VCAP::CloudController::DropletsListMessage.new params
+      droplets_parameters.valid?
+      droplets_parameters.errors.each do |key, value|
+        raise InvalidParam.new("Invalid type for param #{key}") if value.present?
       end
+    rescue NoMethodError => e
+      raise InvalidParam.new("Unknown query param #{e.name[0...-1]}")
     end
   end
 end

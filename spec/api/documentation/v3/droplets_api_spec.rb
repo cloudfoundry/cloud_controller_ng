@@ -107,8 +107,7 @@ resource 'Droplets (Experimental)', type: :api do
     parameter :states, 'Droplet state to filter by', valid_values: %w(PENDING STAGING STAGED FAILED), example_values: 'states[]=PENDING&states[]=STAGING'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
-    parameter :order_by, 'Value to sort by', valid_values: %w(created_at updated_at)
-    parameter :order_direction, 'Direction to sort by', valid_values: %w(asc desc)
+    parameter :order_by, 'Value to sort by. Prepend with "+" or "-" to change sort direction to ascending or descending, respectively.', valid_values: %w(created_at updated_at)
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
@@ -123,7 +122,7 @@ resource 'Droplets (Experimental)', type: :api do
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
         app_guid:              app_model.guid,
-        created_at: Time.at(1),
+        created_at:            Time.at(1),
         package_guid:          package.guid,
         buildpack:             buildpack.name,
         buildpack_guid:        buildpack.guid,
@@ -144,8 +143,7 @@ resource 'Droplets (Experimental)', type: :api do
 
     let(:page) { 1 }
     let(:per_page) { 2 }
-    let(:order_by) { 'created_at' }
-    let(:order_direction) { 'asc' }
+    let(:order_by) { '-created_at' }
 
     before do
       space.organization.add_user user
@@ -157,12 +155,32 @@ resource 'Droplets (Experimental)', type: :api do
         {
           'pagination' => {
             'total_results' => 2,
-            'first'         => { 'href' => "/v3/droplets?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
-            'last'          => { 'href' => "/v3/droplets?order_by=#{order_by}&order_direction=#{order_direction}&page=1&per_page=2" },
+            'first'         => { 'href' => "/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
+            'last'          => { 'href' => "/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
             'next'          => nil,
             'previous'      => nil,
           },
           'resources'  => [
+            {
+              'guid'                   => droplet2.guid,
+              'state'                  => VCAP::CloudController::DropletModel::STAGED_STATE,
+              'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
+              'buildpack'              => 'https://github.com/cloudfoundry/my-buildpack.git',
+              'error'                  => droplet2.error,
+              'procfile'               => droplet2.procfile,
+              'environment_variables'  => {},
+              'created_at'             => iso8601,
+              'updated_at'             => nil,
+              '_links'                 => {
+                'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },
+                'package' => { 'href' => "/v3/packages/#{package.guid}" },
+                'app'     => { 'href' => "/v3/apps/#{droplet2.app_guid}" },
+                'assign_current_droplet' => {
+                  'href' => "/v3/apps/#{droplet2.app_guid}/current_droplet",
+                  'method' => 'PUT'
+                }
+              }
+            },
             {
               'guid'                   => droplet1.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGING_STATE,
@@ -180,26 +198,6 @@ resource 'Droplets (Experimental)', type: :api do
                 'app'       => { 'href' => "/v3/apps/#{droplet1.app_guid}" },
                 'assign_current_droplet' => {
                   'href' => "/v3/apps/#{droplet1.app_guid}/current_droplet",
-                  'method' => 'PUT'
-                }
-              }
-            },
-            {
-              'guid'                   => droplet2.guid,
-              'state'                  => VCAP::CloudController::DropletModel::STAGED_STATE,
-              'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
-              'buildpack'              => 'https://github.com/cloudfoundry/my-buildpack.git',
-              'error'                  => droplet2.error,
-              'procfile'               => droplet2.procfile,
-              'environment_variables'  => {},
-              'created_at'             => iso8601,
-              'updated_at'             => nil,
-              '_links'                 => {
-                'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },
-                'package' => { 'href' => "/v3/packages/#{package.guid}" },
-                'app'     => { 'href' => "/v3/apps/#{droplet2.app_guid}" },
-                'assign_current_droplet' => {
-                  'href' => "/v3/apps/#{droplet2.app_guid}/current_droplet",
                   'method' => 'PUT'
                 }
               }
