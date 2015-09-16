@@ -1,4 +1,5 @@
 require 'queries/app_droplets_list_fetcher'
+require 'messages/apps_droplets_list_message'
 
 module VCAP::CloudController
   class AppsDropletsController < RestController::BaseController
@@ -52,18 +53,17 @@ module VCAP::CloudController
     end
 
     def validate_allowed_params(params)
-      schema = {
-        'states' => ->(v) { v.is_a? Array },
-        'page' => ->(v) { v.to_i > 0 },
-        'per_page' => ->(v) { v.to_i > 0 },
-        'order_by' => ->(v) { %w(created_at updated_at).include?(v) },
-        'order_direction' => ->(v) { %w(asc desc).include?(v) }
-      }
-      params.each do |key, value|
-        validator = schema[key]
-        raise InvalidParam.new("Unknown query param #{key}") if validator.nil?
-        raise InvalidParam.new("Invalid type for param #{key}") if !validator.call(value)
+      droplets_parameters = VCAP::CloudController::AppsDropletsListMessage.new params
+      droplets_parameters.valid?
+      droplets_parameters.errors.each do |key, value|
+        raise InvalidParam.new("Invalid type for param #{key}") if value.present?
       end
+    rescue NoMethodError => e
+      raise InvalidParam.new("Unknown query param #{e.name[0...-1]}")
+    end
+
+    def build_facets(params)
+      params.except('order_direction')
     end
   end
 end
