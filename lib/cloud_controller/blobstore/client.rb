@@ -27,12 +27,13 @@ module CloudController
         !file(key).nil?
       end
 
-      def download_from_blobstore(source_key, destination_path)
+      def download_from_blobstore(source_key, destination_path, mode: nil)
         FileUtils.mkdir_p(File.dirname(destination_path))
         File.open(destination_path, 'w') do |file|
           (@cdn || files).get(partitioned_key(source_key)) do |*chunk|
             file.write(chunk[0])
           end
+          file.chmod(mode) if mode
         end
       end
 

@@ -448,6 +448,16 @@
   http_code: 400
   message: "The app copy is invalid: %s"
 
+160003:
+  name: AppResourcesFileModeInvalid
+  http_code: 400
+  message: "The resource file mode is invalid: %s"
+
+160004:
+  name: AppResourcesFilePathInvalid
+  http_code: 400
+  message: "The resource file path is invalid: %s"
+
 170001:
   name: StagingError
   http_code: 400

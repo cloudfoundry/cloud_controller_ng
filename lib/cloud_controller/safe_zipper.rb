@@ -73,19 +73,16 @@ class SafeZipper
   end
 
   def any_outside_relative_paths?
-    zip_info.split("\n")[3..-3].any? do |line|
-      match = line.match(/^\s*\d+\s+[\d-]+\s+[\d:]+\s+(.*)$/)
-      match && is_outside?(match[1])
+    zip_info.split("\n")[3..-3].map do |info|
+      info.match(/^\s*\d+\s+[\d-]+\s+[\d:]+\s+(.*)$/)[1]
+    end.any? do |path|
+      !VCAP::CloudController::FilePathChecker.safe_path? path, @zip_destination
     end
   end
 
   def any_outside_symlinks?
     Find.find(@zip_destination).find do |item|
-      File.symlink?(item) && is_outside?(File.readlink(item))
+      File.symlink?(item) && !VCAP::CloudController::FilePathChecker.safe_path?(File.readlink(item), @zip_destination)
     end
-  end
-
-  def is_outside?(path)
-    !File.expand_path(path, @zip_destination).start_with?("#{@zip_destination}/")
   end
 end

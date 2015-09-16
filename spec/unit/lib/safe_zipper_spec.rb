@@ -29,7 +29,7 @@ describe SafeZipper do
     it 'returns the size if it is large' do
       allow(Open3).to receive(:capture3).with(%(unzip -l #{zip_path})).and_return(
         [
-          "\nArchive:\n Filename\n ---\n app.rb\n10000000001 1 file",
+          "Archive:\n Filename\n ---\n 0  09-15-15 17:44 foo\n ---\n10000000001 1 file\n",
           nil,
           double('status', :success? => true)]
       )

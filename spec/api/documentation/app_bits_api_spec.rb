@@ -52,6 +52,8 @@ resource 'Apps', type: [:api, :legacy_api] do
     resources_desc = <<-eos
       Fingerprints of the application bits that have previously been pushed to Cloud Foundry.
       Each fingerprint must include the file path, sha1 hash, and file size in bytes.
+      Each fingerprint may include the file mode, which must be an octal string with at least read and write permissions for owners.
+      If a mode is not provided, the default mode of 0744 will be used.
       Fingerprinted bits MUST exist in the Cloud Foundry resource cache or the request (or job, if async) will fail.
     eos
     field :resources, resources_desc,
@@ -59,7 +61,8 @@ resource 'Apps', type: [:api, :legacy_api] do
           example_values: [
             [
               { fn: 'path/to/content.txt', size: 123, sha1: 'b907173290db6a155949ab4dc9b2d019dea0c901' },
-              { fn: 'path/to/code.jar', size: 123, sha1: 'ff84f89760317996b9dd180ab996b079f418396f' }
+              { fn: 'path/to/code.jar', size: 123, sha1: 'ff84f89760317996b9dd180ab996b079f418396f' },
+              { fn: 'path/to/code.jar', size: 123, sha1: 'ff84f89760317996b9dd180ab996b079f418396f', mode: '644' }
             ].to_json
           ]
 

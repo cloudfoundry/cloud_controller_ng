@@ -20,8 +20,8 @@ class AppBitsPackage
 
       global_app_bits_cache.cp_r_to_blobstore(local_app_bits.uncompressed_path)
 
-      fingerprints_in_app_cache.each do |local_destination, app_bit_sha|
-        global_app_bits_cache.download_from_blobstore(app_bit_sha, File.join(local_app_bits.uncompressed_path, local_destination))
+      fingerprints_in_app_cache.each do |local_destination, app_bit_sha, mode|
+        global_app_bits_cache.download_from_blobstore(app_bit_sha, File.join(local_app_bits.uncompressed_path, local_destination), mode: mode)
       end
 
       package = local_app_bits.create_package

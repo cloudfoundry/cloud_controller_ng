@@ -39,11 +39,19 @@ module VCAP::CloudController
         [HTTP::CREATED, '{}']
       end
     rescue VCAP::CloudController::Errors::ApiError => e
-
       if e.name == 'AppBitsUploadInvalid' || e.name == 'AppPackageInvalid'
         app.mark_as_failed_to_stage
       end
       raise
+    rescue StandardError => e
+      app.mark_as_failed_to_stage
+      if e.message.include?('File mode')
+        raise Errors::ApiError.new_from_details('AppResourcesFileModeInvalid', e.message)
+      elsif e.message.include?('File path')
+        raise Errors::ApiError.new_from_details('AppResourcesFilePathInvalid', e.message)
+      else
+        raise
+      end
     end
 
     post "#{path_guid}/copy_bits", :copy_app_bits

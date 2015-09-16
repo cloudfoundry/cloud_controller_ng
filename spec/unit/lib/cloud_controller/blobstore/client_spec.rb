@@ -224,6 +224,30 @@ module CloudController
               expect(File.read(destination)).to eq(content)
             end
           end
+
+          describe 'file permissions' do
+            before do
+              upload_tmpfile(client, sha_of_content)
+            end
+
+            context 'when not specifying a mode' do
+              it 'does not change permissions on the file' do
+                destination = File.join(local_dir, 'some_directory_to_place_file', 'downloaded_file')
+                client.download_from_blobstore(sha_of_content, destination)
+
+                expect(sprintf('%o', File.stat(destination).mode)).to eq('100644')
+              end
+            end
+
+            context 'when specifying a mode' do
+              it 'does change permissions on the file' do
+                destination = File.join(local_dir, 'some_directory_to_place_file', 'downloaded_file')
+                client.download_from_blobstore(sha_of_content, destination, mode: 0753)
+
+                expect(sprintf('%o', File.stat(destination).mode)).to eq('100753')
+              end
+            end
+          end
         end
 
         describe '#cp_to_blobstore' do

@@ -136,14 +136,69 @@ describe AppBitsPackage do
 
     it 'uploads the new app bits to the package blob store' do
       create
+
       package_blobstore.download_from_blobstore(app.guid, File.join(local_tmp_dir, 'package.zip'))
       expect(`unzip -l #{local_tmp_dir}/package.zip`).to include('bye')
     end
 
-    it 'uploads the old app bits already in the app bits cache to the package blob store' do
-      create
-      package_blobstore.download_from_blobstore(app.guid, File.join(local_tmp_dir, 'package.zip'))
-      expect(`unzip -l #{local_tmp_dir}/package.zip`).to include('path/to/content.txt')
+    describe 'cached/old app bits' do
+      it 'uploads the old app bits already in the app bits cache to the package blob store' do
+        create
+
+        package_blobstore.download_from_blobstore(app.guid, File.join(local_tmp_dir, 'package.zip'))
+        expect(`unzip -l #{local_tmp_dir}/package.zip`).to include('path/to/content.txt')
+      end
+
+      it 'defaults the files to 744 permissions' do
+        create
+
+        package_blobstore.download_from_blobstore(app.guid, File.join(local_tmp_dir, 'package.zip'))
+        `unzip #{local_tmp_dir}/package.zip path/to/content.txt -d #{local_tmp_dir}`
+        expect(sprintf('%o', File.stat(File.join(local_tmp_dir, 'path/to/content.txt')).mode)).to eq('100744')
+      end
+
+      context 'when specific file permissions are requested' do
+        let(:fingerprints_in_app_cache) do
+          path = File.join(local_tmp_dir, 'content')
+          sha = 'some_fake_sha'
+          File.open(path, 'w') { |f| f.write 'content'  }
+          global_app_bits_cache.cp_to_blobstore(path, sha)
+
+          CloudController::Blobstore::FingerprintsCollection.new([{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha, 'mode' => mode }])
+        end
+
+        let(:mode) { '0653' }
+
+        it 'uploads the old app bits with the requested permissions' do
+          create
+
+          package_blobstore.download_from_blobstore(app.guid, File.join(local_tmp_dir, 'package.zip'))
+          `unzip #{local_tmp_dir}/package.zip path/to/content.txt -d #{local_tmp_dir}`
+          expect(sprintf('%o', File.stat(File.join(local_tmp_dir, 'path/to/content.txt')).mode)).to eq('100653')
+        end
+
+        describe 'bad file permissions' do
+          context 'when the write permissions are too-restrictive' do
+            let(:mode) { '344' }
+
+            it 'errors' do
+              expect {
+                create
+              }.to raise_error(CloudController::Blobstore::FingerprintsCollection::BadFileMode)
+            end
+          end
+
+          context 'when the permissions are nonsense' do
+            let(:mode) { 'banana' }
+
+            it 'errors' do
+              expect {
+                create
+              }.to raise_error(CloudController::Blobstore::FingerprintsCollection::BadFileMode)
+            end
+          end
+        end
+      end
     end
 
     it 'uploads the package zip to the package blob store' do
