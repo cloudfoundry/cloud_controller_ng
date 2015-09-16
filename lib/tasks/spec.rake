@@ -34,7 +34,9 @@ namespace :spec do
     fast_suites = %w[
         access
         actions
+        collection_transformers
         jobs
+        messages
         models
         presenters
         queries
