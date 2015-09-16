@@ -5,7 +5,7 @@ module VCAP::CloudController
     include ActiveModel::Model
     include VCAP::CloudController::Validators
 
-    VALID_ORDER_BY_KEYS = %r(created_at|updated_at)
+    VALID_ORDER_BY_KEYS = /created_at|updated_at/
 
     attr_accessor :names, :guids, :organization_guids, :space_guids, :page, :per_page, :order_by
 

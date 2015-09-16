@@ -24,7 +24,8 @@ resource 'Apps (Experimental)', type: :api do
     parameter :guids, 'App guids to filter by', valid_values: 'array of strings', example_values: 'guid[]=guid1&guid[]=guid2'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1 - 5000'
-    parameter :order_by, 'Value to sort by. Prepend with "+" or "-" to change sort direction to ascending or descending, respectively.', valid_values: 'created_at, updated_at', example_value: 'order_by=-created_at'
+    parameter :order_by, 'Value to sort by. Prepend with "+" or "-" to change sort direction to ascending or descending, respectively.',
+      valid_values: 'created_at, updated_at', example_value: 'order_by=-created_at'
 
     let(:name1) { 'my_app1' }
     let(:name2) { 'my_app2' }

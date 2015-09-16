@@ -63,7 +63,7 @@ module VCAP::CloudController
           order_direction = nil
         end
 
-        return order_by, order_direction
+        [order_by, order_direction]
       end
 
       ORDER_PREFIXES = %w(+ -)
