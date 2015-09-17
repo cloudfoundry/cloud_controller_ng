@@ -74,7 +74,7 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'BadQueryParameter'
               expect(error.response_code).to eq 400
-              expect(error.message).to match('Order by is invalid')
+              expect(error.message).to match('Order by received an unsupported value')
             end
           end
         end
