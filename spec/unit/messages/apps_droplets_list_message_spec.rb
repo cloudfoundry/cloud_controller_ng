@@ -3,32 +3,32 @@ require 'messages/apps_droplets_list_message'
 
 module VCAP::CloudController
   describe AppsDropletsListMessage do
+    it 'has error messages about parameters' do
+      expect(AppsDropletsListMessage.new.error_message).to include 'parameter'
+    end
+
     describe 'fields' do
       it 'accepts a set of fields' do
-        expect {
-          AppsDropletsListMessage.new({
-              states: [],
-              page: 1,
-              per_page: 5,
-              order_by: 'created_at',
-            })
-        }.not_to raise_error
+        message = AppsDropletsListMessage.new({
+            states: [],
+            page: 1,
+            per_page: 5,
+            order_by: 'created_at'
+          })
+        expect(message).to be_valid
       end
 
       it 'accepts an empty set' do
-        expect {
-          AppsDropletsListMessage.new
-        }.not_to raise_error
+        message = AppsDropletsListMessage.new
+        expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        expect {
-          AppsDropletsListMessage.new({
-              foobar: 'pants',
-            })
-        }.to(raise_error NoMethodError) do |e|
-          expect(e.message).to include 'foobar='
-        end
+        message = AppsDropletsListMessage.new({
+            foobar: 'pants',
+          })
+        expect(message).to be_invalid
+        expect(message.errors[:base].length).to eq 1
       end
 
       describe 'validations' do

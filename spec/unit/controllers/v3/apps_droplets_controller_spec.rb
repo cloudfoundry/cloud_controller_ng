@@ -59,14 +59,14 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'BadQueryParameter'
               expect(error.response_code).to eq 400
-              expect(error.message).to match('Invalid type')
+              expect(error.message).to match('Order by is invalid')
             end
           end
         end
 
         context 'unknown query param' do
           let(:bad_param) { 'foo' }
-          let(:params) { { 'bad_param' => bad_param } }
+          let(:params) { { 'bad_param' => bad_param, 'lies' =>  bad_param } }
 
           it 'returns 400' do
             expect {
@@ -74,7 +74,9 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'BadQueryParameter'
               expect(error.response_code).to eq 400
-              expect(error.message).to match('Unknown query param')
+              expect(error.message).to include('Unknown parameter(s)')
+              expect(error.message).to include('bad_param')
+              expect(error.message).to include('lies')
             end
           end
         end

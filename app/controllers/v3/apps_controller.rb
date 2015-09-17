@@ -44,8 +44,6 @@ module VCAP::CloudController
       end
 
       [HTTP::OK, @app_presenter.present_json_list(paginated_apps, facets)]
-    rescue InvalidParam => e
-      invalid_param!(e.message)
     end
 
     get '/v3/apps/:guid', :show
@@ -241,12 +239,7 @@ module VCAP::CloudController
 
     def validate_allowed_params(params)
       apps_parameters = VCAP::CloudController::AppsListMessage.new params
-      apps_parameters.valid?
-      apps_parameters.errors.each do |key, value|
-        raise InvalidParam.new("Invalid type for param #{key}") if value.present?
-      end
-    rescue NoMethodError => e
-      raise InvalidParam.new("Unknown query param #{e.name[0...-1]}")
+      invalid_param!(apps_parameters.errors.full_messages) unless apps_parameters.valid?
     end
 
     def unable_to_perform!(msg, details)

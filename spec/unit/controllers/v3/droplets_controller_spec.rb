@@ -216,7 +216,7 @@ module VCAP::CloudController
               }.to raise_error do |error|
                 expect(error.name).to eq 'BadQueryParameter'
                 expect(error.response_code).to eq 400
-                expect(error.message).to match('Invalid type')
+                expect(error.message).to match('App guids must be an array')
               end
             end
           end
@@ -231,7 +231,8 @@ module VCAP::CloudController
               }.to raise_error do |error|
                 expect(error.name).to eq 'BadQueryParameter'
                 expect(error.response_code).to eq 400
-                expect(error.message).to match('Unknown query param')
+                expect(error.message).to include('Unknown parameter(s)')
+                expect(error.message).to include('bad_param')
               end
             end
           end

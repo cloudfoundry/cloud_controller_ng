@@ -35,8 +35,6 @@ module VCAP::CloudController
       end
 
       [HTTP::OK, @droplet_presenter.present_json_list(paginated_result, '/v3/droplets', params)]
-    rescue InvalidParam => e
-      invalid_param!(e.message)
     end
 
     get '/v3/droplets/:guid', :show
@@ -95,12 +93,7 @@ module VCAP::CloudController
 
     def validate_allowed_params(params)
       droplets_parameters = VCAP::CloudController::DropletsListMessage.new params
-      droplets_parameters.valid?
-      droplets_parameters.errors.each do |key, value|
-        raise InvalidParam.new("Invalid type for param #{key}") if value.present?
-      end
-    rescue NoMethodError => e
-      raise InvalidParam.new("Unknown query param #{e.name[0...-1]}")
+      invalid_param!(droplets_parameters.errors.full_messages) unless droplets_parameters.valid?
     end
   end
 end
