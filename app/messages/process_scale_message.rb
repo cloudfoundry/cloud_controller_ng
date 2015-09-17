@@ -6,6 +6,8 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
+    validates_with NoAdditionalKeysValidator
+
     validates :instances, numericality: { only_integer: true }, allow_nil: true
     validates :memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true

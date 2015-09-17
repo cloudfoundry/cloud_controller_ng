@@ -3,8 +3,56 @@ require 'messages/apps_droplets_list_message'
 
 module VCAP::CloudController
   describe AppsDropletsListMessage do
-    it 'has error messages about parameters' do
-      expect(AppsDropletsListMessage.new.error_message).to include 'parameter'
+    describe '.from_params' do
+      let(:params) do
+        {
+          'states'    => 'state1,state2',
+          'page'      => 1,
+          'per_page'  => 5,
+          'order_by'  => 'created_at'
+        }
+      end
+
+      it 'returns the correct AppCreateMessage' do
+        message = AppsDropletsListMessage.from_params(params)
+
+        expect(message).to be_a(AppsDropletsListMessage)
+        expect(message.states).to eq(['state1', 'state2'])
+        expect(message.page).to eq(1)
+        expect(message.per_page).to eq(5)
+        expect(message.order_by).to eq('created_at')
+      end
+
+      it 'converts requested keys to symbols' do
+        message = AppsDropletsListMessage.from_params(params)
+
+        expect(message.requested?(:states)).to be_truthy
+        expect(message.requested?(:page)).to be_truthy
+        expect(message.requested?(:per_page)).to be_truthy
+        expect(message.requested?(:order_by)).to be_truthy
+      end
+    end
+
+    describe '#to_params' do
+      let(:opts) do
+        {
+          states:    ['state1', 'state2'],
+          page:      1,
+          per_page:  5,
+          order_by:  'created_at',
+        }
+      end
+
+      it 'returns query params' do
+        expected_params = 'states=state1,state2'
+        expect(AppsDropletsListMessage.new(opts).to_params).to eq(expected_params)
+      end
+
+      it 'does not return params that are not requested' do
+        opts.delete(:states)
+        expected_params = ''
+        expect(AppsDropletsListMessage.new(opts).to_params).to eq(expected_params)
+      end
     end
 
     describe 'fields' do
@@ -24,11 +72,10 @@ module VCAP::CloudController
       end
 
       it 'does not accept a field not in this set' do
-        message = AppsDropletsListMessage.new({
-            foobar: 'pants',
-          })
-        expect(message).to be_invalid
-        expect(message.errors[:base].length).to eq 1
+        message = DropletsListMessage.new({ foobar: 'pants' })
+
+        expect(message).not_to be_valid
+        expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
 
       describe 'validations' do

@@ -67,5 +67,33 @@ module VCAP::CloudController
         expect(message.errors.full_messages[0]).to include("Unknown field(s): 'notallowed', 'extra'")
       end
     end
+
+    describe 'additional params validation' do
+      let(:fake_class) do
+        Class.new(BaseMessage) do
+          validates_with VCAP::CloudController::BaseMessage::NoAdditionalParamsValidator
+
+          def allowed_keys
+            [:allowed]
+          end
+
+          def allowed=(_)
+          end
+        end
+      end
+
+      it 'is valid with an allowed message' do
+        message = fake_class.new({ allowed: 'something' })
+
+        expect(message).to be_valid
+      end
+
+      it 'is NOT valid with not allowed keys in the message' do
+        message = fake_class.new({ notallowed: 'something', extra: 'stuff' })
+
+        expect(message).to be_invalid
+        expect(message.errors.full_messages[0]).to include("Unknown query parameter(s): 'notallowed', 'extra'")
+      end
+    end
   end
 end

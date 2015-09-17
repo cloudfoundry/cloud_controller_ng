@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'messages/apps_list_message'
 
 module VCAP::CloudController
   describe AppListFetcher do
@@ -10,14 +11,15 @@ module VCAP::CloudController
       let(:fetcher) { described_class.new }
       let(:space_guids) { [space.guid] }
       let(:pagination_options) { PaginationOptions.new({}) }
-      let(:facets) { {} }
+      let(:message) { AppsListMessage.new(filters) }
+      let(:filters) { {} }
 
       apps = nil
 
       before do
         app.save
         sad_app.save
-        apps = fetcher.fetch(pagination_options, facets, space_guids)
+        apps = fetcher.fetch(pagination_options, message, space_guids)
       end
 
       after do
@@ -26,19 +28,17 @@ module VCAP::CloudController
 
       it 'fetch_all includes all the apps' do
         app = AppModel.make
-        expect(fetcher.fetch_all(pagination_options, {}).records).to include(app)
+        expect(fetcher.fetch_all(pagination_options, message).records).to include(app)
       end
 
-      context 'when no facets are specified' do
-        let(:facets) { {} }
-
+      context 'when no filters are specified' do
         it 'returns all of the desired apps' do
           expect(apps.records).to include(app, sad_app)
         end
       end
 
       context 'when the app names are provided' do
-        let(:facets) { { 'names' => [app.name] } }
+        let(:filters) { { names: [app.name] } }
 
         it 'returns all of the desired apps' do
           expect(apps.records).to include(app)
@@ -47,7 +47,7 @@ module VCAP::CloudController
       end
 
       context 'when the app space_guids are provided' do
-        let(:facets) { { 'space_guids' => [space.guid] } }
+        let(:filters) { { space_guids: [space.guid] } }
         let(:sad_app) { AppModel.make }
 
         it 'returns all of the desired apps' do
@@ -57,7 +57,7 @@ module VCAP::CloudController
       end
 
       context 'when the organization guids are provided' do
-        let(:facets) { { 'organization_guids' => [org.guid] } }
+        let(:filters) { { organization_guids: [org.guid] } }
         let(:sad_org) { Organization.make }
         let(:sad_space) { Space.make(organization_guid: sad_org.guid) }
         let(:sad_app) { AppModel.make(space_guid: sad_space.guid) }
@@ -70,7 +70,7 @@ module VCAP::CloudController
       end
 
       context 'when the app guids are provided' do
-        let(:facets) { { 'guids' => [app.guid] } }
+        let(:filters) { { guids: [app.guid] } }
 
         it 'returns all of the desired apps' do
           expect(apps.records).to include(app)

@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'queries/droplet_list_fetcher'
+require 'messages/droplets_list_message'
 
 module VCAP::CloudController
   describe DropletListFetcher do
@@ -15,26 +16,27 @@ module VCAP::CloudController
     let(:app_guids) { [] }
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:fetcher) { described_class.new }
-    let(:facets) { {} }
+    let(:message) { DropletsListMessage.new(filters) }
+    let(:filters) { {} }
 
     describe '#fetch_all' do
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch_all(pagination_options, facets)
+        results = fetcher.fetch_all(pagination_options, message)
         expect(results).to be_a(PaginatedResult)
       end
 
       it 'returns all of the droplets' do
-        results = fetcher.fetch_all(pagination_options, facets).records
+        results = fetcher.fetch_all(pagination_options, message).records
 
         expect(results.length).to eq(4)
         expect(results).to match_array([desired_droplet, desired_droplet2, sad_droplet_in_space, undesirable_droplet])
       end
 
       context 'when the app guids are provided' do
-        let(:facets) { { 'app_guids' => [app_in_space.guid, undesirable_droplet.app_guid] } }
+        let(:filters) { { app_guids: [app_in_space.guid, undesirable_droplet.app_guid] } }
 
         it 'returns all of the droplets for the requested app guids' do
-          results = fetcher.fetch_all(pagination_options, facets).records
+          results = fetcher.fetch_all(pagination_options, message).records
 
           expect(results.length).to eq 3
           expect(results).to match_array([desired_droplet, desired_droplet2, undesirable_droplet])
@@ -44,13 +46,13 @@ module VCAP::CloudController
 
     describe '#fetch' do
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch(pagination_options, space_guids)
+        results = fetcher.fetch(pagination_options, space_guids, message)
         expect(results).to be_a(PaginatedResult)
       end
 
-      context 'when no facets are specified' do
+      context 'when no filters are specified' do
         it 'returns all of the desired droplets in the requested spaces' do
-          results = fetcher.fetch(pagination_options, space_guids).records
+          results = fetcher.fetch(pagination_options, space_guids, message).records
 
           expect(results.length).to eq 3
           expect(results).to match_array([desired_droplet, desired_droplet2, sad_droplet_in_space])
@@ -58,11 +60,11 @@ module VCAP::CloudController
       end
 
       context 'when the app guids are provided' do
-        let(:facets) { { 'app_guids' => [app_in_space.guid] } }
+        let(:filters) { { app_guids: [app_in_space.guid] } }
         let!(:sad_droplet) { DropletModel.make(state: 'STAGING') }
 
         it 'returns all of the desired droplets for the requested app guids' do
-          results = fetcher.fetch(pagination_options, space_guids, facets).records
+          results = fetcher.fetch(pagination_options, space_guids, message).records
 
           expect(results.length).to eq 2
           expect(results).not_to include(sad_droplet)
@@ -72,13 +74,13 @@ module VCAP::CloudController
       end
 
       context 'when the droplet states are provided' do
-        let(:facets) { { 'states' => ['PENDING', 'FAILED'] } }
+        let(:filters) { { states: ['PENDING', 'FAILED'] } }
         let!(:failed_droplet) { DropletModel.make(state: 'FAILED', app_guid: app_in_space.guid) }
         let!(:pending_droplet) { DropletModel.make(state: 'PENDING', app_guid: app_in_space.guid)  }
         let!(:undesirable_pending_droplet) { DropletModel.make(state: 'PENDING')  }
 
         it 'returns all of the desired droplets with the requested droplet states' do
-          results = fetcher.fetch(pagination_options, space_guids, facets).records
+          results = fetcher.fetch(pagination_options, space_guids, message).records
 
           expect(results.length).to eq 2
           expect(results).not_to include(undesirable_pending_droplet)

@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
-    validates_with RelationshipValidator
+    validates_with NoAdditionalKeysValidator, RelationshipValidator
 
     validates :name, string: true
     validates :environment_variables, hash: true, allow_nil: true

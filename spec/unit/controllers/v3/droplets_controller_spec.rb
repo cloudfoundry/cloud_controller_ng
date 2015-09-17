@@ -207,8 +207,7 @@ module VCAP::CloudController
 
         context 'query params' do
           context 'invalid param format' do
-            let(:app_guids) { 'foo' }
-            let(:params) { { 'app_guids' => app_guids } }
+            let(:params) { { 'order_by' => '^%' } }
 
             it 'returns 400' do
               expect {
@@ -216,7 +215,7 @@ module VCAP::CloudController
               }.to raise_error do |error|
                 expect(error.name).to eq 'BadQueryParameter'
                 expect(error.response_code).to eq 400
-                expect(error.message).to match('App guids must be an array')
+                expect(error.message).to match('Order by is invalid')
               end
             end
           end
@@ -231,8 +230,22 @@ module VCAP::CloudController
               }.to raise_error do |error|
                 expect(error.name).to eq 'BadQueryParameter'
                 expect(error.response_code).to eq 400
-                expect(error.message).to include('Unknown parameter(s)')
+                expect(error.message).to include('Unknown query parameter(s)')
                 expect(error.message).to include('bad_param')
+              end
+            end
+          end
+
+          context 'invalid pagination' do
+            let(:params) { { 'per_page' => 9999999999999999 } }
+
+            it 'returns 400' do
+              expect {
+                droplets_controller.list
+              }.to raise_error do |error|
+                expect(error.name).to eq 'BadQueryParameter'
+                expect(error.response_code).to eq 400
+                expect(error.message).to match('Per page must be between')
               end
             end
           end
@@ -251,7 +264,7 @@ module VCAP::CloudController
             response_code, response_body = droplets_controller.list
 
             expect(droplet_presenter).to have_received(:present_json_list).
-                with(an_instance_of(PaginatedResult), '/v3/droplets', non_presentational_params) do |result|
+                with(an_instance_of(PaginatedResult), '/v3/droplets', instance_of(DropletsListMessage)) do |result|
               expect(result.total).to eq(DropletModel.count)
             end
             expect(response_code).to eq(200)
@@ -274,7 +287,7 @@ module VCAP::CloudController
             response_code, response_body = droplets_controller.list
 
             expect(droplet_presenter).to have_received(:present_json_list).
-                with(an_instance_of(PaginatedResult), '/v3/droplets', non_presentational_params) do |result|
+                with(an_instance_of(PaginatedResult), '/v3/droplets', instance_of(DropletsListMessage)) do |result|
               expect(result.total).to be < DropletModel.count
               expect(result.total).to eq(1)
             end
@@ -308,7 +321,7 @@ module VCAP::CloudController
       end
 
       context 'when a query param is provided' do
-        let(:params) { { order_by: 'created_at', states: ['FAILED'] } }
+        let(:params) { { order_by: 'created_at', states: 'FAILED' } }
         let(:droplet_presenter) { DropletPresenter.new }
 
         before do
@@ -320,8 +333,7 @@ module VCAP::CloudController
 
           parsed_response = MultiJson.load(response_body)
           query_params = CGI.parse(URI(parsed_response['pagination']['first']['href']).query)
-
-          expect(query_params['states[]']).to eq(['FAILED'])
+          expect(query_params['states']).to eq(['FAILED'])
         end
       end
     end

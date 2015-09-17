@@ -18,8 +18,6 @@ require 'messages/apps_list_message'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
-    class InvalidParam < StandardError; end
-
     def self.dependencies
       [:app_presenter]
     end
@@ -31,19 +29,21 @@ module VCAP::CloudController
     get '/v3/apps', :list
     def list
       check_read_permissions!
-      validate_allowed_params(params)
+
+      message = AppsListMessage.from_params(params)
+      invalid_param!(message.errors.full_messages) unless message.valid?
 
       pagination_options = PaginationOptions.from_params(params)
-      facets = params.slice('guids', 'space_guids', 'organization_guids', 'names')
+      invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
       if membership.admin?
-        paginated_apps = AppListFetcher.new.fetch_all(pagination_options, facets)
+        paginated_apps = AppListFetcher.new.fetch_all(pagination_options, message)
       else
         allowed_space_guids = membership.space_guids_for_roles([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
-        paginated_apps = AppListFetcher.new.fetch(pagination_options, facets, allowed_space_guids)
+        paginated_apps = AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
       end
 
-      [HTTP::OK, @app_presenter.present_json_list(paginated_apps, facets)]
+      [HTTP::OK, @app_presenter.present_json_list(paginated_apps, message)]
     end
 
     get '/v3/apps/:guid', :show
@@ -147,8 +147,8 @@ module VCAP::CloudController
       unprocessable!(e.message)
     end
 
-    get '/v3/apps/:guid/env', :env
-    def env(guid)
+    get '/v3/apps/:guid/env', :get_environment
+    def get_environment(guid)
       check_read_permissions!
 
       app, space, org = AppFetcher.new.fetch(guid)
@@ -235,11 +235,6 @@ module VCAP::CloudController
 
     def can_read_envs?(space_guid)
       can_update?(space_guid)
-    end
-
-    def validate_allowed_params(params)
-      apps_parameters = VCAP::CloudController::AppsListMessage.new params
-      invalid_param!(apps_parameters.errors.full_messages) unless apps_parameters.valid?
     end
 
     def unable_to_perform!(msg, details)

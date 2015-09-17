@@ -74,7 +74,7 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'BadQueryParameter'
               expect(error.response_code).to eq 400
-              expect(error.message).to include('Unknown parameter(s)')
+              expect(error.message).to include('Unknown query parameter(s)')
               expect(error.message).to include('bad_param')
               expect(error.message).to include('lies')
             end
@@ -96,7 +96,7 @@ module VCAP::CloudController
             response_code, response_body = apps_droplets_controller.list(app_guid)
 
             expect(droplet_presenter).to have_received(:present_json_list).
-              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets", non_presentational_params) do |result|
+              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets", instance_of(AppsDropletsListMessage)) do |result|
               expect(result.total).to eq(DropletModel.count)
             end
             expect(response_code).to eq(200)
@@ -138,7 +138,7 @@ module VCAP::CloudController
                     Membership::SPACE_AUDITOR,
                     Membership::ORG_MANAGER], space_guid, org_guid)
             expect(droplet_presenter).to have_received(:present_json_list).
-              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets", non_presentational_params) do |result|
+              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets", instance_of(AppsDropletsListMessage)) do |result|
               expect(result.total).to eq(1)
             end
             expect(response_code).to eq(200)

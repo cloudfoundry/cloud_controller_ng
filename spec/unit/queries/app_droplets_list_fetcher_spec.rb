@@ -11,17 +11,18 @@ module VCAP::CloudController
     let(:app_guid) { app.guid }
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:fetcher) { described_class.new }
-    let(:facets) { {} }
+    let(:message) { AppsDropletsListMessage.new(filters) }
+    let(:filters) { {} }
 
     describe '#fetch' do
       it 'returns a PaginatedResult' do
-        results = fetcher.fetch(app_guid, pagination_options, facets)
+        results = fetcher.fetch(app_guid, pagination_options, message)
         expect(results).to be_a(PaginatedResult)
       end
 
-      context 'when no facets are specified' do
+      context 'when no filters are specified' do
         it 'returns all of the desired droplets for the requested app' do
-          results = fetcher.fetch(app_guid, pagination_options, facets).records
+          results = fetcher.fetch(app_guid, pagination_options, message).records
 
           expect(results.length).to eq 2
           expect(results).to match_array([desired_droplet, desired_droplet2])
@@ -30,13 +31,13 @@ module VCAP::CloudController
       end
 
       context 'when the droplet states are provided' do
-        let(:facets) { { 'states' => ['PENDING', 'FAILED'] } }
+        let(:filters) { { states: ['PENDING', 'FAILED'] } }
         let!(:failed_droplet) { DropletModel.make(state: 'FAILED', app_guid: app_guid) }
         let!(:pending_droplet) { DropletModel.make(state: 'PENDING', app_guid: app_guid)  }
         let!(:undesirable_pending_droplet) { DropletModel.make(state: 'PENDING')  }
 
         it 'returns all of the desired droplets with the requested droplet states' do
-          results = fetcher.fetch(app_guid, pagination_options, facets).records
+          results = fetcher.fetch(app_guid, pagination_options, message).records
 
           expect(results.length).to eq 2
           expect(results).not_to include(undesirable_pending_droplet)

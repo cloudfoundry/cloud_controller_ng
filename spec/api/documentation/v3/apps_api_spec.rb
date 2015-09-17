@@ -18,10 +18,10 @@ resource 'Apps (Experimental)', type: :api do
   end
 
   get '/v3/apps' do
-    parameter :names, 'Names of apps to filter by', valid_values: 'array of strings', example_values: 'names[]=name1&names[]=name2'
-    parameter :space_guids, 'Spaces to filter by', valid_values: 'array of strings', example_values: 'space_guids[]=space_guid1&space_guids[]=space_guid2'
-    parameter :organization_guids, 'Organizations to filter by', valid_values: 'array of strings', example_values: 'organization_guids[]=org_guid1&organization_guids[]=org_guid2'
-    parameter :guids, 'App guids to filter by', valid_values: 'array of strings', example_values: 'guid[]=guid1&guid[]=guid2'
+    parameter :names, 'Names of apps to filter by', valid_values: 'array of strings', example_values: 'names=name1,name2'
+    parameter :space_guids, 'Spaces to filter by', valid_values: 'array of strings', example_values: 'space_guids=space_guid1,space_guid2'
+    parameter :organization_guids, 'Organizations to filter by', valid_values: 'array of strings', example_values: 'organization_guids=org_guid1,org_guid2'
+    parameter :guids, 'App guids to filter by', valid_values: 'array of strings', example_values: 'guid=guid1,guid2'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1 - 5000'
     parameter :order_by, 'Value to sort by. Prepend with "+" or "-" to change sort direction to ascending or descending, respectively.',
@@ -118,23 +118,19 @@ resource 'Apps (Experimental)', type: :api do
     context 'faceted search' do
       let(:app_model5) { VCAP::CloudController::AppModel.make(name: name1, space_guid: VCAP::CloudController::Space.make.guid) }
       let!(:app_model6) { VCAP::CloudController::AppModel.make(name: name1, space_guid: VCAP::CloudController::Space.make.guid) }
-      let(:space_guids) { [app_model5.space_guid, space.guid, app_model6.space_guid] }
       let(:per_page) { 2 }
-      let(:names) { [name1] }
+      let(:space_guids) { [app_model5.space_guid, space.guid, app_model6.space_guid].join(',') }
+      let(:names) { [name1].join(',') }
 
-      def space_guid_facets(space_guids)
-        space_guids.map { |sg| "space_guids[]=#{sg}" }.join('&')
-      end
-
-      example 'Filters Apps by guids, names, spaces, and organizations' do
+      it 'Filters Apps by guids, names, spaces, and organizations' do
         user.admin = true
         user.save
         expected_pagination = {
           'total_results' => 3,
-          'first'         => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&order_by=#{order_by}&page=1&per_page=2" },
-          'last'          => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&order_by=#{order_by}&page=2&per_page=2" },
-          'next'          => { 'href' => "/v3/apps?names[]=#{name1}&#{space_guid_facets(space_guids)}&order_by=#{order_by}&page=2&per_page=2" },
-          'previous'      => nil,
+          'first'         => { 'href' => "/v3/apps?names=#{name1}&space_guids=#{space_guids}&order_by=#{order_by}&page=1&per_page=2" },
+          'last'          => { 'href' => "/v3/apps?names=#{name1}&space_guids=#{space_guids}&order_by=#{order_by}&page=2&per_page=2" },
+          'next'          => { 'href' => "/v3/apps?names=#{name1}&space_guids=#{space_guids}&order_by=#{order_by}&page=2&per_page=2" },
+          'previous'      => nil
         }
 
         do_request_with_error_handling

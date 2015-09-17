@@ -6,7 +6,6 @@ require 'messages/droplets_list_message'
 
 module VCAP::CloudController
   class DropletsController < RestController::BaseController
-    class InvalidParam < StandardError; end
     def self.dependencies
       [:droplet_presenter]
     end
@@ -18,23 +17,25 @@ module VCAP::CloudController
     get '/v3/droplets', :list
     def list
       check_read_permissions!
-      validate_allowed_params(params)
+
+      message = DropletsListMessage.from_params(params)
+      invalid_param!(message.errors.full_messages) unless message.valid?
 
       pagination_options = PaginationOptions.from_params(params)
       invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
       if membership.admin?
-        paginated_result = DropletListFetcher.new.fetch_all(pagination_options, params)
+        paginated_result = DropletListFetcher.new.fetch_all(pagination_options, message)
       else
         space_guids = membership.space_guids_for_roles(
           [Membership::SPACE_DEVELOPER,
            Membership::SPACE_MANAGER,
            Membership::SPACE_AUDITOR,
            Membership::ORG_MANAGER])
-        paginated_result = DropletListFetcher.new.fetch(pagination_options, space_guids, params)
+        paginated_result = DropletListFetcher.new.fetch(pagination_options, space_guids, message)
       end
 
-      [HTTP::OK, @droplet_presenter.present_json_list(paginated_result, '/v3/droplets', params)]
+      [HTTP::OK, @droplet_presenter.present_json_list(paginated_result, '/v3/droplets', message)]
     end
 
     get '/v3/droplets/:guid', :show
@@ -89,11 +90,6 @@ module VCAP::CloudController
 
     def invalid_request!(message)
       raise VCAP::Errors::ApiError.new_from_details('InvalidRequest', message)
-    end
-
-    def validate_allowed_params(params)
-      droplets_parameters = VCAP::CloudController::DropletsListMessage.new params
-      invalid_param!(droplets_parameters.errors.full_messages) unless droplets_parameters.valid?
     end
   end
 end

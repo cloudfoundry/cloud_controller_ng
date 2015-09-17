@@ -53,7 +53,7 @@ module VCAP::CloudController
       it 'returns 200 and lists the apps' do
         response_code, response_body = apps_controller.list
 
-        expect(app_presenter).to have_received(:present_json_list).with([app], {})
+        expect(app_presenter).to have_received(:present_json_list).with([app], instance_of(AppsListMessage))
         expect(response_code).to eq(200)
         expect(response_body).to eq(app_response)
       end
@@ -66,8 +66,7 @@ module VCAP::CloudController
 
       context 'query params' do
         context 'invalid param format' do
-          let(:names) { 'foo' }
-          let(:params) { { 'names' => names } }
+          let(:params) { { 'order_by' => '^%' } }
 
           it 'returns 400' do
             expect {
@@ -75,7 +74,7 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'BadQueryParameter'
               expect(error.response_code).to eq 400
-              expect(error.message).to match('Names must be an array')
+              expect(error.message).to match('Order by is invalid')
             end
           end
         end
@@ -90,23 +89,36 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'BadQueryParameter'
               expect(error.response_code).to eq 400
-              expect(error.message).to include('Unknown parameter(s)')
-              expect(error.message).to include('bad_param')
+              expect(error.message).to include('Unknown query param')
             end
           end
         end
 
-        context 'admin' do
-          let(:fetcher) { double(:fetcher, fetch_all: [app, app]) }
+        context 'invalid pagination' do
+          let(:params) { { 'per_page' => 9999999999999999 } }
 
-          before do
-            allow(membership).to receive(:admin?).and_return(true)
+          it 'returns 400' do
+            expect {
+              apps_controller.list
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to match('Per page must be between')
+            end
           end
+        end
+      end
 
-          it 'fetches all apps' do
-            apps_controller.list
-            expect(app_presenter).to have_received(:present_json_list).with([app, app], {})
-          end
+      context 'admin' do
+        let(:fetcher) { double(:fetcher, fetch_all: [app, app]) }
+
+        before do
+          allow(membership).to receive(:admin?).and_return(true)
+        end
+
+        it 'fetches all apps' do
+          apps_controller.list
+          expect(app_presenter).to have_received(:present_json_list).with([app, app], instance_of(AppsListMessage))
         end
       end
     end
@@ -851,7 +863,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#env' do
+    describe '#get_environment' do
       let(:app_model) { AppModel.make }
       let(:space) { app_model.space }
       let(:org) { space.organization }
@@ -862,12 +874,12 @@ module VCAP::CloudController
       end
 
       it 'returns 200' do
-        response_code, _ = apps_controller.env(guid)
+        response_code, _ = apps_controller.get_environment(guid)
         expect(response_code).to eq(200)
       end
 
       it 'checks for the proper roles' do
-        apps_controller.env(guid)
+        apps_controller.get_environment(guid)
 
         expect(membership).to have_received(:has_any_roles?).at_least(1).times.
           with([Membership::SPACE_DEVELOPER], app_model.space.guid)
@@ -882,7 +894,7 @@ module VCAP::CloudController
           expect(apps_controller).to receive(:check_read_permissions!).
             and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
           expect {
-            apps_controller.env(guid)
+            apps_controller.get_environment(guid)
           }.to raise_error do |error|
             expect(error.name).to eq 'NotAuthorized'
             expect(error.response_code).to eq 403
@@ -902,7 +914,7 @@ module VCAP::CloudController
 
         it 'returns a 404 ResourceNotFound error' do
           expect {
-            apps_controller.env(app_model.guid)
+            apps_controller.get_environment(app_model.guid)
           }.to raise_error do |error|
             expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404
@@ -925,7 +937,7 @@ module VCAP::CloudController
 
         it 'raises ApiError NotAuthorized' do
           expect {
-            apps_controller.env(app_model.guid)
+            apps_controller.get_environment(app_model.guid)
           }.to raise_error do |error|
             expect(error.name).to eq 'NotAuthorized'
             expect(error.response_code).to eq 403
@@ -938,7 +950,7 @@ module VCAP::CloudController
 
         it 'raises an ApiError with a 404 code' do
           expect {
-            apps_controller.env(guid)
+            apps_controller.get_environment(guid)
           }.to raise_error do |error|
             expect(error.name).to eq 'ResourceNotFound'
             expect(error.response_code).to eq 404

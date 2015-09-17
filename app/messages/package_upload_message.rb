@@ -6,6 +6,8 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
+    validates_with NoAdditionalKeysValidator
+
     validates :bits_path, presence: { presence: true, message: 'An application zip file must be uploaded' }
 
     def self.create_from_params(params)

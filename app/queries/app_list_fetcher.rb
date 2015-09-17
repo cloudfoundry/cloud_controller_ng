@@ -3,30 +3,30 @@ require 'cloud_controller/paging/paginated_result'
 
 module VCAP::CloudController
   class AppListFetcher
-    def fetch_all(pagination_options, facets)
+    def fetch_all(pagination_options, message)
       dataset = AppModel.dataset
-      filter(pagination_options, facets, dataset)
+      filter(pagination_options, message, dataset)
     end
 
-    def fetch(pagination_options, facets, space_guids)
+    def fetch(pagination_options, message, space_guids)
       dataset = AppModel.where(space_guid: space_guids)
-      filter(pagination_options, facets, dataset)
+      filter(pagination_options, message, dataset)
     end
 
     private
 
-    def filter(pagination_options, facets, dataset)
-      if facets['names']
-        dataset = dataset.where(name: facets['names'])
+    def filter(pagination_options, message, dataset)
+      if message.requested?(:names)
+        dataset = dataset.where(name: message.names)
       end
-      if facets['space_guids']
-        dataset = dataset.where(space_guid: facets['space_guids'])
+      if message.requested?(:space_guids)
+        dataset = dataset.where(space_guid: message.space_guids)
       end
-      if facets['organization_guids']
-        dataset = dataset.where(space_guid: Organization.where(guid: facets['organization_guids']).map(&:spaces).flatten.map(&:guid))
+      if message.requested?(:organization_guids)
+        dataset = dataset.where(space_guid: Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid))
       end
-      if facets['guids']
-        dataset = dataset.where(guid: facets['guids'])
+      if message.requested?(:guids)
+        dataset = dataset.where(guid: message.guids)
       end
 
       dataset.eager(:processes)

@@ -3,22 +3,83 @@ require 'messages/apps_list_message'
 
 module VCAP::CloudController
   describe AppsListMessage do
-    it 'has error messages about parameters' do
-      expect(AppsDropletsListMessage.new.error_message).to include 'parameter'
+    describe '.from_params' do
+      let(:params) do
+        {
+          'names'              => 'name1,name2',
+          'guids'              => 'guid1,guid2',
+          'organization_guids' => 'orgguid',
+          'space_guids'        => 'spaceguid',
+          'page'               => 1,
+          'per_page'           => 5,
+          'order_by'           => 'created_at'
+        }
+      end
+
+      it 'returns the correct AppCreateMessage' do
+        message = AppsListMessage.from_params(params)
+
+        expect(message).to be_a(AppsListMessage)
+        expect(message.names).to eq(['name1', 'name2'])
+        expect(message.guids).to eq(['guid1', 'guid2'])
+        expect(message.organization_guids).to eq(['orgguid'])
+        expect(message.space_guids).to eq(['spaceguid'])
+        expect(message.page).to eq(1)
+        expect(message.per_page).to eq(5)
+        expect(message.order_by).to eq('created_at')
+      end
+
+      it 'converts requested keys to symbols' do
+        message = AppsListMessage.from_params(params)
+
+        expect(message.requested?(:names)).to be_truthy
+        expect(message.requested?(:guids)).to be_truthy
+        expect(message.requested?(:organization_guids)).to be_truthy
+        expect(message.requested?(:space_guids)).to be_truthy
+        expect(message.requested?(:page)).to be_truthy
+        expect(message.requested?(:per_page)).to be_truthy
+        expect(message.requested?(:order_by)).to be_truthy
+      end
+    end
+
+    describe '#to_params' do
+      let(:opts) do
+        {
+          names:              ['name1', 'name2'],
+          guids:              ['guid1', 'guid2'],
+          organization_guids: ['orgguid1', 'orgguid2'],
+          space_guids:        ['spaceguid1', 'spaceguid2'],
+          page:               1,
+          per_page:           5,
+          order_by:           'created_at',
+        }
+      end
+
+      it 'returns query params' do
+        expected_params = 'names=name1,name2&guids=guid1,guid2&organization_guids=orgguid1,orgguid2&space_guids=spaceguid1,spaceguid2'
+        expect(AppsListMessage.new(opts).to_params).to eq(expected_params)
+      end
+
+      it 'does not return params that are not requested' do
+        opts.delete(:names)
+        expected_params = 'guids=guid1,guid2&organization_guids=orgguid1,orgguid2&space_guids=spaceguid1,spaceguid2'
+        expect(AppsListMessage.new(opts).to_params).to eq(expected_params)
+      end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        message = AppsListMessage.new({
-            names: [],
-            guids: [],
-            organization_guids: [],
-            space_guids: [],
-            page: 1,
-            per_page: 5,
-            order_by: 'created_at',
-          })
-        expect(message).to be_valid
+        expect {
+          AppsListMessage.new({
+              names:              [],
+              guids:              [],
+              organization_guids: [],
+              space_guids:        [],
+              page:               1,
+              per_page:           5,
+              order_by:           'created_at',
+            })
+        }.not_to raise_error
       end
 
       it 'accepts an empty set' do
@@ -28,8 +89,9 @@ module VCAP::CloudController
 
       it 'does not accept a field not in this set' do
         message = AppsListMessage.new({ foobar: 'pants' })
-        expect(message).to be_invalid
-        expect(message.errors[:base].length).to eq 1
+
+        expect(message).not_to be_valid
+        expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
 
       describe 'validations' do

@@ -6,6 +6,8 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
+    validates_with NoAdditionalKeysValidator
+
     validates :command,
       string: true,
       length: { in: 1..4096, message: 'must be between 1 and 4096 characters' },

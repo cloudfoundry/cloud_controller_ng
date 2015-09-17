@@ -1,4 +1,3 @@
-require 'messages/validators'
 require 'messages/base_message'
 
 module VCAP::CloudController
@@ -7,6 +6,8 @@ module VCAP::CloudController
     VALID_ORDER_BY_KEYS = /created_at|updated_at/
 
     attr_accessor(*ALLOWED_KEYS)
+
+    validates_with NoAdditionalParamsValidator
 
     validates :states, array: true, allow_nil: true
     validates_numericality_of :page, greater_than: 0, allow_nil: true
@@ -17,8 +18,19 @@ module VCAP::CloudController
       super(params.symbolize_keys)
     end
 
-    def error_message
-      'Unknown parameter(s):'
+    def to_params
+      params = []
+      (requested_keys - [:page, :per_page, :order_by]).each do |key|
+        params << "#{key}=#{self.try(key).join(',')}"
+      end
+      params.join('&')
+    end
+
+    def self.from_params(params)
+      opts = params.dup
+      to_array!(opts, 'states')
+
+      new(opts.symbolize_keys)
     end
 
     private

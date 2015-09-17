@@ -18,7 +18,7 @@ resource 'Apps (Experimental)', type: :api do
   end
 
   get '/v3/apps/:guid/droplets' do
-    parameter :states, 'Droplet state to filter by', valid_values: %w(PENDING STAGING STAGED FAILED), example_values: 'states[]=PENDING&states[]=STAGING'
+    parameter :states, 'Droplet state to filter by', valid_values: %w(PENDING STAGING STAGED FAILED), example_values: 'states=PENDING,STAGING'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
     parameter :order_by, 'Value to sort by. Prepend with "+" or "-" to change sort direction to ascending or descending, respectively.', valid_values: %w(created_at updated_at)
@@ -124,6 +124,41 @@ resource 'Apps (Experimental)', type: :api do
       parsed_response = MultiJson.load(response_body)
       expect(response_status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    context 'faceted search' do
+      let!(:droplet4) do
+        VCAP::CloudController::DropletModel.make(
+          app_guid:     app_model.guid,
+          created_at: Time.at(2),
+          package_guid: package.guid,
+          droplet_hash: 'my-hash',
+          buildpack:    'https://github.com/cloudfoundry/my-buildpack.git',
+          state:        VCAP::CloudController::DropletModel::FAILED_STATE
+        )
+      end
+      let(:per_page) { 2 }
+      let(:states) { [VCAP::CloudController::DropletModel::STAGED_STATE, VCAP::CloudController::DropletModel::FAILED_STATE].join(',') }
+
+      it 'Filters Droplets by states, app_guids' do
+        user.admin = true
+        user.save
+
+        expected_states = "#{VCAP::CloudController::DropletModel::STAGED_STATE},#{VCAP::CloudController::DropletModel::FAILED_STATE}"
+        expected_pagination = {
+          'total_results' => 2,
+          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/droplets?states=#{expected_states}&order_by=#{order_by}&page=1&per_page=2" },
+          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/droplets?states=#{expected_states}&order_by=#{order_by}&page=1&per_page=2" },
+          'next'          => nil,
+          'previous'      => nil
+        }
+
+        do_request_with_error_handling
+
+        parsed_response = MultiJson.load(response_body)
+        expect(response_status).to eq(200)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
     end
   end
 end

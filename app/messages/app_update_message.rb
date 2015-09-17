@@ -6,6 +6,8 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
+    validates_with NoAdditionalKeysValidator
+
     validates :name, string: true, allow_nil: true
     validates :environment_variables, hash: true, allow_nil: true
     validates :buildpack, string: true, allow_nil: true

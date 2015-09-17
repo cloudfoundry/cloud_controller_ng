@@ -6,6 +6,8 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
+    validates_with NoAdditionalKeysValidator
+
     validates :type, inclusion: { in: %w(bits docker), message: 'must be one of \'bits, docker\'' }
     validates :app_guid, guid: true
     validates :url, absence: { absence: true, message: 'must be blank when type is bits' }, if: "type == 'bits'"
