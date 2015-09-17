@@ -122,6 +122,12 @@ module VCAP::CloudController
             end
           end
 
+          it 'is checks the whole string, not just a substring' do
+            message = AppsListMessage.new order_by: ' created_at'
+            expect(message).to be_invalid
+            expect(message.errors[:order_by].length).to eq 1
+          end
+
           it 'is invalid otherwise' do
             message = AppsListMessage.new order_by: '+foobar'
             expect(message).to be_invalid

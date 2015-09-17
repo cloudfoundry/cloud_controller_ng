@@ -14,7 +14,8 @@ module VCAP::CloudController
     validates :space_guids, array: true, allow_nil: true
     validates_numericality_of :page, greater_than: 0, allow_nil: true
     validates_numericality_of :per_page, greater_than: 0, allow_nil: true
-    validates_format_of :order_by, with: /[+-]?(#{VALID_ORDER_BY_KEYS})/, allow_nil: true
+    validates_format_of :order_by, with: /\A[+-]?(#{VALID_ORDER_BY_KEYS})\z/, allow_nil: true,
+                                   message: "received an unsupported value. Got: '%{value}'"
 
     def initialize(params={})
       super(params.symbolize_keys)
