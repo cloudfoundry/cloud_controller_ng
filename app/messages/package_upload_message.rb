@@ -2,18 +2,20 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class PackageUploadMessage < BaseMessage
-    attr_accessor :bits_path, :bits_name
+    ALLOWED_KEYS = [:bits_path, :bits_name]
 
-    def allowed_keys
-      [:bits_path, :bits_name]
-    end
-
-    validates_with NoAdditionalKeysValidator
+    attr_accessor(*ALLOWED_KEYS)
 
     validates :bits_path, presence: { presence: true, message: 'An application zip file must be uploaded' }
 
     def self.create_from_params(params)
       PackageUploadMessage.new(params.symbolize_keys)
+    end
+
+    private
+
+    def allowed_keys
+      ALLOWED_KEYS
     end
   end
 end

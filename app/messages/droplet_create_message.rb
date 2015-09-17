@@ -3,13 +3,9 @@ require 'messages/validators'
 
 module VCAP::CloudController
   class DropletCreateMessage < BaseMessage
-    attr_accessor :memory_limit, :disk_limit, :stack, :buildpack, :environment_variables
+    ALLOWED_KEYS = [:memory_limit, :disk_limit, :stack, :buildpack, :environment_variables]
 
-    def allowed_keys
-      [:memory_limit, :disk_limit, :stack, :buildpack, :environment_variables]
-    end
-
-    validates_with NoAdditionalKeysValidator
+    attr_accessor(*ALLOWED_KEYS)
 
     validates :memory_limit, numericality: { only_integer: true }, allow_nil: true
     validates :disk_limit, numericality: { only_integer: true }, allow_nil: true
@@ -24,6 +20,12 @@ module VCAP::CloudController
 
     def self.create_from_http_request(body)
       DropletCreateMessage.new(body.symbolize_keys)
+    end
+
+    private
+
+    def allowed_keys
+      ALLOWED_KEYS
     end
   end
 end

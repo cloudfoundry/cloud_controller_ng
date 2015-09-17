@@ -2,13 +2,11 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class AppCreateMessage < BaseMessage
-    attr_accessor :name, :environment_variables, :buildpack, :relationships
+    ALLOWED_KEYS = [:name, :environment_variables, :buildpack, :relationships]
 
-    def allowed_keys
-      [:name, :relationships, :environment_variables, :buildpack]
-    end
+    attr_accessor(*ALLOWED_KEYS)
 
-    validates_with NoAdditionalKeysValidator, RelationshipValidator
+    validates_with RelationshipValidator
 
     validates :name, string: true
     validates :environment_variables, hash: true, allow_nil: true
@@ -34,6 +32,12 @@ module VCAP::CloudController
 
     def self.create_from_http_request(body)
       AppCreateMessage.new(body.symbolize_keys)
+    end
+
+    private
+
+    def allowed_keys
+      ALLOWED_KEYS
     end
   end
 end

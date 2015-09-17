@@ -2,13 +2,9 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class PackageCreateMessage < BaseMessage
-    attr_accessor :app_guid, :type, :url
+    ALLOWED_KEYS = [:app_guid, :type, :url]
 
-    def allowed_keys
-      [:type, :app_guid, :url]
-    end
-
-    validates_with NoAdditionalKeysValidator
+    attr_accessor(*ALLOWED_KEYS)
 
     validates :type, inclusion: { in: %w(bits docker), message: 'must be one of \'bits, docker\'' }
     validates :app_guid, guid: true
@@ -17,6 +13,12 @@ module VCAP::CloudController
 
     def self.create_from_http_request(app_guid, body)
       PackageCreateMessage.new(body.symbolize_keys.merge({ app_guid: app_guid }))
+    end
+
+    private
+
+    def allowed_keys
+      ALLOWED_KEYS
     end
   end
 end

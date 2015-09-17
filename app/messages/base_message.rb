@@ -8,7 +8,17 @@ module VCAP::CloudController
 
     attr_accessor :requested_keys, :extra_keys
 
-    def initialize(params)
+    class NoAdditionalKeysValidator < ActiveModel::Validator
+      def validate(record)
+        if record.extra_keys.any?
+          record.errors[:base] << "#{record.error_message} '#{record.extra_keys.join("', '")}'"
+        end
+      end
+    end
+
+    validates_with NoAdditionalKeysValidator
+
+    def initialize(params={})
       @requested_keys   = params.keys
       disallowed_params = params.slice!(*allowed_keys)
       @extra_keys       = disallowed_params.keys
@@ -27,18 +37,14 @@ module VCAP::CloudController
       request
     end
 
+    def error_message
+      'Unknown field(s):'
+    end
+
     private
 
     def allowed_keys
       raise NotImplementedError
-    end
-
-    class NoAdditionalKeysValidator < ActiveModel::Validator
-      def validate(record)
-        if record.extra_keys.any?
-          record.errors[:base] << "Unknown field(s): '#{record.extra_keys.join("', '")}'"
-        end
-      end
     end
   end
 end

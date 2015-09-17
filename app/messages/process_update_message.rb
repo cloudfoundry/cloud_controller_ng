@@ -2,9 +2,9 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ProcessUpdateMessage < BaseMessage
-    attr_accessor :command
+    ALLOWED_KEYS = [:command]
 
-    validates_with NoAdditionalKeysValidator
+    attr_accessor(*ALLOWED_KEYS)
 
     validates :command,
       string: true,
@@ -15,8 +15,10 @@ module VCAP::CloudController
       ProcessUpdateMessage.new(body.symbolize_keys)
     end
 
+    private
+
     def allowed_keys
-      [:command]
+      ALLOWED_KEYS
     end
   end
 end
