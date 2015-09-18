@@ -155,11 +155,12 @@ EOF
 Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
 EOF
       purge_description = <<EOF
-Recursively remove a service instance and child objects from Cloud Foundry database without making requests to a service broker
+Recursively remove a service instance and child objects from Cloud Foundry database without making requests to a service broker.
+The user must have the cloud_controller.admin scope on their OAuth token in order to perform a purge.
 EOF
 
       parameter :accepts_incomplete, accepts_incomplete_description, valid_values: [true, false], experimental: true
-      parameter :purge, purge_description, valid_values: [true, false], experimental: true
+      parameter :purge, purge_description, valid_values: [true, false]
 
       before do
         uri = URI(service_broker.broker_url)
