@@ -1,9 +1,6 @@
 module CloudController
   module Blobstore
     class FingerprintsCollection
-      class BadFileMode < StandardError; end
-      class BadFilePath < StandardError; end
-
       def initialize(fingerprints)
         unless fingerprints.is_a?(Array)
           raise VCAP::Errors::ApiError.new_from_details('AppBitsUploadInvalid', 'invalid :resources')
@@ -41,14 +38,13 @@ module CloudController
 
       def parse_mode(raw_mode)
         mode = raw_mode ? raw_mode.to_i(8) : DEFAULT_FILE_MODE
-        raise BadFileMode.new("File mode '#{raw_mode}' is invalid.") unless (mode & 0600) == 0600
+        raise VCAP::Errors::ApiError.new_from_details('AppResourcesFileModeInvalid', "File mode '#{raw_mode}' is invalid.") unless (mode & 0600) == 0600
         mode
       end
 
       def validate_path(file_name)
         checker = VCAP::CloudController::FilePathChecker
-        raise BadFilePath.new("File path '#{file_name}' is not safe.") unless checker.safe_path? file_name
-
+        raise VCAP::Errors::ApiError.new_from_details('AppResourcesFilePathInvalid', "File path '#{file_name}' is not safe.") unless checker.safe_path? file_name
         file_name
       end
     end

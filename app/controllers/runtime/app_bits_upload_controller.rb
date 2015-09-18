@@ -27,7 +27,6 @@ module VCAP::CloudController
       app = find_guid_and_validate_access(:upload, guid)
 
       raise Errors::ApiError.new_from_details('AppBitsUploadInvalid', 'missing :resources') unless params['resources']
-
       uploaded_zip_of_files_not_in_blobstore_path = CloudController::DependencyLocator.instance.upload_handler.uploaded_file(params, 'application')
       app_bits_packer_job = Jobs::Runtime::AppBitsPacker.new(guid, uploaded_zip_of_files_not_in_blobstore_path, json_param('resources'))
 
@@ -39,19 +38,10 @@ module VCAP::CloudController
         [HTTP::CREATED, '{}']
       end
     rescue VCAP::CloudController::Errors::ApiError => e
-      if e.name == 'AppBitsUploadInvalid' || e.name == 'AppPackageInvalid'
+      if e.name == 'AppBitsUploadInvalid' || e.name == 'AppPackageInvalid' || e.name == 'AppResourcesFileModeInvalid' || e.name == 'AppResourcesFilePathInvalid'
         app.mark_as_failed_to_stage
       end
       raise
-    rescue StandardError => e
-      app.mark_as_failed_to_stage
-      if e.message.include?('File mode')
-        raise Errors::ApiError.new_from_details('AppResourcesFileModeInvalid', e.message)
-      elsif e.message.include?('File path')
-        raise Errors::ApiError.new_from_details('AppResourcesFilePathInvalid', e.message)
-      else
-        raise
-      end
     end
 
     post "#{path_guid}/copy_bits", :copy_app_bits

@@ -184,7 +184,10 @@ describe AppBitsPackage do
             it 'errors' do
               expect {
                 create
-              }.to raise_error(CloudController::Blobstore::FingerprintsCollection::BadFileMode)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'AppResourcesFileModeInvalid'
+                expect(error.response_code).to eq 400
+              end
             end
           end
 
@@ -194,7 +197,10 @@ describe AppBitsPackage do
             it 'errors' do
               expect {
                 create
-              }.to raise_error(CloudController::Blobstore::FingerprintsCollection::BadFileMode)
+              }.to raise_error do |error|
+                expect(error.name).to eq 'AppResourcesFileModeInvalid'
+                expect(error.response_code).to eq 400
+              end
             end
           end
         end

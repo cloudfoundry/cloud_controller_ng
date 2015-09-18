@@ -48,7 +48,10 @@ module CloudController
             it 'raises an error' do
               expect {
                 fingerprint
-              }.to raise_error
+              }.to raise_error do |error|
+                expect(error.name).to eq 'AppResourcesFilePathInvalid'
+                expect(error.response_code).to eq 400
+              end
             end
           end
         end
@@ -84,7 +87,10 @@ module CloudController
                 it 'raises an error' do
                   expect {
                     fingerprint
-                  }.to raise_error(CloudController::Blobstore::FingerprintsCollection::BadFileMode, "File mode 'banana' is invalid.")
+                  }.to raise_error do |error|
+                    expect(error.name).to eq 'AppResourcesFileModeInvalid'
+                    expect(error.response_code).to eq 400
+                  end
                 end
               end
 
@@ -94,7 +100,10 @@ module CloudController
                 it 'raises an error' do
                   expect {
                     fingerprint
-                  }.to raise_error(CloudController::Blobstore::FingerprintsCollection::BadFileMode, "File mode '144' is invalid.")
+                  }.to raise_error do |error|
+                    expect(error.name).to eq 'AppResourcesFileModeInvalid'
+                    expect(error.response_code).to eq 400
+                  end
                 end
               end
             end

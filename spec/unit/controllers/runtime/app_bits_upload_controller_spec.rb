@@ -236,14 +236,6 @@ module VCAP::CloudController
                   expect(app_obj.package_state).to eq 'FAILED'
                 end
               end
-
-              xit 'fails cleanly' do
-                make_request
-
-                app_obj.refresh
-                expect(app_obj.package_hash).to be_nil
-                expect(app_obj.package_state).to eq 'FAILED'
-              end
             end
           end
         end
@@ -295,6 +287,71 @@ module VCAP::CloudController
                                               status: 'queued'
                                           }
                                       })
+        end
+
+        describe 'resources' do
+          context 'with a bad file path' do
+            let(:req_body) { { resources: JSON.dump([{ 'fn' => '../../lol', 'sha1' => 'abc', 'size' => 2048 }]) } }
+
+            it 'fails to upload' do
+              expect {
+                put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
+              }.to change {
+                Delayed::Job.count
+              }.by(1)
+
+              successes, failures = Delayed::Worker.new.work_off
+              expect([successes, failures]).to eq [0, 1]
+
+              app_obj.refresh
+              expect(app_obj.package_hash).to be_nil
+              expect(app_obj.package_state).to eq 'FAILED'
+            end
+          end
+
+          context 'with a bad file mode' do
+            context 'when the file is not readable by owner' do
+              let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '300' }]) } }
+
+              before do
+                FeatureFlag.make(name: 'app_bits_upload', enabled: true)
+              end
+
+              it 'fails to upload' do
+                expect {
+                  put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
+                }.to change {
+                    Delayed::Job.count
+                  }.by(1)
+
+                successes, failures = Delayed::Worker.new.work_off
+                expect([successes, failures]).to eq [0, 1]
+
+                app_obj.refresh
+                expect(app_obj.package_hash).to be_nil
+                expect(app_obj.package_state).to eq 'FAILED'
+              end
+            end
+
+            context 'when the file is not writable by owner' do
+              let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '577' }]) } }
+
+              it 'fails to upload' do
+                expect {
+                  put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
+                }.to change {
+                    Delayed::Job.count
+                  }.by(1)
+
+                successes, failures = Delayed::Worker.new.work_off
+                expect([successes, failures]).to eq [0, 1]
+
+                app_obj.refresh
+                expect(app_obj.package_hash).to be_nil
+                expect(app_obj.package_state).to eq 'FAILED'
+              end
+            end
+          end
         end
       end
     end
