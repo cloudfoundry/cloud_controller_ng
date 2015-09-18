@@ -1,4 +1,5 @@
 require 'active_model'
+require 'mappers/order_by_mapper'
 
 module VCAP::CloudController
   class PaginationOptions
@@ -37,47 +38,15 @@ module VCAP::CloudController
       @order_direction ||= DIRECTION_DEFAULT
     end
 
-    class << self
-      def from_params(params)
-        page                      = params.delete('page')
-        page                      = page.to_i unless page.nil?
-        per_page                  = params.delete('per_page')
-        per_page                  = per_page.to_i unless per_page.nil?
-        order_by, order_direction = parse_order(params.delete('order_by'))
-        options                   = { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction }
-        PaginationOptions.new(options)
-      end
-
-      private
-
-      def parse_order(raw_order_by)
-        return unless raw_order_by
-
-        first_character = raw_order_by[0]
-
-        if user_provided_direction?(first_character)
-          order_by = remove_prefix(raw_order_by)
-          order_direction = parse_order_direction(first_character)
-        else
-          order_by = raw_order_by
-          order_direction = nil
-        end
-
-        [order_by, order_direction]
-      end
-
-      ORDER_PREFIXES = %w(+ -)
-      def user_provided_direction?(first_character)
-        ORDER_PREFIXES.include? first_character
-      end
-
-      def parse_order_direction(first_character)
-        first_character == '+' ? 'asc' : 'desc'
-      end
-
-      def remove_prefix(order_by)
-        order_by[1..-1]
-      end
+    def self.from_params(params)
+      page                      = params.delete('page')
+      page                      = page.to_i unless page.nil?
+      per_page                  = params.delete('per_page')
+      per_page                  = per_page.to_i unless per_page.nil?
+      raw_order_by              = params.delete('order_by')
+      order_by, order_direction = raw_order_by ? OrderByMapper.from_param(raw_order_by) : nil
+      options                   = { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction }
+      PaginationOptions.new(options)
     end
 
     def keys
