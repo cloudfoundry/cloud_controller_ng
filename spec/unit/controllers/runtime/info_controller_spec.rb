@@ -28,6 +28,7 @@ module VCAP::CloudController
         expect(hash['api_version']).to eq(VCAP::CloudController::Constants::API_VERSION)
         expect(hash['app_ssh_endpoint']).to eq(TestConfig.config[:info][:app_ssh_endpoint])
         expect(hash['app_ssh_host_key_fingerprint']).to eq(TestConfig.config[:info][:app_ssh_host_key_fingerprint])
+        expect(hash['app_ssh_oauth_client']).to eq(TestConfig.config[:info][:app_ssh_oauth_client])
       end
 
       it 'includes login url when configured' do

@@ -23,7 +23,8 @@ module VCAP::CloudController
           support_address: String,
           description: String,
           optional(:app_ssh_endpoint) => String,
-          optional(:app_ssh_host_key_fingerprint) => String
+          optional(:app_ssh_host_key_fingerprint) => String,
+          optional(:app_ssh_oauth_client) => String,
         },
 
         :system_domain => String,
