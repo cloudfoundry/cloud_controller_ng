@@ -11,20 +11,24 @@ module VCAP::CloudController
     describe '#create_route_service_instance_binding' do
       let(:route) { Route.make }
       let(:service_instance) { ManagedServiceInstance.make(space: route.space) }
+      let(:route_service_url) {'https://some-rs-url'}
 
       before do
         service_instance.service.requires = ['route_forwarding']
         service_instance.service.save
         allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
-        stub_bind(service_instance)
+        stub_bind(service_instance, { body: {route_service_url: route_service_url}.to_json })
       end
 
       it 'creates a binding' do
         expect(route.service_instance).to be_nil
         expect(service_instance.routes).to be_empty
 
-        manager.create_route_service_instance_binding(route, service_instance)
+        binding = manager.create_route_service_instance_binding(route, service_instance)
 
+        expect(binding.service_instance).to eq service_instance
+        expect(binding.route).to eq route
+        expect(binding.route_service_url).to eq route_service_url
         expect(route.reload.service_instance).to eq service_instance
         expect(service_instance.reload.routes).to include route
       end
@@ -80,27 +84,6 @@ module VCAP::CloudController
         before do
           stub_bind(service_instance, body: { syslog_drain_url: 'syslog.com/drain' }.to_json)
           stub_unbind_for_instance(service_instance)
-        end
-
-        it 'does not create a binding and raises an error for services that do not require syslog_drain' do
-          expect {
-            manager.create_route_service_instance_binding(route, service_instance)
-          }.to raise_error do |e|
-            expect(e).to be_a(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidSyslogDrainUrl)
-            expect(e.message).to include('not registered as a logging service')
-          end
-          expect(route.reload.service_instance).to be_nil
-          expect(service_instance.reload.routes).to be_empty
-        end
-
-        it 'creates a binding for services that require syslog_drain' do
-          service_instance.service.requires << 'syslog_drain'
-          service_instance.service.save
-
-          manager.create_route_service_instance_binding(route, service_instance)
-
-          expect(route.reload.service_instance).to eq service_instance
-          expect(service_instance.reload.routes).to include route
         end
       end
 

@@ -198,6 +198,7 @@ module VCAP::CloudController
   RouteBinding.blueprint do
     service_instance  { ManagedServiceInstance.make(:routing) }
     route { Route.make space: service_instance.space }
+    route_service_url { Sham.url }
   end
 
   ServiceBinding.blueprint do

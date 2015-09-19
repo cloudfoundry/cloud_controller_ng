@@ -25,8 +25,12 @@ module VCAP::CloudController
 
       raise Sequel::ValidationFailed.new(binding) unless binding.valid?
 
-      bind(binding, {})
+      raw_attributes = bind(binding, {})
+      attributes_to_update = {
+        route_service_url: raw_attributes[:route_service_url]
+      }
 
+      binding.set_all(attributes_to_update)
       begin
         binding.save
       rescue => e
@@ -34,6 +38,8 @@ module VCAP::CloudController
         mitigate_orphan(binding)
         raise e
       end
+
+      binding
     end
 
     def delete_route_service_instance_binding(binding)
@@ -54,8 +60,9 @@ module VCAP::CloudController
       validate_app_create_action(binding_attrs)
 
       service_binding = ServiceBinding.new(binding_attrs)
+      raw_attributes = bind(service_binding, arbitrary_parameters)
 
-      attributes_to_update = bind(service_binding, arbitrary_parameters)
+      attributes_to_update = raw_attributes.tap {|r| r.delete(:route_service_url)}
 
       service_binding.set_all(attributes_to_update)
 

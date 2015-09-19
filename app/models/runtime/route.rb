@@ -19,6 +19,7 @@ module VCAP::CloudController
       after_add:    :handle_add_app,
       after_remove: :handle_remove_app
 
+    one_to_one :route_binding
     one_through_one :service_instance, join_table: :route_bindings
 
     add_association_dependencies apps: :nullify

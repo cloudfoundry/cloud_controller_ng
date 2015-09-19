@@ -60,6 +60,7 @@ module VCAP::CloudController
             'environment'                     => Environment.new(app, EnvironmentVariableGroup.running.environment_json).as_json,
             'num_instances'                   => app.desired_instances,
             'routes'                          => app.uris,
+            'routing_info'                    => app.routing_info,
             'log_guid'                        => app.guid,
             'health_check_type'               => app.health_check_type,
             'health_check_timeout_in_seconds' => app.health_check_timeout || default_health_check_timeout,

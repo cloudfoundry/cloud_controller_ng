@@ -448,6 +448,15 @@ module VCAP::CloudController
       routes.map(&:uri)
     end
 
+    def routing_info
+      info = routes.map do |r|
+        info = { 'hostname' => r.uri }
+        info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
+        info
+      end
+      { 'http_routes' => info }
+    end
+
     def mark_as_staged
       self.package_state = 'STAGED'
       self.package_pending_since = nil

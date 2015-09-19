@@ -1869,6 +1869,32 @@ module VCAP::CloudController
       end
     end
 
+    describe 'routing_info' do
+      let(:domain) { PrivateDomain.make(name: 'mydomain.com', owning_organization: org) }
+      let(:app) { AppFactory.make(space: space) }
+      let(:route_without_service) { Route.make(host: 'host2', domain: domain, space: space, path: '/my%20path') }
+      let(:route_with_service) do
+        route = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
+        service_instance = ManagedServiceInstance.make(:routing, space: space)
+        RouteBinding.make(route: route, service_instance: service_instance)
+        route
+      end
+
+      it 'returns the mapped http routes associated with the app' do
+        app.add_route(route_with_service)
+        app.add_route(route_without_service)
+
+        expected_hash = {
+          'http_routes' => [
+            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_binding.route_service_url }, # TODO: route.route_service_url
+            { 'hostname' => route_without_service.uri }
+          ]
+        }
+
+        expect(app.routing_info).to match expected_hash
+      end
+    end
+
     describe 'adding routes to unsaved apps' do
       it 'should set a route by guid on a new but unsaved app' do
         app = App.new(name: Sham.name,

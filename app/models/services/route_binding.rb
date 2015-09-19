@@ -5,6 +5,10 @@ module VCAP::CloudController
     many_to_one :route
     many_to_one :service_instance
 
+    export_attributes :route_service_url
+
+    import_attributes :route_service_url
+
     delegate :service, :service_plan, :client, to: :service_instance
 
     def after_initialize

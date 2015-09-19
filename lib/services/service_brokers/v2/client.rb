@@ -119,8 +119,13 @@ module VCAP::Services::ServiceBrokers::V2
       attributes = {
         credentials: parsed_response['credentials']
       }
+
       if parsed_response.key?('syslog_drain_url')
         attributes[:syslog_drain_url] = parsed_response['syslog_drain_url']
+      end
+
+      if parsed_response.key?('route_service_url')
+        attributes[:route_service_url] = parsed_response['route_service_url']
       end
 
       attributes

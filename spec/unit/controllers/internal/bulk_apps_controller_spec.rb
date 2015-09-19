@@ -107,7 +107,6 @@ module VCAP::CloudController
                 domain: SharedDomain.make(name: 'lo-mein.com'),
             )
             app.add_route(route1)
-
             route2 = Route.make(
                 space: app.space,
                 host: 'conan',

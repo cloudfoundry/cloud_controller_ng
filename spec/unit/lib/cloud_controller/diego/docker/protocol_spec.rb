@@ -163,11 +163,23 @@ module VCAP::CloudController
 
         describe '#desire_app_message' do
           let(:running_env) { { 'KEY' => 'running_value' } }
+          let(:route_without_service) { Route.make(space: app.space) }
+          let(:route_with_service) do
+            si = ManagedServiceInstance.make(:routing, space: app.space)
+            r = Route.make(space: app.space)
+            RouteBinding.make(route: r, service_instance: si, route_service_url: 'http://foobar.com')
+            r
+          end
 
           before do
             group = EnvironmentVariableGroup.running
             group.environment_json = running_env
             group.save
+
+            route_with_service.save
+            route_without_service.save
+            app.add_route(route_without_service)
+            app.add_route(route_with_service)
           end
 
           subject(:message) do
@@ -185,7 +197,16 @@ module VCAP::CloudController
               'execution_metadata' => app.execution_metadata,
               'environment' => Environment.new(app, running_env).as_json,
               'num_instances' => app.desired_instances,
-              'routes' => app.uris,
+              'routes' => [
+                route_without_service.uri,
+                route_with_service.uri
+              ],
+              'routing_info' => {
+                'http_routes' => [
+                  { 'hostname' => route_without_service.uri },
+                  { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_binding.route_service_url }
+                ]
+              },
               'log_guid' => app.guid,
               'docker_image' => app.docker_image,
               'health_check_type' => app.health_check_type,
@@ -222,7 +243,7 @@ module VCAP::CloudController
           context 'when there is no current_droplet for app' do
             let(:docker_image) { 'cloudfoundry/diego-docker-app:latest' }
             let(:app) do
-              App.new(
+              App.make(
                 name: Sham.name,
                 space: Space.make,
                 stack: Stack.default,

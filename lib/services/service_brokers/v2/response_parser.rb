@@ -43,7 +43,8 @@ module VCAP::Services
             when 200, 201
               JsonObjectValidator.new(@logger,
                 SyslogDrainValidator.new(opts[:service_guid],
-                  SuccessValidator.new(state: 'succeeded')))
+                  RouteServiceURLValidator.new(
+                    SuccessValidator.new(state: 'succeeded'))))
             when 202
               JsonObjectValidator.new(@logger,
                 FailingValidator.new(Errors::ServiceBrokerBadResponse))
@@ -216,6 +217,34 @@ module VCAP::Services
             if !parsed_response['syslog_drain_url'].nil? && !service.requires.include?('syslog_drain')
               raise Errors::ServiceBrokerInvalidSyslogDrainUrl.new(uri, method, response)
             end
+            @validator.validate(method: method, uri: uri, code: code, response: response)
+          end
+        end
+
+        class RouteServiceURLValidator
+          def initialize(validator)
+            @validator = validator
+          end
+
+          def validate(method:, uri:, code:, response:)
+            parsed_response = MultiJson.load(response.body)
+
+            url = parsed_response['route_service_url']
+            if url
+              is_valid = true
+
+              begin
+                parsed_url = URI.parse(url)
+                is_valid = parsed_url.is_a?(URI::HTTPS)
+              rescue URI::InvalidURIError
+                is_valid = false
+              end
+
+              unless is_valid
+                raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
+              end
+            end
+
             @validator.validate(method: method, uri: uri, code: code, response: response)
           end
         end

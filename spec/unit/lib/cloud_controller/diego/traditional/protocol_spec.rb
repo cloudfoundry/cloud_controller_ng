@@ -193,12 +193,21 @@ module VCAP::CloudController
 
           let(:running_env) { { 'KEY' => 'running_value' } }
 
+          let(:route_without_service) { Route.make(space: app.space) }
+          let(:route_with_service) do
+            si = ManagedServiceInstance.make(:routing, space: app.space)
+            r = Route.make(space: app.space)
+            RouteBinding.make(route: r, service_instance: si, route_service_url: 'http://foobar.com')
+            r
+          end
+
           before do
             group = EnvironmentVariableGroup.running
             group.environment_json = running_env
             group.save
 
-            app.add_route(Route.make(space: app.space))
+            app.add_route(route_without_service)
+            app.add_route(route_with_service)
             app.current_droplet.execution_metadata = 'foobar'
           end
 
@@ -217,7 +226,18 @@ module VCAP::CloudController
                   'stack' => app.stack.name,
                   'start_command' => app.command,
                   'execution_metadata' => app.execution_metadata,
-                  'routes' => app.uris,
+                  'routes' => [
+                    route_without_service.uri,
+                    route_with_service.uri
+                  ],
+                  'routing_info' => {
+                    'http_routes' => [
+                      { 'hostname' => route_without_service.uri },
+                      { 'hostname' => route_with_service.uri,
+                        'route_service_url' => route_with_service.route_binding.route_service_url
+                      }
+                    ]
+                  },
                   'egress_rules' => ['running_egress_rule'],
                   'etag' => app.updated_at.to_f.to_s,
                   'allow_ssh' => true,
