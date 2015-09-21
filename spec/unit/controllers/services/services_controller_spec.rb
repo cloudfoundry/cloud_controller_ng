@@ -317,6 +317,23 @@ module VCAP::CloudController
 
           expect(a_request(:delete, /#{service.service_broker.broker_url}.*/)).not_to have_been_made
         end
+
+        context 'a service instance operation is in progress' do
+          before do
+            service_instance.save_with_new_operation({}, state: VCAP::CloudController::ManagedServiceInstance::IN_PROGRESS_STRING)
+          end
+
+          it 'deletes the service and its dependent models' do
+            delete "/v2/services/#{service.guid}?purge=true", '{}', headers_for(admin_user)
+
+            expect(last_response).to have_status_code(204)
+            expect(Service.first(guid: service.guid)).to be_nil
+            expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
+            expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil
+            expect(ServiceBinding.first(guid: service_binding.guid)).to be_nil
+            expect(ServiceKey.first(guid: service_key.guid)).to be_nil
+          end
+        end
       end
     end
   end

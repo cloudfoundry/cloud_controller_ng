@@ -279,6 +279,7 @@ module VCAP::CloudController
     end
 
     describe '#purge' do
+      let!(:event_repository) { double(Repositories::Services::ServiceUsageEventRepository) }
       let!(:service_plan) { ServicePlan.make(service: service) }
       let!(:service_plan_visibility) { ServicePlanVisibility.make(service_plan: service_plan) }
       let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
@@ -289,11 +290,18 @@ module VCAP::CloudController
       let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: service_plan_2) }
       let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance_2) }
 
+      before do
+        allow(Repositories::Services::ServiceUsageEventRepository).to receive(:new).and_return(event_repository)
+        allow(event_repository).to receive(:record_service_binding_event)
+        allow(event_repository).to receive(:deleted_event_from_service_instance)
+        allow(event_repository).to receive(:record_service_instance_event)
+      end
+
       context 'for v1 services' do
         let!(:service) { Service.make(:v1) }
 
         it 'destroys all models that depend on it' do
-          service.purge
+          service.purge(event_repository)
 
           expect(Service.find(guid: service.guid)).to be_nil
           expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
@@ -307,7 +315,7 @@ module VCAP::CloudController
         end
 
         it 'does not make any requests to the service broker' do
-          service.purge
+          service.purge(event_repository)
           http_client_stub = VCAP::Services::ServiceBrokers::V1::HttpClient.new
           expect(http_client_stub).not_to have_received(:unbind)
           expect(http_client_stub).not_to have_received(:deprovision)
@@ -315,7 +323,7 @@ module VCAP::CloudController
 
         it 'does not mark apps for restaging that were bound to the deleted service' do
           service_binding.app.update(package_state: 'STAGED')
-          expect { service.purge }.not_to change { service_binding.app.reload.pending? }
+          expect { service.purge(event_repository) }.not_to change { service_binding.app.reload.pending? }
         end
       end
 
@@ -323,7 +331,7 @@ module VCAP::CloudController
         let!(:service) { Service.make(:v2) }
 
         it 'destroys all models that depend on it' do
-          service.purge
+          service.purge(event_repository)
 
           expect(Service.find(guid: service.guid)).to be_nil
           expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
@@ -337,13 +345,33 @@ module VCAP::CloudController
         end
 
         it 'does not make any requests to the service broker' do
-          service.purge
+          service.purge(event_repository)
           expect(a_request(:delete, /.*/)).not_to have_been_made
         end
 
         it 'does not mark apps for restaging that were bound to the deleted service' do
           service_binding.app.update(package_state: 'STAGED')
-          expect { service.purge }.not_to change { service_binding.app.reload.pending? }
+          expect { service.purge(event_repository) }.not_to change { service_binding.app.reload.pending? }
+        end
+
+        context 'there is a service instance with state `in progress`' do
+          before do
+            service_instance.save_with_new_operation({}, state: VCAP::CloudController::ManagedServiceInstance::IN_PROGRESS_STRING)
+          end
+
+          it 'destroys all models that depend on it' do
+            service.purge(event_repository)
+
+            expect(Service.find(guid: service.guid)).to be_nil
+            expect(ServicePlan.first(guid: service_plan.guid)).to be_nil
+            expect(ServicePlan.first(guid: service_plan_2.guid)).to be_nil
+            expect(ServicePlanVisibility.first(guid: service_plan_visibility.guid)).to be_nil
+            expect(ServicePlanVisibility.first(guid: service_plan_visibility_2.guid)).to be_nil
+            expect(ServiceInstance.first(guid: service_instance.guid)).to be_nil
+            expect(ServiceInstance.first(guid: service_instance_2.guid)).to be_nil
+            expect(ServiceBinding.first(guid: service_binding.guid)).to be_nil
+            expect(ServiceBinding.first(guid: service_binding_2.guid)).to be_nil
+          end
         end
       end
 
@@ -356,7 +384,7 @@ module VCAP::CloudController
 
         it 'raises the same error' do
           expect {
-            service.purge
+            service.purge(event_repository)
           }.to raise_error(RuntimeError, /Boom/)
         end
       end
@@ -369,7 +397,7 @@ module VCAP::CloudController
         end
 
         it 'rolls back the transaction and does not destroy any records' do
-          service.purge rescue nil
+          service.purge(event_repository) rescue nil
 
           expect(Service.find(guid: service.guid)).to be
           expect(ServicePlan.first(guid: service_plan.guid)).to be
@@ -383,7 +411,7 @@ module VCAP::CloudController
         end
 
         it "does not leave the service in 'purging' state" do
-          service.purge rescue nil
+          service.purge(event_repository) rescue nil
           expect(service.reload.purging).to be false
         end
       end

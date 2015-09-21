@@ -125,12 +125,13 @@ module VCAP::CloudController
       unique_id
     end
 
-    def purge
+    def purge(event_repository)
       db.transaction do
         self.update(purging: true)
         service_plans.each do |plan|
-          errors = ServiceInstanceDelete.new.delete(plan.service_instances_dataset)
-          raise errors.first if errors.any?
+          plan.service_instances_dataset.each do |instance|
+            ServiceInstancePurger.new(event_repository).purge(instance)
+          end
         end
         self.destroy
       end
