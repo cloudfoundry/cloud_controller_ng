@@ -10,8 +10,7 @@ module VCAP::CloudController
           let(:buildpack) { Buildpack.make }
           let(:success_response) do
             {
-              execution_metadata:     '{command: [' ']}',
-              detected_start_command: { web: '' },
+              execution_metadata: '{"process_types": { "web": "some command"}}',
               lifecycle_data:         {
                 buildpack_key:      buildpack.key,
                 detected_buildpack: 'INTERCAL',
@@ -19,7 +18,7 @@ module VCAP::CloudController
             }
           end
           let(:malformed_success_response) do
-            success_response.except(:detected_start_command)
+            success_response.except(:execution_metadata)
           end
           let(:fail_response) do
             {
@@ -59,15 +58,21 @@ module VCAP::CloudController
 
               context 'when staging metadata is returned' do
                 before do
-                  success_response[:detected_start_command][:web] = 'start me'
+                  metadata = {
+                      process_types: {
+                          web: 'start me',
+                          worker: 'hello',
+                          anything: 'hi hi hi'
+                      }
+                  }
+                  success_response[:execution_metadata] = MultiJson.dump(metadata)
                 end
 
                 it 'updates the droplet with the metadata' do
                   handle_staging_result(success_response)
                   staged_droplet.reload
                   droplet = staged_droplet
-                  expect(droplet.detected_start_command).to eq('start me')
-                  expect(droplet.procfile).to eq("web: #{droplet.detected_start_command}")
+                  expect(droplet.procfile).to eq("web: start me\nworker: hello\nanything: hi hi hi")
                   expect(droplet.buildpack).to eq('INTERCAL')
                 end
 
@@ -117,7 +122,7 @@ module VCAP::CloudController
                       'diego.staging.success.invalid-message',
                       staging_guid: staged_droplet.guid,
                       payload:      malformed_success_response,
-                      error:        '{ detected_start_command => Missing key }'
+                      error:        '{ execution_metadata => Missing key }'
                     )
                 end
               end

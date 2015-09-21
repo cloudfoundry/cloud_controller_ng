@@ -12,7 +12,6 @@ module VCAP::CloudController
           @staging_response_schema ||= Membrane::SchemaParser.parse do
             {
               execution_metadata:     String,
-              detected_start_command: Hash,
               lifecycle_data:         {
                 buildpack_key:      String,
                 detected_buildpack: String,
@@ -25,6 +24,7 @@ module VCAP::CloudController
 
         def save_staging_result(app, payload)
           lifecycle_data = payload[:lifecycle_data]
+          metadata = MultiJson.load(payload[:execution_metadata], symbolize_keys: true)
 
           app.class.db.transaction do
             app.lock!
@@ -34,8 +34,8 @@ module VCAP::CloudController
             droplet = app.current_droplet
             droplet.lock!
             droplet.update_execution_metadata(payload[:execution_metadata])
-            if payload.key?(:detected_start_command)
-              droplet.update_detected_start_command(payload[:detected_start_command][:web])
+            if metadata[:process_types] && metadata[:process_types][:web]
+              droplet.update_detected_start_command(metadata[:process_types][:web])
             end
 
             app.save_changes(raise_on_save_failure: true)
