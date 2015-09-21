@@ -11,24 +11,24 @@ module VCAP::CloudController
     describe '#create_route_service_instance_binding' do
       let(:route) { Route.make }
       let(:service_instance) { ManagedServiceInstance.make(space: route.space) }
-      let(:route_service_url) {'https://some-rs-url'}
+      let(:route_service_url) { 'https://some-rs-url' }
 
       before do
         service_instance.service.requires = ['route_forwarding']
         service_instance.service.save
         allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
-        stub_bind(service_instance, { body: {route_service_url: route_service_url}.to_json })
+        stub_bind(service_instance, { body: { route_service_url: route_service_url }.to_json })
       end
 
       it 'creates a binding' do
         expect(route.service_instance).to be_nil
         expect(service_instance.routes).to be_empty
 
-        binding = manager.create_route_service_instance_binding(route, service_instance)
+        route_binding = manager.create_route_service_instance_binding(route, service_instance)
 
-        expect(binding.service_instance).to eq service_instance
-        expect(binding.route).to eq route
-        expect(binding.route_service_url).to eq route_service_url
+        expect(route_binding.service_instance).to eq service_instance
+        expect(route_binding.route).to eq route
+        expect(route_binding.route_service_url).to eq route_service_url
         expect(route.reload.service_instance).to eq service_instance
         expect(service_instance.reload.routes).to include route
       end

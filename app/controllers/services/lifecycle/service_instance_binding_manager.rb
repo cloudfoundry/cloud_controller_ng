@@ -17,36 +17,36 @@ module VCAP::CloudController
     def create_route_service_instance_binding(route, instance)
       raise ServiceInstanceNotBindable unless instance.bindable?
 
-      binding = RouteBinding.new
-      binding.route = route
-      binding.service_instance = instance
+      route_binding = RouteBinding.new
+      route_binding.route = route
+      route_binding.service_instance = instance
 
       @access_validator.validate_access(:update, instance)
 
-      raise Sequel::ValidationFailed.new(binding) unless binding.valid?
+      raise Sequel::ValidationFailed.new(route_binding) unless route_binding.valid?
 
-      raw_attributes = bind(binding, {})
+      raw_attributes = bind(route_binding, {})
       attributes_to_update = {
         route_service_url: raw_attributes[:route_service_url]
       }
 
-      binding.set_all(attributes_to_update)
+      route_binding.set_all(attributes_to_update)
       begin
-        binding.save
+        route_binding.save
       rescue => e
         @logger.error "Failed to save binding for route: #{route.guid} and service instance: #{instance.guid} with exception: #{e}"
-        mitigate_orphan(binding)
+        mitigate_orphan(route_binding)
         raise e
       end
 
-      binding
+      route_binding
     end
 
-    def delete_route_service_instance_binding(binding)
-      @access_validator.validate_access(:update, binding.service_instance)
-      errors = ServiceBindingDelete.new.delete [binding]
+    def delete_route_service_instance_binding(route_binding)
+      @access_validator.validate_access(:update, route_binding.service_instance)
+      errors = ServiceBindingDelete.new.delete [route_binding]
       unless errors.empty?
-        @logger.error "Failed to delete binding with guid: #{binding.guid} with errors: #{errors.map(&:message).join(',')}"
+        @logger.error "Failed to delete binding with guid: #{route_binding.guid} with errors: #{errors.map(&:message).join(',')}"
         raise errors.first
       end
     end
@@ -62,7 +62,7 @@ module VCAP::CloudController
       service_binding = ServiceBinding.new(binding_attrs)
       raw_attributes = bind(service_binding, arbitrary_parameters)
 
-      attributes_to_update = raw_attributes.tap {|r| r.delete(:route_service_url)}
+      attributes_to_update = raw_attributes.tap { |r| r.delete(:route_service_url) }
 
       service_binding.set_all(attributes_to_update)
 
@@ -94,14 +94,14 @@ module VCAP::CloudController
 
     private
 
-    def bind(binding, arbitrary_parameters)
-      raise_if_locked(binding.service_instance)
-      binding.client.bind(binding, arbitrary_parameters: arbitrary_parameters) # binding.bind(arbitrary_parameters)
+    def bind(binding_obj, arbitrary_parameters)
+      raise_if_locked(binding_obj.service_instance)
+      binding_obj.client.bind(binding_obj, arbitrary_parameters: arbitrary_parameters) # binding.bind(arbitrary_parameters)
     end
 
-    def unbind(binding)
-      raise_if_locked(binding.service_instance)
-      binding.client.unbind(binding) # binding.unbind
+    def unbind(binding_obj)
+      raise_if_locked(binding_obj.service_instance)
+      binding_obj.client.unbind(binding_obj) # binding.unbind
     end
 
     def async?(params)
