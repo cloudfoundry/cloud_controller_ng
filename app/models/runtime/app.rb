@@ -617,6 +617,8 @@ module VCAP::CloudController
             AppObserver.routes_changed(self)
             @routes_changed = false
           end
+          self.updated_at = Sequel::CURRENT_TIMESTAMP
+          save
         end
       else
         set_new_version

@@ -2304,11 +2304,18 @@ module VCAP::CloudController
         before do
           subject.diego = true
           allow(AppObserver).to receive(:routes_changed).with(subject)
+          process_guid = Diego::ProcessGuid.from_app(subject)
+          stub_request(:delete, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
         end
 
         it 'does not update the app version' do
           expect { subject.add_route(route) }.to_not change(subject, :version)
           expect { subject.remove_route(route) }.to_not change(subject, :version)
+        end
+
+        it 'updates the app updated_at' do
+          expect { subject.add_route(route) }.to change(subject, :updated_at)
+          expect { subject.remove_route(route) }.to change(subject, :updated_at)
         end
 
         it 'calls the app observer with the app' do
