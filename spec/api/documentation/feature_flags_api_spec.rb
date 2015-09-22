@@ -89,7 +89,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
   end
 
   get '/v2/config/feature_flags/unset_roles_by_username' do
-    example 'Get the Unset User Roals feature flag' do
+    example 'Get the Unset User Roles feature flag' do
       explanation <<-HEREDOC
         When enabled, Org Managers or Space Managers can remove access roles by username.
         In order for this feature to be enabled the CF operator must:
@@ -112,7 +112,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
   end
 
   get '/v2/config/feature_flags/set_roles_by_username' do
-    example 'Get the Set User Roals feature flag' do
+    example 'Get the Set User Roles feature flag' do
       explanation <<-HEREDOC
         When enabled, Org Managers or Space Managers can add access roles by username.
         In order for this feature to be enabled the CF operator must:
