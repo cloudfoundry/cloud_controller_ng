@@ -281,7 +281,7 @@ module VCAP::CloudController
 
         ids = user.membership_space_ids.all.map { |data| data[:space_id] }
 
-        expect(ids).to eq([developer_space, manager_space, auditor_space].map(&:id))
+        expect(ids).to match_array([developer_space, manager_space, auditor_space].map(&:id))
       end
     end
   end
