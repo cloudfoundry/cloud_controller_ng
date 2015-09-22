@@ -1091,9 +1091,9 @@ module VCAP::CloudController
               put "/v2/service_instances/#{service_instance.guid}",
                 MultiJson.dump({ name: new_long_instance_name }), json_headers(admin_headers)
 
-                expect(last_response).to have_status_code(400)
-                expect(decoded_response['code']).to eq(60009)
-                expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTooLong')
+              expect(last_response).to have_status_code(400)
+              expect(decoded_response['code']).to eq(60009)
+              expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTooLong')
             end
           end
         end
@@ -1958,10 +1958,10 @@ module VCAP::CloudController
                 description: 'Done!'
               }.to_json)
 
-                Timecop.freeze Time.now + 2.minute do
-                  Delayed::Job.last.invoke_job
-                  expect(Event.find(type: 'audit.service_instance.delete')).to be
-                end
+              Timecop.freeze Time.now + 2.minute do
+                Delayed::Job.last.invoke_job
+                expect(Event.find(type: 'audit.service_instance.delete')).to be
+              end
             end
 
             it 'indicates the service instance is being deleted' do
@@ -1990,10 +1990,10 @@ module VCAP::CloudController
                 }
               }.to_json)
 
-                expect(last_response).to have_status_code 202
-                Timecop.freeze Time.now + 30.minutes do
-                  expect(Delayed::Worker.new.work_off).to eq [1, 0]
-                end
+              expect(last_response).to have_status_code 202
+              Timecop.freeze Time.now + 30.minutes do
+                expect(Delayed::Worker.new.work_off).to eq [1, 0]
+              end
             end
 
             context 'when the broker successfully fetches updated information about the instance' do
