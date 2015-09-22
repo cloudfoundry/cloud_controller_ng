@@ -188,6 +188,10 @@ uaa:
 hm9000:
   url: <%= p("hm9000.url", "https://hm9000.#{domain}") %>
 
+routing_api:
+  url: <%= "https://api.#{domain}/routing" %>
+
+
 # App staging parameters
 staging:
   timeout_in_seconds: <%= p("cc.staging_timeout_in_seconds") %>
