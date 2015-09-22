@@ -55,6 +55,10 @@ module VCAP::CloudController
       space.organization if space
     end
 
+    def route_service_url
+      route_binding && route_binding.route_service_url
+    end
+
     def validate
       validates_presence :domain
       validates_presence :space

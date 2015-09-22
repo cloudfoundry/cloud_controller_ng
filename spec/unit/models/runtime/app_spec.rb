@@ -1886,7 +1886,7 @@ module VCAP::CloudController
 
         expected_hash = {
           'http_routes' => [
-            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_binding.route_service_url }, # TODO: route.route_service_url
+            { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url },
             { 'hostname' => route_without_service.uri }
           ]
         }

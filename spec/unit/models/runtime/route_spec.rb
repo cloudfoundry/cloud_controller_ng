@@ -397,6 +397,24 @@ module VCAP::CloudController
         end
       end
 
+      describe 'route_service_url' do
+        context 'with a route_binding' do
+          let(:route_binding) { RouteBinding.make }
+          let(:route) { route_binding.route }
+
+          it 'returns the route_service_url associated with the binding' do
+            expect(route.route_service_url).to eq route_binding.route_service_url
+          end
+        end
+
+        context 'without a route_binding' do
+          let(:route) { Route.make }
+          it 'returns nil' do
+            expect(route.route_service_url).to be_nil
+          end
+        end
+      end
+
       describe '#uri' do
         context 'for a non-nil path' do
           it 'should return the fqdn with path' do
