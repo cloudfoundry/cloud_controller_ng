@@ -2517,6 +2517,24 @@ module VCAP::CloudController
         expect(a_request(:put, service_binding_uri).with(body: expected_body)).to have_been_made
       end
 
+      context 'binding permissions' do
+        context 'admin' do
+          it 'allows an admin to bind a space' do
+            put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, admin_headers
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        context 'neither an admin nor a Space Developer' do
+          let(:manager) { make_manager_for_space(space) }
+          it 'raises an error' do
+            put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(manager)
+            expect(last_response.status).to eq(403)
+            expect(last_response.body).to include('You are not authorized to perform the requested action')
+          end
+        end
+      end
+
       context 'when the service instance is not a route service' do
         let(:service_instance) { ManagedServiceInstance.make(space: space) }
 
