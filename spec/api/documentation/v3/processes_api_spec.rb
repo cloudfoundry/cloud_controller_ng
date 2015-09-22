@@ -92,7 +92,9 @@ resource 'Processes (Experimental)', type: :api do
   end
 
   get '/v3/processes/:guid' do
-    let(:process) { VCAP::CloudController::AppFactory.make }
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:app_model) { VCAP::CloudController::AppModel.make space: space }
+    let(:process) { VCAP::CloudController::AppFactory.make app_guid: app_model.guid, space: space }
     let(:guid) { process.guid }
     let(:type) { process.type }
 
@@ -102,6 +104,8 @@ resource 'Processes (Experimental)', type: :api do
     end
 
     example 'Get a Process' do
+      expect(process.app_guid).to be_present
+
       expected_response = {
         'guid'         => guid,
         'type'         => type,
