@@ -55,9 +55,9 @@ module VCAP::CloudController
           let(:member_b) { instance_variable_get(member_b_ivar) }
 
           include_examples 'permission enumeration', user_role,
-                           name: 'managed service instance',
-                           path: '/v2/service_instances',
-                           enumerate: 0
+            name: 'managed service instance',
+            path: '/v2/service_instances',
+            enumerate: 0
         end
       end
 
@@ -74,9 +74,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_developer }
 
           include_examples 'permission enumeration', 'Developer',
-                           name: 'managed service instance',
-                           path: '/v2/service_instances',
-                           enumerate: 1
+            name: 'managed service instance',
+            path: '/v2/service_instances',
+            enumerate: 1
 
           it 'prevents a developer from creating a service instance in an unauthorized space' do
             plan = ServicePlan.make(:v2)
@@ -178,9 +178,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_auditor }
 
           include_examples 'permission enumeration', 'SpaceAuditor',
-                           name: 'managed service instance',
-                           path: '/v2/service_instances',
-                           enumerate: 1
+            name: 'managed service instance',
+            path: '/v2/service_instances',
+            enumerate: 1
         end
 
         describe 'SpaceManager' do
@@ -308,8 +308,8 @@ module VCAP::CloudController
             it 'should pass along the parameters to the service broker' do
               expect(last_response).to have_status_code(201)
               expect(a_request(:put, service_broker_url_regex).
-                  with(body: hash_including(parameters: parameters))).
-                to have_been_made.times(1)
+                     with(body: hash_including(parameters: parameters))).
+              to have_been_made.times(1)
             end
           end
 
@@ -319,8 +319,8 @@ module VCAP::CloudController
             it 'should reject the request' do
               expect(last_response).to have_status_code(400)
               expect(a_request(:put, service_broker_url_regex).
-                  with(body: hash_including(parameters: parameters))).
-                to have_been_made.times(0)
+                     with(body: hash_including(parameters: parameters))).
+              to have_been_made.times(0)
             end
           end
         end
@@ -345,9 +345,9 @@ module VCAP::CloudController
             expect(event.space_guid).to eq(instance.space.guid)
             expect(event.organization_guid).to eq(instance.space.organization.guid)
             expect(event.metadata['request']).to include({
-                'name' => instance.name,
-                'service_plan_guid' => instance.service_plan_guid,
-                'space_guid' => instance.space_guid,
+              'name' => instance.name,
+              'service_plan_guid' => instance.service_plan_guid,
+              'space_guid' => instance.space_guid,
             })
           end
 
@@ -472,9 +472,9 @@ module VCAP::CloudController
               expect(event.space_guid).to eq(instance.space.guid)
               expect(event.organization_guid).to eq(instance.space.organization.guid)
               expect(event.metadata['request']).to include({
-                  'name' => instance.name,
-                  'service_plan_guid' => instance.service_plan_guid,
-                  'space_guid' => instance.space_guid,
+                'name' => instance.name,
+                'service_plan_guid' => instance.service_plan_guid,
+                'space_guid' => instance.space_guid,
               })
             end
           end
@@ -489,9 +489,9 @@ module VCAP::CloudController
               stub_request(:get, service_broker_url_regex).
                 with(headers: { 'Accept' => 'application/json' }).
                 to_return(status: 200, body: {
-                    state: 'in progress',
-                    description: 'new description'
-                  }.to_json)
+                  state: 'in progress',
+                  description: 'new description'
+                }.to_json)
             end
 
             it 'does not enqueue additional delay_jobs after broker_client_max_async_poll_duration_minutes' do
@@ -546,9 +546,9 @@ module VCAP::CloudController
             expect(event.space_guid).to eq(instance.space.guid)
             expect(event.organization_guid).to eq(instance.space.organization.guid)
             expect(event.metadata['request']).to include({
-                'name' => instance.name,
-                'service_plan_guid' => instance.service_plan_guid,
-                'space_guid' => instance.space_guid,
+              'name' => instance.name,
+              'service_plan_guid' => instance.service_plan_guid,
+              'space_guid' => instance.space_guid,
             })
           end
         end
@@ -964,10 +964,10 @@ module VCAP::CloudController
           expect(event.space_guid).to eq(service_instance.space.guid)
           expect(event.organization_guid).to eq(service_instance.space.organization.guid)
           expect(event.metadata).to include({
-                'request' => {
-                  'service_plan_guid' => new_service_plan.guid,
-                }
-              })
+            'request' => {
+              'service_plan_guid' => new_service_plan.guid,
+            }
+          })
         end
 
         it 'returns a 201 and updates to the new plan' do
@@ -1017,8 +1017,8 @@ module VCAP::CloudController
               put "/v2/service_instances/#{service_instance.guid}", body, headers_for(developer)
               expect(last_response).to have_status_code(400)
               expect(a_request(:put, service_broker_url_regex).
-                       with(body: hash_including(parameters: parameters))).
-                to have_been_made.times(0)
+                     with(body: hash_including(parameters: parameters))).
+              to have_been_made.times(0)
             end
           end
 
@@ -1089,11 +1089,11 @@ module VCAP::CloudController
             it 'fails and returns service instance name too long message correctly' do
               new_long_instance_name = 'a' * 51
               put "/v2/service_instances/#{service_instance.guid}",
-                  MultiJson.dump({ name: new_long_instance_name }), json_headers(admin_headers)
+                MultiJson.dump({ name: new_long_instance_name }), json_headers(admin_headers)
 
-              expect(last_response).to have_status_code(400)
-              expect(decoded_response['code']).to eq(60009)
-              expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTooLong')
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['code']).to eq(60009)
+                expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTooLong')
             end
           end
         end
@@ -1256,7 +1256,7 @@ module VCAP::CloudController
 
             let(:body) do
               MultiJson.dump(
-                  service_plan_guid: other_plan.guid
+                service_plan_guid: other_plan.guid
               )
             end
 
@@ -1349,10 +1349,10 @@ module VCAP::CloudController
           expect(event.space_guid).to eq(service_instance.space.guid)
           expect(event.organization_guid).to eq(service_instance.space.organization.guid)
           expect(event.metadata).to include({
-                'request' => {
-                  'service_plan_guid' => new_service_plan.guid,
-                }
-              })
+            'request' => {
+              'service_plan_guid' => new_service_plan.guid,
+            }
+          })
         end
 
         it 'returns 201' do
@@ -1430,9 +1430,9 @@ module VCAP::CloudController
 
               stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
-                    state: 'succeeded',
-                    description: 'Phew, all done'
-                  }.to_json)
+                state: 'succeeded',
+                description: 'Phew, all done'
+              }.to_json)
             end
 
             it 'updates the description of the service instance last operation' do
@@ -1476,10 +1476,10 @@ module VCAP::CloudController
               expect(event.space_guid).to eq(service_instance.space.guid)
               expect(event.organization_guid).to eq(service_instance.space.organization.guid)
               expect(event.metadata).to include({
-                    'request' => {
-                      'service_plan_guid' => new_service_plan.guid,
-                    }
-                  })
+                'request' => {
+                  'service_plan_guid' => new_service_plan.guid,
+                }
+              })
             end
           end
 
@@ -1954,14 +1954,14 @@ module VCAP::CloudController
               broker_uri.password = broker.auth_password
               stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
-                  state: 'succeeded',
-                  description: 'Done!'
-                }.to_json)
+                state: 'succeeded',
+                description: 'Done!'
+              }.to_json)
 
-              Timecop.freeze Time.now + 2.minute do
-                Delayed::Job.last.invoke_job
-                expect(Event.find(type: 'audit.service_instance.delete')).to be
-              end
+                Timecop.freeze Time.now + 2.minute do
+                  Delayed::Job.last.invoke_job
+                  expect(Event.find(type: 'audit.service_instance.delete')).to be
+                end
             end
 
             it 'indicates the service instance is being deleted' do
@@ -1984,16 +1984,16 @@ module VCAP::CloudController
 
               stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
-                  last_operation: {
-                    state: 'in progress',
-                    description: 'Yep, still working'
-                  }
-                }.to_json)
+                last_operation: {
+                  state: 'in progress',
+                  description: 'Yep, still working'
+                }
+              }.to_json)
 
-              expect(last_response).to have_status_code 202
-              Timecop.freeze Time.now + 30.minutes do
-                expect(Delayed::Worker.new.work_off).to eq [1, 0]
-              end
+                expect(last_response).to have_status_code 202
+                Timecop.freeze Time.now + 30.minutes do
+                  expect(Delayed::Worker.new.work_off).to eq [1, 0]
+                end
             end
 
             context 'when the broker successfully fetches updated information about the instance' do
@@ -2001,9 +2001,9 @@ module VCAP::CloudController
                 delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", {}, headers_for(developer)
                 stub_request(:get, last_operation_state_url(service_instance)).
                   to_return(status: 200, body: {
-                      state: 'in progress',
-                      description: 'still going'
-                    }.to_json)
+                  state: 'in progress',
+                  description: 'still going'
+                }.to_json)
               end
 
               it 'updates the description of the service instance last operation' do
@@ -2100,7 +2100,7 @@ module VCAP::CloudController
             before do
               stub_request(:delete, service_broker_url_regex).
                 with(headers: { 'Accept' => 'application/json' }).
-                  to_raise(HTTPClient::TimeoutError)
+                to_raise(HTTPClient::TimeoutError)
             end
 
             it 'fails the initial delete with description included in the error message' do
