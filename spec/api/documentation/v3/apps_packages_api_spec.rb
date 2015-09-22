@@ -51,7 +51,7 @@ resource 'Apps (Experimental)', type: :api do
             'error'      => nil,
             'created_at' => iso8601,
             'updated_at' => nil,
-            '_links'     => {
+            'links'     => {
               'self'   => { 'href' => "/v3/packages/#{package.guid}" },
               'upload' => { 'href' => "/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
               'download' => { 'href' => "/v3/packages/#{package.guid}/download", 'method' => 'GET' },

@@ -25,7 +25,7 @@ module VCAP::CloudController
         expect(result['disk_in_mb']).to eq(process.disk_quota)
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
-        expect(result['_links']).to eq(links)
+        expect(result['links']).to eq(links)
       end
     end
 

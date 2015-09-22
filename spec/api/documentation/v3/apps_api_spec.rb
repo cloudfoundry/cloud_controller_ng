@@ -73,7 +73,7 @@ resource 'Apps (Experimental)', type: :api do
             'created_at' => iso8601,
             'updated_at' => nil,
             'environment_variables' => environment_variables,
-            '_links' => {
+            'links' => {
               'self'                   => { 'href' => "/v3/apps/#{app_model3.guid}" },
               'processes'              => { 'href' => "/v3/apps/#{app_model3.guid}/processes" },
               'packages'               => { 'href' => "/v3/apps/#{app_model3.guid}/packages" },
@@ -94,7 +94,7 @@ resource 'Apps (Experimental)', type: :api do
             'created_at' => iso8601,
             'updated_at' => nil,
             'environment_variables' => {},
-            '_links' => {
+            'links' => {
               'self'                   => { 'href' => "/v3/apps/#{app_model2.guid}" },
               'processes'              => { 'href' => "/v3/apps/#{app_model2.guid}/processes" },
               'packages'               => { 'href' => "/v3/apps/#{app_model2.guid}/packages" },
@@ -180,7 +180,7 @@ resource 'Apps (Experimental)', type: :api do
         'created_at' => iso8601,
         'updated_at' => nil,
         'environment_variables' => environment_variables,
-        '_links' => {
+        'links' => {
           'self'                   => { 'href' => "/v3/apps/#{guid}" },
           'processes'              => { 'href' => "/v3/apps/#{guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{guid}/packages" },
@@ -254,7 +254,7 @@ resource 'Apps (Experimental)', type: :api do
         'created_at' => iso8601,
         'updated_at' => nil,
         'environment_variables' => environment_variables,
-        '_links' => {
+        'links' => {
           'self'                   => { 'href' => "/v3/apps/#{expected_guid}" },
           'processes'              => { 'href' => "/v3/apps/#{expected_guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{expected_guid}/packages" },
@@ -328,7 +328,7 @@ resource 'Apps (Experimental)', type: :api do
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'environment_variables' => environment_variables,
-        '_links' => {
+        'links' => {
           'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
@@ -424,7 +424,7 @@ resource 'Apps (Experimental)', type: :api do
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'environment_variables' => {},
-        '_links' => {
+        'links' => {
           'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
@@ -485,7 +485,7 @@ resource 'Apps (Experimental)', type: :api do
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'environment_variables' => {},
-        '_links' => {
+        'links' => {
           'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
@@ -613,7 +613,7 @@ resource 'Apps (Experimental)', type: :api do
         'environment_variables' => {},
         'created_at' => iso8601,
         'updated_at' => iso8601,
-        '_links' => {
+        'links' => {
           'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },

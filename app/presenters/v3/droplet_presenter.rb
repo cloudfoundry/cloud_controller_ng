@@ -38,7 +38,7 @@ module VCAP::CloudController
         environment_variables:  droplet.environment_variables || {},
         created_at:             droplet.created_at,
         updated_at:             droplet.updated_at,
-        _links:                 build_links(droplet),
+        links:                  build_links(droplet),
       }
     end
 

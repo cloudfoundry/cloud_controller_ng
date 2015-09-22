@@ -43,7 +43,7 @@ module VCAP::CloudController
         disk_in_mb:   process.disk_quota,
         created_at:   process.created_at,
         updated_at:   process.updated_at,
-        _links:       build_links(process),
+        links:        build_links(process),
       }
     end
   end

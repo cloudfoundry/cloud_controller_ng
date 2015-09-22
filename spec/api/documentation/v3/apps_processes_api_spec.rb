@@ -54,7 +54,7 @@ resource 'Apps (Experimental)', type: :api do
             'command'      => nil,
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
-            '_links'       => {
+            'links'       => {
               'self'  => { 'href' => "/v3/processes/#{process.guid}" },
               'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
               'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },
@@ -94,7 +94,7 @@ resource 'Apps (Experimental)', type: :api do
         'disk_in_mb'   => 1024,
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
-        '_links'       => {
+        'links'       => {
           'self'  => { 'href' => "/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },
@@ -145,7 +145,7 @@ resource 'Apps (Experimental)', type: :api do
         'disk_in_mb'   => disk_in_mb,
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
-        '_links'       => {
+        'links'       => {
           'self'  => { 'href' => "/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },

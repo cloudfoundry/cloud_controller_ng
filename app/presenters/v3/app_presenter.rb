@@ -34,7 +34,7 @@ module VCAP::CloudController
         created_at:              app.created_at,
         updated_at:              app.updated_at,
         environment_variables:   app.environment_variables || {},
-        _links:                  build_links(app)
+        links:                   build_links(app)
       }
     end
 

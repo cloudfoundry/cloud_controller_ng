@@ -51,7 +51,7 @@ resource 'App Routes (Experimental)', type: :api do
             'path'       => '',
             'created_at' => iso8601,
             'updated_at' => nil,
-            '_links'     => {
+            'links'     => {
               'space'  => { 'href' => "/v2/spaces/#{space.guid}" },
               'domain' => { 'href' => "/v2/domains/#{route1.domain.guid}" }
             }
@@ -62,7 +62,7 @@ resource 'App Routes (Experimental)', type: :api do
             'path'       => '/foo/bar',
             'created_at' => iso8601,
             'updated_at' => nil,
-            '_links'     => {
+            'links'     => {
               'space'  => { 'href' => "/v2/spaces/#{space.guid}" },
               'domain' => { 'href' => "/v2/domains/#{route2.domain.guid}" }
             }

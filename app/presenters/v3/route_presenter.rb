@@ -29,7 +29,7 @@ module VCAP::CloudController
         path:   route.path,
         created_at: route.created_at,
         updated_at: route.updated_at,
-        _links: build_links(route),
+        links: build_links(route),
       }
     end
 

@@ -18,8 +18,8 @@ module VCAP::CloudController
         expect(result['url']).to eq(package.url)
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
-        expect(result['_links']).to include('self')
-        expect(result['_links']).to include('app')
+        expect(result['links']).to include('self')
+        expect(result['links']).to include('app')
       end
 
       context 'when the package type is bits' do
@@ -29,11 +29,11 @@ module VCAP::CloudController
           json_result = PackagePresenter.new.present_json(package)
           result      = MultiJson.load(json_result)
 
-          expect(result['_links']['upload']['href']).to eq("/v3/packages/#{package.guid}/upload")
-          expect(result['_links']['upload']['method']).to eq('POST')
+          expect(result['links']['upload']['href']).to eq("/v3/packages/#{package.guid}/upload")
+          expect(result['links']['upload']['method']).to eq('POST')
 
-          expect(result['_links']['stage']['href']).to eq("/v3/packages/#{package.guid}/droplets")
-          expect(result['_links']['stage']['method']).to eq('POST')
+          expect(result['links']['stage']['href']).to eq("/v3/packages/#{package.guid}/droplets")
+          expect(result['links']['stage']['method']).to eq('POST')
         end
       end
 
@@ -44,7 +44,7 @@ module VCAP::CloudController
           json_result = PackagePresenter.new.present_json(package)
           result      = MultiJson.load(json_result)
 
-          expect(result['_links']['upload']).to be_nil
+          expect(result['links']['upload']).to be_nil
         end
       end
     end

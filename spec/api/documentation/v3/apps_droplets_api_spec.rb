@@ -85,7 +85,7 @@ resource 'Apps (Experimental)', type: :api do
               'environment_variables'  => {},
               'created_at'             => iso8601,
               'updated_at'             => nil,
-              '_links'                 => {
+              'links'                 => {
                 'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },
                 'package' => { 'href' => "/v3/packages/#{package.guid}" },
                 'app'     => { 'href' => "/v3/apps/#{droplet2.app_guid}" },
@@ -105,7 +105,7 @@ resource 'Apps (Experimental)', type: :api do
               'procfile'               => droplet1.procfile,
               'created_at'             => iso8601,
               'updated_at'             => nil,
-              '_links'                 => {
+              'links'                 => {
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
                 'package'   => { 'href' => "/v3/packages/#{package.guid}" },
                 'buildpack' => { 'href' => "/v2/buildpacks/#{buildpack.guid}" },

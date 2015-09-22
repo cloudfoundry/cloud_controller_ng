@@ -57,7 +57,7 @@ resource 'Processes (Experimental)', type: :api do
             'disk_in_mb' => 1024,
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
-            '_links'       => {
+            'links'       => {
               'self'  => { 'href' => "/v3/processes/#{process1.guid}" },
               'scale' => { 'href' => "/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
               'app'   => { 'href' => "/v3/apps/#{app_model.guid}" },
@@ -73,7 +73,7 @@ resource 'Processes (Experimental)', type: :api do
             'disk_in_mb' => 1024,
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
-            '_links'       => {
+            'links'       => {
               'self'  => { 'href' => "/v3/processes/#{process2.guid}" },
               'scale' => { 'href' => "/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
               'app'   => { 'href' => "/v3/apps/#{process2.app_guid}" },
@@ -115,7 +115,7 @@ resource 'Processes (Experimental)', type: :api do
         'disk_in_mb' => 1024,
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
-        '_links'       => {
+        'links'       => {
           'self'  => { 'href' => "/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },
@@ -162,7 +162,7 @@ resource 'Processes (Experimental)', type: :api do
         'disk_in_mb' => 1024,
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
-        '_links'       => {
+        'links'       => {
           'self'  => { 'href' => "/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },
@@ -212,7 +212,7 @@ resource 'Processes (Experimental)', type: :api do
         'disk_in_mb' => disk_in_mb,
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
-        '_links'       => {
+        'links'       => {
           'self'  => { 'href' => "/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
           'app'   => { 'href' => "/v3/apps/#{process.app_guid}" },

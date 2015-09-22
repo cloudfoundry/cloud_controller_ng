@@ -71,7 +71,7 @@ resource 'Packages (Experimental)', type: :api do
               'error'      => nil,
               'created_at' => iso8601,
               'updated_at' => nil,
-              '_links'     => {
+              'links'     => {
                 'self'   => { 'href' => "/v3/packages/#{package1.guid}" },
                 'upload' => { 'href' => "/v3/packages/#{package1.guid}/upload", 'method' => 'POST' },
                 'download' => { 'href' => "/v3/packages/#{package1.guid}/download", 'method' => 'GET' },
@@ -88,7 +88,7 @@ resource 'Packages (Experimental)', type: :api do
               'error'      => nil,
               'created_at' => iso8601,
               'updated_at' => nil,
-              '_links'     => {
+              'links'     => {
                 'self' => { 'href' => "/v3/packages/#{package2.guid}" },
                 'app'  => { 'href' => "/v3/apps/#{package2.app_guid}" },
               }
@@ -129,7 +129,7 @@ resource 'Packages (Experimental)', type: :api do
         'error'      => nil,
         'created_at' => iso8601,
         'updated_at' => nil,
-        '_links'     => {
+        'links'     => {
           'self'   => { 'href' => "/v3/packages/#{guid}" },
           'upload' => { 'href' => "/v3/packages/#{guid}/upload", 'method' => 'POST' },
           'download' => { 'href' => "/v3/packages/#{guid}/download", 'method' => 'GET' },
@@ -182,7 +182,7 @@ resource 'Packages (Experimental)', type: :api do
           'url'        => url,
           'created_at' => iso8601,
           'updated_at' => nil,
-          '_links'     => {
+          'links'     => {
             'self' => { 'href' => "/v3/packages/#{package.guid}" },
             'app'  => { 'href' => "/v3/apps/#{guid}" },
           }
@@ -232,7 +232,7 @@ resource 'Packages (Experimental)', type: :api do
           'url'        => 'http://awesome-sauce.com',
           'created_at' => iso8601,
           'updated_at' => nil,
-          '_links'     => {
+          'links'     => {
             'self' => { 'href' => "/v3/packages/#{package.guid}" },
             'app'  => { 'href' => "/v3/apps/#{guid}" },
           }
@@ -303,7 +303,7 @@ resource 'Packages (Experimental)', type: :api do
         'error'      => nil,
         'created_at' => iso8601,
         'updated_at' => iso8601,
-        '_links'     => {
+        'links'     => {
           'self'   => { 'href' => "/v3/packages/#{package_model.guid}" },
           'upload' => { 'href' => "/v3/packages/#{package_model.guid}/upload", 'method' => 'POST' },
           'download' => { 'href' => "/v3/packages/#{package_model.guid}/download", 'method' => 'GET' },
@@ -472,7 +472,7 @@ resource 'Packages (Experimental)', type: :api do
             'users'               => nil
           }
         },
-        '_links'                => {
+        'links'                => {
           'self'                   => { 'href' => "/v3/droplets/#{droplet.guid}" },
           'package'                => { 'href' => "/v3/packages/#{guid}" },
           'app'                    => { 'href' => "/v3/apps/#{app_guid}" },

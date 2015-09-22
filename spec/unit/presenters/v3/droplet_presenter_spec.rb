@@ -27,14 +27,14 @@ module VCAP::CloudController
         expect(result['environment_variables']).to eq(droplet.environment_variables)
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
-        expect(result['_links']).to include('self')
-        expect(result['_links']['self']['href']).to eq("/v3/droplets/#{droplet.guid}")
-        expect(result['_links']).to include('package')
-        expect(result['_links']['package']['href']).to eq("/v3/packages/#{droplet.package_guid}")
-        expect(result['_links']['buildpack']['href']).to eq("/v2/buildpacks/#{droplet.buildpack_guid}")
-        expect(result['_links']['app']['href']).to eq("/v3/apps/#{droplet.app_guid}")
-        expect(result['_links']['assign_current_droplet']['href']).to eq("/v3/apps/#{droplet.app_guid}/current_droplet")
-        expect(result['_links']['assign_current_droplet']['method']).to eq('PUT')
+        expect(result['links']).to include('self')
+        expect(result['links']['self']['href']).to eq("/v3/droplets/#{droplet.guid}")
+        expect(result['links']).to include('package')
+        expect(result['links']['package']['href']).to eq("/v3/packages/#{droplet.package_guid}")
+        expect(result['links']['buildpack']['href']).to eq("/v2/buildpacks/#{droplet.buildpack_guid}")
+        expect(result['links']['app']['href']).to eq("/v3/apps/#{droplet.app_guid}")
+        expect(result['links']['assign_current_droplet']['href']).to eq("/v3/apps/#{droplet.app_guid}/current_droplet")
+        expect(result['links']['assign_current_droplet']['method']).to eq('PUT')
       end
     end
 
@@ -45,7 +45,7 @@ module VCAP::CloudController
         json_result = DropletPresenter.new.present_json(droplet)
         result      = MultiJson.load(json_result)
 
-        expect(result['_links']['buildpack']).to be_nil
+        expect(result['links']['buildpack']).to be_nil
       end
     end
 
