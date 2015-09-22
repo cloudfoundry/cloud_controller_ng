@@ -29,14 +29,14 @@ resource 'Routes', type: [:api, :legacy_api] do
 
     context 'with a route binding' do
       before do
-        VCAP::CloudController::RouteBinding.make(service_instance: service_instance, route: route)
+        route_binding = VCAP::CloudController::RouteBinding.make(service_instance: service_instance, route: route)
+        stub_unbind(route_binding)
       end
 
       standard_model_list :route, VCAP::CloudController::RoutesController
       standard_model_get :route, nested_associations: [:domain, :space, :service_instance]
+      standard_model_delete :route
     end
-
-    standard_model_delete :route
 
     post '/v2/routes/' do
       include_context 'updatable_fields', required: true

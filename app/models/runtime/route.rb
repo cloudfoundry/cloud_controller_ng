@@ -144,6 +144,16 @@ module VCAP::CloudController
 
     private
 
+    def before_destroy
+      destroy_route_bindings
+      super
+    end
+
+    def destroy_route_bindings
+      errors = ServiceBindingDelete.new.delete(self.route_binding_dataset)
+      raise errors.first unless errors.empty?
+    end
+
     def around_destroy
       loaded_apps = apps
       super

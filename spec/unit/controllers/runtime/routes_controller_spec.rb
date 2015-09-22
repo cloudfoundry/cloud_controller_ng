@@ -240,9 +240,9 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:user) { User.make }
       let(:req) {{
-                   domain_guid: SharedDomain.make.guid,
-                   space_guid:  space.guid,
-                   host:        'example'
+        domain_guid: SharedDomain.make.guid,
+        space_guid:  space.guid,
+        host:        'example'
       }}
 
       before do

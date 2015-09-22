@@ -548,6 +548,41 @@ module VCAP::CloudController
 
         route.destroy
       end
+
+      context 'with route bindings' do
+        let(:route_binding) { RouteBinding.make }
+        let(:route) { route_binding.route }
+        let(:app) { AppFactory.make(space: route.space) }
+
+        before do
+          app.add_route(route)
+          stub_unbind(route_binding)
+        end
+
+        it 'deletes any associated route_bindings' do
+          route_binding_guid = route_binding.guid
+
+          route.destroy
+          expect(RouteBinding.find(guid: route_binding_guid)).to be_nil
+          expect(app.reload.routes).to be_empty
+        end
+
+        context 'when deleting the route binding errors' do
+          before do
+            stub_unbind(route_binding, status: 500)
+          end
+
+          it 'does not delete the route or associated data and raises an error' do
+            route_binding_guid = route_binding.guid
+
+            expect {
+              route.destroy
+            }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
+            expect(RouteBinding.find(guid: route_binding_guid)).to eq route_binding
+            expect(app.reload.routes[0]).to eq route
+          end
+        end
+      end
     end
 
     describe 'apps association' do
