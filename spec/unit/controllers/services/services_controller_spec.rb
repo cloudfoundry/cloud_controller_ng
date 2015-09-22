@@ -208,6 +208,20 @@ module VCAP::CloudController
         expect(decoded_guids).to eq(visible_services.map(&:guid))
       end
 
+      context 'with private brokers' do
+        it 'returns plans visible in any space they are a member of' do
+          space = Space.make(organization: organization)
+          private_broker = ServiceBroker.make(space: space)
+          service = Service.make(service_broker: private_broker, active: true)
+          space.add_developer(user)
+
+          get '/v2/services', {}, headers
+          expect(last_response.status).to eq 200
+
+          expect(decoded_guids).to include(service.guid)
+        end
+      end
+
       context 'when the user has an invalid auth token' do
         let(:headers) do
           {

@@ -265,5 +265,24 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#membership_space_ids' do
+      it 'returns a list of space ids that the user is a member of' do
+        user = User.make
+        organization = Organization.make
+        organization.add_user user
+        developer_space = Space.make organization: organization
+        auditor_space = Space.make organization: organization
+        manager_space = Space.make organization: organization
+
+        manager_space.add_manager user
+        auditor_space.add_auditor user
+        developer_space.add_developer user
+
+        ids = user.membership_space_ids.all.map { |data| data[:space_id] }
+
+        expect(ids).to eq([developer_space, manager_space, auditor_space].map(&:id))
+      end
+    end
   end
 end

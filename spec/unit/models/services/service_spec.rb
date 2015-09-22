@@ -161,6 +161,66 @@ module VCAP::CloudController
         records = Service.user_visible(nil).all
         expect(records).to eq [public_service]
       end
+
+      describe 'services from private brokers' do
+        it 'does not return the services to users with no roles in the space' do
+          space = Space.make
+          space_developer = User.make
+
+          space.organization.add_user space_developer
+
+          private_broker = ServiceBroker.make space: space
+          service = Service.make(service_broker: private_broker, active: true)
+
+          records = Service.user_visible(space_developer).all
+          expect(records.map(&:guid)).not_to include service.guid
+        end
+
+        it "returns services from private brokers to space developers in that private broker's space" do
+          space = Space.make
+          space_developer = User.make
+
+          space.organization.add_user space_developer
+
+          space.add_developer space_developer
+
+          private_broker = ServiceBroker.make space: space
+          service = Service.make(service_broker: private_broker, active: true)
+
+          records = Service.user_visible(space_developer).all
+          expect(records.map(&:guid)).to include service.guid
+        end
+
+        it "returns services from private brokers to space auditors in that private broker's space" do
+          space = Space.make
+          space_auditor = User.make
+
+          space.organization.add_user space_auditor
+
+          space.add_auditor space_auditor
+
+          private_broker = ServiceBroker.make space: space
+          service = Service.make(service_broker: private_broker, active: true)
+
+          records = Service.user_visible(space_auditor).all
+          expect(records.map(&:guid)).to include service.guid
+        end
+
+        it "returns services from private brokers to space managers in that private broker's space" do
+          space = Space.make
+          space_manager = User.make
+
+          space.organization.add_user space_manager
+
+          space.add_manager space_manager
+
+          private_broker = ServiceBroker.make space: space
+          service = Service.make(service_broker: private_broker, active: true)
+
+          records = Service.user_visible(space_manager).all
+          expect(records).to include service
+        end
+      end
     end
 
     describe '#tags' do
