@@ -48,17 +48,13 @@ resource 'Service Instances', type: [:api, :legacy_api] do
     response_field 'dashboard_url', 'The service broker-provided URL to access administrative features of the service instance. May be null.'
     response_field 'type', 'The type of service instance.',
       valid_values: ['managed_service_instance', 'user_provided_service_instance']
-    response_field 'last_operation', 'The status of the last operation requested on the service instance. May be null.',
-      experimental: true
+    response_field 'last_operation', 'The status of the last operation requested on the service instance. May be null.'
     response_field 'last_operation.type', 'The type of operation that was last performed or currently being performed on the service instance',
-      experimental: true,
       valid_values: ['create', 'update', 'delete']
     response_field 'last_operation.state', 'The status of the last operation or current operation being performed on the service instance.',
-      experimental: true,
       valid_values: ['in progress', 'succeeded', 'failed']
-    response_field 'last_operation.description', 'The service broker-provided description of the operation. May be null.', experimental: true
-    response_field 'last_operation.updated_at', 'The timestamp that the Cloud Controller last checked the service instance state from the broker.',
-      experimental: true
+    response_field 'last_operation.description', 'The service broker-provided description of the operation. May be null.'
+    response_field 'last_operation.updated_at', 'The timestamp that the Cloud Controller last checked the service instance state from the broker.'
     response_field 'space_url', 'The relative path to the space resource that this service instance belongs to.'
     response_field 'service_plan_url', 'The relative path to the service plan resource that this service instance belongs to.'
     response_field 'service_binding_url', 'The relative path to the service bindings that this service instance is bound to.'
@@ -81,7 +77,7 @@ resource 'Service Instances', type: [:api, :legacy_api] do
       param_description = <<EOF
 Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
 EOF
-      parameter :accepts_incomplete, param_description, valid_values: [true, false], experimental: true
+      parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
       before do
         uri = URI(service_broker.broker_url)
@@ -124,7 +120,7 @@ EOF
       param_description = <<EOF
 Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
 EOF
-      parameter :accepts_incomplete, param_description, valid_values: [true, false], experimental: true
+      parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
       before do
         uri = URI(service_broker.broker_url)
@@ -159,7 +155,7 @@ Recursively remove a service instance and child objects from Cloud Foundry datab
 The user must have the cloud_controller.admin scope on their OAuth token in order to perform a purge.
 EOF
 
-      parameter :accepts_incomplete, accepts_incomplete_description, valid_values: [true, false], experimental: true
+      parameter :accepts_incomplete, accepts_incomplete_description, valid_values: [true, false]
       parameter :purge, purge_description, valid_values: [true, false]
 
       before do
