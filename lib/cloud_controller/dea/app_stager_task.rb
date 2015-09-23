@@ -8,13 +8,14 @@ module VCAP::CloudController
       attr_reader :config
       attr_reader :message_bus
 
-      def initialize(config, message_bus, app, dea_pool, stager_pool, blobstore_url_generator)
+      def initialize(config, message_bus, app, dea_pool, stager_pool, blobstore_url_generator, buildpack_blobstore)
         @config = config
         @message_bus = message_bus
         @app = app
         @dea_pool = dea_pool
         @stager_pool = stager_pool
         @blobstore_url_generator = blobstore_url_generator
+        @buildpack_blobstore = buildpack_blobstore
       end
 
       def task_id
@@ -65,7 +66,7 @@ module VCAP::CloudController
 
       # We never stage if there is not a start request
       def staging_request
-        StagingMessage.new(@config, @blobstore_url_generator).staging_request(@app, task_id)
+        StagingMessage.new(@config, @blobstore_url_generator, @buildpack_blobstore).staging_request(@app, task_id)
       end
 
       private

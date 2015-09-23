@@ -5,12 +5,12 @@ module VCAP::CloudController
     class StagerPool
       attr_reader :config, :message_bus
 
-      def initialize(config, message_bus, blobstore_url_generator)
+      def initialize(config, message_bus, buildpacks_presenter)
         @advertise_timeout = config[:dea_advertisement_timeout_in_seconds]
         @percentage_of_top_stagers = (config[:placement_top_stager_percentage] || 0) / 100.0
         @message_bus = message_bus
         @stager_advertisements = []
-        @blobstore_url_generator = blobstore_url_generator
+        @buildpacks_presenter = buildpacks_presenter
         register_subscriptions
       end
 
@@ -51,7 +51,7 @@ module VCAP::CloudController
       end
 
       def admin_buildpacks
-        AdminBuildpacksPresenter.new(@blobstore_url_generator).to_staging_message_array
+        @buildpacks_presenter.to_staging_message_array
       end
 
       def validate_stack_availability(stack)

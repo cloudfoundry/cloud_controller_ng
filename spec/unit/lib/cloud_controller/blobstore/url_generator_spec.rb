@@ -160,6 +160,34 @@ module CloudController
           end
         end
 
+        context 'admin buildpack blobs' do
+          let(:buildpack_guid) { Sham.guid }
+          let(:blob) { double(:blob, download_url: 'http://example.com/blob') }
+
+          context 'when the admin buildpacks are stored on local blobstore' do
+            context 'and the blob exists' do
+              before { allow(admin_buildpack_blobstore).to receive_messages(download_uri: '/a/b/c') }
+
+              it 'gives a local URI to the blobstore host/port' do
+                uri = URI.parse(url_generator.admin_buildpack_blob_download_url(blob, buildpack_guid))
+                expect(uri.host).to eql blobstore_host
+                expect(uri.port).to eql blobstore_port
+                expect(uri.user).to eql 'username'
+                expect(uri.password).to eql 'password'
+                expect(uri.path).to eql "/v2/buildpacks/#{buildpack_guid}/download"
+              end
+            end
+          end
+
+          context 'when the buildpack are stored remotely' do
+            let(:admin_buildpack_blobstore) { double(local?: false) }
+
+            it 'gives out signed url to remote blobstore for appbits' do
+              expect(url_generator.admin_buildpack_blob_download_url(blob, buildpack_guid)).to eql('http://example.com/blob')
+            end
+          end
+        end
+
         context 'v3 droplet downloads' do
           let(:droplet) { VCAP::CloudController::DropletModel.make }
 

@@ -188,6 +188,10 @@ module CloudController
       DropletPresenter.new
     end
 
+    def buildpacks_presenter
+      @buildpacks_presenter ||= AdminBuildpacksPresenter.new(blobstore_url_generator, buildpack_blobstore)
+    end
+
     def object_renderer
       eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
       serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new

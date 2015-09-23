@@ -30,6 +30,10 @@ module CloudController
         generate_download_url(@admin_buildpack_blobstore, "/v2/buildpacks/#{buildpack.guid}/download", buildpack.key)
       end
 
+      def admin_buildpack_blob_download_url(buildpack_blob, buildpack_guid)
+        generate_download_url(@admin_buildpack_blobstore, "/v2/buildpacks/#{buildpack_guid}/download", buildpack_guid, buildpack_blob)
+      end
+
       def droplet_download_url(app)
         droplet = app.current_droplet
         return nil unless droplet
@@ -78,8 +82,8 @@ module CloudController
 
       private
 
-      def generate_download_url(store, path, blobstore_key)
-        uri = store.download_uri(blobstore_key)
+      def generate_download_url(store, path, blobstore_key, blob=nil)
+        uri = blob ? blob.download_url : store.download_uri(blobstore_key)
         return nil unless uri
         store.local? ? staging_uri(path) : uri
       end

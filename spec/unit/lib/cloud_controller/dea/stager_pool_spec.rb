@@ -3,7 +3,8 @@ require 'spec_helper'
 module VCAP::CloudController
   describe VCAP::CloudController::Dea::StagerPool do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:url_generator) { double(:url_generator) }
+    let(:buildpack_array) { double(:generated_buildpack_arrray) }
+    let(:buildpacks_presenter) { double(:buildpacks_presenter, to_staging_message_array: buildpack_array) }
     let(:staging_advertise_msg) do
       {
         'id' => 'staging-id',
@@ -13,7 +14,7 @@ module VCAP::CloudController
       }
     end
 
-    subject { Dea::StagerPool.new(TestConfig.config, message_bus, url_generator) }
+    subject { Dea::StagerPool.new(TestConfig.config, message_bus, buildpacks_presenter) }
 
     describe '#register_subscriptions' do
       let!(:stager_pool) { subject }
@@ -179,9 +180,6 @@ module VCAP::CloudController
         }
       end
 
-      let(:buildpack_array) { double(:generated_buildpack_arrray) }
-      let(:buildpacks_presenter) { double(:buildpacks_presenter, to_staging_message_array: buildpack_array) }
-
       before do
         subject.process_advertise_message(stager_advertise_msg)
       end
@@ -195,7 +193,6 @@ module VCAP::CloudController
 
       context 'when the stager is seen for the first time' do
         it 'publishes a buildpack advertisement' do
-          expect(AdminBuildpacksPresenter).to receive(:new).with(url_generator).and_return buildpacks_presenter
           expect(message_bus).to receive(:publish).with('buildpacks', buildpack_array)
 
           subject.process_advertise_message(stager_advertise_msg.merge('id' => '123'))

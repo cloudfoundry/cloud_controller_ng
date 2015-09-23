@@ -3,11 +3,12 @@ require 'spec_helper'
 module VCAP::CloudController
   describe Dea::StagingMessage do
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
+    let(:blobstore) { CloudController::DependencyLocator.instance.buildpack_blobstore }
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:task_id) { 'somthing' }
     let(:droplet_guid) { 'abc123' }
     let(:log_id) { 'log-id' }
-    let(:staging_message) { Dea::StagingMessage.new(config_hash, blobstore_url_generator) }
+    let(:staging_message) { Dea::StagingMessage.new(config_hash, blobstore_url_generator, blobstore) }
 
     before do
       SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
