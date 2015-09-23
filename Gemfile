@@ -38,7 +38,7 @@ gem 'cf-message-bus', '~> 0.3.0'
 gem 'cf-registrar', '~> 1.0.2', git: 'https://github.com/cloudfoundry/cf-registrar.git'
 
 group :db do
-  gem 'mysql2', '0.3.13'
+  gem 'mysql2', '0.3.20'
   gem 'pg', '0.16.0'
 end
 
