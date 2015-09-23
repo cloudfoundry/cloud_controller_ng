@@ -10,7 +10,7 @@ bundler_args: --deployment --without development
 cache: bundler
 
 rvm:
-  - 2.1.6
+  - 2.2.3
 
 before_script:
   - bundle exec rake db:create
