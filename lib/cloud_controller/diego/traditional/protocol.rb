@@ -55,7 +55,7 @@ module VCAP::CloudController
             'file_descriptors'                => app.file_descriptors,
             'droplet_uri'                     => @blobstore_url_generator.unauthorized_perma_droplet_download_url(app),
             'stack'                           => app.stack.name,
-            'start_command'                   => app.command,
+            'start_command'                   => app.command.nil? ? app.detected_start_command : app.command,
             'execution_metadata'              => app.execution_metadata,
             'environment'                     => Environment.new(app, EnvironmentVariableGroup.running.environment_json).as_json,
             'num_instances'                   => app.desired_instances,

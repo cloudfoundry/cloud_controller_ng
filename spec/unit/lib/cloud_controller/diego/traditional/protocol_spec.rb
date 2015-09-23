@@ -255,6 +255,30 @@ module VCAP::CloudController
               expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)
             end
           end
+
+          describe 'start_command' do
+            context 'when app has a command set' do
+              before do
+                app.command = 'command from app'
+                app.save
+              end
+              it 'uses it' do
+                expect(message['start_command']).to eq('command from app')
+              end
+            end
+
+            context 'when app does not have a start command set' do
+              before do
+                app.command = ''
+                app.save
+                app.current_droplet.detected_start_command = 'command from droplet'
+                app.current_droplet.save
+              end
+              it 'uses the droplet detected start command' do
+                expect(message['start_command']).to eq('command from droplet')
+              end
+            end
+          end
         end
       end
     end
