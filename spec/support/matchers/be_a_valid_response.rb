@@ -1,5 +1,4 @@
 RSpec::Matchers.define :be_a_response_like do |expected|
-
   define_method :bad_key! do |key|
     @problem_keys ||= []
     @problem_keys << key
@@ -33,7 +32,7 @@ RSpec::Matchers.define :be_a_response_like do |expected|
   diffable
 
   failure_message do |actual|
-    bad_keys_info = (!!@problem_keys ? "Bad keys: #{@problem_keys}" : "")
+    bad_keys_info = (!!@problem_keys ? "Bad keys: #{@problem_keys}" : '')
 
     <<-HEREDOC
       expected: #{expected}
@@ -41,5 +40,4 @@ RSpec::Matchers.define :be_a_response_like do |expected|
       #{bad_keys_info}
     HEREDOC
   end
-
 end
