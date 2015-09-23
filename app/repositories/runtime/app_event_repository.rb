@@ -97,14 +97,14 @@ module VCAP::CloudController
           create_app_audit_event('audit.app.copy-bits', dest_app, dest_app.space, actor_hash, metadata)
         end
 
-        def record_app_ssh_unauthorized(app, actor_guid, actor_name)
+        def record_app_ssh_unauthorized(app, actor_guid, actor_name, index)
           actor_hash = { name: actor_name, guid: actor_guid, type: 'user' }
-          create_app_audit_event('audit.app.ssh-unauthorized', app, app.space, actor_hash, {})
+          create_app_audit_event('audit.app.ssh-unauthorized', app, app.space, actor_hash, { index: index })
         end
 
-        def record_app_ssh_authorized(app, actor_guid, actor_name)
+        def record_app_ssh_authorized(app, actor_guid, actor_name, index)
           actor_hash = { name: actor_name, guid: actor_guid, type: 'user' }
-          create_app_audit_event('audit.app.ssh-authorized', app, app.space, actor_hash, {})
+          create_app_audit_event('audit.app.ssh-authorized', app, app.space, actor_hash, { index: index })
         end
 
         private

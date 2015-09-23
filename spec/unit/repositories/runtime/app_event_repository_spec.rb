@@ -323,9 +323,10 @@ module VCAP::CloudController
         let(:app) { AppFactory.make }
         let(:user) { User.make }
         let(:user_email) { 'user@example.com' }
+        let(:instance_index) { 3 }
 
         it 'creates a new app.ssh-unauthorized event for the app' do
-          event = app_event_repository.record_app_ssh_unauthorized(app, user.guid, user_email)
+          event = app_event_repository.record_app_ssh_unauthorized(app, user.guid, user_email, instance_index)
 
           expect(event.type).to eq('audit.app.ssh-unauthorized')
           expect(event.actor).to eq(user.guid)
@@ -333,6 +334,7 @@ module VCAP::CloudController
           expect(event.actee).to eq(app.guid)
           expect(event.actor_name).to eq('user@example.com')
           expect(event.actee_type).to eq('app')
+          expect(event.metadata).to eq({ index: instance_index })
         end
       end
 
@@ -340,9 +342,10 @@ module VCAP::CloudController
         let(:app) { AppFactory.make }
         let(:user) { User.make }
         let(:user_email) { 'user@example.com' }
+        let(:instance_index) { 3 }
 
         it 'creates a new app.ssh-authorized event for the app' do
-          event = app_event_repository.record_app_ssh_authorized(app, user.guid, user_email)
+          event = app_event_repository.record_app_ssh_authorized(app, user.guid, user_email, instance_index)
 
           expect(event.type).to eq('audit.app.ssh-authorized')
           expect(event.actor).to eq(user.guid)
@@ -350,6 +353,7 @@ module VCAP::CloudController
           expect(event.actee).to eq(app.guid)
           expect(event.actor_name).to eq('user@example.com')
           expect(event.actee_type).to eq('app')
+          expect(event.metadata).to eq({ index: instance_index })
         end
       end
 

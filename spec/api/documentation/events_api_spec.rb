@@ -230,7 +230,7 @@ resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List App SSH Authorized Events' do
-      app_event_repository.record_app_ssh_authorized(test_app, test_user.guid, test_user_email)
+      app_event_repository.record_app_ssh_authorized(test_app, test_user.guid, test_user_email, 1)
 
       client.get '/v2/events?q=type:audit.app.ssh-authorized', {}, headers
       expect(status).to eq(200)
@@ -242,11 +242,11 @@ resource 'Events', type: [:api, :legacy_api] do
                                actee: test_app.guid,
                                actee_name: test_app.name,
                                space_guid: test_app.space.guid,
-                               metadata: {}
+                               metadata: { 'index' => 1 }
     end
 
     example 'List App SSH Unauthorized Events' do
-      app_event_repository.record_app_ssh_unauthorized(test_app, test_user.guid, test_user_email)
+      app_event_repository.record_app_ssh_unauthorized(test_app, test_user.guid, test_user_email, 1)
 
       client.get '/v2/events?q=type:audit.app.ssh-unauthorized', {}, headers
       expect(status).to eq(200)
@@ -258,7 +258,7 @@ resource 'Events', type: [:api, :legacy_api] do
                                actee: test_app.guid,
                                actee_name: test_app.name,
                                space_guid: test_app.space.guid,
-                               metadata: {}
+                               metadata: { 'index' => 1 }
     end
 
     example 'List events associated with an App since January 1, 2014' do

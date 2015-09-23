@@ -7,6 +7,7 @@ module VCAP::CloudController
     let(:enable_ssh) { true }
     let(:user) { User.make }
     let(:app_model) { AppFactory.make(diego: diego, enable_ssh: enable_ssh) }
+    let(:instance_index) { '2' }
     let(:space) { app_model.space }
 
     before do
@@ -16,9 +17,9 @@ module VCAP::CloudController
       allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return true
     end
 
-    describe 'GET /internal/apps/:guid/ssh_access' do
+    describe 'GET /internal/apps/:guid/ssh_access/:index' do
       it 'returns a 200 and ProcessGuid' do
-        get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+        get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(user)
         expect(last_response.status).to eq(200)
         expected_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(app_model)
         expect(decoded_response['process_guid']).to eq(expected_process_guid)
@@ -26,16 +27,17 @@ module VCAP::CloudController
 
       it 'creates an audit event recording this ssh access' do
         expect {
-          get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+          get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(user)
         }.to change { Event.count }.by(1)
         event = Event.last
         expect(event.type).to eq('audit.app.ssh-authorized')
         expect(event.actor).to eq(user.guid)
+        expect(event.metadata).to eq({ 'index' => instance_index })
       end
 
       context 'as an admin user' do
         it 'returns a 200 and ProcessGuid' do
-          get "/internal/apps/#{app_model.guid}/ssh_access", {}, admin_headers
+          get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, admin_headers
           expect(last_response.status).to eq(200)
           expected_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(app_model)
           expect(decoded_response['process_guid']).to eq(expected_process_guid)
@@ -43,11 +45,12 @@ module VCAP::CloudController
 
         it 'creates an audit event recording this ssh access' do
           expect {
-            get "/internal/apps/#{app_model.guid}/ssh_access", {}, admin_headers
+            get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, admin_headers
           }.to change { Event.count }.by(1)
           event = Event.last
           expect(event.type).to eq('audit.app.ssh-authorized')
           expect(event.actor).to eq(admin_user.guid)
+          expect(event.metadata).to eq({ 'index' => instance_index })
         end
       end
 
@@ -60,7 +63,7 @@ module VCAP::CloudController
         end
 
         it 'returns a 403' do
-          get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(auditor)
+          get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(auditor)
           expect(last_response.status).to eq(403)
         end
       end
@@ -69,17 +72,18 @@ module VCAP::CloudController
         let(:diego) { false }
 
         it 'returns a 400' do
-          get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+          get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(user)
           expect(last_response.status).to eq(400)
         end
 
         it 'creates an audit event recording this ssh failure' do
           expect {
-            get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+            get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(user)
           }.to change { Event.count }.by(1)
           event = Event.last
           expect(event.type).to eq('audit.app.ssh-unauthorized')
           expect(event.actor).to eq(user.guid)
+          expect(event.metadata).to eq({ 'index' => instance_index })
         end
       end
 
@@ -87,24 +91,25 @@ module VCAP::CloudController
         let(:enable_ssh) { false }
 
         it 'returns a 400' do
-          get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+          get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(user)
           expect(last_response.status).to eq(400)
         end
 
         it 'creates an audit event recording this ssh failure' do
           expect {
-            get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+            get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(user)
           }.to change { Event.count }.by(1)
           event = Event.last
           expect(event.type).to eq('audit.app.ssh-unauthorized')
           expect(event.actor).to eq(user.guid)
+          expect(event.metadata).to eq({ 'index' => instance_index })
         end
       end
 
       context 'when the app does not exists' do
         context 'and the user has a valid auth token' do
           it 'returns a 404' do
-            get '/internal/apps/does-not-exist/ssh_access', {}, headers_for(user)
+            get '/internal/apps/does-not-exist/ssh_access/32914083940812934', {}, headers_for(user)
             expect(last_response.status).to eq(404)
           end
         end
@@ -112,7 +117,7 @@ module VCAP::CloudController
         context 'and the user does not have a valid auth token' do
           it 'returns a 401' do
             expect {
-              get '/internal/apps/non-existant/ssh_access', {}, {}
+              get '/internal/apps/non-existant/ssh_access/324342', {}, {}
               expect(last_response.status).to eq(401)
             }.not_to change { Event.count }
           end
@@ -129,26 +134,28 @@ module VCAP::CloudController
 
         it 'creates an audit event recording this auth failure' do
           expect {
-            get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(other_user)
+            get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(other_user)
           }.to change { Event.count }.by(1)
           event = Event.last
           expect(event.type).to eq('audit.app.ssh-unauthorized')
           expect(event.actor).to eq(other_user.guid)
+          expect(event.metadata).to eq({ 'index' => instance_index })
         end
       end
 
       context 'when the user does not have a valid auth token' do
         it 'returns a 401' do
-          get "/internal/apps/#{app_model.guid}/ssh_access", {}, {}
+          get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, {}
           expect(last_response.status).to eq(401)
         end
 
         it 'creates an audit event recording this auth failure' do
           expect {
-            get "/internal/apps/#{app_model.guid}/ssh_access", {}, {}
+            get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, {}
           }.to change { Event.count }.by(1)
           event = Event.last
           expect(event.type).to eq('audit.app.ssh-unauthorized')
+          expect(event.metadata).to eq({ 'index' => instance_index })
         end
       end
 
@@ -159,17 +166,18 @@ module VCAP::CloudController
         end
 
         it 'returns a 400' do
-          get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+          get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(user)
           expect(last_response.status).to eq(400)
         end
 
         it 'creates an audit event recording this ssh failure' do
           expect {
-            get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+            get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(user)
           }.to change { Event.count }.by(1)
           event = Event.last
           expect(event.type).to eq('audit.app.ssh-unauthorized')
           expect(event.actor).to eq(user.guid)
+          expect(event.metadata).to eq({ 'index' => instance_index })
         end
       end
 
@@ -179,17 +187,46 @@ module VCAP::CloudController
         end
 
         it 'returns a 400' do
-          get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+          get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(user)
           expect(last_response.status).to eq(400)
         end
 
         it 'creates an audit event recording this ssh failure' do
+          expect {
+            get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, headers_for(user)
+          }.to change { Event.count }.by(1)
+          event = Event.last
+          expect(event.type).to eq('audit.app.ssh-unauthorized')
+          expect(event.actor).to eq(user.guid)
+          expect(event.metadata).to eq({ 'index' => instance_index })
+        end
+      end
+    end
+
+    describe 'GET /internal/apps/:guid/ssh_access' do
+      context 'when the user can access the app' do
+        it 'creates an audit event recording this ssh access with an unknown index' do
+          expect {
+            get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
+          }.to change { Event.count }.by(1)
+          event = Event.last
+          expect(event.type).to eq('audit.app.ssh-authorized')
+          expect(event.actor).to eq(user.guid)
+          expect(event.metadata).to eq({ 'index' => 'unknown' })
+        end
+      end
+
+      context 'when the user cannot access the app' do
+        let(:enable_ssh) { false }
+
+        it 'creates an audit event recording this ssh failure with an unknown index' do
           expect {
             get "/internal/apps/#{app_model.guid}/ssh_access", {}, headers_for(user)
           }.to change { Event.count }.by(1)
           event = Event.last
           expect(event.type).to eq('audit.app.ssh-unauthorized')
           expect(event.actor).to eq(user.guid)
+          expect(event.metadata).to eq({ 'index' => 'unknown' })
         end
       end
     end
