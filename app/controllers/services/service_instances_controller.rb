@@ -142,9 +142,11 @@ module VCAP::CloudController
       end
 
       validate_access(:delete, service_instance)
+      has_assocations = has_routes?(service_instance) ||
+                        has_bindings?(service_instance) ||
+                        has_keys?(service_instance)
 
-      association_not_empty!(:service_bindings) if has_bindings?(service_instance) && !recursive?
-      association_not_empty!(:service_keys) if has_keys?(service_instance) && !recursive?
+      association_not_empty! if has_assocations && !recursive?
 
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
       delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
@@ -338,8 +340,9 @@ module VCAP::CloudController
       raise Errors::ApiError.new_from_details('InvalidRequest')
     end
 
-    def association_not_empty!(association)
-      raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', association, :service_instances)
+    def association_not_empty!
+      asscociations = 'service_bindings, service_keys, and routes'
+      raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', asscociations, :service_instances)
     end
 
     def space_change_not_allowed!
@@ -361,6 +364,10 @@ module VCAP::CloudController
 
     def plan_update_requested?(requested_plan_guid, old_plan)
       requested_plan_guid && requested_plan_guid != old_plan.guid
+    end
+
+    def has_routes?(service_instance)
+      !service_instance.routes.empty?
     end
 
     def has_bindings?(service_instance)

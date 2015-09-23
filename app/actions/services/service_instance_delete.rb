@@ -12,12 +12,12 @@ module VCAP::CloudController
     def delete(service_instance_dataset)
       service_instance_dataset.each_with_object([]) do |service_instance, errors_accumulator|
         binding_errors = delete_service_bindings(service_instance)
+        binding_errors.concat delete_service_keys(service_instance)
+        binding_errors.concat delete_route_bindings(service_instance)
+
         errors_accumulator.concat binding_errors
 
-        key_errors = delete_service_keys(service_instance)
-        errors_accumulator.concat key_errors
-
-        if binding_errors.empty? && key_errors.empty?
+        if binding_errors.empty?
           instance_errors = delete_service_instance(service_instance)
 
           if service_instance.operation_in_progress? && @multipart_delete && instance_errors.empty?
@@ -55,6 +55,11 @@ module VCAP::CloudController
       end
 
       errors
+    end
+
+    def delete_route_bindings(service_instance)
+      route_bindings_dataset = RouteBinding.where(service_instance_id: service_instance.id)
+      ServiceBindingDelete.new.delete(route_bindings_dataset)
     end
 
     def delete_service_bindings(service_instance)

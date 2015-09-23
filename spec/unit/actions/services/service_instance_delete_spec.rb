@@ -6,11 +6,16 @@ module VCAP::CloudController
     subject(:service_instance_delete) { ServiceInstanceDelete.new }
 
     describe '#delete' do
-      let!(:service_instance_1) { ManagedServiceInstance.make }
-      let!(:service_instance_2) { ManagedServiceInstance.make }
+      let!(:service_instance_1) { ManagedServiceInstance.make(:routing) }
+      let!(:service_instance_2) { ManagedServiceInstance.make(:routing) }
 
       let!(:service_binding_1) { ServiceBinding.make(service_instance: service_instance_1) }
       let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance_2) }
+
+      let!(:route_1) { Route.make(space: service_instance_1.space) }
+      let!(:route_2) { Route.make(space: service_instance_2.space) }
+      let!(:route_binding_1) { RouteBinding.make(route: route_1, service_instance: service_instance_1) }
+      let!(:route_binding_2) { RouteBinding.make(route: route_2, service_instance: service_instance_2) }
 
       let!(:service_instance_dataset) { ServiceInstance.dataset }
       let(:user) { User.make }
@@ -21,6 +26,9 @@ module VCAP::CloudController
           stub_deprovision(service_instance)
           stub_unbind(service_instance.service_bindings.first)
         end
+
+        stub_unbind(route_binding_1)
+        stub_unbind(route_binding_2)
       end
 
       it 'deletes all the service_instances' do
@@ -33,6 +41,12 @@ module VCAP::CloudController
         expect {
           service_instance_delete.delete(service_instance_dataset)
         }.to change { ServiceBinding.count }.by(-2)
+      end
+
+      it 'deletes all the route bindings for all the service instance' do
+        expect {
+          service_instance_delete.delete(service_instance_dataset)
+        }.to change { RouteBinding.count }.by(-2)
       end
 
       it 'deletes user provided service instances' do
@@ -191,10 +205,11 @@ module VCAP::CloudController
           service_instance_1.service_instance_operation = ServiceInstanceOperation.make(state: 'in progress')
         end
 
-        it 'returns an error' do
+        it 'returns an operation in progress error for route and service bindings' do
           errors = service_instance_delete.delete(service_instance_dataset)
-          expect(errors.length).to eq 1
-          expect(errors.first).to be_instance_of VCAP::Errors::ApiError
+          expect(errors.length).to eq 2
+          expect(errors.first.name).to eq 'AsyncServiceInstanceOperationInProgress'
+          expect(errors.second.name).to eq 'AsyncServiceInstanceOperationInProgress'
         end
 
         it 'keeps the instance in an `in progress` state' do
@@ -225,6 +240,35 @@ module VCAP::CloudController
         it 'fails the last operation of the service instance' do
           service_instance_delete.delete(service_instance_dataset)
           expect(service_instance_2.last_operation.state).to eq('failed')
+        end
+      end
+
+      context 'when the broker returns an error for route unbinding' do
+        before do
+          stub_unbind(route_binding_2, status: 500)
+        end
+
+        it 'does not rollback previous deletions of service instances' do
+          expect(ServiceInstance.count).to eq 2
+          service_instance_delete.delete(service_instance_dataset)
+          expect(ServiceInstance.count).to eq 1
+        end
+
+        it 'propagates service unbind errors' do
+          errors = service_instance_delete.delete(service_instance_dataset)
+          expect(errors.count).to eq(1)
+          expect(errors[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
+        end
+
+        it 'does not attempt to delete that service instance' do
+          service_instance_delete.delete(service_instance_dataset)
+          expect(service_instance_1.exists?).to be_falsey
+          expect(service_instance_2.exists?).to be_truthy
+
+          broker_url_1 = deprovision_url(service_instance_1, accepts_incomplete: nil)
+          broker_url_2 = deprovision_url(service_instance_2, accepts_incomplete: nil)
+          expect(a_request(:delete, broker_url_1)).to have_been_made
+          expect(a_request(:delete, broker_url_2)).not_to have_been_made
         end
       end
 

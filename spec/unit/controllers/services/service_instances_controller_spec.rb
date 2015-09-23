@@ -1845,8 +1845,9 @@ module VCAP::CloudController
             delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
 
             expect(last_response).to have_status_code 400
-            expect(last_response.body).to match /AssociationNotEmpty/
-            expect(last_response.body).to match /Please delete the service_bindings associations for your service_instances/
+            expect(last_response.body).to include 'AssociationNotEmpty'
+            expect(last_response.body).to include
+            'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
           end
 
           context 'and recursive=true' do
@@ -1857,6 +1858,46 @@ module VCAP::CloudController
               expect(last_response.status).to eq(204)
               expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
               expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
+            end
+          end
+        end
+
+        context 'when the instance has route bindings' do
+          let(:route_binding) { RouteBinding.make }
+          let(:service_instance) { route_binding.service_instance }
+          let(:route) { route_binding.route }
+
+          before do
+            stub_unbind(route_binding)
+          end
+
+          context 'and the user has not set recursive=true' do
+            it 'does not delete the associated service bindings' do
+              expect {
+                delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
+              }.to change(RouteBinding, :count).by(0)
+              expect(ServiceInstance.find(guid: service_instance.guid)).to be
+              expect(RouteBinding.find(guid: route_binding.guid)).to be
+            end
+
+            it 'should give the user an error' do
+              delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
+
+              expect(last_response).to have_status_code 400
+              expect(last_response.body).to include 'AssociationNotEmpty'
+              expect(last_response.body).to include
+              'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
+            end
+          end
+
+          context 'and recursive=true' do
+            it 'deletes the associated route bindings' do
+              expect {
+                delete "/v2/service_instances/#{service_instance.guid}?recursive=true", {}, headers_for(developer)
+              }.to change(RouteBinding, :count).by(-1)
+              expect(last_response.status).to eq(204)
+              expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+              expect(RouteBinding.find(guid: route_binding.guid)).to be_nil
             end
           end
         end
@@ -1877,8 +1918,9 @@ module VCAP::CloudController
               delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
 
               expect(last_response).to have_status_code 400
-              expect(last_response.body).to match /AssociationNotEmpty/
-              expect(last_response.body).to match /Please delete the service_keys associations for your service_instances/
+              expect(last_response.body).to include 'AssociationNotEmpty'
+              expect(last_response.body).to include
+              'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
             end
           end
 
@@ -2377,8 +2419,9 @@ module VCAP::CloudController
             delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
 
             expect(last_response).to have_status_code 400
-            expect(last_response.body).to match /AssociationNotEmpty/
-            expect(last_response.body).to match /Please delete the service_bindings associations for your service_instances/
+            expect(last_response.body).to include 'AssociationNotEmpty'
+            expect(last_response.body).to include
+            'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
           end
 
           context 'when recursive=true' do
