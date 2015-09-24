@@ -20,11 +20,7 @@ module VCAP::CloudController
     end
 
     def to_params
-      params = []
-      (requested_keys - [:page, :per_page, :order_by]).each do |key|
-        params << "#{key}=#{self.try(key).join(',')}"
-      end
-      params.join('&')
+      super(exclude: [:page, :per_page, :order_by])
     end
 
     def self.from_params(params)

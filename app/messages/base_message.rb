@@ -27,6 +27,30 @@ module VCAP::CloudController
       request
     end
 
+    def to_params(opts={ exclude: [] })
+      params = []
+      (requested_keys - opts[:exclude]).each do |key|
+        val = self.try(key)
+
+        escaped_val = if val && val.is_a?(Array)
+                        CGI.escape(val.map { |v| CGI.escape(v) }.join(','))
+                      elsif val
+                        CGI.escape(val.to_s)
+                      else
+                        ''
+                      end
+
+        params << "#{CGI.escape(key.to_param)}=#{escaped_val}"
+      end
+      params.join('&')
+    end
+
+    def self.to_array!(params, key)
+      if params[key]
+        params[key] = params[key].to_s.split(',').map { |val| CGI.unescape(val) unless val.nil? }
+      end
+    end
+
     class NoAdditionalKeysValidator < ActiveModel::Validator
       def validate(record)
         if record.extra_keys.any?
@@ -47,10 +71,6 @@ module VCAP::CloudController
 
     def allowed_keys
       raise NotImplementedError
-    end
-
-    def self.to_array!(params, key)
-      params[key] =  params[key].to_s.split(',') if params[key]
     end
   end
 end

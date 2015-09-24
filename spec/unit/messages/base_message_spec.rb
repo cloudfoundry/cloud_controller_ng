@@ -40,6 +40,92 @@ module VCAP::CloudController
       end
     end
 
+    describe '#to_params' do
+      ParamsClass = Class.new(BaseMessage) do
+        attr_accessor :array_field, :num_field, :string_field, :nil_field
+
+        def allowed_keys
+          [:array_field, :num_field, :string_field, :nil_field]
+        end
+      end
+
+      let(:opts) do
+        {
+            array_field:  ['st ate1', 'sta,te2'],
+            num_field:    1.2,
+            string_field: 'stringval&',
+            nil_field:    nil
+        }
+      end
+
+      it 'returns escaped query params' do
+        params = []
+        params << 'array_field=st%2Bate1%2Csta%252Cte2&'
+        params << 'num_field=1.2&'
+        params << 'string_field=stringval%26&'
+        params << 'nil_field='
+        expected_params = params.join
+        expect(ParamsClass.new(opts).to_params).to eq(expected_params)
+      end
+
+      it 'does not return params that are not requested' do
+        opts.delete(:nil_field)
+        params = []
+        params << 'array_field=st%2Bate1%2Csta%252Cte2&'
+        params << 'num_field=1.2&'
+        params << 'string_field=stringval%26'
+        expected_params = params.join
+        expect(ParamsClass.new(opts).to_params).to eq(expected_params)
+      end
+
+      it 'can exclude params' do
+        params = []
+        params << 'array_field=st%2Bate1%2Csta%252Cte2&'
+        params << 'string_field=stringval%26&'
+        params << 'nil_field='
+        expected_params = params.join
+        expect(ParamsClass.new(opts).to_params({ exclude: [:num_field] })).to eq(expected_params)
+      end
+    end
+
+    describe '.to_array!' do
+      let(:escaped_comma) { '%2C' }
+      let(:params) do
+        {
+            array_field:                     'state1,state2',
+            array_with_comma_in_value_field: "st ate1,sta#{escaped_comma}te2",
+            array_with_nil_field:            'state1,state2,',
+            num_field:                       1.2,
+            string_field:                    'stringval&',
+            nil_field:                       nil
+        }
+      end
+
+      it 'separates on commas' do
+        expect(BaseMessage.to_array!(params, :array_field)).to eq(['state1', 'state2'])
+      end
+
+      it 'url query decodes individual array values' do
+        expect(BaseMessage.to_array!(params, :array_with_comma_in_value_field)).to eq(['st ate1', 'sta,te2'])
+      end
+
+      it 'handles nil array values' do
+        expect(BaseMessage.to_array!(params, :array_with_nil_field)).to eq(['state1', 'state2'])
+      end
+
+      it 'handles single numeric values' do
+        expect(BaseMessage.to_array!(params, :num_field)).to eq(['1.2'])
+      end
+
+      it 'handles single string values' do
+        expect(BaseMessage.to_array!(params, :string_field)).to eq(['stringval&'])
+      end
+
+      it 'handles single nil values' do
+        expect(BaseMessage.to_array!(params, :nil_field)).to eq(nil)
+      end
+    end
+
     describe 'additional keys validation' do
       let(:fake_class) do
         Class.new(BaseMessage) do

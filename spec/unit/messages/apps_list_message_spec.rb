@@ -45,24 +45,18 @@ module VCAP::CloudController
     describe '#to_params' do
       let(:opts) do
         {
-          names:              ['name1', 'name2'],
-          guids:              ['guid1', 'guid2'],
-          organization_guids: ['orgguid1', 'orgguid2'],
-          space_guids:        ['spaceguid1', 'spaceguid2'],
-          page:               1,
-          per_page:           5,
-          order_by:           'created_at',
+            names:              ['name1', 'name2'],
+            guids:              ['guid1', 'guid2'],
+            organization_guids: ['orgguid1', 'orgguid2'],
+            space_guids:        ['spaceguid1', 'spaceguid2'],
+            page:               1,
+            per_page:           5,
+            order_by:           'created_at',
         }
       end
 
-      it 'returns query params' do
-        expected_params = 'names=name1,name2&guids=guid1,guid2&organization_guids=orgguid1,orgguid2&space_guids=spaceguid1,spaceguid2'
-        expect(AppsListMessage.new(opts).to_params).to eq(expected_params)
-      end
-
-      it 'does not return params that are not requested' do
-        opts.delete(:names)
-        expected_params = 'guids=guid1,guid2&organization_guids=orgguid1,orgguid2&space_guids=spaceguid1,spaceguid2'
+      it 'excludes the pagination keys' do
+        expected_params = 'names=name1%2Cname2&guids=guid1%2Cguid2&organization_guids=orgguid1%2Corgguid2&space_guids=spaceguid1%2Cspaceguid2'
         expect(AppsListMessage.new(opts).to_params).to eq(expected_params)
       end
     end

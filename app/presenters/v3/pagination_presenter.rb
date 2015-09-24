@@ -13,17 +13,19 @@ module VCAP::CloudController
       previous_page = page - 1
       next_page     = page + 1
 
-      order = OrderByMapper.to_param(pagination_options.order_by, pagination_options.order_direction)
+      order = OrderByMapper.to_param_hash(pagination_options.order_by, pagination_options.order_direction)
+      pagination_params = { per_page: per_page }.merge(order)
 
-      serialized_filters = filters.nil? ? '' : filters.to_params
-      serialized_filters += '&' unless serialized_filters.empty?
+      filter_params = filters.nil? ? '' : filters.to_params
+      filter_params += '&' unless filter_params.empty?
 
       {
         total_results: total_results,
-        first:         { href: "#{base_url}?#{serialized_filters}#{order}page=1&per_page=#{per_page}" },
-        last:          { href: "#{base_url}?#{serialized_filters}#{order}page=#{last_page}&per_page=#{per_page}" },
-        next:          next_page <= last_page ? { href: "#{base_url}?#{serialized_filters}#{order}page=#{next_page}&per_page=#{per_page}" } : nil,
-        previous:      previous_page > 0 ? { href: "#{base_url}?#{serialized_filters}#{order}page=#{previous_page}&per_page=#{per_page}" } : nil,
+
+        first:    { href: "#{base_url}?#{filter_params}#{pagination_params.merge({ page: 1 }).to_query}" },
+        last:     { href: "#{base_url}?#{filter_params}#{pagination_params.merge({ page: last_page }).to_query}" },
+        next:     next_page <= last_page ? { href: "#{base_url}?#{filter_params}#{pagination_params.merge({ page: next_page }).to_query}" } : nil,
+        previous: previous_page > 0 ? { href: "#{base_url}?#{filter_params}#{pagination_params.merge({ page: previous_page }).to_query}" } : nil,
       }
     end
   end

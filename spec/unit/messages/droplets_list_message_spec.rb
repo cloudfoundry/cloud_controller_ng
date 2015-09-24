@@ -47,14 +47,8 @@ module VCAP::CloudController
         }
       end
 
-      it 'returns query params' do
-        expected_params = 'states=state1,state2&app_guids=appguid1,appguid2'
-        expect(DropletsListMessage.new(opts).to_params).to eq(expected_params)
-      end
-
-      it 'does not return params that are not requested' do
-        opts.delete(:app_guids)
-        expected_params = 'states=state1,state2'
+      it 'excludes the pagination keys' do
+        expected_params = 'states=state1%2Cstate2&app_guids=appguid1%2Cappguid2'
         expect(DropletsListMessage.new(opts).to_params).to eq(expected_params)
       end
     end

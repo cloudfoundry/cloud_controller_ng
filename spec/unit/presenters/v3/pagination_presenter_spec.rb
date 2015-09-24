@@ -123,10 +123,10 @@ module VCAP::CloudController
             next_page     = result[:next][:href]
             previous_page = result[:previous][:href]
 
-            expect(first_page).to eq("v3/cloudfoundry/is-great?order_by=+#{order_by}&page=1&per_page=#{per_page}")
-            expect(last_page).to eq("v3/cloudfoundry/is-great?order_by=+#{order_by}&page=3&per_page=#{per_page}")
-            expect(next_page).to eq("v3/cloudfoundry/is-great?order_by=+#{order_by}&page=3&per_page=#{per_page}")
-            expect(previous_page).to eq("v3/cloudfoundry/is-great?order_by=+#{order_by}&page=1&per_page=#{per_page}")
+            expect(first_page).to eq("v3/cloudfoundry/is-great?order_by=%2B#{order_by}&page=1&per_page=#{per_page}")
+            expect(last_page).to eq("v3/cloudfoundry/is-great?order_by=%2B#{order_by}&page=3&per_page=#{per_page}")
+            expect(next_page).to eq("v3/cloudfoundry/is-great?order_by=%2B#{order_by}&page=3&per_page=#{per_page}")
+            expect(previous_page).to eq("v3/cloudfoundry/is-great?order_by=%2B#{order_by}&page=1&per_page=#{per_page}")
           end
 
           context 'when the order direction is desc' do

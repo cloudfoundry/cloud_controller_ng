@@ -147,8 +147,8 @@ resource 'Apps (Experimental)', type: :api do
         expected_states = "#{VCAP::CloudController::DropletModel::STAGED_STATE},#{VCAP::CloudController::DropletModel::FAILED_STATE}"
         expected_pagination = {
           'total_results' => 2,
-          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/droplets?states=#{expected_states}&order_by=#{order_by}&page=1&per_page=2" },
-          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/droplets?states=#{expected_states}&order_by=#{order_by}&page=1&per_page=2" },
+          'first'         => { 'href' => "/v3/apps/#{app_model.guid}/droplets?states=#{CGI.escape(expected_states)}&order_by=#{order_by}&page=1&per_page=2" },
+          'last'          => { 'href' => "/v3/apps/#{app_model.guid}/droplets?states=#{CGI.escape(expected_states)}&order_by=#{order_by}&page=1&per_page=2" },
           'next'          => nil,
           'previous'      => nil
         }

@@ -36,21 +36,15 @@ module VCAP::CloudController
     describe '#to_params' do
       let(:opts) do
         {
-          states:    ['state1', 'state2'],
+          states:    ['state'],
           page:      1,
           per_page:  5,
           order_by:  'created_at',
         }
       end
 
-      it 'returns query params' do
-        expected_params = 'states=state1,state2'
-        expect(AppsDropletsListMessage.new(opts).to_params).to eq(expected_params)
-      end
-
-      it 'does not return params that are not requested' do
-        opts.delete(:states)
-        expected_params = ''
+      it 'excludes the pagination keys' do
+        expected_params = 'states=state'
         expect(AppsDropletsListMessage.new(opts).to_params).to eq(expected_params)
       end
     end
