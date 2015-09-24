@@ -15,7 +15,6 @@ module VCAP::CloudController
         env << { 'name' => 'VCAP_APPLICATION', 'value' => vcap_application.to_json }
         env << { 'name' => 'VCAP_SERVICES', 'value' => app.system_env_json['VCAP_SERVICES'].to_json }
         env << { 'name' => 'MEMORY_LIMIT', 'value' => "#{app.memory}m" }
-        env << { 'name' => 'CF_STACK', 'value' => "#{app.stack.name}" }
 
         db_uri = app.database_uri
         env << { 'name' => 'DATABASE_URL', 'value' => db_uri } if db_uri

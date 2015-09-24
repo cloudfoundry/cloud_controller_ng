@@ -25,7 +25,6 @@ module VCAP::CloudController::Diego
         { 'name' => 'VCAP_APPLICATION', 'value' => encoded_vcap_application_json },
         { 'name' => 'VCAP_SERVICES', 'value' => encoded_vcap_services_json },
         { 'name' => 'MEMORY_LIMIT', 'value' => "#{app.memory}m" },
-        { 'name' => 'CF_STACK', 'value' => "#{app.stack.name}" },
         { 'name' => 'APP_KEY1', 'value' => 'APP_VAL1' },
         { 'name' => 'APP_KEY2', 'value' => '{"nested":"data"}' },
         { 'name' => 'APP_KEY3', 'value' => '[1,2,3]' },
