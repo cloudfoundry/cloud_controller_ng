@@ -12,16 +12,20 @@ module VCAP::CloudController
 
     let(:success_response) do
       {
-        execution_metadata: '{"process_types": { "web": "some command"}}',
-        lifecycle_data: {
-          buildpack_key: buildpack.key,
-          detected_buildpack: 'INTERCAL',
+        result: {
+          process_types:      { web: 'some command' },
+          execution_metadata: '',
+          lifecycle_type:     'buildpack',
+          lifecycle_metadata: {
+            buildpack_key:      buildpack.key,
+            detected_buildpack: 'INTERCAL',
+          }
         }
       }
     end
 
     let(:malformed_success_response) do
-      success_response.except(:execution_metadata)
+      success_response[:result].except(:execution_metadata)
     end
 
     let(:fail_response) do
@@ -62,14 +66,11 @@ module VCAP::CloudController
 
       context 'when staging metadata is returned' do
         before do
-          metadata = {
-              process_types: {
-                  web: 'web_command',
-                  worker: 'worker_command',
-                  anything: 'hi hi hi'
-              }
+          success_response[:result][:process_types] = {
+            web: 'web_command',
+            worker: 'worker_command',
+            anything: 'hi hi hi'
           }
-          success_response[:execution_metadata] = MultiJson.dump(metadata)
         end
 
         it 'updates the droplet with the returned start command' do
@@ -77,7 +78,7 @@ module VCAP::CloudController
           staged_app.reload
           droplet = staged_app.current_droplet
 
-          expect(droplet.execution_metadata).to eq(success_response[:execution_metadata])
+          expect(droplet.execution_metadata).to eq('')
           expect(droplet.detected_start_command).to eq('web_command')
           expect(droplet.droplet_hash).to eq('lol')
         end
@@ -183,7 +184,7 @@ module VCAP::CloudController
             'diego.staging.success.invalid-message',
             staging_guid: staging_guid,
             payload: malformed_success_response,
-            error: '{ execution_metadata => Missing key }'
+            error: '{ result => Missing key }'
           )
         end
       end

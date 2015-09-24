@@ -10,15 +10,21 @@ module VCAP::CloudController
           let(:buildpack) { Buildpack.make }
           let(:success_response) do
             {
-              execution_metadata: '{"process_types": { "web": "some command"}}',
-              lifecycle_data:         {
-                buildpack_key:      buildpack.key,
-                detected_buildpack: 'INTERCAL',
+              result: {
+                lifecycle_type: 'buildpack',
+                lifecycle_metadata: {
+                  buildpack_key:      buildpack.key,
+                  detected_buildpack: 'INTERCAL',
+                },
+                execution_metadata: '',
+                process_types:      {
+                  web: 'some command'
+                }
               }
             }
           end
           let(:malformed_success_response) do
-            success_response.except(:execution_metadata)
+            success_response[:result].except(:execution_metadata)
           end
           let(:fail_response) do
             {
@@ -56,16 +62,13 @@ module VCAP::CloudController
                 }.to change { staged_droplet.reload.staged? }.to(true)
               end
 
-              context 'when staging metadata is returned' do
+              context 'when staging result is returned' do
                 before do
-                  metadata = {
-                      process_types: {
-                          web: 'start me',
-                          worker: 'hello',
-                          anything: 'hi hi hi'
-                      }
+                  success_response[:result][:process_types] = {
+                    web:      'start me',
+                    worker:   'hello',
+                    anything: 'hi hi hi'
                   }
-                  success_response[:execution_metadata] = MultiJson.dump(metadata)
                 end
 
                 it 'updates the droplet with the metadata' do
@@ -81,7 +84,7 @@ module VCAP::CloudController
                     staged_droplet.buildpack = 'OG BP'
                     staged_droplet.save
 
-                    success_response[:lifecycle_data][:detected_buildpack] = ''
+                    success_response[:result][:lifecycle_metadata][:detected_buildpack] = ''
                   end
 
                   it 'does NOT override existing buildpack value' do
@@ -122,7 +125,7 @@ module VCAP::CloudController
                       'diego.staging.success.invalid-message',
                       staging_guid: staged_droplet.guid,
                       payload:      malformed_success_response,
-                      error:        '{ execution_metadata => Missing key }'
+                      error:        '{ result => Missing key }'
                     )
                 end
               end

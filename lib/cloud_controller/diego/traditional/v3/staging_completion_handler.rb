@@ -12,11 +12,15 @@ module VCAP::CloudController
           def self.success_parser
             @staging_response_schema ||= Membrane::SchemaParser.parse do
               {
+                result: {
                   execution_metadata: String,
-                  lifecycle_data: {
-                      buildpack_key: String,
-                      detected_buildpack: String,
-                  }
+                  lifecycle_type:     'buildpack',
+                  lifecycle_metadata: {
+                    buildpack_key:      String,
+                    detected_buildpack: String,
+                  },
+                  process_types:      dict(Symbol, String)
+                }
               }
             end
           end
@@ -24,7 +28,7 @@ module VCAP::CloudController
           private
 
           def handle_failure(droplet, payload)
-            error = payload[:error][:id] || 'StagingError'
+            error   = payload[:error][:id] || 'StagingError'
             message = payload[:error][:message]
 
             droplet.class.db.transaction do
@@ -54,17 +58,16 @@ module VCAP::CloudController
           end
 
           def save_staging_result(droplet, payload)
-            lifecycle_data = payload[:lifecycle_data]
-            metadata = MultiJson.load(payload[:execution_metadata], symbolize_keys: true)
+            lifecycle_data = payload[:result][:lifecycle_metadata]
 
             process_types = []
-            metadata[:process_types].each do |type, command|
+            payload[:result][:process_types].each do |type, command|
               process_types << "#{type}: #{command}"
             end
 
             droplet.class.db.transaction do
               droplet.lock!
-              droplet.procfile = process_types.join("\n")
+              droplet.procfile  = process_types.join("\n")
               droplet.buildpack = lifecycle_data[:detected_buildpack] unless lifecycle_data[:detected_buildpack].blank?
               droplet.mark_as_staged
 

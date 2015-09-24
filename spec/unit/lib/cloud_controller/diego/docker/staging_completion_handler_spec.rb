@@ -23,10 +23,17 @@ module VCAP::CloudController
         context 'when it receives a success response' do
           let(:payload) do
             {
-              execution_metadata: '"{\"cmd\":[\"start\"]}"',
-              detected_start_command: { web: 'start' },
+              result: {
+                execution_metadata: '"{\"cmd\":[\"start\"]}"',
+                process_types: { web: 'start' },
+                lifecycle_type: 'docker',
+                lifecycle_metadata: {
+                  docker_image: docker_image_name
+                }
+              }
             }
           end
+          let(:docker_image_name) { '' }
 
           it 'marks the app as staged' do
             expect {
@@ -43,14 +50,7 @@ module VCAP::CloudController
             expect(runner).to have_received(:start)
           end
 
-          context 'when it receives lifecycle_data in response' do
-            let(:payload) do
-              {
-                execution_metadata: '"{\"cmd\":[\"start\"]}"',
-                detected_start_command: { web: 'start' },
-                lifecycle_data: { docker_image: docker_image_name }
-              }
-            end
+          describe 'lifecycle_metadata in response' do
             let(:droplet) { app.reload.current_droplet }
 
             context 'with cached image' do
@@ -74,49 +74,17 @@ module VCAP::CloudController
             end
           end
 
-          context 'when it receives no lifecycle_data in response' do
-            let(:payload) do
-              {
-                execution_metadata: '"{\"cmd\":[\"start\"]}"',
-                detected_start_command: { web: 'start' },
-              }
-            end
-            let(:droplet) { app.reload.current_droplet }
-
-            it 'does not update the cached image' do
-              expect {
-                handler.staging_complete(staging_guid, payload)
-              }.not_to change {
-                droplet.cached_docker_image
-              }
-            end
-          end
-
-          context 'when it receives empty lifecycle_data in response' do
-            let(:payload) do
-              {
-                execution_metadata: '"{\"cmd\":[\"start\"]}"',
-                detected_start_command: { web: 'start' },
-                lifecycle_data: {}
-              }
-            end
-            let(:droplet) { app.reload.current_droplet }
-
-            it 'does not update the cached image' do
-              expect {
-                handler.staging_complete(staging_guid, payload)
-              }.not_to change {
-                droplet.cached_docker_image
-              }
-            end
-          end
-
           context 'when the app is restaged and user opted-out from caching' do
             let(:payload) do
               {
-                execution_metadata: '"{\"cmd\":[\"start\"]}"',
-                detected_start_command: { web: 'start' },
-                lifecycle_data: {}
+                result: {
+                  execution_metadata: '"{\"cmd\":[\"start\"]}"',
+                  process_types:      { web: 'start' },
+                  lifecycle_type:     'docker',
+                  lifecycle_metadata: {
+                    docker_image: ''
+                  }
+                }
               }
             end
             let(:droplet) { app.reload.current_droplet }
