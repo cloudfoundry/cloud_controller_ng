@@ -168,7 +168,8 @@ module LegacyApiDsl
 
     def standard_model_delete(model, options={}, &block)
       title = options[:title] || model.to_s.titleize
-      delete "#{root(model)}/:guid" do
+      query_string = "?#{options[:query_string]}"
+      delete "#{root(model)}/:guid#{query_string}" do
         parameter :guid, "The guid of the #{title}"
 
         instance_eval(&block) if block_given?

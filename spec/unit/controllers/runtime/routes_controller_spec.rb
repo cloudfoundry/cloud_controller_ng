@@ -236,6 +236,37 @@ module VCAP::CloudController
       end
     end
 
+    describe 'DELETE /v2/routes/:guid' do
+      context 'with route services bound to the route' do
+        let(:route_binding) { RouteBinding.make }
+        let(:route) { route_binding.route }
+
+        context 'with recursive=true' do
+          before do
+            stub_unbind(route_binding)
+          end
+
+          it 'deletes the route and associated binding' do
+            delete "v2/routes/#{route.guid}?recursive=true", {}, admin_headers
+
+            expect(Route.find(guid: route.guid)).not_to be
+            expect(RouteBinding.find(guid: route_binding.guid)).not_to be
+          end
+        end
+
+        context 'without recursive=true' do
+          it 'raises an error and does not delete anything' do
+            delete "v2/routes/#{route.guid}", {}, admin_headers
+
+            expect(last_response).to have_status_code 400
+            expect(last_response.body).to include 'AssociationNotEmpty'
+            expect(last_response.body).to include
+            'Please delete the service_instance associations for your routes'
+          end
+        end
+      end
+    end
+
     describe 'POST /v2/routes' do
       let(:space) { Space.make }
       let(:user) { User.make }

@@ -35,7 +35,7 @@ resource 'Routes', type: [:api, :legacy_api] do
 
       standard_model_list :route, VCAP::CloudController::RoutesController
       standard_model_get :route, nested_associations: [:domain, :space, :service_instance]
-      standard_model_delete :route
+      standard_model_delete :route, query_string: 'recursive=true'
     end
 
     post '/v2/routes/' do

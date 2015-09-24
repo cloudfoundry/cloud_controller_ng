@@ -46,7 +46,12 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      route = find_guid_and_validate_access(:delete, guid)
+      if !recursive? && route.service_instance.present?
+        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instance', route.class.table_name)
+      end
+
+      do_delete(route)
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
