@@ -5,7 +5,7 @@ module VCAP::CloudController
     end
 
     def self.path
-      "#{ROUTE_PREFIX}/config/running_security_groups"
+      "#{V2_ROUTE_PREFIX}/config/running_security_groups"
     end
 
     def self.not_found_exception(guid)

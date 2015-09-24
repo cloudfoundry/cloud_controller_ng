@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class EnvironmentVariableGroupsController < RestController::ModelController
     def self.path
-      "#{ROUTE_PREFIX}/config/environment_variable_groups"
+      "#{V2_ROUTE_PREFIX}/config/environment_variable_groups"
     end
 
     get "#{path}/staging", :read_staging

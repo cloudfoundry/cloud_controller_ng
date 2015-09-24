@@ -57,7 +57,7 @@ module VCAP::CloudController
       end
 
       it 'injects the services_event_repository dependency' do
-        expect { described_class.new(nil, logger, nil, {}, nil, nil, dependencies) }.to raise_error KeyError, 'key not found: :services_event_repository'
+        expect { described_class.new(nil, logger, {}, {}, nil, nil, dependencies) }.to raise_error KeyError, 'key not found: :services_event_repository'
       end
     end
 

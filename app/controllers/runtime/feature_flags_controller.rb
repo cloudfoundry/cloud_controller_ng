@@ -3,7 +3,7 @@ require 'presenters/api/feature_flag_presenter'
 module VCAP::CloudController
   class FeatureFlagsController < RestController::ModelController
     def self.path
-      "#{ROUTE_PREFIX}/config/feature_flags"
+      "#{V2_ROUTE_PREFIX}/config/feature_flags"
     end
 
     def self.translate_validation_exception(e, attributes)

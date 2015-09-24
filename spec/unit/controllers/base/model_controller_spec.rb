@@ -15,7 +15,7 @@ module VCAP::CloudController
 
         dep = { object_renderer: nil, collection_renderer: nil }
         @model_controller = RestController::ModelController.new(
-          nil, FakeLogger.new([]), nil, {}, nil, nil, dep
+          nil, FakeLogger.new([]), {}, {}, nil, nil, dep
         )
       end
 
@@ -816,7 +816,7 @@ module VCAP::CloudController
 
     describe 'attributes censoring' do
       let(:dep) { { object_renderer: nil, collection_renderer: nil } }
-      let(:model_controller) { TestModelRedactController.new(nil, FakeLogger.new([]), nil, {}, nil, nil, dep) }
+      let(:model_controller) { TestModelRedactController.new(nil, FakeLogger.new([]), {}, {}, nil, nil, dep) }
 
       context 'when the request contains sensitive attributes' do
         let(:request_attributes) { { 'one' => 1, 'two' => 2, 'redacted' => 'password' } }

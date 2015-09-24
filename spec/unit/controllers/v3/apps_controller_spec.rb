@@ -13,7 +13,7 @@ module VCAP::CloudController
       AppsV3Controller.new(
         {},
         logger,
-        {},
+        { 'PATH_INFO' => '/v3/apps' },
         params,
         req_body,
         nil,
@@ -75,6 +75,20 @@ module VCAP::CloudController
               expect(error.name).to eq 'BadQueryParameter'
               expect(error.response_code).to eq 400
               expect(error.message).to match('Order by received an unsupported value')
+            end
+          end
+        end
+
+        context 'when the page is not an integer' do
+          let(:params) { { 'page' => '1.1' } }
+
+          it 'returns 400' do
+            expect {
+              apps_controller.list
+            }.to raise_error do |error|
+              expect(error.name).to eq 'BadQueryParameter'
+              expect(error.response_code).to eq 400
+              expect(error.message).to match('Page must be an integer')
             end
           end
         end

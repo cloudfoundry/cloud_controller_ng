@@ -127,13 +127,18 @@ module VCAP::CloudController
       describe '#redirect' do
         let(:request) { double('request', query_string: '') }
         let(:sinatra) { double('sinatra', request: request) }
+        let(:env) { double(:env) }
         let(:app) do
           described_class.new(
             double(:config),
-            logger, double(:env), double(:params, :[] => nil),
+            logger, env, double(:params, :[] => nil),
             double(:body),
             sinatra,
           )
+        end
+
+        before do
+          allow(env).to receive(:[])
         end
 
         it 'delegates #redirect to the injected sinatra' do
@@ -254,6 +259,21 @@ module VCAP::CloudController
           let(:env) { { 'PATH_INFO' => '/v1/apps/v2' } }
           it { is_expected.not_to be_v2_api }
         end
+      end
+    end
+
+    describe '#unversioned_api?' do
+      subject(:base_controller) do
+        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil)
+      end
+      context 'when the endpoint is unversioned' do
+        let(:env) { { 'PATH_INFO' => '/foobar' } }
+        it { is_expected.to be_unversioned_api }
+      end
+
+      context 'when the endpoint is not unversioned' do
+        let(:env) { { 'PATH_INFO' => '/v1/foobar' } }
+        it { is_expected.not_to be_unversioned_api }
       end
     end
 

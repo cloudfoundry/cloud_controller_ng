@@ -6,7 +6,7 @@ require 'cloud_controller/security/access_context'
 module VCAP::CloudController::RestController
   # The base class for all api endpoints.
   class BaseController
-    ROUTE_PREFIX = '/v2'
+    V2_ROUTE_PREFIX = '/v2'
 
     include VCAP::CloudController
     include VCAP::Errors
@@ -43,9 +43,11 @@ module VCAP::CloudController::RestController
       @env     = env
       @params  = params
       @body    = body
-      common_params = CommonParams.new(logger)
-      query_string = sinatra.request.query_string if sinatra
-      @opts    = common_params.parse(params, query_string)
+      if v2_api? || unversioned_api?
+        common_params = CommonParams.new(logger)
+        query_string = sinatra.request.query_string if sinatra
+        @opts    = common_params.parse(params, query_string)
+      end
       @sinatra = sinatra
       @access_context = Security::AccessContext.new
 
@@ -137,7 +139,11 @@ module VCAP::CloudController::RestController
     end
 
     def v2_api?
-      env['PATH_INFO'] =~ /^#{ROUTE_PREFIX}/
+      env['PATH_INFO'] =~ /^#{V2_ROUTE_PREFIX}/
+    end
+
+    def unversioned_api?
+      !(env['PATH_INFO'] =~ /^\/v\d/)
     end
 
     def recursive?
@@ -225,7 +231,7 @@ module VCAP::CloudController::RestController
       # @return [String] The path/route to the collection associated with
       # the class.
       def path
-        "#{ROUTE_PREFIX}/#{path_base}"
+        "#{V2_ROUTE_PREFIX}/#{path_base}"
       end
 
       # Get and set the base of the path for the api endpoint.

@@ -131,6 +131,12 @@ module VCAP::CloudController
             expect(message).to be_invalid
             expect(message.errors[:page].length).to eq 1
           end
+
+          it 'is invalid if page is not an integer' do
+            message = AppsListMessage.new page: 1.1
+            expect(message).to be_invalid
+            expect(message.errors[:page].length).to eq 1
+          end
         end
 
         describe 'per_page' do
