@@ -33,6 +33,7 @@ module VCAP::CloudController
       route_binding.set_all(attributes_to_update)
       begin
         route_binding.save
+        route_binding.notify_diego if attributes_to_update[:route_service_url]
       rescue => e
         @logger.error "Failed to save binding for route: #{route.guid} and service instance: #{instance.guid} with exception: #{e}"
         mitigate_orphan(route_binding)

@@ -11,6 +11,12 @@ module VCAP::CloudController
 
     delegate :service, :service_plan, :client, to: :service_instance
 
+    def notify_diego
+      route.apps.each do |app|
+        app.handle_update_route(route) if app.diego
+      end
+    end
+
     def after_initialize
       super
       self.guid ||= SecureRandom.uuid

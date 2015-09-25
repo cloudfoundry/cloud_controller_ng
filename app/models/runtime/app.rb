@@ -614,6 +614,10 @@ module VCAP::CloudController
       end
     end
 
+    def handle_update_route(route)
+      mark_routes_changed(route)
+    end
+
     private
 
     def mark_routes_changed(_=nil)
