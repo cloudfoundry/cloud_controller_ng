@@ -4,28 +4,28 @@ module VCAP::CloudController
   class PaginationPresenter
     def present_pagination_hash(paginated_result, base_url, filters=nil)
       pagination_options = paginated_result.pagination_options
-      page          = pagination_options.page
-      per_page      = pagination_options.per_page
-      total_results = paginated_result.total
 
-      last_page     = (total_results.to_f / per_page.to_f).ceil
+      last_page     = (paginated_result.total.to_f / pagination_options.per_page.to_f).ceil
       last_page     = 1 if last_page < 1
-      previous_page = page - 1
-      next_page     = page + 1
+      previous_page = pagination_options.page - 1
+      next_page     = pagination_options.page + 1
 
-      order = OrderByMapper.to_param_hash(pagination_options.order_by, pagination_options.order_direction)
-      pagination_params = { per_page: per_page }.merge(order)
+      order_params  = OrderByMapper.to_param_hash(pagination_options.order_by, pagination_options.order_direction)
+      filter_params = filters.nil? ? {} : filters.to_param_hash
+      params        = { per_page: pagination_options.per_page }.merge(order_params).merge(filter_params)
 
-      filter_params = filters.nil? ? '' : filters.to_params
-      filter_params += '&' unless filter_params.empty?
+      first_uri    = URI::HTTP.build(path: base_url, query: params.merge({ page: 1 }).to_query).request_uri
+      last_uri     = URI::HTTP.build(path: base_url, query: params.merge({ page: last_page }).to_query).request_uri
+      next_uri     = URI::HTTP.build(path: base_url, query: params.merge({ page: next_page }).to_query).request_uri
+      previous_uri = URI::HTTP.build(path: base_url, query: params.merge({ page: previous_page }).to_query).request_uri
 
       {
-        total_results: total_results,
+        total_results: paginated_result.total,
 
-        first:    { href: "#{base_url}?#{filter_params}#{pagination_params.merge({ page: 1 }).to_query}" },
-        last:     { href: "#{base_url}?#{filter_params}#{pagination_params.merge({ page: last_page }).to_query}" },
-        next:     next_page <= last_page ? { href: "#{base_url}?#{filter_params}#{pagination_params.merge({ page: next_page }).to_query}" } : nil,
-        previous: previous_page > 0 ? { href: "#{base_url}?#{filter_params}#{pagination_params.merge({ page: previous_page }).to_query}" } : nil,
+        first:         { href: first_uri },
+        last:          { href: last_uri },
+        next:          next_page <= last_page ? { href: next_uri } : nil,
+        previous:      previous_page > 0 ? { href: previous_uri } : nil
       }
     end
   end

@@ -33,7 +33,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#to_params' do
+    describe '#to_param_hash' do
       let(:opts) do
         {
           states:    ['state'],
@@ -44,8 +44,8 @@ module VCAP::CloudController
       end
 
       it 'excludes the pagination keys' do
-        expected_params = 'states=state'
-        expect(AppsDropletsListMessage.new(opts).to_params).to eq(expected_params)
+        expected_params = [:states]
+        expect(AppsDropletsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 

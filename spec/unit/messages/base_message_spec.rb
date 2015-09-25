@@ -40,7 +40,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#to_params' do
+    describe '#to_param_hash' do
       ParamsClass = Class.new(BaseMessage) do
         attr_accessor :array_field, :num_field, :string_field, :nil_field
 
@@ -58,33 +58,33 @@ module VCAP::CloudController
         }
       end
 
-      it 'returns escaped query params' do
-        params = []
-        params << 'array_field=st%2Bate1%2Csta%252Cte2&'
-        params << 'num_field=1.2&'
-        params << 'string_field=stringval%26&'
-        params << 'nil_field='
-        expected_params = params.join
-        expect(ParamsClass.new(opts).to_params).to eq(expected_params)
+      it 'returns query param hash with escaped array members' do
+        expected_params = {
+          array_field:  'st+ate1,sta%2Cte2',
+          num_field:    1.2,
+          string_field: 'stringval&',
+          nil_field:    nil,
+        }
+        expect(ParamsClass.new(opts).to_param_hash).to eq(expected_params)
       end
 
-      it 'does not return params that are not requested' do
+      it 'does not return params that are not requested during initialization' do
         opts.delete(:nil_field)
-        params = []
-        params << 'array_field=st%2Bate1%2Csta%252Cte2&'
-        params << 'num_field=1.2&'
-        params << 'string_field=stringval%26'
-        expected_params = params.join
-        expect(ParamsClass.new(opts).to_params).to eq(expected_params)
+        expected_params = {
+          array_field:  'st+ate1,sta%2Cte2',
+          num_field:    1.2,
+          string_field: 'stringval&',
+        }
+        expect(ParamsClass.new(opts).to_param_hash).to eq(expected_params)
       end
 
       it 'can exclude params' do
-        params = []
-        params << 'array_field=st%2Bate1%2Csta%252Cte2&'
-        params << 'string_field=stringval%26&'
-        params << 'nil_field='
-        expected_params = params.join
-        expect(ParamsClass.new(opts).to_params({ exclude: [:num_field] })).to eq(expected_params)
+        expected_params = {
+          array_field:  'st+ate1,sta%2Cte2',
+          string_field: 'stringval&',
+          nil_field:    nil,
+        }
+        expect(ParamsClass.new(opts).to_param_hash({ exclude: [:num_field] })).to eq(expected_params)
       end
     end
 

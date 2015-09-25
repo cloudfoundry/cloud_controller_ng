@@ -27,22 +27,17 @@ module VCAP::CloudController
       request
     end
 
-    def to_params(opts={ exclude: [] })
-      params = []
+    def to_param_hash(opts={ exclude: [] })
+      params = {}
       (requested_keys - opts[:exclude]).each do |key|
         val = self.try(key)
-
-        escaped_val = if val && val.is_a?(Array)
-                        CGI.escape(val.map { |v| CGI.escape(v) }.join(','))
-                      elsif val
-                        CGI.escape(val.to_s)
-                      else
-                        ''
-                      end
-
-        params << "#{CGI.escape(key.to_param)}=#{escaped_val}"
+        if val.is_a?(Array)
+          params[key] = val.map { |v| CGI.escape(v) }.join(',')
+        else
+          params[key] = val
+        end
       end
-      params.join('&')
+      params
     end
 
     def self.to_array!(params, key)

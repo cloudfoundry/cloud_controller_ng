@@ -127,9 +127,9 @@ resource 'Apps (Experimental)', type: :api do
         user.save
         expected_pagination = {
           'total_results' => 3,
-          'first'         => { 'href' => "/v3/apps?names=#{name1}&space_guids=#{CGI.escape(space_guids)}&order_by=#{order_by}&page=1&per_page=2" },
-          'last'          => { 'href' => "/v3/apps?names=#{name1}&space_guids=#{CGI.escape(space_guids)}&order_by=#{order_by}&page=2&per_page=2" },
-          'next'          => { 'href' => "/v3/apps?names=#{name1}&space_guids=#{CGI.escape(space_guids)}&order_by=#{order_by}&page=2&per_page=2" },
+          'first'         => { 'href' => "/v3/apps?names=#{name1}&order_by=#{order_by}&page=1&per_page=2&space_guids=#{CGI.escape(space_guids)}" },
+          'last'          => { 'href' => "/v3/apps?names=#{name1}&order_by=#{order_by}&page=2&per_page=2&space_guids=#{CGI.escape(space_guids)}" },
+          'next'          => { 'href' => "/v3/apps?names=#{name1}&order_by=#{order_by}&page=2&per_page=2&space_guids=#{CGI.escape(space_guids)}" },
           'previous'      => nil
         }
 

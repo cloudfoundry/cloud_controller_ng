@@ -42,7 +42,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#to_params' do
+    describe '#to_param_hash' do
       let(:opts) do
         {
             names:              ['name1', 'name2'],
@@ -56,8 +56,8 @@ module VCAP::CloudController
       end
 
       it 'excludes the pagination keys' do
-        expected_params = 'names=name1%2Cname2&guids=guid1%2Cguid2&organization_guids=orgguid1%2Corgguid2&space_guids=spaceguid1%2Cspaceguid2'
-        expect(AppsListMessage.new(opts).to_params).to eq(expected_params)
+        expected_params = [:names, :guids, :organization_guids, :space_guids]
+        expect(AppsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 

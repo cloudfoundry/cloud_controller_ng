@@ -19,7 +19,7 @@ module VCAP::CloudController
       super(params.symbolize_keys)
     end
 
-    def to_params
+    def to_param_hash
       super(exclude: [:page, :per_page, :order_by])
     end
 
