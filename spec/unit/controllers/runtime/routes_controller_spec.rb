@@ -294,6 +294,35 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/routes/:guid' do
+      let(:user) { User.make }
+      let(:organization) { Organization.make }
+      let(:domain) { PrivateDomain.make(owning_organization: organization) }
+      let(:space) { Space.make(organization: organization) }
+      let(:route) { Route.make(domain: domain, space: space) }
+
+      context 'as a space auditor' do
+        before do
+          organization.add_user user
+          space.add_auditor user
+        end
+
+        it 'includes the domain guid' do
+          get "/v2/routes/#{route.guid}", {}, headers_for(user)
+          expect(last_response.status).to eq 200
+          expect(decoded_response['entity']['domain_guid']).to_not be_nil
+        end
+      end
+
+      context 'as an admin' do
+        it 'includes the domain guid' do
+          get "/v2/routes/#{route.guid}", {}, admin_headers
+          expect(last_response.status).to eq 200
+          expect(decoded_response['entity']['domain_guid']).to_not be_nil
+        end
+      end
+    end
+
     describe 'GET /v2/routes' do
       let(:organization) { Organization.make }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }

@@ -148,39 +148,57 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:organization) { Organization.make }
 
-      before do
-        organization.add_user(user)
-        organization.add_manager(user)
-        organization.add_billing_manager(user)
-        organization.add_auditor(user)
-      end
-
-      context 'when the domain has an owning organization' do
+      context 'a space auditor' do
+        let(:space) { Space.make organization: organization }
         let(:domain) { PrivateDomain.make(owning_organization: organization) }
 
-        it 'has its GUID and URL in the response body' do
-          get "/v2/domains/#{domain.guid}", '{}', json_headers(headers_for(user))
+        before do
+          organization.add_user user
+          space.add_auditor user
+        end
 
+        it 'can see the domain' do
+          get "/v2/domains/#{domain.guid}", {}, headers_for(user)
           expect(last_response.status).to eq 200
-          expect(decoded_response['entity']['owning_organization_guid']).to eq organization.guid
-          expect(decoded_response['entity']['owning_organization_url']).to eq "/v2/organizations/#{organization.guid}"
-          expect(last_response).to be_a_deprecated_response
+          expect(decoded_response['metadata']['guid']).to eq domain.guid
         end
       end
 
-      context 'when the domain is shared' do
-        let(:domain) { SharedDomain.make }
+      context 'as an org manager and auditor' do
+        before do
+          organization.add_user(user)
+          organization.add_manager(user)
+          organization.add_billing_manager(user)
+          organization.add_auditor(user)
+        end
 
-        it 'has its GUID as null, and no url key in the response body' do
-          get "/v2/domains/#{domain.guid}", '{}', json_headers(admin_headers)
+        context 'when the domain has an owning organization' do
+          let(:domain) { PrivateDomain.make(owning_organization: organization) }
 
-          expect(last_response.status).to eq(200)
+          it 'has its GUID and URL in the response body' do
+            get "/v2/domains/#{domain.guid}", '{}', json_headers(headers_for(user))
 
-          json = MultiJson.load(last_response.body)
-          expect(json['entity']['owning_organization_guid']).to be_nil
+            expect(last_response.status).to eq 200
+            expect(decoded_response['entity']['owning_organization_guid']).to eq organization.guid
+            expect(decoded_response['entity']['owning_organization_url']).to eq "/v2/organizations/#{organization.guid}"
+            expect(last_response).to be_a_deprecated_response
+          end
+        end
 
-          expect(json['entity']).not_to include('owning_organization_url')
-          expect(last_response).to be_a_deprecated_response
+        context 'when the domain is shared' do
+          let(:domain) { SharedDomain.make }
+
+          it 'has its GUID as null, and no url key in the response body' do
+            get "/v2/domains/#{domain.guid}", '{}', json_headers(admin_headers)
+
+            expect(last_response.status).to eq(200)
+
+            json = MultiJson.load(last_response.body)
+            expect(json['entity']['owning_organization_guid']).to be_nil
+
+            expect(json['entity']).not_to include('owning_organization_url')
+            expect(last_response).to be_a_deprecated_response
+          end
         end
       end
     end
