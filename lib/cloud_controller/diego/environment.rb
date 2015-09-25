@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Diego
     class Environment
-      EXCLUDE = [:application_uris, :uris, :users]
+      EXCLUDE = [:users]
 
       def initialize(app, initial_env={})
         @app = app
