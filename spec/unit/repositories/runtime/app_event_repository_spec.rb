@@ -138,21 +138,21 @@ module VCAP::CloudController
         end
       end
 
-      describe '#record_app_set_current_droplet' do
+      describe '#record_app_map_droplet' do
         let(:space) { Space.make }
-        let(:app) { AppFactory.make(space: space) }
+        let(:app) { AppModel.make(space: space) }
         let(:user) { User.make }
         let(:user_email) { 'user email' }
 
-        it 'creates a new audit.app.delete-request event' do
-          event = app_event_repository.record_app_set_current_droplet(app, space, user.guid, user_email, { a: 1 })
+        it 'creates a new audit.app.droplet_mapped event' do
+          event = app_event_repository.record_app_map_droplet(app, space, user.guid, user_email, { a: 1 })
           event.reload
           expect(event.actor).to eq(user.guid)
           expect(event.actor_type).to eq('user')
           expect(event.actor_name).to eq(user_email)
-          expect(event.type).to eq('audit.app.update')
+          expect(event.type).to eq('audit.app.droplet_mapped')
           expect(event.actee).to eq(app.guid)
-          expect(event.actee_type).to eq('app')
+          expect(event.actee_type).to eq('v3-app')
           expect(event.actee_name).to eq(app.name)
           expect(event.metadata).to eq({ 'request' => { 'a' => 1 } })
         end

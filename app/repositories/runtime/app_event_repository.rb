@@ -27,12 +27,12 @@ module VCAP::CloudController
           create_app_audit_event('audit.app.update', app, space, actor, metadata)
         end
 
-        def record_app_set_current_droplet(app, space, actor_guid, actor_name, request_attrs)
+        def record_app_map_droplet(app, space, actor_guid, actor_name, request_attrs)
           Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{app_audit_hash(request_attrs)})")
 
           actor = { name: actor_name, guid: actor_guid, type: 'user' }
           metadata = { request: app_audit_hash(request_attrs) }
-          create_app_audit_event('audit.app.update', app, space, actor, metadata)
+          create_app_audit_event('audit.app.droplet_mapped', app, space, actor, metadata)
         end
 
         def record_app_create(app, space, actor_guid, actor_name, request_attrs)

@@ -632,7 +632,7 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to match(expected_response)
       event = VCAP::CloudController::Event.where(actor: user.guid).first
       expect(event.values).to include({
-        type: 'audit.app.update',
+        type: 'audit.app.droplet_mapped',
         actee: app_model.guid,
         actee_type: 'v3-app',
         actee_name: app_model.name,
