@@ -202,6 +202,30 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when diego does not return a success', isolation: :truncation do
+          before do
+            allow(logger).to receive(:info)
+            allow(logger).to receive(:error)
+
+            app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+            @process_guid = Diego::ProcessGuid.from_app(app)
+            # required for add_route below
+            stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 202)
+            app.add_route route
+
+            stub_request(:delete, service_binding_url_pattern).to_return(status: 200,  body: {}.to_json)
+          end
+
+          it 'orphans the route binding' do
+            expect {
+              stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 500)
+              manager.create_route_service_instance_binding(route, service_instance)
+            }.to raise_error(VCAP::Errors::ApiError, /desire app failed: 500/i)
+
+            expect(a_request(:delete, service_binding_url_pattern)).to have_been_made.times(1)
+          end
+        end
       end
     end
 
