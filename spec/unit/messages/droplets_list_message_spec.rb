@@ -108,6 +108,12 @@ module VCAP::CloudController
             expect(message).to be_invalid
             expect(message.errors[:page].length).to eq 1
           end
+
+          it 'is invalid if page is not an integer' do
+            message = DropletsListMessage.new page: 1.1
+            expect(message).to be_invalid
+            expect(message.errors[:page].length).to eq 1
+          end
         end
 
         describe 'per_page' do
@@ -125,6 +131,12 @@ module VCAP::CloudController
 
           it 'is invalid if per_page is negative' do
             message = DropletsListMessage.new per_page: -1
+            expect(message).to be_invalid
+            expect(message.errors[:per_page].length).to eq 1
+          end
+
+          it 'is invalid if per_page is not an integer' do
+            message = DropletsListMessage.new per_page: 1.1
             expect(message).to be_invalid
             expect(message.errors[:per_page].length).to eq 1
           end
