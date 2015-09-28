@@ -318,6 +318,17 @@ module VCAP::CloudController
           expect(errors[0].message).to eq 'BOOM'
         end
       end
+
+      context 'when deleting already deleted service instance' do
+        it 'does not throw errors as element is missing anyway' do
+          expect(ServiceInstance.count).to eq 2
+          service_instance_delete.delete([service_instance_1])
+          errors = service_instance_delete.delete([service_instance_1])
+          expect(ServiceInstance.count).to eq 1
+
+          expect(errors.count).to eq(0)
+        end
+      end
     end
   end
 end

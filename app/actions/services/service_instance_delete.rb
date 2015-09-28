@@ -1,5 +1,6 @@
 require 'actions/services/service_binding_delete'
 require 'actions/services/locks/deleter_lock'
+require 'sequel'
 
 module VCAP::CloudController
   class ServiceInstanceDelete
@@ -33,6 +34,10 @@ module VCAP::CloudController
 
     def delete_service_instance(service_instance)
       errors = []
+
+      if !service_instance.exists? # for idempotency purposes
+        return []
+      end
 
       begin
         lock = DeleterLock.new(service_instance)
