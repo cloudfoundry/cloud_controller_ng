@@ -2,6 +2,7 @@ module VCAP::CloudController
   class SharedDomainsController < RestController::ModelController
     define_attributes do
       attribute :name, String
+      attribute :router_group_guid, String, default: nil
     end
 
     query_parameters :name

@@ -9,6 +9,7 @@ resource 'Shared Domains', type: [:api, :legacy_api] do
   authenticated_request
 
   field :guid, 'The guid of the domain.', required: false
+  field :router_group_guid, 'The guid of the router group.', required: false
   field :name, 'The name of the domain.', required: true, example_values: ['example.com', 'foo.example.com']
 
   standard_model_list :shared_domain, VCAP::CloudController::SharedDomainsController
@@ -17,10 +18,14 @@ resource 'Shared Domains', type: [:api, :legacy_api] do
 
   post '/v2/shared_domains' do
     example 'Create a Shared Domain' do
-      client.post '/v2/shared_domains', fields_json, headers
+      client.post '/v2/shared_domains', fields_json(router_group_guid: 'my-random-guid'), headers
       expect(status).to eq 201
       standard_entity_response parsed_response, :shared_domain,
-                               name: 'example.com'
+                               name: 'example.com', router_group_guid: 'my-random-guid'
+
+      domain_guid = parsed_response['metadata']['guid']
+      domain = VCAP::CloudController::Domain.find(guid: domain_guid)
+      expect(domain.router_group_guid).to eq('my-random-guid')
     end
   end
 
