@@ -16,7 +16,6 @@ module VCAP::CloudController
 
       def process_advertise_message(msg)
         advertisement = NatsMessages::StagerAdvertisement.new(msg, Time.now.utc.to_i + @advertise_timeout)
-        publish_buildpacks unless stager_in_pool?(advertisement.stager_id)
 
         mutex.synchronize do
           remove_advertisement_for_id(advertisement.stager_id)
@@ -44,10 +43,6 @@ module VCAP::CloudController
         message_bus.subscribe('staging.advertise') do |msg|
           process_advertise_message(msg)
         end
-      end
-
-      def publish_buildpacks
-        message_bus.publish('buildpacks', admin_buildpacks)
       end
 
       def admin_buildpacks
