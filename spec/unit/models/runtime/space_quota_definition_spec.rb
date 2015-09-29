@@ -36,7 +36,7 @@ module VCAP::CloudController
           expect(space_quota_definition).to be_valid
         end
 
-        it 'instance_memory_limit cannot be less than zero' do
+        it 'instance_memory_limit cannot be less than -1' do
           space_quota_definition.instance_memory_limit = -2
           expect(space_quota_definition).not_to be_valid
           expect(space_quota_definition.errors.on(:instance_memory_limit)).to include(:invalid_instance_memory_limit)
@@ -45,11 +45,29 @@ module VCAP::CloudController
           expect(space_quota_definition).to be_valid
         end
       end
+
+      describe 'app_instance_limit' do
+        it 'cannot less than -1' do
+          space_quota_definition.app_instance_limit = -2
+          expect(space_quota_definition).not_to be_valid
+          expect(space_quota_definition.errors.on(:app_instance_limit)).to include(:invalid_app_instance_limit)
+
+          space_quota_definition.app_instance_limit = -1
+          expect(space_quota_definition).to be_valid
+        end
+      end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit, :instance_memory_limit }
-      it { is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services, :total_routes, :memory_limit, :instance_memory_limit }
+      it do
+        is_expected.to export_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
+          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit
+      end
+
+      it do
+        is_expected.to import_attributes :name, :organization_guid, :non_basic_services_allowed, :total_services,
+          :total_routes, :memory_limit, :instance_memory_limit, :app_instance_limit
+      end
     end
 
     describe '#destroy' do

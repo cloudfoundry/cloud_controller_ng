@@ -1166,6 +1166,16 @@ module VCAP::CloudController
         expect(last_response.body).to match /Invalid app state provided/
         expect(decoded_response['code']).to eq(100001)
       end
+
+      it 'validates space quota app instance limit' do
+        space.space_quota_definition = SpaceQuotaDefinition.make(app_instance_limit: 2)
+        space.save(validate: false)
+
+        put "/v2/apps/#{app_obj.guid}", MultiJson.dump(instances: 3), json_headers(admin_headers)
+
+        expect(last_response.status).to eq(400)
+        expect(decoded_response['code']).to eq(310008)
+      end
     end
   end
 end

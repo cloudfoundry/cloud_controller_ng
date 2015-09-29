@@ -65,7 +65,11 @@ module VCAP::CloudController
       elsif instance_number_errors
         Errors::ApiError.new_from_details('AppInvalid', 'Number of instances less than 0')
       elsif app_instance_limit_errors
-        Errors::ApiError.new_from_details('QuotaInstanceLimitExceeded')
+        if app_instance_limit_errors.include?(:space_app_instance_limit_exceeded)
+          Errors::ApiError.new_from_details('SpaceQuotaInstanceLimitExceeded')
+        else
+          Errors::ApiError.new_from_details('QuotaInstanceLimitExceeded')
+        end
       elsif state_errors
         Errors::ApiError.new_from_details('AppInvalid', 'Invalid app state provided')
       elsif docker_errors && docker_errors.include?(:docker_disabled)

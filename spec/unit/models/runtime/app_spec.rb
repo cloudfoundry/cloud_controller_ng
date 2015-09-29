@@ -144,6 +144,13 @@ module VCAP::CloudController
           targets = max_instance_memory_policies.collect(&:quota_definition)
           expect(targets).to match_array([org.quota_definition, space.space_quota_definition])
         end
+
+        it 'validates org and space using MaxAppInstancesPolicy' do
+          max_app_instances_policy = app.validation_policies.select { |policy| policy.instance_of? MaxAppInstancesPolicy }
+          expect(max_app_instances_policy.length).to eq(2)
+          targets = max_app_instances_policy.collect(&:quota_definition)
+          expect(targets).to match_array([org.quota_definition, space.space_quota_definition])
+        end
       end
 
       describe 'buildpack' do
@@ -353,6 +360,9 @@ module VCAP::CloudController
         let(:quota) do
           QuotaDefinition.make(memory_limit: 128)
         end
+        let(:space_quota) do
+          SpaceQuotaDefinition.make(memory_limit: 128, organization: org)
+        end
 
         context 'app update' do
           def act_as_cf_admin(&block)
@@ -363,7 +373,7 @@ module VCAP::CloudController
           end
 
           let(:org) { Organization.make(quota_definition: quota) }
-          let(:space) { Space.make(organization: org) }
+          let(:space) { Space.make(organization: org, space_quota_definition: space_quota) }
           subject!(:app) { AppFactory.make(space: space, memory: 64, instances: 2, state: 'STARTED', package_hash: 'a-hash') }
 
           it 'should raise error when quota is exceeded' do
@@ -400,6 +410,17 @@ module VCAP::CloudController
 
           it 'should raise error when instance quota is exceeded' do
             quota.app_instance_limit = 4
+            quota.memory_limit = 512
+            quota.save
+
+            app.instances = 5
+            expect { app.save }.to raise_error(/instance_limit_exceeded/)
+          end
+
+          it 'should raise error when space instance quota is exceeded' do
+            space_quota.app_instance_limit = 4
+            space_quota.memory_limit = 512
+            space_quota.save
             quota.memory_limit = 512
             quota.save
 

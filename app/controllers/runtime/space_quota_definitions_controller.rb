@@ -7,6 +7,7 @@ module VCAP::CloudController
       attribute :total_routes,               Integer
       attribute :memory_limit,               Integer
       attribute :instance_memory_limit,      Integer, default: nil
+      attribute :app_instance_limit,         Integer, default: nil
 
       to_one :organization
       to_many :spaces, exclude_in: [:create, :update]

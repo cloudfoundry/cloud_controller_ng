@@ -813,6 +813,11 @@
   http_code: 404
   message: "Space Quota Definition could not be found: %s"
 
+310008:
+  name: SpaceQuotaInstanceLimitExceeded
+  http_code: 400
+  message: "You have exceeded the instance limit for your space's quota."
+
 320001:
   name: DiegoDisabled
   http_code: 400

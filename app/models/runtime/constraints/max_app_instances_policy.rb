@@ -1,7 +1,9 @@
 class MaxAppInstancesPolicy
-  def initialize(app, organization, quota_definition, error_name)
+  attr_reader :quota_definition
+
+  def initialize(app, space_or_org, quota_definition, error_name)
     @app = app
-    @organization = organization
+    @space_or_org = space_or_org
     @quota_definition = quota_definition
     @error_name = error_name
     @errors = app.errors
@@ -12,7 +14,7 @@ class MaxAppInstancesPolicy
     return unless @app.scaling_operation?
     return if @quota_definition.app_instance_limit == -1
 
-    other_apps = @organization.apps.reject { |app| app.guid == @app.guid }
+    other_apps = @space_or_org.apps.reject { |app| app.guid == @app.guid }
 
     proposed_instance_count = other_apps.sum(&:instances) + @app.instances
 
