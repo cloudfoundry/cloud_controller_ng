@@ -16,7 +16,7 @@ module VCAP::CloudController
         }
       end
 
-      it 'returns the correct AppCreateMessage' do
+      it 'returns the correct AppsListMessage' do
         message = AppsListMessage.from_params(params)
 
         expect(message).to be_a(AppsListMessage)

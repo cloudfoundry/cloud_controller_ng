@@ -8,6 +8,7 @@ require 'actions/package_download'
 require 'actions/package_upload'
 require 'messages/package_upload_message'
 require 'messages/droplet_create_message'
+require 'messages/packages_list_message'
 
 module VCAP::CloudController
   class PackagesController < RestController::BaseController
@@ -25,9 +26,11 @@ module VCAP::CloudController
     def list
       check_read_permissions!
 
+      message = PackagesListMessage.from_params(params)
+      invalid_param!(message.errors.full_messages) unless message.valid?
+
       pagination_options = PaginationOptions.from_params(params)
       invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
-      invalid_param!("Unknown query param(s) '#{params.keys.join("', '")}'") if params.any?
 
       if membership.admin?
         paginated_result = PackageListFetcher.new.fetch_all(pagination_options)
