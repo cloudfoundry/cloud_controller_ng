@@ -156,7 +156,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
         body_parameter :username, "The user's name", required: true, example_values: ['user@example.com']
 
         put 'v2/organizations/:guid/users' do
-          example 'Associate User with the Organization by Username (experimental)' do
+          example 'Associate User with the Organization by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
@@ -169,7 +169,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
         end
 
         delete 'v2/organizations/:guid/users' do
-          example 'Disassociate User with the Organization by Username (experimental)' do
+          example 'Disassociate User with the Organization by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_user.guid)
@@ -208,7 +208,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
         body_parameter :username, "The user's name", required: true, example_values: ['user@example.com']
 
         put 'v2/organizations/:guid/managers' do
-          example 'Associate Manager with the Organization by Username (experimental)' do
+          example 'Associate Manager with the Organization by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
@@ -221,7 +221,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
         end
 
         delete 'v2/organizations/:guid/managers' do
-          example 'Disassociate Manager with the Organization by Username (experimental)' do
+          example 'Disassociate Manager with the Organization by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_manager_guid)
@@ -259,7 +259,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
         body_parameter :username, "The user's name", required: true, example_values: ['user@example.com']
 
         put 'v2/organizations/:guid/billing_managers' do
-          example 'Associate Billing Manager with the Organization by Username (experimental)' do
+          example 'Associate Billing Manager with the Organization by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
@@ -272,7 +272,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
         end
 
         delete 'v2/organizations/:guid/billing_managers' do
-          example 'Disassociate Billing Manager with the Organization by Username (experimental)' do
+          example 'Disassociate Billing Manager with the Organization by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_billing_manager_guid)
@@ -310,7 +310,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
         body_parameter :username, "The user's name", required: true, example_values: ['user@example.com']
 
         put 'v2/organizations/:guid/auditors' do
-          example 'Associate Auditor with the Organization by Username (experimental)' do
+          example 'Associate Auditor with the Organization by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return('user-guid')
@@ -323,7 +323,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
         end
 
         delete 'v2/organizations/:guid/auditors' do
-          example 'Disassociate Auditor with the Organization by Username (experimental)' do
+          example 'Disassociate Auditor with the Organization by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_auditor_guid)

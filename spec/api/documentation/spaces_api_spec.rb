@@ -118,7 +118,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         body_parameter :username, "The user's name", required: true, example_values: ['user@example.com']
 
         put 'v2/spaces/:guid/developers' do
-          example 'Associate Developer with the Space by Username (experimental)' do
+          example 'Associate Developer with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(developer.guid)
@@ -131,7 +131,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         end
 
         delete 'v2/spaces/:guid/developers' do
-          example 'Disassociate Developer with the Space by Username (experimental)' do
+          example 'Disassociate Developer with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_developer.guid)
@@ -171,7 +171,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         body_parameter :username, "The user's name", required: true, example_values: ['user@example.com']
 
         put 'v2/spaces/:guid/managers' do
-          example 'Associate Manager with the Space by Username (experimental)' do
+          example 'Associate Manager with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(manager.guid)
@@ -184,7 +184,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         end
 
         delete 'v2/spaces/:guid/managers' do
-          example 'Disassociate Manager with the Space by Username (experimental)' do
+          example 'Disassociate Manager with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_manager.guid)
@@ -224,7 +224,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         body_parameter :username, "The user's name", required: true, example_values: ['user@example.com']
 
         put 'v2/spaces/:guid/auditors' do
-          example 'Associate Auditor with the Space by Username (experimental)' do
+          example 'Associate Auditor with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(auditor.guid)
@@ -237,7 +237,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         end
 
         delete 'v2/spaces/:guid/auditors' do
-          example 'Disassociate Auditor with the Space by Username (experimental)' do
+          example 'Disassociate Auditor with the Space by Username' do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_auditor.guid)
