@@ -6,6 +6,7 @@ require 'messages/process_scale_message'
 require 'actions/process_scale'
 require 'actions/process_update'
 require 'messages/process_update_message'
+require 'messages/processes_list_message'
 
 module VCAP::CloudController
   class ProcessesController < RestController::BaseController
@@ -16,6 +17,9 @@ module VCAP::CloudController
     get '/v3/processes', :list
     def list
       check_read_permissions!
+
+      message = ProcessesListMessage.from_params(params)
+      invalid_param!(message.errors.full_messages) unless message.valid?
 
       pagination_options = PaginationOptions.from_params(params)
       invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?

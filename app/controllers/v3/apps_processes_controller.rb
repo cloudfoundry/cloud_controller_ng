@@ -1,6 +1,7 @@
 require 'presenters/v3/process_presenter'
 require 'cloud_controller/index_stopper'
 require 'cloud_controller/paging/pagination_options'
+require 'messages/processes_list_message'
 
 module VCAP::CloudController
   class AppsProcessesController < RestController::BaseController
@@ -12,9 +13,11 @@ module VCAP::CloudController
     def list_processes(guid)
       check_read_permissions!
 
+      message = ProcessesListMessage.from_params(params)
+      invalid_param!(message.errors.full_messages) unless message.valid?
+
       pagination_options = PaginationOptions.from_params(params)
       invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
-      invalid_param!("Unknown query param(s) '#{params.keys.join("', '")}'") if params.any?
 
       app = AppModel.where(guid: guid).eager(:space, space: :organization).all.first
       app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)

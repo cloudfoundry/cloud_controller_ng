@@ -98,7 +98,7 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'BadQueryParameter'
               expect(error.response_code).to eq 400
-              expect(error.message).to include("Unknown query param(s) 'invalid', 'bad'")
+              expect(error.message).to include("Unknown query parameter(s): 'invalid', 'bad'")
             end
           end
         end
@@ -112,7 +112,7 @@ module VCAP::CloudController
             }.to raise_error do |error|
               expect(error.name).to eq 'BadQueryParameter'
               expect(error.response_code).to eq 400
-              expect(error.message).to include('Per page must be between 1 and 5000')
+              expect(error.message).to include('Per page is not a number')
             end
           end
         end

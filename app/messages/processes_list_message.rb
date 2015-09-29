@@ -1,7 +1,7 @@
 require 'messages/base_message'
 
 module VCAP::CloudController
-  class PackagesListMessage < BaseMessage
+  class ProcessesListMessage < BaseMessage
     ALLOWED_KEYS = [:page, :per_page]
 
     attr_accessor(*ALLOWED_KEYS)

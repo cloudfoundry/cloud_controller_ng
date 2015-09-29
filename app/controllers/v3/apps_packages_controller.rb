@@ -3,6 +3,7 @@ require 'cloud_controller/paging/pagination_options'
 require 'messages/package_create_message'
 require 'actions/package_create'
 require 'actions/package_copy'
+require 'messages/packages_list_message'
 
 module VCAP::CloudController
   class AppsPackagesController < RestController::BaseController
