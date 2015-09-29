@@ -215,15 +215,20 @@ module VCAP::CloudController
             app.add_route route
 
             stub_request(:delete, service_binding_url_pattern).to_return(status: 200,  body: {}.to_json)
-          end
 
-          it 'orphans the route binding' do
             expect {
               stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 500)
               manager.create_route_service_instance_binding(route, service_instance)
             }.to raise_error(VCAP::Errors::ApiError, /desire app failed: 500/i)
+          end
 
+          it 'orphans the route binding and mitigates it' do
             expect(a_request(:delete, service_binding_url_pattern)).to have_been_made.times(1)
+            expect(RouteBinding.find(service_instance_id: service_instance.id, route_id: route.id)).to be_nil
+          end
+
+          it 'logs that nsync failed to update' do
+            expect(logger).to have_received(:error).with /Failed to update/
           end
         end
       end
