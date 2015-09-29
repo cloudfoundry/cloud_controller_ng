@@ -169,35 +169,5 @@ module VCAP::CloudController
         }.from(nil).to('staging-id')
       end
     end
-
-    describe 'pre-warming buildpack caches' do
-      let(:stager_advertise_msg) do
-        {
-          'id' => 'staging-id',
-          'stacks' => ['stack-name'],
-          'available_memory' => 1024,
-          'available_disk' => 512
-        }
-      end
-
-      before do
-        subject.process_advertise_message(stager_advertise_msg)
-      end
-
-      context 'when the stager is already in the pool' do
-        it 'does not send an buildpack advertisement' do
-          expect(message_bus).not_to receive(:publish)
-          subject.process_advertise_message(stager_advertise_msg)
-        end
-      end
-
-      context 'when the stager is seen for the first time' do
-        it 'publishes a buildpack advertisement' do
-          expect(message_bus).to receive(:publish).with('buildpacks', buildpack_array)
-
-          subject.process_advertise_message(stager_advertise_msg.merge('id' => '123'))
-        end
-      end
-    end
   end
 end
