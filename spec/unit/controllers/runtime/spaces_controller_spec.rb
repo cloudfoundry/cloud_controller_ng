@@ -676,15 +676,9 @@ module VCAP::CloudController
           expect(ServiceInstance.find(guid: service_instance_guid)).not_to be_nil
           expect(Route.find(guid: route_guid)).not_to be_nil
 
-          space_delete_jobs = Delayed::Job.where("handler like '%SpaceDelete%'")
-          expect(space_delete_jobs.count).to eq 1
-          job = space_delete_jobs.first
+          successes, _ = Delayed::Worker.new.work_off
 
-          Delayed::Worker.new.work_off
-
-          # a successfully completed job is removed from the table
-          expect(Delayed::Job.find(id: job.id)).to be_nil
-
+          expect(successes).to eq 1
           expect(Space.find(guid: space_guid)).to be_nil
           expect(AppModel.find(guid: app_guid)).to be_nil
           expect(ServiceInstance.find(guid: service_instance_guid)).to be_nil
@@ -829,11 +823,10 @@ module VCAP::CloudController
                 expect(last_response).to have_status_code 202
                 job_url = MultiJson.load(last_response.body)['metadata']['url']
 
-                Delayed::Worker.new.work_off
+                successes, failures = Delayed::Worker.new.work_off
 
-                space_delete_jobs = Delayed::Job.where("handler like '%SpaceDelete%'")
-                expect(space_delete_jobs.count).to eq 1
-                expect(space_delete_jobs.first.last_error).not_to be_nil
+                expect(successes).to eq(0)
+                expect(failures).to eq(1)
 
                 get job_url, {}, json_headers(admin_headers)
                 expect(last_response).to have_status_code 200
@@ -883,11 +876,9 @@ module VCAP::CloudController
                 delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
                 expect(last_response).to have_status_code 202
 
-                Delayed::Worker.new.work_off
-
-                space_delete_jobs = Delayed::Job.where("handler like '%SpaceDelete%'")
-                expect(space_delete_jobs.count).to eq 1
-                expect(space_delete_jobs.first.last_error).not_to be_nil
+                successes, failures = Delayed::Worker.new.work_off
+                expect(successes).to eq 0
+                expect(failures).to eq 1
 
                 job_url = decoded_response['metadata']['url']
 
@@ -900,11 +891,7 @@ module VCAP::CloudController
               it 'does not delete that instance' do
                 delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
 
-                Delayed::Worker.new.work_off
-
-                space_delete_jobs = Delayed::Job.where("handler like '%SpaceDelete%'")
-                expect(space_delete_jobs.count).to eq 1
-                expect(space_delete_jobs.first.last_error).not_to be_nil
+                expect(Delayed::Worker.new.work_off).to eq([0, 1])
 
                 expect(space.exists?).to be_truthy
                 expect(service_instance_1.exists?).to be_truthy
@@ -913,11 +900,7 @@ module VCAP::CloudController
               it 'deletes the other service instances' do
                 delete "/v2/spaces/#{space_guid}?recursive=true&async=true", '', json_headers(admin_headers)
 
-                Delayed::Worker.new.work_off
-
-                space_delete_jobs = Delayed::Job.where("handler like '%SpaceDelete%'")
-                expect(space_delete_jobs.count).to eq 1
-                expect(space_delete_jobs.first.last_error).not_to be_nil
+                expect(Delayed::Worker.new.work_off).to eq([0, 1])
 
                 expect(service_instance_2.exists?).to be_falsey
                 expect(service_instance_3.exists?).to be_falsey

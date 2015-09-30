@@ -107,7 +107,22 @@ module CloudController
 
       def delete_all(page_size=1000)
         logger.info("Attempting to delete all files in #{@directory_key}/#{@root_dir} blobstore")
-        delete_matching_key(/#{@root_dir}/, page_size)
+
+        files_to_destroy = []
+
+        files.each do |blobstore_file|
+          next unless /#{@root_dir}/.match(blobstore_file.key)
+
+          files_to_destroy << blobstore_file
+          if files_to_destroy.length == page_size
+            delete_files(files_to_destroy)
+            files_to_destroy = []
+          end
+        end
+
+        if files_to_destroy.length > 0
+          delete_files(files_to_destroy)
+        end
       end
 
       def delete_files(files_to_delete)
@@ -125,24 +140,6 @@ module CloudController
       def delete(key)
         blob_file = file(key)
         delete_file(blob_file) if blob_file
-      end
-
-      def delete_matching_key(key_regex, page_size=1000)
-        files_to_destroy = []
-
-        files.each do |blobstore_file|
-          next unless key_regex.match(blobstore_file.key)
-          files_to_destroy << blobstore_file
-
-          if files_to_destroy.length == page_size
-            delete_files(files_to_destroy)
-            files_to_destroy = []
-          end
-        end
-
-        if files_to_destroy.length > 0
-          delete_files(files_to_destroy)
-        end
       end
 
       def delete_blob(blob)

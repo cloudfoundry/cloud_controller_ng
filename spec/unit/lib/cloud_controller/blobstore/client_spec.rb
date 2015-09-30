@@ -597,30 +597,6 @@ module CloudController
           end
         end
 
-        describe '#delete_matching_key' do
-          it 'deletes all files that match it' do
-            path = File.join(local_dir, 'empty_file')
-            FileUtils.touch(path)
-
-            client.cp_to_blobstore(path, 'thing1')
-            client.cp_to_blobstore(path, 'thing2')
-            client.cp_to_blobstore(path, 'otherthing')
-            client.cp_to_blobstore(path, 'potato')
-
-            expect(client.exists?('thing1')).to be true
-            expect(client.exists?('thing2')).to be true
-            expect(client.exists?('otherthing')).to be true
-            expect(client.exists?('potato')).to be true
-
-            client.delete_matching_key(/thing/)
-
-            expect(client.exists?('thing1')).to be false
-            expect(client.exists?('thing2')).to be false
-            expect(client.exists?('otherthing')).to be false
-            expect(client.exists?('potato')).to be true
-          end
-        end
-
         describe '#delete' do
           it 'deletes the file' do
             path = File.join(local_dir, 'empty_file')

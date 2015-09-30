@@ -1,5 +1,3 @@
-require 'jobs/v3/buildpack_cache_delete'
-
 module VCAP::CloudController
   class AppDelete
     attr_reader :user_guid, :user_email
@@ -17,7 +15,6 @@ module VCAP::CloudController
         PackageDelete.new.delete(packages_to_delete(app))
         DropletDelete.new.delete(droplets_to_delete(app))
         ProcessDelete.new.delete(processes_to_delete(app))
-        delete_buildpack_cache(app)
         app.remove_all_routes
 
         Repositories::Runtime::AppEventRepository.new.record_app_delete_request(
@@ -32,11 +29,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def delete_buildpack_cache(app)
-      delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
-      Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
-    end
 
     def packages_to_delete(app_model)
       app_model.packages_dataset.select(:"#{PackageModel.table_name}__guid", :"#{PackageModel.table_name}__id").all
