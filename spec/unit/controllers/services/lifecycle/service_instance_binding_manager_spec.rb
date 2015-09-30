@@ -43,20 +43,30 @@ module VCAP::CloudController
         end
       end
 
-      context 'when binding a service instance to a route with an app', isolation: :truncation do
-        before do
-          app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
-          process_guid = Diego::ProcessGuid.from_app(app)
-          stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
-          app.add_route route
+      context 'binding a service instance to a route' do
+        context 'when the route has no apps' do
+          it 'does not send request to diego' do
+            expect_any_instance_of(Diego::NsyncClient).not_to receive(:desire_app)
+
+            manager.create_route_service_instance_binding(route, service_instance)
+          end
         end
 
-        it 'sends a message on to diego' do
-          expect_any_instance_of(Diego::NsyncClient).to receive(:desire_app) do |*args|
-            message = args.last
-            expect(message).to match(/route_service_url/)
+        context 'when the route has an app', isolation: :truncation do
+          before do
+            app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+            process_guid = Diego::ProcessGuid.from_app(app)
+            stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
+            app.add_route route
           end
-          manager.create_route_service_instance_binding(route, service_instance)
+
+          it 'sends a message on to diego' do
+            expect_any_instance_of(Diego::NsyncClient).to receive(:desire_app) do |*args|
+              message = args.last
+              expect(message).to match(/route_service_url/)
+            end
+            manager.create_route_service_instance_binding(route, service_instance)
+          end
         end
       end
 
