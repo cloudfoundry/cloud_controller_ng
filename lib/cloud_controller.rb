@@ -102,6 +102,4 @@ require 'cloud_controller/errors/instances_unavailable'
 require 'cloud_controller/uaa/errors'
 require 'cloud_controller/uaa/uaa_client'
 
-require 'cloud_controller/bits_expiration'
-
 require 'services'

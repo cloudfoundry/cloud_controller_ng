@@ -166,14 +166,12 @@ module VCAP::CloudController
 
         :packages => {
           optional(:max_package_size) => Integer,
-          optional(:max_valid_packages_stored) => Integer,
           :app_package_directory_key => String,
           :fog_connection => Hash
         },
 
         :droplets => {
           droplet_directory_key: String,
-          optional(:max_staged_droplets_stored) => Integer,
           fog_connection: Hash
         },
 
@@ -342,8 +340,6 @@ module VCAP::CloudController
         config[:staging][:minimum_staging_file_descriptor_limit] ||= 16384
         config[:broker_client_timeout_seconds] ||= 60
         config[:broker_client_default_async_poll_interval_seconds] ||= 60
-        config[:packages][:max_valid_packages_stored] ||= 5
-        config[:droplets][:max_staged_droplets_stored] ||= 5
 
         unless config.key?(:users_can_select_backend)
           config[:users_can_select_backend] = true

@@ -56,7 +56,6 @@ module VCAP::CloudController
 
       begin
         stagers.stager_for_package(package).staging_complete(droplet, staging_response)
-        BitsExpiration.new.expire_droplets!(droplet.app)
       rescue Errors::ApiError => api_err
         raise api_err
       rescue => e
