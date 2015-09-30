@@ -6,13 +6,16 @@ module VCAP::CloudController
     STAGING_STATE = 'STAGING'.freeze
     FAILED_STATE = 'FAILED'.freeze
     STAGED_STATE = 'STAGED'.freeze
+    EXPIRED_STATE = 'EXPIRED'.freeze
     DROPLET_STATES = [
       PENDING_STATE,
       STAGING_STATE,
       FAILED_STATE,
-      STAGED_STATE
+      STAGED_STATE,
+      EXPIRED_STATE
     ].freeze
 
+    many_to_one :package, class: 'VCAP::CloudController::PackageModel', key: :package_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
 

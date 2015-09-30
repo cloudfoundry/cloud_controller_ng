@@ -40,6 +40,9 @@ module VCAP::CloudController
         it 'knows its job name' do
           expect(job.job_name_in_configuration).to equal(:package_bits)
         end
+
+        it 'expires any old packages' do
+        end
       end
     end
   end

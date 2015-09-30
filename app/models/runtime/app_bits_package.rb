@@ -50,6 +50,8 @@ class AppBitsPackage
         package.state = VCAP::CloudController::PackageModel::READY_STATE
         package.save
       end
+
+      VCAP::CloudController::BitsExpiration.new.expire_packages!(package.app)
     rescue => e
       package.db.transaction do
         package.lock!

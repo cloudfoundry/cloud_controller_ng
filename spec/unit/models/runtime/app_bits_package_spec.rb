@@ -61,6 +61,12 @@ describe AppBitsPackage do
       create
     end
 
+    it 'expires any old packages' do
+      allow(VCAP::CloudController::Config).to receive(:config) { {} }
+      expect_any_instance_of(VCAP::CloudController::BitsExpiration).to receive(:expire_packages!)
+      create
+    end
+
     context 'when there is no package uploaded' do
       let(:compressed_path) { nil }
 
