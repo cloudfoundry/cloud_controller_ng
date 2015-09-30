@@ -336,7 +336,7 @@ module VCAP::CloudController
           }
         end
 
-        it 'does not verify the cert' do
+        it 'does verify the cert' do
           stub_request(:post, "#{hm9000_url}/bulk_app_state").
             to_return(status: 200, body: {}.to_json)
 

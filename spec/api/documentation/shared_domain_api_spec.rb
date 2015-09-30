@@ -9,7 +9,7 @@ resource 'Shared Domains', type: [:api, :legacy_api] do
   authenticated_request
 
   field :guid, 'The guid of the domain.', required: false
-  field :router_group_guid, 'The guid of the router group.', required: false
+  field :router_group_guid, 'The guid of the router group.', required: false, experimental: true
   field :name, 'The name of the domain.', required: true, example_values: ['example.com', 'foo.example.com']
 
   standard_model_list :shared_domain, VCAP::CloudController::SharedDomainsController
@@ -17,8 +17,29 @@ resource 'Shared Domains', type: [:api, :legacy_api] do
   standard_model_delete :shared_domain
 
   post '/v2/shared_domains' do
+    let(:routing_api_body) do
+      [
+        { guid: 'router-group-guid1', name: 'group-name', type: 'tcp' },
+        { guid: 'my-random-guid', name: 'group-name', type: 'tcp' }
+      ].to_json
+    end
+    let(:routing_api_url) do
+      url = TestConfig.config[:routing_api][:url]
+      "#{url}/routing/v1/router_groups"
+    end
+
+    before do
+      allow_any_instance_of(CF::UAA::TokenIssuer).to receive(:client_credentials_grant).
+        and_return(double('token_info', auth_header: 'bearer AUTH_HEADER'))
+
+      stub_request(:get, routing_api_url).
+        with(headers: { 'Authorization' => 'bearer AUTH_HEADER' }).
+        to_return(status: 200, body: routing_api_body)
+    end
+
     example 'Create a Shared Domain' do
       client.post '/v2/shared_domains', fields_json(router_group_guid: 'my-random-guid'), headers
+
       expect(status).to eq 201
       standard_entity_response parsed_response, :shared_domain,
                                name: 'example.com', router_group_guid: 'my-random-guid'

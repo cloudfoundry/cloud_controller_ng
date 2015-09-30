@@ -413,6 +413,36 @@ describe CloudController::DependencyLocator do
     end
   end
 
+  describe '#routing_api_client' do
+    let(:config) do
+      TestConfig.override(routing_api:
+                          {
+        url: 'routing-api-url',
+        routing_client_name: 'routing-client',
+        routing_client_secret: 'routing-secret',
+      }
+                         )
+      TestConfig.config
+    end
+
+    it 'returns a routing_api_client' do
+      name = config[:routing_api][:routing_client_name]
+      secret = config[:routing_api][:routing_client_secret]
+      uaa = config[:uaa][:url]
+      opts = { skip_ssl_validation: config[:skip_cert_verify] }
+
+      token_issuer = double('token_issuer')
+      expect(CF::UAA::TokenIssuer).to receive(:new).with(uaa, name, secret, opts).and_return(token_issuer)
+
+      client = locator.routing_api_client
+
+      expect(client).to be_an_instance_of(VCAP::CloudController::RoutingApi::Client)
+      expect(client.token_issuer).to eq token_issuer
+      expect(client.routing_api_uri.to_s).to eq(config[:routing_api][:url])
+      expect(client.skip_cert_verify).to eq(config[:skip_cert_verify])
+    end
+  end
+
   describe '#missing_blob_handler' do
     it 'returns the correct handler' do
       handler = double('a missing blob handler')

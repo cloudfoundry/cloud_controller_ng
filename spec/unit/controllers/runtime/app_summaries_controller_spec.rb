@@ -97,6 +97,7 @@ module VCAP::CloudController
           shared_domains = SharedDomain.all.collect do |domain|
             { 'guid' => domain.guid,
               'name' => domain.name,
+              'router_group_guid' => domain.router_group_guid,
             }
           end
 

@@ -898,3 +898,7 @@
   http_code: 400
   message: "%s"
 
+370001:
+  name: RoutingApiUnavailable
+  http_code: 503
+  message: "The Routing API is currently unavailable"

@@ -2,20 +2,21 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe SharedDomain, type: :model do
-    subject { described_class.make name: 'test.example.com' }
+    subject { described_class.make name: 'test.example.com', router_group_guid: 'my-router-group-guid' }
 
     it { is_expected.to have_timestamp_columns }
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name }
-      it { is_expected.to import_attributes :name }
+      it { is_expected.to export_attributes :name, :router_group_guid }
+      it { is_expected.to import_attributes :name, :router_group_guid }
     end
 
     describe '#as_summary_json' do
       it 'returns a hash containing the guid and name' do
         expect(subject.as_summary_json).to eq(
                                              guid: subject.guid,
-                                             name: 'test.example.com')
+                                             name: 'test.example.com',
+                                             router_group_guid: 'my-router-group-guid')
       end
     end
 

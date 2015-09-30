@@ -225,6 +225,18 @@ module CloudController
       UaaClient.new(target, client_id, secret, { skip_ssl_validation: skip_cert_verify })
     end
 
+    def routing_api_client
+      skip_cert_verify = @config[:skip_cert_verify]
+
+      client_id = @config[:routing_api] && @config[:routing_api][:routing_client_name]
+      secret = @config[:routing_api] && @config[:routing_api][:routing_client_secret]
+      uaa_target = @config[:uaa][:url]
+      token_issuer = CF::UAA::TokenIssuer.new(uaa_target, client_id, secret, { skip_ssl_validation: skip_cert_verify })
+
+      routing_api_url = @config[:routing_api] && @config[:routing_api][:url]
+      RoutingApi::Client.new(routing_api_url, token_issuer, skip_cert_verify)
+    end
+
     def missing_blob_handler
       CloudController::BlobSender::MissingBlobHandler.new
     end

@@ -225,7 +225,6 @@ module VCAP::CloudController
         ],
 
         optional(:app_bits_upload_grace_period_in_seconds) => Integer,
-
         optional(:default_locale) => String,
         optional(:allowed_cors_domains) => [String],
 
@@ -237,7 +236,9 @@ module VCAP::CloudController
         optional(:users_can_select_backend) => bool,
         optional(:default_to_diego_backend) => bool,
         optional(:routing_api) => {
-          url: String
+          url: String,
+          routing_client_name: String,
+          routing_client_secret: String,
         },
       }
     end

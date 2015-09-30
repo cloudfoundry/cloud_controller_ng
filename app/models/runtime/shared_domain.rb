@@ -14,6 +14,7 @@ module VCAP::CloudController
       {
         guid: guid,
         name: name,
+        router_group_guid: router_group_guid,
       }
     end
 
