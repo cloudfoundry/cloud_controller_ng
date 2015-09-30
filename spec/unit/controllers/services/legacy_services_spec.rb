@@ -120,7 +120,6 @@ module VCAP::CloudController
             expect(op_state.type).to eq 'create'
             expect(op_state.state).to eq 'succeeded'
             expect(op_state.description).to eq ''
-            expect(op_state.updated_at).not_to be_nil
           end
         end
 

@@ -207,7 +207,7 @@ module VCAP::CloudController
           self.last_operation.destroy
         end
 
-        self.service_instance_operation = ServiceInstanceOperation.create(last_operation)
+        self.service_instance_operation = ServiceInstanceOperation.new(last_operation)
       end
     end
 

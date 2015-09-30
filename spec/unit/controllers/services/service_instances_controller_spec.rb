@@ -245,7 +245,6 @@ module VCAP::CloudController
           expect(last_operation['state']).to eq 'succeeded'
           expect(last_operation['description']).to eq ''
           expect(last_operation['type']).to eq 'create'
-          expect(last_operation['updated_at']).not_to be_nil
         end
 
         it 'creates a CREATED service usage event' do
