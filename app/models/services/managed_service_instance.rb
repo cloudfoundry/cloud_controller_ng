@@ -213,8 +213,6 @@ module VCAP::CloudController
 
     def update_service_instance(attributes_to_update)
       ManagedServiceInstance.db.transaction do
-        lock!
-
         update_attributes(attributes_to_update)
       end
     end
