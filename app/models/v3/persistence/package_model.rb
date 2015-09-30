@@ -5,7 +5,8 @@ module VCAP::CloudController
       READY_STATE   = 'READY',
       FAILED_STATE  = 'FAILED',
       CREATED_STATE = 'AWAITING_UPLOAD',
-      COPYING_STATE = 'COPYING'
+      COPYING_STATE = 'COPYING',
+      EXPIRED_STATE = 'EXPIRED'
     ].map(&:freeze).freeze
 
     PACKAGE_TYPES = [
@@ -13,6 +14,7 @@ module VCAP::CloudController
       DOCKER_TYPE = 'docker'
     ].map(&:freeze).freeze
 
+    one_to_many :droplets, class: 'VCAP::CloudController::DropletModel', key: :package_guid, primary_key: :guid
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
 

@@ -232,6 +232,12 @@ module VCAP::CloudController
             post url, MultiJson.dump(staging_response)
           end
         end
+
+        it 'expires any old droplets' do
+          allow(Config).to receive(:config) { {} }
+          expect_any_instance_of(BitsExpiration).to receive(:expire_droplets!)
+          post url, MultiJson.dump(staging_response)
+        end
       end
     end
   end

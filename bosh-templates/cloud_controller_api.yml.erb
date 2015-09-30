@@ -230,6 +230,7 @@ resource_pool:
 
 packages:
   app_package_directory_key: <%= p("cc.packages.app_package_directory_key") %>
+  max_valid_packages_stored: <%= p("cc.packages.max_valid_packages_stored") %>
   max_package_size: <%= p("cc.packages.max_package_size") %>
   <% if_p("cc.packages.cdn") do %>
   cdn:
@@ -248,6 +249,7 @@ droplets:
     private_key: <%= p("cc.droplets.cdn.private_key").inspect %>
   <% end %>
   fog_connection: <%= p(["cc.droplets.fog_connection", "cc.default_fog_connection"]).to_json %>
+  max_staged_droplets_stored: <%= p("cc.droplets.max_staged_droplets_stored") %>
 
 buildpacks:
   buildpack_directory_key: <%= p("cc.buildpacks.buildpack_directory_key") %>

@@ -86,6 +86,14 @@ module VCAP::CloudController
         it 'does not set a default value for internal_service_hostname' do
           expect(config[:internal_service_hostname]).to be_nil
         end
+
+        it ' sets a default value for num_of_valid_packages_per_app_to_store' do
+          expect(config[:packages][:max_valid_packages_stored]).to eq(5)
+        end
+
+        it ' sets a default value for num_of_staged_droplets_per_app_to_store' do
+          expect(config[:droplets][:max_staged_droplets_stored]).to eq(5)
+        end
       end
 
       context 'when config values are provided' do
@@ -174,6 +182,11 @@ module VCAP::CloudController
 
           it 'preserves the internal_service_hostname value from the file' do
             expect(config[:internal_service_hostname]).to eq('cloud_controller_ng.service.cf.internal')
+          end
+
+          it 'preserves the expiration values from the file' do
+            expect(config[:packages][:max_valid_packages_stored]).to eq(10)
+            expect(config[:droplets][:max_staged_droplets_stored]).to eq(10)
           end
 
           context 'when the staging auth is already url encoded' do
