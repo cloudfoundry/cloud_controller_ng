@@ -24,20 +24,29 @@ module VCAP::CloudController
       validate_droplet_is_staged
     end
 
-    def self.user_visible(user)
-      dataset.where(user_visibility_filter(user))
-    end
+    class << self
+      def user_visible(user)
+        dataset.where(user_visibility_filter(user))
+      end
 
-    def self.user_visibility_filter(user)
-      {
-        space_guid: Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).union(
-            Space.dataset.join_table(:inner, :spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)
-          ).union(
-            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)
-          ).union(
-            Space.dataset.join_table(:inner, :organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)
+      def user_visibility_filter(user)
+        {
+          space_guid: space_guids_where_visible(user)
+        }
+      end
+
+      private
+
+      def space_guids_where_visible(user)
+        Space.join(:spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid)
+        .union(
+          Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)
+        ).union(
+          Space.join(:spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)
+        ).union(
+          Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)
         ).select(:space_guid)
-      }
+      end
     end
 
     private
