@@ -5,8 +5,8 @@ module VCAP::CloudController
     end
 
     define_attributes do
-      attribute :name, String
-      attribute :router_group_guid, String, default: nil
+      attribute :name, String, exclude_in: :update
+      attribute :router_group_guid, String, exclude_in: :update, default: nil
     end
 
     query_parameters :name

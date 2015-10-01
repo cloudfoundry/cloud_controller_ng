@@ -14,8 +14,8 @@ module VCAP::CloudController
         })
       end
 
-      it do
-        expect(described_class).to have_updatable_attributes({
+      it 'cannot update its fields' do
+        expect(described_class).not_to have_updatable_attributes({
           name: { type: 'string' },
           router_group_guid: { type: 'string' }
         })
