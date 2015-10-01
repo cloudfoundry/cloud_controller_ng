@@ -10,6 +10,7 @@ describe 'Broker API Versions' do
       'broker_api_v2.4_spec.rb' => '9be296cb6ce21259cafa15c9a6f06004',
       'broker_api_v2.5_spec.rb' => '5babf49a7cee063016bb6bc024b8d290',
       'broker_api_v2.6_spec.rb' => '13f4c11e90402cf4ca4c32e3f1145771',
+      'broker_api_v2.7_spec.rb' => '0e3f109f30e2c0e8fd14c7ad35fd6741',
     }
   end
   let(:digester) { Digester.new(algorithm: Digest::MD5) }
