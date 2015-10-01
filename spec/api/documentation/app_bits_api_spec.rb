@@ -73,6 +73,8 @@ resource 'Apps', type: [:api, :legacy_api] do
         Defines and uploads the bits (artifacts and dependencies) that this application needs to run, using a multipart PUT request.
         Bits that have already been uploaded can be referenced by their resource fingerprint(s).
         Bits that have not already been uploaded to Cloud Foundry must be included as a zipped binary file named "application".
+        File mode bits are only presevered for applications run on a Diego backend. If left blank, mode will default to 749, which
+        are also the default bits for a DEA backend. File mode bits are required to have at least the minimum permissions of 0600.
       eos
 
       # rubocop:disable LineLength
