@@ -51,13 +51,7 @@ module VCAP::CloudController
         visible_plans = ServicePlan.user_visible(current_user)
         ids_from_plans = visible_plans.map(&:service_id).uniq
 
-        ids_from_private_brokers = current_user.membership_space_ids.
-          join(:service_brokers, space_id: :space_id).
-          join(:services, service_broker_id: :id).
-          select(:services__id).
-          map(&:values).flatten.uniq
-
-        { id: ids_from_plans | ids_from_private_brokers }
+        { id: ids_from_plans }
       end
 
       def unauthenticated_visibility_filter

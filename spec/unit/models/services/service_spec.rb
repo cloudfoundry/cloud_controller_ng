@@ -171,6 +171,7 @@ module VCAP::CloudController
 
           private_broker = ServiceBroker.make space: space
           service = Service.make(service_broker: private_broker, active: true)
+          ServicePlan.make(service: service, active: true, public: false)
 
           records = Service.user_visible(space_developer).all
           expect(records.map(&:guid)).not_to include service.guid
@@ -186,6 +187,7 @@ module VCAP::CloudController
 
           private_broker = ServiceBroker.make space: space
           service = Service.make(service_broker: private_broker, active: true)
+          ServicePlan.make(service: service, active: true, public: false)
 
           records = Service.user_visible(space_developer).all
           expect(records.map(&:guid)).to include service.guid
@@ -201,7 +203,7 @@ module VCAP::CloudController
 
           private_broker = ServiceBroker.make space: space
           service = Service.make(service_broker: private_broker, active: true)
-
+          ServicePlan.make(service: service, active: true, public: false)
           records = Service.user_visible(space_auditor).all
           expect(records.map(&:guid)).to include service.guid
         end
@@ -216,7 +218,7 @@ module VCAP::CloudController
 
           private_broker = ServiceBroker.make space: space
           service = Service.make(service_broker: private_broker, active: true)
-
+          ServicePlan.make(service: service, active: true, public: false)
           records = Service.user_visible(space_manager).all
           expect(records).to include service
         end

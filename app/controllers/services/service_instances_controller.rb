@@ -82,7 +82,12 @@ module VCAP::CloudController
 
       invalid_service_instance!(service_instance) unless service_instance.valid?
       space_not_found! unless space
-      org_not_authorized! unless plan_visible_to_org?(organization, service_plan)
+
+      if service_plan.broker_private?
+        space_not_authorized! unless (service_plan.service_broker.space == space)
+      else
+        org_not_authorized! unless plan_visible_to_org?(organization, service_plan)
+      end
 
       service_instance = ServiceInstanceCreate.new(@services_event_repository, logger).
                              create(request_attrs, accepts_incomplete)
@@ -318,6 +323,10 @@ module VCAP::CloudController
 
     def org_not_authorized!
       raise Errors::ApiError.new_from_details('ServiceInstanceOrganizationNotAuthorized')
+    end
+
+    def space_not_authorized!
+      raise Errors::ApiError.new_from_details('ServiceInstanceSpaceNotAuthorized')
     end
 
     def space_not_found!

@@ -104,11 +104,14 @@ module VCAP::CloudController
       remove_audited_space space
     end
 
-    def membership_space_ids
-      db[:spaces_developers].where(user_id: id).
-        union(db[:spaces_auditors].where(user_id: id)).
-        union(db[:spaces_managers].where(user_id: id)).
-        select(:space_id)
+    def membership_spaces
+      Space.join(:spaces_developers, space_id: :id, user_id: id).select(:spaces__id).
+        union(
+          Space.join(:spaces_auditors, space_id: :id, user_id: id).select(:spaces__id)
+        ).
+        union(
+          Space.join(:spaces_managers, space_id: :id, user_id: id).select(:spaces__id)
+        )
     end
 
     def self.user_visibility_filter(_)

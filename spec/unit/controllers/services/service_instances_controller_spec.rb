@@ -69,36 +69,63 @@ module VCAP::CloudController
       end
 
       describe 'App Space Level Permissions' do
-        describe 'Developer' do
-          let(:member_a) { @space_a_developer }
-          let(:member_b) { @space_b_developer }
+        let(:service_broker_url_regex) do
+          uri = URI(broker.broker_url)
+          broker_url = uri.host + uri.path
+          %r{https://#{broker.auth_username}:#{broker.auth_password}@#{broker_url}/v2/service_instances/(.*)}
+        end
 
-          include_examples 'permission enumeration', 'Developer',
-            name: 'managed service instance',
-            path: '/v2/service_instances',
-            enumerate: 1
+        describe 'plans from a private broker' do
+          let(:space) { Space.make }
+          let(:organization) { space.organization }
+          let!(:private_broker) { ServiceBroker.make(space_guid: space.guid) }
+          let!(:service_from_a_private_broker) { Service.make(service_broker: private_broker) }
+          let!(:plan_from_a_private_broker) { ServicePlan.make(service: service_from_a_private_broker, public: false) }
+          let(:broker) { private_broker }
+          let!(:developer) { make_developer_for_space(space) }
 
-          it 'prevents a developer from creating a service instance in an unauthorized space' do
-            plan = ServicePlan.make(:v2)
+          before do
+            stub_request(:put, service_broker_url_regex).
+              with(headers: { 'Accept' => 'application/json' }).
+              to_return(
+                status: 201,
+                body: { dashboard_url: 'url.com', state: 'succeeded', state_description: '100%' }.to_json,
+                headers: { 'Content-Type' => 'application/json' })
+          end
 
-            req = MultiJson.dump(
-              name: 'foo',
-              space_guid: @space_b.guid,
-              service_plan_guid: plan.guid
+          it 'allows a user to create a service instance for a private broker in the same space as the broker' do
+            payload = MultiJson.dump(
+              'space_guid' => space.guid,
+              'name' => Sham.name,
+              'service_plan_guid' => plan_from_a_private_broker.guid,
             )
 
-            post '/v2/service_instances', req, headers_for(member_a)
+            post 'v2/service_instances', payload, headers_for(developer)
+            expect(last_response.status).to eq(201)
+          end
 
+          it 'does not allow user to create a service instance for a private broker in a difference space as the broker' do
+            other_space = Space.make organization: organization
+            other_space.add_developer developer
+
+            payload = MultiJson.dump(
+              'space_guid' => other_space.guid,
+              'name' => Sham.name,
+              'service_plan_guid' => plan_from_a_private_broker.guid,
+            )
+
+            post 'v2/service_instances', payload, headers_for(developer)
             expect(last_response.status).to eq(403)
-            expect(MultiJson.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
+            expect(parsed_response['description']).to match('A service instance for the selected plan cannot be created in this space.')
           end
         end
 
-        describe 'private plans' do
+        describe 'plans with public:false' do
           let!(:unprivileged_organization) { Organization.make }
           let!(:private_plan) { ServicePlan.make(:v2, public: false) }
           let!(:unprivileged_space) { Space.make(organization: unprivileged_organization) }
           let!(:developer) { make_developer_for_space(unprivileged_space) }
+          let(:broker) { private_plan.service_broker }
 
           before do
             stub_request(:put, service_broker_url_regex).
@@ -140,8 +167,8 @@ module VCAP::CloudController
               privileged_space.add_developer(developer)
             end
 
+            let(:broker) { private_plan.service.service_broker }
             let(:service_broker_url_regex) do
-              broker = private_plan.service.service_broker
               uri = URI(broker.broker_url)
               broker_url = uri.host + uri.path
               %r{https://#{broker.auth_username}:#{broker.auth_password}@#{broker_url}/v2/service_instances/(.*)}
@@ -170,6 +197,31 @@ module VCAP::CloudController
               expect(last_response.status).to eq(403)
               expect(MultiJson.load(last_response.body)['description']).to match('A service instance for the selected plan cannot be created in this organization.')
             end
+          end
+        end
+
+        describe 'Developer' do
+          let(:member_a) { @space_a_developer }
+          let(:member_b) { @space_b_developer }
+
+          include_examples 'permission enumeration', 'Developer',
+            name: 'managed service instance',
+            path: '/v2/service_instances',
+            enumerate: 1
+
+          it 'prevents a developer from creating a service instance in an unauthorized space' do
+            plan = ServicePlan.make(:v2)
+
+            req = MultiJson.dump(
+              name: 'foo',
+              space_guid: @space_b.guid,
+              service_plan_guid: plan.guid
+            )
+
+            post '/v2/service_instances', req, headers_for(member_a)
+
+            expect(last_response.status).to eq(403)
+            expect(MultiJson.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
           end
         end
 

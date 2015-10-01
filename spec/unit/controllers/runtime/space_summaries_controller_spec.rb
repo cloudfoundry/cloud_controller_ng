@@ -56,6 +56,32 @@ module VCAP::CloudController
         expect(decoded_response['services']).to eq(MultiJson.load(MultiJson.dump(expected_services)))
       end
 
+      it 'returns service summary for the space, including private service instances' do
+        foo_space = Space.make
+        private_broker = ServiceBroker.make(space_guid: foo_space.guid)
+        service = Service.make(service_broker: private_broker)
+        service_plan = ServicePlan.make(service: service, public: false)
+        service_instance = ManagedServiceInstance.make(space: space, service_plan: service_plan)
+
+        get "/v2/spaces/#{space.guid}/summary", '', admin_headers
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['services'].map { |service_json| service_json['guid'] }).to include(service_instance.guid)
+      end
+
+      it 'does not return private services from other spaces' do
+        other_space = Space.make
+        private_broker2 = ServiceBroker.make(space: other_space)
+        service2 = Service.make(service_broker: private_broker2)
+        service_plan2 = ServicePlan.make(service: service2, public: false)
+        service_instance2 = ManagedServiceInstance.make(space: other_space, service_plan: service_plan2)
+
+        get "/v2/spaces/#{space.guid}/summary", '', admin_headers
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['services'].map { |service_json| service_json['guid'] }).to_not include service_instance2.guid
+      end
+
       context 'when the instances reporter fails' do
         before do
           allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_apps).and_raise(

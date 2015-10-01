@@ -243,6 +243,11 @@
   http_code: 400
   message: "The service instance and the route are in different spaces."
 
+60018:
+  name: ServiceInstanceSpaceNotAuthorized
+  http_code: 403
+  message: A service instance for the selected plan cannot be created in this space.
+
 70001:
   name: RuntimeInvalid
   http_code: 400

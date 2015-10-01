@@ -97,7 +97,7 @@ module ControllerHelpers
     parse(last_response.body, options)
   end
 
-  alias parsed_response decoded_response
+  alias_method :parsed_response, :decoded_response
 
   def parse(json, options={})
     MultiJson.load(json, options)

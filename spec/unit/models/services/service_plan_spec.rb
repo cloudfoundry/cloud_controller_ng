@@ -39,7 +39,7 @@ module VCAP::CloudController
 
           expect {
             ServicePlan.make service: service, public: true
-          }.to raise_error Sequel::ValidationFailed, 'public may not be true for private plans'
+          }.to raise_error Sequel::ValidationFailed, 'public may not be true for plans belonging to private service brokers'
         end
       end
     end
@@ -50,6 +50,25 @@ module VCAP::CloudController
     end
 
     describe '#save' do
+      context 'before_filters' do
+        it 'defaults public to true if a value is not supplied' do
+          service = Service.make
+
+          expect(ServicePlan.make(service: service, public: false).public).to be(false)
+          expect(ServicePlan.make(service: service, public: true).public).to be(true)
+          expect(ServicePlan.make(service: service).public).to be(true)
+        end
+
+        it 'defaults to false if a value is not supplied but a private broker is' do
+          space = Space.make
+          private_broker = ServiceBroker.make space_id: space.id, space_guid: space.guid
+          service = Service.make service_broker: private_broker
+
+          expect(ServicePlan.make(service: service, public: false).public).to be(false)
+          expect(ServicePlan.make(service: service).public).to be(false)
+        end
+      end
+
       context 'on create' do
         context 'when no unique_id is set' do
           let(:attrs) { { unique_id: nil } }
@@ -122,6 +141,37 @@ module VCAP::CloudController
       end
     end
 
+    describe '.plan_ids_from_private_brokers' do
+      let(:organization) { Organization.make }
+      let(:space_1) { Space.make(organization: organization, id: Space.count + 9998) }
+      let(:space_2) { Space.make(organization: organization, id: Space.count + 9999) }
+      let(:user) { User.make }
+      let(:broker_1) { ServiceBroker.make(space: space_1) }
+      let(:broker_2) { ServiceBroker.make(space: space_2) }
+      let(:service_1) { Service.make(service_broker: broker_1) }
+      let(:service_2) { Service.make(service_broker: broker_2) }
+      let!(:service_plan_1) { ServicePlan.make(service: service_1, public: false) }
+      let!(:service_plan_2) { ServicePlan.make(service: service_2, public: false) }
+
+      before do
+        organization.add_user user
+        space_1.add_developer user
+        space_2.add_manager user
+      end
+
+      it 'returns plans from private service brokers in all the spaces the user has roles in' do
+        expect(ServicePlan.plan_ids_from_private_brokers(user)).to(match_array([service_plan_1.id, service_plan_2.id]))
+      end
+
+      it "doesn't return plans for private services in spaces the user doesn't have roles in" do
+        broker = ServiceBroker.make
+        service = Service.make(service_broker: broker)
+        plan = ServicePlan.make(service: service, public: false)
+
+        expect(ServicePlan.plan_ids_from_private_brokers(user)).not_to include plan
+      end
+    end
+
     describe '.organization_visible' do
       it 'returns plans that are visible to the organization' do
         hidden_private_plan = ServicePlan.make(public: false)
@@ -161,20 +211,20 @@ module VCAP::CloudController
         service = Service.make service_broker: broker
         plan = ServicePlan.make service: service
 
-        expect(plan.private?).to be_truthy
+        expect(plan.broker_private?).to be_truthy
       end
 
       it 'returns false if the plan belongs to a service that belongs to a public broker' do
         plan = ServicePlan.make
 
-        expect(plan.private?).to be_falsey
+        expect(plan.broker_private?).to be_falsey
       end
 
       context 'for v1 services' do
         it 'is false' do
           plan = ServicePlan.make(:v1)
 
-          expect(plan.private?).to be_falsey
+          expect(plan.broker_private?).to be_falsey
         end
       end
     end

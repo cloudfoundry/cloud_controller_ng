@@ -132,6 +132,25 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/services/:guid/service_plans' do
+      let!(:organization) { Organization.make }
+      let!(:space) { Space.make(organization: organization) }
+      let!(:user) { User.make }
+      let!(:broker) { ServiceBroker.make(space: space) }
+      let!(:service) { Service.make(service_broker: broker) }
+      let!(:service_plan) { ServicePlan.make(service: service, public: false) }
+
+      before do
+        organization.add_user user
+        space.add_developer user
+      end
+
+      it 'returns private service plans' do
+        get "/v2/services/#{service.guid}/service_plans", {}, headers_for(user)
+        expect(decoded_response['resources'].first['metadata']['guid']).to eq service_plan.guid
+      end
+    end
+
     describe 'GET /v2/services' do
       let(:organization) do
         Organization.make.tap do |org|
@@ -213,6 +232,7 @@ module VCAP::CloudController
           space = Space.make(organization: organization)
           private_broker = ServiceBroker.make(space: space)
           service = Service.make(service_broker: private_broker, active: true)
+          ServicePlan.make(service: service)
           space.add_developer(user)
 
           get '/v2/services', {}, headers
