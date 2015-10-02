@@ -14,11 +14,8 @@ Sequel.migration do
 
     alter_table :apps do
       add_column :stack_id, Integer
-      add_foreign_key [:stack_id], :stacks, name: :fk_apps_stack_id
-    end
-
-    alter_table :apps do
       set_column_not_null :stack_id
+      add_foreign_key [:stack_id], :stacks, name: :fk_apps_stack_id
     end
   end
 end
