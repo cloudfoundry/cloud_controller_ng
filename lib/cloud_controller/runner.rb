@@ -5,7 +5,6 @@ require 'i18n/backend/fallbacks'
 require 'vcap/uaa_token_decoder'
 require 'vcap/uaa_verification_key'
 require 'cf_message_bus/message_bus'
-require 'cf/registrar'
 require 'loggregator_emitter'
 require 'loggregator'
 require 'cloud_controller/dea/sub_system'
@@ -102,8 +101,6 @@ module VCAP::CloudController
           app     = builder.build(@config, request_metrics)
 
           start_thin_server(app)
-
-          router_registrar.register_with_router
         rescue => e
           logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
           raise e
@@ -209,17 +206,6 @@ module VCAP::CloudController
     def stop_thin_server
       logger.info('Stopping Thin Server.')
       @thin_server.stop if @thin_server
-    end
-
-    def router_registrar
-      @registrar ||= Cf::Registrar.new(
-          message_bus_servers: @config[:message_bus_servers],
-          host: @config[:external_host],
-          port: @config[:external_port],
-          uri: @config[:external_domain],
-          tags: { component: 'CloudController' },
-          index: @config[:index]
-      )
     end
 
     def register_with_collector(message_bus)
