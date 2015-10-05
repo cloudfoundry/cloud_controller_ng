@@ -58,7 +58,7 @@ module VCAP::CloudController
     end
 
     def buildpack_cache_name(app_model)
-      "#{app_model.guid}-#{Stack.default.name}"
+      "#{app_model.guid}/#{Stack.default.name}"
     end
   end
 end
