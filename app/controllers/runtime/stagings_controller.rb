@@ -159,13 +159,13 @@ module VCAP::CloudController
     end
 
     get "#{V3_APP_BUILDPACK_CACHE_PATH}/:stack/:guid/download", :download_v3_app_buildpack_cache
-    def download_v3_app_buildpack_cache(stack, guid)
+    def download_v3_app_buildpack_cache(stack_name, guid)
       app_model = AppModel.find(guid: guid)
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found') if app_model.nil?
 
-      logger.info 'v3-droplet.begin-download', app_guid: guid, stack: stack
+      logger.info 'v3-droplet.begin-download', app_guid: guid, stack: stack_name
 
-      blob = buildpack_cache_blobstore.blob("#{guid}-#{stack}")
+      blob = buildpack_cache_blobstore.blob("#{guid}-#{stack_name}")
       blob_name = 'buildpack cache'
 
       @missing_blob_handler.handle_missing_blob!(guid, blob_name) unless blob

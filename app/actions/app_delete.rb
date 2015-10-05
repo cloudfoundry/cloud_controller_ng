@@ -1,3 +1,5 @@
+require 'jobs/runtime/blobstore_delete.rb'
+
 module VCAP::CloudController
   class AppDelete
     attr_reader :user_guid, :user_email
@@ -15,6 +17,7 @@ module VCAP::CloudController
         PackageDelete.new.delete(packages_to_delete(app))
         DropletDelete.new.delete(droplets_to_delete(app))
         ProcessDelete.new.delete(processes_to_delete(app))
+        delete_buildpack_cache(app)
         app.remove_all_routes
 
         Repositories::Runtime::AppEventRepository.new.record_app_delete_request(
@@ -29,6 +32,11 @@ module VCAP::CloudController
     end
 
     private
+
+    def delete_buildpack_cache(app)
+      delete_job = Jobs::Runtime::BlobstoreDelete.new(buildpack_cache_name(app), :buildpack_cache_blobstore)
+      Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
+    end
 
     def packages_to_delete(app_model)
       app_model.packages_dataset.select(:"#{PackageModel.table_name}__guid", :"#{PackageModel.table_name}__id").all
@@ -47,6 +55,10 @@ module VCAP::CloudController
         :"#{App.table_name}__id",
         :"#{App.table_name}__app_guid",
         :"#{App.table_name}__name").all
+    end
+
+    def buildpack_cache_name(app_model)
+      "#{app_model.guid}-#{Stack.default.name}"
     end
   end
 end

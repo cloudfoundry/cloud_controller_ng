@@ -641,9 +641,15 @@ module VCAP::CloudController
             expect(ServiceInstance.find(guid: service_instance_guid)).not_to be_nil
             expect(Route.find(guid: route_guid)).not_to be_nil
 
-            successes, _ = Delayed::Worker.new.work_off
+            org_delete_jobs = Delayed::Job.where("handler like '%OrganizationDelete%'")
+            expect(org_delete_jobs.count).to eq 1
+            job = org_delete_jobs.first
 
-            expect(successes).to eq 1
+            Delayed::Worker.new.work_off
+
+            # a successfully completed job is removed from the table
+            expect(Delayed::Job.find(id: job.id)).to be_nil
+
             expect(Organization.find(guid: org.guid)).to be_nil
             expect(Space.find(guid: space_guid)).to be_nil
             expect(AppModel.find(guid: app_guid)).to be_nil
