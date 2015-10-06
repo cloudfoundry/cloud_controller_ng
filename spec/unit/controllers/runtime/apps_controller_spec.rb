@@ -184,14 +184,25 @@ module VCAP::CloudController
             space.save
           end
 
-          it 'errors when attempting to set enable_ssh to true' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(admin_headers)
-            expect(last_response.status).to eq(400)
-          end
-
           it 'allows enable_ssh to be set to false' do
             post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false)), json_headers(admin_headers)
             expect(last_response.status).to eq(201)
+          end
+
+          context 'and the user is an admin' do
+            it 'allows enable_ssh to be set to true' do
+              post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(admin_headers)
+              expect(last_response.status).to eq(201)
+            end
+          end
+
+          context 'and the user is not an admin' do
+            let(:nonadmin_user) { VCAP::CloudController::User.make(admin: false, active: true) }
+
+            it 'errors when attempting to set enable_ssh to true' do
+              post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(headers_for(nonadmin_user))
+              expect(last_response.status).to eq(400)
+            end
           end
         end
       end

@@ -102,8 +102,7 @@ module VCAP::CloudController
         MaxAppInstancesPolicy.new(self, space, space && space.space_quota_definition, :space_app_instance_limit_exceeded),
         HealthCheckPolicy.new(self, health_check_timeout),
         CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?),
-        DockerPolicy.new(self),
-        EnableSshPolicy.new(self)
+        DockerPolicy.new(self)
       ]
     end
 
