@@ -38,7 +38,6 @@ module VCAP::CloudController
         end
       end
 
-      let(:stager) { instance_double(Diego::Stager, staging_complete: nil) }
       let(:staged_app) { make_diego_app }
       let(:app_id) { staged_app.guid }
       let(:task_id) { staged_app.staging_task_id }
@@ -49,8 +48,6 @@ module VCAP::CloudController
         @internal_user = 'internal_user'
         @internal_password = 'internal_password'
         authorize @internal_user, @internal_password
-
-        allow_any_instance_of(Stagers).to receive(:stager_for_app).and_return(stager)
       end
 
       describe 'authentication' do
@@ -71,6 +68,10 @@ module VCAP::CloudController
         end
 
         context 'when using valid credentials' do
+          before do
+            allow_any_instance_of(Diego::Stager).to receive(:staging_complete)
+          end
+
           it 'succeeds' do
             post url, MultiJson.dump(staging_response)
             expect(last_response.status).to eq(200)
@@ -99,14 +100,14 @@ module VCAP::CloudController
 
       context 'with a diego app' do
         it 'calls the stager with the staging guid and response' do
-          expect(stager).to receive(:staging_complete).with(staging_guid, staging_response)
+          expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(staging_guid, staging_response)
 
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(200)
         end
 
         it 'propagates api errors from staging_response' do
-          expect(stager).to receive(:staging_complete).and_raise(Errors::ApiError.new_from_details('JobTimeout'))
+          expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(Errors::ApiError.new_from_details('JobTimeout'))
 
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(524)
@@ -137,7 +138,6 @@ module VCAP::CloudController
     end
 
     context 'staging a v3 package' do
-      let(:stager) { instance_double(Diego::V3::Stager, staging_complete: nil) }
       let(:url) { "/internal/v3/staging/#{staging_guid}/droplet_completed" }
       let(:staged_app) { AppModel.make }
       let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
@@ -148,19 +148,17 @@ module VCAP::CloudController
         @internal_user = 'internal_user'
         @internal_password = 'internal_password'
         authorize @internal_user, @internal_password
-
-        allow_any_instance_of(Stagers).to receive(:stager_for_package).and_return(stager)
       end
 
       it 'calls the stager with the droplet and response' do
-        expect(stager).to receive(:staging_complete).with(droplet, staging_response)
+        expect_any_instance_of(Diego::V3::Stager).to receive(:staging_complete).with(droplet, staging_response)
 
         post url, MultiJson.dump(staging_response)
         expect(last_response.status).to eq(200)
       end
 
       it 'propagates api errors from staging_response' do
-        expect(stager).to receive(:staging_complete).and_raise(Errors::ApiError.new_from_details('JobTimeout'))
+        expect_any_instance_of(Diego::V3::Stager).to receive(:staging_complete).and_raise(Errors::ApiError.new_from_details('JobTimeout'))
 
         post url, MultiJson.dump(staging_response)
         expect(last_response.status).to eq(524)
@@ -209,6 +207,7 @@ module VCAP::CloudController
 
         context 'when using valid credentials' do
           it 'succeeds' do
+            allow_any_instance_of(Diego::V3::Stager).to receive(:staging_complete)
             post url, MultiJson.dump(staging_response)
             expect(last_response.status).to eq(200)
           end
@@ -234,6 +233,7 @@ module VCAP::CloudController
         end
 
         it 'expires any old droplets' do
+          allow_any_instance_of(Diego::V3::Stager).to receive(:staging_complete)
           allow(Config).to receive(:config) { {} }
           expect_any_instance_of(BitsExpiration).to receive(:expire_droplets!)
           post url, MultiJson.dump(staging_response)
