@@ -248,6 +248,11 @@
   http_code: 403
   message: A service instance for the selected plan cannot be created in this space.
 
+60019:
+  name: ServiceInstanceRouteServiceURLInvalid
+  http_code: 400
+  message: "The service instance cannot be created with the invalid route service URL: %s"
+
 70001:
   name: RuntimeInvalid
   http_code: 400

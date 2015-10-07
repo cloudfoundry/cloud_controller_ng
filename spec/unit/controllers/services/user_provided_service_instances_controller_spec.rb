@@ -9,7 +9,8 @@ module VCAP::CloudController
           credentials:           { type: 'hash', default: {} },
           syslog_drain_url:      { type: 'string', default: '' },
           space_guid:            { type: 'string', required: true },
-          service_binding_guids: { type: '[string]' }
+          service_binding_guids: { type: '[string]' },
+          route_service_url:     { type: 'string', default: '' }
         })
       end
 
@@ -19,7 +20,8 @@ module VCAP::CloudController
           credentials:           { type: 'hash' },
           syslog_drain_url:      { type: 'string' },
           space_guid:            { type: 'string' },
-          service_binding_guids: { type: '[string]' }
+          service_binding_guids: { type: '[string]' },
+          route_service_url:     { type: 'string' }
         })
       end
     end
@@ -98,7 +100,8 @@ module VCAP::CloudController
         {
           'name' => 'my-upsi',
           'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
-          'space_guid' => space.guid
+          'space_guid' => space.guid,
+          'route_service_url' => 'https://route.url.com'
         }
       end
 
@@ -111,6 +114,7 @@ module VCAP::CloudController
         expect(service_instance.name).to eq 'my-upsi'
         expect(service_instance.credentials).to eq({ 'uri' => 'https://user:password@service-location.com:port/db' })
         expect(service_instance.space.guid).to eq space.guid
+        expect(service_instance.route_service_url).to eq 'https://route.url.com'
       end
 
       it 'records a create event' do
@@ -131,9 +135,31 @@ module VCAP::CloudController
             'name' => 'my-upsi',
             'credentials' => '[REDACTED]',
             'space_guid' => space.guid,
-            'syslog_drain_url' => ''
+            'syslog_drain_url' => '',
+            'route_service_url' => 'https://route.url.com'
           }
         })
+      end
+
+      context 'when the service instance is invalid' do
+        context 'because the route_service_url is invalid' do
+          let(:req) do
+            {
+              'name' => 'my-upsi',
+              'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
+              'space_guid' => space.guid,
+              'route_service_url' => 'http://route.url.com'
+            }
+          end
+
+          it 'returns CF-ServiceInstanceInvalid' do
+            post '/v2/user_provided_service_instances', req.to_json, headers_for(developer)
+
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['error_code']).to eq('CF-ServiceInstanceRouteServiceURLInvalid')
+            expect(last_response.status).to eq(400)
+          end
+        end
       end
     end
 

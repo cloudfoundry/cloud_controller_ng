@@ -7,6 +7,7 @@ module VCAP::CloudController
       attribute :name, String
       attribute :credentials, Hash, default: {}
       attribute :syslog_drain_url, String, default: ''
+      attribute :route_service_url, String, default: ''
 
       to_one :space
       to_many :service_bindings
@@ -42,6 +43,9 @@ module VCAP::CloudController
         { 'Location' => "#{self.class.path}/#{service_instance.guid}" },
         object_renderer.render_json(self.class, service_instance, @opts)
       ]
+
+    rescue UserProvidedServiceInstance::InvalidRouteServiceUrlScheme
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid', @request_attrs['route_service_url'])
     end
 
     def update(guid)

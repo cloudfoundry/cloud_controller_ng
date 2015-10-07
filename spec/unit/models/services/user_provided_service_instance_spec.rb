@@ -43,11 +43,17 @@ module VCAP::CloudController
           service_instance.add_service_binding(service_binding)
         }.to raise_error VCAP::CloudController::ServiceInstance::InvalidServiceBinding
       end
+
+      it 'raises an error if the route_service_url is not https' do
+        expect {
+          described_class.make(route_service_url: 'http://route.url.com')
+        }.to raise_error VCAP::CloudController::UserProvidedServiceInstance::InvalidRouteServiceUrlScheme
+      end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :credentials, :space_guid, :type, :syslog_drain_url }
-      it { is_expected.to import_attributes :name, :credentials, :space_guid, :syslog_drain_url }
+      it { is_expected.to export_attributes :name, :credentials, :space_guid, :type, :syslog_drain_url, :route_service_url }
+      it { is_expected.to import_attributes :name, :credentials, :space_guid, :syslog_drain_url, :route_service_url }
     end
 
     describe '#create' do
@@ -56,6 +62,7 @@ module VCAP::CloudController
           name: 'awesome-service',
           space: VCAP::CloudController::Space.make,
           credentials: { 'foo' => 'bar' },
+          route_service_url: 'https://route.url.com'
         )
         expect(instance.refresh.is_gateway_service).to be false
       end
@@ -67,6 +74,11 @@ module VCAP::CloudController
         expect(ServiceUsageEvent.count).to eq(1)
         expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::CREATED_EVENT_STATE)
         expect(event).to match_service_instance(instance)
+      end
+
+      it 'should create the service instance if the route_service_url is empty' do
+        described_class.make(route_service_url: '')
+        expect(ServiceInstance.count).to eq(1)
       end
     end
 
