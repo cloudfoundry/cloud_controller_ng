@@ -153,7 +153,9 @@ module VCAP::CloudController
       raise ApiError.new_from_details('StagingError', "malformed buildpack cache upload request for #{guid}") unless upload_path
       check_file_md5
 
-      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, "#{guid}/#{stack_name}", :buildpack_cache_blobstore)
+      cache_key = CacheKeyPresenter.cache_key(guid: guid, stack_name: stack_name)
+
+      blobstore_upload = Jobs::Runtime::BlobstoreUpload.new(upload_path, cache_key, :buildpack_cache_blobstore)
       Jobs::Enqueuer.new(blobstore_upload, queue: Jobs::LocalQueue.new(config)).enqueue
       HTTP::OK
     end

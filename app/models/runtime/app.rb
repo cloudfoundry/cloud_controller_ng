@@ -6,6 +6,7 @@ require 'cloud_controller/errors/invalid_route_relation'
 require 'repositories/runtime/app_usage_event_repository'
 require 'actions/services/service_binding_delete'
 require 'presenters/message_bus/service_binding_presenter'
+require 'presenters/v3/cache_key_presenter'
 
 require_relative 'buildpack'
 
@@ -514,7 +515,7 @@ module VCAP::CloudController
     end
 
     def buildpack_cache_key
-      "#{guid}/#{stack.name}"
+      CacheKeyPresenter.cache_key(guid: guid, stack_name: stack.name)
     end
 
     def docker_image=(value)

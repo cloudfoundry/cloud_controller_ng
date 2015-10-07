@@ -597,6 +597,101 @@ module CloudController
           end
         end
 
+        describe '#delete_all_in_path' do
+          let(:connection_config) { { provider: 'Local', local_root: local_dir } }
+
+          before do
+            Fog.unmock!
+          end
+
+          after do
+            Fog.mock!
+          end
+
+          it 'deletes all the files within a specific path' do
+            path = File.join(local_dir, 'empty_file')
+            FileUtils.touch(path)
+
+            remote_path_1 = 'aaaaguid'
+
+            remote_key_1 = "#{remote_path_1}/stack_1"
+            remote_key_2 = "#{remote_path_1}/stack_2"
+
+            remote_path_2 = 'bbbbguid'
+            remote_key_3 = "#{remote_path_2}/stack_3"
+
+            client.cp_to_blobstore(path, remote_key_1)
+            client.cp_to_blobstore(path, remote_key_2)
+            client.cp_to_blobstore(path, remote_key_3)
+            expect(client.exists?(remote_key_1)).to be true
+            expect(client.exists?(remote_key_2)).to be true
+            expect(client.exists?(remote_key_3)).to be true
+
+            client.delete_all_in_path(remote_path_1)
+
+            expect(client.exists?(remote_key_1)).to be false
+            expect(client.exists?(remote_key_2)).to be false
+            expect(client.exists?(remote_key_3)).to be true
+          end
+
+          it 'should be ok if there are no files' do
+            expect(client.files).to have(0).items
+            expect {
+              client.delete_all_in_path('nonsense_path')
+            }.to_not raise_error
+          end
+
+          context 'when the underlying blobstore allows multiple deletes in a single request' do
+            let(:connection_config) do
+              {
+                provider: 'AWS',
+                aws_access_key_id: 'fake_access_key_id',
+                aws_secret_access_key: 'fake_secret_access_key',
+              }
+            end
+
+            it 'should be ok if there are no files' do
+              Fog.mock!
+              expect(client.files).to have(0).items
+              expect {
+                client.delete_all_in_path('path!')
+              }.to_not raise_error
+            end
+          end
+
+          context 'when a root dir is provided' do
+            let(:client_with_root) do
+              Client.new(connection_config, directory_key, nil, 'root-dir')
+            end
+
+            it 'only deletes files at the root' do
+              path = File.join(local_dir, 'empty_file')
+              FileUtils.touch(path)
+
+              remote_path_1 = 'aaaaguid'
+
+              remote_key_1 = "#{remote_path_1}/stack_1"
+              remote_key_2 = "#{remote_path_1}/stack_2"
+
+              remote_path_2 = 'bbbbguid'
+              remote_key_3 = "#{remote_path_2}/stack_3"
+
+              client_with_root.cp_to_blobstore(path, remote_key_1)
+              client_with_root.cp_to_blobstore(path, remote_key_2)
+              client_with_root.cp_to_blobstore(path, remote_key_3)
+              expect(client_with_root.exists?(remote_key_1)).to be true
+              expect(client_with_root.exists?(remote_key_2)).to be true
+              expect(client_with_root.exists?(remote_key_3)).to be true
+
+              client_with_root.delete_all_in_path(remote_path_1)
+
+              expect(client_with_root.exists?(remote_key_1)).to be false
+              expect(client_with_root.exists?(remote_key_2)).to be false
+              expect(client_with_root.exists?(remote_key_3)).to be true
+            end
+          end
+        end
+
         describe '#delete' do
           it 'deletes the file' do
             path = File.join(local_dir, 'empty_file')

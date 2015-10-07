@@ -125,6 +125,20 @@ module CloudController
         end
       end
 
+      def delete_all_in_path(path)
+        logger.info("Attempting to delete all files in #{@directory_key}/#{@root_dir} blobstore under #{path}")
+        remote_path = "#{@directory_key}/#{partitioned_key(path)}"
+        files_to_destroy = []
+
+        file_store = connection.directories.get(remote_path)
+        return unless file_store
+        file_store.files.map do |file|
+          files_to_destroy << file
+        end
+
+        delete_files(files_to_destroy) if files_to_destroy.length > 0
+      end
+
       def delete_files(files_to_delete)
         if connection.respond_to?(:delete_multiple_objects)
           # AWS needs the file key to work; other providers with multiple delete

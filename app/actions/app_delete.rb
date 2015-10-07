@@ -1,4 +1,5 @@
 require 'jobs/runtime/blobstore_delete.rb'
+require 'jobs/v3/buildpack_cache_delete'
 
 module VCAP::CloudController
   class AppDelete
@@ -34,7 +35,7 @@ module VCAP::CloudController
     private
 
     def delete_buildpack_cache(app)
-      delete_job = Jobs::Runtime::BlobstoreDelete.new(buildpack_cache_name(app), :buildpack_cache_blobstore)
+      delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
       Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
     end
 
@@ -55,10 +56,6 @@ module VCAP::CloudController
         :"#{App.table_name}__id",
         :"#{App.table_name}__app_guid",
         :"#{App.table_name}__name").all
-    end
-
-    def buildpack_cache_name(app_model)
-      "#{app_model.guid}/#{Stack.default.name}"
     end
   end
 end
