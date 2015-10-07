@@ -53,6 +53,7 @@ module VCAP::CloudController
 
             before do
               allow(Steno).to receive(:logger).with('cc.stager').and_return(logger)
+              allow(Loggregator).to receive(:emit_error)
             end
 
             describe 'success case' do
@@ -77,6 +78,18 @@ module VCAP::CloudController
                   droplet = staged_droplet
                   expect(droplet.procfile).to eq("web: start me\nworker: hello\nanything: hi hi hi")
                   expect(droplet.buildpack).to eq('INTERCAL')
+                end
+
+                context 'when process_types is empty' do
+                  before do
+                    success_response[:result][:process_types] = nil
+                  end
+
+                  it 'gracefully sets process_types to an empty hash, but mark the droplet as failed' do
+                    handle_staging_result(success_response)
+                    expect(staged_droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+                    expect(staged_droplet.error).to eq('StagingError - No process types returned from stager')
+                  end
                 end
 
                 context 'when detected_buildpack is empty' do
@@ -127,6 +140,10 @@ module VCAP::CloudController
                       payload:      malformed_success_response,
                       error:        '{ result => Missing key }'
                     )
+                end
+
+                it 'logs an error for the CF user' do
+                  expect(Loggregator).to have_received(:emit_error).with(staged_droplet.guid, /Malformed message from Diego stager/)
                 end
               end
 

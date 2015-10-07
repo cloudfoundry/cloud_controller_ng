@@ -44,16 +44,27 @@ module VCAP::CloudController
 
           def handle_success(droplet, payload)
             begin
+              if payload[:result]
+                payload[:result][:process_types] ||= {}
+              end
+
               self.class.success_parser.validate(payload)
             rescue Membrane::SchemaValidationError => e
               logger.error('diego.staging.success.invalid-message', staging_guid: droplet.guid, payload: payload, error: e.to_s)
+              Loggregator.emit_error(droplet.guid, 'Malformed message from Diego stager')
+
               raise Errors::ApiError.new_from_details('InvalidRequest', payload)
             end
 
-            begin
-              save_staging_result(droplet, payload)
-            rescue => e
-              logger.error(@logger_prefix + 'saving-staging-result-failed', staging_guid: droplet.guid, response: payload, error: e.message)
+            if payload[:result][:process_types] == {}
+              payload[:error] = { message: 'No process types returned from stager' }
+              handle_failure(droplet, payload)
+            else
+              begin
+                save_staging_result(droplet, payload)
+              rescue => e
+                logger.error(@logger_prefix + 'saving-staging-result-failed', staging_guid: droplet.guid, response: payload, error: e.message)
+              end
             end
           end
 
