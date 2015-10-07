@@ -30,13 +30,15 @@ module VCAP::CloudController
       {
         guid:       package.guid,
         type:       package.type,
-        hash: {
-          type: DEFAULT_HASHING_ALGORITHM,
-          value: package.package_hash
+        data: {
+          hash: {
+            type: DEFAULT_HASHING_ALGORITHM,
+            value: package.package_hash
+          },
+          error:      package.error,
         },
         url:        package.url,
         state:      package.state,
-        error:      package.error,
         created_at: package.created_at,
         updated_at: package.updated_at,
         links:      build_links(package),

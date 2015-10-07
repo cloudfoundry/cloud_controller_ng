@@ -45,6 +45,26 @@ module VCAP::CloudController
         end
       end
 
+      context 'when a data parameter is provided for a bits package and it is not empty' do
+        let(:params) { { app_guid: 'guid', type: 'bits', data: { foobar: 'foobaz' } } }
+
+        it 'is not valid' do
+          message = PackageCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:data]).to include('data must be empty if provided for bits packages')
+        end
+      end
+
+      context 'when a data parameter is not provided for a bits package' do
+        let(:params) { { app_guid: 'guid', type: 'bits' } }
+
+        it 'is valid' do
+          message = PackageCreateMessage.new(params)
+          expect(message).to be_valid
+        end
+      end
+
       context 'type is bits and a url is provided' do
         let(:params) { { app_guid: 'guid', type: 'bits', url: 'a-url' }  }
 

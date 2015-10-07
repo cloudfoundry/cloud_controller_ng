@@ -45,10 +45,12 @@ resource 'Apps (Experimental)', type: :api do
           {
             'guid'       => package.guid,
             'type'       => 'bits',
-            'hash'       => { 'type' => 'sha1', 'value' => nil },
+            'data'       => {
+              'hash'       => { 'type' => 'sha1', 'value' => nil },
+              'error'      => nil
+            },
             'url'        => nil,
             'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
-            'error'      => nil,
             'created_at' => iso8601,
             'updated_at' => nil,
             'links'     => {
