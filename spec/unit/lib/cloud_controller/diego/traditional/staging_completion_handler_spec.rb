@@ -48,6 +48,7 @@ module VCAP::CloudController
 
     before do
       allow(Steno).to receive(:logger).with('cc.stager').and_return(logger)
+      allow(Loggregator).to receive(:emit_error)
       allow(Dea::Client).to receive(:start)
 
       staged_app.add_new_droplet('lol')
@@ -69,7 +70,7 @@ module VCAP::CloudController
           success_response[:result][:process_types] = {
             web: 'web_command',
             worker: 'worker_command',
-            anything: 'hi hi hi'
+            anything: 'lizard hand on a stick'
           }
         end
 
@@ -81,6 +82,18 @@ module VCAP::CloudController
           expect(droplet.execution_metadata).to eq('')
           expect(droplet.detected_start_command).to eq('web_command')
           expect(droplet.droplet_hash).to eq('lol')
+        end
+
+        context 'when the app has no procfile' do
+          before do
+            success_response[:result][:process_types] = nil
+          end
+
+          it 'gracefully handles a nil process_types' do
+            expect {
+              handle_staging_result(success_response)
+            }.to change { staged_app.reload.staged? }.to(true)
+          end
         end
       end
 
@@ -186,6 +199,10 @@ module VCAP::CloudController
             payload: malformed_success_response,
             error: '{ result => Missing key }'
           )
+        end
+
+        it 'logs an error for the CF user' do
+          expect(Loggregator).to have_received(:emit_error).with(staged_app.guid, /Malformed message from Diego stager/)
         end
       end
 

@@ -10,11 +10,15 @@ module VCAP::CloudController
     let(:execution_metadata) { 'execution_metadata' }
     let(:staging_response) do
       {
-        lifecycle_data: {
-          buildpack_key: buildpack_key,
-          detected_buildpack: detected_buildpack,
-        },
-        execution_metadata: execution_metadata
+        result: {
+          lifecycle_type: 'buildpack',
+          lifecycle_metadata: {
+            buildpack_key: buildpack_key,
+            detected_buildpack: detected_buildpack,
+          },
+          execution_metadata: execution_metadata,
+          process_types: { web: 'start me' }
+        }
       }
     end
 
@@ -69,7 +73,7 @@ module VCAP::CloudController
 
         context 'when using valid credentials' do
           before do
-            allow_any_instance_of(Diego::Stager).to receive(:staging_complete)
+            allow_any_instance_of(Diego::Runner).to receive(:start)
           end
 
           it 'succeeds' do
@@ -91,6 +95,10 @@ module VCAP::CloudController
 
         context 'with an invalid staging guid' do
           let(:task_id) { 'bogus-taskid' }
+
+          before do
+            allow_any_instance_of(Diego::Runner).to receive(:start)
+          end
 
           it 'fails with a 400' do
             post url, MultiJson.dump(staging_response)

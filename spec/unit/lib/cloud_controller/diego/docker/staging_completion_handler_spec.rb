@@ -117,6 +117,50 @@ module VCAP::CloudController
             end
           end
 
+          context 'when process_types is empty' do
+            before do
+              payload[:result][:process_types] = nil
+            end
+
+            it 'raises ApiError and marks the app as failed to stage' do
+              expect {
+                handler.staging_complete(staging_guid, payload)
+              }.to raise_error(VCAP::Errors::ApiError).and change {
+                app.reload.package_state
+              }.from('PENDING').to('FAILED')
+            end
+
+            it 'logs an error for the CF operator' do
+              expect {
+                handler.staging_complete(staging_guid, payload)
+              }.to raise_error(VCAP::Errors::ApiError)
+
+              expect(logger).to have_received(:error).with(
+                'diego.staging.success.invalid-message',
+                staging_guid: staging_guid,
+                payload: payload,
+                error: '{ result => { process_types => Expected instance of Hash, given instance of NilClass. } }'
+              )
+            end
+
+            it 'logs an error for the CF user' do
+              expect {
+                handler.staging_complete(staging_guid, payload)
+              }.to raise_error(VCAP::Errors::ApiError)
+
+              expect(Loggregator).to have_received(:emit_error).with(app.guid, /Malformed message from Diego stager/)
+            end
+
+            it 'should not start anything' do
+              expect {
+                handler.staging_complete(staging_guid, payload)
+              }.to raise_error(VCAP::Errors::ApiError)
+
+              expect(runners).not_to have_received(:runner_for_app)
+              expect(runner).not_to have_received(:start)
+            end
+          end
+
           context 'when the staging guid is invalid' do
             let(:staging_guid) { Diego::StagingGuid.from('unknown_app_guid', 'unknown_task_id') }
 
