@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:user) { User.make }
     let(:guid) { 'v2-or-v3-app-guid' }
     let(:space_guids) { ['guid-1', 'guid-2'] }
-
+    let(:roles) { double(:roles) }
     let(:membership) { double(:membership) }
     let(:fetcher) { double(:fetcher, app_exists?: true, app_exists_by_space?: true) }
     let(:logger) { instance_double(Steno::Logger) }
@@ -29,6 +29,7 @@ module VCAP::CloudController
       allow(LogAccessFetcher).to receive(:new).and_return(fetcher)
       allow(log_access_controller).to receive(:membership).and_return(membership)
       allow(log_access_controller).to receive(:current_user).and_return(user)
+      allow(VCAP::CloudController::Roles).to receive(:new).and_return(roles)
     end
 
     describe '#lookup' do
@@ -47,10 +48,8 @@ module VCAP::CloudController
 
       context 'permissions' do
         context 'admin user' do
-          let(:user) { User.make(admin: true) }
-
           before do
-            allow(membership).to receive(:admin?).and_return(true)
+            allow(roles).to receive(:admin?).and_return(true)
           end
 
           it 'uses admin permissions' do
@@ -61,7 +60,7 @@ module VCAP::CloudController
 
         context 'non admin  user' do
           before do
-            allow(membership).to receive(:admin?).and_return(false)
+            allow(roles).to receive(:admin?).and_return(false)
             allow(membership).to receive(:space_guids_for_roles).with(
               [Membership::SPACE_DEVELOPER,
                Membership::SPACE_MANAGER,
@@ -80,7 +79,7 @@ module VCAP::CloudController
 
       context 'when the app does not exist' do
         before do
-          allow(membership).to receive(:admin?).and_return(true)
+          allow(roles).to receive(:admin?).and_return(true)
           allow(fetcher).to receive(:app_exists?).with('some-guid').and_return(false)
         end
 
@@ -92,7 +91,7 @@ module VCAP::CloudController
 
       context 'when the app is found' do
         before do
-          allow(membership).to receive(:admin?).and_return(true)
+          allow(roles).to receive(:admin?).and_return(true)
         end
 
         it 'returns 200 when the app is found' do
