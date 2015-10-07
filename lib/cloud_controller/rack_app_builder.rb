@@ -4,6 +4,9 @@ module VCAP::CloudController
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
 
       logger = access_log(config)
+
+      Rails.application.initialize!
+
       Rack::Builder.new do
         if logger
           use Rack::CommonLogger, logger
@@ -16,6 +19,10 @@ module VCAP::CloudController
 
         map '/' do
           run FrontController.new(config, token_decoder, request_metrics)
+        end
+
+        map '/v3' do
+          run Rails.application.app
         end
       end
     end

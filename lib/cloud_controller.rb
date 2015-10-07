@@ -1,3 +1,10 @@
+require 'vcap/common'
+
+require 'rails'
+require 'action_controller/railtie'
+
+require 'controllers/base/base_controller_v3.rb'
+
 require 'sinatra'
 require 'sequel'
 require 'thin'
@@ -8,7 +15,6 @@ require 'allowy'
 
 require 'eventmachine/schedule_sync'
 
-require 'vcap/common'
 require 'vcap/errors/details'
 require 'vcap/errors/api_error'
 require 'uaa/token_coder'
@@ -39,6 +45,8 @@ require 'cloud_controller/steno_configurer'
 require 'cloud_controller/constants'
 
 require 'controllers/base/front_controller'
+
+Rails.application.initialize! if ENV['RAILS_ENV'] == 'test'
 
 require 'cloud_controller/config'
 require 'cloud_controller/db'

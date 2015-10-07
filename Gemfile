@@ -2,7 +2,7 @@
 source 'http://rubygems.org'
 
 gem 'addressable'
-gem 'activesupport'
+gem 'railties'
 gem 'rake'
 gem 'eventmachine', '~> 1.0.0'
 gem 'fog'
@@ -57,6 +57,7 @@ group :test do
   gem 'rspec_api_documentation', git: 'https://github.com/zipmark/rspec_api_documentation.git'
   gem 'rspec-collection_matchers'
   gem 'rspec-its'
+  gem 'rspec-rails'
   gem 'rubocop'
   gem 'astrolabe'
   gem 'timecop'
