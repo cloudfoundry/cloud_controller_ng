@@ -2398,5 +2398,16 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#needs_package_in_current_state?' do
+      it 'returns true if started' do
+        app = App.new(state: 'STARTED', package_hash: nil)
+        expect(app.needs_package_in_current_state?).to eq(true)
+      end
+
+      it 'returns false if not started' do
+        expect(App.new(state: 'STOPPED', package_hash: nil).needs_package_in_current_state?).to eq(false)
+      end
+    end
   end
 end

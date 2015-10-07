@@ -139,7 +139,7 @@ module VCAP::CloudController
     end
 
     def before_save
-      if generate_start_event? && !package_hash
+      if needs_package_in_current_state? && !package_hash
         raise VCAP::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
       end
 
@@ -197,21 +197,9 @@ module VCAP::CloudController
       create_app_usage_buildpack_event
     end
 
-    def generate_start_event?
-      # Change to app state is given priority over change to footprint as
-      # we would like to generate only either start or stop event exactly
-      # once during a state change. Also, if the app is not in started state
-      # and/or is new, then the changes to the footprint shouldn't trigger a
-      # billing event.
-      started? && ((column_changed?(:state)) || (!new? && footprint_changed?))
-    end
-
-    def generate_stop_event?
-      # If app is not in started state and/or is new, then the changes
-      # to the footprint shouldn't trigger a billing event.
-      !new? &&
-        (being_stopped? || (footprint_changed? && started?)) &&
-        !has_stop_event_for_latest_run?
+    def needs_package_in_current_state?
+      started?
+      # started? && ((column_changed?(:state)) || (!new? && footprint_changed?))
     end
 
     def in_suspended_org?
