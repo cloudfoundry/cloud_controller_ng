@@ -6,7 +6,22 @@ module VCAP::CloudController::RoutingApi
     let(:token_info) { double(:token_info) }
     let(:routing_api_url) { 'http://routing-api.example.com' }
     let(:skip_cert_verify) { false }
+    let(:body) { nil }
+    let(:status) { 400 }
+    let(:path) { '/routing/v1/router_groups' }
     let(:routing_api) { Client.new(routing_api_url, token_issuer, skip_cert_verify) }
+
+    before do
+      if !routing_api_url.nil?
+        uri = URI(routing_api_url)
+        uri.path = path
+        stub_request(:get, uri.to_s).
+            to_return(status: status, body: body)
+
+        allow(token_issuer).to receive(:client_credentials_grant).and_return(token_info)
+        allow(token_info).to receive(:auth_header).and_return('bearer my-token')
+      end
+    end
 
     describe '.router_groups' do
       let(:status) { 200 }
@@ -16,7 +31,6 @@ module VCAP::CloudController::RoutingApi
           { guid: 'random-guid-2', name: 'group-name', type: 'tcp' },
         ].to_json
       end
-      let(:path) { '/routing/v1/router_groups' }
 
       context 'when the routing api url does not exist' do
         let(:routing_api_url) { nil }
@@ -28,16 +42,6 @@ module VCAP::CloudController::RoutingApi
       end
 
       context 'when the routing api url does exist' do
-        before do
-          uri = URI(routing_api_url)
-          uri.path = path
-          stub_request(:get, uri.to_s).
-              to_return(status: status, body: body)
-
-          allow(token_issuer).to receive(:client_credentials_grant).and_return(token_info)
-          allow(token_info).to receive(:auth_header).and_return('bearer my-token')
-        end
-
         it 'calls the routing-api and retrieves a list of known router groups' do
           expected_router_group1 = RouterGroup.new('guid' => 'random-guid-1')
           expected_router_group2 = RouterGroup.new('guid' => 'random-guid-2')
@@ -154,6 +158,34 @@ module VCAP::CloudController::RoutingApi
             expect(a_request(:get, routing_api_url + path)).
                 to have_been_made.times(1)
           end
+        end
+      end
+    end
+
+    describe '.router_group' do
+      let(:status) { 200 }
+      let(:body) do
+        [
+          { guid: 'random-guid-1', name: 'group-name', type: 'tcp' },
+          { guid: 'router-group-guid', name: 'group-name', type: 'my-type' },
+        ].to_json
+      end
+
+      context 'when the guid exists' do
+        let(:guid) { 'router-group-guid' }
+        let(:type) { 'my-type' }
+
+        it 'returns the router group object' do
+          group = routing_api.router_group(guid)
+          expect(group.guid).to eq(guid)
+          expect(group.type).to eq(type)
+        end
+      end
+
+      context 'when the guid does not exist' do
+        it 'return nil' do
+          group = routing_api.router_group('no-group-guid')
+          expect(group).to be_nil
         end
       end
     end

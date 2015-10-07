@@ -30,6 +30,10 @@ module VCAP::CloudController::RoutingApi
       to_router_group_objects(response.body)
     end
 
+    def router_group(guid)
+      router_groups.find { |rtr_group| rtr_group.guid == guid }
+    end
+
     private
 
     def to_router_group_objects(body)

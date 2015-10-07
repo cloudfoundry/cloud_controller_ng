@@ -1,8 +1,11 @@
+# rubocop:disable CyclomaticComplexity
+
 module VCAP::CloudController
   class RoutesController < RestController::ModelController
     define_attributes do
       attribute :host, String, default: ''
       attribute :path, String, default: nil
+      attribute :port, Integer, default: nil
       to_one :domain
       to_one :space
       to_one :service_instance, exclude_in: [:create, :update]
@@ -10,6 +13,15 @@ module VCAP::CloudController
     end
 
     query_parameters :host, :domain_guid, :organization_guid, :path
+
+    def self.dependencies
+      [:routing_api_client]
+    end
+
+    def inject_dependencies(dependencies)
+      super
+      @routing_api_client = dependencies.fetch(:routing_api_client)
+    end
 
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:host, :domain_id])
@@ -20,6 +32,11 @@ module VCAP::CloudController
       path_errors = e.errors.on([:host, :domain_id, :path])
       if path_errors && path_errors.include?(:unique)
         return Errors::ApiError.new_from_details('RoutePathTaken', attributes['path'])
+      end
+
+      port_errors = e.errors.on([:domain_id, :port])
+      if port_errors && port_errors.include?(:unique)
+        return Errors::ApiError.new_from_details('RoutePortTaken', attributes['port'])
       end
 
       space_errors = e.errors.on(:space)
@@ -89,11 +106,62 @@ module VCAP::CloudController
       [HTTP::NOT_FOUND, nil]
     end
 
+    def before_create
+      super
+      domain_guid = request_attrs['domain_guid']
+      return if domain_guid.nil?
+
+      port = request_attrs['port']
+      validate_tcp_route(domain_guid, port)
+    end
+
+    def before_update(route)
+      super
+      return if request_attrs['app']
+
+      domain_guid = route.domain.guid
+      port = request_attrs['port']
+      validate_tcp_route(domain_guid, port)
+    end
+
     define_messages
     define_routes
   end
 
   private
+
+  def validate_tcp_route(domain_guid, port)
+    domain = Domain[guid: domain_guid]
+    if domain.nil?
+      raise Errors::ApiError.new_from_details('DomainInvalid', 'Domain with guid ' + domain_guid + ' does not exist')
+    end
+
+    if port.nil?
+      if !domain.router_group_guid.nil?
+        raise Errors::ApiError.new_from_details('RouteInvalid', 'Router groups are only supported for TCP routes.')
+      end
+    else
+      if domain.router_group_guid.nil?
+        raise Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
+      end
+
+      begin
+        router_group = @routing_api_client.router_group(domain.router_group_guid)
+      rescue RoutingApi::Client::RoutingApiUnavailable
+        raise Errors::ApiError.new_from_details('RoutingApiUnavailable')
+      rescue RoutingApi::Client::UaaUnavailable
+        raise Errors::ApiError.new_from_details('UaaUnavailable')
+      end
+
+      if router_group.nil? || router_group.type != 'tcp'
+        raise Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
+      end
+
+      if port <= 0 || port > 65535
+        raise Errors::ApiError.new_from_details('RouteInvalid', 'Port must be greater than 0 and less than 65536.')
+      end
+    end
+  end
 
   def path_errors(path_error, attributes)
     if path_error.include?(:single_slash)

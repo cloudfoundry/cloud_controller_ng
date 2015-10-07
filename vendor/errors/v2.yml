@@ -588,6 +588,11 @@
   http_code: 400
   message: "The path is taken: %s"
 
+210005:
+  name: RoutePortTaken
+  http_code: 400
+  message: "The port is taken: %s"
+
 220001:
   name: InstancesError
   http_code: 400

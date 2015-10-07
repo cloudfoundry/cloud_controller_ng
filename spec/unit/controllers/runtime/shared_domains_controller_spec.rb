@@ -91,7 +91,7 @@ module VCAP::CloudController
               and_raise(RoutingApi::Client::RoutingApiUnavailable)
           end
 
-          it 'returns a 502 Bad Gateway' do
+          it 'returns a 503 Service Unavailable' do
             post '/v2/shared_domains', body, json_headers(admin_headers)
 
             expect(last_response).to have_status_code(503)

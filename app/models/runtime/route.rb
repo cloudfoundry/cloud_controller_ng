@@ -24,8 +24,8 @@ module VCAP::CloudController
 
     add_association_dependencies apps: :nullify
 
-    export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid
-    import_attributes :host, :path, :domain_guid, :space_guid, :app_guids
+    export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :port
+    import_attributes :host, :path, :domain_guid, :space_guid, :app_guids, :port
 
     def fqdn
       host.empty? ? domain.name : "#{host}.#{domain.name}"
@@ -51,6 +51,11 @@ module VCAP::CloudController
       old_path.nil? ? '' : old_path
     end
 
+    alias_method :old_port, :port
+    def port
+      old_port.nil? ? 0 : old_port
+    end
+
     def organization
       space.organization if space
     end
@@ -67,19 +72,28 @@ module VCAP::CloudController
 
       validates_format /^([\w\-]+|\*)$/, :host if host && !host.empty?
 
-      if path.empty?
+      if path.empty? && port == 0
         validates_unique [:host, :domain_id]  do |ds|
-          ds.where(path: '')
+          ds.where(path: '', port: 0)
         end
-      else
-        validates_unique [:host, :domain_id, :path]
+      elsif !path.empty? && port == 0
+        validates_unique [:host, :domain_id, :path]  do |ds|
+          ds.where(port: 0)
+        end
+      else # port > 0
+        validates_unique [:domain_id, :port]
       end
 
       validate_path
 
       validate_domain
       validate_total_routes
+      validate_ports
       errors.add(:host, :domain_conflict) if domains_match?
+    end
+
+    def validate_ports
+      errors.add(:port, :invalid_port) if port < 0 || port > 65535
     end
 
     def validate_path
@@ -185,7 +199,7 @@ module VCAP::CloudController
       domain_change = column_change(:domain_id)
       return false if !new? && domain_change && domain_change[0] != domain_change[1]
 
-      if (domain.shared? && !host.present?) ||
+      if (domain.shared? && (!host.present? && !old_port.present?)) ||
           (space && !domain.usable_by_organization?(space.organization))
         return false
       end

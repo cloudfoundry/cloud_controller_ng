@@ -3,13 +3,26 @@ require 'rspec_api_documentation/dsl'
 
 resource 'Routes', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:organization) { VCAP::CloudController::Organization.make }
-  let(:space) { VCAP::CloudController::Space.make(organization: organization) }
-  let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: organization) }
+  let(:space) { VCAP::CloudController::Space.make }
+  let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
   let(:route_path) { '/apps/v1/path' }
+  let(:port) { 10000 }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
   let(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
   let(:guid) { route.guid }
+
+  let(:routing_api_client) { double('routing_api_client') }
+  let(:router_group) {
+    VCAP::CloudController::RoutingApi::RouterGroup.new({
+                                                         'guid' => 'tcp-guid',
+                                                         'type' => 'tcp',
+                                                       })
+  }
+  before do
+    allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
+                                                              and_return(routing_api_client)
+    allow(routing_api_client).to receive(:router_group).and_return(router_group)
+  end
 
   authenticated_request
 
@@ -24,6 +37,7 @@ resource 'Routes', type: [:api, :legacy_api] do
       field :domain_guid, 'The guid of the associated domain', required: opts[:required], example_values: [Sham.guid]
       field :space_guid, 'The guid of the associated space', required: opts[:required], example_values: [Sham.guid]
       field :host, 'The host portion of the route'
+      field :port, 'The port of the route. Supported for domains of TCP router groups only.', required: false, example_values: [50000], experimental: true
       field :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
     end
 
@@ -47,14 +61,15 @@ resource 'Routes', type: [:api, :legacy_api] do
             domain_guid: domain.guid,
             space_guid: space.guid,
             path: route_path,
+            port: port,
           ), pretty: true
         )
         client.post '/v2/routes', body, headers
-
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :route
         expect(parsed_response['entity']['path']).to eq(route_path)
+        expect(parsed_response['entity']['port']).to eq(port)
         expect(parsed_response['entity']['space_guid']).to eq(space.guid)
       end
     end
@@ -69,6 +84,7 @@ resource 'Routes', type: [:api, :legacy_api] do
           {
             host: new_host,
             path: route_path,
+            port: port,
           }, pretty: true
         )
         client.put "/v2/routes/#{guid}", body, headers
@@ -76,6 +92,7 @@ resource 'Routes', type: [:api, :legacy_api] do
         expect(status).to eq 201
         standard_entity_response parsed_response, :route, host: new_host
         expect(parsed_response['entity']['path']).to eq(route_path)
+        expect(parsed_response['entity']['port']).to eq(port)
       end
     end
   end

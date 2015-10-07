@@ -101,11 +101,52 @@ module VCAP::CloudController
     end
 
     describe 'Validations' do
-      let(:route) { Route.make }
+      let!(:route) { Route.make }
 
       it { is_expected.to validate_presence :domain }
       it { is_expected.to validate_presence :space }
       it { is_expected.to validate_presence :host }
+
+      context 'route ports' do
+        let(:domain) { SharedDomain.make }
+        let(:route) { Route.make(domain: domain, host: '', port: 1) }
+
+        it 'validates that the port is greater than equal to 0' do
+          route.port = -1
+          expect(route).not_to be_valid
+        end
+
+        it 'validates that the port is less than 65536' do
+          route.port = 65536
+          expect(route).not_to be_valid
+        end
+
+        it 'does not require a host' do
+          route.host = ''
+          route.port = 15000
+          expect(route).to be_valid
+        end
+
+        it 'requires a host or port' do
+          route.host = nil
+          route.port = nil
+          expect(route).not_to be_valid
+        end
+
+        context 'when port is specified' do
+          it 'does not validate uniqueness of host' do
+            expect {
+              Route.make(port: 10, host: '', domain: domain)
+            }.not_to raise_error
+          end
+
+          it 'validates the uniqueness of the port' do
+            new_route = Route.new(port: 1, host: '', domain: domain)
+            expect(new_route).not_to be_valid
+            expect(new_route.errors.on([:domain_id, :port])).to include :unique
+          end
+        end
+      end
 
       context 'unescaped paths' do
         it 'validates uniqueness' do
@@ -346,8 +387,8 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :host, :domain_guid, :space_guid, :path, :service_instance_guid }
-      it { is_expected.to import_attributes :host, :domain_guid, :space_guid, :app_guids, :path }
+      it { is_expected.to export_attributes :host, :domain_guid, :space_guid, :path, :service_instance_guid, :port }
+      it { is_expected.to import_attributes :host, :domain_guid, :space_guid, :app_guids, :path, :port }
     end
 
     describe 'instance methods' do
