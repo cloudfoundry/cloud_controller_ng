@@ -53,7 +53,7 @@ describe 'Cloud controller Loggregator Integration', type: :integration do
     message = messages.first
     expect(message.message).to eq "Created app with guid #{app_id}"
     expect(message.app_id).to eq app_id
-    expect(message.source_name).to eq 'API'
+    expect(message.source_type).to eq 'API'
     expect(message.message_type).to eq LogMessage::MessageType::OUT
   end
 end

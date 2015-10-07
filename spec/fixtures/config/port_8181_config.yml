@@ -55,7 +55,6 @@ logging:
 
 loggregator:
   router: "127.0.0.1:12345"
-  shared_secret: "loggregatorsecret"
 
 message_bus_servers:
   - nats://127.0.0.1:4222

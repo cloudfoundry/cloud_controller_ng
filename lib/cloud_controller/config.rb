@@ -202,7 +202,6 @@ module VCAP::CloudController
 
         optional(:loggregator) => {
           optional(:router) => String,
-          optional(:shared_secret) => String,
         },
 
         optional(:doppler) => {

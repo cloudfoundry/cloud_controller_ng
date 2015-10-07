@@ -110,7 +110,6 @@ db_encryption_key: some-key
 
 loggregator:
   router: "127.0.0.1:8080"
-  shared_secret: "loggregator-secret"
 
 renderer:
   max_results_per_page: 100
