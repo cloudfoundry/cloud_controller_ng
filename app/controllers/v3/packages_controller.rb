@@ -32,7 +32,7 @@ module VCAP::CloudController
       pagination_options = PaginationOptions.from_params(params)
       invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-      if membership.admin?
+      if roles.admin?
         paginated_result = PackageListFetcher.new.fetch_all(pagination_options)
       else
         space_guids = membership.space_guids_for_roles(
@@ -50,7 +50,7 @@ module VCAP::CloudController
     def upload(package_guid)
       check_write_permissions!
 
-      FeatureFlag.raise_unless_enabled!('app_bits_upload') unless membership.admin?
+      FeatureFlag.raise_unless_enabled!('app_bits_upload') unless roles.admin?
 
       message = PackageUploadMessage.create_from_params(params)
       unprocessable!(message.errors.full_messages) unless message.valid?
@@ -147,6 +147,7 @@ module VCAP::CloudController
     private
 
     def can_read?(space_guid, org_guid)
+      roles.admin? ||
       membership.has_any_roles?(
         [Membership::SPACE_DEVELOPER,
          Membership::SPACE_MANAGER,
@@ -155,17 +156,11 @@ module VCAP::CloudController
         space_guid, org_guid)
     end
 
-    def can_stage?(space_guid)
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-    end
-
     def can_delete?(space_guid)
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+      roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
-
-    def can_upload?(space_guid)
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-    end
+    alias_method :can_stage?, :can_delete?
+    alias_method :can_upload?, :can_delete?
 
     def package_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found')

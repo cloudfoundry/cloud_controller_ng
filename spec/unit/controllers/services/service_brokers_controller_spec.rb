@@ -2,7 +2,6 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe ServiceBrokersController, :services do
-    let(:headers) { headers_for(admin_user) }
     let(:broker) { ServiceBroker.make }
     let(:catalog_json) do
       {
@@ -58,7 +57,7 @@ module VCAP::CloudController
     end
 
     let(:non_admin_headers) do
-      user = VCAP::CloudController::User.make(admin: false)
+      user = VCAP::CloudController::User.make
       json_headers(headers_for(user))
     end
 
@@ -175,17 +174,18 @@ module VCAP::CloudController
 
       let(:body) { body_hash.to_json }
       let(:errors) { instance_double(Sequel::Model::Errors, on: nil) }
+      let(:user) { User.make }
 
       it 'creates a broker create event' do
         email = 'email@example.com'
         stub_catalog
-        post '/v2/service_brokers', body, headers_for(admin_user, email: email)
+        post '/v2/service_brokers', body, admin_headers_for(user, email: email)
         broker = ServiceBroker.last
 
         event = Event.first(type: 'audit.service_broker.create')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
-        expect(event.actor).to eq(admin_user.guid)
+        expect(event.actor).to eq(user.guid)
         expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(broker.guid)
         expect(event.actee_type).to eq('service_broker')
@@ -204,7 +204,7 @@ module VCAP::CloudController
 
       it 'creates a service broker registration' do
         stub_catalog
-        post '/v2/service_brokers', body, headers
+        post '/v2/service_brokers', body, admin_headers
 
         expect(last_response).to have_status_code(201)
         expect(a_request(:get, broker_catalog_url)).to have_been_made
@@ -212,7 +212,7 @@ module VCAP::CloudController
 
       it 'returns the serialized broker' do
         stub_catalog
-        post '/v2/service_brokers', body, headers
+        post '/v2/service_brokers', body, admin_headers
 
         service_broker = ServiceBroker.last
         expect(MultiJson.load(last_response.body)).to eq(
@@ -233,7 +233,7 @@ module VCAP::CloudController
 
       it 'includes a location header for the resource' do
         stub_catalog
-        post '/v2/service_brokers', body, headers
+        post '/v2/service_brokers', body, admin_headers
 
         headers = last_response.original_headers
         broker = ServiceBroker.last
@@ -247,7 +247,7 @@ module VCAP::CloudController
         it 'creates a broker with an associated space' do
           stub_catalog
 
-          post '/v2/service_brokers', body, headers
+          post '/v2/service_brokers', body, admin_headers
 
           expect(last_response).to have_status_code(201)
           parsed_body = JSON.load(last_response.body)
@@ -275,10 +275,10 @@ module VCAP::CloudController
             auth_password: auth_password,
           }.to_json
 
-          post '/v2/service_brokers', public_body, headers
+          post '/v2/service_brokers', public_body, admin_headers
           expect(last_response).to have_status_code(201)
 
-          post '/v2/service_brokers', body, headers
+          post '/v2/service_brokers', body, admin_headers
           expect(last_response).to have_status_code(400)
         end
 
@@ -292,10 +292,10 @@ module VCAP::CloudController
             auth_password: auth_password,
           }.to_json
 
-          post '/v2/service_brokers', public_body, headers
+          post '/v2/service_brokers', public_body, admin_headers
           expect(last_response).to have_status_code(201)
 
-          post '/v2/service_brokers', body, headers
+          post '/v2/service_brokers', body, admin_headers
           expect(last_response).to have_status_code(400)
         end
 
@@ -303,7 +303,7 @@ module VCAP::CloudController
           space.destroy
           stub_catalog
 
-          post '/v2/service_brokers', body, headers
+          post '/v2/service_brokers', body, admin_headers
 
           expect(last_response).to have_status_code(404)
           parsed_body = JSON.load(last_response.body)
@@ -331,7 +331,7 @@ module VCAP::CloudController
           let(:broker_url) { 'http://url_with_underscore.broker.com' }
 
           it 'returns a 400 error' do
-            post '/v2/service_brokers', body, headers
+            post '/v2/service_brokers', body, admin_headers
             expect(last_response).to have_status_code(400)
             expect(decoded_response.fetch('code')).to eq(270011)
           end
@@ -344,7 +344,7 @@ module VCAP::CloudController
 
           it 'returns an error' do
             stub_catalog
-            post '/v2/service_brokers', body, headers
+            post '/v2/service_brokers', body, admin_headers
 
             expect(last_response).to have_status_code(400)
             expect(decoded_response.fetch('code')).to eq(270003)
@@ -358,7 +358,7 @@ module VCAP::CloudController
 
           it 'returns an error' do
             stub_catalog
-            post '/v2/service_brokers', body, headers
+            post '/v2/service_brokers', body, admin_headers
 
             expect(last_response).to have_status_code(400)
             expect(decoded_response.fetch('code')).to eq(270002)
@@ -372,7 +372,7 @@ module VCAP::CloudController
 
           it 'returns an error' do
             stub_catalog
-            post '/v2/service_brokers', body, headers
+            post '/v2/service_brokers', body, admin_headers
 
             expect(last_response).to have_status_code(502)
             expect(decoded_response.fetch('code')).to eq(270012)
@@ -396,7 +396,7 @@ module VCAP::CloudController
 
         it 'emits warnings as headers to the CC client' do
           stub_catalog
-          post('/v2/service_brokers', body, headers)
+          post('/v2/service_brokers', body, admin_headers)
 
           warnings = last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
           expect(warnings.length).to eq(1)
@@ -407,24 +407,25 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/service_brokers/:guid' do
       let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', auth_password: 'secret') }
+      let(:user) { User.make }
 
       it 'deletes the service broker' do
-        delete "/v2/service_brokers/#{broker.guid}", {}, headers
+        delete "/v2/service_brokers/#{broker.guid}", {}, admin_headers
 
         expect(last_response).to have_status_code(204)
 
-        get '/v2/service_brokers', {}, headers
+        get '/v2/service_brokers', {}, admin_headers
         expect(decoded_response).to include('total_results' => 0)
       end
 
       it 'creates a broker delete event' do
         email = 'some-email-address@example.com'
-        delete "/v2/service_brokers/#{broker.guid}", {}, headers_for(admin_user, email: email)
+        delete "/v2/service_brokers/#{broker.guid}", {}, admin_headers_for(user, email: email)
 
         event = Event.first(type: 'audit.service_broker.delete')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
-        expect(event.actor).to eq(admin_user.guid)
+        expect(event.actor).to eq(user.guid)
         expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(broker.guid)
         expect(event.actee_type).to eq('service_broker')
@@ -436,7 +437,7 @@ module VCAP::CloudController
       end
 
       it 'returns 404 when deleting a service broker that does not exist' do
-        delete '/v2/service_brokers/1234', {}, headers
+        delete '/v2/service_brokers/1234', {}, admin_headers
         expect(last_response.status).to eq(404)
       end
 
@@ -446,13 +447,13 @@ module VCAP::CloudController
           service_plan = ServicePlan.make(service: service)
           ManagedServiceInstance.make(service_plan: service_plan)
 
-          delete "/v2/service_brokers/#{broker.guid}", {}, headers
+          delete "/v2/service_brokers/#{broker.guid}", {}, admin_headers
 
           expect(last_response.status).to eq(400)
           expect(decoded_response.fetch('code')).to eq(270010)
           expect(decoded_response.fetch('description')).to match(/Can not remove brokers that have associated service instances/)
 
-          get '/v2/service_brokers', {}, headers
+          get '/v2/service_brokers', {}, admin_headers
           expect(decoded_response).to include('total_results' => 1)
         end
       end
@@ -463,7 +464,7 @@ module VCAP::CloudController
           expect(last_response).to be_forbidden
 
           # make sure it still exists
-          get '/v2/service_brokers', {}, headers
+          get '/v2/service_brokers', {}, admin_headers
           expect(decoded_response).to include('total_results' => 1)
         end
       end
@@ -489,6 +490,7 @@ module VCAP::CloudController
           auth_password: 'abc123',
         )
       end
+      let(:user) { User.make }
 
       before do
         attrs = {
@@ -506,12 +508,12 @@ module VCAP::CloudController
           body_hash.delete(:broker_url)
           email = 'email@example.com'
 
-          put "/v2/service_brokers/#{broker.guid}", body, headers_for(admin_user, email: email)
+          put "/v2/service_brokers/#{broker.guid}", body, admin_headers_for(user, email: email)
 
           event = Event.first(type: 'audit.service_broker.update')
           expect(event.actor_type).to eq('user')
           expect(event.timestamp).to be
-          expect(event.actor).to eq(admin_user.guid)
+          expect(event.actor).to eq(user.guid)
           expect(event.actor_name).to eq(email)
           expect(event.actee).to eq(broker.guid)
           expect(event.actee_type).to eq('service_broker')
@@ -525,7 +527,7 @@ module VCAP::CloudController
         end
 
         it 'updates the broker' do
-          put "/v2/service_brokers/#{broker.guid}", body, headers
+          put "/v2/service_brokers/#{broker.guid}", body, admin_headers
 
           broker.reload
           expect(broker.name).to eq(body_hash[:name])
@@ -534,7 +536,7 @@ module VCAP::CloudController
         end
 
         it 'returns the serialized broker' do
-          put "/v2/service_brokers/#{broker.guid}", body, headers
+          put "/v2/service_brokers/#{broker.guid}", body, admin_headers
 
           expect(last_response).to have_status_code(200)
           json_response = MultiJson.load(last_response.body)
@@ -550,7 +552,7 @@ module VCAP::CloudController
 
         context 'when specifying an unknown broker' do
           it 'returns 404' do
-            put '/v2/service_brokers/nonexistent', body, headers
+            put '/v2/service_brokers/nonexistent', body, admin_headers
 
             expect(last_response).to have_status_code(HTTP::NOT_FOUND)
           end
@@ -561,7 +563,7 @@ module VCAP::CloudController
             before { body_hash[:broker_url] = 'foo.bar' }
 
             it 'returns an error' do
-              put "/v2/service_brokers/#{broker.guid}", body, headers
+              put "/v2/service_brokers/#{broker.guid}", body, admin_headers
 
               expect(last_response).to have_status_code(400)
               expect(decoded_response.fetch('code')).to eq(270011)
@@ -574,7 +576,7 @@ module VCAP::CloudController
             before { body_hash[:broker_url] = another_broker.broker_url }
 
             it 'returns an error' do
-              put "/v2/service_brokers/#{broker.guid}", body, headers
+              put "/v2/service_brokers/#{broker.guid}", body, admin_headers
 
               expect(last_response.status).to eq(400)
               expect(decoded_response.fetch('code')).to eq(270003)
@@ -587,7 +589,7 @@ module VCAP::CloudController
             before { body_hash[:name] = another_broker.name }
 
             it 'returns an error' do
-              put "/v2/service_brokers/#{broker.guid}", body, headers
+              put "/v2/service_brokers/#{broker.guid}", body, admin_headers
 
               expect(last_response.status).to eq(400)
               expect(decoded_response.fetch('code')).to eq(270002)
@@ -642,7 +644,7 @@ module VCAP::CloudController
           end
 
           it 'includes the warnings in the response' do
-            put("/v2/service_brokers/#{broker.guid}", body, headers)
+            put("/v2/service_brokers/#{broker.guid}", body, admin_headers)
             warnings = last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
             expect(warnings.length).to eq(1)
             expect(warnings[0]).to match(/Service plans are missing from the broker/)

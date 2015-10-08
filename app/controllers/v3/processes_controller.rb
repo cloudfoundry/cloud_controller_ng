@@ -25,7 +25,7 @@ module VCAP::CloudController
       invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
       invalid_param!("Unknown query param(s) '#{params.keys.join("', '")}'") if params.any?
 
-      if membership.admin?
+      if roles.admin?
         paginated_result = ProcessListFetcher.new.fetch_all(pagination_options)
       else
         space_guids = membership.space_guids_for_roles([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
@@ -83,7 +83,7 @@ module VCAP::CloudController
     def scale(guid)
       check_write_permissions!
 
-      FeatureFlag.raise_unless_enabled!('app_scaling') unless membership.admin?
+      FeatureFlag.raise_unless_enabled!('app_scaling') unless roles.admin?
 
       request = parse_and_validate_json(body)
       message = ProcessScaleMessage.create_from_http_request(request)
@@ -116,6 +116,7 @@ module VCAP::CloudController
     end
 
     def can_read?(space_guid, org_guid)
+      roles.admin? ||
       membership.has_any_roles?([Membership::SPACE_DEVELOPER,
                                  Membership::SPACE_MANAGER,
                                  Membership::SPACE_AUDITOR,
@@ -123,16 +124,10 @@ module VCAP::CloudController
     end
 
     def can_update?(space_guid)
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+      roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
-
-    def can_terminate?(space_guid)
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-    end
-
-    def can_scale?(space_guid)
-      can_update?(space_guid)
-    end
+    alias_method :can_terminate?, :can_update?
+    alias_method :can_scale?, :can_update?
 
     def instance_not_found!
       raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Instance not found')

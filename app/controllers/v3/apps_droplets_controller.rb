@@ -24,7 +24,7 @@ module VCAP::CloudController
       app, space, org = AppFetcher.new.fetch(app_guid)
       app_not_found! if app.nil?
 
-      if membership.admin? || can_read?(space.guid, org.guid)
+      if can_read?(space.guid, org.guid)
         paginated_result = AppDropletsListFetcher.new.fetch(app_guid, pagination_options, message)
       else
         app_not_found!
@@ -40,6 +40,7 @@ module VCAP::CloudController
     private
 
     def can_read?(space_guid, org_guid)
+      roles.admin? ||
       membership.has_any_roles?([Membership::SPACE_DEVELOPER,
                                  Membership::SPACE_MANAGER,
                                  Membership::SPACE_AUDITOR,

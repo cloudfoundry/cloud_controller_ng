@@ -53,7 +53,7 @@ module VCAP::CloudController
 
       context 'for an admin' do
         it 'should allow them to create a snapshot' do
-          post '/v2/snapshots', payload, headers_for(admin_user)
+          post '/v2/snapshots', payload, admin_headers
           expect(last_response.status).to eq(201)
         end
       end

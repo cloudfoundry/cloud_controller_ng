@@ -5,7 +5,8 @@ module VCAP::CloudController
     let(:logger) { instance_double(Steno::Logger) }
     let(:params) { {} }
     let(:req_body) { '' }
-    let(:membership) { double(:membership) }
+    let(:membership) { instance_double(Membership) }
+    let(:roles) { instance_double(Roles) }
     let(:apps_routes_controller) do
       AppsRoutesController.new(
         {},
@@ -22,6 +23,8 @@ module VCAP::CloudController
       allow(logger).to receive(:debug)
       allow(apps_routes_controller).to receive(:membership).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow(Roles).to receive(:new).and_return(roles)
+      allow(roles).to receive(:admin?).and_return(false)
     end
 
     describe '#add_route' do
@@ -33,6 +36,23 @@ module VCAP::CloudController
 
       before do
         allow(apps_routes_controller).to receive(:check_write_permissions!).and_return(nil)
+      end
+
+      it 'returns 204' do
+        response_code, _ = apps_routes_controller.add_route(app.guid)
+        expect(response_code).to eq(204)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns 204' do
+          response_code, _ = apps_routes_controller.add_route(app.guid)
+          expect(response_code).to eq(204)
+        end
       end
 
       it 'checks for the proper roles' do
@@ -149,62 +169,79 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
 
-      context 'when the user cannot list routes of the application' do
-        context 'when the user does not have read permissions' do
-          it 'raises an ApiError with a 403 code' do
-            expect(apps_routes_controller).to receive(:check_read_permissions!).
-                and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
-            expect {
-              apps_routes_controller.list(app_model.guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'NotAuthorized'
-              expect(error.response_code).to eq 403
-            end
+      before do
+        allow(apps_routes_controller).to receive(:check_read_permissions!).and_return(nil)
+      end
+
+      it 'returns a 200' do
+        response_code, _ = apps_routes_controller.list(app_model.guid)
+        expect(response_code).to eq 200
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 200' do
+          response_code, _ = apps_routes_controller.list(app_model.guid)
+          expect(response_code).to eq 200
+        end
+      end
+
+      it 'checks for the proper roles' do
+        apps_routes_controller.list(app_model.guid)
+
+        expect(membership).to have_received(:has_any_roles?).
+                                  with([Membership::SPACE_DEVELOPER,
+                                        Membership::SPACE_MANAGER,
+                                        Membership::SPACE_AUDITOR,
+                                        Membership::ORG_MANAGER
+                                       ], space.guid, org.guid)
+      end
+
+      context 'when the app does not exist' do
+        it 'raises an API 404 error' do
+          expect {
+            apps_routes_controller.list('bogus')
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.message).to eq 'App not found'
+            expect(error.response_code).to eq 404
           end
         end
       end
 
-      context 'when the user has read permissions' do
+      context 'when the user does not have required roles' do
         before do
-          allow(apps_routes_controller).to receive(:check_read_permissions!).and_return(nil)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
-        it 'checks for the proper roles' do
-          apps_routes_controller.list(app_model.guid)
-
-          expect(membership).to have_received(:has_any_roles?).
-              with([Membership::SPACE_DEVELOPER,
-                    Membership::SPACE_MANAGER,
-                    Membership::SPACE_AUDITOR,
-                    Membership::ORG_MANAGER
-                   ], space.guid, org.guid)
-        end
-
-        context 'when the app does not exist' do
-          it 'raises an API 404 error' do
-            expect {
-              apps_routes_controller.list('bogus')
-            }.to raise_error do |error|
-              expect(error.name).to eq 'ResourceNotFound'
-              expect(error.message).to eq 'App not found'
-              expect(error.response_code).to eq 404
-            end
+        it 'raises an API 404 error' do
+          expect {
+            apps_routes_controller.list(app_model.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.message).to eq 'App not found'
+            expect(error.response_code).to eq 404
           end
         end
+      end
 
-        context 'when the user does not have required roles' do
-          before do
-            allow(membership).to receive(:has_any_roles?).and_return(false)
-          end
+      context 'when the user does not have read permissions' do
+        before do
+          allow(apps_routes_controller).to receive(:check_read_permissions!).and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+        end
 
-          it 'raises an API 404 error' do
-            expect {
-              apps_routes_controller.list(app_model.guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'ResourceNotFound'
-              expect(error.message).to eq 'App not found'
-              expect(error.response_code).to eq 404
-            end
+        it 'raises an ApiError with a 403 code' do
+          expect(apps_routes_controller).to receive(:check_read_permissions!).
+                                                and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
+          expect {
+            apps_routes_controller.list(app_model.guid)
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
           end
         end
       end
@@ -221,6 +258,23 @@ module VCAP::CloudController
       before do
         AppModelRoute.create(app: app_model, route: route, type: 'web')
         allow(apps_routes_controller).to receive(:check_write_permissions!).and_return(nil)
+      end
+
+      it 'returns a 204' do
+        response_code, _ = apps_routes_controller.delete(app_model.guid)
+        expect(response_code).to eq 204
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 204' do
+          response_code, _ = apps_routes_controller.delete(app_model.guid)
+          expect(response_code).to eq 204
+        end
       end
 
       it 'checks for the proper roles' do

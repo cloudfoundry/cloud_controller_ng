@@ -36,7 +36,7 @@ module VCAP::CloudController
       pagination_options = PaginationOptions.from_params(params)
       invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-      if membership.admin?
+      if roles.admin?
         paginated_apps = AppListFetcher.new.fetch_all(pagination_options, message)
       else
         allowed_space_guids = membership.space_guids_for_roles([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
@@ -68,7 +68,7 @@ module VCAP::CloudController
       buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
       unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
 
-      space_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], message.space_guid)
+      space_not_found! unless can_create?(message.space_guid)
 
       app = AppCreate.new(current_user, current_user_email).create(message)
 
@@ -211,31 +211,22 @@ module VCAP::CloudController
     private
 
     def can_read?(space_guid, org_guid)
+      roles.admin? ||
       membership.has_any_roles?([Membership::SPACE_DEVELOPER,
                                  Membership::SPACE_MANAGER,
                                  Membership::SPACE_AUDITOR,
                                  Membership::ORG_MANAGER], space_guid, org_guid)
     end
 
-    def can_update?(space_guid)
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+    def can_create?(space_guid)
+      roles.admin? ||
+          membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
-
-    def can_delete?(space_guid)
-      can_update?(space_guid)
-    end
-
-    def can_start?(space_guid)
-      can_update?(space_guid)
-    end
-
-    def can_stop?(space_guid)
-      can_update?(space_guid)
-    end
-
-    def can_read_envs?(space_guid)
-      can_update?(space_guid)
-    end
+    alias_method :can_update?, :can_create?
+    alias_method :can_delete?, :can_create?
+    alias_method :can_start?, :can_create?
+    alias_method :can_stop?, :can_create?
+    alias_method :can_read_envs?, :can_create?
 
     def unable_to_perform!(msg, details)
       raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', msg, details)

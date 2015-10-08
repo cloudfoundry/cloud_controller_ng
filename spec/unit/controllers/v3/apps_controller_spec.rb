@@ -8,7 +8,8 @@ module VCAP::CloudController
     let(:params) { {} }
     let(:app_model) { nil }
     let(:app_presenter) { double(:app_presenter) }
-    let(:membership) { double(:membership) }
+    let(:membership) { instance_double(Membership) }
+    let(:roles) { instance_double(Roles) }
     let(:apps_controller) do
       AppsV3Controller.new(
         {},
@@ -30,6 +31,8 @@ module VCAP::CloudController
       allow(apps_controller).to receive(:current_user).and_return(User.make)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       allow(app_presenter).to receive(:present_json).and_return(app_response)
+      allow(Roles).to receive(:new).and_return(roles)
+      allow(roles).to receive(:admin?).and_return(false)
     end
 
     describe '#list' do
@@ -43,9 +46,6 @@ module VCAP::CloudController
         allow(app_presenter).to receive(:present_json_list).and_return(app_response)
         allow(apps_controller).to receive(:check_read_permissions!).and_return(true)
         allow(AppListFetcher).to receive(:new).and_return(fetcher)
-        allow(membership).to receive(:space_guids_for_managed_orgs).
-          and_return(['some-space-guid', 'yet-another-space-guid'])
-        allow(membership).to receive(:admin?).and_return(false)
         allow(membership).to receive(:space_guids_for_roles).and_return([app.space.guid]).
           with([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
       end
@@ -127,7 +127,7 @@ module VCAP::CloudController
         let(:fetcher) { double(:fetcher, fetch_all: [app, app]) }
 
         before do
-          allow(membership).to receive(:admin?).and_return(true)
+          allow(roles).to receive(:admin?).and_return(true)
         end
 
         it 'fetches all apps' do
@@ -147,14 +147,25 @@ module VCAP::CloudController
         allow(apps_controller).to receive(:check_read_permissions!)
       end
 
-      it 'returns a 200' do
-        response_code, _ = apps_controller.show(guid)
+      it 'returns a 200 and the app' do
+        response_code, response = apps_controller.show(guid)
+
         expect(response_code).to eq 200
+        expect(response).to eq(app_response)
       end
 
-      it 'returns the app' do
-        _, response = apps_controller.show(guid)
-        expect(response).to eq(app_response)
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 200 and the app' do
+          response_code, response = apps_controller.show(guid)
+
+          expect(response_code).to eq 200
+          expect(response).to eq(app_response)
+        end
       end
 
       context 'when the app does not exist' do
@@ -233,14 +244,23 @@ module VCAP::CloudController
             with([Membership::SPACE_DEVELOPER], space_guid)
       end
 
-      it 'returns a 201 Created response' do
-        response_code, _ = apps_controller.create
+      it 'returns a 201 Created  and the app' do
+        response_code, response = apps_controller.create
         expect(response_code).to eq 201
+        expect(response).to eq(app_response)
       end
 
-      it 'returns the app' do
-        _, response = apps_controller.create
-        expect(response).to eq(app_response)
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 201 Created  and the app' do
+          response_code, response = apps_controller.create
+          expect(response_code).to eq 201
+          expect(response).to eq(app_response)
+        end
       end
 
       context 'when the request body is invalid JSON' do
@@ -434,14 +454,23 @@ module VCAP::CloudController
             with([Membership::SPACE_DEVELOPER], app_model.space.guid)
         end
 
-        it 'returns a 200 OK response' do
-          response_code, _ = apps_controller.update(app_model.guid)
+        it 'returns a 200 OK and the app' do
+          response_code, response = apps_controller.update(app_model.guid)
           expect(response_code).to eq 200
+          expect(response).to eq(app_response)
         end
 
-        it 'returns the app information' do
-          _, response = apps_controller.update(app_model.guid)
-          expect(response).to eq(app_response)
+        context 'admin' do
+          before do
+            allow(roles).to receive(:admin?).and_return(true)
+            allow(membership).to receive(:has_any_roles?).and_return(false)
+          end
+
+          it 'returns a 200 OK and the app' do
+            response_code, response = apps_controller.update(app_model.guid)
+            expect(response_code).to eq 200
+            expect(response).to eq(app_response)
+          end
         end
 
         context 'when the request body is invalid JSON' do
@@ -575,7 +604,17 @@ module VCAP::CloudController
           with([Membership::SPACE_DEVELOPER], space.guid)
       end
 
-      context 'when the app exists' do
+      it 'returns a 204' do
+        response_code, _ = apps_controller.delete(app_model.guid)
+        expect(response_code).to eq 204
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
         it 'returns a 204' do
           response_code, _ = apps_controller.delete(app_model.guid)
           expect(response_code).to eq 204
@@ -659,8 +698,28 @@ module VCAP::CloudController
       let(:droplet) { DropletModel.make(procfile: 'web: a', app_guid: app_model.guid, state: DropletModel::STAGED_STATE) }
 
       before do
+        allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
         app_model.update(droplet: droplet)
         app_model.save
+      end
+
+      it 'returns a 200 and the app' do
+        response_code, response = apps_controller.start(app_model.guid)
+        expect(response_code).to eq 200
+        expect(response).to eq(app_response)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 200 and the app' do
+          response_code, response = apps_controller.start(app_model.guid)
+          expect(response_code).to eq 200
+          expect(response).to eq(app_response)
+        end
       end
 
       context 'when the user cannot start the application' do
@@ -784,6 +843,29 @@ module VCAP::CloudController
       let(:space) { app_model.space }
       let(:org) { space.organization }
 
+      before do
+        allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
+      end
+
+      it 'returns a 200 and the app' do
+        response_code, response = apps_controller.stop(app_model.guid)
+        expect(response_code).to eq 200
+        expect(response).to eq(app_response)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 200 and the app' do
+          response_code, response = apps_controller.stop(app_model.guid)
+          expect(response_code).to eq 200
+          expect(response).to eq(app_response)
+        end
+      end
+
       context 'when the user cannot stop the application' do
         context 'when the user does not have write permissions' do
           it 'raises an ApiError with a 403 code' do
@@ -892,6 +974,18 @@ module VCAP::CloudController
         expect(response_code).to eq(200)
       end
 
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns 200' do
+          response_code, _ = apps_controller.get_environment(guid)
+          expect(response_code).to eq(200)
+        end
+      end
+
       it 'checks for the proper roles' do
         apps_controller.get_environment(guid)
 
@@ -990,6 +1084,18 @@ module VCAP::CloudController
       it 'returns 200' do
         response_code, _ = apps_controller.assign_current_droplet(guid)
         expect(response_code).to eq(200)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns 200' do
+          response_code, _ = apps_controller.assign_current_droplet(guid)
+          expect(response_code).to eq(200)
+        end
       end
 
       context 'bad json' do

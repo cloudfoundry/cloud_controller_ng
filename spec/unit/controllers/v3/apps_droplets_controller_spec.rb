@@ -5,7 +5,8 @@ module VCAP::CloudController
     let(:logger) { instance_double(Steno::Logger) }
     let(:params) { {} }
     let(:droplet_presenter) { double(:droplet_presenter) }
-    let(:membership) { double(:membership) }
+    let(:membership) { instance_double(Membership) }
+    let(:roles) { instance_double(Roles) }
     let(:req_body) { '{}' }
     let(:app) { AppModel.make }
     let(:space) { app.space }
@@ -32,9 +33,11 @@ module VCAP::CloudController
     before do
       allow(logger).to receive(:debug)
       allow(apps_droplets_controller).to receive(:membership).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow(membership).to receive(:has_any_roles?).and_return(false)
       allow(app_fetcher).to receive(:fetch).and_return([app, space, org])
       allow(AppFetcher).to receive(:new).and_return(app_fetcher)
+      allow(Roles).to receive(:new).and_return(roles)
+      allow(roles).to receive(:admin?).and_return(false)
     end
 
     describe '#list' do
@@ -84,7 +87,7 @@ module VCAP::CloudController
 
       context 'when the user is an admin' do
         before do
-          allow(membership).to receive(:admin?).and_return(true)
+          allow(roles).to receive(:admin?).and_return(true)
         end
 
         context 'the app exists' do
@@ -122,7 +125,7 @@ module VCAP::CloudController
         let(:viewable_droplet) { DropletModel.make }
         context 'when the user has space privileges' do
           before do
-            allow(membership).to receive(:admin?).and_return(false)
+            allow(roles).to receive(:admin?).and_return(false)
             allow(membership).to receive(:has_any_roles?).and_return(true)
           end
 
@@ -148,7 +151,7 @@ module VCAP::CloudController
 
         context 'when the user has no space privileges' do
           before do
-            allow(membership).to receive(:admin?).and_return(false)
+            allow(roles).to receive(:admin?).and_return(false)
             allow(membership).to receive(:has_any_roles?).and_return(false)
           end
 

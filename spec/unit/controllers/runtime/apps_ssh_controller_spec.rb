@@ -36,8 +36,10 @@ module VCAP::CloudController
       end
 
       context 'as an admin user' do
+        let(:user) { User.make }
+
         it 'returns a 200 and ProcessGuid' do
-          get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, admin_headers
+          get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, admin_headers_for(user)
           expect(last_response.status).to eq(200)
           expected_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(app_model)
           expect(decoded_response['process_guid']).to eq(expected_process_guid)
@@ -45,11 +47,11 @@ module VCAP::CloudController
 
         it 'creates an audit event recording this ssh access' do
           expect {
-            get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, admin_headers
+            get "/internal/apps/#{app_model.guid}/ssh_access/#{instance_index}", {}, admin_headers_for(user)
           }.to change { Event.count }.by(1)
           event = Event.last
           expect(event.type).to eq('audit.app.ssh-authorized')
-          expect(event.actor).to eq(admin_user.guid)
+          expect(event.actor).to eq(user.guid)
           expect(event.metadata).to eq({ 'index' => instance_index })
         end
       end

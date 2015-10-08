@@ -9,12 +9,6 @@ module VCAP::CloudController
     let(:membership) { Membership.new(user) }
 
     describe '#has_any_roles?' do
-      it 'returns true for admins' do
-        user.update(admin: true)
-        result = membership.has_any_roles?('anything')
-        expect(result).to be_truthy
-      end
-
       context 'when space roles are provided' do
         before do
           organization.add_user(user)

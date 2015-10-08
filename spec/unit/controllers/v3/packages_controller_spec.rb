@@ -7,7 +7,8 @@ module VCAP::CloudController
     let(:params) { {} }
     let(:package_presenter) { double(:package_presenter) }
     let(:droplet_presenter) { double(:droplet_presenter) }
-    let(:membership) { double(:membership) }
+    let(:membership) { instance_double(Membership) }
+    let(:roles) { instance_double(Roles) }
     let(:stagers) { double(:stagers) }
     let(:req_body) { '{}' }
 
@@ -31,6 +32,8 @@ module VCAP::CloudController
       allow(logger).to receive(:debug)
       allow(membership).to receive(:has_any_roles?).and_return(true)
       allow(packages_controller).to receive(:membership).and_return(membership)
+      allow(Roles).to receive(:new).and_return(roles)
+      allow(roles).to receive(:admin?).and_return(false)
     end
 
     describe '#upload' do
@@ -43,7 +46,6 @@ module VCAP::CloudController
       before do
         allow(package_presenter).to receive(:present_json).and_return(expected_response)
         allow(packages_controller).to receive(:check_write_permissions!)
-        allow(membership).to receive(:admin?).and_return(false)
       end
 
       it 'returns 200 and updates the package state' do
@@ -53,6 +55,22 @@ module VCAP::CloudController
         expect(response).to eq(expected_response)
         expect(package_presenter).to have_received(:present_json).with(an_instance_of(PackageModel))
         expect(package.reload.state).to eq(PackageModel::PENDING_STATE)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns 200 and updates the package state' do
+          code, response = packages_controller.upload(package.guid)
+
+          expect(code).to eq(HTTP::OK)
+          expect(response).to eq(expected_response)
+          expect(package_presenter).to have_received(:present_json).with(an_instance_of(PackageModel))
+          expect(package.reload.state).to eq(PackageModel::PENDING_STATE)
+        end
       end
 
       context 'when app_bits_upload is disabled' do
@@ -73,7 +91,7 @@ module VCAP::CloudController
         end
 
         context 'admin user' do
-          before { allow(membership).to receive(:admin?).and_return(true) }
+          before { allow(roles).to receive(:admin?).and_return(true) }
 
           it 'returns 200 and updates the package state' do
             code, response = packages_controller.upload(package.guid)
@@ -248,7 +266,8 @@ module VCAP::CloudController
       context 'permissions' do
         context 'user is an admin' do
           before do
-            allow(membership).to receive(:admin?).and_return(true)
+            allow(roles).to receive(:admin?).and_return(true)
+            allow(membership).to receive(:has_any_roles?).and_return(false)
           end
 
           it 'returns 302' do
@@ -350,6 +369,20 @@ module VCAP::CloudController
         expect(package_presenter).to have_received(:present_json).with(package)
       end
 
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 200 OK and the package' do
+          response_code, response = packages_controller.show(package.guid)
+          expect(response_code).to eq 200
+          expect(response).to eq(expected_response)
+          expect(package_presenter).to have_received(:present_json).with(package)
+        end
+      end
+
       context 'when the user has the incorrect scope' do
         before do
           allow(packages_controller).to receive(:check_read_permissions!).
@@ -433,6 +466,19 @@ module VCAP::CloudController
         expect(response).to be_nil
       end
 
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 204 NO CONTENT' do
+          response_code, response = packages_controller.delete(package.guid)
+          expect(response_code).to eq 204
+          expect(response).to be_nil
+        end
+      end
+
       context 'when the user cannot read the package' do
         before do
           allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
@@ -497,7 +543,6 @@ module VCAP::CloudController
       before do
         allow(package_presenter).to receive(:present_json_list).and_return(expected_response)
         allow(packages_controller).to receive(:check_read_permissions!).and_return(nil)
-        allow(membership).to receive(:admin?)
         allow(membership).to receive(:space_guids_for_roles)
       end
 
@@ -507,6 +552,21 @@ module VCAP::CloudController
         expect(package_presenter).to have_received(:present_json_list).with(an_instance_of(PaginatedResult), '/v3/packages')
         expect(response_code).to eq(200)
         expect(response_body).to eq(expected_response)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns 200 and lists the packages' do
+          response_code, response_body = packages_controller.list
+
+          expect(package_presenter).to have_received(:present_json_list).with(an_instance_of(PaginatedResult), '/v3/packages')
+          expect(response_code).to eq(200)
+          expect(response_body).to eq(expected_response)
+        end
       end
 
       context 'when the user has the incorrect scope' do
@@ -529,7 +589,7 @@ module VCAP::CloudController
 
       context 'when the user is an admin' do
         before do
-          allow(membership).to receive(:admin?).and_return(true)
+          allow(roles).to receive(:admin?).and_return(true)
         end
 
         it 'returns all packages' do
@@ -552,7 +612,7 @@ module VCAP::CloudController
         let(:viewable_package) { PackageModel.make }
 
         before do
-          allow(membership).to receive(:admin?).and_return(false)
+          allow(roles).to receive(:admin?).and_return(false)
           allow(membership).to receive(:space_guids_for_roles).and_return([viewable_package.app.space.guid])
         end
 
@@ -631,6 +691,21 @@ module VCAP::CloudController
 
         expect(membership).to have_received(:has_any_roles?).at_least(1).times.
             with([Membership::SPACE_DEVELOPER], space.guid,)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 201 Created response' do
+          expect {
+            response_code, body = packages_controller.stage(package.guid)
+            expect(response_code).to eq 201
+            expect(body).to eq droplet_response
+          }.to change { DropletModel.count }.from(0).to(1)
+        end
       end
 
       describe 'buildpack request' do

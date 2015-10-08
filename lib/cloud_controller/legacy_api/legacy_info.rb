@@ -43,7 +43,7 @@ module VCAP::CloudController
     private
 
     def account_capacity
-      if user.admin?
+      if user.admin
         AccountCapacity.admin
       else
         AccountCapacity.default

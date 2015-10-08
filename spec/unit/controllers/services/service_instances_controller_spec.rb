@@ -1192,18 +1192,18 @@ module VCAP::CloudController
           end
 
           it 'updates the service instance tags in the database' do
-            put "/v2/service_instances/#{service_instance.guid}", body, headers_for(admin_user)
+            put "/v2/service_instances/#{service_instance.guid}", body, admin_headers
 
             expect(last_response).to have_status_code(201)
             expect(service_instance.reload.tags).to include('tag1', 'tag2')
 
-            put "/v2/service_instances/#{service_instance.guid}", update_body, headers_for(admin_user)
+            put "/v2/service_instances/#{service_instance.guid}", update_body, admin_headers
             expect(last_response).to have_status_code(201)
             expect(service_instance.reload.tags).to eq(max_tags)
           end
 
           it 'make sure the tags update works with the max length (edge case)' do
-            put "/v2/service_instances/#{service_instance.guid}", update_body, headers_for(admin_user)
+            put "/v2/service_instances/#{service_instance.guid}", update_body, admin_headers
             expect(last_response).to have_status_code(201)
             expect(decoded_response['entity']['tags']).to eq(max_tags)
             expect(service_instance.reload.tags).to eq(max_tags)
@@ -1786,7 +1786,7 @@ module VCAP::CloudController
       end
 
       it 'updates all services instances for a given plan with the new plan id' do
-        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, headers_for(admin_user)
+        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, admin_headers
 
         expect(last_response.status).to eql(200)
         expect(first_service_plan.service_instances.count).to eql(0)
@@ -1797,7 +1797,7 @@ module VCAP::CloudController
       it 'returns the number of instances moved' do
         ManagedServiceInstance.make(service_plan: first_service_plan)
 
-        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, headers_for(admin_user)
+        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, admin_headers
 
         expect(decoded_response['changed_count']).to eql(2)
       end
@@ -1806,7 +1806,7 @@ module VCAP::CloudController
         let(:new_plan_guid) { 'a-plan-that-does-not-exist' }
 
         it 'does not update any service instances' do
-          put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, headers_for(admin_user)
+          put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, admin_headers
 
           expect(last_response.status).to eql(400)
           expect(first_service_plan.service_instances.count).to eql(1)
@@ -1817,7 +1817,7 @@ module VCAP::CloudController
 
       context 'when given an invalid existing plan guid' do
         it 'does not update any service instances' do
-          put '/v2/service_plans/some-non-existant-plan/service_instances', body, headers_for(admin_user)
+          put '/v2/service_plans/some-non-existant-plan/service_instances', body, admin_headers
 
           expect(last_response.status).to eql(400)
           expect(first_service_plan.service_instances.count).to eql(1)
@@ -1830,7 +1830,7 @@ module VCAP::CloudController
         put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, headers_for(developer)
         expect(last_response.status).to eql(403)
 
-        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, headers_for(admin_user)
+        put "/v2/service_plans/#{first_service_plan.guid}/service_instances", body, admin_headers
         expect(last_response.status).to eql(200)
       end
     end

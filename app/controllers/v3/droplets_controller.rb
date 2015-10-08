@@ -24,7 +24,7 @@ module VCAP::CloudController
       pagination_options = PaginationOptions.from_params(params)
       invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-      if membership.admin?
+      if roles.admin?
         paginated_result = DropletListFetcher.new.fetch_all(pagination_options, message)
       else
         space_guids = membership.space_guids_for_roles(
@@ -70,6 +70,7 @@ module VCAP::CloudController
     private
 
     def can_read?(space_guid, org_guid)
+      roles.admin? ||
       membership.has_any_roles?([Membership::SPACE_DEVELOPER,
                                  Membership::SPACE_MANAGER,
                                  Membership::SPACE_AUDITOR,
@@ -77,7 +78,7 @@ module VCAP::CloudController
     end
 
     def can_delete?(space_guid)
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+      roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 
     def droplet_not_found!

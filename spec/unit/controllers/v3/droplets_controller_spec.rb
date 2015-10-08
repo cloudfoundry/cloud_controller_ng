@@ -5,7 +5,8 @@ module VCAP::CloudController
     let(:logger) { instance_double(Steno::Logger) }
     let(:params) { {} }
     let(:droplet_presenter) { double(:droplet_presenter) }
-    let(:membership) { double(:membership) }
+    let(:membership) { instance_double(Membership) }
+    let(:roles) { instance_double(Roles) }
     let(:req_body) { '{}' }
 
     let(:droplets_controller) do
@@ -26,6 +27,8 @@ module VCAP::CloudController
       allow(logger).to receive(:debug)
       allow(droplets_controller).to receive(:membership).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
+      allow(Roles).to receive(:new).and_return(roles)
+      allow(roles).to receive(:admin?).and_return(false)
     end
 
     describe '#show' do
@@ -44,6 +47,20 @@ module VCAP::CloudController
         expect(response_code).to eq 200
         expect(response).to eq(expected_response)
         expect(droplet_presenter).to have_received(:present_json).with(droplet)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 200 OK and the droplet' do
+          response_code, response = droplets_controller.show(droplet.guid)
+          expect(response_code).to eq 200
+          expect(response).to eq(expected_response)
+          expect(droplet_presenter).to have_received(:present_json).with(droplet)
+        end
       end
 
       context 'when the user has the incorrect scope' do
@@ -123,6 +140,19 @@ module VCAP::CloudController
         response_code, response = droplets_controller.delete(droplet.guid)
         expect(response_code).to eq 204
         expect(response).to be_nil
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 204 NO CONTENT' do
+          response_code, response = droplets_controller.delete(droplet.guid)
+          expect(response_code).to eq 204
+          expect(response).to be_nil
+        end
       end
 
       it 'checks for the proper roles' do
@@ -253,7 +283,7 @@ module VCAP::CloudController
 
         context 'when the user is an admin' do
           before do
-            allow(membership).to receive(:admin?).and_return(true)
+            allow(roles).to receive(:admin?).and_return(true)
           end
 
           it 'returns all droplets' do
@@ -276,7 +306,7 @@ module VCAP::CloudController
           let(:viewable_droplet) { DropletModel.make }
 
           before do
-            allow(membership).to receive(:admin?).and_return(false)
+            allow(roles).to receive(:admin?).and_return(false)
             allow(membership).to receive(:space_guids_for_roles).and_return([viewable_droplet.space.guid])
           end
 
@@ -325,7 +355,7 @@ module VCAP::CloudController
         let(:droplet_presenter) { DropletPresenter.new }
 
         before do
-          allow(membership).to receive(:admin?).and_return(true)
+          allow(roles).to receive(:admin?).and_return(true)
         end
 
         it 'returns pagination links with that param' do

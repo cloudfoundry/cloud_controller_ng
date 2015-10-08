@@ -2,6 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::AppsController do
+    let(:admin_user) { User.make }
     let(:app_event_repository) { Repositories::Runtime::AppEventRepository.new }
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 
@@ -137,7 +138,7 @@ module VCAP::CloudController
           expected_attrs = AppsController::CreateMessage.decode(initial_hash.to_json).extract(stringify_keys: true)
           allow(app_event_repository).to receive(:record_app_create).and_call_original
 
-          post '/v2/apps', MultiJson.dump(initial_hash), json_headers(admin_headers)
+          post '/v2/apps', MultiJson.dump(initial_hash), json_headers(admin_headers_for(admin_user))
 
           app = App.last
           expect(app_event_repository).to have_received(:record_app_create).with(app, app.space, admin_user.guid, SecurityContext.current_user_email, expected_attrs)
@@ -197,7 +198,7 @@ module VCAP::CloudController
           end
 
           context 'and the user is not an admin' do
-            let(:nonadmin_user) { VCAP::CloudController::User.make(admin: false, active: true) }
+            let(:nonadmin_user) { VCAP::CloudController::User.make(active: true) }
 
             it 'errors when attempting to set enable_ssh to true' do
               post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true)), json_headers(headers_for(nonadmin_user))
@@ -425,7 +426,7 @@ module VCAP::CloudController
       let(:decoded_response) { MultiJson.load(last_response.body) }
 
       def delete_app
-        delete "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers)
+        delete "/v2/apps/#{app_obj.guid}", {}, json_headers(admin_headers_for(admin_user))
       end
 
       it 'deletes the app' do
@@ -478,7 +479,7 @@ module VCAP::CloudController
         it 'records the recursive query parameter when recursive'  do
           allow(app_event_repository).to receive(:record_app_delete_request).and_call_original
 
-          delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers)
+          delete "/v2/apps/#{app_obj.guid}?recursive=true", {}, json_headers(admin_headers_for(admin_user))
 
           expect(app_event_repository).to have_received(:record_app_delete_request).with(app_obj, app_obj.space, admin_user.guid, SecurityContext.current_user_email, true)
         end

@@ -9,12 +9,6 @@ resource 'Service Usage Events', type: [:api, :legacy_api] do
   let!(:event2) { VCAP::CloudController::ServiceUsageEvent.make }
   let!(:event3) { VCAP::CloudController::ServiceUsageEvent.make }
 
-  around do |example|
-    admin_user
-    example.run
-    admin_user.destroy
-  end
-
   standard_model_get :service_usage_event
 
   get '/v2/service_usage_events' do

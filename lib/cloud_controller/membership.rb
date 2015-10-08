@@ -15,13 +15,8 @@ module VCAP::CloudController
     def has_any_roles?(roles, space_guid=nil, org_guid=nil)
       roles = [roles] unless roles.is_a?(Array)
 
-      return true if @user.admin?
       member_guids = member_guids(roles: roles)
       member_guids.include?(space_guid) || member_guids.include?(org_guid)
-    end
-
-    def admin?
-      @user.admin?
     end
 
     def space_guids_for_roles(roles)

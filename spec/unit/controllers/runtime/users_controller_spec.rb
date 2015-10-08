@@ -92,6 +92,7 @@ module VCAP::CloudController
       end
 
       context 'admin user' do
+        let(:headers_a) { admin_headers_for(member_a) }
         let(:member_a) { @cf_admin }
         let(:enumeration_expectation_a) { User.order(:id).limit(50) }
 

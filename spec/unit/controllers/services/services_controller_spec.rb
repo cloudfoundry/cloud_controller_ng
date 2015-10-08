@@ -277,7 +277,7 @@ module VCAP::CloudController
 
       context 'when no purge parameter is given' do
         it 'gives error info to user' do
-          delete "/v2/services/#{service.guid}", '{}', headers_for(admin_user)
+          delete "/v2/services/#{service.guid}", '{}', admin_headers
 
           expect(last_response).to have_status_code 400
           expect(last_response.body).to match /AssociationNotEmpty/
@@ -286,20 +286,21 @@ module VCAP::CloudController
 
       context 'when the purge parameter is "true"' do
         let(:email) { 'admin@example.com' }
+        let(:user) { User.make }
 
         before do
           stub_request(:delete, /#{service.service_broker.broker_url}.*/).to_return(body: '', status: 200)
         end
 
         it 'creates a service delete event' do
-          delete "/v2/services/#{service.guid}?purge=true", '{}', headers_for(admin_user, email: email)
+          delete "/v2/services/#{service.guid}?purge=true", '{}', admin_headers_for(user, email: email)
           expect(last_response.status).to eq(204)
 
           event = Event.all.last
           expect(event.type).to eq('audit.service.delete')
           expect(event.actor_type).to eq('user')
           expect(event.timestamp).to be
-          expect(event.actor).to eq(admin_user.guid)
+          expect(event.actor).to eq(user.guid)
           expect(event.actor_name).to eq(email)
           expect(event.actee).to eq(service.guid)
           expect(event.actee_type).to eq('service')
@@ -322,7 +323,7 @@ module VCAP::CloudController
         end
 
         it 'deletes the service and its dependent models' do
-          delete "/v2/services/#{service.guid}?purge=true", '{}', headers_for(admin_user)
+          delete "/v2/services/#{service.guid}?purge=true", '{}', admin_headers
 
           expect(last_response).to have_status_code(204)
           expect(Service.first(guid: service.guid)).to be_nil
@@ -333,7 +334,7 @@ module VCAP::CloudController
         end
 
         it 'does not contact the broker' do
-          delete "/v2/services/#{service.guid}?purge=true", '{}', headers_for(admin_user)
+          delete "/v2/services/#{service.guid}?purge=true", '{}', admin_headers
 
           expect(a_request(:delete, /#{service.service_broker.broker_url}.*/)).not_to have_been_made
         end
@@ -344,7 +345,7 @@ module VCAP::CloudController
           end
 
           it 'deletes the service and its dependent models' do
-            delete "/v2/services/#{service.guid}?purge=true", '{}', headers_for(admin_user)
+            delete "/v2/services/#{service.guid}?purge=true", '{}', admin_headers
 
             expect(last_response).to have_status_code(204)
             expect(Service.first(guid: service.guid)).to be_nil

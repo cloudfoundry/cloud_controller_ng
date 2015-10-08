@@ -61,6 +61,10 @@ module ControllerHelpers
     FakeFrontController.new(TestConfig.config)
   end
 
+  def admin_headers_for(user, opts={})
+    headers_for(user, opts.merge(admin: true))
+  end
+
   def headers_for(user, opts={})
     opts = { email: Sham.email,
              https: false }.merge(opts)
@@ -72,7 +76,11 @@ module ControllerHelpers
 
     scopes = opts[:scopes]
     if scopes.nil? && user
-      scopes = user.admin? ? %w(cloud_controller.admin) : %w(cloud_controller.read cloud_controller.write)
+      scopes = %w(cloud_controller.read cloud_controller.write)
+    end
+
+    if opts[:admin] && user
+      scopes << 'cloud_controller.admin'
     end
 
     if user
@@ -111,12 +119,13 @@ module ControllerHelpers
     decoded_response['entity']
   end
 
-  def admin_user
-    @admin_user ||= VCAP::CloudController::User.make(admin: true)
-  end
-
   def admin_headers
-    @admin_headers ||= headers_for(admin_user)
+    if !@admin_headers
+      user = User.make
+      @admin_headers = headers_for(user, scopes: %w(cloud_controller.admin))
+      user.destroy
+    end
+    @admin_headers
   end
 
   def escape_query(string)

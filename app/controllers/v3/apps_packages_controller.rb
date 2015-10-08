@@ -87,6 +87,7 @@ module VCAP::CloudController
     end
 
     def can_read?(space_guid, org_guid)
+      roles.admin? ||
       membership.has_any_roles?([Membership::SPACE_DEVELOPER,
                                  Membership::SPACE_MANAGER,
                                  Membership::SPACE_AUDITOR,
@@ -94,7 +95,7 @@ module VCAP::CloudController
     end
 
     def can_create?(space_guid)
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+      roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 
     def app_not_found!

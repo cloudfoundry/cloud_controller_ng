@@ -7,7 +7,8 @@ module VCAP::CloudController
     let(:params) { {} }
     let(:process_presenter) { double(:process_presenter) }
     let(:index_stopper) { double(:index_stopper) }
-    let(:membership) { double(:membership) }
+    let(:membership) { instance_double(Membership) }
+    let(:roles) { instance_double(Roles) }
     let(:controller) do
       AppsProcessesController.new(
         {},
@@ -28,6 +29,8 @@ module VCAP::CloudController
       allow(membership).to receive(:has_any_roles?).and_return(true)
       allow(controller).to receive(:membership).and_return(membership)
       allow(controller).to receive(:current_user).and_return(User.make)
+      allow(Roles).to receive(:new).and_return(roles)
+      allow(roles).to receive(:admin?).and_return(false)
     end
 
     describe '#list_processes' do
@@ -56,6 +59,29 @@ module VCAP::CloudController
             with(an_instance_of(PaginatedResult), "/v3/apps/#{guid}/processes") do |result|
               expect(result.total).to eq(2)
             end
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 200 and presents the response' do
+          app_model.add_process(App.make(space: space))
+          app_model.add_process(App.make(space: space))
+          App.make
+          App.make
+
+          response_code, response = controller.list_processes(guid)
+          expect(response_code).to eq 200
+
+          expect(response).to eq(list_response)
+          expect(process_presenter).to have_received(:present_json_list).
+                                           with(an_instance_of(PaginatedResult), "/v3/apps/#{guid}/processes") do |result|
+            expect(result.total).to eq(2)
+          end
+        end
       end
 
       context 'when the user does not have read permissions' do
@@ -168,6 +194,23 @@ module VCAP::CloudController
         expect(index_stopper).to have_received(:stop_index).with(process, 0)
       end
 
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'terminates the lone process' do
+          expect(process.instances).to eq(1)
+
+          status, _body = controller.terminate(app.guid, process.type, 0)
+          process.reload
+          expect(status).to eq(204)
+
+          expect(index_stopper).to have_received(:stop_index).with(process, 0)
+        end
+      end
+
       context 'when the user does not have write permissions' do
         it 'raises an ApiError with a 403 code' do
           expect(controller).to receive(:check_write_permissions!).
@@ -224,7 +267,6 @@ module VCAP::CloudController
       before do
         allow(controller).to receive(:check_write_permissions!)
         allow(process_presenter).to receive(:present_json).and_return(expected_response)
-        allow(membership).to receive(:admin?).and_return(false)
       end
 
       it 'scales the process and returns the correct things' do
@@ -240,6 +282,28 @@ module VCAP::CloudController
         expect(process.disk_quota).to eq(200)
         expect(status).to eq(HTTP::OK)
         expect(body).to eq(expected_response)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'scales the process and returns the correct things' do
+          expect(process.instances).not_to eq(2)
+          expect(process.memory).not_to eq(100)
+          expect(process.disk_quota).not_to eq(200)
+
+          status, body = controller.scale(app.guid, process.type)
+
+          process.reload
+          expect(process.instances).to eq(2)
+          expect(process.memory).to eq(100)
+          expect(process.disk_quota).to eq(200)
+          expect(status).to eq(HTTP::OK)
+          expect(body).to eq(expected_response)
+        end
       end
 
       context 'when the process is invalid' do
@@ -274,7 +338,7 @@ module VCAP::CloudController
         end
 
         context 'user is admin' do
-          before { allow(membership).to receive(:admin?).and_return(true) }
+          before { allow(roles).to receive(:admin?).and_return(true) }
 
           it 'scales the process and returns the correct things' do
             expect(process.instances).not_to eq(2)
@@ -414,6 +478,21 @@ module VCAP::CloudController
         expect(code).to eq(HTTP::OK)
         expect(response).to eq(expected_response)
         expect(process_presenter).to have_received(:present_json).with(process)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns 200 OK and the process' do
+          code, response = controller.show(app.guid, process.type)
+
+          expect(code).to eq(HTTP::OK)
+          expect(response).to eq(expected_response)
+          expect(process_presenter).to have_received(:present_json).with(process)
+        end
       end
 
       context 'when the user does not have read permissions' do

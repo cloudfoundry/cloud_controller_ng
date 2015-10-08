@@ -31,8 +31,6 @@ module VCAP::CloudController
       route_not_found! if route.nil?
       unauthorized! unless can_delete?(space.guid)
 
-      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
-
       AddRouteToApp.new(current_user, current_user_email).add(app, route, web_process)
       [HTTP::NO_CONTENT]
     rescue AddRouteToApp::InvalidRouteMapping => e
@@ -49,8 +47,6 @@ module VCAP::CloudController
       route_not_found! if route.nil?
       unauthorized! unless can_delete?(space.guid)
 
-      app_not_found! unless membership.has_any_roles?([Membership::SPACE_DEVELOPER], app.space_guid)
-
       RemoveRouteFromApp.new(app).remove(route)
       [HTTP::NO_CONTENT]
     end
@@ -62,6 +58,7 @@ module VCAP::CloudController
     private
 
     def can_read?(space_guid, org_guid)
+      roles.admin? ||
       membership.has_any_roles?([Membership::SPACE_DEVELOPER,
                                  Membership::SPACE_MANAGER,
                                  Membership::SPACE_AUDITOR,
@@ -69,7 +66,7 @@ module VCAP::CloudController
     end
 
     def can_delete?(space_guid)
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+      roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
     end
 
     def app_not_found!

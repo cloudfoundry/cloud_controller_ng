@@ -10,7 +10,8 @@ module VCAP::CloudController
     let(:app_model) { AppModel.make(space: space) }
     let(:process) { AppFactory.make(app_guid: app_model.guid) }
     let(:guid) { process.guid }
-    let(:membership) { double(:membership) }
+    let(:membership) { instance_double(Membership) }
+    let(:roles) { instance_double(Roles) }
     let(:req_body) { '' }
     let(:expected_response) { 'process_response_body' }
     let(:params) { {} }
@@ -34,11 +35,12 @@ module VCAP::CloudController
       allow(logger).to receive(:debug)
       allow(process_presenter).to receive(:present_json).and_return(expected_response)
       allow(membership).to receive(:has_any_roles?).and_return(true)
-      allow(membership).to receive(:admin?).and_return(false)
       allow(processes_controller).to receive(:current_user).and_return(user)
       allow(processes_controller).to receive(:membership).and_return(membership)
       allow(processes_controller).to receive(:check_write_permissions!).and_return(nil)
       allow(processes_controller).to receive(:check_read_permissions!).and_return(nil)
+      allow(Roles).to receive(:new).and_return(roles)
+      allow(roles).to receive(:admin?).and_return(false)
     end
 
     describe '#list' do
@@ -60,6 +62,23 @@ module VCAP::CloudController
         expect(response_body).to eq(expected_response)
       end
 
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns 200 and lists the apps' do
+          expect_any_instance_of(ProcessListFetcher).to receive(:fetch_all).with(instance_of(PaginationOptions)).and_call_original
+
+          response_code, response_body = processes_controller.list
+
+          expect(process_presenter).to have_received(:present_json_list).with(instance_of(PaginatedResult), '/v3/processes')
+          expect(response_code).to eq(200)
+          expect(response_body).to eq(expected_response)
+        end
+      end
+
       it 'fetches processes for the users SpaceDeveloper, SpaceManager, SpaceAuditor, OrgManager space guids' do
         expect_any_instance_of(ProcessListFetcher).to receive(:fetch).with(instance_of(PaginationOptions), [space.guid]).and_call_original
         expect_any_instance_of(ProcessListFetcher).to_not receive(:fetch_all)
@@ -74,18 +93,6 @@ module VCAP::CloudController
         processes_controller.list
 
         expect(processes_controller).to have_received(:check_read_permissions!)
-      end
-
-      context 'when user is an admin' do
-        before do
-          allow(membership).to receive(:admin?).and_return(true)
-        end
-
-        it 'fetches all of the results' do
-          expect_any_instance_of(ProcessListFetcher).to receive(:fetch_all).with(instance_of(PaginationOptions)).and_call_original
-
-          processes_controller.list
-        end
       end
 
       context 'when the request parameters are invalid' do
@@ -121,13 +128,22 @@ module VCAP::CloudController
 
     describe '#show' do
       it 'returns 200 OK' do
-        response_code, _ = processes_controller.show(guid)
+        response_code, response = processes_controller.show(guid)
         expect(response_code).to eq(HTTP::OK)
+        expect(response).to eq(expected_response)
       end
 
-      it 'returns the process information' do
-        _, response = processes_controller.show(guid)
-        expect(response).to eq(expected_response)
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns 200 OK' do
+          response_code, response = processes_controller.show(guid)
+          expect(response_code).to eq(HTTP::OK)
+          expect(response).to eq(expected_response)
+        end
       end
 
       context 'when the user does not have read permissions' do
@@ -195,6 +211,23 @@ module VCAP::CloudController
         expect(process.reload.command).to eq('new command')
         expect(status).to eq(HTTP::OK)
         expect(body).to eq(expected_response)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'updates the process and returns the correct things' do
+          expect(process.command).not_to eq('new command')
+
+          status, body = processes_controller.update(process.guid)
+
+          expect(process.reload.command).to eq('new command')
+          expect(status).to eq(HTTP::OK)
+          expect(body).to eq(expected_response)
+        end
       end
 
       context 'when the process does not exist' do
@@ -390,6 +423,28 @@ module VCAP::CloudController
         expect(body).to eq(expected_response)
       end
 
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'scales the process and returns the correct things' do
+          expect(process.instances).not_to eq(2)
+          expect(process.memory).not_to eq(100)
+          expect(process.disk_quota).not_to eq(200)
+
+          status, body = processes_controller.scale(process.guid)
+
+          process.reload
+          expect(process.instances).to eq(2)
+          expect(process.memory).to eq(100)
+          expect(process.disk_quota).to eq(200)
+          expect(status).to eq(HTTP::OK)
+          expect(body).to eq(expected_response)
+        end
+      end
+
       context 'when the process is invalid' do
         before do
           allow_any_instance_of(ProcessScale).to receive(:scale).and_raise(ProcessScale::InvalidProcess.new('errorz'))
@@ -422,7 +477,7 @@ module VCAP::CloudController
         end
 
         context 'admin user' do
-          before { allow(membership).to receive(:admin?).and_return(true) }
+          before { allow(roles).to receive(:admin?).and_return(true) }
 
           it 'scales the process and returns the correct things' do
             expect(process.instances).not_to eq(2)

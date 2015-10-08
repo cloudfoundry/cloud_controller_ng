@@ -560,6 +560,7 @@ module VCAP::CloudController
         context 'when one of the spaces has a v3 app in it' do
           let!(:space) { Space.make(organization: org) }
           let!(:app_model) { AppModel.make(space_guid: space.guid) }
+          let(:user) { User.make }
 
           it 'deletes the v3 app' do
             delete "/v2/organizations/#{org.guid}?recursive=true", '', admin_headers
@@ -568,12 +569,12 @@ module VCAP::CloudController
           end
 
           it 'records an audit event that the app was deleted' do
-            delete "/v2/organizations/#{org.guid}?recursive=true", '', admin_headers
+            delete "/v2/organizations/#{org.guid}?recursive=true", '', admin_headers_for(user)
             expect(last_response).to have_status_code 204
 
             event = Event.find(type: 'audit.app.delete-request', actee: app_model.guid)
             expect(event).not_to be_nil
-            expect(event.actor).to eq admin_user.guid
+            expect(event.actor).to eq user.guid
           end
         end
 

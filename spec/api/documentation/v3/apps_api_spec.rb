@@ -121,10 +121,9 @@ resource 'Apps (Experimental)', type: :api do
       let(:per_page) { 2 }
       let(:space_guids) { [app_model5.space_guid, space.guid, app_model6.space_guid].join(',') }
       let(:names) { [name1].join(',') }
+      let(:user_header) { admin_headers['HTTP_AUTHORIZATION'] }
 
       it 'Filters Apps by guids, names, spaces, and organizations' do
-        user.admin = true
-        user.save
         expected_pagination = {
           'total_results' => 3,
           'first'         => { 'href' => "/v3/apps?names=#{name1}&order_by=#{order_by}&page=1&per_page=2&space_guids=#{CGI.escape(space_guids)}" },

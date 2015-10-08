@@ -52,15 +52,14 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:service_plan_guid) }
     end
 
-    let(:headers) { headers_for(admin_user) }
-
     describe 'POST /v2/service_plan_visibilities' do
       let!(:organization) { Organization.make }
       let!(:service_plan) { ServicePlan.make }
+      let(:user) { User.make }
 
       it 'creates the service plan visibility' do
         params = { organization_guid: organization.guid, service_plan_guid: service_plan.guid }
-        post '/v2/service_plan_visibilities', MultiJson.dump(params), headers
+        post '/v2/service_plan_visibilities', MultiJson.dump(params), admin_headers
 
         expect(last_response.status).to eq 201
 
@@ -73,14 +72,14 @@ module VCAP::CloudController
       it "creates an 'audit.service_plan_visibility.create' event" do
         email = 'some-email-address@example.com'
         params = { 'organization_guid' => organization.guid, 'service_plan_guid' => service_plan.guid }
-        post '/v2/service_plan_visibilities', MultiJson.dump(params), headers_for(admin_user, email: email)
+        post '/v2/service_plan_visibilities', MultiJson.dump(params), admin_headers_for(user, email: email)
 
         event = Event.first(type: 'audit.service_plan_visibility.create')
         visibility = ServicePlanVisibility.first
         expect(visibility).to be
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
-        expect(event.actor).to eq(admin_user.guid)
+        expect(event.actor).to eq(user.guid)
         expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(visibility.guid)
         expect(event.actee_type).to eq('service_plan_visibility')
@@ -96,9 +95,10 @@ module VCAP::CloudController
       let!(:new_organization) { Organization.make }
       let!(:service_plan) { ServicePlan.make }
       let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
+      let(:user) { User.make }
 
       it 'updates the service plan visibility' do
-        put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump({ organization_guid: new_organization.guid }), headers
+        put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump({ organization_guid: new_organization.guid }), admin_headers
 
         expect(last_response.status).to eq(201)
         service_plan_visibility = ServicePlanVisibility.find(guid: visibility.guid)
@@ -108,12 +108,12 @@ module VCAP::CloudController
       it 'creates a service plan visibility update event' do
         email = 'some-email-address@example.com'
         params = { 'organization_guid' => new_organization.guid }
-        put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump(params), headers_for(admin_user, email: email)
+        put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump(params), admin_headers_for(user, email: email)
 
         event = Event.first(type: 'audit.service_plan_visibility.update')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
-        expect(event.actor).to eq(admin_user.guid)
+        expect(event.actor).to eq(user.guid)
         expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(visibility.guid)
         expect(event.actee_type).to eq('service_plan_visibility')
@@ -128,9 +128,10 @@ module VCAP::CloudController
       let!(:organization) { Organization.make }
       let!(:service_plan) { ServicePlan.make }
       let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
+      let(:user) { User.make }
 
       it 'deletes the service plan visibility' do
-        delete "/v2/service_plan_visibilities/#{visibility.guid}", {}, headers
+        delete "/v2/service_plan_visibilities/#{visibility.guid}", {}, admin_headers
 
         expect(last_response.status).to eq(204)
         expect(ServicePlanVisibility.find(guid: visibility.guid)).to be_nil
@@ -138,12 +139,12 @@ module VCAP::CloudController
 
       it 'creates a service plan visibility delete event' do
         email = 'some-email-address@example.com'
-        delete "/v2/service_plan_visibilities/#{visibility.guid}", {}, headers_for(admin_user, email: email)
+        delete "/v2/service_plan_visibilities/#{visibility.guid}", {}, admin_headers_for(user, email: email)
 
         event = Event.first(type: 'audit.service_plan_visibility.delete')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
-        expect(event.actor).to eq(admin_user.guid)
+        expect(event.actor).to eq(user.guid)
         expect(event.actor_name).to eq(email)
         expect(event.actee).to eq(visibility.guid)
         expect(event.actee_type).to eq('service_plan_visibility')
@@ -155,7 +156,7 @@ module VCAP::CloudController
 
       context 'with ?async=true' do
         it 'returns a job id' do
-          delete "/v2/service_plan_visibilities/#{visibility.guid}?async=true", {}, headers
+          delete "/v2/service_plan_visibilities/#{visibility.guid}?async=true", {}, admin_headers
           expect(last_response.status).to eq 202
           expect(decoded_response['entity']['guid']).to be
           expect(decoded_response['entity']['status']).to eq 'queued'

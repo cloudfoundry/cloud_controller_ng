@@ -7,7 +7,8 @@ module VCAP::CloudController
     let(:params) { {} }
     let(:package_presenter) { double(:package_presenter) }
     let(:app) { nil }
-    let(:membership) { double(:membership) }
+    let(:membership) { instance_double(Membership) }
+    let(:roles) { instance_double(Roles) }
     let(:controller) do
       AppsPackagesController.new(
         {},
@@ -26,6 +27,8 @@ module VCAP::CloudController
       allow(logger).to receive(:debug)
       allow(controller).to receive(:current_user).and_return(User.make)
       allow(controller).to receive(:membership).and_return(membership)
+      allow(Roles).to receive(:new).and_return(roles)
+      allow(roles).to receive(:admin?).and_return(false)
     end
 
     describe '#create_new' do
@@ -55,6 +58,27 @@ module VCAP::CloudController
         app.reload
         package = app.packages.first
         expect(package.type).to eq('bits')
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 201 and the response' do
+          expect(app.packages.count).to eq(0)
+
+          response_code, response = controller.create_new(app_guid)
+
+          expect(response_code).to eq 201
+          expect(package_presenter).to have_received(:present_json).with(an_instance_of(PackageModel))
+          expect(response).to eq(package_response)
+
+          app.reload
+          package = app.packages.first
+          expect(package.type).to eq('bits')
+        end
       end
 
       context 'with invalid json' do
@@ -202,6 +226,27 @@ module VCAP::CloudController
         target_app.reload
         package = target_app.packages.first
         expect(package.type).to eq(original_package.type)
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 201 and the response' do
+          expect(target_app.packages.count).to eq(0)
+
+          response_code, response = controller.create_copy(target_app.guid)
+
+          expect(response_code).to eq 201
+          expect(package_presenter).to have_received(:present_json).with(an_instance_of(PackageModel))
+          expect(response).to eq(package_response)
+
+          target_app.reload
+          package = target_app.packages.first
+          expect(package.type).to eq(original_package.type)
+        end
       end
 
       context 'when the user does not have write scope' do
@@ -392,6 +437,29 @@ module VCAP::CloudController
         expect(package_presenter).to have_received(:present_json_list).
             with(an_instance_of(PaginatedResult), "/v3/apps/#{guid}/packages") do |result|
           expect(result.total).to eq(2)
+        end
+      end
+
+      context 'admin' do
+        before do
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 200 and presents the response' do
+          app.add_package(PackageModel.make)
+          app.add_package(PackageModel.make)
+          PackageModel.make
+          PackageModel.make
+
+          response_code, response = controller.list_packages(guid)
+          expect(response_code).to eq 200
+
+          expect(response).to eq(list_response)
+          expect(package_presenter).to have_received(:present_json_list).
+                                           with(an_instance_of(PaginatedResult), "/v3/apps/#{guid}/packages") do |result|
+            expect(result.total).to eq(2)
+          end
         end
       end
 

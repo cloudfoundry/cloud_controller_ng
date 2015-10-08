@@ -91,7 +91,7 @@ module VCAP::CloudController
     end
 
     def admin?
-      admin
+      raise 'This method is deprecated. A user is only an admin if their token contains the cloud_controller.admin scope'
     end
 
     def active?
