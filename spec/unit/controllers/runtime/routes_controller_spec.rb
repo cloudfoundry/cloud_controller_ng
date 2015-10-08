@@ -2,6 +2,27 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe VCAP::CloudController::RoutesController do
+    let(:routing_api_client) { double('routing_api_client') }
+    let(:tcp_group_1) { 'tcp-group-1' }
+    let(:tcp_group_2) { 'tcp-group-2' }
+    let(:http_group) { 'http-group' }
+
+    let(:router_groups) do
+      [
+        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_1, 'type' => 'tcp' }),
+        RoutingApi::RouterGroup.new({ 'guid' => tcp_group_2, 'type' => 'tcp' }),
+        RoutingApi::RouterGroup.new({ 'guid' => http_group, 'type' => 'http' }),
+      ]
+    end
+
+    before do
+      allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
+        and_return(routing_api_client)
+      allow(routing_api_client).to receive(:router_group).with(tcp_group_1).and_return(router_groups[0])
+      allow(routing_api_client).to receive(:router_group).with(tcp_group_2).and_return(router_groups[1])
+      allow(routing_api_client).to receive(:router_group).with(http_group).and_return(router_groups[2])
+    end
+
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:host) }
       it { expect(described_class).to be_queryable_by(:domain_guid) }
@@ -12,24 +33,23 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
-                                                                 host:        { type: 'string', default: '' },
-                                                                 domain_guid: { type: 'string', required: true },
-                                                                 space_guid:  { type: 'string', required: true },
-                                                                 app_guids:   { type: '[string]' },
-                                                                 path:        { type: 'string' },
-                                                                 port:        { type: 'integer' }
-                                                             })
+               host:        { type: 'string', default: '' },
+               domain_guid: { type: 'string', required: true },
+               space_guid:  { type: 'string', required: true },
+               app_guids:   { type: '[string]' },
+               path:        { type: 'string' },
+               port:        { type: 'integer' }
+           })
       end
-
       it do
         expect(described_class).to have_updatable_attributes({
-                                                                 host:        { type: 'string' },
-                                                                 domain_guid: { type: 'string' },
-                                                                 space_guid:  { type: 'string' },
-                                                                 app_guids:   { type: '[string]' },
-                                                                 path:        { type: 'string' },
-                                                                 port:        { type: 'integer' }
-                                                             })
+             host:        { type: 'string' },
+             domain_guid: { type: 'string' },
+             space_guid:  { type: 'string' },
+             app_guids:   { type: '[string]' },
+             path:        { type: 'string' },
+             port:        { type: 'integer' }
+          })
       end
     end
 
@@ -129,9 +149,9 @@ module VCAP::CloudController
       let(:routing_api_client) { double('routing_api_client') }
       let(:router_group) {
         RoutingApi::RouterGroup.new({
-                                        'guid' => 'tcp-guid',
-                                        'type' => 'tcp',
-                                    })
+             'guid' => 'tcp-guid',
+             'type' => 'tcp',
+         })
       }
 
       before do
@@ -338,7 +358,7 @@ module VCAP::CloudController
       end
 
       context 'when creating a route with a null port value' do
-        let(:domain) { SharedDomain.make(router_group_guid: 'tcp-group') }
+        let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
         let(:req) {{
             domain_guid: domain.guid,
             space_guid:  space.guid,
@@ -356,21 +376,6 @@ module VCAP::CloudController
       end
 
       context 'when creating a route with a port value that is not null' do
-        let(:routing_api_client) { double('routing_api_client') }
-        before do
-          allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
-                                                                    and_return(routing_api_client)
-          allow(routing_api_client).to receive(:router_groups).and_return(router_groups)
-          allow(routing_api_client).to receive(:router_group).and_return(router_groups[0])
-        end
-
-        let(:router_groups) do
-          [
-            RoutingApi::RouterGroup.new({ 'guid' => 'tcp-group', 'type' => 'tcp' }),
-            RoutingApi::RouterGroup.new({ 'guid' => 'http-group', 'type' => 'http' }),
-          ]
-        end
-
         let(:domain) { SharedDomain.make }
         let(:port) { 10000 }
         let(:req) {{
@@ -396,7 +401,7 @@ module VCAP::CloudController
         end
 
         context 'with a domain with a router_group_guid and type tcp' do
-          let(:domain) { SharedDomain.make(router_group_guid: 'tcp-group') }
+          let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
 
           it 'creates the route' do
             post '/v2/routes', MultiJson.dump(req), headers_for(user)
@@ -414,6 +419,53 @@ module VCAP::CloudController
               expect(decoded_response['description']).to include('Port must be greater than 0 and less than 65536.')
             end
           end
+
+          context 'when port is already taken' do
+            let(:port) { 8080 }
+            let(:error_message) {
+              "Port #{port} is not available on this domain's router group. " \
+              'Try a different port, request an random port, or ' \
+              'use a domain of a different router group.'
+            }
+
+            before do
+              Route.make(space: space, domain: domain, port: port)
+            end
+
+            context 'in same router group' do
+              let(:another_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+              let(:req) {{
+                  domain_guid: another_domain.guid,
+                  space_guid:  space.guid,
+                  host:        'example',
+                  port:        port,
+              }}
+
+              it 'rejects the request with RoutePortTaken error' do
+                post '/v2/routes', MultiJson.dump(req), headers_for(user)
+
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['description']).to include(error_message)
+              end
+            end
+
+            context 'in different router group' do
+              let(:another_domain) { SharedDomain.make(router_group_guid: tcp_group_2) }
+              let(:req) {{
+                  domain_guid: another_domain.guid,
+                  space_guid:  space.guid,
+                  host:        'example',
+                  port:        port,
+              }}
+
+              it 'creates the route' do
+                post '/v2/routes', MultiJson.dump(req), headers_for(user)
+
+                expect(last_response).to have_status_code(201)
+                expect(decoded_response['entity']['port']).to eq(port)
+              end
+            end
+          end
         end
 
         context 'with a domain without a router_group_guid' do
@@ -426,11 +478,7 @@ module VCAP::CloudController
         end
 
         context 'with a domain with a router_group_guid of type other than tcp' do
-          let(:domain) { SharedDomain.make(router_group_guid: 'http-group') }
-
-          before do
-            allow(routing_api_client).to receive(:router_group).and_return(router_groups[1])
-          end
+          let(:domain) { SharedDomain.make(router_group_guid: http_group) }
 
           it 'rejects the request with a RouteInvalid error' do
             post '/v2/routes', MultiJson.dump(req), headers_for(user)
@@ -495,24 +543,11 @@ module VCAP::CloudController
 
       describe 'tcp routes' do
         let(:port) { 18000 }
+        let(:new_port) { 18001 }
         let(:route) { Route.make(space: space, domain: domain, port: port) }
-        let(:routing_api_client) { double('routing_api_client') }
-        let(:router_groups) do
-          [
-            RoutingApi::RouterGroup.new({ 'guid' => 'tcp-group', 'type' => 'tcp' }),
-            RoutingApi::RouterGroup.new({ 'guid' => 'http-group', 'type' => 'http' }),
-          ]
-        end
-
-        before do
-          allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
-                                                                    and_return(routing_api_client)
-          allow(routing_api_client).to receive(:router_groups).and_return(router_groups)
-          allow(routing_api_client).to receive(:router_group).and_return(router_groups[0])
-        end
 
         context 'when associating with app' do
-          let(:domain) { SharedDomain.make(router_group_guid: 'tcp-group') }
+          let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
           let(:req) { '' }
           let(:app_obj) { AppFactory.make(space: route.space) }
 
@@ -524,13 +559,13 @@ module VCAP::CloudController
           end
         end
 
-        context 'when updating a route with a port value that is not null' do
+        context 'when updating a route with a new port value that is not null' do
           let(:req) {{
-              port: port,
+              port: new_port,
           }}
 
           context 'when router_group returns nil' do
-            let(:domain) { SharedDomain.make(router_group_guid: 'tcp-group') }
+            let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
 
             before do
               allow(routing_api_client).to receive(:router_group).and_return(nil)
@@ -545,23 +580,67 @@ module VCAP::CloudController
           end
 
           context 'with a domain with a router_group_guid and type tcp' do
-            let(:port) { 20000 }
-            let(:domain) { SharedDomain.make(router_group_guid: 'tcp-group') }
+            let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
 
-            it 'creates the route' do
+            it 'updates the route' do
               put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
 
               expect(last_response).to have_status_code(201)
-              expect(decoded_response['entity']['port']).to eq(port)
+              expect(decoded_response['entity']['port']).to eq(new_port)
             end
 
             context 'with an invalid port' do
-              let(:port) { 0 }
+              let(:new_port) { 0 }
               it 'verifies that port is greater than 0' do
                 put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
 
                 expect(last_response).to have_status_code(400)
                 expect(decoded_response['description']).to include('Port must be greater than 0 and less than 65536.')
+              end
+            end
+
+            context 'with the current port' do
+              let(:new_port) { port }
+
+              it 'updates the route' do
+                put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
+
+                expect(last_response).to have_status_code(201)
+                expect(decoded_response['entity']['port']).to eq(new_port)
+              end
+            end
+
+            context 'when the new port is already taken by another route' do
+              let(:error_message) {
+                "Port #{new_port} is not available on this domain's router group. " \
+                'Try a different port, request an random port, or ' \
+                'use a domain of a different router group.'
+              }
+
+              before do
+                Route.make(domain: another_domain, space: space, port: new_port)
+              end
+
+              context 'in same router group' do
+                let(:another_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+
+                it 'rejects the request with RoutePortTaken error' do
+                  put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
+
+                  expect(last_response).to have_status_code(400)
+                  expect(decoded_response['description']).to include(error_message)
+                end
+              end
+
+              context 'in different router group' do
+                let(:another_domain) { SharedDomain.make(router_group_guid: tcp_group_2) }
+
+                it 'updates the route' do
+                  put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
+
+                  expect(last_response).to have_status_code(201)
+                  expect(decoded_response['entity']['port']).to eq(new_port)
+                end
               end
             end
           end
@@ -576,11 +655,7 @@ module VCAP::CloudController
           end
 
           context 'with a domain with a router_group_guid of type other than tcp' do
-            let(:domain) { SharedDomain.make(router_group_guid: 'http-group') }
-
-            before do
-              allow(routing_api_client).to receive(:router_group).and_return(router_groups[1])
-            end
+            let(:domain) { SharedDomain.make(router_group_guid: http_group) }
 
             it 'rejects the request with a RouteInvalid error' do
               put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
