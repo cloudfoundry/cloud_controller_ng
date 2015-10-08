@@ -234,8 +234,7 @@ module VCAP::Services
               is_valid = true
 
               begin
-                parsed_url = URI.parse(url)
-                is_valid = parsed_url.is_a?(URI::HTTPS)
+                is_valid = valid_route_service_url?(URI.parse(url))
               rescue URI::InvalidURIError
                 is_valid = false
               end
@@ -246,6 +245,12 @@ module VCAP::Services
             end
 
             @validator.validate(method: method, uri: uri, code: code, response: response)
+          end
+
+          private
+
+          def valid_route_service_url?(parsed_url)
+            parsed_url.is_a?(URI::HTTPS) && parsed_url.host && !parsed_url.host.split('.').first.empty?
           end
         end
 

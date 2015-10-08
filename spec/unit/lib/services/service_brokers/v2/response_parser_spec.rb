@@ -161,9 +161,15 @@ module VCAP::Services
           }
         end
 
-        def self.with_invalid_route_service_url
+        def self.with_invalid_route_service_url_with_space
           {
               'route_service_url' => 'http:/route-service.cf apps.io'
+          }
+        end
+
+        def self.with_invalid_route_service_url_with_no_host
+          {
+            'route_service_url' => 'https://.com'
           }
         end
 
@@ -281,7 +287,8 @@ module VCAP::Services
         test_case(:bind,      200, with_nil_syslog_drain_url.to_json, service: :no_syslog, result: client_result_with_state('succeeded').merge('syslog_drain_url' => nil))
         test_case(:bind,      200, with_syslog_drain_url.to_json, service: :no_syslog, error: Errors::ServiceBrokerInvalidSyslogDrainUrl)
         test_case(:bind,      200, with_valid_route_service_url.to_json,             result: client_result_with_state('succeeded').merge(with_valid_route_service_url))
-        test_case(:bind,      200, with_invalid_route_service_url.to_json,           error: Errors::ServiceBrokerBadResponse)
+        test_case(:bind,      200, with_invalid_route_service_url_with_space.to_json,           error: Errors::ServiceBrokerBadResponse)
+        test_case(:bind,      200, with_invalid_route_service_url_with_no_host.to_json,           error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      200, with_http_route_service_url.to_json,              error: Errors::ServiceBrokerBadResponse)
         test_pass_through(:bind, 200, with_credentials,                              expected_state: 'succeeded')
         test_case(:bind,      201, broker_partial_json,                              error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_uri))
@@ -292,7 +299,8 @@ module VCAP::Services
         test_case(:bind,      201, with_syslog_drain_url.to_json, service: :no_syslog, error: Errors::ServiceBrokerInvalidSyslogDrainUrl)
         test_case(:bind,      201, with_nil_syslog_drain_url.to_json, service: :no_syslog, result: client_result_with_state('succeeded').merge('syslog_drain_url' => nil))
         test_case(:bind,      201, with_valid_route_service_url.to_json,             result: client_result_with_state('succeeded').merge(with_valid_route_service_url))
-        test_case(:bind,      201, with_invalid_route_service_url.to_json,           error: Errors::ServiceBrokerBadResponse)
+        test_case(:bind,      201, with_invalid_route_service_url_with_space.to_json,           error: Errors::ServiceBrokerBadResponse)
+        test_case(:bind,      201, with_invalid_route_service_url_with_no_host.to_json,           error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      201, with_http_route_service_url.to_json,              error: Errors::ServiceBrokerBadResponse)
         test_pass_through(:bind, 201, with_credentials,                              expected_state: 'succeeded')
         test_case(:bind,      202, broker_empty_json,                                error: Errors::ServiceBrokerBadResponse)
