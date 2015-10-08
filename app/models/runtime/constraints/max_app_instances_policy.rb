@@ -16,7 +16,7 @@ class MaxAppInstancesPolicy
 
     other_apps = @space_or_org.apps.reject { |app| app.guid == @app.guid }
 
-    proposed_instance_count = other_apps.sum(&:instances) + @app.instances
+    proposed_instance_count = other_apps.reject { |app| app.state == 'STOPPED' }.sum(&:instances) + @app.instances
 
     if proposed_instance_count > @quota_definition.app_instance_limit
       @errors.add(:app_instance_limit, @error_name)

@@ -16,9 +16,18 @@ describe MaxAppInstancesPolicy do
     expect(validator).to validate_with_error(app, :app_instance_limit, error_name)
   end
 
-  it 'does not give error when number of instances equals instance limit' do
+  it 'does not give error when number of instances of non-stopped apps equals instance limit' do
     app.instances = max_apps - current_org_instances
     expect(validator).to validate_without_error(app)
+  end
+
+  context 'when number of stopped apps exceeds instance limit' do
+    let!(:stopped_app) { VCAP::CloudController::AppFactory.make(space: org_space, instances: 11, state: 'STOPPED') }
+
+    it 'does not give error' do
+      app.instances = max_apps - current_org_instances
+      expect(validator).to validate_without_error(app)
+    end
   end
 
   context 'when quota definition is null' do
