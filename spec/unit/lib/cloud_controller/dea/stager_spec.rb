@@ -78,7 +78,8 @@ module VCAP::CloudController
                                                             thing_to_stage,
                                                             dea_pool,
                                                             stager_pool,
-                                                            an_instance_of(CloudController::Blobstore::UrlGenerator))
+                                                            an_instance_of(CloudController::Blobstore::UrlGenerator),
+                                                            an_instance_of(CloudController::Blobstore::Client))
         end
 
         it 'starts the app with the returned staging result' do

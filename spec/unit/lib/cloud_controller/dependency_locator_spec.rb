@@ -501,4 +501,14 @@ describe CloudController::DependencyLocator do
       expect(locator.instances_reporters).to be_an_instance_of(VCAP::CloudController::InstancesReporters)
     end
   end
+
+  describe '#buildpacks_presenter' do
+    it 'returns the buildpacks presenter' do
+      expect(locator.buildpacks_presenter).to be_an_instance_of(VCAP::CloudController::AdminBuildpacksPresenter)
+    end
+
+    it 'is a singleton' do
+      expect(locator.buildpacks_presenter).to equal(locator.buildpacks_presenter)
+    end
+  end
 end

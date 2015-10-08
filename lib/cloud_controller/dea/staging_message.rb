@@ -1,8 +1,9 @@
 module VCAP::CloudController
   module Dea
     class StagingMessage
-      def initialize(config, blobstore_url_generator)
+      def initialize(config, blobstore_url_generator, buildpack_blobstore)
         @blobstore_url_generator = blobstore_url_generator
+        @buildpack_blobstore = buildpack_blobstore
         @config = config
       end
 
@@ -58,7 +59,7 @@ module VCAP::CloudController
       end
 
       def admin_buildpacks
-        AdminBuildpacksPresenter.new(@blobstore_url_generator).to_staging_message_array
+        AdminBuildpacksPresenter.new(@blobstore_url_generator, @buildpack_blobstore).to_staging_message_array
       end
 
       def start_app_message(app)

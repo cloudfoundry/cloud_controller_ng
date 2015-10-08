@@ -281,8 +281,7 @@ module VCAP::CloudController
         dependency_locator.register(:upload_handler, UploadHandler.new(config))
         dependency_locator.register(:app_event_repository, Repositories::Runtime::AppEventRepository.new)
 
-        blobstore_url_generator = dependency_locator.blobstore_url_generator
-        stager_pool = Dea::StagerPool.new(@config, message_bus, blobstore_url_generator)
+        stager_pool = Dea::StagerPool.new(@config, message_bus, dependency_locator.buildpacks_presenter)
         dea_pool = Dea::Pool.new(@config, message_bus)
         runners = Runners.new(@config, message_bus, dea_pool, stager_pool)
         stagers = Stagers.new(@config, message_bus, dea_pool, stager_pool, runners)
@@ -292,6 +291,7 @@ module VCAP::CloudController
         dependency_locator.register(:instances_reporters, InstancesReporters.new(tps_client, hm_client))
         dependency_locator.register(:index_stopper, IndexStopper.new(runners))
 
+        blobstore_url_generator = dependency_locator.blobstore_url_generator
         Dea::Client.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
 
         AppObserver.configure(stagers, runners)
