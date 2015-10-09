@@ -12,7 +12,7 @@ class MaxAppInstancesPolicy
   def validate
     return unless @quota_definition
     return unless @app.scaling_operation?
-    return if @quota_definition.app_instance_limit == -1
+    return if @quota_definition.app_instance_limit == -1 || @app.stopped?
 
     other_apps = @space_or_org.apps.reject { |app| app.guid == @app.guid }
 
