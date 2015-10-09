@@ -171,7 +171,7 @@ module VCAP::CloudController
       end
 
       it 'returns the RoutePortTaken message when ports conflict' do
-        taken_port = 1
+        taken_port = 1024
         post '/v2/routes', MultiJson.dump(host: '', domain_guid: tcp_domain.guid, space_guid: space.guid, port: taken_port), json_headers(admin_headers)
 
         post '/v2/routes', MultiJson.dump(host: '', domain_guid: tcp_domain.guid, space_guid: space.guid, port: taken_port), json_headers(admin_headers)
@@ -249,20 +249,6 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(130004)
-      end
-
-      it 'does not allow port values below 1' do
-        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: tcp_domain.guid, space_guid: space.guid, port: -1), json_headers(admin_headers)
-
-        expect(last_response.status).to eq(400)
-        expect(decoded_response['description']).to include('Port must be greater than 0 and less than 65536.')
-      end
-
-      it 'does not allow port values above 65535' do
-        post '/v2/routes', MultiJson.dump(host: 'myexample', domain_guid: tcp_domain.guid, space_guid: space.guid, port: 65536), json_headers(admin_headers)
-
-        expect(last_response.status).to eq(400)
-        expect(decoded_response['description']).to include('Port must be greater than 0 and less than 65536.')
       end
     end
 
@@ -407,15 +393,37 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:user) { User.make }
       let(:domain) { SharedDomain.make }
+      let(:domain_guid) { domain.guid }
+      let(:tcp_route_validator) { double(:tcp_route_validator, validate: nil) }
+
       before do
         space.organization.add_user(user)
         space.add_developer(user)
+        allow(TcpRouteValidator).to receive(:new).with(routing_api_client, domain_guid, new_port).and_return(tcp_route_validator)
       end
 
       describe 'tcp routes' do
         let(:port) { 18000 }
         let(:new_port) { 18001 }
         let(:route) { Route.make(space: space, domain: domain, port: port) }
+        let(:req) { {
+          port: new_port,
+        } }
+
+        context 'when the TCP Route is not valid' do
+          before do
+            allow(tcp_route_validator).to receive(:validate).
+                                              and_raise(TcpRouteValidator::DomainInvalid.new('domain error'))
+          end
+
+          it 'returns an error' do
+            put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
+
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response['description']).to include('domain error')
+            expect(decoded_response['error_code']).to eq 'CF-DomainInvalid'
+          end
+        end
 
         context 'when associating with app' do
           let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
@@ -435,21 +443,6 @@ module VCAP::CloudController
               port: new_port,
           } }
 
-          context 'when router_group returns nil' do
-            let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
-
-            before do
-              allow(routing_api_client).to receive(:router_group).and_return(nil)
-            end
-
-            it 'rejects the request with a RouteInvalid error' do
-              put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
-
-              expect(last_response).to have_status_code(400)
-              expect(decoded_response['description']).to include('Port is supported for domains of TCP router groups only.')
-            end
-          end
-
           context 'with a domain with a router_group_guid and type tcp' do
             let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
 
@@ -458,16 +451,6 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code(201)
               expect(decoded_response['entity']['port']).to eq(new_port)
-            end
-
-            context 'with an invalid port' do
-              let(:new_port) { 0 }
-              it 'verifies that port is greater than 0' do
-                put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
-
-                expect(last_response).to have_status_code(400)
-                expect(decoded_response['description']).to include('Port must be greater than 0 and less than 65536.')
-              end
             end
 
             context 'with the current port' do
@@ -480,66 +463,12 @@ module VCAP::CloudController
                 expect(decoded_response['entity']['port']).to eq(new_port)
               end
             end
-
-            context 'when the new port is already taken by another route' do
-              let(:error_message) {
-                "Port #{new_port} is not available on this domain's router group. " \
-                'Try a different port, request an random port, or ' \
-                'use a domain of a different router group.'
-              }
-
-              before do
-                Route.make(domain: another_domain, space: space, port: new_port)
-              end
-
-              context 'in same router group' do
-                let(:another_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
-
-                it 'rejects the request with RoutePortTaken error' do
-                  put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
-
-                  expect(last_response).to have_status_code(400)
-                  expect(decoded_response['description']).to include(error_message)
-                end
-              end
-
-              context 'in different router group' do
-                let(:another_domain) { SharedDomain.make(router_group_guid: tcp_group_2) }
-
-                it 'updates the route' do
-                  put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
-
-                  expect(last_response).to have_status_code(201)
-                  expect(decoded_response['entity']['port']).to eq(new_port)
-                end
-              end
-            end
-          end
-
-          context 'with a domain without a router_group_guid' do
-            it 'rejects the request with a RouteInvalid error' do
-              put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
-
-              expect(last_response).to have_status_code(400)
-              expect(decoded_response['description']).to include('Port is supported for domains of TCP router groups only.')
-            end
-          end
-
-          context 'with a domain with a router_group_guid of type other than tcp' do
-            let(:domain) { SharedDomain.make(router_group_guid: http_group) }
-
-            it 'rejects the request with a RouteInvalid error' do
-              put "/v2/routes/#{route.guid}", MultiJson.dump(req), headers_for(user)
-
-              expect(last_response).to have_status_code(400)
-              expect(decoded_response['description']).to include('Port is supported for domains of TCP router groups only.')
-            end
           end
 
           context 'when the routing api client raises a UaaUnavailable error' do
             let(:domain) { SharedDomain.make(router_group_guid: 'router-group') }
             before do
-              allow(routing_api_client).to receive(:router_group).
+              allow(tcp_route_validator).to receive(:validate).
                                                and_raise(RoutingApi::Client::UaaUnavailable)
             end
 
@@ -554,7 +483,7 @@ module VCAP::CloudController
           context 'when the routing api client raises a RoutingApiUnavailable error' do
             let(:domain) { SharedDomain.make(router_group_guid: 'router-group') }
             before do
-              allow(routing_api_client).to receive(:router_group).
+              allow(tcp_route_validator).to receive(:validate).
                                                and_raise(RoutingApi::Client::RoutingApiUnavailable)
             end
 

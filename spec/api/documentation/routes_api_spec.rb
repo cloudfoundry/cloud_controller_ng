@@ -37,7 +37,8 @@ resource 'Routes', type: [:api, :legacy_api] do
       field :domain_guid, 'The guid of the associated domain', required: opts[:required], example_values: [Sham.guid]
       field :space_guid, 'The guid of the associated space', required: opts[:required], example_values: [Sham.guid]
       field :host, 'The host portion of the route'
-      field :port, 'The port of the route. Supported for domains of TCP router groups only.', required: false, example_values: [50000], experimental: true
+      field :port, 'The port of the route. Supported for domains of TCP router groups only.', required: false,
+                                                                                              valid_values: '1024-65535', example_values: [50000], experimental: true
       field :path, path_description, required: false, example_values: ['/apps/v1/path', '/apps/v2/path']
     end
 

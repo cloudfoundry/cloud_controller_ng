@@ -49,11 +49,11 @@ module VCAP::CloudController
         end
 
         context 'with an invalid port' do
-          let(:port) { 0 }
+          let(:port) { 1023 }
 
           it 'raises a RouteInvalid error' do
             expect { validator.validate }.
-                to raise_error(TcpRouteValidator::RouteInvalid, 'Port must be greater than 0 and less than 65536.')
+                to raise_error(TcpRouteValidator::RouteInvalid, 'Port must within the range 1024-65535.')
           end
         end
 

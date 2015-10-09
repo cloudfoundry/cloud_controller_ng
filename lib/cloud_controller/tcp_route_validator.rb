@@ -38,8 +38,8 @@ module VCAP::CloudController
           raise RouteInvalid.new('Port is supported for domains of TCP router groups only.')
         end
 
-        if port <= 0 || port > 65535
-          raise RouteInvalid.new('Port must be greater than 0 and less than 65536.')
+        if port < 1024 || port > 65535
+          raise RouteInvalid.new('Port must within the range 1024-65535.')
         end
 
         if port_taken?(port, domain.router_group_guid)

@@ -34,11 +34,6 @@ module VCAP::CloudController
         return Errors::ApiError.new_from_details('RoutePathTaken', attributes['path'])
       end
 
-      port_errors = e.errors.on([:domain_id, :port])
-      if port_errors && port_errors.include?(:unique)
-        return Errors::ApiError.new_from_details('RoutePortTaken', attributes['port'])
-      end
-
       space_errors = e.errors.on(:space)
       if space_errors && space_errors.include?(:total_routes_exceeded)
         return Errors::ApiError.new_from_details('SpaceQuotaTotalRoutesExceeded')
