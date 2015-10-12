@@ -425,14 +425,35 @@ module VCAP::CloudController
       end
     end
 
-      describe '#scale' do
-        let(:req_body) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
-        let(:process_type) { AppFactory.make }
+    describe '#scale' do
+      let(:req_body) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
+      let(:process_type) { AppFactory.make }
 
+      before do
+        @request.env.merge!(headers_for(User.make))
+        allow(process_presenter).to receive(:present_json).and_return(expected_response)
+        allow(membership).to receive(:has_any_roles?).and_return(true)
+      end
+
+      it 'scales the process and returns the correct things' do
+        expect(process_type.instances).not_to eq(2)
+        expect(process_type.memory).not_to eq(100)
+        expect(process_type.disk_quota).not_to eq(200)
+
+        put :scale, { guid: process_type.guid, body: req_body }
+
+        process_type.reload
+        expect(process_type.instances).to eq(2)
+        expect(process_type.memory).to eq(100)
+        expect(process_type.disk_quota).to eq(200)
+        expect(response.status).to eq(HTTP::OK)
+        expect(response.body).to eq(expected_response)
+      end
+
+      context 'admin' do
         before do
-          @request.env.merge!(headers_for(User.make))
-          allow(process_presenter).to receive(:present_json).and_return(expected_response)
-          allow(membership).to receive(:has_any_roles?).and_return(true)
+          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
         it 'scales the process and returns the correct things' do
@@ -449,12 +470,41 @@ module VCAP::CloudController
           expect(response.status).to eq(HTTP::OK)
           expect(response.body).to eq(expected_response)
         end
+      end
 
-        context 'admin' do
-          before do
-            allow(roles).to receive(:admin?).and_return(true)
-            allow(membership).to receive(:has_any_roles?).and_return(false)
+      context 'when the process is invalid' do
+        before do
+          allow_any_instance_of(ProcessScale).to receive(:scale).and_raise(ProcessScale::InvalidProcess.new('errorz'))
+        end
+
+        it 'returns 422' do
+          expect {
+            put :scale, { guid: process_type.guid, body: req_body }
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq(422)
+            expect(error.message).to match('errorz')
           end
+        end
+      end
+
+      context 'when scaling is disabled' do
+        before { FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
+
+        context 'non-admin user' do
+          it 'raises 403' do
+            expect {
+              put :scale, { guid: process_type.guid, body: req_body }
+            }.to raise_error do |error|
+              expect(error.name).to eq 'FeatureDisabled'
+              expect(error.response_code).to eq 403
+              expect(error.message).to match('app_scaling')
+            end
+          end
+        end
+
+        context 'admin user' do
+          before { allow(roles).to receive(:admin?).and_return(true) }
 
           it 'scales the process and returns the correct things' do
             expect(process_type.instances).not_to eq(2)
@@ -471,134 +521,84 @@ module VCAP::CloudController
             expect(response.body).to eq(expected_response)
           end
         end
+      end
 
-        context 'when the process is invalid' do
-          before do
-            allow_any_instance_of(ProcessScale).to receive(:scale).and_raise(ProcessScale::InvalidProcess.new('errorz'))
-          end
+      context 'when the user does not have write permissions' do
+        before { @request.env['HTTP_AUTHORIZATION'] = '' }
 
-          it 'returns 422' do
-            expect {
-              put :scale, { guid: process_type.guid, body: req_body }
-            }.to raise_error do |error|
-              expect(error.name).to eq 'UnprocessableEntity'
-              expect(error.response_code).to eq(422)
-              expect(error.message).to match('errorz')
-            end
-          end
-        end
-
-        context 'when scaling is disabled' do
-          before { FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
-
-          context 'non-admin user' do
-            it 'raises 403' do
-              expect {
-                put :scale, { guid: process_type.guid, body: req_body }
-              }.to raise_error do |error|
-                expect(error.name).to eq 'FeatureDisabled'
-                expect(error.response_code).to eq 403
-                expect(error.message).to match('app_scaling')
-              end
-            end
-          end
-
-          context 'admin user' do
-            before { allow(roles).to receive(:admin?).and_return(true) }
-
-            it 'scales the process and returns the correct things' do
-              expect(process_type.instances).not_to eq(2)
-              expect(process_type.memory).not_to eq(100)
-              expect(process_type.disk_quota).not_to eq(200)
-
-              put :scale, { guid: process_type.guid, body: req_body }
-
-              process_type.reload
-              expect(process_type.instances).to eq(2)
-              expect(process_type.memory).to eq(100)
-              expect(process_type.disk_quota).to eq(200)
-              expect(response.status).to eq(HTTP::OK)
-              expect(response.body).to eq(expected_response)
-            end
-          end
-        end
-
-        context 'when the user does not have write permissions' do
-          before { @request.env['HTTP_AUTHORIZATION'] = '' }
-
-          it 'raises an ApiError with a 403 code' do
-            expect {
-              put :scale, { guid: process_type.guid, body: req_body }
-            }.to raise_error do |error|
-              expect(error.name).to eq 'NotAuthorized'
-              expect(error.response_code).to eq 403
-            end
-          end
-        end
-
-        context 'when the request provides invalid data' do
-          let(:req_body) { { instances: 'wrong' } }
-
-          it 'returns 422' do
-            expect {
-              put :scale, { guid: process_type.guid, body: req_body }
-            }.to raise_error do |error|
-              expect(error.name).to eq 'UnprocessableEntity'
-              expect(error.response_code).to eq(422)
-              expect(error.message).to match('Instances is not a number')
-            end
-          end
-        end
-
-        context 'when the process does not exist' do
-          it 'raises 404' do
-            expect {
-              put :scale, { guid: 'fake-guid', body: req_body }
-            }.to raise_error do |error|
-              expect(error.name).to eq 'ResourceNotFound'
-              expect(error.response_code).to eq(404)
-            end
-          end
-        end
-
-        context 'when the user cannot read the process' do
-          before do
-            allow(membership).to receive(:has_any_roles?).and_return(false)
-          end
-
-          it 'raises 404' do
-            expect {
-              put :scale, { guid: process_type.guid, body: req_body }
-            }.to raise_error do |error|
-              expect(error.name).to eq 'ResourceNotFound'
-              expect(error.response_code).to eq(404)
-            end
-
-            expect(membership).to have_received(:has_any_roles?).with(
-              [Membership::SPACE_DEVELOPER,
-               Membership::SPACE_MANAGER,
-               Membership::SPACE_AUDITOR,
-               Membership::ORG_MANAGER], process_type.space.guid, process_type.space.organization.guid)
-          end
-        end
-
-        context 'when the user cannot scale the process due to membership' do
-          before do
-            allow(membership).to receive(:has_any_roles?).and_return(true, false)
-          end
-
-          it 'raises an ApiError with a 403 code' do
-            expect {
-              put :scale, { guid: process_type.guid, body: req_body }
-            }.to raise_error do |error|
-              expect(error.name).to eq 'NotAuthorized'
-              expect(error.response_code).to eq 403
-            end
-
-            expect(membership).to have_received(:has_any_roles?).with(
-              [Membership::SPACE_DEVELOPER], process_type.space.guid)
+        it 'raises an ApiError with a 403 code' do
+          expect {
+            put :scale, { guid: process_type.guid, body: req_body }
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
           end
         end
       end
+
+      context 'when the request provides invalid data' do
+        let(:req_body) { { instances: 'wrong' } }
+
+        it 'returns 422' do
+          expect {
+            put :scale, { guid: process_type.guid, body: req_body }
+          }.to raise_error do |error|
+            expect(error.name).to eq 'UnprocessableEntity'
+            expect(error.response_code).to eq(422)
+            expect(error.message).to match('Instances is not a number')
+          end
+        end
+      end
+
+      context 'when the process does not exist' do
+        it 'raises 404' do
+          expect {
+            put :scale, { guid: 'fake-guid', body: req_body }
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq(404)
+          end
+        end
+      end
+
+      context 'when the user cannot read the process' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'raises 404' do
+          expect {
+            put :scale, { guid: process_type.guid, body: req_body }
+          }.to raise_error do |error|
+            expect(error.name).to eq 'ResourceNotFound'
+            expect(error.response_code).to eq(404)
+          end
+
+          expect(membership).to have_received(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER,
+             Membership::SPACE_MANAGER,
+             Membership::SPACE_AUDITOR,
+             Membership::ORG_MANAGER], process_type.space.guid, process_type.space.organization.guid)
+        end
+      end
+
+      context 'when the user cannot scale the process due to membership' do
+        before do
+          allow(membership).to receive(:has_any_roles?).and_return(true, false)
+        end
+
+        it 'raises an ApiError with a 403 code' do
+          expect {
+            put :scale, { guid: process_type.guid, body: req_body }
+          }.to raise_error do |error|
+            expect(error.name).to eq 'NotAuthorized'
+            expect(error.response_code).to eq 403
+          end
+
+          expect(membership).to have_received(:has_any_roles?).with(
+            [Membership::SPACE_DEVELOPER], process_type.space.guid)
+        end
+      end
+    end
   end
 end

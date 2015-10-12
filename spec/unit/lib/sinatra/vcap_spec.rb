@@ -165,17 +165,17 @@ describe 'Sinatra::VCAP', type: :controller do
   end
 
   describe 'request id' do
-      before do
-        get '/request_id', nil, {'cf.request_id' => 'request-id' }
-      end
+    before do
+      get '/request_id', nil, { 'cf.request_id' => 'request-id' }
+    end
 
-      it 'should access the request id via VCAP::Request.current_id from the request env cf.request_id' do
-        expect(last_response.body).to eq('request-id')
-      end
+    it 'should access the request id via VCAP::Request.current_id from the request env cf.request_id' do
+      expect(last_response.body).to eq('request-id')
+    end
 
-      it 'unsets the vcap request current_id after the request completes' do
-        expect(VCAP::Request.current_id).to be_nil
-      end
+    it 'unsets the vcap request current_id after the request completes' do
+      expect(VCAP::Request.current_id).to be_nil
+    end
   end
 
   describe 'current request information for diagnostics' do

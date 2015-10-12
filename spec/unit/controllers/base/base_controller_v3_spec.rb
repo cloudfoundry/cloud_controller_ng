@@ -46,7 +46,6 @@ module VCAP
               expect { get :index }.to raise_error(VCAP::Errors::ApiError).
                 and not_change { VCAP::CloudController::SecurityContext.current_user }.from(nil).
                 and change { VCAP::CloudController::SecurityContext.token }.to(:invalid_token)
-
             end
           end
 
@@ -79,9 +78,9 @@ module VCAP
           end
 
           it 'is not required on other actions' do
-              expect {
-                post :create
-              }.not_to raise_error
+            expect {
+              post :create
+            }.not_to raise_error
           end
 
           it 'is not required for admin' do
@@ -143,6 +142,36 @@ module VCAP
             get :index
 
             expect(VCAP::Request.current_id).to be_nil
+          end
+        end
+
+        describe 'https schema validation' do
+          before do
+            @request.env.merge!(headers_for(User.make))
+            Config.config[:https_required] = true
+          end
+
+          context 'when request is http' do
+            before do
+              @request.env['rack.url_scheme'] = 'http'
+            end
+
+            it 'raises an error' do
+              expect {
+                get :index
+              }.to raise_error(VCAP::Errors::ApiError, 'You are not authorized to perform the requested action')
+            end
+          end
+
+          context 'when request is https' do
+            before do
+              @request.env['rack.url_scheme'] = 'https'
+            end
+
+            it 'is a valid request' do
+              get :index
+              expect(response.status).to eq(200)
+            end
           end
         end
       end

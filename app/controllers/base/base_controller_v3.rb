@@ -34,6 +34,7 @@ module VCAP
 
         around_filter :manage_request_id
         before_filter :set_current_user
+        before_filter :validate_scheme!
         before_filter :check_read_permissions!, only: [:index, :show]
         before_filter :check_write_permissions!, except: [:index, :show]
 
@@ -60,12 +61,10 @@ module VCAP
         ###
 
         def manage_request_id
-          begin
-            ::VCAP::Request.current_id = request.env['cf.request_id']
-            yield
-          ensure
-            ::VCAP::Request.current_id = nil
-          end
+          ::VCAP::Request.current_id = request.env['cf.request_id']
+          yield
+        ensure
+          ::VCAP::Request.current_id = nil
         end
 
         def check_read_permissions!
@@ -82,6 +81,11 @@ module VCAP
           auth_token = request.headers['HTTP_AUTHORIZATION']
           token_decoder = VCAP::UaaTokenDecoder.new(Config.config[:uaa])
           VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder).configure(auth_token)
+        end
+
+        def validate_scheme!
+          validator = VCAP::CloudController::RequestSchemeValidator.new
+          validator.validate!(current_user, roles, Config.config, request)
         end
       end
     end

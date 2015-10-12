@@ -20,7 +20,8 @@ module CloudFoundry
       private
 
       def external_request_id(env)
-        if request_id = env['HTTP_X_VCAP_REQUEST_ID'].presence || env['HTTP_X_REQUEST_ID'].presence
+        request_id = env['HTTP_X_VCAP_REQUEST_ID'].presence || env['HTTP_X_REQUEST_ID'].presence
+        if request_id
           "#{request_id.gsub(/[^\w\-]/, '').first(255)}::#{SecureRandom.uuid}"
         end
       end

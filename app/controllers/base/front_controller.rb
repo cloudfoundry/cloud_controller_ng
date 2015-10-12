@@ -1,4 +1,5 @@
 require 'cloud_controller/security/security_context_configurer'
+require 'cloud_controller/request_scheme_validator'
 
 module VCAP::CloudController
   include VCAP::RestAPI
@@ -32,7 +33,7 @@ module VCAP::CloudController
 
       logger.info("Started request, Vcap-Request-Id: #{VCAP::Request.current_id}, User: #{user_guid}")
 
-      validate_scheme
+      validate_scheme!
     end
 
     after do
@@ -63,18 +64,12 @@ module VCAP::CloudController
       halt 200, '' if request.options?
     end
 
-    def validate_scheme
-      user = VCAP::CloudController::SecurityContext.current_user
-      admin = VCAP::CloudController::SecurityContext.admin?
-      return unless user || admin
+    def validate_scheme!
+      validator = VCAP::CloudController::RequestSchemeValidator.new
+      current_user = VCAP::CloudController::SecurityContext.current_user
+      roles = VCAP::CloudController::SecurityContext.roles
 
-      if @config[:https_required] && request.scheme != 'https'
-        raise Errors::ApiError.new_from_details('NotAuthorized')
-      end
-
-      if @config[:https_required_for_admins] && admin && request.scheme != 'https'
-        raise Errors::ApiError.new_from_details('NotAuthorized')
-      end
+      validator.validate!(current_user, roles, @config, request)
     end
 
     def allowed_cors_domains
