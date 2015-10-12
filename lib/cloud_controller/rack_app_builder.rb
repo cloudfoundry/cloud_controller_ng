@@ -1,3 +1,5 @@
+require 'vcap_request_id'
+
 module VCAP::CloudController
   class RackAppBuilder
     def build(config, request_metrics)
@@ -8,9 +10,8 @@ module VCAP::CloudController
       Rails.application.initialize!
 
       Rack::Builder.new do
-        if logger
-          use Rack::CommonLogger, logger
-        end
+        use CloudFoundry::Middleware::VcapRequestId
+        use Rack::CommonLogger, logger if logger
 
         if config[:development_mode] && config[:newrelic_enabled]
           require 'new_relic/rack/developer_mode'

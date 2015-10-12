@@ -8,7 +8,7 @@ module VCAP
 
         controller do
           def index
-            head 204
+            render 200, json: { request_id: VCAP::Request.current_id }
           end
 
           def show
@@ -124,6 +124,25 @@ module VCAP
             expect {
               post :create
             }.not_to raise_error
+          end
+        end
+
+        describe 'request id' do
+          before do
+            @request.env.merge!(admin_headers).merge!('cf.request_id' => 'expected-request-id')
+          end
+
+          it 'sets the vcap request current_id from the passed in rack request during request handling' do
+            get :index
+
+            # finding request id inside the controller action and returning on the body
+            expect(MultiJson.load(response.body)['request_id']).to eq('expected-request-id')
+          end
+
+          it 'unsets the vcap request current_id after the request completes' do
+            get :index
+
+            expect(VCAP::Request.current_id).to be_nil
           end
         end
       end

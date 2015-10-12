@@ -65,12 +65,6 @@ describe 'Sinatra::VCAP', type: :controller do
     end
   end
 
-  shared_examples 'vcap request id' do
-    it 'should return the request guid in the header' do
-      expect(last_response.headers['X-VCAP-Request-ID']).not_to be_nil
-    end
-  end
-
   shared_examples 'http header content type' do
     it 'should return json content type in the header' do
       expect(last_response.headers['Content-Type']).to eql('application/json;charset=utf-8')
@@ -87,7 +81,6 @@ describe 'Sinatra::VCAP', type: :controller do
       expect(last_response.body).to eq('ok')
     end
 
-    include_examples 'vcap request id'
     include_examples 'http header content type'
   end
 
@@ -103,7 +96,6 @@ describe 'Sinatra::VCAP', type: :controller do
       expect(decoded_response['description']).to match(/Unknown request/)
     end
 
-    include_examples 'vcap request id'
     include_examples 'http header content type'
   end
 
@@ -131,7 +123,6 @@ describe 'Sinatra::VCAP', type: :controller do
       expect(recent_errors[0]).to be_an_instance_of(Hash)
     end
 
-    include_examples 'vcap request id'
     include_examples 'http header content type'
   end
 
@@ -173,63 +164,18 @@ describe 'Sinatra::VCAP', type: :controller do
     end
   end
 
-  describe 'accessing vcap request id from inside the app' do
-    before do
-      get '/request_id'
-    end
+  describe 'request id' do
+      before do
+        get '/request_id', nil, {'cf.request_id' => 'request-id' }
+      end
 
-    it 'should access the request id via Thread.current[:request_id]' do
-      expect(last_response.status).to eq(200)
-      expect(last_response.body).to eq(last_response.headers['X-VCAP-Request-ID'])
-    end
-  end
+      it 'should access the request id via VCAP::Request.current_id from the request env cf.request_id' do
+        expect(last_response.body).to eq('request-id')
+      end
 
-  describe 'caller provided x-vcap-request-id' do
-    before do
-      get '/request_id', {}, { 'HTTP_X_VCAP_REQUEST_ID' => 'abcdef' }
-    end
-
-    it 'should set the X-VCAP-Request-ID to the caller specified value' do
-      expect(last_response.status).to eq(200)
-      expect(last_response.headers['X-VCAP-Request-ID']).to match /abcdef::.*/
-    end
-
-    it 'should access the request id via Thread.current[:request_id]' do
-      expect(last_response.status).to eq(200)
-      expect(last_response.body).to match /abcdef::.*/
-    end
-  end
-
-  describe 'caller provided x-request-id' do
-    before do
-      get '/request_id', {}, { 'HTTP_X_REQUEST_ID' => 'abcdef' }
-    end
-
-    it 'should set the X-VCAP-Request-ID to the caller specified value' do
-      expect(last_response.status).to eq(200)
-      expect(last_response.headers['X-VCAP-Request-ID']).to match /abcdef::.*/
-    end
-
-    it 'should access the request id via Thread.current[:request_id]' do
-      expect(last_response.status).to eq(200)
-      expect(last_response.body).to match /abcdef::.*/
-    end
-  end
-
-  describe 'caller provided x-request-id and x-vcap-request-id' do
-    before do
-      get '/request_id', {}, { 'HTTP_X_REQUEST_ID' => 'abc', 'HTTP_X_VCAP_REQUEST_ID' => 'def' }
-    end
-
-    it 'should set the X-VCAP-Request-ID to the caller specified value of X-VCAP-Request-ID' do
-      expect(last_response.status).to eq(200)
-      expect(last_response.headers['X-VCAP-Request-ID']).to match /def::.*/
-    end
-
-    it 'should access the request id via Thread.current[:request_id]' do
-      expect(last_response.status).to eq(200)
-      expect(last_response.body).to match /def::.*/
-    end
+      it 'unsets the vcap request current_id after the request completes' do
+        expect(VCAP::Request.current_id).to be_nil
+      end
   end
 
   describe 'current request information for diagnostics' do

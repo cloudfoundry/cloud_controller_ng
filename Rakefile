@@ -1,5 +1,6 @@
 $LOAD_PATH.unshift(File.expand_path('../lib', __FILE__))
 $LOAD_PATH.unshift(File.expand_path('../app', __FILE__))
+$LOAD_PATH.unshift(File.expand_path('../middleware', __FILE__))
 
 ENV['BUNDLE_GEMFILE'] ||= File.expand_path('../Gemfile', __FILE__)
 ENV['RAILS_ENV'] ||= 'development'
@@ -14,6 +15,8 @@ require_relative 'lib/tasks/rake_config'
 Dir['lib/tasks/**/*.rake'].each do |tasks|
   load tasks
 end
+
+Rails.application.load_tasks
 
 task default: ['spec:all', :rubocop_autocorrect]
 

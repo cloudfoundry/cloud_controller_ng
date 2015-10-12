@@ -5,6 +5,7 @@ task spec: %w[
               spec:unit:fast
               spec:unit:controllers
               spec:unit:lib
+              spec:unit:middleware
               spec:outer
             ]
 
@@ -66,6 +67,11 @@ namespace :spec do
     desc "Run the unit controllers tests"
     task :controllers do
       run_specs("spec/unit/controllers")
+    end
+
+    desc "Run the unit middleware tests"
+    task :middleware do
+      run_specs("spec/unit/middleware")
     end
   end
 
