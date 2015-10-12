@@ -26,7 +26,6 @@ RSpec::Matchers.define :have_nested_routes do |association_routes, options={}|
 
         handle_errors(missing_actions, extra_actions, controller, association_name, errors)
       end
-
     end
 
     errors.length == 0

@@ -14,20 +14,55 @@ module VCAP::Services
 
     describe '#bind' do
       let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
-      let(:binding) do
-        VCAP::CloudController::ServiceBinding.make(
-          service_instance: instance
-        )
+
+      context 'when binding to an app' do
+        let(:binding) do
+          VCAP::CloudController::ServiceBinding.make(
+            service_instance: instance
+          )
+        end
+
+        it 'sets relevant attributes of the instance' do
+          attributes = client.bind(binding)
+          # save to the database to ensure attributes match tables
+          binding.set_all(attributes)
+          binding.save
+
+          expect(binding.credentials).to eq(instance.credentials)
+          expect(binding.syslog_drain_url).to eq(instance.syslog_drain_url)
+        end
+
+        context 'when binding to a service with a route_service_url' do
+          let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
+          it 'sets relevant attributes of the instance' do
+            attributes = client.bind(binding)
+            # save to the database to ensure attributes match tables
+            binding.set_all(attributes)
+            binding.save
+
+            expect(binding.credentials).to eq(instance.credentials)
+            expect(binding.syslog_drain_url).to eq(instance.syslog_drain_url)
+          end
+        end
       end
 
-      it 'sets relevant attributes of the instance' do
-        attributes = client.bind(binding)
-        # save to the database to ensure attributes match tables
-        binding.set_all(attributes)
-        binding.save
+      context 'when binding to a route' do
+        let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
 
-        expect(binding.credentials).to eq(instance.credentials)
-        expect(binding.syslog_drain_url).to eq(instance.syslog_drain_url)
+        let(:binding) do
+          VCAP::CloudController::RouteBinding.make(
+            service_instance: instance
+          )
+        end
+
+        it 'sets relevant attributes of the instance' do
+          attributes = client.bind(binding)
+          # save to the database to ensure attributes match tables
+          binding.set_all(attributes)
+          binding.save
+
+          expect(binding.route_service_url).to eq(instance.route_service_url)
+        end
       end
     end
 

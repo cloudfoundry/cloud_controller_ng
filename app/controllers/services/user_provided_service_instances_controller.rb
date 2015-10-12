@@ -11,6 +11,7 @@ module VCAP::CloudController
 
       to_one :space
       to_many :service_bindings
+      to_many :routes, route_for: [:get, :put]
     end
 
     def self.dependencies
@@ -24,8 +25,14 @@ module VCAP::CloudController
 
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
+      service_instance_errors = e.errors.on(:service_instance)
+
       if space_and_name_errors && space_and_name_errors.include?(:unique)
         Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
+      elsif service_instance_errors.include?(:space_mismatch)
+        Errors::ApiError.new_from_details('ServiceInstanceRouteBindingSpaceMismatch')
+      elsif service_instance_errors.include?(:route_binding_not_allowed)
+        Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
       else
         Errors::ApiError.new_from_details('ServiceInstanceInvalid', e.errors.full_messages)
       end
@@ -87,6 +94,32 @@ module VCAP::CloudController
 
     define_messages
     define_routes
+
+    def add_related(guid, name, other_guid)
+      return super(guid, name, other_guid) if name != :routes
+
+      bind_route(guid, other_guid)
+    end
+
+    def bind_route(instance_guid, route_guid)
+      logger.debug 'cc.association.add', model: self.class.model_class_name, guid: instance_guid, assocation: :routes, other_guid: route_guid
+      @request_attrs = { route: route_guid }
+
+      route = Route.find(guid: route_guid)
+      raise Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
+      raise Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance') if route.service_instance
+
+      instance = find_guid(instance_guid)
+
+      before_update(instance)
+
+      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
+      binding_manager.create_route_service_instance_binding(route, instance)
+
+      after_update(instance)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, instance, @opts)]
+    end
   end
 
   private

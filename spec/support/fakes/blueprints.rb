@@ -173,6 +173,15 @@ module VCAP::CloudController
     is_gateway_service { false }
   end
 
+  UserProvidedServiceInstance.blueprint(:routing) do
+    name              { Sham.name }
+    credentials       { Sham.service_credentials }
+    route_service_url { Sham.url }
+    syslog_drain_url  { Sham.url }
+    space             { Space.make }
+    is_gateway_service { false }
+  end
+
   ServiceInstanceOperation.blueprint do
     type                      { 'create' }
     state                     { 'succeeded' }

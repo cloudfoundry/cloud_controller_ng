@@ -4,10 +4,16 @@ module VCAP::Services
     end
 
     def bind(binding, arbitrary_parameters: {})
-      {
-        credentials: binding.service_instance.credentials,
-        syslog_drain_url: binding.service_instance.syslog_drain_url
-      }
+      if binding.class.name.demodulize == 'RouteBinding'
+        {
+          route_service_url: binding.service_instance.route_service_url,
+        }
+      else
+        {
+          credentials: binding.service_instance.credentials,
+          syslog_drain_url: binding.service_instance.syslog_drain_url,
+        }
+      end
     end
 
     def unbind(_)

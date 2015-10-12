@@ -5,24 +5,26 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
-          name:                  { type: 'string', required: true },
-          credentials:           { type: 'hash', default: {} },
-          syslog_drain_url:      { type: 'string', default: '' },
-          space_guid:            { type: 'string', required: true },
-          service_binding_guids: { type: '[string]' },
-          route_service_url:     { type: 'string', default: '' }
-        })
+              name:                  { type: 'string', required: true },
+              credentials:           { type: 'hash', default: {} },
+              syslog_drain_url:      { type: 'string', default: '' },
+              space_guid:            { type: 'string', required: true },
+              service_binding_guids: { type: '[string]' },
+              route_service_url:     { type: 'string', default: '' },
+              route_guids: { type: '[string]' },
+            })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-          name:                  { type: 'string' },
-          credentials:           { type: 'hash' },
-          syslog_drain_url:      { type: 'string' },
-          space_guid:            { type: 'string' },
-          service_binding_guids: { type: '[string]' },
-          route_service_url:     { type: 'string' }
-        })
+              name:                  { type: 'string' },
+              credentials:           { type: 'hash' },
+              syslog_drain_url:      { type: 'string' },
+              space_guid:            { type: 'string' },
+              service_binding_guids: { type: '[string]' },
+              route_service_url:     { type: 'string' },
+              route_guids: { type: '[string]' },
+            })
       end
     end
 
@@ -40,17 +42,17 @@ module VCAP::CloudController
           let(:member_b) { instance_variable_get(member_b_ivar) }
 
           include_examples 'permission enumeration', user_role,
-                           name: 'user provided service instance',
-                           path: '/v2/user_provided_service_instances',
-                           enumerate: 0
+            name:      'user provided service instance',
+            path:      '/v2/user_provided_service_instances',
+            enumerate: 0
         end
       end
 
       describe 'Org Level Permissions' do
-        user_sees_empty_enumerate('OrgManager',     :@org_a_manager,         :@org_b_manager)
-        user_sees_empty_enumerate('OrgUser',        :@org_a_member,          :@org_b_member)
+        user_sees_empty_enumerate('OrgManager', :@org_a_manager, :@org_b_manager)
+        user_sees_empty_enumerate('OrgUser', :@org_a_member, :@org_b_member)
         user_sees_empty_enumerate('BillingManager', :@org_a_billing_manager, :@org_b_billing_manager)
-        user_sees_empty_enumerate('Auditor',        :@org_a_auditor,         :@org_b_auditor)
+        user_sees_empty_enumerate('Auditor', :@org_a_auditor, :@org_b_auditor)
       end
 
       describe 'App Space Level Permissions' do
@@ -59,9 +61,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_developer }
 
           include_examples 'permission enumeration', 'Developer',
-                           name: 'user provided service instance',
-                           path: '/v2/user_provided_service_instances',
-                           enumerate: 1
+            name:      'user provided service instance',
+            path:      '/v2/user_provided_service_instances',
+            enumerate: 1
         end
 
         describe 'SpaceAuditor' do
@@ -69,9 +71,9 @@ module VCAP::CloudController
           let(:member_b) { @space_b_auditor }
 
           include_examples 'permission enumeration', 'SpaceAuditor',
-                           name: 'user provided service instance',
-                           path: '/v2/user_provided_service_instances',
-                           enumerate: 1
+            name:      'user provided service instance',
+            path:      '/v2/user_provided_service_instances',
+            enumerate: 1
         end
 
         describe 'SpaceManager' do
@@ -79,8 +81,8 @@ module VCAP::CloudController
           let(:member_b) { @space_b_manager }
 
           include_examples 'permission enumeration', 'SpaceManager',
-            name: 'user provided service instance',
-            path: '/v2/user_provided_service_instances',
+            name:      'user provided service instance',
+            path:      '/v2/user_provided_service_instances',
             enumerate: 1
         end
       end
@@ -88,7 +90,10 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes({ service_bindings: [:get, :put, :delete] })
+        expect(described_class).to have_nested_routes(
+            service_bindings: [:get, :put, :delete],
+            routes: [:get, :put]
+          )
       end
     end
 
@@ -98,9 +103,9 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:req) do
         {
-          'name' => 'my-upsi',
-          'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
-          'space_guid' => space.guid,
+          'name'              => 'my-upsi',
+          'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
+          'space_guid'        => space.guid,
           'route_service_url' => 'https://route.url.com'
         }
       end
@@ -120,7 +125,7 @@ module VCAP::CloudController
       it 'records a create event' do
         post '/v2/user_provided_service_instances', req.to_json, headers_for(developer, email: email)
 
-        event = Event.first(type: 'audit.user_provided_service_instance.create')
+        event            = Event.first(type: 'audit.user_provided_service_instance.create')
         service_instance = UserProvidedServiceInstance.first
 
         expect(event.actor).to eq developer.guid
@@ -131,23 +136,23 @@ module VCAP::CloudController
         expect(event.actee_name).to eq service_instance.name
         expect(event.space_guid).to eq space.guid
         expect(event.metadata).to include({
-          'request' => {
-            'name' => 'my-upsi',
-            'credentials' => '[REDACTED]',
-            'space_guid' => space.guid,
-            'syslog_drain_url' => '',
-            'route_service_url' => 'https://route.url.com'
-          }
-        })
+              'request' => {
+                'name'              => 'my-upsi',
+                'credentials'       => '[REDACTED]',
+                'space_guid'        => space.guid,
+                'syslog_drain_url'  => '',
+                'route_service_url' => 'https://route.url.com'
+              }
+            })
       end
 
       context 'when the service instance is invalid' do
         context 'because the route_service_url is invalid' do
           let(:req) do
             {
-              'name' => 'my-upsi',
-              'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
-              'space_guid' => space.guid,
+              'name'              => 'my-upsi',
+              'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
+              'space_guid'        => space.guid,
               'route_service_url' => 'http://route.url.com'
             }
           end
@@ -169,7 +174,7 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:req) do
         {
-          'name' => 'my-upsi',
+          'name'        => 'my-upsi',
           'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' }
         }
       end
@@ -191,7 +196,7 @@ module VCAP::CloudController
         put "/v2/user_provided_service_instances/#{service_instance.guid}", req.to_json, headers_for(developer, email: email)
 
         service_instance = UserProvidedServiceInstance.first
-        event = Event.first(type: 'audit.user_provided_service_instance.update')
+        event            = Event.first(type: 'audit.user_provided_service_instance.update')
 
         expect(event.actor).to eq developer.guid
         expect(event.actor_type).to eq 'user'
@@ -201,11 +206,11 @@ module VCAP::CloudController
         expect(event.actee_name).to eq service_instance.name
         expect(event.space_guid).to eq space.guid
         expect(event.metadata).to include({
-          'request' => {
-            'name' => 'my-upsi',
-            'credentials' => '[REDACTED]'
-          }
-        })
+              'request' => {
+                'name'        => 'my-upsi',
+                'credentials' => '[REDACTED]'
+              }
+            })
       end
 
       describe 'the space_guid parameter' do
@@ -279,6 +284,113 @@ module VCAP::CloudController
         expect(event.actee_name).to eq service_instance.name
         expect(event.space_guid).to eq space.guid
         expect(event.metadata).to include({ 'request' => {} })
+      end
+    end
+
+    describe 'PUT', '/v2/user_provided_service_instances/:guid/routes/:route_guid' do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let(:opts) { {} }
+      let(:service_instance) { UserProvidedServiceInstance.make(:routing, space: space) }
+
+      it 'associates the route and the service instance' do
+        get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+        expect(last_response.status).to eq(200)
+        expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+
+        put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+        expect(last_response.status).to eq(201)
+
+        get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+        expect(last_response.status).to eq(200)
+        expect(JSON.parse(last_response.body)['total_results']).to eql(1)
+      end
+
+      context 'binding permissions' do
+        context 'admin' do
+          it 'allows an admin to bind a space' do
+            put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, admin_headers
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        context 'space developer' do
+          it 'allows a developer to bind a space' do
+            put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        context 'neither an admin nor a Space Developer' do
+          let(:manager) { make_manager_for_space(space) }
+
+          it 'raises an error' do
+            put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(manager)
+            expect(last_response.status).to eq(403)
+            expect(last_response.body).to include('You are not authorized to perform the requested action')
+          end
+        end
+      end
+
+      context 'when the route does not exist' do
+        it 'raises an error' do
+          put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/random-guid", {}, headers_for(developer)
+          expect(last_response.status).to eq(404)
+          expect(JSON.parse(last_response.body)['description']).
+            to include('route could not be found')
+        end
+      end
+
+      context 'when the route has an associated service instance' do
+        before do
+          service_instance = UserProvidedServiceInstance.make(:routing, space: space)
+          RouteBinding.make service_instance: service_instance, route: route
+        end
+
+        it 'raises RouteAlreadyBoundToServiceInstance' do
+          get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+          expect(last_response.status).to eq(200)
+          expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+
+          put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response.status).to eq(400)
+          expect(JSON.parse(last_response.body)['description']).
+            to eq('A route may only be bound to a single service instance')
+
+          get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+          expect(last_response.status).to eq(200)
+          expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+        end
+      end
+
+      context 'when attempting to bind to a service with no route_service_url' do
+        before do
+          service_instance = UserProvidedServiceInstance.make(space: space)
+          put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+        end
+
+        it 'raises ServiceDoesNotSupportRoutes error' do
+          expect(decoded_response['error_code']).to eq('CF-ServiceDoesNotSupportRoutes')
+          expect(last_response).to have_status_code(400)
+        end
+      end
+
+      context 'when the route and service_instance are not in the same space' do
+        let(:other_space) { Space.make(organization: space.organization) }
+        let(:service_instance) { UserProvidedServiceInstance.make(:routing, space: other_space) }
+
+        before do
+          other_space.add_developer(developer)
+          other_space.save
+        end
+
+        it 'raises an error' do
+          put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response.status).to eq(400)
+          expect(JSON.parse(last_response.body)['description']).
+            to include('The service instance and the route are in different spaces.')
+        end
       end
     end
   end

@@ -248,7 +248,7 @@ module VCAP::CloudController
     end
 
     def bind_route(instance_guid, route_guid)
-      logger.debug 'cc.association.add', guid: instance_guid, assocation: :routes, other_guid: route_guid
+      logger.debug 'cc.association.add', model: self.class.model_class_name, guid: instance_guid, assocation: :routes, other_guid: route_guid
       @request_attrs = { route: route_guid }
 
       route = Route.find(guid: route_guid)

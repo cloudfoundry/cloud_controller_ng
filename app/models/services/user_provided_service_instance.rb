@@ -14,6 +14,10 @@ module VCAP::CloudController
       []
     end
 
+    def route_service?
+      !!route_service_url
+    end
+
     def client
       VCAP::Services::ServiceBrokers::UserProvided::Client.new
     end
