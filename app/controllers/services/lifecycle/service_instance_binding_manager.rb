@@ -3,7 +3,9 @@ require 'actions/services/service_binding_delete'
 module VCAP::CloudController
   class ServiceInstanceBindingManager
     class ServiceInstanceNotFound < StandardError; end
+    class RouteNotFound < StandardError; end
     class ServiceInstanceNotBindable < StandardError; end
+    class RouteAlreadyBoundToServiceInstance < StandardError; end
     class AppNotFound < StandardError; end
 
     include VCAP::CloudController::LockCheck
@@ -14,8 +16,15 @@ module VCAP::CloudController
       @logger = logger
     end
 
-    def create_route_service_instance_binding(route, instance)
+    def create_route_service_instance_binding(route_guid, instance_guid)
+      route = Route.find(guid: route_guid)
+      raise RouteNotFound unless route
+
+      instance = ServiceInstance.find(guid: instance_guid)
+
+      raise ServiceInstanceNotFound unless instance
       raise ServiceInstanceNotBindable unless instance.bindable?
+      raise RouteAlreadyBoundToServiceInstance if route.service_instance
 
       route_binding = RouteBinding.new
       route_binding.route = route

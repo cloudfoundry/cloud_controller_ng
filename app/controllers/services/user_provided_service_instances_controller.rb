@@ -103,22 +103,17 @@ module VCAP::CloudController
 
     def bind_route(instance_guid, route_guid)
       logger.debug 'cc.association.add', model: self.class.model_class_name, guid: instance_guid, assocation: :routes, other_guid: route_guid
-      @request_attrs = { route: route_guid }
-
-      route = Route.find(guid: route_guid)
-      raise Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
-      raise Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance') if route.service_instance
-
-      instance = find_guid(instance_guid)
-
-      before_update(instance)
 
       binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
-      binding_manager.create_route_service_instance_binding(route, instance)
+      route_binding = binding_manager.create_route_service_instance_binding(route_guid, instance_guid)
 
-      after_update(instance)
-
-      [HTTP::CREATED, object_renderer.render_json(self.class, instance, @opts)]
+      [HTTP::CREATED, object_renderer.render_json(self.class, route_binding.service_instance, @opts)]
+    rescue ServiceInstanceBindingManager::RouteNotFound
+      raise VCAP::Errors::ApiError.new_from_details('RouteNotFound', route_guid)
+    rescue ServiceInstanceBindingManager::RouteAlreadyBoundToServiceInstance
+      raise VCAP::Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance')
+    rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
     end
   end
 

@@ -2588,14 +2588,14 @@ module VCAP::CloudController
 
       it 'associates the route and the service instance' do
         get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
         expect(JSON.parse(last_response.body)['total_results']).to eql(0)
 
         put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_status_code(201)
 
         get "/v2/service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
         expect(JSON.parse(last_response.body)['total_results']).to eql(1)
       end
 
@@ -2637,12 +2637,6 @@ module VCAP::CloudController
           expect(last_response.status).to eq(400)
           expect(JSON.parse(last_response.body)['description']).
             to include('does not support route binding')
-        end
-
-        it 'does NOT send a bind request to the service broker' do
-          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
-
-          expect(a_request(:put, service_binding_url_pattern)).not_to have_been_made
         end
       end
 
@@ -2689,10 +2683,6 @@ module VCAP::CloudController
           hash_body = JSON.parse(last_response.body)
           expect(hash_body['error_code']).to eq('CF-UnbindableService')
           expect(last_response).to have_status_code(400)
-        end
-
-        it 'does not send a bind request to broker' do
-          expect(a_request(:put, service_binding_url_pattern)).to_not have_been_made
         end
       end
 

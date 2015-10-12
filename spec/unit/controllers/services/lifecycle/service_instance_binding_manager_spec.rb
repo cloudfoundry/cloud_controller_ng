@@ -25,7 +25,7 @@ module VCAP::CloudController
         end
 
         it 'creates a binding and sets the route_service_url' do
-          route_binding = manager.create_route_service_instance_binding(route, service_instance)
+          route_binding = manager.create_route_service_instance_binding(route.guid, service_instance.guid)
 
           expect(route_binding.service_instance).to eq service_instance
           expect(route_binding.route).to eq route
@@ -35,18 +35,16 @@ module VCAP::CloudController
         context 'when require route_forwarding is not set' do
           it 'does not raise an error' do
             expect {
-              manager.create_route_service_instance_binding(route, service_instance)
+              manager.create_route_service_instance_binding(route.guid, service_instance.guid)
             }.not_to raise_error
           end
         end
       end
 
       context 'managed service instance' do
-        let(:service_instance) { ManagedServiceInstance.make(space: route.space) }
+        let(:service_instance) { ManagedServiceInstance.make(:routing, space: route.space) }
 
         before do
-          service_instance.service.requires = ['route_forwarding']
-          service_instance.service.save
           allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
           stub_bind(service_instance, { body: { route_service_url: route_service_url }.to_json })
         end
@@ -55,7 +53,7 @@ module VCAP::CloudController
           expect(route.service_instance).to be_nil
           expect(service_instance.routes).to be_empty
 
-          route_binding = manager.create_route_service_instance_binding(route, service_instance)
+          route_binding = manager.create_route_service_instance_binding(route.guid, service_instance.guid)
 
           expect(route_binding.service_instance).to eq service_instance
           expect(route_binding.route).to eq route
@@ -67,10 +65,44 @@ module VCAP::CloudController
         it 'fails if the instance has another operation in progress' do
           service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
           expect {
-            manager.create_route_service_instance_binding(route, service_instance)
+            manager.create_route_service_instance_binding(route.guid, service_instance.guid)
           }.to raise_error do |e|
             expect(e).to be_a(Errors::ApiError)
             expect(e.message).to include('in progress')
+          end
+        end
+
+        context 'when the route does not exist' do
+          it 'raises a RouteNotFound error and does not call the broker' do
+            expect {
+              manager.create_route_service_instance_binding('not-a-guid', service_instance.guid)
+            }.to raise_error ServiceInstanceBindingManager::RouteNotFound
+
+            expect(a_request(:put, service_binding_url_pattern)).not_to have_been_made
+          end
+        end
+
+        context 'when the service instance does not exist' do
+          it 'raises a ServiceInstanceNotFound error' do
+            expect {
+              manager.create_route_service_instance_binding(route.guid, 'not-a-guid')
+            }.to raise_error ServiceInstanceBindingManager::ServiceInstanceNotFound
+
+            expect(a_request(:put, service_binding_url_pattern)).to_not have_been_made
+          end
+        end
+
+        context 'when the route is already bound to a service_instance' do
+          before do
+            RouteBinding.make(route: route, service_instance: ManagedServiceInstance.make(:routing, space: route.space))
+          end
+
+          it 'raises a already bound to service instance error' do
+            expect {
+              manager.create_route_service_instance_binding(route.guid, service_instance.guid)
+            }.to raise_error ServiceInstanceBindingManager::RouteAlreadyBoundToServiceInstance
+
+            expect(a_request(:put, service_binding_url_pattern)).to_not have_been_made
           end
         end
 
@@ -79,7 +111,7 @@ module VCAP::CloudController
             it 'does not send request to diego' do
               expect_any_instance_of(Diego::NsyncClient).not_to receive(:desire_app)
 
-              manager.create_route_service_instance_binding(route, service_instance)
+              manager.create_route_service_instance_binding(route.guid, service_instance.guid)
             end
           end
 
@@ -96,7 +128,7 @@ module VCAP::CloudController
                 message = args.last
                 expect(message).to match(/route_service_url/)
               end
-              manager.create_route_service_instance_binding(route, service_instance)
+              manager.create_route_service_instance_binding(route.guid, service_instance.guid)
             end
           end
         end
@@ -109,7 +141,7 @@ module VCAP::CloudController
 
           it 'raises Sequel::ValidationFailed' do
             expect {
-              manager.create_route_service_instance_binding(route, service_instance)
+              manager.create_route_service_instance_binding(route.guid, service_instance.guid)
             }.to raise_error(Sequel::ValidationFailed)
           end
         end
@@ -121,7 +153,7 @@ module VCAP::CloudController
 
           it 're-raises the error' do
             expect {
-              manager.create_route_service_instance_binding(route, service_instance)
+              manager.create_route_service_instance_binding(route.guid, service_instance.guid)
             }.to raise_error('blah')
           end
         end
@@ -133,7 +165,7 @@ module VCAP::CloudController
 
           it 'raises Sequel::ValidationFailed' do
             expect {
-              manager.create_route_service_instance_binding(route, service_instance)
+              manager.create_route_service_instance_binding(route.guid, service_instance.guid)
             }.to raise_error(Sequel::ValidationFailed)
           end
         end
@@ -148,7 +180,7 @@ module VCAP::CloudController
             expect(route.service_instance).to be_nil
             expect(service_instance.routes).to be_empty
 
-            route_binding = manager.create_route_service_instance_binding(route, service_instance)
+            route_binding = manager.create_route_service_instance_binding(route.guid, service_instance.guid)
 
             expect(route_binding.service_instance).to eq service_instance
             expect(route_binding.route).to eq route
@@ -166,8 +198,10 @@ module VCAP::CloudController
 
           it 'raises ServiceInstanceNotBindable' do
             expect {
-              manager.create_route_service_instance_binding(route, service_instance)
+              manager.create_route_service_instance_binding(route.guid, service_instance.guid)
             }.to raise_error(ServiceInstanceBindingManager::ServiceInstanceNotBindable)
+
+            expect(a_request(:put, service_binding_url_pattern)).to_not have_been_made
           end
         end
 
@@ -179,7 +213,7 @@ module VCAP::CloudController
 
             it 'enqueues a DeleteOrphanedBinding job' do
               expect {
-                manager.create_route_service_instance_binding(route, service_instance)
+                manager.create_route_service_instance_binding(route.guid, service_instance.guid)
               }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerInvalidSyslogDrainUrl)
 
               expect(Delayed::Job.count).to eq 1
@@ -199,7 +233,7 @@ module VCAP::CloudController
 
             it 'does not create a binding' do
               expect {
-                manager.create_route_service_instance_binding(route, service_instance)
+                manager.create_route_service_instance_binding(route.guid, service_instance.guid)
               }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
               expect(service_instance.reload.routes).to be_empty
               expect(route.reload.service_instance).to be_nil
@@ -207,7 +241,7 @@ module VCAP::CloudController
 
             it 'enqueues a DeleteOrphanedBinding job' do
               expect {
-                manager.create_route_service_instance_binding(route, service_instance)
+                manager.create_route_service_instance_binding(route.guid, service_instance.guid)
               }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
 
               expect(Delayed::Job.count).to eq 1
@@ -230,7 +264,7 @@ module VCAP::CloudController
               allow(logger).to receive(:info)
 
               expect {
-                manager.create_route_service_instance_binding(route, service_instance)
+                manager.create_route_service_instance_binding(route.guid, service_instance.guid)
               }.to raise_error('meow')
             end
 
@@ -272,7 +306,7 @@ module VCAP::CloudController
 
               expect {
                 stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 500)
-                manager.create_route_service_instance_binding(route, service_instance)
+                manager.create_route_service_instance_binding(route.guid, service_instance.guid)
               }.to raise_error(VCAP::Errors::ApiError, /desire app failed: 500/i)
             end
 
