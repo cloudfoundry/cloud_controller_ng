@@ -50,6 +50,23 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class LifecycleDataValidator < ActiveModel::Validator
+    def validate(record)
+      config = record.data_validation_config
+      return validate_data_model(config, record) unless config.data.nil?
+
+      return if config.allow_nil
+      record.errors[:lifecycle].concat ['Data must be present']
+    end
+
+    def validate_data_model(config, record)
+      data_model = "#{record.class}::#{config.data_class}".constantize.new(config.data.symbolize_keys)
+      if !data_model.valid?
+        record.errors[:lifecycle].concat data_model.errors.full_messages
+      end
+    end
+  end
+
   class RelationshipValidator < ActiveModel::Validator
     def validate(record)
       return if !record.relationships.is_a?(Hash)

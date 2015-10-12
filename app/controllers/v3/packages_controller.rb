@@ -123,7 +123,7 @@ module VCAP::CloudController
 
       unauthorized! unless can_stage?(package.space.guid)
 
-      buildpack_to_use    = staging_message.buildpack.nil? ? package.app.buildpack : staging_message.buildpack
+      buildpack_to_use    = staging_message.requested_buildpack? ? staging_message.buildpack : package.app.buildpack
       buildpack_info = BuildpackRequestValidator.new(buildpack: buildpack_to_use)
       unprocessable!(buildpack_info.errors.full_messages) unless buildpack_info.valid?
 
