@@ -1,6 +1,4 @@
 Rails.application.routes.draw do
-  resource :echo
-
   get '/processes', to: 'processes#index'
   get '/processes/:guid', to: 'processes#show'
   patch '/processes/:guid', to: 'processes#update', defaults: { format: :json }

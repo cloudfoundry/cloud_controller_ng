@@ -38,12 +38,6 @@ module VCAP
           request.query_parameters.with_indifferent_access
         end
 
-        # include VCAP::Errors
-        # include VCAP::RestAPI
-        # include Messages
-        # include Routes
-        # extend Forwardable
-
         def check_read_permissions!
           read_scope = SecurityContext.scopes.include?('cloud_controller.read')
           raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !read_scope

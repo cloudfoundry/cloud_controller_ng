@@ -46,7 +46,7 @@ require 'cloud_controller/constants'
 
 require 'controllers/base/front_controller'
 
-Rails.application.initialize! if ENV['RAILS_ENV'] == 'test'
+Rails.application.initialize! if ENV['RAILS_ENV'] == 'test' || ENV['RAILS_ENV'] == 'development'
 
 require 'cloud_controller/config'
 require 'cloud_controller/db'
