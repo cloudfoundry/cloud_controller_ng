@@ -4,6 +4,7 @@ module VCAP::CloudController
   class ServiceInstanceBindingManager
     class ServiceInstanceNotFound < StandardError; end
     class RouteNotFound < StandardError; end
+    class RouteBindingNotFound < StandardError; end
     class ServiceInstanceNotBindable < StandardError; end
     class RouteAlreadyBoundToServiceInstance < StandardError; end
     class AppNotFound < StandardError; end
@@ -48,7 +49,16 @@ module VCAP::CloudController
       route_binding
     end
 
-    def delete_route_service_instance_binding(route_binding)
+    def delete_route_service_instance_binding(route_guid, instance_guid)
+      route = Route.find(guid: route_guid)
+      raise RouteNotFound unless route
+
+      instance = ServiceInstance.find(guid: instance_guid)
+      raise ServiceInstanceNotFound unless instance
+
+      route_binding = RouteBinding.find(service_instance: instance, route: route)
+      raise RouteBindingNotFound unless route_binding
+
       @access_validator.validate_access(:update, route_binding.service_instance)
       errors = ServiceBindingDelete.new.delete [route_binding]
       unless errors.empty?

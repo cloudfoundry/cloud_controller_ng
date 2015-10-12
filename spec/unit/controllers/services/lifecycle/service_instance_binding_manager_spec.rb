@@ -333,17 +333,47 @@ module VCAP::CloudController
       end
 
       it 'sends an unbind request to the service broker' do
-        manager.delete_route_service_instance_binding(route_binding)
+        manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
 
         route_binding_url_pattern = /#{service_binding_url_pattern}#{route_binding.guid}/
         expect(a_request(:delete, route_binding_url_pattern)).to have_been_made
+      end
+
+      context 'when the route does not exist' do
+        it 'raises a RouteNotFound error and does not call the broker' do
+          expect {
+            manager.delete_route_service_instance_binding('not-a-guid', service_instance.guid)
+          }.to raise_error ServiceInstanceBindingManager::RouteNotFound
+
+          expect(a_request(:delete, service_binding_url_pattern)).not_to have_been_made
+        end
+      end
+
+      context 'when the service instance does not exist' do
+        it 'raises a ServiceInstanceNotFound error' do
+          expect {
+            manager.delete_route_service_instance_binding(route.guid, 'not-a-guid')
+          }.to raise_error ServiceInstanceBindingManager::ServiceInstanceNotFound
+
+          expect(a_request(:delete, service_binding_url_pattern)).to_not have_been_made
+        end
+      end
+
+      context 'when the route and service instance are not bound' do
+        it 'raises a RouteBindingNotFound error' do
+          expect {
+            manager.delete_route_service_instance_binding(Route.make.guid, service_instance.guid)
+          }.to raise_error ServiceInstanceBindingManager::RouteBindingNotFound
+
+          expect(a_request(:delete, service_binding_url_pattern)).to_not have_been_made
+        end
       end
 
       it 'deletes the binding and removes associations from routes and service_instances' do
         expect(route.service_instance).to eq service_instance
         expect(service_instance.routes).to include route
 
-        manager.delete_route_service_instance_binding(route_binding)
+        manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
 
         expect(route_binding.exists?).to be_falsey
         expect(route.reload.service_instance).to be_nil
@@ -357,7 +387,7 @@ module VCAP::CloudController
 
         it 'raises an error' do
           expect {
-            manager.delete_route_service_instance_binding(route_binding)
+            manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
           }.to raise_error('blah')
         end
       end
@@ -367,7 +397,7 @@ module VCAP::CloudController
 
         service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
         expect {
-          manager.delete_route_service_instance_binding(route_binding)
+          manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
         }.to raise_error do |e|
           expect(e).to be_a(Errors::ApiError)
           expect(e.message).to include('in progress')
@@ -384,7 +414,7 @@ module VCAP::CloudController
 
         it 'does not delete the binding' do
           expect {
-            manager.delete_route_service_instance_binding(route_binding)
+            manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
           }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
 
           expect(route_binding.exists?).to be_truthy

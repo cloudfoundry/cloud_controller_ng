@@ -98,10 +98,10 @@ module VCAP::CloudController
     def add_related(guid, name, other_guid)
       return super(guid, name, other_guid) if name != :routes
 
-      bind_route(guid, other_guid)
+      bind_route(other_guid, guid)
     end
 
-    def bind_route(instance_guid, route_guid)
+    def bind_route(route_guid, instance_guid)
       logger.debug 'cc.association.add', model: self.class.model_class_name, guid: instance_guid, assocation: :routes, other_guid: route_guid
 
       binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)

@@ -243,10 +243,10 @@ module VCAP::CloudController
 
     def add_related(guid, name, other_guid)
       return super(guid, name, other_guid) if name != :routes
-      bind_route(guid, other_guid)
+      bind_route(other_guid, guid)
     end
 
-    def bind_route(instance_guid, route_guid)
+    def bind_route(route_guid, instance_guid)
       logger.debug 'cc.association.add', model: self.class.model_class_name, guid: instance_guid, assocation: :routes, other_guid: route_guid
 
       binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
@@ -265,22 +265,22 @@ module VCAP::CloudController
 
     def remove_related(guid, name, other_guid)
       return super(guid, name, other_guid) if name != :routes
-
-      unbind_route(guid, other_guid)
+      unbind_route(other_guid, guid)
     end
 
-    def unbind_route(instance_guid, route_guid)
+    def unbind_route(route_guid, instance_guid)
       logger.debug 'cc.association.remove', guid: instance_guid, association: :routes, other_guid: route_guid
 
-      instance = find_guid(instance_guid)
-      route = find_guid(route_guid, Route)
-      binding = RouteBinding.find(service_instance: instance, route: route)
-      invalid_relation!("Route #{route_guid} is not bound to service instance #{instance_guid}.") if binding.nil?
-
       binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
-      binding_manager.delete_route_service_instance_binding(binding)
+      binding_manager.delete_route_service_instance_binding(route_guid, instance_guid)
 
       [HTTP::NO_CONTENT]
+    rescue ServiceInstanceBindingManager::RouteBindingNotFound
+      invalid_relation!("Route #{route_guid} is not bound to service instance #{instance_guid}.")
+    rescue ServiceInstanceBindingManager::RouteNotFound
+      raise VCAP::Errors::ApiError.new_from_details('RouteNotFound', route_guid)
+    rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
     end
 
     private
