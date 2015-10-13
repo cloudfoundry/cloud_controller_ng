@@ -584,8 +584,8 @@ resource 'Apps (Experimental)', type: :api do
   put '/v3/apps/:guid/current_droplet' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
-    let(:proces_types) { { web: 'start the app' } }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid, process_types: proces_types, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:procfile) { 'web: start the app' }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid, procfile: procfile, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space_guid: space_guid) }
 
     before do

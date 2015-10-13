@@ -31,11 +31,7 @@ module VCAP::CloudController
         buildpack:             buildpack_info.to_s,
         package_guid:          package.guid,
         state:                 DropletModel::PENDING_STATE,
-        stack_name:            staging_message.stack,
-        lifecycle:             staging_message.lifecycle,
-        environment_variables: staging_details.environment_variables,
-        memory_limit:          staging_details.memory_limit,
-        disk_limit:            staging_details.disk_limit
+        environment_variables: staging_details.environment_variables
       )
       staging_details.droplet = droplet
       logger.info("droplet created: #{droplet.guid}")

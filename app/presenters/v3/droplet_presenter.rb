@@ -26,22 +26,15 @@ module VCAP::CloudController
 
     def droplet_hash(droplet)
       {
-        guid:                    droplet.guid,
-        state:                   droplet.state,
-        error:                   droplet.error,
-        lifecycle:               droplet.lifecycle,
-        memory_limit:            droplet.memory_limit,
-        disk_limit:              droplet.disk_limit,
-        result: {
-          buildpack:             droplet.buildpack,
-          stack:                 droplet.stack_name,
-          process_types:         droplet.process_types,
-          hash: {
-            type: DEFAULT_HASHING_ALGORITHM,
-            value: droplet.droplet_hash
-          },
-          execution_metadata:   droplet.execution_metadata
+        guid:                   droplet.guid,
+        state:                  droplet.state,
+        hash: {
+          type: DEFAULT_HASHING_ALGORITHM,
+          value: droplet.droplet_hash
         },
+        buildpack:              droplet.buildpack,
+        error:         droplet.error,
+        procfile:               droplet.procfile,
         environment_variables:  droplet.environment_variables || {},
         created_at:             droplet.created_at,
         updated_at:             droplet.updated_at,

@@ -695,7 +695,7 @@ module VCAP::CloudController
       let(:app_model) { AppModel.make }
       let(:space) { app_model.space }
       let(:org) { space.organization }
-      let(:droplet) { DropletModel.make(process_types: { 'web' => 'a' }, app_guid: app_model.guid, state: DropletModel::STAGED_STATE) }
+      let(:droplet) { DropletModel.make(procfile: 'web: a', app_guid: app_model.guid, state: DropletModel::STAGED_STATE) }
 
       before do
         allow(apps_controller).to receive(:check_write_permissions!).and_return(nil)
@@ -1072,7 +1072,7 @@ module VCAP::CloudController
       let(:space) { app_model.space }
       let(:org) { space.organization }
       let(:guid) { app_model.guid }
-      let(:droplet) { DropletModel.make(process_types: { 'web' => 'start app' }, state: DropletModel::STAGED_STATE) }
+      let(:droplet) { DropletModel.make(procfile: 'web: start app', state: DropletModel::STAGED_STATE) }
       let(:droplet_guid) { droplet.guid }
       let(:req_body) { JSON.dump({ droplet_guid: droplet_guid }) }
 

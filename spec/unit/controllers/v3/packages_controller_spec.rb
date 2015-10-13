@@ -709,7 +709,7 @@ module VCAP::CloudController
       end
 
       describe 'buildpack request' do
-        let(:req_body) { { lifecycle: { type: 'buildpack', data: {  buildpack: buildpack_request } } }.to_json }
+        let(:req_body) { { buildpack: buildpack_request }.to_json }
         let(:buildpack) { Buildpack.make }
 
         context 'when a git url is requested' do
