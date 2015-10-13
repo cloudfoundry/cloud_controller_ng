@@ -52,14 +52,43 @@ resource 'User Provided Service Instances', type: [:api, :legacy_api] do
   end
 
   describe 'Nested endpoints' do
-    field :guid, 'The guid of the Service Instance.', required: true
-
     describe 'Service Bindings' do
       before do
         VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
       end
 
+      field :guid, 'The guid of the Service Instance.', required: true
+
       standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :user_provided_service_instance
+    end
+
+    describe 'Routes' do
+      let(:route) { VCAP::CloudController::Route.make(space: service_instance.space) }
+      let(:route_guid) { route.guid }
+      let(:associated_route) { VCAP::CloudController::Route.make(space: service_instance.space) }
+      let(:associated_route_guid) { associated_route.guid }
+      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
+      let(:guid) { service_instance.guid }
+
+      before do
+        binding = VCAP::CloudController::RouteBinding.make(route: associated_route, service_instance: service_instance)
+        associated_route.route_binding = binding
+        associated_route.save
+      end
+
+      parameter :route_guid, 'The guid of the route'
+
+      standard_model_list :routes, VCAP::CloudController::RoutesController, outer_model: :user_provided_service_instance
+      nested_model_associate :route, :user_provided_service_instance
+
+      # Can't user nested_model_remove because it expects a 201
+      delete '/v2/user_provided_service_instance/:guid/routes/:route_guid' do
+        example 'Remove Route from the User Provided Service Instance' do
+          path = "/v2/user_provided_service_instances/#{guid}/routes/#{associated_route_guid}"
+          client.delete path, '', headers
+          expect(status).to eq 204
+        end
+      end
     end
   end
 end
