@@ -41,7 +41,7 @@ class AppBitsPackage
     raise PackageNotFound if package.nil?
 
     begin
-      raise InvalidZip, "The zip provided was not valid" unless valid_zip?(package_path)
+      raise InvalidZip.new('The zip provided was not valid') unless valid_zip?(package_path)
       raise ZipSizeExceeded if @max_package_size && package_size(package_path) > @max_package_size
 
       package_blobstore.cp_to_blobstore(package_path, package_guid)
@@ -70,7 +70,7 @@ class AppBitsPackage
   private
 
   def valid_zip?(package_path)
-    pid = spawn("zip -T #{package_path}", :out=>"/dev/null")
+    pid = spawn("zip -T #{package_path}", out: '/dev/null')
     _, process_object = Process.waitpid2(pid)
     process_object.exitstatus == 0
   end
