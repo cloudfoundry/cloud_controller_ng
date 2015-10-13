@@ -11,7 +11,7 @@ module VCAP::CloudController
 
       to_one :space
       to_many :service_bindings
-      to_many :routes, route_for: [:get, :put]
+      to_many :routes, route_for: [:get, :put, :delete]
     end
 
     def self.dependencies
@@ -101,6 +101,20 @@ module VCAP::CloudController
       bind_route(other_guid, guid)
     end
 
+    def add_related(guid, name, other_guid)
+      return super(guid, name, other_guid) if name != :routes
+
+      bind_route(other_guid, guid)
+    end
+
+    def remove_related(guid, name, other_guid)
+      return super(guid, name, other_guid) if name != :routes
+
+      unbind_route(other_guid, guid)
+    end
+
+    private
+
     def bind_route(route_guid, instance_guid)
       logger.debug 'cc.association.add', model: self.class.model_class_name, guid: instance_guid, assocation: :routes, other_guid: route_guid
 
@@ -115,43 +129,60 @@ module VCAP::CloudController
     rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
     end
-  end
 
-  private
+    def unbind_route(route_guid, instance_guid)
+      logger.debug 'cc.association.remove', guid: instance_guid, association: :routes, other_guid: route_guid
 
-  def decode_create_request_attrs
-    json_msg = self.class::CreateMessage.decode(body)
-    json_msg.extract(stringify_keys: true)
-  end
+      binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
+      binding_manager.delete_route_service_instance_binding(route_guid, instance_guid)
 
-  def create_instance(request_attrs)
-    service_instance = nil
-    UserProvidedServiceInstance.db.transaction do
-      service_instance = UserProvidedServiceInstance.create_from_hash(request_attrs)
-      validate_access(:create, service_instance, request_attrs)
+      [HTTP::NO_CONTENT]
+    rescue ServiceInstanceBindingManager::RouteBindingNotFound
+      invalid_relation!("Route #{route_guid} is not bound to service instance #{instance_guid}.")
+    rescue ServiceInstanceBindingManager::RouteNotFound
+      raise VCAP::Errors::ApiError.new_from_details('RouteNotFound', route_guid)
+    rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
     end
-    service_instance
-  end
 
-  def decode_update_request_attrs
-    json_msg = self.class::UpdateMessage.decode(body)
-    json_msg.extract(stringify_keys: true)
-  end
-
-  def validate_space_not_changed(request_attrs, service_instance)
-    if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
-      raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
+    def invalid_relation!(message)
+      raise Errors::ApiError.new_from_details('InvalidRelation', message)
     end
-  end
 
-  def update_instance(request_attrs, service_instance)
-    ServiceInstance.db.transaction do
-      service_instance.lock!
-      service_instance.update_from_hash(request_attrs)
+    def decode_create_request_attrs
+      json_msg = self.class::CreateMessage.decode(body)
+      json_msg.extract(stringify_keys: true)
     end
-  end
 
-  def propagate_instance_credentials(service_instance)
-    PropagateInstanceCredentials.new.execute service_instance
+    def create_instance(request_attrs)
+      service_instance = nil
+      UserProvidedServiceInstance.db.transaction do
+        service_instance = UserProvidedServiceInstance.create_from_hash(request_attrs)
+        validate_access(:create, service_instance, request_attrs)
+      end
+      service_instance
+    end
+
+    def decode_update_request_attrs
+      json_msg = self.class::UpdateMessage.decode(body)
+      json_msg.extract(stringify_keys: true)
+    end
+
+    def validate_space_not_changed(request_attrs, service_instance)
+      if request_attrs['space_guid'] && request_attrs['space_guid'] != service_instance.space.guid
+        raise Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'cannot change space for service instance')
+      end
+    end
+
+    def update_instance(request_attrs, service_instance)
+      ServiceInstance.db.transaction do
+        service_instance.lock!
+        service_instance.update_from_hash(request_attrs)
+      end
+    end
+
+    def propagate_instance_credentials(service_instance)
+      PropagateInstanceCredentials.new.execute service_instance
+    end
   end
 end

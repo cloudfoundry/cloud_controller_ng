@@ -324,101 +324,136 @@ module VCAP::CloudController
     end
 
     describe '#delete_route_service_binding' do
-      let(:route_binding) { RouteBinding.make }
-      let(:service_instance) { route_binding.service_instance }
-      let(:route) { route_binding.route }
-      before do
-        stub_unbind(route_binding)
-        allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
-      end
-
-      it 'sends an unbind request to the service broker' do
-        manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
-
-        route_binding_url_pattern = /#{service_binding_url_pattern}#{route_binding.guid}/
-        expect(a_request(:delete, route_binding_url_pattern)).to have_been_made
-      end
-
-      context 'when the route does not exist' do
-        it 'raises a RouteNotFound error and does not call the broker' do
-          expect {
-            manager.delete_route_service_instance_binding('not-a-guid', service_instance.guid)
-          }.to raise_error ServiceInstanceBindingManager::RouteNotFound
-
-          expect(a_request(:delete, service_binding_url_pattern)).not_to have_been_made
+      context 'user provided service instance' do
+        let(:route) { Route.make }
+        let(:route_service_url) { 'https://my-rs.example.com' }
+        let(:route_binding) do
+          RouteBinding.make(service_instance: service_instance,
+                            route: route,
+                            route_service_url: route_service_url)
         end
-      end
-
-      context 'when the service instance does not exist' do
-        it 'raises a ServiceInstanceNotFound error' do
-          expect {
-            manager.delete_route_service_instance_binding(route.guid, 'not-a-guid')
-          }.to raise_error ServiceInstanceBindingManager::ServiceInstanceNotFound
-
-          expect(a_request(:delete, service_binding_url_pattern)).to_not have_been_made
+        let(:service_instance) do
+          UserProvidedServiceInstance.make(:routing,
+                                           space: route.space,
+                                           route_service_url: route_service_url)
         end
-      end
 
-      context 'when the route and service instance are not bound' do
-        it 'raises a RouteBindingNotFound error' do
-          expect {
-            manager.delete_route_service_instance_binding(Route.make.guid, service_instance.guid)
-          }.to raise_error ServiceInstanceBindingManager::RouteBindingNotFound
-
-          expect(a_request(:delete, service_binding_url_pattern)).to_not have_been_made
-        end
-      end
-
-      it 'deletes the binding and removes associations from routes and service_instances' do
-        expect(route.service_instance).to eq service_instance
-        expect(service_instance.routes).to include route
-
-        manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
-
-        expect(route_binding.exists?).to be_falsey
-        expect(route.reload.service_instance).to be_nil
-        expect(service_instance.reload.routes).to be_empty
-      end
-
-      context 'when the user does not have authority to delete a binding' do
         before do
-          allow(access_validator).to receive(:validate_access).with(:update, anything).and_raise('blah')
+          allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
         end
 
-        it 'raises an error' do
+        it 'unbinds the route and service instance' do
+          expect(route_binding.service_instance).to eq service_instance
+          expect(route_binding.route).to eq route
+          expect(route_binding.route_service_url).to eq service_instance.route_service_url
+
           expect {
             manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
-          }.to raise_error('blah')
+          }.to change { RouteBinding.count }.by(-1)
+
+          expect {
+            route_binding.reload
+          }.to raise_error 'Record not found'
         end
       end
 
-      it 'fails if the instance has another operation in progress' do
-        allow(logger).to receive(:error)
+      context 'managed service instances' do
+        let(:route_binding) { RouteBinding.make }
+        let(:service_instance) { route_binding.service_instance }
+        let(:route) { route_binding.route }
+        before do
+          stub_unbind(route_binding)
+          allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
+        end
 
-        service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
-        expect {
+        it 'sends an unbind request to the service broker' do
           manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
-        }.to raise_error do |e|
-          expect(e).to be_a(Errors::ApiError)
-          expect(e.message).to include('in progress')
+
+          route_binding_url_pattern = /#{service_binding_url_pattern}#{route_binding.guid}/
+          expect(a_request(:delete, route_binding_url_pattern)).to have_been_made
         end
 
-        expect(logger).to have_received(:error).with /in progress/
-      end
+        context 'when the route does not exist' do
+          it 'raises a RouteNotFound error and does not call the broker' do
+            expect {
+              manager.delete_route_service_instance_binding('not-a-guid', service_instance.guid)
+            }.to raise_error ServiceInstanceBindingManager::RouteNotFound
 
-      context 'when service broker returns a 500 on unbind' do
-        before do
-          stub_unbind(route_binding, status: 500)
+            expect(a_request(:delete, service_binding_url_pattern)).not_to have_been_made
+          end
+        end
+
+        context 'when the service instance does not exist' do
+          it 'raises a ServiceInstanceNotFound error' do
+            expect {
+              manager.delete_route_service_instance_binding(route.guid, 'not-a-guid')
+            }.to raise_error ServiceInstanceBindingManager::ServiceInstanceNotFound
+
+            expect(a_request(:delete, service_binding_url_pattern)).to_not have_been_made
+          end
+        end
+
+        context 'when the route and service instance are not bound' do
+          it 'raises a RouteBindingNotFound error' do
+            expect {
+              manager.delete_route_service_instance_binding(Route.make.guid, service_instance.guid)
+            }.to raise_error ServiceInstanceBindingManager::RouteBindingNotFound
+
+            expect(a_request(:delete, service_binding_url_pattern)).to_not have_been_made
+          end
+        end
+
+        it 'deletes the binding and removes associations from routes and service_instances' do
+          expect(route.service_instance).to eq service_instance
+          expect(service_instance.routes).to include route
+
+          manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
+
+          expect(route_binding.exists?).to be_falsey
+          expect(route.reload.service_instance).to be_nil
+          expect(service_instance.reload.routes).to be_empty
+        end
+
+        context 'when the user does not have authority to delete a binding' do
+          before do
+            allow(access_validator).to receive(:validate_access).with(:update, anything).and_raise('blah')
+          end
+
+          it 'raises an error' do
+            expect {
+              manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
+            }.to raise_error('blah')
+          end
+        end
+
+        it 'fails if the instance has another operation in progress' do
           allow(logger).to receive(:error)
-        end
 
-        it 'does not delete the binding' do
+          service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
           expect {
             manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
-          }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
+          }.to raise_error do |e|
+            expect(e).to be_a(Errors::ApiError)
+            expect(e.message).to include('in progress')
+          end
 
-          expect(route_binding.exists?).to be_truthy
-          expect(logger).to have_received(:error).with /Failed to delete/
+          expect(logger).to have_received(:error).with /in progress/
+        end
+
+        context 'when service broker returns a 500 on unbind' do
+          before do
+            stub_unbind(route_binding, status: 500)
+            allow(logger).to receive(:error)
+          end
+
+          it 'does not delete the binding' do
+            expect {
+              manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
+            }.to raise_error VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
+
+            expect(route_binding.exists?).to be_truthy
+            expect(logger).to have_received(:error).with /Failed to delete/
+          end
         end
       end
     end

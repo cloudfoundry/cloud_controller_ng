@@ -92,7 +92,7 @@ module VCAP::CloudController
       it do
         expect(described_class).to have_nested_routes(
             service_bindings: [:get, :put, :delete],
-            routes: [:get, :put]
+            routes: [:get, :put, :delete]
           )
       end
     end
@@ -402,6 +402,53 @@ module VCAP::CloudController
           expect(last_response.status).to eq(400)
           expect(JSON.parse(last_response.body)['description']).
             to include('The service instance and the route are in different spaces.')
+        end
+      end
+    end
+
+    describe 'DELETE', '/v2/user_provided_service_instances/:service_instance_guid/routes/:route_guid' do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:service_instance) { UserProvidedServiceInstance.make(:routing, space: space) }
+      let(:route) { Route.make(space: space) }
+
+      context 'when a service has an associated route' do
+        let!(:route_binding) { RouteBinding.make(route: route, service_instance: service_instance) }
+
+        it 'deletes the association between the route and the service instance' do
+          get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+          expect(last_response).to have_status_code(200)
+          expect(JSON.parse(last_response.body)['total_results']).to eql(1)
+
+          delete "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response).to have_status_code(204)
+          expect(last_response.body).to be_empty
+
+          get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+          expect(last_response).to have_status_code(200)
+          expect(JSON.parse(last_response.body)['total_results']).to eql(0)
+        end
+      end
+
+      context 'when the service_instance does not exist' do
+        it 'returns a 404' do
+          delete "/v2/user_provided_service_instances/fake-guid/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response).to have_status_code(404)
+        end
+      end
+
+      context 'when the route does not exist' do
+        it 'returns a 404' do
+          delete "/v2/user_provided_service_instances/#{service_instance.guid}/routes/fake-guid", {}, headers_for(developer)
+          expect(last_response).to have_status_code(404)
+        end
+      end
+
+      context 'when the route and service are not bound' do
+        it 'returns a 400 InvalidRelation error' do
+          delete "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response).to have_status_code(400)
+          expect(JSON.parse(last_response.body)['description']).to include('Invalid relation')
         end
       end
     end
