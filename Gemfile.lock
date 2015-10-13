@@ -202,7 +202,7 @@ GEM
     ipaddress (0.8.0)
     json (1.8.3)
     json_pure (1.8.2)
-    loggregator_emitter (5.0.0)
+    loggregator_emitter (5.0.1)
       beefcake (~> 1.0.0)
     machinist (1.0.6)
     membrane (1.1.0)

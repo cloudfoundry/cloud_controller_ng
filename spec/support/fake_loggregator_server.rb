@@ -1,5 +1,5 @@
 require 'socket'
-require 'sonde/sonde.pb'
+require 'sonde'
 
 class FakeLoggregatorServer
   attr_reader :messages, :port, :sock
