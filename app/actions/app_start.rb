@@ -1,4 +1,4 @@
-require 'actions/procfile_parse'
+require 'actions/current_process_types'
 
 module VCAP::CloudController
   class AppStart

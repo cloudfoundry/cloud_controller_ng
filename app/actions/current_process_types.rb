@@ -1,28 +1,25 @@
 require 'cloud_controller/procfile'
 
 module VCAP::CloudController
-  class ProcfileParse
+  class CurrentProcessTypes
     class DropletNotFound < StandardError; end
-    class ProcfileNotFound < StandardError; end
+    class ProcessTypesNotFound < StandardError; end
 
     def initialize(user_guid, user_email)
       @user_guid = user_guid
       @user_email = user_email
-      @logger = Steno.logger('cc.action.procfile_parse')
+      @logger = Steno.logger('cc.action.current_process_types')
     end
 
-    def process_procfile(app)
-      @logger.info('proccess_procfile', guid: app.guid)
+    def process_current_droplet(app)
+      @logger.info('proccess_current_droplet', guid: app.guid)
 
-      if app.droplet && app.droplet.procfile
-        @logger.debug('using the droplet procfile', guid: app.guid)
-
-        procfile = Procfile.load(app.droplet.procfile)
-        converge_on_procfile(app, procfile)
-        procfile
+      if app.droplet && app.droplet.process_types
+        @logger.debug('using the droplet process_types', guid: app.guid)
+        evaluate_processes(app, app.droplet.process_types)
       else
-        @logger.warn('no procfile found', guid: app.guid)
-        raise ProcfileNotFound
+        @logger.warn('no process_types found', guid: app.guid)
+        raise ProcessTypesNotFound
       end
     end
 
@@ -30,18 +27,18 @@ module VCAP::CloudController
 
     attr_reader :user_guid, :user_email
 
-    def converge_on_procfile(app, procfile_hash)
+    def evaluate_processes(app, process_types)
       types = []
-      procfile_hash.each do |(type, command)|
+      process_types.each do |(type, command)|
         type = type.to_s
         types << type
-        process_procfile_line(app, type, command)
+        add_or_update_process(app, type, command)
       end
       processes = app.processes_dataset.where(Sequel.~(type: types))
       ProcessDelete.new.delete(processes.all)
     end
 
-    def process_procfile_line(app, type, command)
+    def add_or_update_process(app, type, command)
       existing_process = app.processes_dataset.where(type: type).first
       if existing_process
         message = { command: command }

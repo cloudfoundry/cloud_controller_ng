@@ -70,13 +70,22 @@ module VCAP::CloudController
                     worker:   'hello',
                     anything: 'hi hi hi'
                   }
+
+                  success_response[:result][:execution_metadata] = 'black-box-string'
                 end
 
                 it 'updates the droplet with the metadata' do
                   handle_staging_result(success_response)
                   staged_droplet.reload
                   droplet = staged_droplet
-                  expect(droplet.procfile).to eq("web: start me\nworker: hello\nanything: hi hi hi")
+                  data = {
+                    'web'    => 'start me',
+                    'worker' => 'hello',
+                    'anything' => 'hi hi hi'
+                  }
+
+                  expect(droplet.execution_metadata).to eq('black-box-string')
+                  expect(droplet.process_types).to eq(data)
                   expect(droplet.buildpack).to eq('INTERCAL')
                 end
 
