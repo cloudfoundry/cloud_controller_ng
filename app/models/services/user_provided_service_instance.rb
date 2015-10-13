@@ -15,7 +15,7 @@ module VCAP::CloudController
     end
 
     def route_service?
-      !!route_service_url
+      !(route_service_url.nil? || route_service_url.empty?)
     end
 
     def client

@@ -376,6 +376,18 @@ module VCAP::CloudController
         end
       end
 
+      context 'when attempting to bind to a service with an empty route_service_url' do
+        before do
+          service_instance = UserProvidedServiceInstance.make(route_service_url: '', space: space)
+          put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+        end
+
+        it 'raises ServiceDoesNotSupportRoutes error' do
+          expect(last_response).to have_status_code(400)
+          expect(decoded_response['error_code']).to eq('CF-ServiceDoesNotSupportRoutes')
+        end
+      end
+
       context 'when the route and service_instance are not in the same space' do
         let(:other_space) { Space.make(organization: space.organization) }
         let(:service_instance) { UserProvidedServiceInstance.make(:routing, space: other_space) }
