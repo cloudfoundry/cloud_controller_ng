@@ -7,42 +7,24 @@ module VCAP::CloudController
       it 'presents the droplet as json' do
         droplet = DropletModel.make(
           state:                  DropletModel::STAGED_STATE,
-          buildpack_guid:         'buildpack-guid',
-          buildpack:              'actual-buildpack',
+          buildpack_guid:         'a-buildpack',
           error:         'example error',
-          process_types: { 'web' => 'npm start', 'worker' => 'start worker' },
+          procfile: 'web: npm start',
           environment_variables:  { 'elastic' => 'runtime' },
-          memory_limit: 234,
-          disk_limit: 934,
-          lifecycle: {
-            'type' => 'buildpack',
-            'data' => {
-              'buildpack' => 'requested-buildpack',
-              'stack' => 'requested-stack'
-            }
-          },
-          stack_name: Stack.default.name,
           created_at: Time.at(1),
           updated_at: Time.at(2),
-          execution_metadata: 'black-box-string'
         )
+
         json_result = DropletPresenter.new.present_json(droplet)
         result      = MultiJson.load(json_result)
 
         expect(result['guid']).to eq(droplet.guid)
         expect(result['state']).to eq(droplet.state)
+        expect(result['hash']).to eq({ 'type' => 'sha1', 'value' => nil })
+        expect(result['buildpack']).to eq(droplet.buildpack)
         expect(result['error']).to eq(droplet.error)
-        expect(result['lifecycle']['type']).to eq('buildpack')
-        expect(result['lifecycle']).to eq(droplet.lifecycle)
+        expect(result['procfile']).to eq(droplet.procfile)
         expect(result['environment_variables']).to eq(droplet.environment_variables)
-        expect(result['memory_limit']).to eq(234)
-        expect(result['disk_limit']).to eq(934)
-        expect(result['result']['hash']).to eq({ 'type' => 'sha1', 'value' => nil })
-        expect(result['result']['buildpack']).to eq('actual-buildpack')
-        expect(result['result']['stack']).to eq(Stack.default.name)
-        expect(result['result']['process_types']).to eq({ 'web' => 'npm start', 'worker' => 'start worker' })
-        expect(result['result']['execution_metadata']).to eq('black-box-string')
-
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
         expect(result['links']).to include('self')

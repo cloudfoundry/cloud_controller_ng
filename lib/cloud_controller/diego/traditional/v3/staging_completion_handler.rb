@@ -71,12 +71,17 @@ module VCAP::CloudController
           def save_staging_result(droplet, payload)
             lifecycle_data = payload[:result][:lifecycle_metadata]
 
+            process_types = []
+            payload[:result][:process_types].each do |type, command|
+              process_types << "#{type}: #{command}"
+            end
+
             droplet.class.db.transaction do
               droplet.lock!
-              droplet.process_types  = payload[:result][:process_types]
+              droplet.procfile  = process_types.join("\n")
               droplet.buildpack = lifecycle_data[:detected_buildpack] unless lifecycle_data[:detected_buildpack].blank?
               droplet.mark_as_staged
-              droplet.execution_metadata = payload[:result][:execution_metadata]
+
               droplet.save_changes(raise_on_save_failure: true)
             end
           end

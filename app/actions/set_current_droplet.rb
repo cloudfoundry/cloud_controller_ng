@@ -14,7 +14,7 @@ module VCAP::CloudController
       app.db.transaction do
         app.lock!
         update_app(app, { droplet_guid: droplet.guid })
-        current_process_types.process_current_droplet(app)
+        procfile_parse.process_procfile(app)
         app.save
       end
 
@@ -25,8 +25,8 @@ module VCAP::CloudController
 
     private
 
-    def current_process_types
-      CurrentProcessTypes.new(@user.guid, @user_email)
+    def procfile_parse
+      ProcfileParse.new(@user.guid, @user_email)
     end
 
     def update_app(app, fields)

@@ -94,16 +94,4 @@ module VCAP::CloudController
       expect(droplet_model.state).to be DropletModel::STAGED_STATE
     end
   end
-
-  describe 'process_types' do
-    let(:droplet_model) { DropletModel.make }
-
-    it 'is a persistable hash' do
-      info = { web: 'started', worker: 'started' }
-      droplet_model.process_types = info
-      droplet_model.save
-      expect(droplet_model.reload.process_types['web']).to eq('started')
-      expect(droplet_model.reload.process_types['worker']).to eq('started')
-    end
-  end
 end

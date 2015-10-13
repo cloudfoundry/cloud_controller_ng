@@ -76,6 +76,61 @@ module VCAP::CloudController
         end
       end
 
+      context 'when stack is not a string' do
+        let(:params) { { stack: 32.77 } }
+
+        it 'is not valid' do
+          message = DropletCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:stack]).to include('must be a string')
+        end
+      end
+
+      context 'when stack is nil' do
+        let(:params) { { stack: nil } }
+
+        it 'is not valid' do
+          message = DropletCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:stack]).to include('must be a string')
+        end
+      end
+
+      context 'when stack is too long' do
+        let(:params) { { stack: 'a' * 5098 } }
+
+        it 'is not valid' do
+          message = DropletCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:stack]).to include('must be between 1 and 4096 characters')
+        end
+      end
+
+      context 'when stack is empty' do
+        let(:params) { { stack: '' } }
+
+        it 'is not valid' do
+          message = DropletCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:stack]).to include('must be between 1 and 4096 characters')
+        end
+      end
+
+      context 'when buildpack is not a string' do
+        let(:params) { { buildpack: 34 } }
+
+        it 'is not valid' do
+          message = DropletCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:buildpack]).to include('must be a string')
+        end
+      end
+
       context 'when environment_variables is not a hash' do
         let(:params) { { environment_variables: 'not-a-hash' } }
 
@@ -84,70 +139,6 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors[:environment_variables]).to include('must be a hash')
-        end
-      end
-
-      context 'when lifecycle is provided' do
-        it 'is valid' do
-          params = { lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } } }
-          message = DropletCreateMessage.new(params)
-          expect(message).to be_valid
-        end
-
-        it 'data must be provided' do
-          params = { lifecycle: { type: 'buildpack' } }
-
-          message = DropletCreateMessage.new(params)
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle_data]).to include('must be a hash')
-        end
-
-        it 'must be a valid lifecycle type' do
-          params = { lifecycle: { data: {}, type: { subhash: 'woah!' } } }
-
-          message = DropletCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle_type]).to include('is not included in the list')
-        end
-
-        it 'must provide a valid stack' do
-          params = { lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: { non: 'sense' } } } }
-
-          message = DropletCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle]).to include('Stack must be a string')
-        end
-
-        it 'must be in the database' do
-          params = { lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'redhat' } } }
-
-          message = DropletCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle]).to include('Stack must exist in our DB')
-        end
-
-        it 'must provide a valid buildpack' do
-          params = { lifecycle: { type: 'buildpack', data: { buildpack: { wh: 'at?' }, stack: 'onstacksonstacks' } } }
-
-          message = DropletCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle]).to include('Buildpack must be a string')
-        end
-      end
-
-      context 'when lifecycle is not provided' do
-        let(:params) { { memory_limit: 5 } }
-
-        it 'defaults to buildpack' do
-          message = DropletCreateMessage.new(params)
-          expect(message).to be_valid
-
-          expect(message.lifecycle[:type]).to eq('buildpack')
-          expect(message.lifecycle[:data][:stack]).to eq(Stack.default.name)
         end
       end
     end

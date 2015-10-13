@@ -21,7 +21,7 @@ module VCAP::CloudController
       let(:package) { PackageModel.make(app_guid: app.guid, state: PackageModel::READY_STATE) }
       let(:buildpack)  { Buildpack.make }
       let(:staging_message) { DropletCreateMessage.create_from_http_request(opts) }
-      let(:stack) { Stack.default.name }
+      let(:stack) { 'linuxfs2' }
       let(:memory_limit) { 12340 }
       let(:disk_limit) { 32100 }
       let(:buildpack_git_url) { 'anything' }
@@ -29,17 +29,11 @@ module VCAP::CloudController
       let(:droplet) { double(:droplet, guid: 'some-droplet-guid') }
       let(:stager) { instance_double(Diego::V3::Stager) }
       let(:opts) do
-        {
-          lifecycle: {
-            type: 'buildpack',
-            data: {
-              stack:             Stack.default.name,
-              buildpack: buildpack_git_url
-            }
-          },
+        { stack:             stack,
           memory_limit:      memory_limit,
-          disk_limit:        disk_limit
-        }.deep_stringify_keys
+          disk_limit:        disk_limit,
+          buildpack_git_url: buildpack_git_url,
+        }.stringify_keys
       end
       let(:buildpack_info) { BuildpackRequestValidator.new }
 
@@ -57,15 +51,11 @@ module VCAP::CloudController
           expect {
             droplet = action.stage(package, buildpack_info, staging_message, stagers)
             expect(droplet.state).to eq(DropletModel::PENDING_STATE)
-            expect(droplet.lifecycle).to eq(opts['lifecycle'])
             expect(droplet.package_guid).to eq(package.guid)
             expect(droplet.buildpack).to eq(buildpack.name)
             expect(droplet.buildpack_guid).to eq(buildpack.guid)
             expect(droplet.app_guid).to eq(app.guid)
-            expect(droplet.memory_limit).to eq(calculated_mem_limit)
-            expect(droplet.disk_limit).to eq(calculated_disk_limit)
             expect(droplet.environment_variables).to eq(environment_variables)
-            expect(droplet.stack_name).to eq(stack)
           }.to change { DropletModel.count }.by(1)
         end
       end
@@ -88,14 +78,16 @@ module VCAP::CloudController
         end
 
         context 'when the user does not specify a stack' do
-          let(:stack) { nil }
+          let(:stack) { Stack.default.name }
 
           it 'uses a default value for stack' do
+            staging_message.stack = nil
+
             action.stage(package, buildpack_info, staging_message, stagers)
 
             expect(stager).to have_received(:stage) do |staging_details|
               expect(staging_details.droplet).to eq(droplet)
-              expect(staging_details.stack).to eq(Stack.default.name)
+              expect(staging_details.stack).to eq(stack)
               expect(staging_details.memory_limit).to eq(calculated_mem_limit)
               expect(staging_details.disk_limit).to eq(calculated_disk_limit)
               expect(staging_details.buildpack_info).to eq(buildpack_info)

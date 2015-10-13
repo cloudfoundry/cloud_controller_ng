@@ -395,10 +395,16 @@ resource 'Packages (Experimental)', type: :api do
   end
 
   post '/v3/packages/:guid/droplets' do
+    body_parameter :buildpack, 'Buildpack to be used when staging the package.
+    Note: If this parameter is not provided, then the buildpack associated with your app will be used as a default',
+      valid_values:   ['buildpack name', 'git url'],
+      example_values: ['ruby_buildpack', 'https://github.com/cloudfoundry/ruby-buildpack'],
+      required: false
     body_parameter :environment_variables, 'Environment variables to use during staging.
     Environment variable names may not start with "VCAP_" or "CF_". "PORT" is not a valid environment variable.',
       example_values: ['{"FEATURE_ENABLED": "true"}'],
       required: false
+    body_parameter :stack, 'Stack used to stage package', required: false
     body_parameter :memory_limit, 'Memory limit used to stage package', required: false
     body_parameter :disk_limit, 'Disk limit used to stage package', required: false
 
@@ -417,18 +423,6 @@ resource 'Packages (Experimental)', type: :api do
         type:     VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
-
-    body_parameter :lifecycle, 'Lifecycle information for a droplet.  If not provided, it will default to a buildpack',
-      required: false,
-      example_values: [
-        { lifecycle: {
-          type: 'buildpack',
-          data: {
-            buildpack: 'http://github.com/myorg/awesome-buildpack',
-            stack: 'cflinuxfs2'
-          } }
-        }.to_s]
-
     let(:guid) { package_model.guid }
     let(:stack) { 'cflinuxfs2' }
     let(:diego_staging_response) do
@@ -438,16 +432,6 @@ resource 'Packages (Experimental)', type: :api do
         lifecycle_data:         {
           buildpack_key:      'String',
           detected_buildpack: 'String',
-        }
-      }
-    end
-
-    let(:lifecycle) do
-      {
-        type: 'buildpack',
-        data: {
-          buildpack: buildpack,
-          stack: stack
         }
       }
     end
@@ -462,7 +446,7 @@ resource 'Packages (Experimental)', type: :api do
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_download_url).and_return('some-string')
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_droplet_upload_url).and_return('some-string')
       stub_request(:put, "#{TestConfig.config[:diego_stager_url]}/v1/staging/whatuuid").
-        to_return(status: 202, body: diego_staging_response.to_json)
+           to_return(status: 202, body: diego_staging_response.to_json)
     end
 
     example 'Stage a package' do
@@ -476,8 +460,12 @@ resource 'Packages (Experimental)', type: :api do
       expected_response = {
         'guid'                  => droplet.guid,
         'state'                 => 'PENDING',
+        'hash'                  => { 'type' => 'sha1', 'value' => nil },
+        'buildpack'             => 'http://github.com/myorg/awesome-buildpack',
         'error'                 => nil,
-        'lifecycle'             => { 'type' => 'buildpack', 'data' => { 'stack' => 'cflinuxfs2', 'buildpack' => 'http://github.com/myorg/awesome-buildpack' } },
+        'procfile'              => nil,
+        'created_at'            => iso8601,
+        'updated_at'            => nil,
         'environment_variables' => {
           'CF_STACK'         => stack,
           'CUSTOM_ENV_VAR'   => custom_env_var_val,
@@ -496,17 +484,6 @@ resource 'Packages (Experimental)', type: :api do
             'users'               => nil
           }
         },
-        'memory_limit' => 1024,
-        'disk_limit' => 4096,
-        'result' => {
-          'buildpack' => 'http://github.com/myorg/awesome-buildpack',
-          'stack' => 'cflinuxfs2',
-          'process_types' => nil,
-          'hash' => { 'type' => 'sha1', 'value' => nil },
-          'execution_metadata' => nil
-        },
-        'created_at'            => iso8601,
-        'updated_at'            => nil,
         'links'                => {
           'self'                   => { 'href' => "/v3/droplets/#{droplet.guid}" },
           'package'                => { 'href' => "/v3/packages/#{guid}" },
