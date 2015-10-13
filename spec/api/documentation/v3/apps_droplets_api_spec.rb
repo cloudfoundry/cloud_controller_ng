@@ -49,6 +49,7 @@ resource 'Apps (Experimental)', type: :api do
         package_guid: package.guid,
         droplet_hash: 'my-hash',
         buildpack:    'https://github.com/cloudfoundry/my-buildpack.git',
+        process_types: { web: 'started' }.to_json,
         state:        VCAP::CloudController::DropletModel::STAGED_STATE
       )
     end
@@ -78,11 +79,18 @@ resource 'Apps (Experimental)', type: :api do
             {
               'guid'                   => droplet2.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGED_STATE,
-              'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
-              'buildpack'              => 'https://github.com/cloudfoundry/my-buildpack.git',
               'error'                  => droplet2.error,
-              'procfile'               => droplet2.procfile,
+              'lifecycle'              => nil,
+              'memory_limit'           => nil,
+              'disk_limit'            => nil,
               'environment_variables'  => {},
+              'result'                   => {
+                'hash'                   => { 'type' => 'sha1', 'value' => 'my-hash' },
+                'process_types'          => droplet2.process_types,
+                'buildpack'              => 'https://github.com/cloudfoundry/my-buildpack.git',
+                'execution_metadata'     => nil,
+                'stack'                  => nil
+              },
               'created_at'             => iso8601,
               'updated_at'             => nil,
               'links'                 => {
@@ -98,11 +106,18 @@ resource 'Apps (Experimental)', type: :api do
             {
               'guid'                   => droplet1.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGING_STATE,
-              'hash'                   => { 'type' => 'sha1', 'value' => nil },
-              'buildpack'              => buildpack.name,
               'error'                  => droplet1.error,
+              'lifecycle'              => nil,
+              'memory_limit'           => nil,
+              'disk_limit'            => nil,
               'environment_variables'  => droplet1.environment_variables,
-              'procfile'               => droplet1.procfile,
+              'result' => {
+                'hash'                 => { 'type' => 'sha1', 'value' => nil },
+                'process_types'        => droplet1.process_types,
+                'buildpack'            => buildpack.name,
+                'execution_metadata'   => nil,
+                'stack'                => nil
+              },
               'created_at'             => iso8601,
               'updated_at'             => nil,
               'links'                 => {
