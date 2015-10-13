@@ -33,6 +33,9 @@ module VCAP::CloudController
         Errors::ApiError.new_from_details('ServiceInstanceRouteBindingSpaceMismatch')
       elsif service_instance_errors.include?(:route_binding_not_allowed)
         Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
+      elsif service_instance_errors.include?(:route_service_url_not_https)
+        raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
+                                                      'Scheme for route_service_url must be https.')
       else
         Errors::ApiError.new_from_details('ServiceInstanceInvalid', e.errors.full_messages)
       end
@@ -50,9 +53,6 @@ module VCAP::CloudController
         { 'Location' => "#{self.class.path}/#{service_instance.guid}" },
         object_renderer.render_json(self.class, service_instance, @opts)
       ]
-
-    rescue UserProvidedServiceInstance::InvalidRouteServiceUrlScheme
-      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid', @request_attrs['route_service_url'])
     end
 
     def update(guid)

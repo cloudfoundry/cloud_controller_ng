@@ -251,7 +251,7 @@
 60019:
   name: ServiceInstanceRouteServiceURLInvalid
   http_code: 400
-  message: "The service instance cannot be created with the invalid route service URL: %s"
+  message: "The service instance cannot be created with the invalid route service url: %s"
 
 70001:
   name: RuntimeInvalid

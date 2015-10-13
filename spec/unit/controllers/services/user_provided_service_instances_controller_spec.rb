@@ -160,9 +160,9 @@ module VCAP::CloudController
           it 'returns CF-ServiceInstanceInvalid' do
             post '/v2/user_provided_service_instances', req.to_json, headers_for(developer)
 
-            hash_body = JSON.parse(last_response.body)
-            expect(hash_body['error_code']).to eq('CF-ServiceInstanceRouteServiceURLInvalid')
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response['error_code']).to eq('CF-ServiceInstanceRouteServiceURLInvalid')
+            expect(decoded_response['description']).to include 'must be https'
           end
         end
       end

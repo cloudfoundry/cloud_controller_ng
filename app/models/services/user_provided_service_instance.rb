@@ -1,7 +1,5 @@
 module VCAP::CloudController
   class UserProvidedServiceInstance < ServiceInstance
-    class InvalidRouteServiceUrlScheme < StandardError; end
-
     export_attributes :name, :credentials, :space_guid, :type, :syslog_drain_url, :route_service_url
     import_attributes :name, :credentials, :space_guid, :syslog_drain_url, :route_service_url
 
@@ -34,7 +32,7 @@ module VCAP::CloudController
       return if route_service_url == ''
 
       if route_service_url && URI(route_service_url).scheme.to_s.downcase != 'https'
-        raise InvalidRouteServiceUrlScheme.new(:route_service_url)
+        errors.add(:service_instance, :route_service_url_not_https)
       end
     end
   end

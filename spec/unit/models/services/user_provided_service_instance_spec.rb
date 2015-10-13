@@ -45,9 +45,9 @@ module VCAP::CloudController
       end
 
       it 'raises an error if the route_service_url is not https' do
-        expect {
-          described_class.make(route_service_url: 'http://route.url.com')
-        }.to raise_error VCAP::CloudController::UserProvidedServiceInstance::InvalidRouteServiceUrlScheme
+        instance = described_class.make
+        instance.route_service_url = 'http://route.url.com'
+        expect(instance).not_to be_valid
       end
     end
 
