@@ -85,14 +85,6 @@ describe AppBitsPackage do
       end
     end
 
-    context 'when the zip file uploaded is invalid' do
-      let(:compressed_path) { File.expand_path('../../../fixtures/bad.zip', File.dirname(__FILE__)) }
-
-      it 'raises an informative error' do
-        (expect { create }).to raise_error(AppBitsPackage::InvalidZip)
-      end
-    end
-
     context 'when copying to the blobstore fails' do
       it 'logs the exception on the package and reraises the exception' do
         allow(package_blobstore).to receive(:cp_to_blobstore).and_raise('BOOM')
