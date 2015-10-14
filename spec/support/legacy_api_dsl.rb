@@ -127,11 +127,16 @@ module LegacyApiDsl
       end
     end
 
-    def nested_model_associate(model, outer_model)
+    def nested_model_associate(model, outer_model, opts={})
+      experimental = if opts[:experimental]
+                       ' (experimental)'
+                     else
+                       ''
+                     end
       path = "#{api_version}/#{outer_model.to_s.pluralize}/:guid/#{model.to_s.pluralize}/:#{model}_guid"
 
       put path do
-        example_request "Associate #{model.to_s.titleize} with the #{outer_model.to_s.titleize}" do
+        example_request "Associate #{model.to_s.titleize} with the #{outer_model.to_s.titleize}#{experimental}" do
           expect(status).to eq 201
           standard_entity_response parsed_response, outer_model
         end

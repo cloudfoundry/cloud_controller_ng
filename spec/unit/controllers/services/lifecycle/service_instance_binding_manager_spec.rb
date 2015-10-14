@@ -340,12 +340,25 @@ module VCAP::CloudController
 
         before do
           allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
+
+          app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+          @process_guid = Diego::ProcessGuid.from_app(app)
+          # required for add_route below
+          stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 202)
+          app.add_route route
+
+          stub_request(:put, "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{@process_guid}").to_return(status: 202)
         end
 
-        it 'unbinds the route and service instance' do
+        it 'unbinds the route and service instance', isolation: :truncation  do
           expect(route_binding.service_instance).to eq service_instance
           expect(route_binding.route).to eq route
           expect(route_binding.route_service_url).to eq service_instance.route_service_url
+
+          expect_any_instance_of(Diego::NsyncClient).to receive(:desire_app) do |*args|
+            message = args.last
+            expect(message).not_to match(/route_service_url/)
+          end
 
           expect {
             manager.delete_route_service_instance_binding(route.guid, service_instance.guid)
@@ -354,6 +367,7 @@ module VCAP::CloudController
           expect {
             route_binding.reload
           }.to raise_error 'Record not found'
+
         end
       end
 

@@ -60,11 +60,9 @@ module VCAP::CloudController
       raise RouteBindingNotFound unless route_binding
 
       @access_validator.validate_access(:update, route_binding.service_instance)
-      errors = ServiceBindingDelete.new.delete [route_binding]
-      unless errors.empty?
-        @logger.error "Failed to delete binding with guid: #{route_binding.guid} with errors: #{errors.map(&:message).join(',')}"
-        raise errors.first
-      end
+      delete_route_binding(route_binding)
+
+      route_binding.notify_diego if route_binding.route_service_url
     end
 
     def create_app_service_instance_binding(service_instance_guid, app_guid, binding_attrs, arbitrary_parameters)
@@ -152,6 +150,16 @@ module VCAP::CloudController
       @logger.error "Failed to save binding for route: #{route_binding.route.guid} and service instance: #{route_binding.service_instance.guid} with exception: #{e}"
       mitigate_orphan(route_binding)
       raise e
+    end
+
+    def delete_route_binding(route_binding)
+      route_binding.db.transaction do
+        errors = ServiceBindingDelete.new.delete [route_binding]
+        unless errors.empty?
+          @logger.error "Failed to delete binding with guid: #{route_binding.guid} with errors: #{errors.map(&:message).join(',')}"
+          raise errors.first
+        end
+      end
     end
 
     def notify_diego(route_binding, attributes_to_update)
