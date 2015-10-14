@@ -11,7 +11,7 @@ module VCAP::CloudController
     BUILDPACK_LIFECYCLE = 'buildpack'
     LIFECYCLE_TYPES = [BUILDPACK_LIFECYCLE].map(&:freeze).freeze
 
-    def self.lifecyle_requested?
+    def self.lifecycle_requested?
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
     end
 
@@ -27,12 +27,12 @@ module VCAP::CloudController
     validates :lifecycle_type,
       inclusion: { in: LIFECYCLE_TYPES },
       presence: true,
-      if: lifecyle_requested?
+      if: lifecycle_requested?
 
     validates :lifecycle_data,
       hash: true,
       allow_nil: false,
-      if: lifecyle_requested?
+      if: lifecycle_requested?
 
     def requested_buildpack?
       requested?(:lifecycle) && lifecycle_type == BUILDPACK_LIFECYCLE

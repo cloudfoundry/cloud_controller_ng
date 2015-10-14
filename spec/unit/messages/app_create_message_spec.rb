@@ -7,12 +7,18 @@ module VCAP::CloudController
       let(:body) {
         {
           'name'                  => 'some-name',
-          'buildpack'             => 'some-buildpack',
           'environment_variables' => {
             'ENVVAR' => 'env-val'
           },
           'relationships'         => {
             'space' => { 'guid' => 'some-guid' }
+          },
+          'lifecycle' => {
+              'type'  => 'buildpack',
+              'data'  => {
+                'buildpack' => 'some-buildpack',
+                'stack'     => 'some-stack'
+              }
           }
         }
       }
@@ -23,9 +29,15 @@ module VCAP::CloudController
         expect(message).to be_a(AppCreateMessage)
         expect(message.name).to eq('some-name')
         expect(message.space_guid).to eq('some-guid')
-        expect(message.buildpack).to eq('some-buildpack')
         expect(message.environment_variables).to eq({ 'ENVVAR' => 'env-val' })
         expect(message.relationships).to eq({ 'space' => { 'guid' => 'some-guid' } })
+        expect(message.lifecycle).to eq(
+            { 'type'  => 'buildpack',
+              'data'  => {
+                'buildpack' => 'some-buildpack',
+                'stack'     => 'some-stack'
+              }
+            })
       end
 
       it 'converts requested keys to symbols' do
@@ -33,8 +45,8 @@ module VCAP::CloudController
 
         expect(message.requested?(:name)).to be_truthy
         expect(message.requested?(:relationships)).to be_truthy
-        expect(message.requested?(:buildpack)).to be_truthy
         expect(message.requested?(:environment_variables)).to be_truthy
+        expect(message.requested?(:lifecycle)).to be_truthy
       end
     end
 
@@ -75,17 +87,6 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors_on(:environment_variables)[0]).to include('must be a hash')
-        end
-      end
-
-      context 'when a buildpack is not a string' do
-        let(:params) { { buildpack: 45 } }
-
-        it 'is not valid' do
-          message = AppCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors_on(:buildpack)).to include('must be a string')
         end
       end
 
@@ -176,6 +177,93 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors[:relationships]).to include("Unknown field(s): 'other'")
+          end
+        end
+      end
+
+      describe 'lifecycle' do
+        context 'when lifecycle is provided' do
+          let(:params) do
+            {
+              name: 'some_name',
+              relationships: { space: { guid: 'some-guid' } },
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: 'java',
+                  stack: 'cflinuxfs2'
+                }
+              }
+            }
+          end
+
+          it 'is valid' do
+            message = AppCreateMessage.new(params)
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when lifecycle data is provided' do
+          let(:params) do
+            {
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: 123,
+                  stack: 'fake-stack'
+                }
+              }
+            }
+          end
+
+          it 'must provide a valid buildpack value' do
+            message = AppCreateMessage.new(params)
+            expect(message).not_to be_valid
+            expect(message.errors_on(:lifecycle)).to include('Buildpack must be a string')
+          end
+
+          it 'must provide a valid stack name' do
+            message = AppCreateMessage.new(params)
+            expect(message).not_to be_valid
+            expect(message.errors_on(:lifecycle)).to include('Stack must exist in our DB')
+          end
+        end
+
+        context 'when data is not provided' do
+          let(:params) do { lifecycle: { type: 'buildpack' } } end
+
+          it 'is not valid' do
+            message = AppCreateMessage.new(params)
+            expect(message).not_to be_valid
+            expect(message.errors_on(:lifecycle_data)).to include('must be a hash')
+          end
+        end
+
+        context 'when lifecycle data type is not valid' do
+          let(:params) do { lifecycle: { data: {}, type: { subhash: 'woah!' } } } end
+
+          it 'is not valid' do
+            message = AppCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:lifecycle_type)).to include('is not included in the list')
+          end
+        end
+
+        context 'when lifecycle is not provided' do
+          let(:params) do
+            {
+              name: 'some_name',
+              relationships: { space: { guid: 'some-guid' } }
+            }
+          end
+
+          it 'defaults to buildpack' do
+            message = AppCreateMessage.new(params)
+            expect(message).to be_valid
+
+            expect(message.lifecycle[:type]).to eq('buildpack')
+            expect(message.lifecycle[:data][:stack]).to eq(Stack.default.name)
           end
         end
       end

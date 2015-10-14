@@ -13,7 +13,8 @@ module VCAP::CloudController
         name:                  message.name,
         space_guid:            message.space_guid,
         environment_variables: message.environment_variables,
-        buildpack:             message.buildpack)
+        lifecycle:             message.lifecycle
+      )
 
       Repositories::Runtime::AppEventRepository.new.record_app_create(
         app,

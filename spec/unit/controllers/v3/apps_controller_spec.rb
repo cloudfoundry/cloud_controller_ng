@@ -217,11 +217,12 @@ module VCAP::CloudController
 
     describe '#create' do
       let(:space_guid) { Sham.guid }
+      let(:buildpack) {}
       let(:req_body) do
         {
           name: 'some-name',
           relationships: { space: { guid: space_guid } },
-          buildpack: 'http://some.url',
+          lifecycle: { type: 'buildpack', data: { buildpack: 'http://some.url', stack: nil } }
         }.to_json
       end
       let(:app_create) { instance_double(AppCreate) }
@@ -325,7 +326,7 @@ module VCAP::CloudController
           {
             name:       'some-name',
             relationships: { space: { guid: space_guid } },
-            buildpack:  'blagow!'
+            lifecycle: { type: 'buildpack', data: { buildpack: 'blawgow', stack: nil } }
           }.to_json
         end
 
@@ -337,6 +338,22 @@ module VCAP::CloudController
             expect(error.response_code).to eq(422)
             expect(error.message).to match('must be an existing admin buildpack or a valid git URI')
           end
+        end
+      end
+
+      context 'when the space developer requests lifecycle data' do
+        let(:req_body) do
+          {
+            name: 'some-name',
+            relationships: { space: { guid: space_guid } },
+            lifecycle: { data: { buildpack: nil, stack: nil } }
+          }.to_json
+        end
+
+        it 'moves the stack and buildpack data under the lifecycle object' do
+          response_code, response = apps_controller.create
+          expect(response_code).to eq 201
+          expect(response).to eq(app_response)
         end
       end
     end

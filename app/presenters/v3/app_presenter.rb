@@ -30,9 +30,9 @@ module VCAP::CloudController
         name:                    app.name,
         desired_state:           app.desired_state,
         total_desired_instances: app.processes.map(&:instances).reduce(:+) || 0,
-        buildpack:               app.buildpack,
         created_at:              app.created_at,
         updated_at:              app.updated_at,
+        lifecycle:               app.lifecycle,
         environment_variables:   app.environment_variables || {},
         links:                   build_links(app)
       }

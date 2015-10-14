@@ -32,6 +32,7 @@ resource 'Apps (Experimental)', type: :api do
     let(:name3) { 'my_app3' }
     let(:environment_variables) { { 'magic' => 'beautiful' } }
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:lifecycle) { { 'type' => 'buildpack', 'data' => { 'buildpack' => buildpack.name } } }
     let!(:app_model1) { VCAP::CloudController::AppModel.make(name: name1, space_guid: space.guid, created_at: Time.at(1)) }
     let!(:app_model2) { VCAP::CloudController::AppModel.make(name: name2, space_guid: space.guid, created_at: Time.at(2)) }
     let!(:app_model3) { VCAP::CloudController::AppModel.make(
@@ -39,7 +40,8 @@ resource 'Apps (Experimental)', type: :api do
       space_guid: space.guid,
       environment_variables: environment_variables,
       created_at: Time.at(3),
-      buildpack: buildpack.name)
+      lifecycle: lifecycle
+    )
     }
     let!(:app_model4) { VCAP::CloudController::AppModel.make(space_guid: VCAP::CloudController::Space.make.guid) }
     let(:space) { VCAP::CloudController::Space.make }
@@ -69,7 +71,7 @@ resource 'Apps (Experimental)', type: :api do
             'guid'   => app_model3.guid,
             'desired_state' => app_model3.desired_state,
             'total_desired_instances' => 0,
-            'buildpack' => buildpack.name,
+            'lifecycle' => lifecycle,
             'created_at' => iso8601,
             'updated_at' => nil,
             'environment_variables' => environment_variables,
@@ -90,7 +92,7 @@ resource 'Apps (Experimental)', type: :api do
             'guid'   => app_model2.guid,
             'desired_state' => app_model3.desired_state,
             'total_desired_instances' => 0,
-            'buildpack' => app_model2.buildpack,
+            'lifecycle' => app_model2.lifecycle,
             'created_at' => iso8601,
             'updated_at' => nil,
             'environment_variables' => {},
@@ -149,8 +151,8 @@ resource 'Apps (Experimental)', type: :api do
     let(:app_model) { VCAP::CloudController::AppModel.make(
       name: name,
       droplet_guid: droplet_guid,
-      environment_variables: environment_variables,
-      buildpack: buildpack.name)
+      environment_variables: environment_variables
+    )
     }
     let(:process1) { VCAP::CloudController::App.make(space: space, instances: 1) }
     let(:process2) { VCAP::CloudController::App.make(space: space, instances: 2) }
@@ -175,7 +177,6 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => guid,
         'desired_state' => app_model.desired_state,
         'total_desired_instances' => 3,
-        'buildpack' => buildpack.name,
         'created_at' => iso8601,
         'updated_at' => nil,
         'environment_variables' => environment_variables,
@@ -205,6 +206,7 @@ resource 'Apps (Experimental)', type: :api do
     let(:name) { 'my_app' }
     let(:buildpack) { VCAP::CloudController::Buildpack.make.name }
     let(:environment_variables) { { 'open' => 'source' } }
+    let(:lifecycle) { { 'type' => 'buildpack', 'data' => { 'stack' => nil, 'buildpack' => buildpack } } }
 
     before do
       space.organization.add_user(user)
@@ -215,10 +217,9 @@ resource 'Apps (Experimental)', type: :api do
     body_parameter :"relationships[space][guid]", 'Guid for a particular space', scope: [:relationships, :space], required: true
 
     body_parameter :environment_variables, 'Environment variables to be used for the App when running', required: false
-    body_parameter :buildpack, 'Default buildpack to use when staging the application packages.
-    Note: a null value will use autodetection',
-      example_values: ['ruby_buildpack', 'https://github.com/cloudfoundry/ruby-buildpack'],
-      valid_values: ['null', 'buildpack name', 'git url'],
+    body_parameter :lifecycle, 'Lifecycle to be used when creating the app.
+    Note: If no lifecycle is provided, lifecycle type defaults to buildpack.
+    Data is a required field in lifecycle',
       required: false
 
     let(:raw_post) do
@@ -249,7 +250,7 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => expected_guid,
         'desired_state' => 'STOPPED',
         'total_desired_instances' => 0,
-        'buildpack' => buildpack,
+        'lifecycle'              => created_app.lifecycle,
         'created_at' => iso8601,
         'updated_at' => nil,
         'environment_variables' => environment_variables,
@@ -288,7 +289,8 @@ resource 'Apps (Experimental)', type: :api do
     let(:space_guid) { space.guid }
     let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid) }
     let(:buildpack) { 'http://gitwheel.org/my-app' }
-    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'original_name', space_guid: space_guid) }
+    let(:lifecycle) { { 'type' => 'buildpack', 'data' => { 'buildpack' => 'default-buildpack', 'stack' => 'default-stack' } } }
+    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'original_name', space_guid: space_guid, lifecycle: lifecycle) }
 
     before do
       space.organization.add_user(user)
@@ -323,7 +325,7 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => app_model.guid,
         'desired_state' => app_model.desired_state,
         'total_desired_instances' => 0,
-        'buildpack' => buildpack,
+        'lifecycle' => lifecycle,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'environment_variables' => environment_variables,
@@ -584,9 +586,10 @@ resource 'Apps (Experimental)', type: :api do
   put '/v3/apps/:guid/current_droplet' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
-    let(:proces_types) { { web: 'start the app' } }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid, process_types: proces_types, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space_guid: space_guid) }
+    let(:process_types) { { web: 'start the app' } }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid, process_types: process_types, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:lifecycle) { { 'type' => 'buildpack', 'data' => { 'buildpack' => 'default-buildpack', 'stack' => 'default-stack' } } }
+    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space_guid: space_guid, lifecycle: lifecycle) }
 
     before do
       space.organization.add_user(user)
@@ -608,7 +611,7 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => app_model.guid,
         'desired_state' => app_model.desired_state,
         'total_desired_instances' => 1,
-        'buildpack' => app_model.buildpack,
+        'lifecycle' => app_model.lifecycle,
         'environment_variables' => {},
         'created_at' => iso8601,
         'updated_at' => iso8601,

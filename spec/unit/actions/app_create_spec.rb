@@ -12,19 +12,17 @@ module VCAP::CloudController
       let(:space_guid) { space.guid }
       let(:environment_variables) { { 'BAKED' => 'POTATO' } }
       let(:buildpack) { Buildpack.make }
-      let(:relationships) do
-        {
-          'space' => { 'guid' => space_guid }
-        }
-      end
+      let(:relationships) { { 'space' => { 'guid' => space_guid } } }
+      let(:lifecycle) { { 'type' => 'buildpack', 'data' => { 'buildpack' => buildpack.name, 'stack' => 'cflinuxfs2' } } }
 
       it 'create an app' do
-        message = AppCreateMessage.new(name: 'my-app', relationships: relationships, environment_variables: environment_variables, buildpack: buildpack.name)
+        message = AppCreateMessage.new(name: 'my-app', relationships: relationships, environment_variables: environment_variables, lifecycle: lifecycle)
         app     = app_create.create(message)
         expect(app.name).to eq('my-app')
         expect(app.space).to eq(space)
         expect(app.environment_variables).to eq(environment_variables)
-        expect(app.buildpack).to eq(buildpack.name)
+        expect(app.lifecycle).to eq(lifecycle)
+        expect(app.lifecycle['data']['buildpack']).to eq(buildpack.name)
       end
 
       it 're-raises validation errors' do
@@ -35,7 +33,7 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        message = AppCreateMessage.new(name: 'my-app', relationships: relationships, environment_variables: environment_variables, buildpack: buildpack.name)
+        message = AppCreateMessage.new(name: 'my-app', relationships: relationships, environment_variables: environment_variables, lifecycle: lifecycle)
 
         expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_create).with(
             instance_of(AppModel),
@@ -46,7 +44,7 @@ module VCAP::CloudController
               'name'                  => 'my-app',
               'relationships'         => { 'space' => { 'guid' => space_guid } },
               'environment_variables' => { 'BAKED' => 'POTATO' },
-              'buildpack'             => buildpack.name
+              'lifecycle'             => lifecycle
             }
           )
 

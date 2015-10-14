@@ -5,7 +5,19 @@ module VCAP::CloudController
   describe AppPresenter do
     describe '#present_json' do
       it 'presents the app as json' do
-        app = AppModel.make(created_at: Time.at(1), updated_at: Time.at(2), environment_variables: { 'some' => 'stuff' }, desired_state: 'STOPPED', buildpack: 'http://some.url')
+        app = AppModel.make(
+          created_at: Time.at(1),
+          updated_at: Time.at(2),
+          environment_variables: { 'some' => 'stuff' },
+          desired_state: 'STOPPED',
+          lifecycle: {
+            'type' => 'buildpack',
+            'data' => {
+              'buildpack' => 'requested-buildpack',
+              'stack' => 'requested-stack'
+            }
+          },
+        )
         process = App.make(space: app.space, instances: 4)
         app.add_process(process)
 
@@ -23,7 +35,8 @@ module VCAP::CloudController
         expect(result['links']).to include('start')
         expect(result['links']).to include('stop')
         expect(result['links']).to include('assign_current_droplet')
-        expect(result['buildpack']).to eq(app.buildpack)
+        expect(result['lifecycle']['type']).to eq('buildpack')
+        expect(result['lifecycle']).to eq(app.lifecycle)
       end
 
       it 'returns 0 if there are no processes' do
