@@ -1,4 +1,5 @@
 require 'vcap_request_id'
+require 'cors'
 
 module VCAP::CloudController
   class RackAppBuilder
@@ -10,6 +11,7 @@ module VCAP::CloudController
       Rails.application.initialize!
 
       Rack::Builder.new do
+        use CloudFoundry::Middleware::Cors, config[:allowed_cors_domains]
         use CloudFoundry::Middleware::VcapRequestId
         use Rack::CommonLogger, logger if logger
 

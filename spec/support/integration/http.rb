@@ -53,4 +53,11 @@ module IntegrationHttp
     response.extend(JsonBody)
     response
   end
+
+  def make_options_request(path, headers={})
+    http = Net::HTTP.new('localhost', '8181')
+    response = http.options(path, headers)
+    response.extend(JsonBody)
+    response
+  end
 end
