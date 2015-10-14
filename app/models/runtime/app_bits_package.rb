@@ -4,6 +4,7 @@ require 'cloud_controller/blobstore/fingerprints_collection'
 class AppBitsPackage
   class PackageNotFound < StandardError; end
   class ZipSizeExceeded < StandardError; end
+  class InvalidZip < StandardError; end
 
   attr_reader :package_blobstore, :global_app_bits_cache, :max_package_size, :tmp_dir
 
@@ -40,6 +41,7 @@ class AppBitsPackage
     raise PackageNotFound if package.nil?
 
     begin
+      raise InvalidZip.new('The zip provided was not valid') unless valid_zip?(package_path)
       raise ZipSizeExceeded if @max_package_size && package_size(package_path) > @max_package_size
 
       package_blobstore.cp_to_blobstore(package_path, package_guid)
@@ -66,6 +68,17 @@ class AppBitsPackage
   end
 
   private
+
+  def valid_zip?(package_path)
+    command = "unzip -l #{package_path}"
+    r,w = IO.pipe
+    pid = Process.spawn(command, :out => w, :err => [:child, :out])
+    w.close
+    Process.wait2(pid)
+    output = r.read
+    r.close
+    !output.split("\n").last.match(/^\s*(\d+)/).nil?
+  end
 
   def package_size(package_path)
     zip_info = `unzip -l #{package_path}`
