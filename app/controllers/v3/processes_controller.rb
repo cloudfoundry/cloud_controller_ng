@@ -7,9 +7,8 @@ require 'actions/process_scale'
 require 'actions/process_update'
 require 'messages/process_update_message'
 require 'messages/processes_list_message'
-require 'controllers/base/base_controller_v3'
 
-class ProcessesController < VCAP::CloudController::RestController::BaseControllerV3
+class ProcessesController < ApplicationController
   def index
     message = ProcessesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?

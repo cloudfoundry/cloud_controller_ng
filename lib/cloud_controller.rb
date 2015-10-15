@@ -1,9 +1,6 @@
 require 'vcap/common'
 
-require 'rails'
-require 'action_controller/railtie'
-
-require 'controllers/base/base_controller_v3.rb'
+require File.expand_path('../../config/application', __FILE__)
 
 require 'sinatra'
 require 'sequel'
