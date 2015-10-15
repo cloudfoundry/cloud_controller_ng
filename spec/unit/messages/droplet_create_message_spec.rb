@@ -99,6 +99,7 @@ module VCAP::CloudController
 
           message = DropletCreateMessage.new(params)
           expect(message).not_to be_valid
+          expect(message.errors[:lifecycle]).to include('Data must be present')
           expect(message.errors[:lifecycle_data]).to include('must be a hash')
         end
 

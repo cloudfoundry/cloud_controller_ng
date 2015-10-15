@@ -236,6 +236,7 @@ module VCAP::CloudController
             message = AppCreateMessage.new(params)
             expect(message).not_to be_valid
             expect(message.errors_on(:lifecycle_data)).to include('must be a hash')
+            expect(message.errors[:lifecycle]).to include('Data must be present')
           end
         end
 

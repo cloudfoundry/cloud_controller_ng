@@ -60,7 +60,7 @@ module VCAP::CloudController::Validators
     end
 
     def validate_data_model(config, record)
-      data_model = "#{record.class}::#{config.data_class}".constantize.new(config.data.symbolize_keys)
+      data_model = "VCAP::CloudController::#{config.data_class}".constantize.new(config.data.symbolize_keys)
       if !data_model.valid?
         record.errors[:lifecycle].concat data_model.errors.full_messages
       end

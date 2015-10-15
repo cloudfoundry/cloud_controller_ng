@@ -181,7 +181,7 @@ module VCAP::CloudController::Validators
     end
 
     describe 'LifecycleDataValidator' do
-      class DataMessage < VCAP::CloudController::BaseMessage
+      class VCAP::CloudController::DataMessage < VCAP::CloudController::BaseMessage
         attr_accessor :type, :data, :allow_data_nil
         def allowed_keys
           [:type, :data, :allow_data_nil]
@@ -197,7 +197,7 @@ module VCAP::CloudController::Validators
           )
         end
 
-        class FooData < VCAP::CloudController::BaseMessage
+        class VCAP::CloudController::FooData < VCAP::CloudController::BaseMessage
           attr_accessor :foo
 
           def allowed_keys
@@ -207,7 +207,7 @@ module VCAP::CloudController::Validators
           validates :foo, numericality: true
         end
 
-        class BarData < VCAP::CloudController::BaseMessage
+        class VCAP::CloudController::BarData < VCAP::CloudController::BaseMessage
           attr_accessor :bar
 
           def allowed_keys
@@ -219,24 +219,24 @@ module VCAP::CloudController::Validators
       end
 
       it "adds data' error message to the base class" do
-        message = DataMessage.new({ allow_data_nil: true, type: 'foo', data: { foo: 'not a number' } })
+        message = VCAP::CloudController::DataMessage.new({ allow_data_nil: true, type: 'foo', data: { foo: 'not a number' } })
         expect(message).not_to be_valid
         expect(message.errors_on(:lifecycle)).to include('Foo is not a number')
       end
 
       it 'handles polymorphic types of data' do
-        message = DataMessage.new({ allow_data_nil: true, type: 'bar', data: { bar: 'not a number' } })
+        message = VCAP::CloudController::DataMessage.new({ allow_data_nil: true, type: 'bar', data: { bar: 'not a number' } })
         expect(message).not_to be_valid
         expect(message.errors_on(:lifecycle)).to include('Bar is not a number')
       end
 
       it "doesn't error if data is not provided and config specifies it to be so" do
-        message = DataMessage.new({ allow_data_nil: true, type: 'foo' })
+        message = VCAP::CloudController::DataMessage.new({ allow_data_nil: true, type: 'foo' })
         expect(message).to be_valid
       end
 
-      it 'adds error if data is not provided and config speci' do
-        message = DataMessage.new({ allow_data_nil: false, type: 'foo' })
+      it 'adds error if data is not provided and config specifies it to be so' do
+        message = VCAP::CloudController::DataMessage.new({ allow_data_nil: false, type: 'foo' })
         expect(message).not_to be_valid
       end
     end
