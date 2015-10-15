@@ -52,10 +52,10 @@ module VCAP::CloudController
           end
 
           samples = []
-          100.times do
+          1000.times do
             samples.push(subject.find_stager('stack-name', 1024, 0))
           end
-          expect(samples.uniq.size).to be == placement_percentage
+          expect(samples.uniq.size).to be_within(1).of(placement_percentage)
         end
       end
 
