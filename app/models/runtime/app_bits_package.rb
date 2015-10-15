@@ -71,8 +71,8 @@ class AppBitsPackage
 
   def valid_zip?(package_path)
     command = "unzip -l #{package_path}"
-    r,w = IO.pipe
-    pid = Process.spawn(command, :out => w, :err => [:child, :out])
+    r, w = IO.pipe
+    pid = Process.spawn(command, out: w, err: [:child, :out])
     w.close
     Process.wait2(pid)
     output = r.read
