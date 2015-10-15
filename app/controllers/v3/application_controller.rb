@@ -18,6 +18,7 @@ class ApplicationController < ActionController::Base
 
   wrap_parameters :body, format: [:json]
 
+  before_filter :set_locale
   around_filter :manage_request_id
   before_filter :set_current_user
   around_filter :log_request
@@ -84,5 +85,9 @@ class ApplicationController < ActionController::Base
     yield
   ensure
     logger.info("Completed request, Vcap-Request-Id: #{request_id}, Status: #{status}")
+  end
+
+  def set_locale
+    I18n.locale = request.headers['HTTP_ACCEPT_LANGUAGE']
   end
 end
