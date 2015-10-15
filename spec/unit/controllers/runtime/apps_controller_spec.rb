@@ -903,7 +903,7 @@ module VCAP::CloudController
             end
 
             it 'succeeds' do
-              expect(last_response.status).to eq(201)
+              expect(last_response.status).to eq(204)
             end
           end
         end

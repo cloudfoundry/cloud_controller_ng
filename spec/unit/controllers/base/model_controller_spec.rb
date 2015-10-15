@@ -618,7 +618,7 @@ module VCAP::CloudController
 
             delete "/v2/test_models/#{model.guid}/test_model_many_to_ones/#{associated_model2.guid}", '{}', admin_headers
 
-            expect(last_response.status).to eq(201)
+            expect(last_response.status).to eq(204)
             model.reload
             expect(model.test_model_many_to_ones).to be_empty
           end

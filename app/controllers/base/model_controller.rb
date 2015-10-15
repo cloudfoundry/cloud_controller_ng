@@ -204,6 +204,7 @@ module VCAP::CloudController::RestController
 
       after_update(obj)
 
+      return [HTTP::NO_CONTENT] if verb == 'remove'
       [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
     end
 

@@ -150,8 +150,7 @@ module LegacyApiDsl
         example "Remove #{model.to_s.titleize} from the #{outer_model.to_s.titleize}" do
           path = "#{self.class.api_version}/#{outer_model.to_s.pluralize}/#{send(:guid)}/#{model.to_s.pluralize}/#{send("associated_#{model}_guid")}"
           client.delete path, '', headers
-          expect(status).to eq 201
-          standard_entity_response parsed_response, outer_model
+          expect(status).to eq 204
         end
       end
     end
