@@ -1,10 +1,4 @@
-$LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
-$LOAD_PATH.unshift(File.expand_path('../../app', __FILE__))
-$LOAD_PATH.unshift(File.expand_path('../../middleware', __FILE__))
-
-require 'rubygems'
-require 'bundler'
-require 'bundler/setup'
+require File.expand_path('../../config/boot', __FILE__)
 
 if ENV['CODECLIMATE_REPO_TOKEN'] && ENV['COVERAGE']
   require 'codeclimate-test-reporter'

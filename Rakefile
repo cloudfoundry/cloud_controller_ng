@@ -1,9 +1,4 @@
-$LOAD_PATH.unshift(File.expand_path('../lib', __FILE__))
-$LOAD_PATH.unshift(File.expand_path('../app', __FILE__))
-$LOAD_PATH.unshift(File.expand_path('../middleware', __FILE__))
-
-ENV['BUNDLE_GEMFILE'] ||= File.expand_path('../Gemfile', __FILE__)
-require 'bundler/setup'
+require File.expand_path('../config/boot', __FILE__)
 
 require 'yaml'
 require 'sequel'

@@ -8,8 +8,6 @@ module VCAP::CloudController
 
       logger = access_log(config)
 
-      Rails.application.initialize!
-
       Rack::Builder.new do
         use CloudFoundry::Middleware::Cors, config[:allowed_cors_domains]
         use CloudFoundry::Middleware::VcapRequestId
