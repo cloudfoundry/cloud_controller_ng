@@ -1,5 +1,6 @@
 require 'vcap_request_id'
 require 'cors'
+require 'request_metrics'
 
 module VCAP::CloudController
   class RackAppBuilder
@@ -9,6 +10,7 @@ module VCAP::CloudController
       logger = access_log(config)
 
       Rack::Builder.new do
+        use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::Cors, config[:allowed_cors_domains]
         use CloudFoundry::Middleware::VcapRequestId
         use Rack::CommonLogger, logger if logger
@@ -19,7 +21,7 @@ module VCAP::CloudController
         end
 
         map '/' do
-          run FrontController.new(config, token_decoder, request_metrics)
+          run FrontController.new(config, token_decoder)
         end
 
         map '/v3' do

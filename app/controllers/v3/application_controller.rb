@@ -20,6 +20,7 @@ class ApplicationController < ActionController::Base
 
   around_filter :manage_request_id
   before_filter :set_current_user
+  around_filter :log_request
   before_filter :validate_scheme!
   before_filter :check_read_permissions!, only: [:index, :show]
   before_filter :check_write_permissions!, except: [:index, :show]
@@ -38,6 +39,10 @@ class ApplicationController < ActionController::Base
 
   def current_user_email
     VCAP::CloudController::SecurityContext.current_user_email
+  end
+
+  def request_id
+    ::VCAP::Request.current_id
   end
 
   private
@@ -72,5 +77,12 @@ class ApplicationController < ActionController::Base
   def validate_scheme!
     validator = VCAP::CloudController::RequestSchemeValidator.new
     validator.validate!(current_user, roles, Config.config, request)
+  end
+
+  def log_request
+    logger.info("Started request, Vcap-Request-Id: #{request_id}, User: #{current_user.nil? ? nil : current_user.guid}")
+    yield
+  ensure
+    logger.info("Completed request, Vcap-Request-Id: #{request_id}, Status: #{status}")
   end
 end
