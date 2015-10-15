@@ -367,7 +367,6 @@ module VCAP::CloudController
           expect {
             route_binding.reload
           }.to raise_error 'Record not found'
-
         end
       end
 
