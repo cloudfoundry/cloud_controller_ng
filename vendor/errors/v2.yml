@@ -253,6 +253,11 @@
   http_code: 400
   message: "The service instance cannot be created with the invalid route service url: %s"
 
+60020:
+  name: ServiceInstanceRouteServiceRequiresDiego
+  http_code: 400
+  message: "Route services are only supported for apps on Diego."
+
 70001:
   name: RuntimeInvalid
   http_code: 400

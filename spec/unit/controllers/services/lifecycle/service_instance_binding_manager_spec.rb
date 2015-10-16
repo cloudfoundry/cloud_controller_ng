@@ -130,6 +130,19 @@ module VCAP::CloudController
               end
               manager.create_route_service_instance_binding(route.guid, service_instance.guid)
             end
+
+            context 'when the app does not use diego' do
+              before do
+                non_diego_app = AppFactory.make(diego: false, space: route.space, state: 'STARTED')
+                non_diego_app.add_route(route)
+              end
+
+              it 'raises an error' do
+                expect{
+                  manager.create_route_service_instance_binding(route.guid, service_instance.guid)
+                }.to raise_error(ServiceInstanceBindingManager::RouteServiceRequiresDiego)
+              end
+            end
           end
         end
 

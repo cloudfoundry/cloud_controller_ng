@@ -121,6 +121,10 @@ module VCAP::CloudController
       !Domain.find(name: fqdn).nil?
     end
 
+    def all_apps_diego?
+      apps.all?(&:diego?)
+    end
+
     def validate_app(app)
       return unless space && app && domain
 

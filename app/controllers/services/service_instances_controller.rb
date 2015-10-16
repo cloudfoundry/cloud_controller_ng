@@ -261,6 +261,8 @@ module VCAP::CloudController
       raise VCAP::Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance')
     rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
+    rescue ServiceInstanceBindingManager::RouteServiceRequiresDiego
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceRequiresDiego')
     end
 
     def remove_related(guid, name, other_guid)

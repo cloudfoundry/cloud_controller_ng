@@ -518,6 +518,31 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'all_apps_diego?' do
+        let(:diego_app) { AppFactory.make(diego: true) }
+        let(:route) { Route.make(space: diego_app.space, domain: SharedDomain.make) }
+
+        before do
+          diego_app.add_route(route)
+        end
+
+        it 'returns true' do
+          expect(route.all_apps_diego?).to eq(true)
+        end
+
+        context 'when some apps are not using diego' do
+          let(:non_diego_app) { AppFactory.make(diego: false, space: diego_app.space) }
+
+          before do
+            non_diego_app.add_route(route)
+          end
+
+          it 'returns false' do
+            expect(route.all_apps_diego?).to eq(false)
+          end
+        end
+      end
     end
 
     describe 'relations' do

@@ -2671,6 +2671,62 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the route is mapped to a diego app' do
+        before do
+          diego_app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+          diego_app.add_route(route)
+        end
+
+        it 'successfully binds to the route' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          expect(last_response).to have_status_code(201)
+        end
+
+        context 'and is mapped to another diego app as well' do
+          before do
+            another_diego_app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+            another_diego_app.add_route(route)
+          end
+
+          it 'raises RouteServiceRequiresDiego' do
+            put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+            expect(last_response).to have_status_code(201)
+          end
+        end
+      end
+
+      context 'when the route is mapped to a non-diego app' do
+        before do
+          app = AppFactory.make(diego: false, space: route.space, state: 'STARTED')
+          app.add_route(route)
+        end
+
+        it 'raises RouteServiceRequiresDiego' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+          expect(last_response.status).to eq(400)
+          expect(JSON.parse(last_response.body)['description']).
+            to eq('Route services are only supported for apps on Diego.')
+        end
+
+        context 'and is mapped to a diego app' do
+          before do
+            diego_app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+            diego_app.add_route(route)
+          end
+
+          it 'raises RouteServiceRequiresDiego' do
+            put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+            expect(last_response.status).to eq(400)
+
+            expect(JSON.parse(last_response.body)['description']).
+              to eq('Route services are only supported for apps on Diego.')
+          end
+        end
+      end
+
       context 'when attempting to bind to an unbindable service' do
         before do
           service_instance.service.bindable = false
