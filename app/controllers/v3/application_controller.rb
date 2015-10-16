@@ -23,6 +23,7 @@ class ApplicationController < ActionController::Base
   before_filter :set_current_user
   around_filter :log_request
   before_filter :validate_scheme!
+  before_filter :validate_token!
   before_filter :check_read_permissions!, only: [:index, :show]
   before_filter :check_write_permissions!, except: [:index, :show]
 
@@ -89,5 +90,17 @@ class ApplicationController < ActionController::Base
 
   def set_locale
     I18n.locale = request.headers['HTTP_ACCEPT_LANGUAGE']
+  end
+
+  def validate_token!
+    return if current_user
+
+    if VCAP::CloudController::SecurityContext.missing_token?
+      raise VCAP::Errors::ApiError.new_from_details('NotAuthenticated')
+    elsif VCAP::CloudController::SecurityContext.invalid_token?
+      raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
+    end
+
+    raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
   end
 end
