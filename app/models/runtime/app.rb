@@ -359,10 +359,12 @@ module VCAP::CloudController
 
     def validate_route(route)
       objection = Errors::InvalidRouteRelation.new(route.guid)
+      route_service_objection = Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
 
       raise objection if route.nil?
       raise objection if space.nil?
       raise objection if route.space_id != space.id
+      raise route_service_objection if !route.route_service_url.nil? && !diego?
 
       raise objection unless route.domain.usable_by_organization?(space.organization)
     end

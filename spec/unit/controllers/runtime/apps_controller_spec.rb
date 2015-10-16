@@ -932,6 +932,28 @@ module VCAP::CloudController
       end
     end
 
+    describe 'on route bind' do
+      context 'with a non-Diego app' do
+        let(:space) { route.space }
+        let(:app_obj) { AppFactory.make(diego: false, space: space, state: 'STARTED') }
+        let(:user) { make_developer_for_space(space) }
+        let(:route_binding) { RouteBinding.make }
+        let(:service_instance) { route_binding.service_instance }
+        let(:route) { route_binding.route }
+
+        context 'and the route is already bound to a routing service' do
+          let(:decoded_response) { MultiJson.load(last_response.body) }
+
+          it 'fails to change the route' do
+            put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil, json_headers(headers_for(user))
+
+            expect(decoded_response['description']).to match(/Invalid relation: The requested route relation is invalid: .* - Route services are only supported for apps on Diego/)
+            expect(last_response.status).to eq(400)
+          end
+        end
+      end
+    end
+
     describe 'on instance number change' do
       before do
         FeatureFlag.create(name: 'diego_docker', enabled: true)

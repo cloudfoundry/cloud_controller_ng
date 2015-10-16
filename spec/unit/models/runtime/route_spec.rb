@@ -618,7 +618,7 @@ module VCAP::CloudController
       context 'with route bindings' do
         let(:route_binding) { RouteBinding.make }
         let(:route) { route_binding.route }
-        let(:app) { AppFactory.make(space: route.space) }
+        let(:app) { AppFactory.make(space: route.space, diego: true) }
 
         before do
           app.add_route(route)

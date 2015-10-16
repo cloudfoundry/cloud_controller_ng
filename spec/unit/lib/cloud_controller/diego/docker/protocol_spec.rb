@@ -18,6 +18,7 @@ module VCAP::CloudController
             docker_image: 'fake/docker_image',
             health_check_timeout: 120,
             enable_ssh: true,
+            diego: true
           )
         end
 
@@ -92,7 +93,7 @@ module VCAP::CloudController
           end
 
           context 'when the app memory is less than the minimum staging memory' do
-            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', memory: 127) }
+            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', memory: 127, diego: true) }
 
             subject(:message) do
               protocol.stage_app_message(app, config)
@@ -104,7 +105,7 @@ module VCAP::CloudController
           end
 
           context 'when the app disk is less than the minimum staging disk' do
-            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', disk_quota: 127) }
+            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', disk_quota: 127, diego: true) }
 
             subject(:message) do
               protocol.stage_app_message(app, config)
@@ -116,7 +117,7 @@ module VCAP::CloudController
           end
 
           context 'when the app fd limit is less than the minimum staging fd limit' do
-            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', file_descriptors: 127) }
+            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', file_descriptors: 127, diego: true) }
 
             subject(:message) do
               protocol.stage_app_message(app, config)
@@ -140,7 +141,7 @@ module VCAP::CloudController
                 docker_email: email
               }
             end
-            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', docker_credentials_json: docker_credentials) }
+            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', docker_credentials_json: docker_credentials, diego: true) }
 
             it 'uses the provided credentials to stage a Docker app' do
               expect(message[:lifecycle_data][:docker_login_server]).to eq(server)
@@ -222,7 +223,7 @@ module VCAP::CloudController
               TestConfig.override(default_health_check_timeout: default_health_check_timeout)
             end
 
-            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', health_check_timeout: nil) }
+            let(:app) { AppFactory.make(docker_image: 'fake/docker_image', health_check_timeout: nil, diego: true) }
 
             it 'uses the default app health check from the config' do
               expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)
@@ -231,7 +232,7 @@ module VCAP::CloudController
 
           context 'when there is a cached_docker_image' do
             let(:cached_docker_image) { '10.244.2.6:8080/uuid' }
-            let(:app) { AppFactory.make(docker_image: 'cloudfoundry/diego-docker-app:latest') }
+            let(:app) { AppFactory.make(docker_image: 'cloudfoundry/diego-docker-app:latest', diego: true) }
 
             before { app.current_droplet.cached_docker_image = cached_docker_image }
 
@@ -248,6 +249,7 @@ module VCAP::CloudController
                 space: Space.make,
                 stack: Stack.default,
                 docker_image: docker_image,
+                diego: true
               )
             end
 

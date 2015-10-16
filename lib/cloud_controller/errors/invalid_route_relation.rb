@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Errors
     class InvalidRouteRelation < InvalidRelation
       def to_s
-        "The URL was not available [route ID #{super}]"
+        "The requested route relation is invalid: #{super}"
       end
     end
   end

@@ -2707,7 +2707,7 @@ module VCAP::CloudController
 
           expect(last_response.status).to eq(400)
           expect(JSON.parse(last_response.body)['description']).
-            to eq('Route services are only supported for apps on Diego.')
+            to eq('Route services are only supported for apps on Diego. Unbind the service instance from the route or enable Diego for the app.')
         end
 
         context 'and is mapped to a diego app' do
@@ -2722,7 +2722,7 @@ module VCAP::CloudController
             expect(last_response.status).to eq(400)
 
             expect(JSON.parse(last_response.body)['description']).
-              to eq('Route services are only supported for apps on Diego.')
+              to eq('Route services are only supported for apps on Diego. Unbind the service instance from the route or enable Diego for the app.')
           end
         end
       end

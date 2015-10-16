@@ -256,7 +256,7 @@
 60020:
   name: ServiceInstanceRouteServiceRequiresDiego
   http_code: 400
-  message: "Route services are only supported for apps on Diego."
+  message: "Route services are only supported for apps on Diego. Unbind the service instance from the route or enable Diego for the app."
 
 70001:
   name: RuntimeInvalid

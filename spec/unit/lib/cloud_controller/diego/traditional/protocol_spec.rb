@@ -21,6 +21,7 @@ module VCAP::CloudController
           AppFactory.make(
             health_check_timeout: default_health_check_timeout,
             command: 'start_me',
+            diego: true
           )
         end
 
@@ -74,7 +75,7 @@ module VCAP::CloudController
           let(:password) { 'password' }
 
           let(:message) { protocol.stage_app_message(app, config) }
-          let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id') }
+          let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id', diego: true) }
           let(:buildpack_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
 
           it 'contains the correct payload for staging a traditional app' do
@@ -144,7 +145,7 @@ module VCAP::CloudController
           end
 
           context 'when the app memory is less than the minimum staging memory' do
-            let(:app) { AppFactory.make(memory: 127) }
+            let(:app) { AppFactory.make(memory: 127, diego: true) }
 
             subject(:message) do
               protocol.stage_app_message(app, config)
@@ -156,7 +157,7 @@ module VCAP::CloudController
           end
 
           context 'when the app disk is less than the minimum staging disk' do
-            let(:app) { AppFactory.make(disk_quota: 127) }
+            let(:app) { AppFactory.make(disk_quota: 127, diego: true) }
 
             subject(:message) do
               protocol.stage_app_message(app, config)
@@ -168,7 +169,7 @@ module VCAP::CloudController
           end
 
           context 'when the app fd limit is less than the minimum staging fd limit' do
-            let(:app) { AppFactory.make(file_descriptors: 127) }
+            let(:app) { AppFactory.make(file_descriptors: 127, diego: true) }
 
             subject(:message) do
               protocol.stage_app_message(app, config)
@@ -249,7 +250,7 @@ module VCAP::CloudController
               TestConfig.override(default_health_check_timeout: default_health_check_timeout)
             end
 
-            let(:app) { AppFactory.make(health_check_timeout: nil) }
+            let(:app) { AppFactory.make(health_check_timeout: nil, diego: true) }
 
             it 'uses the default app health check from the config' do
               expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)
