@@ -18,14 +18,15 @@ class ApplicationController < ActionController::Base
 
   wrap_parameters :body, format: [:json]
 
-  before_filter :set_locale
-  around_filter :manage_request_id
-  before_filter :set_current_user
-  around_filter :log_request
-  before_filter :validate_scheme!
-  before_filter :validate_token!
-  before_filter :check_read_permissions!, only: [:index, :show]
-  before_filter :check_write_permissions!, except: [:index, :show]
+  before_action :set_locale
+  around_action :manage_request_id
+  before_action :set_current_user, except: [:internal_error]
+  before_action :validate_scheme!, except: [:not_found, :internal_error]
+  before_action :validate_token!, except: [:not_found, :internal_error]
+  before_action :check_read_permissions!, only: [:index, :show]
+  before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error]
+
+  rescue_from VCAP::Errors::ApiError, with: :handle_api_error
 
   def query_params
     request.query_parameters.with_indifferent_access
@@ -45,6 +46,10 @@ class ApplicationController < ActionController::Base
 
   def request_id
     ::VCAP::Request.current_id
+  end
+
+  def logger
+    @logger ||= Steno.logger('cc.api')
   end
 
   private
@@ -74,18 +79,12 @@ class ApplicationController < ActionController::Base
     auth_token = request.headers['HTTP_AUTHORIZATION']
     token_decoder = VCAP::UaaTokenDecoder.new(Config.config[:uaa])
     VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder).configure(auth_token)
+    logger.info("User for request: #{current_user.nil? ? nil : current_user.guid}")
   end
 
   def validate_scheme!
     validator = VCAP::CloudController::RequestSchemeValidator.new
     validator.validate!(current_user, roles, Config.config, request)
-  end
-
-  def log_request
-    logger.info("Started request, Vcap-Request-Id: #{request_id}, User: #{current_user.nil? ? nil : current_user.guid}")
-    yield
-  ensure
-    logger.info("Completed request, Vcap-Request-Id: #{request_id}, Status: #{status}")
   end
 
   def set_locale
@@ -102,5 +101,11 @@ class ApplicationController < ActionController::Base
     end
 
     raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
+  end
+
+  def handle_api_error(error)
+    presenter = ErrorPresenter.new(error, Rails.env.test?)
+    logger.info(presenter.log_message)
+    render status: presenter.response_code, json: MultiJson.dump(presenter.error_hash, pretty: true)
   end
 end

@@ -13,7 +13,7 @@ describe ApplicationController, type: :controller do
     end
 
     def create
-      head 204
+      head 201
     end
   end
 
@@ -40,17 +40,15 @@ describe ApplicationController, type: :controller do
       end
 
       it 'sets the token to invalid' do
-        expect { get :index }.to raise_error(VCAP::Errors::ApiError).
-            and not_change { VCAP::CloudController::SecurityContext.current_user }.from(nil).
-                and change { VCAP::CloudController::SecurityContext.token }.to(:invalid_token)
+        expect { get :index }.to not_change { VCAP::CloudController::SecurityContext.current_user }.from(nil).
+          and change { VCAP::CloudController::SecurityContext.token }.to(:invalid_token)
       end
     end
 
     context 'when there is no auth token provided' do
       it 'sets security context to be empty' do
-        expect { get :index }.to raise_error(VCAP::Errors::ApiError).
-            and not_change { VCAP::CloudController::SecurityContext.current_user }.from(nil).
-                and not_change { VCAP::CloudController::SecurityContext.token }.from(nil)
+        expect { get :index }.to not_change { VCAP::CloudController::SecurityContext.current_user }.from(nil).
+          and not_change { VCAP::CloudController::SecurityContext.token }.from(nil)
       end
     end
   end
@@ -63,29 +61,29 @@ describe ApplicationController, type: :controller do
     end
 
     it 'is required on index' do
-      expect {
-        get :index
-      }.to raise_error(VCAP::Errors::ApiError, 'You are not authorized to perform the requested action')
+      get :index
+
+      expect(response.status).to eq(403)
+      expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
     end
 
     it 'is required on show' do
-      expect {
-        get :show, id: 1
-      }.to raise_error(VCAP::Errors::ApiError, 'You are not authorized to perform the requested action')
+      get :show, id: 1
+
+      expect(response.status).to eq(403)
+      expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
     end
 
     it 'is not required on other actions' do
-      expect {
-        post :create
-      }.not_to raise_error
+      post :create
+      expect(response.status).to eq(201)
     end
 
     it 'is not required for admin' do
       @request.env.merge!(admin_headers)
 
-      expect {
-        post :create
-      }.not_to raise_error
+      post :create
+      expect(response.status).to eq(201)
     end
   end
 
@@ -97,29 +95,26 @@ describe ApplicationController, type: :controller do
     end
 
     it 'is not required on index' do
-      expect {
-        get :index
-      }.not_to raise_error
+      get :index
+      expect(response.status).to eq(200)
     end
 
     it 'is not required on show' do
-      expect {
-        get :show, id: 1
-      }.not_to raise_error
+      get :show, id: 1
+      expect(response.status).to eq(204)
     end
 
     it 'is required on other actions' do
-      expect {
-        post :create
-      }.to raise_error(VCAP::Errors::ApiError, 'You are not authorized to perform the requested action')
+      post :create
+      expect(response.status).to eq(403)
+      expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
     end
 
     it 'is not required for admin' do
       @request.env.merge!(admin_headers)
 
-      expect {
-        post :create
-      }.not_to raise_error
+      post :create
+      expect(response.status).to eq(201)
     end
   end
 
@@ -137,7 +132,6 @@ describe ApplicationController, type: :controller do
 
     it 'unsets the vcap request current_id after the request completes' do
       get :index
-
       expect(VCAP::Request.current_id).to be_nil
     end
   end
@@ -154,9 +148,9 @@ describe ApplicationController, type: :controller do
       end
 
       it 'raises an error' do
-        expect {
-          get :index
-        }.to raise_error(VCAP::Errors::ApiError, 'You are not authorized to perform the requested action')
+        get :index
+        expect(response.status).to eq(403)
+        expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
       end
     end
 
@@ -190,9 +184,9 @@ describe ApplicationController, type: :controller do
       let(:headers) { {} }
 
       it 'raises NotAuthenticated' do
-        expect {
-          get :index
-        }.to raise_error(VCAP::Errors::ApiError, 'Authentication error')
+        get :index
+        expect(response.status).to eq(401)
+        expect(MultiJson.load(response.body)['description']).to eq('Authentication error')
       end
     end
 
@@ -200,9 +194,9 @@ describe ApplicationController, type: :controller do
       let(:headers) { { 'HTTP_AUTHORIZATION' => 'bearer potato' } }
 
       it 'raises InvalidAuthToken' do
-        expect {
-          get :index
-        }.to raise_error(VCAP::Errors::ApiError, 'Invalid Auth Token')
+        get :index
+        expect(response.status).to eq(401)
+        expect(MultiJson.load(response.body)['description']).to eq('Invalid Auth Token')
       end
     end
 
@@ -219,9 +213,9 @@ describe ApplicationController, type: :controller do
       end
 
       it 'raises InvalidAuthToken' do
-        expect {
-          get :index
-        }.to raise_error(VCAP::Errors::ApiError, 'Invalid Auth Token')
+        get :index
+        expect(response.status).to eq(401)
+        expect(MultiJson.load(response.body)['description']).to eq('Invalid Auth Token')
       end
     end
   end

@@ -1,6 +1,7 @@
 require 'vcap_request_id'
 require 'cors'
 require 'request_metrics'
+require 'request_logs'
 
 module VCAP::CloudController
   class RackAppBuilder
@@ -13,6 +14,7 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::Cors, config[:allowed_cors_domains]
         use CloudFoundry::Middleware::VcapRequestId
+        use CloudFoundry::Middleware::RequestLogs, Steno.logger('cc.api')
         use Rack::CommonLogger, logger if logger
 
         if config[:development_mode] && config[:newrelic_enabled]

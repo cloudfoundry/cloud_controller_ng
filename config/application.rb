@@ -1,7 +1,11 @@
 require 'rails'
 require 'action_controller/railtie'
 
+Rails.logger = Logger.new('/dev/null')
+
 class Application < ::Rails::Application
+  config.exceptions_app = self.routes
+
   config.middleware.delete 'ActionDispatch::Session::CookieStore'
   config.middleware.delete 'ActionDispatch::Cookies'
   config.middleware.delete 'ActionDispatch::Flash'
