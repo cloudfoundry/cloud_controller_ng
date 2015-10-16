@@ -307,6 +307,36 @@ module VCAP::CloudController
         expect(JSON.parse(last_response.body)['total_results']).to eql(1)
       end
 
+      context 'when the route is mapped to a non-diego app' do
+        before do
+          app = AppFactory.make(diego: false, space: route.space, state: 'STARTED')
+          app.add_route(route)
+        end
+
+        it 'raises RouteServiceRequiresDiego' do
+          put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+          expect(last_response.status).to eq(400)
+          expect(JSON.parse(last_response.body)['description']).
+            to eq('Route services are only supported for apps on Diego.')
+        end
+
+        context 'and is mapped to a diego app' do
+          before do
+            diego_app = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+            diego_app.add_route(route)
+          end
+
+          it 'raises RouteServiceRequiresDiego' do
+            put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+            expect(last_response.status).to eq(400)
+
+            expect(JSON.parse(last_response.body)['description']).
+              to eq('Route services are only supported for apps on Diego.')
+          end
+        end
+      end
       context 'binding permissions' do
         context 'admin' do
           it 'allows an admin to bind a space' do

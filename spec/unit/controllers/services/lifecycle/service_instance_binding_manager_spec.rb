@@ -138,7 +138,7 @@ module VCAP::CloudController
               end
 
               it 'raises an error' do
-                expect{
+                expect {
                   manager.create_route_service_instance_binding(route.guid, service_instance.guid)
                 }.to raise_error(ServiceInstanceBindingManager::RouteServiceRequiresDiego)
               end
