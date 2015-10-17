@@ -75,12 +75,14 @@ describe ApplicationController, type: :controller do
     end
 
     it 'is not required on other actions' do
+      @request.env.merge!(json_headers({}))
+
       post :create
       expect(response.status).to eq(201)
     end
 
     it 'is not required for admin' do
-      @request.env.merge!(admin_headers)
+      @request.env.merge!(json_headers(admin_headers))
 
       post :create
       expect(response.status).to eq(201)
@@ -111,7 +113,7 @@ describe ApplicationController, type: :controller do
     end
 
     it 'is not required for admin' do
-      @request.env.merge!(admin_headers)
+      @request.env.merge!(json_headers(admin_headers))
 
       post :create
       expect(response.status).to eq(201)
@@ -217,6 +219,28 @@ describe ApplicationController, type: :controller do
         expect(response.status).to eq(401)
         expect(MultiJson.load(response.body)['description']).to eq('Invalid Auth Token')
       end
+    end
+  end
+
+  describe 'application/json content type validation' do
+    before do
+      @request.env.merge!(admin_headers)
+    end
+
+    it 'is not required on index' do
+      get :index
+      expect(response.status).to eq(200)
+    end
+
+    it 'is not required on show' do
+      get :show, id: 1
+      expect(response.status).to eq(204)
+    end
+
+    it 'is required on other actions' do
+      post :create
+      expect(response.status).to eq(400)
+      expect(MultiJson.load(response.body)['description']).to eq('Invalid content type, expected: application/json')
     end
   end
 end

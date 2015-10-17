@@ -21,10 +21,11 @@ class ApplicationController < ActionController::Base
   before_action :set_locale
   around_action :manage_request_id
   before_action :set_current_user, except: [:internal_error]
-  before_action :validate_scheme!, except: [:not_found, :internal_error]
-  before_action :validate_token!, except: [:not_found, :internal_error]
+  before_action :validate_scheme!, except: [:not_found, :internal_error, :bad_request]
+  before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
   before_action :check_read_permissions!, only: [:index, :show]
-  before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error]
+  before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error, :bad_request]
+  before_action :validate_content_type!, except: [:index, :show, :not_found, :internal_error, :bad_request]
 
   rescue_from VCAP::Errors::ApiError, with: :handle_api_error
 
@@ -107,5 +108,9 @@ class ApplicationController < ActionController::Base
     presenter = ErrorPresenter.new(error, Rails.env.test?)
     logger.info(presenter.log_message)
     render status: presenter.response_code, json: MultiJson.dump(presenter.error_hash, pretty: true)
+  end
+
+  def validate_content_type!
+    raise VCAP::Errors::ApiError.new_from_details('InvalidContentType', Mime::JSON) unless request.content_type == Mime::JSON
   end
 end
