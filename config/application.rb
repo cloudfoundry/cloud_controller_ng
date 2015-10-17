@@ -1,8 +1,6 @@
 require 'rails'
 require 'action_controller/railtie'
 
-Rails.logger = Logger.new('/dev/null')
-
 class Application < ::Rails::Application
   config.exceptions_app = self.routes
 

@@ -235,7 +235,7 @@ module VCAP::CloudController
     def statsd_client
       @statsd_client ||= (
         logger.info("configuring statsd server at #{@config[:statsd_host]}:#{@config[:statsd_port]}")
-        Statsd.logger = Steno.logger('statsd.client')
+        # Statsd.logger = Steno.logger('statsd.client')
         Statsd.new(@config[:statsd_host], @config[:statsd_port].to_i)
       )
     end

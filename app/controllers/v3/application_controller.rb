@@ -22,10 +22,10 @@ class ApplicationController < ActionController::Base
   around_action :manage_request_id
   before_action :set_current_user, except: [:internal_error]
   before_action :validate_scheme!, except: [:not_found, :internal_error, :bad_request]
-  before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
-  before_action :check_read_permissions!, only: [:index, :show]
-  before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error, :bad_request]
-  before_action :validate_content_type!, except: [:index, :show, :not_found, :internal_error, :bad_request]
+  # before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
+  # before_action :check_read_permissions!, only: [:index, :show]
+  # before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error, :bad_request]
+  # before_action :validate_content_type!, except: [:index, :show, :not_found, :internal_error, :bad_request]
 
   rescue_from VCAP::Errors::ApiError, with: :handle_api_error
 

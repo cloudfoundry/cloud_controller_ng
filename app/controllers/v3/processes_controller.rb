@@ -10,6 +10,8 @@ require 'messages/processes_list_message'
 
 class ProcessesController < ApplicationController
   def index
+    raise 'omg'
+
     message = ProcessesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 

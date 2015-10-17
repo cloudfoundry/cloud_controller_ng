@@ -6,7 +6,8 @@ class ErrorsController <  ApplicationController
   end
 
   def internal_error
-    error =  VCAP::Errors::ApiError.new_from_details('ServerError')
+    # error =  VCAP::Errors::ApiError.new_from_details('ServerError')
+    error =  request.env['action_dispatch.exception']
     presenter = ErrorPresenter.new(error, Rails.env.test?)
     logger.error(presenter.log_message)
     render status: presenter.response_code, json: MultiJson.dump(presenter.error_hash, pretty: true)
