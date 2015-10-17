@@ -554,9 +554,10 @@ module CloudController
             end
 
             it 'deletes in groups of the page_size' do
-              allow(client).to receive(:delete_files).and_call_original
-
               Fog.mock!
+              connection = client.send(:connection)
+              allow(connection).to receive(:delete_multiple_objects)
+
               file = File.join(local_dir, 'empty_file')
               FileUtils.touch(file)
 
@@ -570,7 +571,8 @@ module CloudController
               page_size = 2
               client.delete_all(page_size)
 
-              expect(client).to have_received(:delete_files).twice
+              expect(connection).to have_received(:delete_multiple_objects).with(directory_key, ['ab/cd/abcdef1', 'ab/cd/abcdef2'])
+              expect(connection).to have_received(:delete_multiple_objects).with(directory_key, ['ab/cd/abcdef3'])
             end
           end
 
@@ -730,59 +732,6 @@ module CloudController
             expect {
               client.delete_blob(blob)
             }.to_not raise_error
-          end
-        end
-
-        describe '#delete_files' do
-          let(:connection_config) { { provider: 'Local', local_root: local_dir } }
-
-          it 'deletes all the files' do
-            Fog.unmock!
-
-            path = File.join(local_dir, 'empty_file')
-            FileUtils.touch(path)
-
-            client.cp_to_blobstore(path, 'ab56')
-            client.cp_to_blobstore(path, 'abcdef123456')
-            expect(client.exists?('ab56')).to be true
-            expect(client.exists?('abcdef123456')).to be true
-
-            client.delete_files([client.blob('abcdef123456').file, client.blob('ab56').file])
-
-            expect(client.exists?('ab56')).to be false
-            expect(client.exists?('abcdef123456')).to be false
-          end
-
-          context 'when the blobstore backing allows deleting multiple files' do
-            let(:connection_config) do
-              {
-                provider: 'AWS',
-                aws_access_key_id: 'fake_access_key_id',
-                aws_secret_access_key: 'fake_secret_access_key',
-              }
-            end
-
-            it 'only makes one request' do
-              Fog.mock!
-
-              path = File.join(local_dir, 'empty_file')
-              FileUtils.touch(path)
-
-              client.cp_to_blobstore(path, 'ab56')
-              client.cp_to_blobstore(path, 'abcdef123456')
-              expect(client.exists?('ab56')).to be true
-              expect(client.exists?('abcdef123456')).to be true
-
-              files = [client.blob('abcdef123456').file, client.blob('ab56').file]
-
-              connection = client.send(:connection)
-              allow(connection).to receive(:delete_multiple_objects).and_call_original
-
-              delete_response = client.delete_files(files)
-
-              expect(delete_response[:body]['DeleteResult'].length).to eq(files.length)
-              expect(connection).to have_received(:delete_multiple_objects).with(directory_key, ['ab/cd/abcdef123456', 'ab/56/ab56'])
-            end
           end
         end
       end

@@ -10,7 +10,7 @@ module VCAP::CloudController
 
         def perform
           logger = Steno.logger('cc.background')
-          logger.info("Attempting delete of all blobs under directory '#{app_guid}' from blobstore buildpack_cache_blobstore")
+          logger.info("Attempting delete of all blobs for app '#{app_guid}' from blobstore buildpack_cache_blobstore")
 
           blobstore = CloudController::DependencyLocator.instance.public_send(:buildpack_cache_blobstore)
           blobstore.delete_all_in_path(app_guid)

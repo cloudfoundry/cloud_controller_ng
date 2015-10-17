@@ -10,6 +10,9 @@ module CloudController
     class Client
       class FileNotFound < StandardError
       end
+
+      DEFAULT_BATCH_SIZE = 1000
+
       def initialize(connection_config, directory_key, cdn=nil, root_dir=nil, min_size=nil, max_size=nil)
         @root_dir = root_dir
         @connection_config = connection_config
@@ -105,49 +108,24 @@ module CloudController
         dest_file.save
       end
 
-      def delete_all(page_size=1000)
+      def delete_all(page_size=DEFAULT_BATCH_SIZE)
         logger.info("Attempting to delete all files in #{@directory_key}/#{@root_dir} blobstore")
 
-        files_to_destroy = []
-
-        files.each do |blobstore_file|
-          next unless /#{@root_dir}/.match(blobstore_file.key)
-
-          files_to_destroy << blobstore_file
-          if files_to_destroy.length == page_size
-            delete_files(files_to_destroy)
-            files_to_destroy = []
-          end
-        end
-
-        if files_to_destroy.length > 0
-          delete_files(files_to_destroy)
-        end
+        delete_files(files_for(@root_dir), page_size)
       end
 
       def delete_all_in_path(path)
-        logger.info("Attempting to delete all files in #{@directory_key}/#{@root_dir} blobstore under #{path}")
-        remote_path = "#{@directory_key}/#{partitioned_key(path)}"
-        files_to_destroy = []
+        logger.info("Attempting to delete all files in blobstore #{@directory_key} under path #{@directory_key}/#{partitioned_key(path)}")
 
-        file_store = connection.directories.get(remote_path)
-        return unless file_store
-        file_store.files.map do |file|
-          files_to_destroy << file
-        end
-
-        delete_files(files_to_destroy) if files_to_destroy.length > 0
+        delete_files(files_for(partitioned_key(path)), DEFAULT_BATCH_SIZE)
       end
 
-      def delete_files(files_to_delete)
-        if connection.respond_to?(:delete_multiple_objects)
-          # AWS needs the file key to work; other providers with multiple delete
-          # are currently not supported. When support is added this code may
-          # need an update.
-          keys = files_to_delete.collect(&:key)
-          connection.delete_multiple_objects(@directory_key, keys)
+      def files_for(prefix)
+        if connection.is_a? Fog::Storage::Local::Real
+          directory = connection.directories.get(File.join(dir.key, prefix || ''))
+          directory ? directory.files : []
         else
-          files_to_delete.each { |f| delete_file(f) }
+          connection.directories.get(dir.key, prefix: prefix).files
         end
       end
 
@@ -179,6 +157,35 @@ module CloudController
 
       def delete_file(file)
         file.destroy
+      end
+
+      def delete_files(files_to_delete, page_size)
+        if connection.respond_to?(:delete_multiple_objects)
+          # AWS needs the file key to work; other providers with multiple delete
+          # are currently not supported. When support is added this code may
+          # need an update.
+          each_slice(files_to_delete, page_size) do |file_group|
+            connection.delete_multiple_objects(@directory_key, file_group.map(&:key))
+          end
+        else
+          files_to_delete.each { |f| delete_file(f) }
+        end
+      end
+
+      def each_slice(files, batch_size, &blk)
+        batch = []
+        files.each do |f|
+          batch << f
+
+          if batch.length == batch_size
+            blk.call(batch)
+            batch = []
+          end
+        end
+
+        if batch.length > 0
+          blk.call(batch)
+        end
       end
 
       def file(key)
