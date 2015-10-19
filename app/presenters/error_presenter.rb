@@ -33,6 +33,7 @@ class ErrorPresenter
   end
 
   def errors_to_raise
+    require 'webmock'
     [WebMock::NetConnectNotAllowedError]
   end
 end

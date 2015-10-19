@@ -63,12 +63,11 @@ module VCAP::CloudController
       end
 
       it 'fails without read permissions scope on the auth token' do
-        @request.env['HTTP_AUTHORIZATION'] = ''
-        expect {
-          get :index
-        }.to raise_error do |error|
-          expect(error.name).to eq('NotAuthorized')
-        end
+        @request.env.merge!(headers_for(User.make, scopes: ['cloud_controller.write']))
+        get :index
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include('NotAuthorized')
       end
 
       context 'when the request parameters are invalid' do
@@ -76,13 +75,11 @@ module VCAP::CloudController
           let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
 
           it 'returns an 400 Bad Request' do
-            expect {
-              get :index, params
-            }.to raise_error do |error|
-              expect(error.name).to eq 'BadQueryParameter'
-              expect(error.response_code).to eq 400
-              expect(error.message).to include("Unknown query parameter(s): 'invalid', 'bad'")
-            end
+            get :index, params
+
+            expect(response.status).to eq(400)
+            expect(response.body).to include('BadQueryParameter')
+            expect(response.body).to include("Unknown query parameter(s): 'invalid', 'bad'")
           end
         end
 
@@ -90,13 +87,11 @@ module VCAP::CloudController
           let(:params) { { 'per_page' => 10000 } }
 
           it 'returns an 400 Bad Request' do
-            expect {
-              get :index, params
-            }.to raise_error do |error|
-              expect(error.name).to eq 'BadQueryParameter'
-              expect(error.response_code).to eq 400
-              expect(error.message).to include('Per page must be between 1 and 5000')
-            end
+            get :index, params
+
+            expect(response.status).to eq(400)
+            expect(response.body).to include('BadQueryParameter')
+            expect(response.body).to include('Per page must be between 1 and 5000')
           end
         end
       end
@@ -133,26 +128,22 @@ module VCAP::CloudController
       end
 
       context 'when the user does not have read permissions' do
-        before { @request.env['HTTP_AUTHORIZATION'] = '' }
+        before { @request.env.merge!(headers_for(User.make, scopes: ['cloud_controller.write'])) }
         it 'raises an ApiError with a 403 code' do
-          expect {
-            get :show, { guid: process_type.guid }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
+          get :show, { guid: process_type.guid }
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
         end
       end
 
       context 'when the process does not exist' do
         it 'raises an ApiError with a 404 code' do
-          expect {
-            get :show, { guid: 'ABC123' }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.message).to eq 'Process not found'
-            expect(error.response_code).to eq 404
-          end
+          get :show, { guid: 'ABC123' }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+          expect(response.body).to include('Process not found')
         end
       end
 
@@ -162,13 +153,11 @@ module VCAP::CloudController
         end
 
         it 'raises 404' do
-          expect {
-            get :show, { guid: process_type.guid }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq(404)
-            expect(error.message).to eq 'Process not found'
-          end
+          get :show, { guid: process_type.guid }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+          expect(response.body).to include('Process not found')
 
           expect(membership).to have_received(:has_any_roles?).with(
               [Membership::SPACE_DEVELOPER,
@@ -188,7 +177,7 @@ module VCAP::CloudController
       end
 
       before do
-        @request.env.merge!(headers_for(User.make))
+        @request.env.merge!(json_headers(headers_for(User.make)))
         allow(process_presenter).to receive(:present_json).and_return(expected_response)
         allow(membership).to receive(:has_any_roles?).and_return(true)
       end
@@ -222,25 +211,21 @@ module VCAP::CloudController
 
       context 'when the process does not exist' do
         it 'raises an ApiError with a 404 code' do
-          expect {
-            patch :update, { guid: 'made-up-guid', body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
+          patch :update, { guid: 'made-up-guid', body: req_body }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
         end
       end
 
       context 'when the user does not have write permissions' do
-        before { @request.env['HTTP_AUTHORIZATION'] = '' }
+        before { @request.env.merge!(json_headers(headers_for(User.make, scopes: ['cloud_controller.read']))) }
 
         it 'raises an ApiError with a 403 code' do
-          expect {
-            patch :update, { guid: process_type.guid, body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
+          patch :update, { guid: process_type.guid, body: req_body }
+
+          expect(response.body).to include('NotAuthorized')
+          expect(response.status).to eq(403)
         end
       end
 
@@ -250,13 +235,11 @@ module VCAP::CloudController
         end
 
         it 'returns 422' do
-          expect {
-            patch :update, { guid: process_type.guid, body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'UnprocessableEntity'
-            expect(error.response_code).to eq(422)
-            expect(error.message).to match('errorz')
-          end
+          patch :update, { guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq(422)
+          expect(response.body).to include('UnprocessableEntity')
+          expect(response.body).to include('errorz')
         end
       end
 
@@ -264,13 +247,11 @@ module VCAP::CloudController
         let(:req_body) { { command: false } }
 
         it 'returns 422' do
-          expect {
-            patch :update, { guid: process_type.guid, body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'UnprocessableEntity'
-            expect(error.response_code).to eq(422)
-            expect(error.message).to include('Command must be a string')
-          end
+          patch :update, { guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq(422)
+          expect(response.body).to include('UnprocessableEntity')
+          expect(response.body).to include('Command must be a string')
         end
       end
 
@@ -280,12 +261,10 @@ module VCAP::CloudController
         end
 
         it 'raises 404' do
-          expect {
-            patch :update, { guid: process_type.guid, body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq(404)
-          end
+          patch :update, { guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
 
           expect(membership).to have_received(:has_any_roles?).with(
               [Membership::SPACE_DEVELOPER,
@@ -301,12 +280,10 @@ module VCAP::CloudController
         end
 
         it 'raises an ApiError with a 403 code' do
-          expect {
-            patch :update, { guid: process_type.guid, body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
+          patch :update, { guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq 403
+          expect(response.body).to include('NotAuthorized')
 
           expect(membership).to have_received(:has_any_roles?).with(
               [Membership::SPACE_DEVELOPER], process_type.space.guid)
@@ -319,7 +296,7 @@ module VCAP::CloudController
       let(:index_stopper) { double(:index_stopper) }
 
       before do
-        @request.env.merge!(headers_for(User.make))
+        @request.env.merge!(json_headers(headers_for(User.make)))
         allow(index_stopper).to receive(:stop_index)
         allow_any_instance_of(ProcessesController).to receive(:index_stopper).and_return(index_stopper)
         allow(membership).to receive(:has_any_roles?).and_return(true)
@@ -353,35 +330,29 @@ module VCAP::CloudController
       end
 
       it 'returns a 404 if process does not exist' do
-        expect {
-          put :terminate, { guid: 'bad-guid', index: 0 }
-        }.to raise_error do |error|
-          expect(error.name).to eq 'ResourceNotFound'
-          expect(error.response_code).to eq(404)
-          expect(error.message).to match('Process not found')
-        end
+        put :terminate, { guid: 'bad-guid', index: 0 }
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+        expect(response.body).to include('Process not found')
       end
 
       it 'returns a 404 if instance index out of bounds' do
-        expect {
-          put :terminate, { guid: process_type.guid, index: 1 }
-        }.to raise_error do |error|
-          expect(error.name).to eq 'ResourceNotFound'
-          expect(error.response_code).to eq(404)
-          expect(error.message).to match('Instance not found')
-        end
+        put :terminate, { guid: process_type.guid, index: 1 }
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+        expect(response.body).to include('Instance not found')
       end
 
       context 'when the user does not have write permissions' do
-        before { @request.env['HTTP_AUTHORIZATION'] = '' }
+        before { @request.env.merge!(json_headers(headers_for(User.make, scopes: ['cloud_controller.read']))) }
 
         it 'raises an ApiError with a 403 code' do
-          expect {
-            put :terminate, { guid: process_type.guid, index: 0 }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
+          put :terminate, { guid: process_type.guid, index: 0 }
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
         end
       end
 
@@ -391,12 +362,10 @@ module VCAP::CloudController
         end
 
         it 'raises 404' do
-          expect {
-            put :terminate, { guid: process_type.guid, index: 0 }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq(404)
-          end
+          put :terminate, { guid: process_type.guid, index: 0 }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
 
           expect(membership).to have_received(:has_any_roles?).with(
               [Membership::SPACE_DEVELOPER,
@@ -412,12 +381,10 @@ module VCAP::CloudController
         end
 
         it 'raises an ApiError with a 403 code' do
-          expect {
-            put :terminate, { guid: process_type.guid, index: 0 }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
+          put :terminate, { guid: process_type.guid, index: 0 }
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
 
           expect(membership).to have_received(:has_any_roles?).with(
               [Membership::SPACE_DEVELOPER], process_type.space.guid)
@@ -430,7 +397,7 @@ module VCAP::CloudController
       let(:process_type) { AppFactory.make }
 
       before do
-        @request.env.merge!(headers_for(User.make))
+        @request.env.merge!(json_headers(headers_for(User.make)))
         allow(process_presenter).to receive(:present_json).and_return(expected_response)
         allow(membership).to receive(:has_any_roles?).and_return(true)
       end
@@ -478,13 +445,11 @@ module VCAP::CloudController
         end
 
         it 'returns 422' do
-          expect {
-            put :scale, { guid: process_type.guid, body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'UnprocessableEntity'
-            expect(error.response_code).to eq(422)
-            expect(error.message).to match('errorz')
-          end
+          put :scale, { guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq(422)
+          expect(response.body).to include('UnprocessableEntity')
+          expect(response.body).to include('errorz')
         end
       end
 
@@ -493,13 +458,11 @@ module VCAP::CloudController
 
         context 'non-admin user' do
           it 'raises 403' do
-            expect {
-              put :scale, { guid: process_type.guid, body: req_body }
-            }.to raise_error do |error|
-              expect(error.name).to eq 'FeatureDisabled'
-              expect(error.response_code).to eq 403
-              expect(error.message).to match('app_scaling')
-            end
+            put :scale, { guid: process_type.guid, body: req_body }
+
+            expect(response.status).to eq(403)
+            expect(response.body).to include('FeatureDisabled')
+            expect(response.body).to include('app_scaling')
           end
         end
 
@@ -524,15 +487,13 @@ module VCAP::CloudController
       end
 
       context 'when the user does not have write permissions' do
-        before { @request.env['HTTP_AUTHORIZATION'] = '' }
+        before { @request.env.merge!(json_headers(headers_for(User.make, scopes: ['cloud_controller.read']))) }
 
         it 'raises an ApiError with a 403 code' do
-          expect {
-            put :scale, { guid: process_type.guid, body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
+          put :scale, { guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq 403
+          expect(response.body).to include('NotAuthorized')
         end
       end
 
@@ -540,24 +501,20 @@ module VCAP::CloudController
         let(:req_body) { { instances: 'wrong' } }
 
         it 'returns 422' do
-          expect {
-            put :scale, { guid: process_type.guid, body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'UnprocessableEntity'
-            expect(error.response_code).to eq(422)
-            expect(error.message).to match('Instances is not a number')
-          end
+          put :scale, { guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq(422)
+          expect(response.body).to include('UnprocessableEntity')
+          expect(response.body).to include('Instances is not a number')
         end
       end
 
       context 'when the process does not exist' do
         it 'raises 404' do
-          expect {
-            put :scale, { guid: 'fake-guid', body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq(404)
-          end
+          put :scale, { guid: 'fake-guid', body: req_body }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
         end
       end
 
@@ -567,12 +524,10 @@ module VCAP::CloudController
         end
 
         it 'raises 404' do
-          expect {
-            put :scale, { guid: process_type.guid, body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq(404)
-          end
+          put :scale, { guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
 
           expect(membership).to have_received(:has_any_roles?).with(
             [Membership::SPACE_DEVELOPER,
@@ -588,12 +543,10 @@ module VCAP::CloudController
         end
 
         it 'raises an ApiError with a 403 code' do
-          expect {
-            put :scale, { guid: process_type.guid, body: req_body }
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
+          put :scale, { guid: process_type.guid, body: req_body }
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
 
           expect(membership).to have_received(:has_any_roles?).with(
             [Membership::SPACE_DEVELOPER], process_type.space.guid)

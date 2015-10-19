@@ -13,11 +13,15 @@ module VCAP::CloudController
     end
 
     describe '#internal_error' do
-      it 'returns an error' do
+      before do
+        @request.env.merge!('action_dispatch.exception' => StandardError.new('sad things'))
+      end
+
+      it 'returns the error from the request env in action_dispatch.exception' do
         get :internal_error
 
         expect(response.status).to eq(500)
-        expect(response.body).to include('CF-ServerError')
+        expect(response.body).to include('sad things')
       end
     end
 
