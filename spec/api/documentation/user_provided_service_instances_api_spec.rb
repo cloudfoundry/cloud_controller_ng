@@ -26,7 +26,8 @@ resource 'User Provided Service Instances', type: [:api, :legacy_api] do
           space_guid: space_guid,
           name: 'my-user-provided-instance',
           credentials: { somekey: 'somevalue' },
-          syslog_drain_url: 'syslog://example.com'
+          syslog_drain_url: 'syslog://example.com',
+          route_service_url: 'https://logger.example.com'
         }
 
         client.post '/v2/user_provided_service_instances', MultiJson.dump(request_hash, pretty: true), headers
