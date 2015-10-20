@@ -11,6 +11,13 @@ Rails.application.routes.draw do
   delete '/v3/processes/:guid/instances/:index', to: 'processes#terminate'
   put '/v3/processes/:guid/scale', to: 'processes#scale'
 
+  get '/v3/packages', to: 'packages#index'
+  get '/v3/packages/:guid', to: 'packages#show'
+  post '/v3/packages/:guid/upload', to: 'packages#upload'
+  get '/v3/packages/:guid/download', to: 'packages#download'
+  delete '/v3/packages/:guid', to: 'packages#destroy'
+  post '/v3/packages/:guid/droplets', to: 'packages#stage'
+
   match '404', :to => 'errors#not_found', via: :all
   match '500', :to => 'errors#internal_error', via: :all
   match '400', :to => 'errors#bad_request', via: :all

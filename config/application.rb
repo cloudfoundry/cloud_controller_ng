@@ -10,7 +10,6 @@ class Application < ::Rails::Application
   config.middleware.delete 'ActionDispatch::RequestId'
   config.middleware.delete 'Rails::Rack::Logger'
   config.middleware.delete 'ActionDispatch::Static'
-  config.middleware.delete 'Rack::Sendfile'
   config.middleware.delete 'Rack::Lock'
   config.middleware.delete 'Rack::Head'
   config.middleware.delete 'Rack::ConditionalGet'

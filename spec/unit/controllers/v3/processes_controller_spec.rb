@@ -5,12 +5,9 @@ module VCAP::CloudController
     let(:process_presenter) { double(:process_presenter) }
     let(:space) { Space.make }
     let(:membership) { instance_double(Membership) }
-    let(:roles) { instance_double(Roles) }
     let(:expected_response) { 'process_response_body' }
 
     before do
-      allow(Roles).to receive(:new).and_return(roles)
-      allow(roles).to receive(:admin?).and_return(false)
       allow_any_instance_of(ProcessesController).to receive(:process_presenter).and_return(process_presenter)
       allow_any_instance_of(ProcessesController).to receive(:membership).and_return(membership)
     end
@@ -37,7 +34,7 @@ module VCAP::CloudController
 
       context 'admin' do
         before do
-          allow(roles).to receive(:admin?).and_return(true)
+          @request.env.merge!(json_headers(admin_headers))
           allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
@@ -115,7 +112,7 @@ module VCAP::CloudController
 
       context 'admin' do
         before do
-          allow(roles).to receive(:admin?).and_return(true)
+          @request.env.merge!(json_headers(admin_headers))
           allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
@@ -194,7 +191,7 @@ module VCAP::CloudController
 
       context 'admin' do
         before do
-          allow(roles).to receive(:admin?).and_return(true)
+          @request.env.merge!(json_headers(admin_headers))
           allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
@@ -314,7 +311,7 @@ module VCAP::CloudController
 
       context 'admin' do
         before do
-          allow(roles).to receive(:admin?).and_return(true)
+          @request.env.merge!(json_headers(admin_headers))
           allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
@@ -419,7 +416,7 @@ module VCAP::CloudController
 
       context 'admin' do
         before do
-          allow(roles).to receive(:admin?).and_return(true)
+          @request.env.merge!(json_headers(admin_headers))
           allow(membership).to receive(:has_any_roles?).and_return(false)
         end
 
@@ -467,7 +464,7 @@ module VCAP::CloudController
         end
 
         context 'admin user' do
-          before { allow(roles).to receive(:admin?).and_return(true) }
+          before { @request.env.merge!(json_headers(admin_headers)) }
 
           it 'scales the process and returns the correct things' do
             expect(process_type.instances).not_to eq(2)

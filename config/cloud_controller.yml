@@ -63,7 +63,6 @@ doppler:
   enabled: false
 
 db:
-  database: postgres://postgres@localhost:5432/ccdb
   max_connections: 32
   pool_timeout: 10
 

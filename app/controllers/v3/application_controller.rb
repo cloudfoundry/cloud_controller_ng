@@ -1,4 +1,8 @@
 module V3ErrorsHelper
+  def invalid_request!(message)
+    raise VCAP::Errors::ApiError.new_from_details('InvalidRequest', message)
+  end
+
   def invalid_param!(message)
     raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', message)
   end
@@ -16,16 +20,16 @@ class ApplicationController < ActionController::Base
   include VCAP::CloudController
   include V3ErrorsHelper
 
-  wrap_parameters :body, format: [:json]
+  wrap_parameters :body, format: [:json, :url_encoded_form]
 
   before_action :set_locale
   around_action :manage_request_id
   before_action :set_current_user, except: [:internal_error]
   before_action :validate_scheme!, except: [:not_found, :internal_error, :bad_request]
-  # before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
-  # before_action :check_read_permissions!, only: [:index, :show]
-  # before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error, :bad_request]
-  # before_action :validate_content_type!, except: [:index, :show, :not_found, :internal_error, :bad_request]
+  before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
+  before_action :check_read_permissions!, only: [:index, :show]
+  before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error, :bad_request]
+  before_action :seed_body
 
   rescue_from VCAP::Errors::ApiError, with: :handle_api_error
 
@@ -110,7 +114,7 @@ class ApplicationController < ActionController::Base
     render status: presenter.response_code, json: MultiJson.dump(presenter.error_hash, pretty: true)
   end
 
-  def validate_content_type!
-    raise VCAP::Errors::ApiError.new_from_details('InvalidContentType', Mime::JSON) unless request.content_type == Mime::JSON
+  def seed_body
+    params[:body] ||= {}
   end
 end

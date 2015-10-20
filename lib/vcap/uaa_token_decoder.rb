@@ -32,7 +32,7 @@ module VCAP
       @logger.warn('Token expired')
       raise BadToken.new(e.message)
     rescue CF::UAA::DecodeError, CF::UAA::AuthError => e
-      # @logger.warn("Invalid bearer token: #{e.inspect} #{e.backtrace}")
+      @logger.warn("Invalid bearer token: #{e.inspect} #{e.backtrace}")
       raise BadToken.new(e.message)
     end
 

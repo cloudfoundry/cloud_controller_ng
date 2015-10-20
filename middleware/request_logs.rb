@@ -7,8 +7,6 @@ module CloudFoundry
       end
 
       def call(env)
-        # env['action_dispatch.logger'] = @logger
-
         request = ActionDispatch::Request.new(env)
 
         @logger.info(

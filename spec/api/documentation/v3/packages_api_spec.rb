@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'rails_helper'
 require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
@@ -424,6 +424,8 @@ resource 'Packages (Experimental)', type: :api do
   end
 
   post '/v3/packages/:guid/droplets' do
+    header 'Content-Type', 'application/json'
+
     body_parameter :environment_variables, 'Environment variables to use during staging.
     Environment variable names may not start with "VCAP_" or "CF_". "PORT" is not a valid environment variable.',
       example_values: ['{"FEATURE_ENABLED": "true"}'],
