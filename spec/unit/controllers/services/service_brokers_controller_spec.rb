@@ -243,6 +243,12 @@ module VCAP::CloudController
       describe 'adding a broker to a space only' do
         let(:space) { Space.make }
         let(:body) { body_hash.merge({ space_guid: space.guid }).to_json }
+        let(:user) { User.make }
+
+        before do
+          space.organization.add_user user
+          space.add_developer user
+        end
 
         it 'creates a broker with an associated space' do
           stub_catalog
@@ -655,6 +661,76 @@ module VCAP::CloudController
           it 'returns a forbidden status for non-admin users' do
             put "/v2/service_brokers/#{broker.guid}", body, non_admin_headers
             expect(last_response).to be_forbidden
+          end
+        end
+
+        context 'when the user is a space developer' do
+          let(:space) { Space.make(id: 1) }
+          let(:broker) do ServiceBroker.make(
+            guid: '123',
+            name: 'My Custom Service',
+            broker_url: 'http://broker.example.com',
+            auth_username: 'me',
+            auth_password: 'abc123',
+            space_id: space.id)
+          end
+          let(:user) { User.make }
+
+          before do
+            space.organization.add_user user
+            space.add_developer user
+            attrs = {
+              url: 'http://broker.example.com',
+              auth_username: 'me',
+              auth_password: 'abc123',
+            }
+            stub_request(:get, build_broker_url(attrs, '/v2/catalog')).
+              to_return(status: 200, body: catalog_json.to_json)
+          end
+
+          it 'updates the broker' do
+            put "/v2/service_brokers/#{broker.guid}", body, headers_for(user)
+            expect(last_response.status).to eq(200)
+
+            broker.reload
+            expect(broker.name).to eq(body_hash[:name])
+            expect(broker.auth_username).to eq(body_hash[:auth_username])
+            expect(broker.auth_password).to eq(body_hash[:auth_password])
+          end
+
+          context 'when the user tries to change the parent space' do
+            let(:body_hash) do
+              {
+                name: 'some-name',
+                space_guid: '23234234'
+              }
+            end
+
+            let(:body) { body_hash.to_json }
+            let!(:old_space_guid) { broker.space_guid }
+
+            it 'does not update the broker' do
+              put "/v2/service_brokers/#{broker.guid}", body, headers_for(user)
+              expect(last_response.status).to eq(200)
+              expect(broker.space_guid).to eq(old_space_guid)
+            end
+          end
+
+          context 'when the user is a space developer in another space' do
+            let(:space_outer) { Space.make(id: 2) }
+            let(:broker) do ServiceBroker.make(
+              guid: '123',
+              name: 'My Custom Service',
+              broker_url: 'http://broker.example.com',
+              auth_username: 'me',
+              auth_password: 'abc123',
+              space_id: space_outer.id)
+            end
+
+            it 'does not update the broker' do
+              put "/v2/service_brokers/#{broker.guid}", body, headers_for(user)
+              expect(last_response.status).to eq(403)
+            end
           end
         end
       end
