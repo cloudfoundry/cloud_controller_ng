@@ -32,13 +32,18 @@ module VCAP::CloudController
         package_guid:          package.guid,
         state:                 DropletModel::PENDING_STATE,
         stack_name:            staging_message.stack,
-        lifecycle:             staging_message.lifecycle,
         environment_variables: staging_details.environment_variables,
         memory_limit:          staging_details.memory_limit,
         disk_limit:            staging_details.disk_limit
       )
       staging_details.droplet = droplet
       logger.info("droplet created: #{droplet.guid}")
+
+      BuildpackLifecycleDataModel.create(
+        buildpack: staging_message.buildpack,
+        stack:     staging_message.stack,
+        droplet: droplet
+      )
 
       logger.info("staging package: #{package.inspect} for droplet #{droplet.guid}")
       stagers.stager_for_package(package).stage(staging_details)

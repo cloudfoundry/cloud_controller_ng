@@ -13,9 +13,13 @@ module VCAP::CloudController
     one_to_many :droplets, class: 'VCAP::CloudController::DropletModel', key: :app_guid, primary_key: :guid
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel', key: :droplet_guid, primary_key: :guid, without_guid_generation: true
 
+    one_to_one :buildpack_lifecycle_data,
+                class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
+                key: :app_guid,
+                primary_key: :guid
+
     encrypt :environment_variables, salt: :salt, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
-    serializes_via_json :lifecycle
 
     def validate
       validates_presence :name
@@ -23,6 +27,14 @@ module VCAP::CloudController
       validates_format APP_NAME_REGEX, :name
       validate_environment_variables
       validate_droplet_is_staged
+    end
+
+    def lifecycle_type
+      return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if self.buildpack_lifecycle_data
+    end
+
+    def lifecycle_data
+      return buildpack_lifecycle_data if self.buildpack_lifecycle_data
     end
 
     class << self

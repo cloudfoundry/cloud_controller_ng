@@ -29,7 +29,10 @@ module VCAP::CloudController
         guid:                    droplet.guid,
         state:                   droplet.state,
         error:                   droplet.error,
-        lifecycle:               droplet.lifecycle,
+        lifecycle: {
+          type: droplet.lifecycle_type,
+          data: droplet.lifecycle_data.to_hash
+        },
         memory_limit:            droplet.memory_limit,
         disk_limit:              droplet.disk_limit,
         result: {

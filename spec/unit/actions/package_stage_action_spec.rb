@@ -15,30 +15,30 @@ module VCAP::CloudController
       let(:calculated_mem_limit) { 32 }
       let(:calculated_disk_limit) { 64 }
       let(:environment_variables) { 'environment_variables' }
-      let(:space)  { Space.make }
+      let(:space) { Space.make }
       let(:org) { space.organization }
-      let(:app)  { AppModel.make(space_guid: space.guid) }
+      let(:app) { AppModel.make(space_guid: space.guid) }
       let(:package) { PackageModel.make(app_guid: app.guid, state: PackageModel::READY_STATE) }
-      let(:buildpack)  { Buildpack.make }
-      let(:staging_message) { DropletCreateMessage.create_from_http_request(opts) }
+      let(:buildpack) { Buildpack.make }
+      let(:staging_message) { DropletCreateMessage.create_from_http_request(request) }
       let(:stack) { Stack.default.name }
       let(:memory_limit) { 12340 }
       let(:disk_limit) { 32100 }
       let(:buildpack_git_url) { 'anything' }
       let(:stagers) { double(:stagers) }
-      let(:droplet) { double(:droplet, guid: 'some-droplet-guid') }
+      let(:droplet) { DropletModel.make(app: app) }
       let(:stager) { instance_double(Diego::V3::Stager) }
-      let(:opts) do
+      let(:lifecycle_data) { { stack: Stack.default.name,
+                               buildpack: buildpack_git_url }
+      }
+      let(:request) do
         {
           lifecycle: {
             type: 'buildpack',
-            data: {
-              stack:             Stack.default.name,
-              buildpack: buildpack_git_url
-            }
+            data: lifecycle_data
           },
-          memory_limit:      memory_limit,
-          disk_limit:        disk_limit
+          memory_limit: memory_limit,
+          disk_limit: disk_limit
         }.deep_stringify_keys
       end
       let(:buildpack_info) { BuildpackRequestValidator.new }
@@ -57,7 +57,7 @@ module VCAP::CloudController
           expect {
             droplet = action.stage(package, buildpack_info, staging_message, stagers)
             expect(droplet.state).to eq(DropletModel::PENDING_STATE)
-            expect(droplet.lifecycle).to eq(opts['lifecycle'])
+            expect(droplet.lifecycle_data.to_hash).to eq(lifecycle_data)
             expect(droplet.package_guid).to eq(package.guid)
             expect(droplet.buildpack).to eq(buildpack.name)
             expect(droplet.buildpack_guid).to eq(buildpack.guid)

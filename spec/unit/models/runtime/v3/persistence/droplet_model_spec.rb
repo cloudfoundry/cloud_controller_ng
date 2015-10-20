@@ -106,4 +106,35 @@ module VCAP::CloudController
       expect(droplet_model.reload.process_types['worker']).to eq('started')
     end
   end
+
+  describe '#lifecycle_type' do
+    let(:droplet_model) { DropletModel.make }
+    let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
+
+    it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
+      expect(droplet_model.lifecycle_type).to eq('buildpack')
+    end
+  end
+
+  describe '#lifecycle_data' do
+    let(:droplet_model) { DropletModel.make }
+    let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
+
+    it 'returns buildpack_lifecycle_data if it is on the model' do
+      expect(droplet_model.lifecycle_data).to eq(lifecycle_data)
+    end
+
+    it 'is a persistable hash' do
+      expect(droplet_model.reload.lifecycle_data.buildpack).to eq(lifecycle_data.buildpack)
+      expect(droplet_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
+    end
+
+    context 'lifecycle_data is nil' do
+      let(:non_buildpack_droplet_model) { DropletModel.make }
+
+      it 'returns nil if no lifecycle data types are present' do
+        expect(non_buildpack_droplet_model.lifecycle_data).to eq(nil)
+      end
+    end
+  end
 end

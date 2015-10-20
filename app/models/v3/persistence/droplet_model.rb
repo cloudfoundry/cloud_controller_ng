@@ -18,10 +18,14 @@ module VCAP::CloudController
     many_to_one :package, class: 'VCAP::CloudController::PackageModel', key: :package_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
+    one_to_one :buildpack_lifecycle_data,
+                class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
+                key: :droplet_guid,
+                primary_key: :guid
+
     encrypt :environment_variables, salt: :salt, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
     serializes_via_json :process_types
-    serializes_via_json :lifecycle
 
     def validate
       super
@@ -45,6 +49,14 @@ module VCAP::CloudController
 
     def mark_as_staged
       self.state = STAGED_STATE
+    end
+
+    def lifecycle_type
+      return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if self.buildpack_lifecycle_data
+    end
+
+    def lifecycle_data
+      return buildpack_lifecycle_data if self.buildpack_lifecycle_data
     end
   end
 end

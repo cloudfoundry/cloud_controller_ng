@@ -64,7 +64,7 @@ module VCAP::CloudController
       )
     end
 
-    delegate :buildpack, to: :buildpack_data
+    delegate :buildpack, :stack, to: :buildpack_data
 
     def self.create_from_http_request(body)
       AppCreateMessage.new(body.symbolize_keys)

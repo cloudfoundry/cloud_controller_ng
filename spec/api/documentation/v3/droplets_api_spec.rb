@@ -34,7 +34,6 @@ resource 'Droplets (Experimental)', type: :api do
         buildpack:              buildpack_git_url,
         error:                  'example error',
         environment_variables:  { 'cloud' => 'foundry' },
-        lifecycle: { 'type' => 'buildpack', 'data' => { 'stack' => nil, 'buildpack' => buildpack_git_url } },
       )
     end
 
@@ -43,6 +42,7 @@ resource 'Droplets (Experimental)', type: :api do
     before do
       space.organization.add_user user
       space.add_developer user
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet_model)
     end
 
     example 'Get a Droplet' do
@@ -50,8 +50,13 @@ resource 'Droplets (Experimental)', type: :api do
         'guid'                   => droplet_model.guid,
         'state'                  => droplet_model.state,
         'error'                  => droplet_model.error,
-        'lifecycle'              => droplet_model.lifecycle,
-
+        'lifecycle'              => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpack' => droplet_model.lifecycle_data.buildpack,
+            'stack' => droplet_model.lifecycle_data.stack,
+          }
+        },
         'result' => {
           'hash'                 => { 'type' => 'sha1', 'value' => droplet_model.droplet_hash },
           'stack'                => droplet_model.stack_name,
@@ -149,7 +154,6 @@ resource 'Droplets (Experimental)', type: :api do
         process_types: { 'web' => 'started' },
         memory_limit: 123,
         disk_limit: 456,
-        lifecycle: { type: 'buildpack', data: { buildpack: 'https://github.com/cloudfoundry/requested-buildpack.git', stack: nil } },
         execution_metadata: 'black-box-secrets'
 
       )
@@ -163,6 +167,8 @@ resource 'Droplets (Experimental)', type: :api do
     before do
       space.organization.add_user user
       space.add_developer user
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet2)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet1)
     end
 
     example 'List all Droplets' do
@@ -179,7 +185,13 @@ resource 'Droplets (Experimental)', type: :api do
             {
               'guid'                   => droplet2.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGED_STATE,
-              'lifecycle'              => droplet2.lifecycle,
+              'lifecycle'              => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpack' => droplet2.lifecycle_data.buildpack,
+                  'stack' => droplet2.lifecycle_data.stack,
+                }
+              },
               'error'                  => droplet2.error,
               'memory_limit'           => droplet2.memory_limit,
               'disk_limit'             => droplet2.disk_limit,
@@ -206,7 +218,13 @@ resource 'Droplets (Experimental)', type: :api do
             {
               'guid'                   => droplet1.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGING_STATE,
-              'lifecycle'              => droplet1.lifecycle,
+              'lifecycle'              => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpack' => droplet1.lifecycle_data.buildpack,
+                  'stack' => droplet1.lifecycle_data.stack,
+                }
+              },
               'error'                  => droplet1.error,
               'memory_limit'           => droplet1.memory_limit,
               'disk_limit'             => droplet1.disk_limit,
@@ -255,6 +273,10 @@ resource 'Droplets (Experimental)', type: :api do
       let(:per_page) { 2 }
       let(:app_guids) { [app_model.guid].join(',') }
       let(:states) { [VCAP::CloudController::DropletModel::STAGED_STATE, VCAP::CloudController::DropletModel::FAILED_STATE].join(',') }
+
+      before do
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet4)
+      end
 
       it 'Filters Droplets by states, app_guids' do
         user.admin = true

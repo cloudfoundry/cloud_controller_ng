@@ -63,6 +63,8 @@ resource 'Apps (Experimental)', type: :api do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet1)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet2)
     end
 
     example 'List associated droplets' do
@@ -80,7 +82,13 @@ resource 'Apps (Experimental)', type: :api do
               'guid'                   => droplet2.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGED_STATE,
               'error'                  => droplet2.error,
-              'lifecycle'              => nil,
+              'lifecycle'              => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpack' => droplet2.lifecycle_data.buildpack,
+                  'stack' => droplet2.lifecycle_data.stack,
+                }
+              },
               'memory_limit'           => nil,
               'disk_limit'            => nil,
               'environment_variables'  => {},
@@ -107,7 +115,13 @@ resource 'Apps (Experimental)', type: :api do
               'guid'                   => droplet1.guid,
               'state'                  => VCAP::CloudController::DropletModel::STAGING_STATE,
               'error'                  => droplet1.error,
-              'lifecycle'              => nil,
+              'lifecycle'              => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpack' => droplet1.lifecycle_data.buildpack,
+                  'stack' => droplet1.lifecycle_data.stack,
+                }
+              },
               'memory_limit'           => nil,
               'disk_limit'            => nil,
               'environment_variables'  => droplet1.environment_variables,
@@ -132,7 +146,7 @@ resource 'Apps (Experimental)', type: :api do
               }
             }
           ]
-        }
+      }
 
       do_request_with_error_handling
 
@@ -156,6 +170,7 @@ resource 'Apps (Experimental)', type: :api do
       let(:states) { [VCAP::CloudController::DropletModel::STAGED_STATE, VCAP::CloudController::DropletModel::FAILED_STATE].join(',') }
 
       it 'Filters Droplets by states, app_guids' do
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet4)
         user.admin = true
         user.save
 

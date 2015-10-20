@@ -3,37 +3,42 @@ require 'presenters/v3/droplet_presenter'
 
 module VCAP::CloudController
   describe DropletPresenter do
+    let(:droplet) do
+      DropletModel.make(
+        state:                  DropletModel::STAGED_STATE,
+        buildpack_guid:         'buildpack-guid',
+        buildpack:              'actual-buildpack',
+        error:         'example error',
+        process_types: { 'web' => 'npm start', 'worker' => 'start worker' },
+        environment_variables:  { 'elastic' => 'runtime' },
+        memory_limit: 234,
+        disk_limit: 934,
+        stack_name: Stack.default.name,
+        created_at: Time.at(1),
+        updated_at: Time.at(2),
+        execution_metadata: 'black-box-string'
+      )
+    end
+    let!(:lifecycle_data) do
+      BuildpackLifecycleDataModel.create(
+        buildpack: 'the-happiest-buildpack',
+        stack: 'the-happiest-stack',
+        droplet: droplet
+      )
+    end
+
     describe '#present_json' do
       it 'presents the droplet as json' do
-        droplet = DropletModel.make(
-          state:                  DropletModel::STAGED_STATE,
-          buildpack_guid:         'buildpack-guid',
-          buildpack:              'actual-buildpack',
-          error:         'example error',
-          process_types: { 'web' => 'npm start', 'worker' => 'start worker' },
-          environment_variables:  { 'elastic' => 'runtime' },
-          memory_limit: 234,
-          disk_limit: 934,
-          lifecycle: {
-            'type' => 'buildpack',
-            'data' => {
-              'buildpack' => 'requested-buildpack',
-              'stack' => 'requested-stack'
-            }
-          },
-          stack_name: Stack.default.name,
-          created_at: Time.at(1),
-          updated_at: Time.at(2),
-          execution_metadata: 'black-box-string'
-        )
         json_result = DropletPresenter.new.present_json(droplet)
         result      = MultiJson.load(json_result)
 
         expect(result['guid']).to eq(droplet.guid)
         expect(result['state']).to eq(droplet.state)
         expect(result['error']).to eq(droplet.error)
+
         expect(result['lifecycle']['type']).to eq('buildpack')
-        expect(result['lifecycle']).to eq(droplet.lifecycle)
+        expect(result['lifecycle']['data']['stack']).to eq('the-happiest-stack')
+        expect(result['lifecycle']['data']['buildpack']).to eq('the-happiest-buildpack')
         expect(result['environment_variables']).to eq(droplet.environment_variables)
         expect(result['memory_limit']).to eq(234)
         expect(result['disk_limit']).to eq(934)
@@ -59,6 +64,11 @@ module VCAP::CloudController
     context 'when the buildpack_guid is not present' do
       let(:droplet) { DropletModel.make }
 
+      before do
+        lifecycle_data.buildpack = nil
+        lifecycle_data.save
+      end
+
       it 'does NOT include a link to upload' do
         json_result = DropletPresenter.new.present_json(droplet)
         result      = MultiJson.load(json_result)
@@ -69,8 +79,8 @@ module VCAP::CloudController
 
     describe '#present_json_list' do
       let(:pagination_presenter) { instance_double(PaginationPresenter) }
-      let(:droplet1) { DropletModel.make }
-      let(:droplet2) { DropletModel.make }
+      let(:droplet1) { droplet }
+      let(:droplet2) { droplet }
       let(:droplets) { [droplet1, droplet2] }
       let(:presenter) { DropletPresenter.new(pagination_presenter) }
       let(:page) { 1 }

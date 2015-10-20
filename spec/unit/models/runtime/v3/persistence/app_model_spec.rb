@@ -147,5 +147,34 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#lifecycle_type' do
+      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model) }
+
+      it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
+        expect(app_model.lifecycle_type).to eq('buildpack')
+      end
+    end
+
+    describe '#lifecycle_data' do
+      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model) }
+
+      it 'returns buildpack_lifecycle_data if it is on the model' do
+        expect(app_model.lifecycle_data).to eq(lifecycle_data)
+      end
+
+      it 'is a persistable hash' do
+        expect(app_model.reload.lifecycle_data.buildpack).to eq(lifecycle_data.buildpack)
+        expect(app_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
+      end
+
+      context 'lifecycle_data is nil' do
+        let(:non_buildpack_app_model) { AppModel.make }
+
+        it 'returns nil if no lifecycle data types are present' do
+          expect(non_buildpack_app_model.lifecycle_data).to eq(nil)
+        end
+      end
+    end
   end
 end

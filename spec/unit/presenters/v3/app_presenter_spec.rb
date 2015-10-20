@@ -3,21 +3,25 @@ require 'presenters/v3/app_presenter'
 
 module VCAP::CloudController
   describe AppPresenter do
+    let(:app) do
+      AppModel.make(
+      created_at: Time.at(1),
+      updated_at: Time.at(2),
+      environment_variables: { 'some' => 'stuff' },
+      desired_state: 'STOPPED',
+    )
+    end
+
+    before do
+      BuildpackLifecycleDataModel.create(
+        buildpack: 'the-happiest-buildpack',
+        stack: 'the-happiest-stack',
+        app: app
+      )
+    end
+
     describe '#present_json' do
       it 'presents the app as json' do
-        app = AppModel.make(
-          created_at: Time.at(1),
-          updated_at: Time.at(2),
-          environment_variables: { 'some' => 'stuff' },
-          desired_state: 'STOPPED',
-          lifecycle: {
-            'type' => 'buildpack',
-            'data' => {
-              'buildpack' => 'requested-buildpack',
-              'stack' => 'requested-stack'
-            }
-          },
-        )
         process = App.make(space: app.space, instances: 4)
         app.add_process(process)
 
@@ -36,72 +40,77 @@ module VCAP::CloudController
         expect(result['links']).to include('stop')
         expect(result['links']).to include('assign_current_droplet')
         expect(result['lifecycle']['type']).to eq('buildpack')
-        expect(result['lifecycle']).to eq(app.lifecycle)
+        expect(result['lifecycle']['data']['stack']).to eq('the-happiest-stack')
+        expect(result['lifecycle']['data']['buildpack']).to eq('the-happiest-buildpack')
       end
 
-      it 'returns 0 if there are no processes' do
-        app = AppModel.make
+      context 'if there are no processes' do
+        it 'returns 0' do
+          json_result = AppPresenter.new.present_json(app)
+          result      = MultiJson.load(json_result)
 
-        json_result = AppPresenter.new.present_json(app)
-        result      = MultiJson.load(json_result)
-
-        expect(result['total_desired_instances']).to eq(0)
+          expect(result['total_desired_instances']).to eq(0)
+        end
       end
 
-      it 'returns an empty hash as environment_variables if not present' do
-        app = AppModel.make
+      context 'if environment_variables are not present' do
+        before { app.environment_variables = {} }
 
-        json_result = AppPresenter.new.present_json(app)
-        result      = MultiJson.load(json_result)
+        it 'returns an empty hash as environment_variables' do
+          json_result = AppPresenter.new.present_json(app)
+          result      = MultiJson.load(json_result)
 
-        expect(result['environment_variables']).to eq({})
+          expect(result['environment_variables']).to eq({})
+        end
       end
 
-      it 'includes a link to the droplet if present' do
-        app = AppModel.make(droplet_guid: '123')
+      context 'links' do
+        it 'includes start, stop, and assign_current_droplet links' do
+          app.environment_variables = { 'some' => 'stuff' }
 
-        json_result = AppPresenter.new.present_json(app)
-        result      = MultiJson.load(json_result)
+          json_result = AppPresenter.new.present_json(app)
+          result      = MultiJson.load(json_result)
 
-        expect(result['links']['droplet']['href']).to eq('/v3/droplets/123')
-      end
+          expect(result['links']['start']['method']).to eq('PUT')
+          expect(result['links']['stop']['method']).to eq('PUT')
+          expect(result['links']['assign_current_droplet']['method']).to eq('PUT')
+        end
 
-      it 'includes a link to the droplets if present' do
-        app = AppModel.make
-        DropletModel.make(app_guid: app.guid, state: 'PENDING')
-        DropletModel.make(app_guid: app.guid, state: 'FAILED')
+        it 'includes routes links' do
+          json_result = AppPresenter.new.present_json(app)
+          result      = MultiJson.load(json_result)
 
-        json_result = AppPresenter.new.present_json(app)
-        result      = MultiJson.load(json_result)
+          expect(result['links']['routes']['href']).to eq("/v3/apps/#{app.guid}/routes")
+        end
 
-        expect(result['links']['droplets']['href']).to eq("/v3/apps/#{app.guid}/droplets")
-      end
+        context 'droplets' do
+          before do
+            app.droplet = DropletModel.make(guid: '123')
+          end
 
-      it 'includes start, stop, and assign_current_droplet links' do
-        app = AppModel.make(environment_variables: { 'some' => 'stuff' }, desired_state: 'STOPPED')
+          it 'includes a link to the droplet' do
+            json_result = AppPresenter.new.present_json(app)
+            result      = MultiJson.load(json_result)
 
-        json_result = AppPresenter.new.present_json(app)
-        result      = MultiJson.load(json_result)
+            expect(result['links']['droplet']['href']).to eq('/v3/droplets/123')
+          end
 
-        expect(result['links']['start']['method']).to eq('PUT')
-        expect(result['links']['stop']['method']).to eq('PUT')
-        expect(result['links']['assign_current_droplet']['method']).to eq('PUT')
-      end
+          it 'includes a link to the droplets if present' do
+            DropletModel.make(app_guid: app.guid, state: 'PENDING')
 
-      it 'includes routes links' do
-        app = AppModel.make
+            json_result = AppPresenter.new.present_json(app)
+            result      = MultiJson.load(json_result)
 
-        json_result = AppPresenter.new.present_json(app)
-        result      = MultiJson.load(json_result)
-
-        expect(result['links']['routes']['href']).to eq("/v3/apps/#{app.guid}/routes")
+            expect(result['links']['droplets']['href']).to eq("/v3/apps/#{app.guid}/droplets")
+          end
+        end
       end
     end
 
     describe '#present_json_list' do
       let(:pagination_presenter) { double(:pagination_presenter, present_pagination_hash: 'pagination_stuff') }
-      let(:app_model1) { AppModel.make }
-      let(:app_model2) { AppModel.make }
+      let(:app_model1) { app }
+      let(:app_model2) { app }
       let(:apps) { [app_model1, app_model2] }
       let(:presenter) { AppPresenter.new(pagination_presenter) }
       let(:page) { 1 }

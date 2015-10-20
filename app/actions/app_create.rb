@@ -13,7 +13,6 @@ module VCAP::CloudController
         name:                  message.name,
         space_guid:            message.space_guid,
         environment_variables: message.environment_variables,
-        lifecycle:             message.lifecycle
       )
 
       Repositories::Runtime::AppEventRepository.new.record_app_create(
@@ -22,6 +21,12 @@ module VCAP::CloudController
         @user.guid,
         @user_email,
         message.audit_hash
+      )
+
+      BuildpackLifecycleDataModel.create(
+        buildpack: message.buildpack,
+        stack:     message.stack,
+        app: app
       )
 
       app

@@ -32,7 +32,10 @@ module VCAP::CloudController
         total_desired_instances: app.processes.map(&:instances).reduce(:+) || 0,
         created_at:              app.created_at,
         updated_at:              app.updated_at,
-        lifecycle:               app.lifecycle,
+        lifecycle: {
+          type: app.lifecycle_type,
+          data: app.lifecycle_data.to_hash
+        },
         environment_variables:   app.environment_variables || {},
         links:                   build_links(app)
       }

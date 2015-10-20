@@ -303,6 +303,11 @@ module VCAP::CloudController
     locked { false }
   end
 
+  BuildpackLifecycleDataModel.blueprint do
+    buildpack { Sham.name }
+    stack { Sham.name }
+  end
+
   AppUsageEvent.blueprint do
     state { 'STARTED' }
     package_state { 'STAGED' }
