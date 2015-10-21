@@ -77,19 +77,6 @@ resource 'Service Brokers', type: [:api, :legacy_api] do
 
         document_warning_header(response_headers)
       end
-
-      it 'can create a Private Service Broker' do
-        client.post '/v2/service_brokers', fields_json({ space_guid: space.guid }), headers
-
-        expect(status).to eq 201
-        validate_response VCAP::RestAPI::MetadataMessage, parsed_response['metadata']
-        expect(parsed_response['entity']['name']).to eq('service-broker-name')
-        expect(parsed_response['entity']['broker_url']).to eq('https://broker.example.com')
-        expect(parsed_response['entity']['auth_username']).to eq('admin')
-        expect(parsed_response['entity']['space_guid']).to eq(space.guid)
-
-        document_warning_header(response_headers)
-      end
     end
 
     put '/v2/service_brokers/:guid' do
