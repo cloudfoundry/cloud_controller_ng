@@ -10,20 +10,16 @@ module VCAP::CloudController
     let(:app_presenter) { double(:app_presenter) }
     let(:membership) { instance_double(Membership) }
     let(:roles) { instance_double(Roles) }
-    let(:apps_controller) do
-      AppsV3Controller.new(
-        {},
-        logger,
-        { 'PATH_INFO' => '/v3/apps' },
-        params,
-        req_body,
-        nil,
-        {
-          app_presenter:     app_presenter,
-        },
-      )
-    end
     let(:app_response) { 'app_response_body' }
+    let(:apps_controller) do
+      AppsV3Controller.new({},
+                           logger,
+                           { 'PATH_INFO' => '/v3/apps' },
+                           params,
+                           req_body,
+                           nil,
+                           { app_presenter: app_presenter })
+    end
 
     before do
       allow(logger).to receive(:debug)
@@ -216,21 +212,18 @@ module VCAP::CloudController
     end
 
     describe '#create' do
-      let(:space_guid) { Sham.guid }
+      let(:space) { Space.make }
       let(:buildpack) {}
       let(:req_body) do
         {
           name: 'some-name',
-          relationships: { space: { guid: space_guid } },
+          relationships: { space: { guid: space.guid } },
           lifecycle: { type: 'buildpack', data: { buildpack: 'http://some.url', stack: nil } }
         }.to_json
       end
-      let(:app_create) { instance_double(AppCreate) }
 
       before do
         allow(apps_controller).to receive(:check_write_permissions!)
-        allow(AppCreate).to receive(:new).and_return(app_create)
-        allow(app_create).to receive(:create)
       end
 
       it 'checks for write permissions' do
@@ -242,13 +235,15 @@ module VCAP::CloudController
         apps_controller.create
 
         expect(membership).to have_received(:has_any_roles?).at_least(1).times.
-            with([Membership::SPACE_DEVELOPER], space_guid)
+            with([Membership::SPACE_DEVELOPER], space.guid)
       end
 
       it 'returns a 201 Created  and the app' do
         response_code, response = apps_controller.create
         expect(response_code).to eq 201
         expect(response).to eq(app_response)
+
+        expect(AppModel.last.name).to eq('some-name')
       end
 
       context 'admin' do
@@ -290,8 +285,10 @@ module VCAP::CloudController
       end
 
       context 'when the app is invalid' do
+        let(:app_create) { instance_double(AppCreate) }
         before do
           allow(app_create).to receive(:create).and_raise(AppCreate::InvalidApp.new('ya done goofed'))
+          allow(AppCreate).to receive(:new).and_return(app_create)
         end
 
         it 'returns an UnprocessableEntity error' do
@@ -325,7 +322,7 @@ module VCAP::CloudController
         let(:req_body) do
           {
             name:       'some-name',
-            relationships: { space: { guid: space_guid } },
+            relationships: { space: { guid: space.guid } },
             lifecycle: { type: 'buildpack', data: { buildpack: 'blawgow', stack: nil } }
           }.to_json
         end
@@ -341,19 +338,64 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the space developer requests lifecycle data' do
+      context 'when the space developer does not request lifecycle data' do
         let(:req_body) do
           {
             name: 'some-name',
-            relationships: { space: { guid: space_guid } },
-            lifecycle: { data: { buildpack: nil, stack: nil } }
+            relationships: { space: { guid: space.guid } }
           }.to_json
         end
-
-        it 'moves the stack and buildpack data under the lifecycle object' do
+        it 'uses the defaults' do
           response_code, response = apps_controller.create
+          created_app = AppModel.last
+
+          expect(created_app.lifecycle_data.stack).to eq(Stack.default.name)
+          expect(created_app.lifecycle_data.buildpack).to eq(nil)
           expect(response_code).to eq 201
           expect(response).to eq(app_response)
+        end
+      end
+      context 'when the space developer requests lifecycle data' do
+        context 'and leaves part of the data blank' do
+          let(:req_body) do
+            {
+              name: 'some-name',
+              relationships: { space: { guid: space.guid } },
+              lifecycle: { type: 'buildpack', data: { buildpack: nil, stack: nil } }
+            }.to_json
+          end
+
+          it 'creates the app with the lifecycle data, filling in defaults' do
+            response_code, response = apps_controller.create
+            created_app = AppModel.last
+
+            expect(created_app.lifecycle_data.stack).to eq(Stack.default.name)
+            expect(created_app.lifecycle_data.buildpack).to eq(nil)
+            expect(response_code).to eq 201
+            expect(response).to eq(app_response)
+          end
+        end
+        context 'and they do not include the data section' do
+          let(:req_body) do
+            {
+              name: 'some-name',
+              relationships: { space: { guid: space.guid } },
+              lifecycle: { type: 'buildpack' }
+            }.to_json
+          end
+
+          it 'raises an error' do
+            expect {
+              apps_controller.create
+            }.to raise_error do |error|
+              expect(error.name).to eq 'UnprocessableEntity'
+              expect(error.response_code).to eq(422)
+              expect(error.message).
+                to match('The request is semantically invalid: Lifecycle data must be present, Lifecycle data must be a hash')
+            end
+
+            expect(AppModel.count).to eq(0)
+          end
         end
       end
     end

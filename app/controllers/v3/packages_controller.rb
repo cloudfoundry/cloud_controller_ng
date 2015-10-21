@@ -9,6 +9,7 @@ require 'actions/package_upload'
 require 'messages/package_upload_message'
 require 'messages/droplet_create_message'
 require 'messages/packages_list_message'
+require 'builders/droplet_stage_request_builder'
 
 module VCAP::CloudController
   class PackagesController < RestController::BaseController
@@ -114,16 +115,18 @@ module VCAP::CloudController
     def stage(package_guid)
       check_write_permissions!
 
-      request = parse_and_validate_json(body)
-      staging_message = DropletCreateMessage.create_from_http_request(request)
-      unprocessable!(staging_message.errors.full_messages) unless staging_message.valid?
-
       package = PackageModel.where(guid: package_guid).eager(:app, :space, space: :organization).all.first
       package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
 
+      request = parse_and_validate_json(body)
+      app_lifecycle = package.app.lifecycle_data
+      assembled_request  = DropletStageRequestBuilder.new.build(request, app_lifecycle)
+      staging_message = DropletCreateMessage.create_from_http_request(assembled_request)
+      unprocessable!(staging_message.errors.full_messages) unless staging_message.valid?
+
       unauthorized! unless can_stage?(package.space.guid)
 
-      buildpack_to_use    = staging_message.requested_buildpack? ? staging_message.buildpack : package.app.buildpack
+      buildpack_to_use    = staging_message.requested_buildpack? ? staging_message.buildpack : package.app.lifecycle_data.buildpack
       buildpack_info = BuildpackRequestValidator.new(buildpack: buildpack_to_use)
       unprocessable!(buildpack_info.errors.full_messages) unless buildpack_info.valid?
 

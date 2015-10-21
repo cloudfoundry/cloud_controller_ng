@@ -15,11 +15,6 @@ module VCAP::CloudController
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
     end
 
-    def initialize(*attrs)
-      super
-      @lifecycle ||= default_lifecycle
-    end
-
     validates :memory_limit, numericality: { only_integer: true }, allow_nil: true
     validates :disk_limit, numericality: { only_integer: true }, allow_nil: true
     validates :environment_variables, environment_variables: true, allow_nil: true
@@ -64,16 +59,6 @@ module VCAP::CloudController
 
     def lifecycle_data
       lifecycle['data'] || lifecycle[:data]
-    end
-
-    def default_lifecycle
-      {
-        type: 'buildpack',
-        data: {
-          stack: Stack.default.name,
-          buildpack: nil
-        }
-      }
     end
 
     def allowed_keys

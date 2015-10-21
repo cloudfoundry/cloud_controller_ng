@@ -56,7 +56,7 @@ module VCAP::CloudController::Validators
       return validate_data_model(config, record) unless config.data.nil?
 
       return if config.allow_nil
-      record.errors[:lifecycle].concat ['Data must be present']
+      record.errors[:lifecycle].concat ['data must be present']
     end
 
     def validate_data_model(config, record)

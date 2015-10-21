@@ -15,11 +15,6 @@ module VCAP::CloudController
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
     end
 
-    def initialize(*attrs)
-      super
-      @lifecycle ||= default_lifecycle
-    end
-
     validates :name, string: true
     validates :environment_variables, hash: true, allow_nil: true
     validates :relationships, hash: true, presence: true, allow_nil: false
@@ -82,16 +77,6 @@ module VCAP::CloudController
 
     def lifecycle_data
       lifecycle['data'] || lifecycle[:data]
-    end
-
-    def default_lifecycle
-      {
-        type: 'buildpack',
-        data: {
-          stack: Stack.default.name,
-          buildpack: nil
-        }
-      }
     end
 
     def allowed_keys

@@ -670,16 +670,17 @@ module VCAP::CloudController
 
     describe '#stage' do
       let(:req_body) { '{}' }
-      let(:package) { PackageModel.make(app_guid: app.guid, type: PackageModel::BITS_TYPE, state: PackageModel::READY_STATE) }
+      let(:package) { PackageModel.make(app_guid: app_model.guid, type: PackageModel::BITS_TYPE, state: PackageModel::READY_STATE) }
       let(:droplet_response) { 'barbaz' }
-      let(:app) { AppModel.make }
-      let(:space) { app.space }
+      let(:app_model) { AppModel.make }
+      let(:space) { app_model.space }
       let(:org) { space.organization }
 
       before do
         allow(packages_controller).to receive(:check_write_permissions!).and_return(nil)
         allow(droplet_presenter).to receive(:present_json).and_return(droplet_response)
         allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
+        BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: Stack.default.name)
       end
 
       it 'returns a 201 Created response' do
@@ -743,7 +744,7 @@ module VCAP::CloudController
             response_code, body = packages_controller.stage(package.guid)
             expect(response_code).to eq(201)
             expect(body).to eq droplet_response
-            expect(DropletModel.last.buildpack).to eq(buildpack.name)
+            expect(DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(buildpack.name)
           end
 
           context 'when the buildpack does not exist' do
@@ -760,19 +761,18 @@ module VCAP::CloudController
           end
         end
 
-        context 'when buildpack is not requsted and app has a buildpack' do
+        context 'when buildpack is not requested and app has a buildpack' do
           let(:req_body) { '{}' }
 
           before do
-            app.buildpack = buildpack.name
-            app.save
+            BuildpackLifecycleDataModel.make(app: app_model, buildpack: buildpack.name, stack: Stack.default.name)
           end
 
           it 'uses the apps buildpack' do
             response_code, body = packages_controller.stage(package.guid)
             expect(response_code).to eq(201)
             expect(body).to eq droplet_response
-            expect(DropletModel.last.buildpack).to eq(app.buildpack)
+            expect(DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
           end
         end
       end
@@ -808,8 +808,8 @@ module VCAP::CloudController
           }
 
           before do
-            app.environment_variables = { 'key_from_app' => 'should_merge', 'conflicting_key' => 'value_from_app' }
-            app.save
+            app_model.environment_variables = { 'key_from_app' => 'should_merge', 'conflicting_key' => 'value_from_app' }
+            app_model.save
           end
           it 'merges with the existing environment variables' do
             response_code, _ = packages_controller.stage(package.guid)

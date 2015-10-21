@@ -1,6 +1,7 @@
 {
   "app/access/*.rb": {"type": "unit", "alternate": "spec/unit/access/{}_spec.rb"},
   "app/actions/*.rb": {"type": "unit", "alternate": "spec/unit/actions/{}_spec.rb"},
+  "app/builders/*.rb": {"type": "unit", "alternate": "spec/unit/builders/{}_spec.rb"},
   "app/collection_transformers/*.rb": {"type": "unit", "alternate": "spec/unit/collection_transformers/{}_spec.rb"},
   "app/controllers/*.rb": {"type": "unit", "alternate": "spec/unit/controllers/{}_spec.rb"},
   "app/jobs/*.rb": {"type": "unit", "alternate": "spec/unit/jobs/{}_spec.rb"},

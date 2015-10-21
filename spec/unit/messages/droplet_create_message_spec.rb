@@ -22,7 +22,12 @@ module VCAP::CloudController
 
     describe 'validations' do
       context 'when unexpected keys are requested' do
-        let(:params) { { unexpected: 'foo' } }
+        let(:params) do
+          {
+            unexpected: 'meow',
+            lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
+          }
+        end
 
         it 'is not valid' do
           message = DropletCreateMessage.new(params)
@@ -33,7 +38,12 @@ module VCAP::CloudController
       end
 
       context 'when memory_limit is not an number' do
-        let(:params) { { memory_limit: 'silly string thing' } }
+        let(:params) do
+          {
+            memory_limit: 'silly string thing',
+            lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
+          }
+        end
 
         it 'is not valid' do
           message = DropletCreateMessage.new(params)
@@ -44,7 +54,12 @@ module VCAP::CloudController
       end
 
       context 'when memory_limit is not an integer' do
-        let(:params) { { memory_limit: 3.5 } }
+        let(:params) do
+          {
+            memory_limit: 3.5,
+            lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
+          }
+        end
 
         it 'is not valid' do
           message = DropletCreateMessage.new(params)
@@ -55,7 +70,12 @@ module VCAP::CloudController
       end
 
       context 'when disk_limit is not an number' do
-        let(:params) { { disk_limit: 'silly string thing' } }
+        let(:params) do
+          {
+            disk_limit: 'not-a-number',
+            lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
+          }
+        end
 
         it 'is not valid' do
           message = DropletCreateMessage.new(params)
@@ -66,7 +86,12 @@ module VCAP::CloudController
       end
 
       context 'when disk_limit is not an integer' do
-        let(:params) { { disk_limit: 3.5 } }
+        let(:params) do
+          {
+            disk_limit: 3.5,
+            lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
+          }
+        end
 
         it 'is not valid' do
           message = DropletCreateMessage.new(params)
@@ -77,7 +102,12 @@ module VCAP::CloudController
       end
 
       context 'when environment_variables is not a hash' do
-        let(:params) { { environment_variables: 'not-a-hash' } }
+        let(:params) do
+          {
+            environment_variables: 'not-a-hash',
+            lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
+          }
+        end
 
         it 'is not valid' do
           message = DropletCreateMessage.new(params)
@@ -99,7 +129,7 @@ module VCAP::CloudController
 
           message = DropletCreateMessage.new(params)
           expect(message).not_to be_valid
-          expect(message.errors[:lifecycle]).to include('Data must be present')
+          expect(message.errors[:lifecycle]).to include('data must be present')
           expect(message.errors[:lifecycle_data]).to include('must be a hash')
         end
 
@@ -137,18 +167,6 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors[:lifecycle]).to include('Buildpack must be a string')
-        end
-      end
-
-      context 'when lifecycle is not provided' do
-        let(:params) { { memory_limit: 5 } }
-
-        it 'defaults to buildpack' do
-          message = DropletCreateMessage.new(params)
-          expect(message).to be_valid
-
-          expect(message.lifecycle[:type]).to eq('buildpack')
-          expect(message.lifecycle[:data][:stack]).to eq(Stack.default.name)
         end
       end
     end

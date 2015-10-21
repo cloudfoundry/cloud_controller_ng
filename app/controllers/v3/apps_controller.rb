@@ -15,6 +15,7 @@ require 'messages/app_create_message'
 require 'messages/app_update_message'
 require 'messages/buildpack_request_validator'
 require 'messages/apps_list_message'
+require 'builders/app_create_request_builder'
 
 module VCAP::CloudController
   class AppsV3Controller < RestController::BaseController
@@ -62,7 +63,8 @@ module VCAP::CloudController
       check_write_permissions!
 
       request = parse_and_validate_json(body)
-      message = AppCreateMessage.create_from_http_request(request)
+      assembled_request = AppCreateRequestBuilder.new.build(request)
+      message = AppCreateMessage.create_from_http_request(assembled_request)
       unprocessable!(message.errors.full_messages) unless message.valid?
 
       buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
