@@ -44,7 +44,7 @@ module VCAP::CloudController
       describe 'name' do
         subject(:org) { Organization.make }
 
-        it 'shoud allow standard ascii characters' do
+        it 'should allow standard ascii characters' do
           org.name = "A -_- word 2!?()\'\"&+."
           expect {
             org.save

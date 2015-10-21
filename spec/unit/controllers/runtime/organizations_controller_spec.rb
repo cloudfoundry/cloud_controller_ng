@@ -484,6 +484,41 @@ module VCAP::CloudController
           expect(org.users).to include(user)
         end
       end
+
+      context 'PUT /v2/organizations/org_guid/private_domains/domain_guid' do
+        context 'when PrivateDomain is shared' do
+          let(:org1) { Organization.make }
+          let(:org2) { Organization.make }
+          let(:private_domain) { PrivateDomain.make(owning_organization: org1) }
+          let(:user) { User.make }
+          let(:manager) { User.make }
+          let(:target_manager) { User.make }
+
+          before do
+            org1.add_manager(manager)
+            org2.add_manager(manager)
+
+            org1.add_auditor(target_manager)
+            org2.add_manager(target_manager)
+          end
+
+          it 'should allow a user who is a manager of both the target org and the owning org to share a private domain' do
+            put "/v2/organizations/#{org2.guid}/private_domains/#{private_domain.guid}", {}, headers_for(manager)
+            expect(last_response.status).to eq(201)
+            expect(org2.private_domains).to include(private_domain)
+          end
+
+          it 'should not allow the user to share domains to an org that the user is not a org manager of' do
+            put "/v2/organizations/#{org2.guid}/private_domains/#{private_domain.guid}", {}, headers_for(user)
+            expect(last_response.status).to eq(403)
+          end
+
+          it 'should not allow the user to share domains that user is not a manager in the owning organization of' do
+            put "/v2/organizations/#{org2.guid}/private_domains/#{private_domain.guid}", {}, headers_for(target_manager)
+            expect(last_response.status).to eq(403)
+          end
+        end
+      end
     end
 
     describe 'GET /v2/organizations/:guid/users' do

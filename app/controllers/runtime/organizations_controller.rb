@@ -196,6 +196,16 @@ module VCAP::CloudController
       end
     end
 
+    put '/v2/organizations/:guid/private_domains/:domain_guid', :share_domain
+    def share_domain(guid, domain_guid)
+      org = find_guid_and_validate_access(:update, guid)
+      domain = find_guid_and_validate_access(:update, domain_guid, PrivateDomain)
+
+      org.add_private_domain(domain)
+      @opts.merge(transform_opts: { organization_id: org.id })
+      [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
+    end
+
     delete "#{path_guid}/domains/:domain_guid" do |controller_instance|
       controller_instance.add_warning('Endpoint removed')
       headers = { 'Location' => '/v2/private_domains/:domain_guid' }
