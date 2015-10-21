@@ -18,6 +18,10 @@ Rails.application.routes.draw do
   delete '/v3/packages/:guid', to: 'packages#destroy'
   post '/v3/packages/:guid/droplets', to: 'packages#stage'
 
+  get '/v3/droplets', to: 'droplets#index'
+  get '/v3/droplets/:guid', to: 'droplets#show'
+  delete '/v3/droplets/:guid', to: 'droplets#destroy'
+
   match '404', :to => 'errors#not_found', via: :all
   match '500', :to => 'errors#internal_error', via: :all
   match '400', :to => 'errors#bad_request', via: :all
