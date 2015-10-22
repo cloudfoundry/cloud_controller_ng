@@ -80,7 +80,6 @@ DESC
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :security_group
       describe 'with space_guid' do
-        parameter :space_guid, 'The guid of the Space'
         nested_model_associate :space, :security_group
         nested_model_remove :space, :security_group
       end
