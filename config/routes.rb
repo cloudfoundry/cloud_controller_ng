@@ -22,6 +22,10 @@ Rails.application.routes.draw do
   get '/v3/droplets/:guid', to: 'droplets#show'
   delete '/v3/droplets/:guid', to: 'droplets#destroy'
 
+  get '/v3/apps/:guid/routes', to: 'apps_routes#index'
+  delete '/v3/apps/:guid/routes', to: 'apps_routes#destroy'
+  put '/v3/apps/:guid/routes', to: 'apps_routes#add_route'
+
   match '404', :to => 'errors#not_found', via: :all
   match '500', :to => 'errors#internal_error', via: :all
   match '400', :to => 'errors#bad_request', via: :all

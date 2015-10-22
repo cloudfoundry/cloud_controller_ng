@@ -73,12 +73,6 @@ describe DropletsController, type: :controller do
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
-
-        expect(membership).to have_received(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid)
       end
     end
   end
