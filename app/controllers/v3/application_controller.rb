@@ -29,7 +29,7 @@ class ApplicationController < ActionController::Base
   before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
   before_action :check_read_permissions!, only: [:index, :show]
   before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error, :bad_request]
-  before_action :seed_body
+  before_action :null_coalesce_body
 
   rescue_from VCAP::Errors::ApiError, with: :handle_api_error
 
@@ -114,7 +114,7 @@ class ApplicationController < ActionController::Base
     render status: presenter.response_code, json: MultiJson.dump(presenter.error_hash, pretty: true)
   end
 
-  def seed_body
+  def null_coalesce_body
     params[:body] ||= {}
   end
 end
