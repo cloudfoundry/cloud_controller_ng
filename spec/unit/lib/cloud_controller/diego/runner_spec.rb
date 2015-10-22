@@ -90,6 +90,20 @@ module VCAP::CloudController
           expect(protocol).to have_received(:desire_app_message).with(app, default_health_check_timeout)
         end
       end
+
+      describe '#with_logging' do
+        it 'raises a reasonable error if diego is not on' do
+          expect do
+            runner.with_logging { raise StandardError.new('getaddrinfo: Name or service not known') }
+          end.to raise_error(Runner::CannotCommunicateWithDiegoError)
+        end
+
+        it 'raises a reasonable error if diego is not on' do
+          expect do
+            runner.with_logging { raise ArgumentError.new('Other Error') }
+          end.to raise_error(ArgumentError)
+        end
+      end
     end
   end
 end
