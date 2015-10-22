@@ -26,6 +26,11 @@ Rails.application.routes.draw do
   delete '/v3/apps/:guid/routes', to: 'apps_routes#destroy'
   put '/v3/apps/:guid/routes', to: 'apps_routes#add_route'
 
+  get '/v3/apps/:guid/processes', to: 'apps_processes#index'
+  get '/v3/apps/:guid/processes/:type', to: 'apps_processes#show'
+  put '/v3/apps/:guid/processes/:type/scale', to: 'apps_processes#scale'
+  delete '/v3/apps/:guid/processes/:type/instances/:index', to: 'apps_processes#terminate'
+
   match '404', :to => 'errors#not_found', via: :all
   match '500', :to => 'errors#internal_error', via: :all
   match '400', :to => 'errors#bad_request', via: :all
