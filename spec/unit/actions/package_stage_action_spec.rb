@@ -59,7 +59,6 @@ module VCAP::CloudController
             expect(droplet.state).to eq(DropletModel::PENDING_STATE)
             expect(droplet.lifecycle_data.to_hash).to eq(lifecycle_data)
             expect(droplet.package_guid).to eq(package.guid)
-            expect(droplet.buildpack).to eq(buildpack.name)
             expect(droplet.buildpack_guid).to eq(buildpack.guid)
             expect(droplet.app_guid).to eq(app.guid)
             expect(droplet.memory_limit).to eq(calculated_mem_limit)

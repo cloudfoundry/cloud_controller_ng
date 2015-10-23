@@ -2,13 +2,41 @@ require 'spec_helper'
 require 'builders/droplet_stage_request_builder'
 
 module VCAP::CloudController
-  describe DropletRequestBuilder do
-    let(:request_builder) { DropletRequestBuilder.new }
+  describe DropletStageRequestBuilder do
+    let(:request_builder) { DropletStageRequestBuilder.new }
     context 'lifecycle' do
       let(:app_model) { AppModel.make }
       let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model) }
       let(:default_buildpack) { lifecycle_data.buildpack }
       let(:default_stack) { lifecycle_data.stack }
+
+      context 'data' do
+        it 'does not supply a default if data is not provided, but lifecycle is' do
+          params = {
+            'lifecycle' => {}
+          }
+
+          assembled_request = request_builder.build(params, app_model.lifecycle_data)
+          expect(assembled_request['lifecycle']['data']).to be(nil)
+        end
+      end
+
+      context 'type' do
+        let(:stack) { Stack.make(name: 'some-valid-stack') }
+        it 'does not supply a default to type' do
+          params = {
+            'lifecycle' => {
+              'data' => {
+                'buildpack' => 'http://github.com/myorg/awesome-buildpack',
+                'stack' => stack.name
+              }
+            }
+          }
+
+          assembled_request = request_builder.build(params, app_model.lifecycle_data)
+          expect(assembled_request['lifecycle']['type']).to be(nil)
+        end
+      end
 
       context 'buildpack' do
         let(:stack) { Stack.make(name: 'some-valid-stack') }

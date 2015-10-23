@@ -499,7 +499,7 @@ resource 'Packages (Experimental)', type: :api do
         'memory_limit' => 1024,
         'disk_limit' => 4096,
         'result' => {
-          'buildpack' => 'http://github.com/myorg/awesome-buildpack',
+          'buildpack' => nil,
           'stack' => 'cflinuxfs2',
           'process_types' => nil,
           'hash' => { 'type' => 'sha1', 'value' => nil },

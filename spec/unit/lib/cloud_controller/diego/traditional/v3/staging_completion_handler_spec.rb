@@ -13,9 +13,9 @@ module VCAP::CloudController
               result: {
                 lifecycle_type: 'buildpack',
                 lifecycle_metadata: {
-                  buildpack_key:      buildpack.key,
-                  detected_buildpack: 'INTERCAL',
-                },
+                    buildpack_key:      buildpack.key,
+                    detected_buildpack: 'INTERCAL',
+                  },
                 execution_metadata: '',
                 process_types:      {
                   web: 'some command'

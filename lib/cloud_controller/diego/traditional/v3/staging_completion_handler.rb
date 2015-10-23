@@ -70,7 +70,6 @@ module VCAP::CloudController
 
           def save_staging_result(droplet, payload)
             lifecycle_data = payload[:result][:lifecycle_metadata]
-
             droplet.class.db.transaction do
               droplet.lock!
               droplet.process_types  = payload[:result][:process_types]

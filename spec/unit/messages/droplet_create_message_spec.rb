@@ -124,13 +124,21 @@ module VCAP::CloudController
           expect(message).to be_valid
         end
 
-        it 'data must be provided' do
+        it 'must provide data' do
           params = { lifecycle: { type: 'buildpack' } }
 
           message = DropletCreateMessage.new(params)
           expect(message).not_to be_valid
           expect(message.errors[:lifecycle]).to include('data must be present')
           expect(message.errors[:lifecycle_data]).to include('must be a hash')
+        end
+
+        it 'must provide type' do
+          params = { lifecycle: { data: { buildpack: 'java', stack: 'cflinuxfs2' } } }
+
+          message = DropletCreateMessage.new(params)
+          expect(message).not_to be_valid
+          expect(message.errors[:lifecycle_type]).to include("can't be blank")
         end
 
         it 'must be a valid lifecycle type' do

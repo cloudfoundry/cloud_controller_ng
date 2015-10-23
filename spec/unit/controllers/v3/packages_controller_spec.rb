@@ -720,7 +720,7 @@ module VCAP::CloudController
             response_code, body = packages_controller.stage(package.guid)
             expect(response_code).to eq(201)
             expect(body).to eq droplet_response
-            expect(DropletModel.last.buildpack).to eq('http://dan-and-zach-awesome-pack.com')
+            expect(DropletModel.last.lifecycle_data.buildpack).to eq('http://dan-and-zach-awesome-pack.com')
           end
 
           context 'when the url is invalid' do

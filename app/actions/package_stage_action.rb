@@ -28,7 +28,6 @@ module VCAP::CloudController
       droplet = DropletModel.create(
         app_guid:              package.app.guid,
         buildpack_guid:        buildpack_info.buildpack_record.try(:guid),
-        buildpack:             buildpack_info.to_s,
         package_guid:          package.guid,
         state:                 DropletModel::PENDING_STATE,
         stack_name:            staging_message.stack,
@@ -40,9 +39,9 @@ module VCAP::CloudController
       logger.info("droplet created: #{droplet.guid}")
 
       BuildpackLifecycleDataModel.create(
-        buildpack: staging_message.buildpack,
-        stack:     staging_message.stack,
-        droplet: droplet
+        buildpack: staging_message.lifecycle['data']['buildpack'],
+        stack:     staging_message.lifecycle['data']['stack'],
+        droplet:   droplet
       )
 
       logger.info("staging package: #{package.inspect} for droplet #{droplet.guid}")

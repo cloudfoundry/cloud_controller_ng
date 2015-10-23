@@ -20,8 +20,8 @@ module VCAP::CloudController
     validates :environment_variables, environment_variables: true, allow_nil: true
 
     validates :lifecycle_type,
-      inclusion: { in: LIFECYCLE_TYPES },
       presence: true,
+      inclusion: { in: LIFECYCLE_TYPES },
       if: lifecycle_requested?
 
     validates :lifecycle_data,
