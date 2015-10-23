@@ -435,16 +435,6 @@ module VCAP::CloudController
         expect(App.filter(id: app_obj.id)).to be_empty
       end
 
-      context 'a diego app' do
-        let(:app_obj) { AppFactory.make(diego: true) }
-
-        it 'returns a 204 even if we cannot communicate with diego' do
-          allow_any_instance_of(App).to receive(:destroy).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
-          delete_app
-          expect(last_response.status).to eq(204)
-        end
-      end
-
       context 'non recursive deletion' do
         context 'with NON-empty service_binding association' do
           let!(:svc_instance) { ManagedServiceInstance.make(space: app_obj.space) }

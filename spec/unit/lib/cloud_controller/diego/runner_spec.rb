@@ -45,11 +45,17 @@ module VCAP::CloudController
       describe '#stop' do
         before do
           allow(messenger).to receive(:send_stop_app_request)
-          runner.stop
         end
 
         it 'sends a stop app request' do
+          runner.stop
           expect(messenger).to have_received(:send_stop_app_request).with(app)
+        end
+
+        it 'does not send a request if the app is not started' do
+          app.state = 'STOPPED'
+          runner.stop
+          expect(messenger).not_to have_received(:send_stop_app_request).with(app)
         end
       end
 

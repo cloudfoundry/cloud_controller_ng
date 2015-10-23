@@ -29,6 +29,7 @@ module VCAP::CloudController
       end
 
       def stop
+        return unless @app.started?
         with_logging('stop_app') { @messenger.send_stop_app_request(@app) }
       end
 
@@ -39,14 +40,14 @@ module VCAP::CloudController
       def with_logging(action=nil)
         yield
       rescue StandardError => e
-        return raise e unless diego_not_respond_error?(e)
+        return raise e unless diego_not_responding_error?(e)
         logger.error "Cannot communicate with diego - tried to send #{action}"
         raise CannotCommunicateWithDiegoError.new(e.message)
       end
 
       private
 
-      def diego_not_respond_error?(e)
+      def diego_not_responding_error?(e)
         /getaddrinfo/ =~ e.message
       end
 

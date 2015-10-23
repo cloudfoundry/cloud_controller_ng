@@ -76,6 +76,7 @@ module VCAP::CloudController
       instance_not_found! unless process_index.to_i < process.instances && process_index.to_i >= 0
 
       index_stopper.stop_index(process, process_index.to_i)
+
       [HTTP::NO_CONTENT, nil]
     end
 

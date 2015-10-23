@@ -7,6 +7,7 @@ module VCAP::CloudController
     let(:stager) { double(:stager) }
     let(:runner) { double(:runner, stop: nil, start: nil) }
     let(:app_active) { true }
+    let(:diego) { false }
     let(:app) do
       double(
         :app,
@@ -17,6 +18,7 @@ module VCAP::CloudController
         needs_staging?: app_needs_staging,
         active?: app_active,
         buildpack_cache_key: key,
+        diego: diego
       )
     end
     let(:app_started) { false }
@@ -36,6 +38,15 @@ module VCAP::CloudController
       it 'stops the app' do
         expect(runner).to receive(:stop)
         subject
+      end
+
+      context 'diego app' do
+        let(:diego) { true }
+
+        it 'does not care if diego is unavailable' do
+          allow(runner).to receive(:stop).and_raise(VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError)
+          expect { subject }.not_to raise_error
+        end
       end
 
       it "deletes the app's buildpack cache" do

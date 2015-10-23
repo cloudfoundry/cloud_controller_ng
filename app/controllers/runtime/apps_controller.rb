@@ -108,10 +108,7 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', app.class.table_name)
       end
 
-      begin
-        app.destroy
-      rescue VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError
-      end
+      app.destroy
 
       @app_event_repository.record_app_delete_request(
           app,
