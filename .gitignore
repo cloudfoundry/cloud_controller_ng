@@ -6,6 +6,7 @@
 .bundle
 bundler
 spec/artifacts
+spec/examples.txt
 ci-artifacts-dir
 ci-working-dir
 coverage
