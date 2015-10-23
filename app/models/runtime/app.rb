@@ -699,3 +699,7 @@ module VCAP::CloudController
   end
   # rubocop:enable ClassLength
 end
+
+module VCAP::CloudController
+  ProcessModel = App
+end

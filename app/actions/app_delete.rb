@@ -52,10 +52,10 @@ module VCAP::CloudController
 
     def processes_to_delete(app_model)
       app_model.processes_dataset.
-        select(:"#{App.table_name}__guid",
-        :"#{App.table_name}__id",
-        :"#{App.table_name}__app_guid",
-        :"#{App.table_name}__name").all
+        select(:"#{ProcessModel.table_name}__guid",
+        :"#{ProcessModel.table_name}__id",
+        :"#{ProcessModel.table_name}__app_guid",
+        :"#{ProcessModel.table_name}__name").all
     end
   end
 end

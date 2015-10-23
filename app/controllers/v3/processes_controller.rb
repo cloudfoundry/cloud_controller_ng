@@ -39,7 +39,7 @@ module VCAP::CloudController
     def show(guid)
       check_read_permissions!
 
-      process = App.where(guid: guid).eager(:space, :organization).all.first
+      process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first
 
       not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
 
@@ -54,7 +54,7 @@ module VCAP::CloudController
       message = ProcessUpdateMessage.create_from_http_request(request)
       unprocessable!(message.errors.full_messages) unless message.valid?
 
-      process = App.where(guid: guid).eager(:space, :organization).all.first
+      process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first
       not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
       unauthorized! if !can_update?(process.space.guid)
 
@@ -69,7 +69,7 @@ module VCAP::CloudController
     def terminate(process_guid, process_index)
       check_write_permissions!
 
-      process = App.where(guid: process_guid).eager(:space, :organization).all.first
+      process = ProcessModel.where(guid: process_guid).eager(:space, :organization).all.first
       not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
       unauthorized! unless can_terminate?(process.space.guid)
 

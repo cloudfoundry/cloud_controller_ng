@@ -1,12 +1,12 @@
 module VCAP::CloudController
   class ProcessListFetcher
     def fetch_all(pagination_options)
-      dataset = App.dataset
+      dataset = ProcessModel.dataset
       paginate(dataset, pagination_options)
     end
 
     def fetch(pagination_options, space_guids)
-      dataset = App.select_all(:apps).join(:spaces, id: :space_id, guid: space_guids)
+      dataset = ProcessModel.select_all(:apps).join(:spaces, id: :space_id, guid: space_guids)
       paginate(dataset, pagination_options)
     end
 
