@@ -213,7 +213,6 @@ module VCAP::CloudController
 
     describe '#create' do
       let(:space) { Space.make }
-      let(:buildpack) {}
       let(:req_body) do
         {
           name: 'some-name',
