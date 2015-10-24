@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'webrick'
 
 module CloudController
   module Blobstore
@@ -746,6 +747,70 @@ module CloudController
           expect(client.exists?('abcdef')).to be true
           expect(client.blob('abcdef')).to be
           expect(client.download_uri('abcdef')).to match(%r{my-root/ab/cd/abcdef})
+        end
+      end
+
+      describe 'downloading without mocking' do
+        describe 'from a CDN' do
+          let(:port) { 9876 } # TODO Can we find a free port?
+
+          around(:each) do |example|
+            WebMock.disable_net_connect!(allow_localhost: true)
+            example.run
+            WebMock.disable_net_connect!
+          end
+
+          it 'correctly downloads byte streams' do
+            cdn = Cdn.make("http://localhost:#{port}")
+            client = Client.new(connection_config, directory_key, cdn)
+
+            source_directory_path = File.expand_path('../../../../fixtures/', File.dirname(__FILE__))
+            source_file_path = File.join(source_directory_path, 'pa/rt/partitioned_key')
+            source_hexdigest = Digest::SHA2.file(source_file_path).hexdigest
+
+            pid = spawn("ruby -rwebrick -e'WEBrick::HTTPServer.new(:Port => #{port}, :DocumentRoot => \"#{source_directory_path}\").start'", :out => "test.out", :err => "test.err")
+
+            Process.detach(pid)
+
+            begin
+              destination_file_path = File.join(Dir.mktmpdir, 'hard_file.xyz')
+
+              client.download_from_blobstore('partitioned_key', destination_file_path)
+
+              destination_hexdigest = Digest::SHA2.file(destination_file_path).hexdigest
+
+              expect(destination_hexdigest).to eq(source_hexdigest)
+            ensure
+              Process.kill(9, pid)
+            end
+          end
+        end
+
+        describe 'from a blobstore' do
+          around(:each) do |example|
+            Fog.unmock!
+            example.run
+            Fog.mock!
+          end
+
+          it 'correctly downloads byte streams' do
+            Fog.unmock!
+            local_root = File.expand_path('../../../../', File.dirname(__FILE__))
+            source_directory_path = File.join(local_root, 'fixtures')
+
+            client = Client.new({ provider: 'Local', local_root: local_root }, 'fixtures')
+
+            source_file_path = File.join(source_directory_path, 'pa/rt/partitioned_key')
+            source_hexdigest = Digest::SHA2.file(source_file_path).hexdigest
+
+            destination_file_path = File.join(Dir.mktmpdir, 'hard_file.xyz')
+
+            client.download_from_blobstore('partitioned_key', destination_file_path)
+
+            destination_hexdigest = Digest::SHA2.file(destination_file_path).hexdigest
+
+            expect(destination_hexdigest).to eq(source_hexdigest)
+          end
         end
       end
     end
