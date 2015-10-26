@@ -61,7 +61,6 @@ resource 'Routes', type: [:api, :legacy_api] do
           required_fields.merge(
             domain_guid: domain.guid,
             space_guid: space.guid,
-            path: route_path,
             port: port,
           ), pretty: true
         )
@@ -69,7 +68,6 @@ resource 'Routes', type: [:api, :legacy_api] do
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :route
-        expect(parsed_response['entity']['path']).to eq(route_path)
         expect(parsed_response['entity']['port']).to eq(port)
         expect(parsed_response['entity']['space_guid']).to eq(space.guid)
       end
@@ -78,22 +76,19 @@ resource 'Routes', type: [:api, :legacy_api] do
     put '/v2/routes/:guid' do
       include_context 'updatable_fields', required: false
 
-      let(:new_host) { 'new_host' }
+      let(:new_port) { 12000 }
 
       example 'Update a Route' do
         body = MultiJson.dump(
           {
-            host: new_host,
-            path: route_path,
-            port: port,
+            port: new_port,
           }, pretty: true
         )
         client.put "/v2/routes/#{guid}", body, headers
 
         expect(status).to eq 201
-        standard_entity_response parsed_response, :route, host: new_host
-        expect(parsed_response['entity']['path']).to eq(route_path)
-        expect(parsed_response['entity']['port']).to eq(port)
+        standard_entity_response parsed_response, :route, port: new_port
+        expect(parsed_response['entity']['port']).to eq(new_port)
       end
     end
   end

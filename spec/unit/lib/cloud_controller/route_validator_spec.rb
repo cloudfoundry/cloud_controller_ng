@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe TcpRouteValidator do
-    let(:validator) { TcpRouteValidator.new(routing_api_client, domain_guid, port) }
+  describe RouteValidator do
+    let(:validator) { RouteValidator.new(routing_api_client, domain_guid, route_attrs) }
     let(:routing_api_client) { double('routing_api', router_group: router_group) }
     let(:router_group) { double(:router_group, type: router_group_type, guid: router_group_guid) }
     let(:router_group_type) { 'tcp' }
@@ -10,13 +10,16 @@ module VCAP::CloudController
     let(:domain_guid) { domain.guid }
     let(:domain) { SharedDomain.make(router_group_guid: router_group_guid) }
     let(:port) { 8080 }
+    let(:host) { nil }
+    let(:path) { nil }
+    let(:route_attrs) { { 'port' => port, 'host' => host, 'path' => path } }
 
     context 'when non-existent domain is specified' do
       let(:domain_guid) { 'non-existent-domain' }
 
       it 'raises a DomainInvalid error' do
         expect { validator.validate }.
-            to raise_error(TcpRouteValidator::DomainInvalid, 'Domain with guid non-existent-domain does not exist')
+            to raise_error(RouteValidator::DomainInvalid, 'Domain with guid non-existent-domain does not exist')
       end
     end
 
@@ -28,7 +31,7 @@ module VCAP::CloudController
 
         it 'raises a RouteInvalid error' do
           expect { validator.validate }.
-              to raise_error(TcpRouteValidator::RouteInvalid, 'Router groups are only supported for TCP routes.')
+              to raise_error(RouteValidator::RouteInvalid, 'Port is required, as domain belongs to a TCP router group.')
         end
       end
     end
@@ -39,7 +42,7 @@ module VCAP::CloudController
 
         it 'raises a RouteInvalid error' do
           expect { validator.validate }.
-              to raise_error(TcpRouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
+              to raise_error(RouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
         end
       end
 
@@ -53,7 +56,23 @@ module VCAP::CloudController
 
           it 'raises a RouteInvalid error' do
             expect { validator.validate }.
-                to raise_error(TcpRouteValidator::RouteInvalid, 'Port must within the range 1024-65535.')
+                to raise_error(RouteValidator::RouteInvalid, 'Port must within the range 1024-65535.')
+          end
+        end
+
+        context 'host is included in request' do
+          let(:host) { 'abc' }
+          it 'raises a RouteInvalid error' do
+            expect { validator.validate }.
+                to raise_error(RouteValidator::RouteInvalid, 'Host and path are not supported, as domain belongs to a TCP router group.')
+          end
+        end
+
+        context 'path is included in request' do
+          let(:path) { '/fake/path' }
+          it 'raises a RouteInvalid error' do
+            expect { validator.validate }.
+                to raise_error(RouteValidator::RouteInvalid, 'Host and path are not supported, as domain belongs to a TCP router group.')
           end
         end
 
@@ -69,7 +88,7 @@ module VCAP::CloudController
                 'use a domain of a different router group.'
 
             expect { validator.validate }.
-                to raise_error(TcpRouteValidator::RoutePortTaken, error_message)
+                to raise_error(RouteValidator::RoutePortTaken, error_message)
           end
         end
 
@@ -90,7 +109,7 @@ module VCAP::CloudController
 
         it 'rejects the request with a RouteInvalid error' do
           expect { validator.validate }.
-              to raise_error(TcpRouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
+              to raise_error(RouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
         end
       end
 
@@ -99,7 +118,7 @@ module VCAP::CloudController
 
         it 'rejects the request with a RouteInvalid error' do
           expect { validator.validate }.
-              to raise_error(TcpRouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
+              to raise_error(RouteValidator::RouteInvalid, 'Port is supported for domains of TCP router groups only.')
         end
       end
     end

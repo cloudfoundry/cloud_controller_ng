@@ -318,23 +318,28 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:user) { User.make }
       let(:domain_guid) { SharedDomain.make.guid }
+      let(:host) { 'example' }
+      let(:port) { 1050 }
       let(:req) { {
           domain_guid: domain_guid,
           space_guid: space.guid,
-          host: 'example'
+          host: host,
+          port: port,
+          path: ''
       } }
+      let(:route_attrs) { { 'port' => port, 'host' => host, 'path' => '' } }
       let(:tcp_route_validator) { double(:tcp_route_validator, validate: nil) }
 
       before do
         space.organization.add_user(user)
         space.add_developer(user)
-        allow(TcpRouteValidator).to receive(:new).with(routing_api_client, domain_guid, nil).and_return(tcp_route_validator)
+        allow(RouteValidator).to receive(:new).with(routing_api_client, domain_guid, route_attrs).and_return(tcp_route_validator)
       end
 
       context 'when the TCP Route is not valid' do
         before do
           allow(tcp_route_validator).to receive(:validate).
-                                            and_raise(TcpRouteValidator::DomainInvalid.new('domain error'))
+                                            and_raise(RouteValidator::DomainInvalid.new('domain error'))
         end
 
         it 'returns an error' do
@@ -399,7 +404,7 @@ module VCAP::CloudController
       before do
         space.organization.add_user(user)
         space.add_developer(user)
-        allow(TcpRouteValidator).to receive(:new).with(routing_api_client, domain_guid, new_port).and_return(tcp_route_validator)
+        allow(RouteValidator).to receive(:new).with(routing_api_client, domain_guid, route_attrs).and_return(tcp_route_validator)
       end
 
       describe 'tcp routes' do
@@ -409,11 +414,12 @@ module VCAP::CloudController
         let(:req) { {
           port: new_port,
         } }
+        let(:route_attrs) { { 'port' => new_port, 'host' => nil, 'path' => nil } }
 
         context 'when the TCP Route is not valid' do
           before do
             allow(tcp_route_validator).to receive(:validate).
-                                              and_raise(TcpRouteValidator::DomainInvalid.new('domain error'))
+                                              and_raise(RouteValidator::DomainInvalid.new('domain error'))
           end
 
           it 'returns an error' do
