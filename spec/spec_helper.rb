@@ -58,7 +58,6 @@ RSpec.configure do |rspec_config|
   rspec_config.before(:all, type: :integration) { WebMock.allow_net_connect! }
   rspec_config.after(:all, type: :integration) { WebMock.disable_net_connect!(allow: 'codeclimate.com') }
 
-  rspec_config.example_status_persistence_file_path = 'spec/examples.txt'
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
 
   Delayed::Worker.plugins << DeserializationRetry

@@ -1,39 +1,16 @@
-desc "Runs all specs, not stopping for failures"
-task :spec do
-  %w[
-      db:pick
-      db:recreate
-      spec:unit:fast
-      spec:unit:controllers
-      spec:unit:lib
-      spec:outer
-  ].each do |task_name|
-    begin
-      Rake::Task[task_name].invoke
-    rescue
-    end
-  end
-  puts 'Re-running failed specs to aggregate failures...'
-  run_failed_specs
-end
+desc "Runs all specs"
+task spec: %w[
+              db:pick
+              db:recreate
+              spec:unit:fast
+              spec:unit:controllers
+              spec:unit:lib
+              spec:outer
+            ]
 
 namespace :spec do
   task all: "db:pick" do
     run_specs("spec")
-  end
-
-  task failfast: %w[
-    db:pick
-    db:recreate
-    spec:unit:fast
-    spec:unit:controllers
-    spec:unit:lib
-    spec:outer
-  ]
-
-  desc 'Run only previously failing tests'
-  task failed: "db:pick" do
-    run_failed_specs
   end
 
   desc "Generate the API documents"
@@ -88,20 +65,5 @@ namespace :spec do
 
   def run_specs(path)
     sh "bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail"
-  end
-
-  def run_failed_specs
-    test_command =  "bundle exec rspec --only-failures --color --tty spec --require rspec/instafail --format RSpec::Instafail"
-
-    output = ''
-    IO.popen(test_command).each do |line|
-      output << "#{line}"
-    end.close
-    if $? != 0
-      puts output
-      abort
-    else
-      puts 'All tests are passing!'
-    end
   end
 end
