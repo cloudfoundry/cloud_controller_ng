@@ -398,9 +398,21 @@ resource 'Packages (Experimental)', type: :api do
     body_parameter :environment_variables, 'Environment variables to use during staging.
     Environment variable names may not start with "VCAP_" or "CF_". "PORT" is not a valid environment variable.',
       example_values: ['{"FEATURE_ENABLED": "true"}'],
-      required: false
-    body_parameter :memory_limit, 'Memory limit used to stage package', required: false
-    body_parameter :disk_limit, 'Disk limit used to stage package', required: false
+      required: false, valid_values: 'object'
+    body_parameter :memory_limit, 'Memory limit used to stage package', valid_values: 'integer', required: false
+    body_parameter :disk_limit, 'Disk limit used to stage package', valid_values: 'integer', required: false
+    body_parameter :lifecycle, 'Lifecycle information for a droplet.  If not provided, it will default to a buildpack',
+      valid_values: 'object', required: false,
+      example_values: [
+                        MultiJson.dump(
+                          {
+                            type: 'buildpack',
+                            data: {
+                              buildpack: 'http://github.com/myorg/awesome-buildpack',
+                              stack:     'cflinuxfs2'
+                            }
+                          }, pretty: true)
+                      ]
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
@@ -418,16 +430,7 @@ resource 'Packages (Experimental)', type: :api do
       )
     end
 
-    body_parameter :lifecycle, 'Lifecycle information for a droplet.  If not provided, it will default to a buildpack',
-      required: false,
-      example_values: [
-        { lifecycle: {
-          type: 'buildpack',
-          data: {
-            buildpack: 'http://github.com/myorg/awesome-buildpack',
-            stack: 'cflinuxfs2'
-          } }
-        }.to_s]
+
 
     let(:guid) { package_model.guid }
     let(:stack) { 'cflinuxfs2' }
