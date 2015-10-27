@@ -9,7 +9,7 @@ module VCAP::CloudController
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end
 
-    describe '#list_processes' do
+    describe '#index' do
       let(:app_model) { AppModel.make }
       let(:space) { app_model.space }
       let(:org) { space.organization }
@@ -90,8 +90,6 @@ module VCAP::CloudController
 
       context 'when the request parameters are invalid' do
         context 'because there are unknown parameters' do
-          let(:params) { {'invalid' => 'thing', 'bad' => 'stuff'} }
-
           it 'returns an 400 Bad Request' do
             get :index, guid: app_model.guid, invalid: 'thing', bad: 'stuff'
 
@@ -102,8 +100,6 @@ module VCAP::CloudController
         end
 
         context 'because there are invalid values in parameters' do
-          let(:params) { {'per_page' => 'foo'} }
-
           it 'returns an 400 Bad Request' do
             get :index, guid: app_model.guid, per_page: 50000
 

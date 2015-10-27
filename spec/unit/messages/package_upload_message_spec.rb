@@ -35,7 +35,7 @@ module VCAP::CloudController
     describe '.create_from_params' do
       let(:params) { { 'bits_path' => 'foobar' } }
 
-      it 'returns the correct PackageCreateMessage' do
+      it 'returns the correct PackageUploadMessage' do
         message = PackageUploadMessage.create_from_params(params)
 
         expect(message).to be_a(PackageUploadMessage)

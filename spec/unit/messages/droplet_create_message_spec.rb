@@ -6,7 +6,7 @@ module VCAP::CloudController
     describe '.create_from_http_request' do
       let(:body) { { 'memory_limit' => 10 } }
 
-      it 'returns the correct PackageCreateMessage' do
+      it 'returns the correct DropletCreateMessage' do
         message = DropletCreateMessage.create_from_http_request(body)
 
         expect(message).to be_a(DropletCreateMessage)
