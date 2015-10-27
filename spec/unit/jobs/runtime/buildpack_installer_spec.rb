@@ -84,11 +84,11 @@ module VCAP::CloudController
           end
 
           context 'with a new buildpack' do
-            it 'does not create a buildpack' do
+            it 'does not create a buildpack and re-raises the error' do
               expect {
                 expect {
                   job.perform
-                }.to raise_error
+                }.to raise_error(RuntimeError)
               }.to_not change { Buildpack.count }
             end
           end
@@ -96,10 +96,10 @@ module VCAP::CloudController
           context 'with an existing buildpack' do
             let!(:buildpack) { Buildpack.make(name: buildpack_name, enabled: false) }
 
-            it 'does not update any values on the buildpack' do
+            it 'does not update any values on the buildpack and re-raises the error' do
               expect {
                 job.perform
-              }.to raise_error
+              }.to raise_error(RuntimeError)
 
               expect(Buildpack.find(name: buildpack_name)).to eql(buildpack)
             end

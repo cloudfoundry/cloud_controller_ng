@@ -5,12 +5,12 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     it 'cannot create top level domains' do
-      expect { Domain.make name: 'com' }.to raise_error
+      expect { Domain.make name: 'com' }.to raise_error(Sequel::ValidationFailed, /name format/)
     end
 
-    it "can't be created if a would become parent" do
+    it "can't be created if foo would become parent" do
       PrivateDomain.make name: 'bar.foo.com'
-      expect { PrivateDomain.make name: 'foo.com' }.to raise_error
+      expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /name overlapping_domain/)
     end
 
     describe 'Associations' do

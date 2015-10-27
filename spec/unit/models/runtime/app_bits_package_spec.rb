@@ -81,7 +81,7 @@ describe AppBitsPackage do
 
       it 'raises an error and removes the compressed path' do
         expect(FileUtils).to receive(:rm_f).with(compressed_path)
-        expect { create }.to raise_error
+        expect { create }.to raise_error(AppBitsPackage::PackageNotFound)
       end
     end
 
@@ -96,7 +96,7 @@ describe AppBitsPackage do
     context 'when copying to the blobstore fails' do
       it 'logs the exception on the package and reraises the exception' do
         allow(package_blobstore).to receive(:cp_to_blobstore).and_raise('BOOM')
-        expect { create }.to raise_error
+        expect { create }.to raise_error('BOOM')
         expect(package.reload.state).to eq('FAILED')
         expect(package.error).to eq('BOOM')
       end
@@ -259,7 +259,7 @@ describe AppBitsPackage do
 
       it 'removes the compressed path afterwards' do
         expect(FileUtils).to receive(:rm_f).with(compressed_path)
-        expect { create }.to raise_exception
+        expect { create }.to raise_exception VCAP::Errors::ApiError, /package.+larger/i
       end
     end
 

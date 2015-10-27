@@ -92,7 +92,7 @@ module VCAP::CloudController
           org = Organization.make
           quota = SpaceQuotaDefinition.make
 
-          expect { org.add_space_quota_definition(quota) }.to raise_error
+          expect { org.add_space_quota_definition(quota) }.to raise_error(Sequel::HookFailed)
         end
       end
 

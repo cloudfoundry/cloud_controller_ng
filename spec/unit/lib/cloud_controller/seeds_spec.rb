@@ -191,7 +191,7 @@ module VCAP::CloudController
         end
 
         it 'raises if the system org is not specified' do
-          expect { Seeds.create_seed_domains(config, nil) }.to raise_error
+          expect { Seeds.create_seed_domains(config, nil) }.to raise_error(RuntimeError, /organization.+cannot be nil/)
         end
 
         it 'creates the system domain if the system domain does not exist' do

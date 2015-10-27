@@ -55,7 +55,7 @@ describe CloudController::DropletUploader do
         expect {
           expect {
             subject.upload(temp_file_with_content.path)
-          }.to raise_error
+          }.to raise_error('Upload failed')
         }.not_to change {
           app.reload.droplets.size
         }

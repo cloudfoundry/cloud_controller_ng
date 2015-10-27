@@ -37,7 +37,7 @@ module VCAP::CloudController
 
           it "it doesn't hide EISDIR if raised for the new droplet key format" do
             allow(droplet_blobstore).to receive(:delete).with(new_droplet_key).and_raise Errno::EISDIR
-            expect { job.perform }.to raise_error
+            expect { job.perform }.to raise_error(Errno::EISDIR, /Is a directory/)
           end
 
           it "it doesn't hide error other than EISDIR" do

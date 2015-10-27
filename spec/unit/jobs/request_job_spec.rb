@@ -41,7 +41,7 @@ module VCAP::CloudController::Jobs
         random_request_id = SecureRandom.uuid
         ::VCAP::Request.current_id = random_request_id
 
-        expect { request_job.perform }.to raise_error, 'runtime test exception'
+        expect { request_job.perform }.to raise_error 'runtime test exception'
 
         expect(::VCAP::Request.current_id).to eq random_request_id
       end

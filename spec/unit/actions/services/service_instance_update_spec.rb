@@ -90,7 +90,7 @@ module VCAP::CloudController
             tags = ['a'] * 1000
             expect {
               service_instance_update.update_service_instance(service_instance, { 'tags' => tags })
-            }.to raise_error
+            }.to raise_error(Sequel::ValidationFailed, /too_long/)
             expect(service_instance.last_operation.state).to eq('failed')
           end
         end
@@ -130,7 +130,7 @@ module VCAP::CloudController
 
               expect {
                 service_instance_update.update_service_instance(service_instance, request_attrs)
-              }.to raise_error
+              }.to raise_error(Sequel::ValidationFailed, /max_length/)
 
               service_instance.reload
               expect(service_instance.name).to eq(old_name)
@@ -146,7 +146,7 @@ module VCAP::CloudController
 
               expect {
                 service_instance_update.update_service_instance(service_instance, request_attrs)
-              }.to raise_error
+              }.to raise_error(Sequel::ValidationFailed, /max_length/)
 
               expect(
                 a_request(:patch, update_url(service_instance)).with(

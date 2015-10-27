@@ -43,7 +43,7 @@ module VCAP::CloudController
             it 'will raise an error' do
               expect {
                 repository.create_from_service_instance(service_instance, nil)
-              }.to raise_error
+              }.to raise_error(Sequel::NotNullConstraintViolation)
             end
           end
 
@@ -56,7 +56,7 @@ module VCAP::CloudController
               it 'will raise an error' do
                 expect {
                   repository.create_from_service_instance(service_instance, custom_state)
-                }.to raise_error
+                }.to raise_error(NoMethodError)
               end
             end
           end

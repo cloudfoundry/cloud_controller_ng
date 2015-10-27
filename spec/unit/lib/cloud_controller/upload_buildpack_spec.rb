@@ -135,7 +135,7 @@ module VCAP::CloudController
         end
 
         it 'should not update the key and filename on the existing buildpack' do
-          expect { upload_buildpack.upload_buildpack(buildpack, valid_zip, filename) }.to raise_error
+          expect { upload_buildpack.upload_buildpack(buildpack, valid_zip, filename) }.to raise_error(RuntimeError)
           bp = Buildpack.find(name: buildpack.name)
           expect(bp).to_not be_nil
           expect(bp.key).to eq(previous_key)

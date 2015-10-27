@@ -489,7 +489,7 @@ module VCAP::CloudController
           it 'errors' do
             expect {
               AppFactory.make(docker_credentials_json: { 'docker_user' => 'user' })
-            }.to raise_error
+            }.to raise_error(Sequel::ValidationFailed, /docker_credentials/)
           end
         end
 
@@ -2112,7 +2112,7 @@ module VCAP::CloudController
         it 'does not call UndoAppChanges when its not an ApiError', isolation: :truncation do
           expect(AppObserver).to receive(:updated).once.with(app).and_raise('boom')
           expect(UndoAppChanges).not_to receive(:new)
-          expect { app.update(state: 'STARTED') }.to raise_error
+          expect { app.update(state: 'STARTED') }.to raise_error('boom')
         end
       end
 

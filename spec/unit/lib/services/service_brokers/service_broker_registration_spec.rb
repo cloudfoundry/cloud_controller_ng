@@ -560,7 +560,7 @@ module VCAP::Services::ServiceBrokers
         end
 
         it 'raises the error' do
-          expect { registration.update }.to raise_error
+          expect { registration.update }.to raise_error(RuntimeError)
         end
 
         it 'does not update the broker' do

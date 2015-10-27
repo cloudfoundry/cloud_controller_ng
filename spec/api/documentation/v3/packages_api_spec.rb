@@ -404,15 +404,15 @@ resource 'Packages (Experimental)', type: :api do
     body_parameter :lifecycle, 'Lifecycle information for a droplet.  If not provided, it will default to a buildpack',
       valid_values: 'object', required: false,
       example_values: [
-                        MultiJson.dump(
-                          {
-                            type: 'buildpack',
-                            data: {
-                              buildpack: 'http://github.com/myorg/awesome-buildpack',
-                              stack:     'cflinuxfs2'
-                            }
-                          }, pretty: true)
-                      ]
+        MultiJson.dump(
+          {
+            type: 'buildpack',
+            data: {
+              buildpack: 'http://github.com/myorg/awesome-buildpack',
+              stack:     'cflinuxfs2'
+            }
+          }, pretty: true)
+      ]
 
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
@@ -429,8 +429,6 @@ resource 'Packages (Experimental)', type: :api do
         type:     VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
-
-
 
     let(:guid) { package_model.guid }
     let(:stack) { 'cflinuxfs2' }

@@ -99,7 +99,7 @@ module VCAP::CloudController
         it 'attempts synchronous orphan mitigation' do
           expect {
             create_action.create(request_attrs, false)
-          }.to raise_error
+          }.to raise_error(RuntimeError)
           expect(mock_orphan_mitigator).to have_received(:attempt_deprovision_instance)
         end
 

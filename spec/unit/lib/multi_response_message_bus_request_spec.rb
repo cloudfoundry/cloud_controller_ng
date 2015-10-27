@@ -63,32 +63,6 @@ describe MultiResponseMessageBusRequest do
       expect(last_error.message).to match /timed out/
     end
 
-    it 'does not accept responses after the specified timeout for subsequent requests' do
-      response1_count = 0
-      multi_response_message_bus_request.on_response(2) do |response, error|
-        response1_count += 1
-      end
-
-      response2_count = 0
-      multi_response_message_bus_request.on_response(4) do |response, error|
-        response2_count += 1
-      end
-
-      multi_response_message_bus_request.request(request: 'request-value')
-
-      # send response within first response timeout
-      message_bus.respond_to_request('fake nats subject', 'response1' => 'response-value')
-
-      timer_stub.and_yield
-
-      # send response within second response timeout
-      # but after first response timeout expires
-      message_bus.respond_to_request('fake nats subject', 'response2' => 'response-value')
-
-      expect(response1_count).to eq(1)
-      expect(response2_count).to eq(1)
-    end
-
     it 'notifies second callback with second response' do
       response1_count = 0
       last1_response = nil
