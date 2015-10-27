@@ -31,6 +31,9 @@ Rails.application.routes.draw do
   put '/v3/apps/:guid/processes/:type/scale', to: 'apps_processes#scale'
   delete '/v3/apps/:guid/processes/:type/instances/:index', to: 'apps_processes#terminate'
 
+  get '/v3/apps/:guid/packages', to: 'apps_packages#index'
+  post '/v3/apps/:guid/packages', to: 'apps_packages#create'
+
   match '404', :to => 'errors#not_found', via: :all
   match '500', :to => 'errors#internal_error', via: :all
   match '400', :to => 'errors#bad_request', via: :all
