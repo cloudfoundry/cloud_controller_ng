@@ -21,6 +21,8 @@ module VCAP::CloudController
     encrypt :environment_variables, salt: :salt, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
+    add_association_dependencies buildpack_lifecycle_data: :delete
+
     def validate
       validates_presence :name
       validates_unique [:space_guid, :name]
