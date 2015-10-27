@@ -84,6 +84,16 @@ module VCAP::CloudController::Diego
           end
         end
 
+        context 'when the TPS endpoint 404s' do
+          before do
+            stub_request(:get, "#{tps_status_url}").to_return(status: 404, body: 'Could not find it')
+          end
+
+          it 'returns an empty array' do
+            expect(client.lrp_instances(app)).to eq([])
+          end
+        end
+
         context 'when the TPS endpoint fails' do
           before do
             stub_request(:get, "#{tps_status_url}").to_return(status: 500, body: 'This Broke')
@@ -214,6 +224,16 @@ module VCAP::CloudController::Diego
               client.lrp_instances_stats(app)
             }.to raise_error(VCAP::Errors::InstancesUnavailable, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
+          end
+        end
+
+        context 'when the TPS endpoint 404s' do
+          before do
+            stub_request(:get, "#{tps_stats_url}").to_return(status: 404, body: 'Could not find it')
+          end
+
+          it 'returns an empty array' do
+            expect(client.lrp_instances_stats(app)).to eq([])
           end
         end
 

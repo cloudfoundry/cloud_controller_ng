@@ -65,12 +65,14 @@ module VCAP::CloudController
           raise Errors::InstancesUnavailable.new(e)
         end
 
-        if response.code != '200'
+        if response.code == '200'
+          JSON.parse(response.body, symbolize_names: true)
+        elsif response.code == '404'
+          return []
+        else
           err_msg = "response code: #{response.code}, response body: #{response.body}"
           raise Errors::InstancesUnavailable.new(err_msg)
         end
-
-        JSON.parse(response.body, symbolize_names: true)
       rescue JSON::JSONError => e
         raise Errors::InstancesUnavailable.new(e)
       end
