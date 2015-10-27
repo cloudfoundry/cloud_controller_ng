@@ -3,7 +3,7 @@ require 'builders/app_create_request_builder'
 
 module VCAP::CloudController
   describe AppCreateRequestBuilder do
-    let(:request_builder) { DropletRequestBuilder.new }
+    let(:request_builder) { AppCreateRequestBuilder.new }
     context 'lifecycle' do
       let(:default_buildpack) { nil }
       let(:default_stack) { Stack.default.name }

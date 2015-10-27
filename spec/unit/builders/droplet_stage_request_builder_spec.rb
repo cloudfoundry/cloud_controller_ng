@@ -201,7 +201,6 @@ module VCAP::CloudController
             }
           }
           it 'fills in the default data hash' do
-            puts app_model.lifecycle_data.inspect
             assembled_request = request_builder.build(params, app_model.lifecycle_data)
             expect(assembled_request).to eq(desired_assembled_request)
           end
