@@ -16,8 +16,6 @@ module VCAP::CloudController
     plugin :serialization
     plugin :after_initialize
 
-    extend IntegerArraySerializer
-
     def after_initialize
       default_instances = db_schema[:instances][:default].to_i
 
@@ -49,19 +47,18 @@ module VCAP::CloudController
                       :state, :version, :command, :console, :debug, :staging_task_id,
                       :package_state, :health_check_type, :health_check_timeout,
                       :staging_failed_reason, :staging_failed_description, :diego, :docker_image, :package_updated_at,
-                      :detected_start_command, :enable_ssh, :docker_credentials_json, :ports
+                      :detected_start_command, :enable_ssh, :docker_credentials_json
 
     import_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
                       :state, :command, :console, :debug, :staging_task_id,
                       :service_binding_guids, :route_guids, :health_check_type,
                       :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
-                      :docker_credentials_json, :ports
+                      :docker_credentials_json
 
     strip_attributes :name
 
     serialize_attributes :json, :metadata
-    serialize_attributes :integer_array, :ports
 
     encrypt :environment_json, salt: :salt, column: :encrypted_environment_json
     encrypt :docker_credentials_json, salt: :docker_salt, column: :encrypted_docker_credentials_json
@@ -106,8 +103,7 @@ module VCAP::CloudController
         MaxAppInstancesPolicy.new(self, space, space && space.space_quota_definition, :space_app_instance_limit_exceeded),
         HealthCheckPolicy.new(self, health_check_timeout),
         CustomBuildpackPolicy.new(self, custom_buildpacks_enabled?),
-        DockerPolicy.new(self),
-        PortsPolicy.new(self)
+        DockerPolicy.new(self)
       ]
     end
 

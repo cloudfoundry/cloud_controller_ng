@@ -540,8 +540,7 @@ module VCAP::CloudController
             :staging_failed_description,
             :staging_task_id,
             :state,
-            :version,
-            :ports
+            :version
           )
       }
 
@@ -570,8 +569,7 @@ module VCAP::CloudController
             :space_guid,
             :stack_guid,
             :staging_task_id,
-            :state,
-            :ports
+            :state
           )
       }
     end
@@ -2445,19 +2443,6 @@ module VCAP::CloudController
 
       it 'returns false if not started' do
         expect(App.new(state: 'STOPPED', package_hash: nil).needs_package_in_current_state?).to eq(false)
-      end
-    end
-
-    describe 'ports' do
-      it 'serializes and deserializes arrays of integers' do
-        app = App.make(ports: [1, 2, 3, 4])
-        expect(app.ports).to eq([1, 2, 3, 4])
-
-        app = App.make(ports: [])
-        expect(app.ports).to eq(nil)
-
-        app = App.make(ports: [1])
-        expect(app.ports).to eq([1])
       end
     end
   end
