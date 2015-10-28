@@ -67,7 +67,7 @@ class AppsPackagesController < ApplicationController
   private
 
   def membership
-    @membership ||= Membership.new(current_user)
+    @membership ||= VCAP::CloudController::Membership.new(current_user)
   end
 
   def can_read?(space_guid, org_guid)
