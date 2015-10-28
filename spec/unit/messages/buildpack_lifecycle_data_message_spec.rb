@@ -55,10 +55,10 @@ module VCAP::CloudController
         context 'when the stack is nil' do
           let(:params) { { stack: nil } }
 
-          it 'is valid' do
+          it 'is not valid' do
             message = BuildpackLifecycleDataMessage.new(params)
 
-            expect(message).to be_valid
+            expect(message).not_to be_valid
           end
         end
 
@@ -111,7 +111,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the stack is nil' do
+        context 'when the stack is not requested' do
           let(:params) { { buildpack: nil } }
 
           it 'is valid' do

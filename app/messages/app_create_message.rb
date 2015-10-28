@@ -22,8 +22,7 @@ module VCAP::CloudController
     validates :lifecycle_type,
       inclusion: { in: LIFECYCLE_TYPES, message: 'is invalid' },
       presence: true,
-      if: lifecycle_requested?,
-      allow_nil: true
+      if: lifecycle_requested?
 
     validates :lifecycle_data,
       hash: true,

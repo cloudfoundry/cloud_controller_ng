@@ -8,10 +8,14 @@ module VCAP::CloudController
     end
     validates_with NoAdditionalKeysValidator
 
+    def self.stack_requested?
+      proc { |message| message.requested?(:stack) }
+    end
+
     validates :stack,
       string: true,
       length: { in: 1..4096, message: 'must be between 1 and 4096 characters' },
-      allow_nil: true
+      if: stack_requested?
 
     validates :buildpack,
       string: true,

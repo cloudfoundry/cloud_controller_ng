@@ -327,18 +327,27 @@ resource 'Apps (Experimental)', type: :api do
     let(:buildpack) { 'http://gitwheel.org/my-app' }
     let(:app_model) { VCAP::CloudController::AppModel.make(name: 'original_name', space_guid: space_guid) }
 
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'redhat') }
+    let(:lifecycle) { { 'type' => 'buildpack', 'data' => { 'buildpack' => buildpack, 'stack' => stack.name } } }
+
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, stack: VCAP::CloudController::Stack.default.name, buildpack: 'og-buildpack')
     end
 
     body_parameter :name, 'Name of the App'
     body_parameter :environment_variables, 'Environment variables to be used for the App when running'
-    body_parameter :buildpack, 'Default buildpack to use when staging the application packages.
-    Note: a null value will use autodetection',
-      example_values: ['ruby_buildpack', 'https://github.com/cloudfoundry/ruby-buildpack'],
-      valid_values: ['null', 'buildpack name', 'git url'],
+    # body_parameter :buildpack, 'Default buildpack to use when staging the application packages.
+    # Note: a null value will use autodetection',
+    #   example_values: ['ruby_buildpack', 'https://github.com/cloudfoundry/ruby-buildpack'],
+    #   valid_values: ['null', 'buildpack name', 'git url'],
+    #   required: false
+    body_parameter :lifecycle, 'Lifecycle to be used when updating the app.
+    Note: lifecycle type cannot be changed.
+    Buildpack can be set to null to allow the backend to auto-detect the appropriate buildpack.
+    Stack can be updated, but cannot be null.
+    Type and Data are required fields in lifecycle, but lifecycle itself is not required.',
       required: false
 
     let(:name) { 'new_name' }
@@ -364,8 +373,8 @@ resource 'Apps (Experimental)', type: :api do
         'lifecycle'              => {
           'type' => 'buildpack',
           'data' => {
-            'buildpack' => app_model.lifecycle_data.buildpack,
-            'stack' => app_model.lifecycle_data.stack,
+            'buildpack' => buildpack,
+            'stack' => stack.name,
           }
         },
         'created_at' => iso8601,
@@ -398,7 +407,10 @@ resource 'Apps (Experimental)', type: :api do
         space_guid: space_guid,
         organization_guid: space.organization.guid
       })
-      expect(event.metadata['request']).to eq({ 'name' => 'new_name', 'environment_variables' => 'PRIVATE DATA HIDDEN', 'buildpack' => buildpack })
+
+      metadata_request = { 'name' => 'new_name', 'environment_variables' => 'PRIVATE DATA HIDDEN',
+                           'lifecycle' => { 'type' => 'buildpack', 'data' => { 'buildpack' => buildpack, 'stack' => stack.name } } }
+      expect(event.metadata['request']).to eq(metadata_request)
     end
   end
 
@@ -464,7 +476,6 @@ resource 'Apps (Experimental)', type: :api do
         'guid'   => app_model.guid,
         'desired_state'   => 'STARTED',
         'total_desired_instances' => 0,
-        'buildpack' => app_model.buildpack,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'environment_variables' => {},
@@ -531,7 +542,6 @@ resource 'Apps (Experimental)', type: :api do
       expected_response = {
         'name'   => app_model.name,
         'guid'   => app_model.guid,
-        'buildpack' => app_model.buildpack,
         'desired_state'   => 'STOPPED',
         'total_desired_instances' => 0,
         'created_at' => iso8601,

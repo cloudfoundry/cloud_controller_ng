@@ -314,14 +314,31 @@ module VCAP::CloudController
           end
         end
 
-        context 'when lifecycle data type is not valid' do
-          let(:params) do { lifecycle: { data: {}, type: { subhash: 'woah!' } } } end
+        describe 'lifecycle type validations' do
+          context 'when lifecycle type is not a valid type' do
+            let(:params) do
+              { lifecycle: { data: {}, type: { subhash: 'woah!' } } }
+            end
 
-          it 'is not valid' do
-            message = AppCreateMessage.new(params)
+            it 'is not valid' do
+              message = AppCreateMessage.new(params)
 
-            expect(message).not_to be_valid
-            expect(message.errors_on(:lifecycle_type)).to include('is invalid')
+              expect(message).not_to be_valid
+              expect(message.errors_on(:lifecycle_type)).to include('is invalid')
+            end
+          end
+
+          context 'when lifecycle type is not provided' do
+            let(:params) do
+              { lifecycle: { data: {} } }
+            end
+
+            it 'is not valid' do
+              message = AppCreateMessage.new(params)
+
+              expect(message).not_to be_valid
+              expect(message.errors_on(:lifecycle_type)).to include("can't be blank")
+            end
           end
         end
       end
