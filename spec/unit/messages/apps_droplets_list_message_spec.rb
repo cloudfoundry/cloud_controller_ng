@@ -157,7 +157,7 @@ module VCAP::CloudController
           end
 
           it 'is invalid otherwise' do
-            message = AppsDropletsListMessage.new order_by: '+foobar'
+            message = AppsDropletsListMessage.new order_by: 123456
             expect(message).to be_invalid
             expect(message.errors[:order_by].length).to eq 1
           end

@@ -34,6 +34,8 @@ Rails.application.routes.draw do
   get '/v3/apps/:guid/packages', to: 'apps_packages#index'
   post '/v3/apps/:guid/packages', to: 'apps_packages#create'
 
+  post '/v3/apps/:guid/droplets', to: 'apps_droplets#index'
+
   match '404', :to => 'errors#not_found', via: :all
   match '500', :to => 'errors#internal_error', via: :all
   match '400', :to => 'errors#bad_request', via: :all
