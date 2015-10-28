@@ -58,6 +58,8 @@ resource 'Apps', type: [:api, :legacy_api] do
 
     field :staging_failed_reason, 'Reason for application staging failures', default: nil
     field :staging_failed_description, 'Detailed description for the staging_failed_reason', default: nil
+
+    field :ports, 'Ports on which application may listen. Supported for applications pushed to Diego only.'
   end
 
   describe 'Standard endpoints' do
@@ -83,7 +85,8 @@ resource 'Apps', type: [:api, :legacy_api] do
       include_context 'fields', required: true
       example 'Creating an App' do
         space_guid = VCAP::CloudController::Space.make.guid
-        client.post '/v2/apps', MultiJson.dump(required_fields.merge(space_guid: space_guid), pretty: true), headers
+        ports = [1000, 2000]
+        client.post '/v2/apps', MultiJson.dump(required_fields.merge(space_guid: space_guid, ports: ports), pretty: true), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :app

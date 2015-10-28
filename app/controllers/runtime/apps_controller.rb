@@ -23,6 +23,7 @@ module VCAP::CloudController
       attribute :production,              Message::Boolean, default: false
       attribute :state,                   String,           default: 'STOPPED'
       attribute :detected_start_command,  String,                              exclude_in: [:create, :update]
+      attribute :ports,                   [Integer],        default: nil
 
       to_one :space
       to_one :stack,               optional_in: :create
