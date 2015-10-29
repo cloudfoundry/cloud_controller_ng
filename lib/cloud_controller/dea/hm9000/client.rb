@@ -66,6 +66,7 @@ module VCAP::CloudController
           uri.path = '/bulk_app_state'
 
           client = HTTPClient.new
+          client.ssl_config.set_default_paths
           if username && password
             client.set_auth(nil, username, password)
           end

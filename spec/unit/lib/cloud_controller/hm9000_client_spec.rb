@@ -295,6 +295,14 @@ module VCAP::CloudController
       end
     end
 
+    it 'uses the default certificate store' do
+      stub_request(:post, "#{hm9000_url}/bulk_app_state").
+        to_return(status: 200, body: {}.to_json)
+
+      expect_any_instance_of(HTTPClient::SSLConfig).to receive(:set_default_paths)
+      subject.healthy_instances(app0)
+    end
+
     describe 'ssl certificate validation' do
       context 'when skip_cert_verify is true' do
         let(:hm9000_config) do
