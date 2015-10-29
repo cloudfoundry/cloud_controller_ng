@@ -103,13 +103,13 @@ module VCAP::CloudController
 
                 context 'when detected_buildpack is empty' do
                   before do
-                    staged_droplet.buildpack = 'OG BP'
+                    staged_droplet.buildpack_lifecycle_data = BuildpackLifecycleDataModel.make(buildpack: 'OG BP', stack: 'on stacks on stacks')
                     staged_droplet.save
 
                     success_response[:result][:lifecycle_metadata][:detected_buildpack] = ''
                   end
 
-                  it 'does NOT override existing buildpack value' do
+                  it 'uses the lifecycle data buildpack' do
                     handle_staging_result(success_response)
                     expect(staged_droplet.reload.buildpack).to eq('OG BP')
                   end

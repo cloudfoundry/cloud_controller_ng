@@ -10,6 +10,14 @@
 
   Note: The output of this command includes your new app's GUID
 
+  App now also accepts `lifecycle` settings. To create the app with a specific `buildpack` or `stack` do the following:
+
+  ```
+  cf curl /v3/apps -X POST -d '{"name":"app-name",
+                                "relationships": {"space": {"guid": "[your-space-guid]"} },
+                                "lifecycle": { "type": "buildpack", "data": { "stack": "cflinuxfs2", "buildpack": "ruby_buildpack"}}'`
+  ```
+
 1. Create an empty package for the app ([docs](http://apidocs.cloudfoundry.org/release-candidate/packages_(experimental)/create_a_package.html)):
 
   `cf curl /v3/apps/[your-app-guid]/packages -X POST -d '{"type":"bits"}'`

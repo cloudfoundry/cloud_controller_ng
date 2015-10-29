@@ -23,7 +23,7 @@ module VCAP::CloudController
     def stack_name_must_be_in_db
       return unless stack.is_a?(String)
       if Stack.find(name: stack).nil?
-        errors.add(:stack, 'must exist in our DB')
+        errors.add(:stack, 'is invalid')
       end
     end
   end

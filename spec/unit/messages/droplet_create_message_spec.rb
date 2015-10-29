@@ -165,7 +165,7 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:lifecycle]).to include('Stack must exist in our DB')
+          expect(message.errors[:lifecycle]).to include('Stack is invalid')
         end
 
         it 'must provide a valid buildpack' do

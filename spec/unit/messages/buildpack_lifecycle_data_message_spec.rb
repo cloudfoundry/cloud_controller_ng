@@ -70,7 +70,7 @@ module VCAP::CloudController
               message = BuildpackLifecycleDataMessage.new(params)
 
               expect(message).not_to be_valid
-              expect(message.errors.full_messages[0]).to include('Stack must exist in our DB')
+              expect(message.errors.full_messages[0]).to include('Stack is invalid')
             end
           end
         end

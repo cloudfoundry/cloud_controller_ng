@@ -20,7 +20,7 @@ module VCAP::CloudController
     validates :relationships, hash: true, presence: true, allow_nil: false
 
     validates :lifecycle_type,
-      inclusion: { in: LIFECYCLE_TYPES },
+      inclusion: { in: LIFECYCLE_TYPES, message: 'is invalid' },
       presence: true,
       if: lifecycle_requested?,
       allow_nil: true

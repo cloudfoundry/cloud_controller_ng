@@ -309,7 +309,7 @@ module VCAP::CloudController
             it 'must provide a valid stack name' do
               message = AppCreateMessage.new(params)
               expect(message).not_to be_valid
-              expect(message.errors_on(:lifecycle)).to include('Stack must exist in our DB')
+              expect(message.errors_on(:lifecycle)).to include('Stack is invalid')
             end
           end
         end
@@ -321,7 +321,7 @@ module VCAP::CloudController
             message = AppCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:lifecycle_type)).to include('is not included in the list')
+            expect(message.errors_on(:lifecycle_type)).to include('is invalid')
           end
         end
       end
