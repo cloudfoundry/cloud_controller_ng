@@ -34,7 +34,7 @@ describe AppsDropletsController, type: :controller do
           get :index, guid: app_model.guid, order_by: 'meow'
 
           expect(response.status).to eq 400
-          expect(response.body).to include('Order by can only be ordered by')
+          expect(response.body).to include("Order by can only be 'created_at' or 'updated_at'")
           expect(response.body).to include('BadQueryParameter')
         end
       end

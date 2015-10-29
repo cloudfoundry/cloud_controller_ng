@@ -3,7 +3,6 @@ require 'messages/base_message'
 module VCAP::CloudController
   class AppsListMessage < BaseMessage
     ALLOWED_KEYS = [:names, :guids, :organization_guids, :space_guids, :page, :per_page, :order_by]
-    VALID_ORDER_BY_KEYS = /created_at|updated_at/
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -15,8 +14,7 @@ module VCAP::CloudController
     validates :space_guids, array: true, allow_nil: true
     validates_numericality_of :page, greater_than: 0, allow_nil: true, only_integer: true
     validates_numericality_of :per_page, greater_than: 0, allow_nil: true, only_integer: true
-    validates_format_of :order_by, with: /\A[+-]?(#{VALID_ORDER_BY_KEYS})\z/, allow_nil: true,
-                                   message: "received an unsupported value. Got: '%{value}'"
+    validates :order_by, string: true, allow_nil: true
 
     def initialize(params={})
       super(params.symbolize_keys)

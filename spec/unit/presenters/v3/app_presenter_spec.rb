@@ -107,6 +107,34 @@ module VCAP::CloudController
       end
     end
 
+    describe '#present_json_env' do
+      let(:app_model) do
+        AppModel.make(
+          created_at: Time.at(1),
+          updated_at: Time.at(2),
+          environment_variables: { 'hello' => 'meow' },
+          desired_state: 'STOPPED',
+          lifecycle: {
+            'type' => 'buildpack',
+            'data' => {
+              'buildpack' => 'requested-buildpack',
+              'stack' => 'requested-stack'
+            }
+          },
+        )
+      end
+
+      it 'presents the app environment variables as json' do
+        json_result = AppPresenter.new.present_json_env(app_model)
+        result      = MultiJson.load(json_result)
+
+        expect(result['environment_variables']).to eq(app_model.environment_variables)
+        expect(result['application_env_json']['VCAP_APPLICATION']['name']).to eq(app_model.name)
+        expect(result['staging_env_json']).to eq({})
+        expect(result['running_env_json']).to eq({})
+      end
+    end
+
     describe '#present_json_list' do
       let(:pagination_presenter) { double(:pagination_presenter, present_pagination_hash: 'pagination_stuff') }
       let(:app_model1) { app }

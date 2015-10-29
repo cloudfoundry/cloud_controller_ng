@@ -212,7 +212,7 @@ module VCAP::CloudController
           expect(message2).to be_valid
           expect(message3).to be_valid
           expect(invalid_message).to_not be_valid
-          expect(invalid_message.errors.full_messages[0]).to include("can only be ordered by 'created_at' or 'updated_at'")
+          expect(invalid_message.errors.full_messages[0]).to include("can only be 'created_at' or 'updated_at'")
         end
       end
 

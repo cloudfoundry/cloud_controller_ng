@@ -1,4 +1,14 @@
 Rails.application.routes.draw do
+  get '/v3/apps', to: 'apps_v3#index'
+  post '/v3/apps', to: 'apps_v3#create'
+  get '/v3/apps/:guid', to: 'apps_v3#show'
+  put '/v3/apps/:guid', to: 'apps_v3#update'
+  delete '/v3/apps/:guid', to: 'apps_v3#destroy'
+  put '/v3/apps/:guid/start', to: 'apps_v3#start'
+  put '/v3/apps/:guid/stop', to: 'apps_v3#stop'
+  get '/v3/apps/:guid/env', to: 'apps_v3#get_environment'
+  put '/v3/apps/:guid/current_droplet', to: 'apps_v3#assign_current_droplet'
+
   get '/processes', to: 'processes#index'
   get '/processes/:guid', to: 'processes#show'
   patch '/processes/:guid', to: 'processes#update'
