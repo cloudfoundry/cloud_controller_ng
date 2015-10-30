@@ -30,6 +30,11 @@ namespace :spec do
 
   task outer: %w[api acceptance integration]
 
+  desc 'Run only previously failing tests'
+  task failed: "db:pick" do
+    run_failed_specs
+  end
+
   namespace :unit do
     fast_suites = %w[
         access
@@ -66,5 +71,9 @@ namespace :spec do
 
   def run_specs(path)
     sh "bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail"
+  end
+
+  def run_failed_specs
+    sh "bundle exec rspec --only-failures --color --tty spec --require rspec/instafail --format RSpec::Instafail"
   end
 end
