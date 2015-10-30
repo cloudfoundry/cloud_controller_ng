@@ -114,13 +114,6 @@ module VCAP::CloudController
           updated_at: Time.at(2),
           environment_variables: { 'hello' => 'meow' },
           desired_state: 'STOPPED',
-          lifecycle: {
-            'type' => 'buildpack',
-            'data' => {
-              'buildpack' => 'requested-buildpack',
-              'stack' => 'requested-stack'
-            }
-          },
         )
       end
 
