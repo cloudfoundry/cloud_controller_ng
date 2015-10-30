@@ -51,12 +51,6 @@ module VCAP::CloudController
       @buildpack_data ||= BuildpackLifecycleDataMessage.new((lifecycle_data || {}).symbolize_keys)
     end
 
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
-
     def lifecycle_type
       return if lifecycle.nil?
       lifecycle['type'] || lifecycle[:type]
@@ -65,6 +59,12 @@ module VCAP::CloudController
     def lifecycle_data
       return if lifecycle.nil?
       lifecycle['data'] || lifecycle[:data]
+    end
+
+    private
+
+    def allowed_keys
+      ALLOWED_KEYS
     end
   end
 end
