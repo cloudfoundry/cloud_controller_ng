@@ -60,7 +60,7 @@ module VCAP::Errors
         end
 
         it 'explodes' do
-          expect { api_error }.to raise_error
+          expect { api_error }.to raise_error(KeyError, /key not found/)
         end
       end
     end

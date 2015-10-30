@@ -23,6 +23,9 @@ module VCAP::CloudController
         end
 
         def stage_app_message(app, config)
+          env = Environment.new(app, EnvironmentVariableGroup.staging.environment_json).as_json
+          logger.debug2("staging environment: #{env.map { |e| e['name'] }}")
+
           lifecycle_data                                    = LifecycleData.new
           lifecycle_data.app_bits_download_uri              = @blobstore_url_generator.app_package_download_url(app)
           lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(app)
@@ -34,7 +37,7 @@ module VCAP::CloudController
           staging_request                     = StagingRequest.new
           staging_request.app_id              = app.guid
           staging_request.log_guid            = app.guid
-          staging_request.environment         = Environment.new(app, EnvironmentVariableGroup.staging.environment_json).as_json
+          staging_request.environment         = env
           staging_request.memory_mb           = [app.memory, config[:staging][:minimum_staging_memory_mb]].max
           staging_request.disk_mb             = [app.disk_quota, config[:staging][:minimum_staging_disk_mb]].max
           staging_request.file_descriptors    = [app.file_descriptors, config[:staging][:minimum_staging_file_descriptor_limit]].max
@@ -48,6 +51,9 @@ module VCAP::CloudController
         end
 
         def desire_app_message(app, default_health_check_timeout)
+          env = Environment.new(app, EnvironmentVariableGroup.running.environment_json).as_json
+          logger.debug2("running environment: #{env.map { |e| e['name'] }}")
+
           message = {
             'process_guid'                    => ProcessGuid.from_app(app),
             'memory_mb'                       => app.memory,
@@ -57,7 +63,7 @@ module VCAP::CloudController
             'stack'                           => app.stack.name,
             'start_command'                   => app.command.nil? ? app.detected_start_command : app.command,
             'execution_metadata'              => app.execution_metadata,
-            'environment'                     => Environment.new(app, EnvironmentVariableGroup.running.environment_json).as_json,
+            'environment'                     => env,
             'num_instances'                   => app.desired_instances,
             'routes'                          => app.uris,
             'routing_info'                    => app.routing_info,
@@ -79,6 +85,10 @@ module VCAP::CloudController
           host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
           path      = "/internal/staging/#{StagingGuid.from_app(app)}/completed"
           "http://#{auth}@#{host_port}#{path}"
+        end
+
+        def logger
+          @logger ||= Steno.logger('cc.diego.tr')
         end
       end
     end
