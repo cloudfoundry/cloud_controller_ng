@@ -395,7 +395,7 @@ module VCAP::CloudController
               org.add_space(org_space_empty)
               expect(org.users).to include(user)
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}", {}, admin_headers
-              expect(last_response.status).to eql(201)
+              expect(last_response.status).to eql(204)
 
               org.refresh
               expect(org.user_guids).not_to include(user)
@@ -418,7 +418,7 @@ module VCAP::CloudController
               org.add_space(org_space_full)
               ['developers', 'auditors', 'managers'].each { |type| expect(org_space_full.send(type)).to include(user) }
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true", {}, admin_headers
-              expect(last_response.status).to eql(201)
+              expect(last_response.status).to eql(204)
 
               org_space_full.refresh
               ['developers', 'auditors', 'managers'].each { |type| expect(org_space_full.send(type)).not_to include(user) }
@@ -428,7 +428,7 @@ module VCAP::CloudController
               org.add_space(org_space_full)
               expect(org.users).to include(user)
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true", {}, admin_headers
-              expect(last_response.status).to eql(201)
+              expect(last_response.status).to eql(204)
 
               org.refresh
               expect(org.users).not_to include(user)
@@ -444,7 +444,7 @@ module VCAP::CloudController
               org_2.add_space(org2_space)
               [org, org_2].each { |organization| expect(organization.users).to include(user) }
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true", {}, admin_headers
-              expect(last_response.status).to eql(201)
+              expect(last_response.status).to eql(204)
 
               [org, org_2].each(&:refresh)
               expect(org.users).not_to include(user)
@@ -457,7 +457,7 @@ module VCAP::CloudController
               ['developers', 'auditors', 'managers'].each { |type| expect(org_space_full.send(type)).to include(user) }
               expect(org2_space.developers).to include(user)
               delete "/v2/organizations/#{org.guid}/users/#{user.guid}?recursive=true", {}, admin_headers
-              expect(last_response.status).to eql(201)
+              expect(last_response.status).to eql(204)
 
               [org_space_full, org2_space].each(&:refresh)
               ['developers', 'auditors', 'managers'].each { |type| expect(org_space_full.send(type)).not_to include(user) }
@@ -781,7 +781,7 @@ module VCAP::CloudController
           Route.make(space: space, domain: private_domain)
 
           delete "/v2/organizations/#{space.organization.guid}/private_domains/#{private_domain.guid}", {}, admin_headers
-          expect(last_response.status).to eq(201)
+          expect(last_response.status).to eq(204)
 
           expect(private_domain.routes.count).to eq(0)
         end
@@ -800,7 +800,7 @@ module VCAP::CloudController
         context 'as an admin' do
           it 'is allowed' do
             delete "/v2/organizations/#{org.guid}/managers/#{org_manager.guid}", {}, admin_headers
-            expect(last_response.status).to eq(201)
+            expect(last_response.status).to eq(204)
           end
         end
 
