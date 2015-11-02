@@ -129,7 +129,7 @@ module VCAP::CloudController
           it 'will raise an error' do
             expect {
               repository.create_from_app(app)
-            }.to raise_error
+            }.to raise_error(Sequel::NotNullConstraintViolation)
           end
         end
 
