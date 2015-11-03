@@ -34,8 +34,8 @@ resource 'Packages (Experimental)', type: :api do
     let!(:package1) { VCAP::CloudController::PackageModel.make(type: type1, app_guid: app_model.guid) }
     let!(:package2) do
       VCAP::CloudController::PackageModel.make(type: type2, app_guid: app_model.guid,
-                                               state:                                       VCAP::CloudController::PackageModel::READY_STATE,
-                                               url:                                         'http://docker-repo/my-image')
+                                               state:  VCAP::CloudController::PackageModel::READY_STATE,
+                                               )
     end
     let!(:package3) { VCAP::CloudController::PackageModel.make(type: type3, app_guid: app_model.guid) }
     let!(:package4) { VCAP::CloudController::PackageModel.make(app_guid: VCAP::CloudController::AppModel.make.guid) }
@@ -49,6 +49,9 @@ resource 'Packages (Experimental)', type: :api do
     before do
       space.organization.add_user user
       space.add_developer user
+
+      VCAP::CloudController::PackageDockerDataModel.create(package: package2, image: 'http://location-of-image.com')
+      VCAP::CloudController::PackageDockerDataModel.create(package: package3, image: 'http://location-of-image-2.com')
     end
 
     example 'List all Packages' do
@@ -69,7 +72,6 @@ resource 'Packages (Experimental)', type: :api do
                 'hash'       => { 'type' => 'sha1', 'value' => nil },
                 'error'      => nil
               },
-              'url'        => nil,
               'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
               'created_at' => iso8601,
               'updated_at' => nil,
@@ -85,10 +87,12 @@ resource 'Packages (Experimental)', type: :api do
               'guid'       => package2.guid,
               'type'       => 'docker',
               'data'       => {
+                'image'    => 'http://location-of-image.com',
+                'store_image' => false,
+                'credentials' => {},
                 'hash'       => { 'type' => 'sha1', 'value' => nil },
                 'error'      => nil,
               },
-              'url'        => 'http://docker-repo/my-image',
               'state'      => VCAP::CloudController::PackageModel::READY_STATE,
               'created_at' => iso8601,
               'updated_at' => nil,
@@ -132,7 +136,6 @@ resource 'Packages (Experimental)', type: :api do
           'error'      => nil
         },
         'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
-        'url'        => nil,
         'created_at' => iso8601,
         'updated_at' => nil,
         'links'     => {
@@ -165,12 +168,26 @@ resource 'Packages (Experimental)', type: :api do
     describe 'creating a package' do
       let(:guid) { app_model.guid }
       let(:type) { 'docker' }
-      let(:url) { 'docker://cloudfoundry/runtime-ci' }
+      let(:data) do  # 'docker://cloudfoundry/runtime-ci'
+        {
+          image: 'registry/image:latest',
+          credentials: {
+            user: 'user name',
+            password: 'very secret password',
+            email: 'root@admin.example.com',
+            login_server: 'https://index.docker.io/v1'
+          },
+          store_image: true
+        }
+      end
 
       let(:raw_post) { body_parameters }
 
       body_parameter :type, 'Package type', required: true, valid_values: ['bits', 'docker']
-      body_parameter :url, 'Url of docker image', required: false
+      body_parameter :data, 'Data for docker packages.  Can be empty for bits packages.', required: false
+      body_parameter :data_image, 'Location of docker image.  Required for docker packages.'
+      body_parameter :data_credentials, 'Credentials for private docker image, available fields are user, password, email, login server. ', required: false
+      body_parameter :data_store_image, 'Whether or not the backend should cache the image. defaults to false', required: false
 
       example 'Create a Package' do
         expect {
@@ -183,11 +200,18 @@ resource 'Packages (Experimental)', type: :api do
           'guid'       => package.guid,
           'type'       => type,
           'data'       => {
+            'image'    => 'registry/image:latest',
+            'credentials' => {
+              'user' => 'user name',
+              'password' => 'very secret password',
+              'email' => 'root@admin.example.com',
+              'login_server' => 'https://index.docker.io/v1'
+            },
+            'store_image' => true,
             'hash'       => { 'type' => 'sha1', 'value' => nil },
             'error'      => nil,
           },
           'state'      => 'READY',
-          'url'        => url,
           'created_at' => iso8601,
           'updated_at' => nil,
           'links'     => {
@@ -216,12 +240,16 @@ resource 'Packages (Experimental)', type: :api do
 
     describe 'copying a package' do
       let(:target_app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
-      let!(:original_package) { VCAP::CloudController::PackageModel.make(type: 'url', url: 'http://awesome-sauce.com', app_guid: app_model.guid) }
+      let!(:original_package) { VCAP::CloudController::PackageModel.make(type: 'docker', app_guid: app_model.guid) }
 
       parameter :source_package_guid, 'The package to copy from', required: true
 
       let(:guid) { target_app_model.guid }
       let(:source_package_guid) { original_package.guid }
+
+      before do
+        VCAP::CloudController::PackageDockerDataModel.create(package: original_package, image: 'http://awesome-sauce.com')
+      end
 
       example 'Copy a Package' do
         # Using client directly instead of calling do_request to ensure parameter is displayed correctly in docs
@@ -233,13 +261,15 @@ resource 'Packages (Experimental)', type: :api do
 
         expected_response = {
           'guid'       => package.guid,
-          'type'       => 'url',
+          'type'       => 'docker',
           'data'       => {
+            'image'    => 'http://awesome-sauce.com',
+            'credentials' => {},
+            'store_image' => false,
             'hash'       => { 'type' => 'sha1', 'value' => nil },
             'error'      => nil,
           },
           'state'      => 'READY',
-          'url'        => 'http://awesome-sauce.com',
           'created_at' => iso8601,
           'updated_at' => nil,
           'links'     => {
@@ -312,7 +342,6 @@ resource 'Packages (Experimental)', type: :api do
           'error'      => nil,
         },
         'state'      => VCAP::CloudController::PackageModel::PENDING_STATE,
-        'url'        => nil,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'links'     => {

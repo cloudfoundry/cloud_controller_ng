@@ -28,7 +28,7 @@ module VCAP::CloudController
       app = AppModel.where(guid: guid).eager(:space, space: :organization).all.first
       app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
 
-      paginated_result = SequelPaginator.new.get_page(app.packages_dataset, pagination_options)
+      paginated_result = SequelPaginator.new.get_page(app.packages_dataset.eager(:docker_data), pagination_options)
 
       [HTTP::OK, @package_presenter.present_json_list(paginated_result, "/v3/apps/#{guid}/packages")]
     end
@@ -49,7 +49,7 @@ module VCAP::CloudController
       app_not_found! if app.nil? || !can_read?(app.space.guid, app.space.organization.guid)
       unauthorized! unless can_create?(app.space.guid)
 
-      source_package = PackageModel.where(guid: params['source_package_guid']).eager(:app, :space, space: :organization).all.first
+      source_package = PackageModel.where(guid: params['source_package_guid']).eager(:app, :space, space: :organization).eager(:docker_data).all.first
       package_not_found! if source_package.nil? || !can_read?(source_package.space.guid, source_package.space.organization.guid)
       unauthorized! unless can_create?(source_package.space.guid)
 

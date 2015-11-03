@@ -56,7 +56,7 @@ module VCAP::CloudController
       message = PackageUploadMessage.create_from_params(params)
       unprocessable!(message.errors.full_messages) unless message.valid?
 
-      package = PackageModel.where(guid: package_guid).eager(:space, space: :organization).all.first
+      package = PackageModel.where(guid: package_guid).eager(:space, space: :organization).eager(:docker_data).all.first
       package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
       unauthorized! unless can_upload?(package.space.guid)
 
@@ -74,7 +74,7 @@ module VCAP::CloudController
     def download(package_guid)
       check_read_permissions!
 
-      package = PackageModel.where(guid: package_guid).eager(:space, space: :organization).all.first
+      package = PackageModel.where(guid: package_guid).eager(:space, space: :organization).eager(:docker_data).all.first
       package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
 
       unprocessable!('Package type must be bits.') unless package.type == 'bits'
@@ -91,7 +91,7 @@ module VCAP::CloudController
     get '/v3/packages/:guid', :show
     def show(guid)
       check_read_permissions!
-      package = PackageModel.where(guid: guid).eager(:space, space: :organization).all.first
+      package = PackageModel.where(guid: guid).eager(:space, space: :organization).eager(:docker_data).all.first
       package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
 
       [HTTP::OK, @package_presenter.present_json(package)]
@@ -115,7 +115,7 @@ module VCAP::CloudController
     def stage(package_guid)
       check_write_permissions!
 
-      package = PackageModel.where(guid: package_guid).eager(:app, :space, space: :organization).all.first
+      package = PackageModel.where(guid: package_guid).eager(:app, :space, space: :organization).eager(:docker_data).all.first
       package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
 
       request = parse_and_validate_json(body)

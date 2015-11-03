@@ -7,9 +7,8 @@ module VCAP::CloudController
 
     describe '#copy' do
       let(:target_app) { AppModel.make }
-      let(:source_package) { PackageModel.make(type: type, url: url) }
+      let(:source_package) { PackageModel.make(type: type) }
       let(:type) { 'docker' }
-      let(:url) { 'docker://cloudfoundry/runtime-ci' }
       let(:app_guid) { target_app.guid }
 
       it 'creates the package with the correct values' do
@@ -19,13 +18,19 @@ module VCAP::CloudController
         created_package = PackageModel.find(guid: result.guid)
         expect(created_package).to eq(result)
         expect(created_package.type).to eq(type)
-        expect(created_package.url).to eq(url)
+      end
+
+      it 'copies over docker info' do
+        PackageDockerDataModel.create(package: source_package, image: 'image-magick.com')
+        result = package_copy.copy(app_guid, source_package)
+        created_package = PackageModel.find(guid: result.guid)
+
+        expect(created_package.docker_data.image).to eq('image-magick.com')
       end
 
       describe 'package state' do
         context 'when type is bits' do
           let(:type) { 'bits' }
-          let(:url) { nil }
 
           it 'sets the state to COPYING_STATE' do
             result = package_copy.copy(app_guid, source_package)

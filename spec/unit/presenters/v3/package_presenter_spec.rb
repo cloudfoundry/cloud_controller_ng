@@ -5,7 +5,7 @@ module VCAP::CloudController
   describe PackagePresenter do
     describe '#present_json' do
       it 'presents the package as json' do
-        package = PackageModel.make(type: 'package_type', url: 'foobar', created_at: Time.at(1), updated_at: Time.at(2))
+        package = PackageModel.make(type: 'package_type', created_at: Time.at(1), updated_at: Time.at(2))
 
         json_result = PackagePresenter.new.present_json(package)
         result      = MultiJson.load(json_result)
@@ -15,7 +15,6 @@ module VCAP::CloudController
         expect(result['state']).to eq(package.state)
         expect(result['data']['error']).to eq(package.error)
         expect(result['data']['hash']).to eq({ 'type' => 'sha1', 'value' => package.package_hash })
-        expect(result['url']).to eq(package.url)
         expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
         expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
         expect(result['links']).to include('self')
@@ -34,6 +33,37 @@ module VCAP::CloudController
 
           expect(result['links']['stage']['href']).to eq("/v3/packages/#{package.guid}/droplets")
           expect(result['links']['stage']['method']).to eq('POST')
+        end
+      end
+
+      context ' when the package type is docker' do
+        let(:package) do
+          PackageModel.make(type: 'docker')
+        end
+
+        let!(:data_model) do
+          PackageDockerDataModel.create({
+              image: 'registry/image:latest',
+              user: 'user',
+              password: 'password',
+              email: 'email',
+              login_server: 'login_server',
+              store_image: true,
+              package: package
+            })
+        end
+
+        it 'presents the docker information in the data section' do
+          json_result = PackagePresenter.new.present_json(package)
+          result      = MultiJson.load(json_result)
+          data        = result['data']
+
+          expect(data['image']).to eq data_model.image
+          expect(data['credentials']['user']).to eq data_model.user
+          expect(data['credentials']['email']).to eq data_model.email
+          expect(data['credentials']['password']).to eq data_model.password
+          expect(data['credentials']['login_server']).to eq data_model.login_server
+          expect(data['store_image']).to eq data_model.store_image
         end
       end
 

@@ -30,18 +30,31 @@ module VCAP::CloudController
       {
         guid:       package.guid,
         type:       package.type,
-        data: {
-          hash: {
-            type: DEFAULT_HASHING_ALGORITHM,
-            value: package.package_hash
-          },
-          error:      package.error,
-        },
-        url:        package.url,
+        data:       build_data(package),
         state:      package.state,
         created_at: package.created_at,
         updated_at: package.updated_at,
         links:      build_links(package),
+      }
+    end
+
+    def build_data(package)
+      data = general_data(package)
+      return data unless package.type == 'docker' && package.docker_data
+      docker_data = package.docker_data
+      data[:image]       = docker_data.image
+      data[:credentials] = docker_data.credentials
+      data[:store_image] = docker_data.store_image
+      data
+    end
+
+    def general_data(package)
+      {
+        hash: {
+          type: DEFAULT_HASHING_ALGORITHM,
+          value: package.package_hash
+        },
+        error:      package.error,
       }
     end
 

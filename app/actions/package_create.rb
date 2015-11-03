@@ -15,11 +15,11 @@ module VCAP::CloudController
       package          = PackageModel.new
       package.app_guid = message.app_guid
       package.type     = message.type
-      package.url      = message.url
-      package.state    = message.type == 'bits' ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
+      package.state    = get_package_state(message)
 
       package.db.transaction do
         package.save
+        make_docker_data(message, package)
 
         Repositories::Runtime::PackageEventRepository.record_app_add_package(
           package,
@@ -34,6 +34,23 @@ module VCAP::CloudController
     end
 
     private
+
+    def get_package_state(message)
+      message.bits_type? ? PackageModel::CREATED_STATE : PackageModel::READY_STATE
+    end
+
+    def make_docker_data(message, package)
+      return nil unless message.docker_type?
+
+      data = PackageDockerDataModel.new
+      data.package = package
+      data.image = message.docker_data.image
+      data.store_image = message.docker_data.store_image
+      data.credentials = (message.docker_data.credentials || {})
+
+      data.save
+      package.docker_data = data
+    end
 
     def logger
       @logger ||= Steno.logger('cc.action.package_create')
