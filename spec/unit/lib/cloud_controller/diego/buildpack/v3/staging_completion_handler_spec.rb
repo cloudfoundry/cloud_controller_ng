@@ -1,13 +1,13 @@
 require 'spec_helper'
-require 'cloud_controller/diego/traditional/v3/staging_completion_handler'
+require 'cloud_controller/diego/buildpack/v3/staging_completion_handler'
 
 module VCAP::CloudController
   module Diego
-    module Traditional
+    module Buildpack
       module V3
         describe StagingCompletionHandler do
           let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
-          let(:buildpack) { Buildpack.make }
+          let(:buildpack) { VCAP::CloudController::Buildpack.make }
           let(:success_response) do
             {
               result: {

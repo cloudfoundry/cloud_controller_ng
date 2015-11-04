@@ -1,11 +1,11 @@
-require 'cloud_controller/diego/traditional/v3/buildpack_entry_generator'
+require 'cloud_controller/diego/buildpack/v3/buildpack_entry_generator'
 require 'cloud_controller/diego/environment'
 require 'cloud_controller/diego/staging_request'
-require 'cloud_controller/diego/traditional/lifecycle_data'
+require 'cloud_controller/diego/buildpack/lifecycle_data'
 
 module VCAP::CloudController
   module Diego
-    module Traditional
+    module Buildpack
       module V3
         class Protocol
           def initialize(blobstore_url_generator, egress_rules)

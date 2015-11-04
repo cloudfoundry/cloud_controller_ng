@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'cloud_controller/diego/traditional/v3/protocol'
+require 'cloud_controller/diego/buildpack/v3/protocol'
 require 'cloud_controller/diego/v3/messenger'
 
 module VCAP::CloudController
@@ -9,7 +9,7 @@ module VCAP::CloudController
         let(:stager_client) { instance_double(StagerClient) }
         let(:nsync_client) { instance_double(NsyncClient) }
         let(:config) { TestConfig.config }
-        let(:protocol) { instance_double(Traditional::V3::Protocol) }
+        let(:protocol) { instance_double(Buildpack::V3::Protocol) }
         let(:default_health_check_timeout) { 9999 }
 
         let(:package) { PackageModel.make }
@@ -21,7 +21,7 @@ module VCAP::CloudController
           let(:staging_guid) { droplet.guid }
           let(:message) { { staging: 'message' } }
           let(:staging_details) do
-            details = VCAP::CloudController::Diego::Traditional::V3::StagingDetails.new
+            details = VCAP::CloudController::Diego::Buildpack::V3::StagingDetails.new
             details.droplet = droplet
             details
           end

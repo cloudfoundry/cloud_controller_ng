@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:config) { TestConfig.config }
 
       let(:completion_handler) do
-        instance_double(Diego::Traditional::StagingCompletionHandler, staging_complete: nil)
+        instance_double(Diego::Buildpack::StagingCompletionHandler, staging_complete: nil)
       end
 
       subject(:stager) do

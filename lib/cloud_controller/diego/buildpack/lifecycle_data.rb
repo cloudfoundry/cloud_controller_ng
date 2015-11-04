@@ -1,6 +1,6 @@
 module VCAP::CloudController
   module Diego
-    module Traditional
+    module Buildpack
       class LifecycleData
         attr_accessor :app_bits_download_uri, :build_artifacts_cache_download_uri
         attr_accessor :build_artifacts_cache_upload_uri, :buildpacks

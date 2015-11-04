@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'cloud_controller/diego/traditional/v3/buildpack_entry_generator'
+require 'cloud_controller/diego/buildpack/v3/buildpack_entry_generator'
 
 module VCAP::CloudController
   module Diego
-    module Traditional
+    module Buildpack
       module V3
         describe BuildpackEntryGenerator do
           subject(:buildpack_entry_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
@@ -15,8 +15,8 @@ module VCAP::CloudController
           let(:blobstore_url_generator) { double('fake url generator') }
 
           before do
-            Buildpack.create(name: 'java', key: 'java-buildpack-key', position: 1)
-            Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2)
+            VCAP::CloudController::Buildpack.create(name: 'java', key: 'java-buildpack-key', position: 1)
+            VCAP::CloudController::Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2)
 
             allow(blobstore_url_generator).to receive(:app_package_download_url).and_return(app_package_download_url)
             allow(blobstore_url_generator).to receive(:admin_buildpack_download_url).and_return(admin_buildpack_download_url)

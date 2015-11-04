@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'cloud_controller/diego/traditional/v3/protocol'
+require 'cloud_controller/diego/buildpack/v3/protocol'
 
 module VCAP::CloudController
   module Diego
-    module Traditional
+    module Buildpack
       module V3
         describe Protocol do
           let(:blobstore_url_generator) do
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
               before do
                 staging_details.buildpack_info.valid?
-                Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2)
+                VCAP::CloudController::Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2)
                 allow(blobstore_url_generator).to receive(:admin_buildpack_download_url).and_return('bp-download-url')
               end
 

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Diego
-    module Traditional
+    module Buildpack
       describe Protocol do
         let(:blobstore_url_generator) do
           instance_double(CloudController::Blobstore::UrlGenerator,
@@ -78,7 +78,7 @@ module VCAP::CloudController
           let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id', diego: true) }
           let(:buildpack_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
 
-          it 'contains the correct payload for staging a traditional app' do
+          it 'contains the correct payload for staging a buildpack app' do
             expect(message).to eq({
                   app_id:              app.guid,
                   log_guid:            app.guid,
@@ -104,7 +104,7 @@ module VCAP::CloudController
           describe 'buildpack payload' do
             let(:buildpack_url) { 'http://example.com/buildpack' }
             before do
-              Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2)
+              VCAP::CloudController::Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2)
 
               allow(blobstore_url_generator).to receive(:admin_buildpack_download_url).and_return(buildpack_url)
             end

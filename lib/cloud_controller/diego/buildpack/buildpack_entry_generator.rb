@@ -1,6 +1,6 @@
 module VCAP::CloudController
   module Diego
-    module Traditional
+    module Buildpack
       class BuildpackEntryGenerator
         def initialize(blobstore_url_generator)
           @blobstore_url_generator = blobstore_url_generator

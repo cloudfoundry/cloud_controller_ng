@@ -1,7 +1,7 @@
 require 'cloud_controller/backends/staging_memory_calculator'
 require 'cloud_controller/backends/staging_disk_calculator'
 require 'cloud_controller/backends/staging_environment_builder'
-require 'cloud_controller/diego/traditional/v3/staging_details'
+require 'cloud_controller/diego/buildpack/v3/staging_details'
 
 module VCAP::CloudController
   class PackageStageAction
@@ -68,7 +68,7 @@ module VCAP::CloudController
         disk_limit,
         staging_message.environment_variables)
 
-      staging_details                       = VCAP::CloudController::Diego::Traditional::V3::StagingDetails.new
+      staging_details                       = VCAP::CloudController::Diego::Buildpack::V3::StagingDetails.new
       staging_details.stack                 = stack
       staging_details.memory_limit          = memory_limit
       staging_details.disk_limit            = disk_limit

@@ -85,7 +85,7 @@ module VCAP::CloudController
           expect(runner).to be_a(Diego::Runner)
         end
 
-        context 'when the app is a traditional buildpack app' do
+        context 'when the app is a buildpack app' do
           let(:docker_image) { nil }
 
           before do

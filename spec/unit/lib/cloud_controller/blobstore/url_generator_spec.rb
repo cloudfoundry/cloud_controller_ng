@@ -309,7 +309,7 @@ module CloudController
           expect(uri.path).to eql "/staging/droplets/#{app.guid}/upload"
         end
 
-        it 'gives out url for buidpack cache' do
+        it 'gives out url for buildpack cache' do
           uri = URI.parse(url_generator.buildpack_cache_upload_url(app))
           expect(uri.host).to eql blobstore_host
           expect(uri.port).to eql blobstore_port

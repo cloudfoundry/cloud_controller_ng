@@ -195,7 +195,7 @@ module VCAP::CloudController
             expect(AppUsageEvent.last).to match_app(app)
           end
 
-          context 'with associated buidpack information' do
+          context 'with associated buildpack information' do
             let(:buildpack) { Buildpack.make }
 
             before do

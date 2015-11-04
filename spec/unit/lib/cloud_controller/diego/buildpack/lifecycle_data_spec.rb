@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'cloud_controller/diego/traditional/lifecycle_data'
+require 'cloud_controller/diego/buildpack/lifecycle_data'
 
 module VCAP::CloudController
   module Diego
-    module Traditional
+    module Buildpack
       describe LifecycleData do
         let(:lifecycle_data) do
           data = LifecycleData.new

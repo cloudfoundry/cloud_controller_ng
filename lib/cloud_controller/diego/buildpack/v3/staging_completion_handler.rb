@@ -2,7 +2,7 @@ require 'cloud_controller/diego/staging_completion_handler_base'
 
 module VCAP::CloudController
   module Diego
-    module Traditional
+    module Buildpack
       module V3
         class StagingCompletionHandler < VCAP::CloudController::Diego::StagingCompletionHandlerBase
           def initialize(runners)

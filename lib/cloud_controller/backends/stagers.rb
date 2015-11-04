@@ -1,14 +1,14 @@
 require 'cloud_controller/dea/stager'
 require 'cloud_controller/diego/stager'
-require 'cloud_controller/diego/traditional/protocol'
-require 'cloud_controller/diego/traditional/staging_completion_handler'
+require 'cloud_controller/diego/buildpack/protocol'
+require 'cloud_controller/diego/buildpack/staging_completion_handler'
 require 'cloud_controller/diego/docker/protocol'
 require 'cloud_controller/diego/docker/staging_completion_handler'
 require 'cloud_controller/diego/egress_rules'
 require 'cloud_controller/diego/v3/stager'
 require 'cloud_controller/diego/v3/messenger'
-require 'cloud_controller/diego/traditional/v3/staging_completion_handler'
-require 'cloud_controller/diego/traditional/v3/protocol'
+require 'cloud_controller/diego/buildpack/v3/staging_completion_handler'
+require 'cloud_controller/diego/buildpack/v3/protocol'
 
 module VCAP::CloudController
   class Stagers
@@ -79,14 +79,14 @@ module VCAP::CloudController
     end
 
     def diego_traditional_stager(app)
-      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator(true), Diego::EgressRules.new)
-      completion_handler = Diego::Traditional::StagingCompletionHandler.new(@runners)
+      protocol = Diego::Buildpack::Protocol.new(dependency_locator.blobstore_url_generator(true), Diego::EgressRules.new)
+      completion_handler = Diego::Buildpack::StagingCompletionHandler.new(@runners)
       Diego::Stager.new(app, v2_messenger_for_protocol(protocol), completion_handler, @config)
     end
 
     def diego_package_stager(package)
-      protocol = Diego::Traditional::V3::Protocol.new(dependency_locator.blobstore_url_generator(true), Diego::EgressRules.new)
-      completion_handler = Diego::Traditional::V3::StagingCompletionHandler.new(@runners)
+      protocol = Diego::Buildpack::V3::Protocol.new(dependency_locator.blobstore_url_generator(true), Diego::EgressRules.new)
+      completion_handler = Diego::Buildpack::V3::StagingCompletionHandler.new(@runners)
       Diego::V3::Stager.new(package, v3_messenger_for_protocol(protocol), completion_handler, @config)
     end
   end

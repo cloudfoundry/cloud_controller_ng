@@ -5,7 +5,7 @@ module VCAP::CloudController
     describe Runner do
       let(:messenger) { instance_double(Messenger) }
       let(:app) { AppFactory.make(state: 'STARTED') }
-      let(:protocol) { instance_double(Diego::Traditional::Protocol, desire_app_message: {}) }
+      let(:protocol) { instance_double(Diego::Buildpack::Protocol, desire_app_message: {}) }
       let(:default_health_check_timeout) { 9999 }
 
       subject(:runner) { Runner.new(app, messenger, protocol, default_health_check_timeout) }

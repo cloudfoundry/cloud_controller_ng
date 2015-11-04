@@ -189,7 +189,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when there is a mixture of diego and traditional apps' do
+        context 'when there is a mixture of diego and dea apps' do
           before do
             app = AppFactory.make
             expect(app.diego).to be_falsey
@@ -362,7 +362,7 @@ module VCAP::CloudController
               end
             end
 
-            context 'when there is a mixture of diego and traditional apps' do
+            context 'when there is a mixture of diego and dea apps' do
               before do
                 5.times { AppFactory.make }
               end

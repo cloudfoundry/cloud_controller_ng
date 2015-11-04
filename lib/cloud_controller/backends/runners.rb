@@ -1,7 +1,7 @@
 require 'cloud_controller/dea/runner'
 require 'cloud_controller/diego/runner'
 require 'cloud_controller/diego/process_guid'
-require 'cloud_controller/diego/traditional/protocol'
+require 'cloud_controller/diego/buildpack/protocol'
 require 'cloud_controller/diego/docker/protocol'
 require 'cloud_controller/diego/egress_rules'
 
@@ -128,7 +128,7 @@ module VCAP::CloudController
       dependency_locator = CloudController::DependencyLocator.instance
       nsync_client = dependency_locator.nsync_client
       stager_client = dependency_locator.stager_client
-      protocol = Diego::Traditional::Protocol.new(dependency_locator.blobstore_url_generator(true), Diego::EgressRules.new)
+      protocol = Diego::Buildpack::Protocol.new(dependency_locator.blobstore_url_generator(true), Diego::EgressRules.new)
       messenger = Diego::Messenger.new(stager_client, nsync_client, protocol)
       Diego::Runner.new(app, messenger, protocol, @config[:default_health_check_timeout])
     end
