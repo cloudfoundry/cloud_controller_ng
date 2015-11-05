@@ -9,7 +9,6 @@ require 'cloud_controller/blob_sender/missing_blob_handler'
 require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/diego/messenger'
-require 'cloud_controller/diego/buildpack/protocol'
 
 module CloudController
   class DependencyLocator

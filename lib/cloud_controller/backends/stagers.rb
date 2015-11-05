@@ -1,8 +1,9 @@
 require 'cloud_controller/dea/stager'
 require 'cloud_controller/diego/stager'
-require 'cloud_controller/diego/buildpack/protocol'
+require 'cloud_controller/diego/protocol'
 require 'cloud_controller/diego/buildpack/staging_completion_handler'
-require 'cloud_controller/diego/docker/protocol'
+require 'cloud_controller/diego/buildpack/lifecycle_protocol'
+require 'cloud_controller/diego/docker/lifecycle_protocol'
 require 'cloud_controller/diego/docker/staging_completion_handler'
 require 'cloud_controller/diego/egress_rules'
 require 'cloud_controller/diego/v3/stager'
@@ -53,7 +54,9 @@ module VCAP::CloudController
     end
 
     def diego_stager(app)
-      app.docker_image.present? ? diego_docker_stager(app) : diego_traditional_stager(app)
+      protocol = Diego::Protocol.new(diego_lifecycle_protocol(app), Diego::EgressRules.new)
+      completion_handler = diego_completion_handler(app)
+      Diego::Stager.new(app, v2_messenger_for_protocol(protocol), completion_handler, @config)
     end
 
     def dependency_locator
@@ -72,16 +75,20 @@ module VCAP::CloudController
       Diego::V3::Messenger.new(stager_client, nsync_client, protocol)
     end
 
-    def diego_docker_stager(app)
-      protocol = Diego::Docker::Protocol.new(Diego::EgressRules.new)
-      completion_handler = Diego::Docker::StagingCompletionHandler.new(@runners)
-      Diego::Stager.new(app, v2_messenger_for_protocol(protocol), completion_handler, @config)
+    def diego_lifecycle_protocol(app)
+      if app.docker_image.present?
+        Diego::Docker::LifecycleProtocol.new
+      else
+        Diego::Buildpack::LifecycleProtocol.new(dependency_locator.blobstore_url_generator(true))
+      end
     end
 
-    def diego_traditional_stager(app)
-      protocol = Diego::Buildpack::Protocol.new(dependency_locator.blobstore_url_generator(true), Diego::EgressRules.new)
-      completion_handler = Diego::Buildpack::StagingCompletionHandler.new(@runners)
-      Diego::Stager.new(app, v2_messenger_for_protocol(protocol), completion_handler, @config)
+    def diego_completion_handler(app)
+      if app.docker_image.present?
+        Diego::Docker::StagingCompletionHandler.new(@runners)
+      else
+        Diego::Buildpack::StagingCompletionHandler.new(@runners)
+      end
     end
 
     def diego_package_stager(package)

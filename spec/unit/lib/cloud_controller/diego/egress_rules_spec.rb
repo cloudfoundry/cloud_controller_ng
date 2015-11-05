@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'cloud_controller/diego/docker/protocol'
 
 module VCAP::CloudController
   module Diego

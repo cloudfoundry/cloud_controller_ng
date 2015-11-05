@@ -16,13 +16,8 @@ module VCAP::CloudController
         @app.mark_for_restaging
         @app.staging_task_id = VCAP.secure_uuid
         @app.save_changes
-        begin
-          @messenger.send_stage_request(@app, @config)
-        rescue Errors::ApiError => e
-          raise e
-        rescue => e
-          raise Errors::ApiError.new_from_details('StagerError', e)
-        end
+
+        send_stage_app_request
       rescue Errors::ApiError => e
         logger.error('stage.app', staging_guid: StagingGuid.from_app(@app), error: e)
         staging_complete(StagingGuid.from_app(@app), { error: { id: 'StagingError', message: e.message } })
@@ -37,6 +32,14 @@ module VCAP::CloudController
 
       def logger
         @logger ||= Steno.logger('cc.stager.client')
+      end
+
+      def send_stage_app_request
+        @messenger.send_stage_request(@app, @config)
+      rescue Errors::ApiError => e
+        raise e
+      rescue => e
+        raise Errors::ApiError.new_from_details('StagerError', e)
       end
     end
   end

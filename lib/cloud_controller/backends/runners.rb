@@ -1,8 +1,9 @@
 require 'cloud_controller/dea/runner'
 require 'cloud_controller/diego/runner'
 require 'cloud_controller/diego/process_guid'
-require 'cloud_controller/diego/buildpack/protocol'
-require 'cloud_controller/diego/docker/protocol'
+require 'cloud_controller/diego/protocol'
+require 'cloud_controller/diego/buildpack/lifecycle_protocol'
+require 'cloud_controller/diego/docker/lifecycle_protocol'
 require 'cloud_controller/diego/egress_rules'
 
 module VCAP::CloudController
@@ -108,29 +109,28 @@ module VCAP::CloudController
     private
 
     def diego_runner(app)
-      app.docker_image.present? ? diego_docker_runner(app) : diego_traditional_runner(app)
+      nsync_client = dependency_locator.nsync_client
+      stager_client = dependency_locator.stager_client
+
+      protocol = Diego::Protocol.new(diego_lifecycle_protocol(app), Diego::EgressRules.new)
+      messenger = Diego::Messenger.new(stager_client, nsync_client, protocol)
+      Diego::Runner.new(app, messenger, protocol, @config[:default_health_check_timeout])
     end
 
     def dea_runner(app)
       Dea::Runner.new(app, @config, @message_bus, @dea_pool, @stager_pool)
     end
 
-    def diego_docker_runner(app)
-      dependency_locator = CloudController::DependencyLocator.instance
-      nsync_client = dependency_locator.nsync_client
-      stager_client = dependency_locator.stager_client
-      protocol = Diego::Docker::Protocol.new(Diego::EgressRules.new)
-      messenger = Diego::Messenger.new(stager_client, nsync_client, protocol)
-      Diego::Runner.new(app, messenger, protocol, @config[:default_health_check_timeout])
+    def dependency_locator
+      CloudController::DependencyLocator.instance
     end
 
-    def diego_traditional_runner(app)
-      dependency_locator = CloudController::DependencyLocator.instance
-      nsync_client = dependency_locator.nsync_client
-      stager_client = dependency_locator.stager_client
-      protocol = Diego::Buildpack::Protocol.new(dependency_locator.blobstore_url_generator(true), Diego::EgressRules.new)
-      messenger = Diego::Messenger.new(stager_client, nsync_client, protocol)
-      Diego::Runner.new(app, messenger, protocol, @config[:default_health_check_timeout])
+    def diego_lifecycle_protocol(app)
+      if app.docker_image.present?
+        Diego::Docker::LifecycleProtocol.new
+      else
+        Diego::Buildpack::LifecycleProtocol.new(dependency_locator.blobstore_url_generator(true))
+      end
     end
 
     def staging_timeout
