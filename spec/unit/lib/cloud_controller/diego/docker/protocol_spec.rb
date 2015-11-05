@@ -18,7 +18,8 @@ module VCAP::CloudController
             docker_image: 'fake/docker_image',
             health_check_timeout: 120,
             enable_ssh: true,
-            diego: true
+            diego: true,
+            ports: [2222, 3333],
           )
         end
 

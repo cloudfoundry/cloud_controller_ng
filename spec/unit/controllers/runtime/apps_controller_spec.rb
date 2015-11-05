@@ -62,7 +62,7 @@ module VCAP::CloudController
             diego:                   { type: 'bool' },
             docker_image:            { type: 'string', required: false },
             docker_credentials_json: { type: 'hash', default: {} },
-            ports:                   { type: '[integer]' }
+            ports:                   { type: '[integer]', default: nil }
           })
       end
 
@@ -327,20 +327,20 @@ module VCAP::CloudController
 
       def create_app
         post '/v2/apps', body, user_headers
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_status_code(201)
         decoded_response['metadata']['guid']
       end
 
       def read_app
         app_guid = create_app
         get "/v2/apps/#{app_guid}", '{}', user_headers
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
       end
 
       def update_app
         app_guid = create_app
         put "/v2/apps/#{app_guid}", body, user_headers
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_status_code(201)
       end
 
       context 'create app' do

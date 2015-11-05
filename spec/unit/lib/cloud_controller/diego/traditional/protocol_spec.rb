@@ -242,6 +242,7 @@ module VCAP::CloudController
                   'egress_rules' => ['running_egress_rule'],
                   'etag' => app.updated_at.to_f.to_s,
                   'allow_ssh' => true,
+                  'ports' => app.ports
                 })
           end
 
