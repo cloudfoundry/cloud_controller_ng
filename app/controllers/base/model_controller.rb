@@ -44,7 +44,6 @@ module VCAP::CloudController::RestController
     #
     # @param [String] guid The GUID of the object to read.
     def read(guid)
-      logger.debug 'cc.read', model: self.class.model_class_name, guid: guid
       obj = find_guid(guid)
       validate_access(:read, obj)
       object_renderer.render_json(self.class, obj, @opts)
@@ -115,8 +114,6 @@ module VCAP::CloudController::RestController
     #
     # @param [Symbol] name The name of the relation to enumerate.
     def enumerate_related(guid, name)
-      logger.debug 'cc.enumerate.related', guid: guid, association: name
-
       obj = find_guid(guid)
       validate_access(:read, obj)
 

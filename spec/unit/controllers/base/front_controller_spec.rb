@@ -44,6 +44,32 @@ module VCAP::CloudController
       end
     end
 
+    describe 'logging' do
+      let(:app) { described_class.new({ https_required: true }, token_decoder, request_metrics) }
+      let(:token_decoder) { double(:token_decoder, decode_token: { 'user_id' => 'fake-user-id' }) }
+
+      context 'get request' do
+        before do
+          allow(Steno).to receive(:logger).with(anything).and_return(fake_logger)
+        end
+
+        it 'logs request id and status code for all requests' do
+          get '/test_front_endpoint/some-guid', '', {}
+          request_id = last_response.headers['X-Vcap-Request-Id']
+          request_status = last_response.status.to_s
+          expect(fake_logger).to have_received(:info).with(
+            "Completed request, Vcap-Request-Id: #{request_id}, Status: #{request_status}, Requested Route: /test_front_endpoint/some-guid")
+        end
+
+        it 'logs request id and user guid for all requests' do
+          get '/test_front_endpoint/some-guid', '', {}
+          request_id = last_response.headers['X-Vcap-Request-Id']
+          expect(fake_logger).to have_received(:info).with(
+            "Started request, Vcap-Request-Id: #{request_id}, User: fake-user-id, Requested Route: /test_front_endpoint/some-guid")
+        end
+      end
+    end
+
     describe 'validating the auth token' do
       let(:user_id) { Sham.guid }
       let(:token_info) { {} }
