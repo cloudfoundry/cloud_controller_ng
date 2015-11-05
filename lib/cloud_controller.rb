@@ -109,5 +109,6 @@ require 'cloud_controller/routing_api/router_group'
 require 'cloud_controller/route_validator'
 
 require 'cloud_controller/integer_array_serializer'
+require 'cloud_controller/port_generator'
 
 require 'services'

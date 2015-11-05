@@ -12,7 +12,7 @@ module VCAP::CloudController
       to_many :apps
     end
 
-    query_parameters :host, :domain_guid, :organization_guid, :path, :port
+    query_parameters :host, :domain_guid, :organization_guid, :path, :port, :generate_port
 
     def self.dependencies
       [:routing_api_client]
@@ -55,6 +55,27 @@ module VCAP::CloudController
       end
 
       Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
+    end
+
+    def create
+      json_msg = self.class::CreateMessage.decode(body)
+
+      @request_attrs = json_msg.extract(stringify_keys: true)
+
+      logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
+
+      overwrite_port! if convert_flag_to_bool(params['generate_port'])
+
+      before_create
+
+      route = model.create_from_hash(request_attrs)
+      validate_access(:create, route, request_attrs)
+
+      [
+        HTTP::CREATED,
+        { 'Location' => "#{self.class.path}/#{route.guid}" },
+        object_renderer.render_json(self.class, route, @opts)
+      ]
     end
 
     def delete(guid)
@@ -106,7 +127,7 @@ module VCAP::CloudController
       domain_guid = request_attrs['domain_guid']
       return if domain_guid.nil?
 
-      validate_tcp_route(domain_guid)
+      validate_route(domain_guid)
     end
 
     def before_update(route)
@@ -114,7 +135,7 @@ module VCAP::CloudController
 
       return if request_attrs['app']
 
-      validate_tcp_route(route.domain.guid) if request_attrs['port'] != route.port
+      validate_route(route.domain.guid) if request_attrs['port'] != route.port
     end
 
     define_messages
@@ -123,7 +144,22 @@ module VCAP::CloudController
 
   private
 
-  def validate_tcp_route(domain_guid)
+  def overwrite_port!
+    if @request_attrs['port']
+      add_warning('Specified port ignored. Random port generated.')
+    end
+
+    @request_attrs = @request_attrs.deep_dup
+    @request_attrs['port'] = PortGenerator.new(@request_attrs).generate_port
+    @request_attrs.freeze
+  end
+
+  def convert_flag_to_bool(flag)
+    raise Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
+    flag == 'true'
+  end
+
+  def validate_route(domain_guid)
     RouteValidator.new(@routing_api_client, domain_guid, assemble_route_attrs).validate
   rescue RouteValidator::ValidationError => e
     raise Errors::ApiError.new_from_details(e.class.name.demodulize, e.message)

@@ -31,7 +31,7 @@ module VCAP::CloudController
 
         it 'raises a RouteInvalid error' do
           expect { validator.validate }.
-              to raise_error(RouteValidator::RouteInvalid, 'Port is required, as domain belongs to a TCP router group.')
+              to raise_error(RouteValidator::RouteInvalid, 'For TCP routes you must specify a port or request a random one.')
         end
       end
     end

@@ -58,7 +58,7 @@ module VCAP::CloudController
 
     def validate_port_included
       if port.nil?
-        raise RouteInvalid.new('Port is required, as domain belongs to a TCP router group.')
+        raise RouteInvalid.new('For TCP routes you must specify a port or request a random one.')
       end
     end
 
