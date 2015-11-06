@@ -28,6 +28,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:domain_guid) }
       it { expect(described_class).to be_queryable_by(:organization_guid) }
       it { expect(described_class).to be_queryable_by(:path) }
+      it { expect(described_class).to be_queryable_by(:port) }
     end
 
     describe 'Attributes' do
