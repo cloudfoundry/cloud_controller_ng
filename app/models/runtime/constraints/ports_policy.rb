@@ -5,7 +5,7 @@ class PortsPolicy
   end
 
   def validate
-    return if @app.ports.nil?
+    return if @app.ports.nil? || @app.ports.empty?
     return @errors.add(:ports, 'Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.') if !@app.diego
     return @errors.add(:ports, 'must be integers') unless all_ports_are_integers?
     @errors.add(:ports, 'must be in valid port range') unless all_ports_are_in_range?

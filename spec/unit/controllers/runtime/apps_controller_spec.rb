@@ -250,6 +250,45 @@ module VCAP::CloudController
             expect(last_response.status).to eq(201)
           end
         end
+
+        context 'when diego is set to true' do
+          context 'when no custom ports are specified' do
+            it 'sets the ports to 8080' do
+              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: true)), json_headers(admin_headers)
+              expect(last_response.status).to eq(201)
+              expect(decoded_response['entity']['ports']).to match([8080])
+              expect(decoded_response['entity']['diego']).to be true
+            end
+          end
+
+          context 'when custom ports are specified' do
+            it 'sets the ports to as specified in the request' do
+              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: true, ports:[9090,5222])), json_headers(admin_headers)
+              expect(last_response.status).to eq(201)
+              expect(decoded_response['entity']['ports']).to match([9090,5222])
+              expect(decoded_response['entity']['diego']).to be true
+            end
+          end
+        end
+
+        context 'when diego is set to false' do
+          context 'when no custom ports are specified' do
+            it 'sets the ports to nil' do
+              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: false)), json_headers(admin_headers)
+              expect(last_response.status).to eq(201)
+              expect(decoded_response['entity']['ports']).to be nil
+              expect(decoded_response['entity']['diego']).to be false
+            end
+          end
+
+          context 'when custom ports are specified' do
+            it 'returns an error' do
+              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: false, ports:[9090,5222])), json_headers(admin_headers)
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['description']).to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.')
+            end
+          end
+        end
       end
     end
 
@@ -359,13 +398,13 @@ module VCAP::CloudController
       let(:update_hash) { {} }
 
       let(:app_obj) { AppFactory.make(instances: 1) }
+      let(:developer) { make_developer_for_space(app_obj.space) }
 
       def update_app
         put "/v2/apps/#{app_obj.guid}", MultiJson.dump(update_hash), json_headers(admin_headers)
       end
 
       describe 'app_scaling feature flag' do
-        let(:developer) { make_developer_for_space(app_obj.space) }
 
         context 'when the flag is enabled' do
           before { FeatureFlag.make(name: 'app_scaling', enabled: true) }
@@ -384,6 +423,87 @@ module VCAP::CloudController
             expect(last_response.status).to eq(403)
             expect(decoded_response['error_code']).to match(/FeatureDisabled/)
             expect(decoded_response['description']).to match(/app_scaling/)
+          end
+        end
+      end
+
+      context 'switch from dea to diego' do
+        context 'when user does not specify any ports' do
+          it 'sets ports to 8080' do
+            put "/v2/apps/#{app_obj.guid}", '{ "diego": true }', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(201)
+            expect(decoded_response['entity']['ports']).to match([8080])
+            expect(decoded_response['entity']['diego']).to be true
+          end
+        end
+
+        context 'when user specifies ports' do
+          it 'sets ports to user specified values' do
+            put "/v2/apps/#{app_obj.guid}", '{ "diego": true, "ports": [9090,5222] }', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(201)
+            expect(decoded_response['entity']['ports']).to match([9090,5222])
+            expect(decoded_response['entity']['diego']).to be true
+          end
+        end
+      end
+
+      context 'switch from diego to dea' do
+        context 'when there are custom ports' do
+          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports:[9090,5222]) }
+          it 'returns error indicating custom ports need to be removed' do
+            put "/v2/apps/#{app_obj.guid}", '{ "diego": false }', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['description']).to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.')
+          end
+        end
+
+        context 'when there are no custom ports currently on the app' do
+          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports:[8080]) }
+          it 'updates the backend of the app and returns 201' do
+            put "/v2/apps/#{app_obj.guid}", '{ "diego": false}', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(201)
+            expect(decoded_response['entity']['ports']).to be nil
+            expect(decoded_response['entity']['diego']).to be false
+          end
+
+          context 'when custom ports are specified as part of update' do
+            it 'updates the backend of the app and returns 201' do
+              put "/v2/apps/#{app_obj.guid}", '{ "diego": false, "ports":[9090] }', json_headers(headers_for(developer))
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['description']).to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.')
+            end
+          end
+        end
+      end
+
+      context 'when app is dea app' do
+        context 'when custom ports are specified' do
+          it 'returns error indicating custom ports need to be removed' do
+            put "/v2/apps/#{app_obj.guid}", '{ "ports": [9090] }', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['description']).to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.')
+          end
+        end
+      end
+
+      context 'when app is diego app' do
+        let(:app_obj) { AppFactory.make(instances: 1, diego: true) }
+        context 'when custom ports are specified' do
+          it 'sets ports to user specified values' do
+            put "/v2/apps/#{app_obj.guid}", '{ "ports": [9090,5222] }', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(201)
+            expect(decoded_response['entity']['ports']).to match([9090,5222])
+            expect(decoded_response['entity']['diego']).to be true
+          end
+        end
+
+        context 'when existing app had custom ports' do
+          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports:[9090,5222]) }
+          it 'sets ports to user specified values' do
+            put "/v2/apps/#{app_obj.guid}", '{ "ports": [1883,5222] }', json_headers(headers_for(developer))
+            expect(last_response.status).to eq(201)
+            expect(decoded_response['entity']['ports']).to match([1883,5222])
+            expect(decoded_response['entity']['diego']).to be true
           end
         end
       end

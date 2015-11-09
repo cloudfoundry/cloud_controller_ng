@@ -141,10 +141,26 @@ module VCAP::CloudController
     def before_create
       space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
       verify_enable_ssh(space)
+      set_default_ports()
     end
 
     def before_update(app)
       verify_enable_ssh(app.space)
+      set_default_ports(app.ports) if app.diego != request_attrs['diego']
+    end
+
+    def set_default_ports(app_ports=[])
+      enable_diego  = @request_attrs['diego']
+      ports = @request_attrs['ports']
+      if enable_diego && ports.nil?
+         @request_attrs = @request_attrs.deep_dup
+         @request_attrs['ports'] = [8080]
+         @request_attrs.freeze
+      elsif !enable_diego && ports.nil? && app_ports == [8080]
+         @request_attrs = @request_attrs.deep_dup
+         @request_attrs['ports'] = []
+         @request_attrs.freeze
+      end
     end
 
     def verify_enable_ssh(space)
