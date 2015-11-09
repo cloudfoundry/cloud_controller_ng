@@ -55,9 +55,6 @@ case $1 in
     pid_guard $PIDFILE "Cloud controller ng"
 
     <% if properties.nfs_server.address %>
-    dpkg -i /var/vcap/packages/nfs_common/rpcbind_0.2.1-2ubuntu1_amd64.deb
-    dpkg -i /var/vcap/packages/nfs_common/nfs-common_1.2.8-6ubuntu1_amd64.deb
-
     export NFS_SHARE=<%= p('nfs_server.share_path') %>
 
     echo "Checking for nfs to be mounted"
