@@ -10,7 +10,7 @@ module CCInitializers
       file
     end
 
-    AWS::CF::Signer.configure do |config|
+    Aws::CF::Signer.configure do |config|
       config.key_path = key_file.path
       config.key_pair_id = cc_config[:droplets][:cdn][:key_pair_id]
       config.default_expires = 600

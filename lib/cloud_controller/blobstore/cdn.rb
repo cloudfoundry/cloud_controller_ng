@@ -20,7 +20,7 @@ module CloudController
 
       def download_uri(path)
         url = "#{host}/#{path}"
-        url = AWS::CF::Signer.sign_url(url) if AWS::CF::Signer.is_configured?
+        url = Aws::CF::Signer.sign_url(url) if Aws::CF::Signer.is_configured?
         url
       end
 

@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'cloud_controller/blobstore/cdn'
+require 'cloudfront-signer'
 
 module CloudController
   module Blobstore
@@ -31,7 +32,7 @@ module CloudController
 
         context 'when CloudFront Signer is not configured' do
           before do
-            allow(AWS::CF::Signer).to receive(:is_configured?).and_return(false)
+            allow(Aws::CF::Signer).to receive(:is_configured?).and_return(false)
             @stub = stub_request(:get, "#{cdn_host}/#{path_location}").to_return(body: 'barbaz')
           end
 
@@ -54,10 +55,10 @@ module CloudController
         end
 
         context 'when CloudFront Signer is configured' do
-          before { allow(AWS::CF::Signer).to receive(:is_configured?).and_return(true) }
+          before { allow(Aws::CF::Signer).to receive(:is_configured?).and_return(true) }
 
           it 'returns a signed URI using the CDN' do
-            expect(AWS::CF::Signer).to receive(:sign_url).with("#{cdn_host}/#{path_location}").and_return('http://signed_url')
+            expect(Aws::CF::Signer).to receive(:sign_url).with("#{cdn_host}/#{path_location}").and_return('http://signed_url')
             stub = stub_request(:get, 'signed_url').to_return(body: 'foobar')
 
             cdn.get(path_location) {}
