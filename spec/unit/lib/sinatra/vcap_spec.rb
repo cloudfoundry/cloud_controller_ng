@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Sinatra::VCAP', type: :controller do
+describe 'Sinatra::VCAP', type: :v2_controller do
   class StructuredErrorWithResponseCode < StructuredError
     def initialize
       super('boring message', 'the source')

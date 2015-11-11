@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe FeatureFlagsController, type: :controller do
+  describe FeatureFlagsController do
     describe 'PUT /v2/config/feature_flags/:name' do
       context 'when the user is an admin' do
         context 'and the flag is in the default feature flags' do
