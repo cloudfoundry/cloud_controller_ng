@@ -1,4 +1,3 @@
-require 'rails'
 require 'action_controller/railtie'
 
 class Application < ::Rails::Application

@@ -41,11 +41,6 @@ module CloudController
         controller = @controller_factory.create_controller(SpacesController)
         expect(controller).to be_instance_of(SpacesController)
       end
-
-      it 'instantiates a ProcessController' do
-        controller = @controller_factory.create_controller(ProcessesController)
-        expect(controller).to be_instance_of(ProcessesController)
-      end
     end
   end
 end
