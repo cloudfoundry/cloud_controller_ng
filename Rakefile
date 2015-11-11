@@ -6,10 +6,6 @@ require 'steno'
 require 'cloud_controller'
 require_relative 'lib/tasks/rake_config'
 
-Dir['lib/tasks/**/*.rake'].each do |tasks|
-  load tasks
-end
-
 Rails.application.load_tasks
 
 task default: ['spec:all', :rubocop_autocorrect]
