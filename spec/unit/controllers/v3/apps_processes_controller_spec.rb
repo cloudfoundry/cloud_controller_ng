@@ -223,7 +223,7 @@ describe AppsProcessesController, type: :controller do
   end
 
   describe '#scale' do
-    let(:body_params) { {instances: 2, memory_in_mb: 100, disk_in_mb: 200} }
+    let(:body_params) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
     let(:org) { space.organization }
@@ -338,7 +338,7 @@ describe AppsProcessesController, type: :controller do
 
     context 'when the request provides invalid data' do
       it 'returns 422' do
-        put :scale, guid: app_model.guid, type: app_process.type, body: {instances: 'oops'}
+        put :scale, guid: app_model.guid, type: app_process.type, body: { instances: 'oops' }
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'

@@ -3,6 +3,7 @@ require 'presenters/v3/droplet_presenter'
 
 module VCAP::CloudController
   describe DropletPresenter do
+    let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
     let(:droplet) do
       DropletModel.make(
         state:                  DropletModel::STAGED_STATE,
@@ -14,17 +15,13 @@ module VCAP::CloudController
         memory_limit: 234,
         disk_limit: 934,
         stack_name: Stack.default.name,
-        created_at: Time.at(1),
-        updated_at: Time.at(2),
         execution_metadata: 'black-box-string'
       )
     end
-    let!(:lifecycle_data) do
-      BuildpackLifecycleDataModel.create(
-        buildpack: 'the-happiest-buildpack',
-        stack: 'the-happiest-stack',
-        droplet: droplet
-      )
+
+    before do
+      droplet.lifecycle_data.buildpack = 'the-happiest-buildpack'
+      droplet.lifecycle_data.stack    = 'the-happiest-stack'
     end
 
     describe '#present_json' do
@@ -48,8 +45,8 @@ module VCAP::CloudController
         expect(result['result']['process_types']).to eq({ 'web' => 'npm start', 'worker' => 'start worker' })
         expect(result['result']['execution_metadata']).to eq('black-box-string')
 
-        expect(result['created_at']).to eq('1970-01-01T00:00:01Z')
-        expect(result['updated_at']).to eq('1970-01-01T00:00:02Z')
+        expect(result['created_at']).to match(iso8601)
+        expect(result['updated_at']).to match(iso8601)
         expect(result['links']).to include('self')
         expect(result['links']['self']['href']).to eq("/v3/droplets/#{droplet.guid}")
         expect(result['links']).to include('package')
@@ -65,8 +62,7 @@ module VCAP::CloudController
       let(:droplet) { DropletModel.make }
 
       before do
-        lifecycle_data.buildpack = nil
-        lifecycle_data.save
+        droplet.lifecycle_data.buildpack = nil
       end
 
       it 'does NOT include a link to upload' do

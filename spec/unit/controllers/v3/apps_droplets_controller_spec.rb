@@ -11,7 +11,7 @@ describe AppsDropletsController, type: :controller do
 
   describe '#index' do
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make()))
+      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
       allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
     end

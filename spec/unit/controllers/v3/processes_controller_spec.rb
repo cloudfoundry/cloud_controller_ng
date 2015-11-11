@@ -49,13 +49,17 @@ describe ProcessesController, type: :controller do
     end
 
     it 'fetches processes for the users SpaceDeveloper, SpaceManager, SpaceAuditor, OrgManager space guids' do
-      expect_any_instance_of(VCAP::CloudController::ProcessListFetcher).to receive(:fetch).with(instance_of(VCAP::CloudController::PaginationOptions), [space.guid]).and_call_original
+      expect_any_instance_of(VCAP::CloudController::ProcessListFetcher).to receive(:fetch).with(
+        instance_of(VCAP::CloudController::PaginationOptions), [space.guid]).and_call_original
       expect_any_instance_of(VCAP::CloudController::ProcessListFetcher).to_not receive(:fetch_all)
 
       get :index
 
       expect(membership).to have_received(:space_guids_for_roles).with(
-                                [VCAP::CloudController::Membership::SPACE_DEVELOPER, VCAP::CloudController::Membership::SPACE_MANAGER, VCAP::CloudController::Membership::SPACE_AUDITOR, VCAP::CloudController::Membership::ORG_MANAGER])
+                                [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+                                 VCAP::CloudController::Membership::SPACE_MANAGER,
+                                 VCAP::CloudController::Membership::SPACE_AUDITOR,
+                                 VCAP::CloudController::Membership::ORG_MANAGER])
     end
 
     it 'fails without read permissions scope on the auth token' do

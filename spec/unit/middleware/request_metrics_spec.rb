@@ -10,7 +10,6 @@ module CloudFoundry
 
       describe 'handling the request' do
         it 'calls start request on request metrics before the request' do
-
           middleware.call({})
           expect(request_metrics).to have_received(:start_request)
         end

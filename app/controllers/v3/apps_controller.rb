@@ -24,7 +24,8 @@ class AppsV3Controller < ApplicationController
     pagination_options = PaginationOptions.from_params(query_params)
     invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-    paginated_result = roles.admin? ? AppListFetcher.new.fetch_all(pagination_options, message) : VCAP::CloudController::AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
+    paginated_result = roles.admin? ? AppListFetcher.new.fetch_all(pagination_options, message) :
+      VCAP::CloudController::AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
 
     render status: :ok, json: AppPresenter.new.present_json_list(paginated_result, message)
   end
@@ -112,7 +113,7 @@ class AppsV3Controller < ApplicationController
     unprocessable!(e.message)
   end
 
-  def get_environment
+  def show_environment
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
     unauthorized! unless can_read_envs?(space.guid)
@@ -158,7 +159,6 @@ class AppsV3Controller < ApplicationController
                                       VCAP::CloudController::Membership::SPACE_AUDITOR,
                                       VCAP::CloudController::Membership::ORG_MANAGER])
   end
-
 
   def can_create?(space_guid)
     roles.admin? ||

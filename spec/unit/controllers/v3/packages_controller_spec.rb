@@ -290,9 +290,9 @@ describe PackagesController, type: :controller do
         allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
         allow(membership).to receive(:has_any_roles?).with(
             [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-              VCAP::CloudController::Membership::SPACE_MANAGER,
-              VCAP::CloudController::Membership::SPACE_AUDITOR,
-              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
       end
 
       it 'returns 404' do
@@ -609,7 +609,10 @@ describe PackagesController, type: :controller do
 
   describe '#stage' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE, state: VCAP::CloudController::PackageModel::READY_STATE) }
+    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
+                                                             type: VCAP::CloudController::PackageModel::BITS_TYPE,
+                                                             state: VCAP::CloudController::PackageModel::READY_STATE)
+    }
     let(:stagers) { double(:stagers) }
 
     before do
@@ -619,7 +622,6 @@ describe PackagesController, type: :controller do
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
       allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-
     end
 
     it 'returns a 201 Created response' do
@@ -683,7 +685,6 @@ describe PackagesController, type: :controller do
 
           expect(response.status).to eq(201)
           expect(VCAP::CloudController::DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(buildpack.name)
-
         end
 
         context 'when the buildpack does not exist' do
@@ -710,7 +711,6 @@ describe PackagesController, type: :controller do
 
           expect(response.status).to eq(201)
           expect(VCAP::CloudController::DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
-
         end
       end
     end
@@ -745,9 +745,9 @@ describe PackagesController, type: :controller do
         allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
         allow(membership).to receive(:has_any_roles?).with(
             [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-              VCAP::CloudController::Membership::SPACE_MANAGER,
-              VCAP::CloudController::Membership::SPACE_AUDITOR,
-              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
       end
 
       it 'returns a 404 ResourceNotFound error' do
@@ -766,9 +766,9 @@ describe PackagesController, type: :controller do
         allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
         allow(membership).to receive(:has_any_roles?).with(
             [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-              VCAP::CloudController::Membership::SPACE_MANAGER,
-              VCAP::CloudController::Membership::SPACE_AUDITOR,
-              VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
             and_return(true)
         allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
             and_return(false)
@@ -814,7 +814,6 @@ describe PackagesController, type: :controller do
             }
           }
         end
-
 
         before do
           app_model.environment_variables = { 'key_from_app' => 'should_merge', 'conflicting_key' => 'value_from_app' }

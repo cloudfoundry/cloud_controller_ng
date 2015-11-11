@@ -83,8 +83,8 @@ describe AppsRoutesController, type: :controller do
            VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
            and_return(true)
 
-           allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-             and_return(false)
+        allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+          and_return(false)
       end
 
       it 'raises ApiError NotAuthorized' do
@@ -323,17 +323,17 @@ describe AppsRoutesController, type: :controller do
 
     context 'when the user can read but cannot write to the route' do
       before do
-        allow(membership).to receive(:has_any_roles?)
-          .with([VCAP::CloudController::Membership::SPACE_DEVELOPER,
+        allow(membership).to receive(:has_any_roles?).
+          with([VCAP::CloudController::Membership::SPACE_DEVELOPER,
                 VCAP::CloudController::Membership::SPACE_MANAGER,
                 VCAP::CloudController::Membership::SPACE_AUDITOR,
                 VCAP::CloudController::Membership::ORG_MANAGER],
                 space.guid,
-                org.guid)
-          .and_return(true)
-        allow(membership).to receive(:has_any_roles?)
-          .with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid)
-          .and_return(false)
+                org.guid).
+          and_return(true)
+        allow(membership).to receive(:has_any_roles?).
+          with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+          and_return(false)
       end
 
       it 'raises ApiError NotAuthorized' do

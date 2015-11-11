@@ -261,7 +261,7 @@ resource 'Apps (Experimental)', type: :api do
             }
           }).to_json
     end
-
+    header 'Content-Type', 'application/json'
     example 'Create an App' do
       explanation <<-eos
         Creates an app in v3 of the Cloud Controller API.
@@ -360,6 +360,7 @@ resource 'Apps (Experimental)', type: :api do
     let(:guid) { app_model.guid }
 
     let(:raw_post) { body_parameters }
+    header 'Content-Type', 'application/json'
 
     example 'Updating an App' do
       do_request_with_error_handling
@@ -670,6 +671,7 @@ resource 'Apps (Experimental)', type: :api do
     let(:guid) { app_model.guid }
 
     let(:raw_post) { body_parameters }
+    header 'Content-Type', 'application/json'
 
     example 'Assigning a droplet as an App\'s current droplet' do
       do_request_with_error_handling

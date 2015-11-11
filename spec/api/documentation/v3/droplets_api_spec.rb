@@ -26,7 +26,7 @@ resource 'Droplets (Experimental)', type: :api do
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
 
-    let(:droplet_model) do
+    let!(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
         state:                  VCAP::CloudController::DropletModel::STAGED_STATE,
         app_guid:               app_model.guid,
@@ -42,7 +42,6 @@ resource 'Droplets (Experimental)', type: :api do
     before do
       space.organization.add_user user
       space.add_developer user
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet_model)
     end
 
     example 'Get a Droplet' do
@@ -69,7 +68,7 @@ resource 'Droplets (Experimental)', type: :api do
         'detected_start_command' => droplet_model.detected_start_command,
         'environment_variables'  => droplet_model.environment_variables,
         'created_at'             => iso8601,
-        'updated_at'             => nil,
+        'updated_at'             => iso8601,
         'links'                 => {
           'self'    => { 'href' => "/v3/droplets/#{guid}" },
           'package' => { 'href' => "/v3/packages/#{package_model.guid}" },
@@ -204,7 +203,7 @@ resource 'Droplets (Experimental)', type: :api do
               },
               'environment_variables'  => {},
               'created_at'             => iso8601,
-              'updated_at'             => nil,
+              'updated_at'             => iso8601,
               'links'                 => {
                 'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },
                 'package' => { 'href' => "/v3/packages/#{package.guid}" },
@@ -237,7 +236,7 @@ resource 'Droplets (Experimental)', type: :api do
               },
               'environment_variables'  => droplet1.environment_variables,
               'created_at'             => iso8601,
-              'updated_at'             => nil,
+              'updated_at'             => iso8601,
               'links'                 => {
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
                 'package'   => { 'href' => "/v3/packages/#{package.guid}" },

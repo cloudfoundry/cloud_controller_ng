@@ -37,7 +37,7 @@ class AppsPackagesController < ApplicationController
   end
 
   def create
-    if params[:body][:source_package_guid]
+    if params[:source_package_guid]
       create_copy
     else
       create_new
@@ -46,7 +46,7 @@ class AppsPackagesController < ApplicationController
 
   def create_copy
     app_guid = params[:guid]
-    source_package_guid = params[:body][:source_package_guid]
+    source_package_guid = params[:source_package_guid]
     app_model = AppModel.where(guid: app_guid).eager(:space, space: :organization).all.first
     app_not_found! if app_model.nil? || !can_read?(app_model.space.guid, app_model.space.organization.guid)
     unauthorized! unless can_create?(app_model.space.guid)

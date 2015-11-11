@@ -751,8 +751,22 @@ module CloudController
       end
 
       describe 'downloading without mocking' do
+        def wait_for_server_to_accept_requests(uri)
+          code       = nil
+          total_time = 0
+          while code != '200' && total_time < 10
+            begin
+              res  = Net::HTTP.get_response(URI(uri))
+              code = res.code
+              total_time += 0.1
+              sleep 0.1
+            rescue
+            end
+          end
+        end
+
         describe 'from a CDN' do
-          let(:port) { 9876 } # TODO Can we find a free port?
+          let(:port) { 9875 } # TODO: Can we find a free port?
 
           around(:each) do |example|
             WebMock.disable_net_connect!(allow_localhost: true)
@@ -761,18 +775,21 @@ module CloudController
           end
 
           it 'correctly downloads byte streams' do
-            cdn = Cdn.make("http://localhost:#{port}")
+            uri    = "http://localhost:#{port}"
+            cdn    = Cdn.make(uri)
             client = Client.new(connection_config, directory_key, cdn)
 
             source_directory_path = File.expand_path('../../../../fixtures/', File.dirname(__FILE__))
             source_file_path = File.join(source_directory_path, 'pa/rt/partitioned_key')
             source_hexdigest = Digest::SHA2.file(source_file_path).hexdigest
 
-            pid = spawn("ruby -rwebrick -e'WEBrick::HTTPServer.new(:Port => #{port}, :DocumentRoot => \"#{source_directory_path}\").start'", :out => "test.out", :err => "test.err")
-
-            Process.detach(pid)
+            pid = spawn("ruby -rwebrick -e'WEBrick::HTTPServer.new(:Port => #{port}, :DocumentRoot => \"#{source_directory_path}\").start'", out: 'test.out', err: 'test.err')
 
             begin
+              Process.detach(pid)
+
+              wait_for_server_to_accept_requests(uri)
+
               destination_file_path = File.join(Dir.mktmpdir, 'hard_file.xyz')
 
               client.download_from_blobstore('partitioned_key', destination_file_path)

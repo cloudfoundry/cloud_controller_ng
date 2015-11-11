@@ -27,7 +27,7 @@ class ApplicationController < ActionController::Base
   before_action :set_current_user, except: [:internal_error]
   before_action :validate_scheme!, except: [:not_found, :internal_error, :bad_request]
   before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
-  before_action :check_read_permissions!, only: [:index, :show, :get_environment]
+  before_action :check_read_permissions!, only: [:index, :show, :show_environment]
   before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error, :bad_request]
   before_action :null_coalesce_body
 
