@@ -13,4 +13,5 @@ class Application < ::Rails::Application
   config.middleware.delete 'Rack::Head'
   config.middleware.delete 'Rack::ConditionalGet'
   config.middleware.delete 'Rack::ETag'
+  config.middleware.delete 'Rack::MethodOverride'
 end
