@@ -16,7 +16,7 @@ module VCAP::CloudController
         begin
           @runners.runner_for_app(app).stop
         rescue VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError
-          # This is a hail mary.  Diego will eventually be consistant.  If this communication fails, we're cool with it.
+          # This is a hail mary.  Diego will eventually be consistent.  If this communication fails, we're cool with it.
         end
 
         delete_package(app) if app.package_hash

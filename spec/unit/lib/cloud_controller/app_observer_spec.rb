@@ -83,10 +83,10 @@ module VCAP::CloudController
     describe '.updated' do
       subject { AppObserver.updated(app) }
 
-      context 'when the app state has changed' do
-        let(:previous_changes) { { state: 'state-change' } }
+      context 'when the app state is changed' do
+        let(:previous_changes) { { state: 'original-state' } }
 
-        context 'if the app has not been started' do
+        context 'if the desired app state is stopped' do
           let(:app_started) { false }
 
           it 'stops the app' do
@@ -100,7 +100,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'if the app has been started' do
+        context 'if the desired app state is started' do
           let(:app_started) { true }
 
           it 'does not stop the app' do
@@ -132,7 +132,7 @@ module VCAP::CloudController
       context 'when the diego flag on the app has changed' do
         let(:previous_changes) { { diego: 'diego-change' } }
 
-        context 'if the app has not been started' do
+        context 'if the desired state of the app is stopped' do
           let(:app_started) { false }
 
           it 'stops the app' do
@@ -146,7 +146,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'if the app has been started' do
+        context 'if the desired state of the app is started' do
           let(:app_started) { true }
 
           it 'does not stop the app' do
@@ -178,7 +178,7 @@ module VCAP::CloudController
       context 'when the enable_ssh flag on the app has changed' do
         let(:previous_changes) { { enable_ssh: true } }
 
-        context 'if the app has not been started' do
+        context 'if the desired state of the app is stopped' do
           let(:app_started) { false }
 
           it 'stops the app' do
@@ -192,7 +192,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'if the app has been started' do
+        context 'if the desired state of the app is started' do
           let(:app_started) { true }
 
           it 'does not stop the app' do
@@ -224,7 +224,7 @@ module VCAP::CloudController
       context 'when the app instances have changed' do
         let(:previous_changes) { { instances: 'something' } }
 
-        context 'if the app has not been started' do
+        context 'if the desired state of the app is stopped' do
           let(:app_started) { false }
 
           it 'does not scale the app' do
@@ -251,7 +251,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'if the app has been started' do
+        context 'if the desired state of the app is started' do
           let(:app_started) { true }
 
           it 'scales the app' do

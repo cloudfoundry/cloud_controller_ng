@@ -29,7 +29,6 @@ module VCAP::CloudController
       end
 
       def stop
-        return unless @app.started?
         with_logging('stop_app') { @messenger.send_stop_app_request(@app) }
       end
 
