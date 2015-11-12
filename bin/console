@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-$LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
-$LOAD_PATH.unshift(File.expand_path('../../app', __FILE__))
+require File.expand_path('../../config/boot', __FILE__)
+ENV['RAILS_ENV'] ||= 'production'
 
 require 'cloud_controller/console'
