@@ -33,6 +33,10 @@ class ApplicationController < ActionController::Base
 
   rescue_from VCAP::Errors::ApiError, with: :handle_api_error
 
+  def configuration
+    Config.config
+  end
+
   def query_params
     request.query_parameters.with_indifferent_access
   end
@@ -82,14 +86,14 @@ class ApplicationController < ActionController::Base
 
   def set_current_user
     auth_token = request.headers['HTTP_AUTHORIZATION']
-    token_decoder = VCAP::UaaTokenDecoder.new(Config.config[:uaa])
+    token_decoder = VCAP::UaaTokenDecoder.new(configuration[:uaa])
     VCAP::CloudController::Security::SecurityContextConfigurer.new(token_decoder).configure(auth_token)
     logger.info("User for request: #{current_user.nil? ? nil : current_user.guid}")
   end
 
   def validate_scheme!
     validator = VCAP::CloudController::RequestSchemeValidator.new
-    validator.validate!(current_user, roles, Config.config, request)
+    validator.validate!(current_user, roles, configuration, request)
   end
 
   def set_locale
