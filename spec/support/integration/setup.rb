@@ -31,8 +31,10 @@ module IntegrationSetup
 
     db_connection_string = "#{TestConfig.config[:db][:database]}_integration_cc"
     if !opts[:preserve_database]
+      db = /postgres/ =~ db_connection_string ? 'postgres' : 'mysql'
       env = {
         'DB_CONNECTION_STRING' => db_connection_string,
+        'DB' => db
       }.merge(opts[:env] || {})
       run_cmd('bundle exec rake db:recreate db:migrate', wait: true, env: env)
     end

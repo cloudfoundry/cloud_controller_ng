@@ -22,7 +22,7 @@ module VCAP::CloudController
         message:               "must be between 1 and #{PER_PAGE_MAX}" }
     validates :order_by, inclusion: {
         in:      %w(created_at updated_at id),
-        message: "can only be ordered by 'created_at' or 'updated_at'"
+        message: "can only be 'created_at' or 'updated_at'"
       }
     validates :order_direction, inclusion: {
         in:      %w(asc desc),

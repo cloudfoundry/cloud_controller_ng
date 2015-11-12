@@ -1,258 +1,184 @@
 require 'presenters/v3/app_presenter'
-require 'cloud_controller/paging/pagination_options'
-require 'queries/app_delete_fetcher'
-require 'queries/app_fetcher'
 require 'queries/app_list_fetcher'
-require 'queries/process_list_fetcher'
-require 'actions/app_delete'
+require 'messages/apps_list_message'
+require 'queries/app_fetcher'
+require 'messages/app_create_message'
+require 'actions/app_create'
+require 'cloud_controller/paging/pagination_options'
+require 'messages/buildpack_request_validator'
+require 'messages/app_update_message'
 require 'actions/app_update'
+require 'queries/app_delete_fetcher'
+require 'actions/app_delete'
 require 'actions/app_start'
 require 'actions/app_stop'
-require 'actions/app_create'
 require 'queries/assign_current_droplet_fetcher'
 require 'actions/set_current_droplet'
-require 'messages/app_create_message'
-require 'messages/app_update_message'
-require 'messages/buildpack_request_validator'
-require 'messages/apps_list_message'
 require 'builders/app_create_request_builder'
 
-module VCAP::CloudController
-  class AppsV3Controller < RestController::BaseController
-    def self.dependencies
-      [:app_presenter]
-    end
+class AppsV3Controller < ApplicationController
+  def index
+    message = AppsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
 
-    def inject_dependencies(dependencies)
-      @app_presenter = dependencies[:app_presenter]
-    end
+    pagination_options = PaginationOptions.from_params(query_params)
+    invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-    get '/v3/apps', :list
-    def list
-      check_read_permissions!
+    paginated_result = roles.admin? ? AppListFetcher.new.fetch_all(pagination_options, message) :
+      VCAP::CloudController::AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
 
-      message = AppsListMessage.from_params(params)
-      invalid_param!(message.errors.full_messages) unless message.valid?
+    render status: :ok, json: AppPresenter.new.present_json_list(paginated_result, message)
+  end
 
-      pagination_options = PaginationOptions.from_params(params)
-      invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
+  def show
+    app, space, org = AppFetcher.new.fetch(params[:guid])
 
-      if roles.admin?
-        paginated_apps = AppListFetcher.new.fetch_all(pagination_options, message)
-      else
-        allowed_space_guids = membership.space_guids_for_roles([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
-        paginated_apps = AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
-      end
+    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
 
-      [HTTP::OK, @app_presenter.present_json_list(paginated_apps, message)]
-    end
+    render status: :ok, json: AppPresenter.new.present_json(app)
+  end
 
-    get '/v3/apps/:guid', :show
-    def show(guid)
-      check_read_permissions!
+  def create
+    assembled_request = AppCreateRequestBuilder.new.build(params[:body])
+    message = AppCreateMessage.create_from_http_request(assembled_request)
+    unprocessable!(message.errors.full_messages) unless message.valid?
 
-      app, space, org = AppFetcher.new.fetch(guid)
+    buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
+    unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
 
-      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    space_not_found! unless can_create?(message.space_guid)
 
-      [HTTP::OK, @app_presenter.present_json(app)]
-    end
+    app = AppCreate.new(current_user, current_user_email).create(message)
 
-    post '/v3/apps', :create
-    def create
-      check_write_permissions!
+    render status: :created, json: AppPresenter.new.present_json(app)
+  rescue AppCreate::InvalidApp => e
+    unprocessable!(e.message)
+  end
 
-      request = parse_and_validate_json(body)
-      assembled_request = AppCreateRequestBuilder.new.build(request)
-      message = AppCreateMessage.create_from_http_request(assembled_request)
-      unprocessable!(message.errors.full_messages) unless message.valid?
+  def update
+    message = AppUpdateMessage.create_from_http_request(params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
 
-      buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
-      unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
+    app, space, org = AppFetcher.new.fetch(params[:guid])
 
-      space_not_found! unless can_create?(message.space_guid)
+    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    unauthorized! unless can_update?(space.guid)
 
-      app = AppCreate.new(current_user, current_user_email).create(message)
+    buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
+    unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
 
-      [HTTP::CREATED, @app_presenter.present_json(app)]
-    rescue AppCreate::InvalidApp => e
-      unprocessable!(e.message)
-    end
+    app = AppUpdate.new(current_user, current_user_email).update(app, message)
 
-    patch '/v3/apps/:guid', :update
-    def update(guid)
-      check_write_permissions!
+    render status: :ok, json: AppPresenter.new.present_json(app)
+  rescue AppUpdate::DropletNotFound
+    droplet_not_found!
+  rescue AppUpdate::InvalidApp => e
+    unprocessable!(e.message)
+  end
 
-      request = parse_and_validate_json(body)
+  def destroy
+    app, space, org  = AppDeleteFetcher.new.fetch(params[:guid])
 
-      app, space, org = AppFetcher.new.fetch(guid)
+    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    unauthorized! unless can_delete?(space.guid)
 
-      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-      unauthorized! unless can_update?(space.guid)
+    AppDelete.new(current_user.guid, current_user_email).delete(app)
 
-      message = AppUpdateMessage.create_from_http_request(request)
-      unprocessable!(message.errors.full_messages) unless message.valid?
+    head :no_content
+  end
 
-      buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
-      unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
+  def start
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    unauthorized! unless can_start?(space.guid)
 
-      app = AppUpdate.new(current_user, current_user_email).update(app, message)
+    AppStart.new(current_user, current_user_email).start(app)
 
-      [HTTP::OK, @app_presenter.present_json(app)]
-    rescue AppUpdate::DropletNotFound
-      droplet_not_found!
-    rescue AppUpdate::InvalidApp => e
-      unprocessable!(e.message)
-    end
+    render status: :ok, json: AppPresenter.new.present_json(app)
+  rescue AppStart::DropletNotFound
+    droplet_not_found!
+  rescue AppStart::InvalidApp => e
+    unprocessable!(e.message)
+  end
 
-    delete '/v3/apps/:guid', :delete
-    def delete(guid)
-      check_write_permissions!
+  def stop
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    unauthorized! unless can_stop?(space.guid)
 
-      app_delete_fetcher = AppDeleteFetcher.new
-      app, space, org    = app_delete_fetcher.fetch(guid)
+    AppStop.new(current_user, current_user_email).stop(app)
 
-      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-      unauthorized! unless can_delete?(space.guid)
+    render status: :ok, json: AppPresenter.new.present_json(app)
+  rescue AppStop::InvalidApp => e
+    unprocessable!(e.message)
+  end
 
-      AppDelete.new(current_user.guid, current_user_email).delete(app)
+  def show_environment
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    unauthorized! unless can_read_envs?(space.guid)
 
-      [HTTP::NO_CONTENT]
-    end
+    render status: :ok, json: AppPresenter.new.present_json_env(app)
+  end
 
-    put '/v3/apps/:guid/start', :start
-    def start(guid)
-      check_write_permissions!
+  def assign_current_droplet
+    app_guid = params[:guid]
+    droplet_guid = params[:body]['droplet_guid']
+    app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
-      app, space, org = AppFetcher.new.fetch(guid)
-      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-      unauthorized! unless can_start?(space.guid)
+    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    unauthorized! unless can_update?(space.guid)
+    unprocessable!('Stop the app before changing droplet') if app.desired_state != 'STOPPED'
 
-      AppStart.new(current_user, current_user_email).start(app)
-      [HTTP::OK, @app_presenter.present_json(app)]
-    rescue AppStart::DropletNotFound
-      droplet_not_found!
-    rescue AppStart::InvalidApp => e
-      unprocessable!(e.message)
-    end
+    droplet_not_found! if droplet.nil?
 
-    put '/v3/apps/:guid/stop', :stop
-    def stop(guid)
-      check_write_permissions!
+    app = SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
 
-      app, space, org = AppFetcher.new.fetch(guid)
-      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-      unauthorized! unless can_stop?(space.guid)
+    render status: :ok, json: AppPresenter.new.present_json(app)
+  rescue SetCurrentDroplet::InvalidApp => e
+    unprocessable!(e.message)
+  end
 
-      AppStop.new(current_user, current_user_email).stop(app)
-      [HTTP::OK, @app_presenter.present_json(app)]
-    rescue AppStop::InvalidApp => e
-      unprocessable!(e.message)
-    end
+  private
 
-    get '/v3/apps/:guid/env', :get_environment
-    def get_environment(guid)
-      check_read_permissions!
+  def membership
+    @membership ||= Membership.new(current_user)
+  end
 
-      app, space, org = AppFetcher.new.fetch(guid)
-      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-      unauthorized! unless can_read_envs?(space.guid)
+  def can_read?(space_guid, org_guid)
+    roles.admin? ||
+      membership.has_any_roles?([VCAP::CloudController::Membership::SPACE_DEVELOPER,
+                                 VCAP::CloudController::Membership::SPACE_MANAGER,
+                                 VCAP::CloudController::Membership::SPACE_AUDITOR,
+                                 VCAP::CloudController::Membership::ORG_MANAGER], space_guid, org_guid)
+  end
 
-      env_vars = app.environment_variables
-      uris = app.routes.map(&:fqdn)
-      vcap_application = {
-        'VCAP_APPLICATION' => {
-          limits: {
-            fds: Config.config[:instance_file_descriptor_limit] || 16384,
-          },
-          application_name: app.name,
-          application_uris: uris,
-          name: app.name,
-          space_name: app.space.name,
-          space_id: app.space.guid,
-          uris: uris,
-          users: nil
-        }
-      }
+  def allowed_space_guids
+    membership.space_guids_for_roles([VCAP::CloudController::Membership::SPACE_DEVELOPER,
+                                      VCAP::CloudController::Membership::SPACE_MANAGER,
+                                      VCAP::CloudController::Membership::SPACE_AUDITOR,
+                                      VCAP::CloudController::Membership::ORG_MANAGER])
+  end
 
-      [
-        HTTP::OK,
-        {
-          'environment_variables' => env_vars,
-          'staging_env_json' => EnvironmentVariableGroup.staging.environment_json,
-          'running_env_json' => EnvironmentVariableGroup.running.environment_json,
-          'application_env_json' => vcap_application
-        }.to_json
-      ]
-    end
+  def can_create?(space_guid)
+    roles.admin? ||
+      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
+  end
+  alias_method :can_update?, :can_create?
+  alias_method :can_delete?, :can_create?
+  alias_method :can_start?, :can_create?
+  alias_method :can_stop?, :can_create?
+  alias_method :can_read_envs?, :can_create?
 
-    put '/v3/apps/:guid/current_droplet', :assign_current_droplet
-    def assign_current_droplet(app_guid)
-      check_write_permissions!
+  def droplet_not_found!
+    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found')
+  end
 
-      droplet_guid = parse_and_validate_json(body)['droplet_guid']
+  def space_not_found!
+    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
+  end
 
-      app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
-
-      app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-      unauthorized! unless can_update?(space.guid)
-      unprocessable!('Stop the app before changing droplet') if app.desired_state != 'STOPPED'
-
-      droplet_not_found! if droplet.nil?
-
-      app = SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
-
-      [HTTP::OK, @app_presenter.present_json(app)]
-    rescue SetCurrentDroplet::InvalidApp => e
-      unprocessable!(e.message)
-    end
-
-    def membership
-      @membership ||= Membership.new(current_user)
-    end
-
-    private
-
-    def can_read?(space_guid, org_guid)
-      roles.admin? ||
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER,
-                                 Membership::SPACE_MANAGER,
-                                 Membership::SPACE_AUDITOR,
-                                 Membership::ORG_MANAGER], space_guid, org_guid)
-    end
-
-    def can_create?(space_guid)
-      roles.admin? ||
-          membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-    end
-    alias_method :can_update?, :can_create?
-    alias_method :can_delete?, :can_create?
-    alias_method :can_start?, :can_create?
-    alias_method :can_stop?, :can_create?
-    alias_method :can_read_envs?, :can_create?
-
-    def unable_to_perform!(msg, details)
-      raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', msg, details)
-    end
-
-    def droplet_not_found!
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found')
-    end
-
-    def space_not_found!
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
-    end
-
-    def app_not_found!
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
-    end
-
-    def unauthorized!
-      raise VCAP::Errors::ApiError.new_from_details('NotAuthorized')
-    end
-
-    def unprocessable!(message)
-      raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
-    end
+  def app_not_found!
+    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
   end
 end

@@ -18,3 +18,5 @@ doc
 log
 tmp
 tags
+test.err
+test.out

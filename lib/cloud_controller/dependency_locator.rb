@@ -172,10 +172,6 @@ module CloudController
       AppRepository.new
     end
 
-    def process_presenter
-      ProcessPresenter.new
-    end
-
     def app_presenter
       AppPresenter.new
     end

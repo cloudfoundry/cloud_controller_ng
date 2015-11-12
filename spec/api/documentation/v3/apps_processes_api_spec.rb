@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'rails_helper'
 require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
@@ -129,6 +129,8 @@ resource 'Apps (Experimental)', type: :api do
       process.space.organization.add_user user
       process.space.add_developer user
     end
+
+    header 'Content-Type', 'application/json'
 
     example 'Scaling a Process from its App' do
       expect {

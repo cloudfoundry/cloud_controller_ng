@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'rails_helper'
 require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
@@ -188,6 +188,7 @@ resource 'Packages (Experimental)', type: :api do
       body_parameter :data_image, 'Location of docker image.  Required for docker packages.'
       body_parameter :data_credentials, 'Credentials for private docker image, available fields are user, password, email, login server. ', required: false
       body_parameter :data_store_image, 'Whether or not the backend should cache the image. defaults to false', required: false
+      header 'Content-Type', 'application/json'
 
       example 'Create a Package' do
         expect {
@@ -424,6 +425,8 @@ resource 'Packages (Experimental)', type: :api do
   end
 
   post '/v3/packages/:guid/droplets' do
+    header 'Content-Type', 'application/json'
+
     body_parameter :environment_variables, 'Environment variables to use during staging.
     Environment variable names may not start with "VCAP_" or "CF_". "PORT" is not a valid environment variable.',
       example_values: ['{"FEATURE_ENABLED": "true"}'],

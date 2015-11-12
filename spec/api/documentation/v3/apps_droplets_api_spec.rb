@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'rails_helper'
 require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
@@ -100,7 +100,7 @@ resource 'Apps (Experimental)', type: :api do
                 'stack'                  => nil
               },
               'created_at'             => iso8601,
-              'updated_at'             => nil,
+              'updated_at'             => iso8601,
               'links'                 => {
                 'self'    => { 'href' => "/v3/droplets/#{droplet2.guid}" },
                 'package' => { 'href' => "/v3/packages/#{package.guid}" },
@@ -133,7 +133,7 @@ resource 'Apps (Experimental)', type: :api do
                 'stack'                => nil
               },
               'created_at'             => iso8601,
-              'updated_at'             => nil,
+              'updated_at'             => iso8601,
               'links'                 => {
                 'self'      => { 'href' => "/v3/droplets/#{droplet1.guid}" },
                 'package'   => { 'href' => "/v3/packages/#{package.guid}" },

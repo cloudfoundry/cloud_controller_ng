@@ -556,7 +556,6 @@ module VCAP::CloudController
           expect(decoded_response['code']).to eq 1001
           expect(decoded_response['description']).to match(/invalid/)
           expect(last_response.location).to be_nil
-          expect(last_response.headers['X-VCAP-Request-ID']).not_to be_nil
         end
 
         it 'returns 400 error when validation fails on create' do

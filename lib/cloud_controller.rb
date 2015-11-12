@@ -14,10 +14,7 @@ require 'vcap/errors/api_error'
 require 'uaa/token_coder'
 
 require 'sinatra/vcap'
-require 'cloud_controller/security_context'
-require 'active_support/core_ext/hash'
-require 'active_support/core_ext/object/to_query'
-require 'active_support/json/encoding'
+require File.expand_path('../../config/environment', __FILE__)
 
 Sequel.default_timezone = :utc
 ActiveSupport::JSON::Encoding.time_precision = 0
@@ -31,6 +28,7 @@ require 'sequel_plugins/sequel_plugins'
 require 'vcap/sequel_add_association_dependencies_monkeypatch'
 require 'access/access'
 
+require 'cloud_controller/security_context'
 require 'cloud_controller/jobs'
 require 'cloud_controller/background_job_environment'
 require 'cloud_controller/db_migrator'

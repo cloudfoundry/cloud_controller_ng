@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export RAILS_ENV=production
 
 export CC_JOB_DIR=/var/vcap/jobs/cloud_controller_ng
 source $CC_JOB_DIR/bin/ruby_version.sh
@@ -99,6 +100,8 @@ case $1 in
 
 
     export DYNO=<%= "#{spec.job.name}-#{spec.index}" %>
+
+    cd $CC_PACKAGE_DIR/cloud_controller_ng
 
     <% if spec.index.to_i == 0 %>
     exec chpst -u vcap:vcap $CC_PACKAGE_DIR/cloud_controller_ng/bin/cloud_controller -m \<% else %>

@@ -13,6 +13,11 @@
   http_code: 400
   message: "Invalid relation: %s"
 
+1003:
+  name: InvalidContentType
+  http_code: 400
+  message: "Invalid content type, expected: %s"
+
 10000:
   name: NotFound
   http_code: 404

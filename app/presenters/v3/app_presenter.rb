@@ -10,6 +10,10 @@ module VCAP::CloudController
       MultiJson.dump(app_hash(app), pretty: true)
     end
 
+    def present_json_env(app)
+      MultiJson.dump(env_hash(app), pretty: true)
+    end
+
     def present_json_list(paginated_result, facets={})
       apps       = paginated_result.records
       app_hashes = apps.collect { |app| app_hash(app) }
@@ -38,6 +42,30 @@ module VCAP::CloudController
         },
         environment_variables:   app.environment_variables || {},
         links:                   build_links(app)
+      }
+    end
+
+    def env_hash(app)
+      vcap_application = {
+        'VCAP_APPLICATION' => {
+          limits: {
+            fds: Config.config[:instance_file_descriptor_limit] || 16384,
+          },
+          application_name: app.name,
+          application_uris: app.routes.map(&:fqdn),
+          name: app.name,
+          space_name: app.space.name,
+          space_id: app.space.guid,
+          uris: app.routes.map(&:fqdn),
+          users: nil
+        }
+      }
+
+      {
+        'environment_variables' => app.environment_variables,
+        'staging_env_json' => EnvironmentVariableGroup.staging.environment_json,
+        'running_env_json' => EnvironmentVariableGroup.running.environment_json,
+        'application_env_json' => vcap_application
       }
     end
 

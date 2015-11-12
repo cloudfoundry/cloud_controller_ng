@@ -134,7 +134,7 @@ class VCAP::CloudController::ResourcePool
       logger.debug 'resource_pool.download.using-cdn'
 
       uri = "#{@cdn[:uri]}/#{s3_key}"
-      for_real_uri = AWS::CF::Signer.is_configured? ? AWS::CF::Signer.sign_url(uri) : uri
+      for_real_uri = Aws::CF::Signer.is_configured? ? Aws::CF::Signer.sign_url(uri) : uri
 
       File.open(destination, 'w') do |file|
         HTTPClient.new.get(for_real_uri) do |chunk|

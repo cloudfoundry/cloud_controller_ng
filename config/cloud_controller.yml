@@ -187,3 +187,8 @@ default_staging_security_groups:
 default_running_security_groups:
 - dummy4
 
+allowed_cors_domains:
+- http://*.appspot.com
+- http://*.inblue.net
+- http://talkoncorners.com
+- http://borrowedheaven.org

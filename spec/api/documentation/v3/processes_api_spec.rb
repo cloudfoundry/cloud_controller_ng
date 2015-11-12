@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'rails_helper'
 require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
@@ -139,6 +139,8 @@ resource 'Processes (Experimental)', type: :api do
       process.space.add_developer user
     end
 
+    header 'Content-Type', 'application/json'
+
     body_parameter :command, 'Start command for process'
 
     let(:command) { 'X' }
@@ -180,6 +182,7 @@ resource 'Processes (Experimental)', type: :api do
     body_parameter :instances, 'Number of instances'
     body_parameter :memory_in_mb, 'The memory in mb allocated per instance'
     body_parameter :disk_in_mb, 'The disk in mb allocated per instance'
+    header 'Content-Type', 'application/json'
 
     let(:instances) { 3 }
     let(:memory_in_mb) { 100 }

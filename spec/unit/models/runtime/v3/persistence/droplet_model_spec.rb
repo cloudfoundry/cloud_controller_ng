@@ -111,6 +111,11 @@ module VCAP::CloudController
     let(:droplet_model) { DropletModel.make }
     let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
 
+    before do
+      droplet_model.buildpack_lifecycle_data = lifecycle_data
+      droplet_model.save
+    end
+
     it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
       expect(droplet_model.lifecycle_type).to eq('buildpack')
     end
@@ -120,6 +125,11 @@ module VCAP::CloudController
     let(:droplet_model) { DropletModel.make }
     let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
 
+    before do
+      droplet_model.buildpack_lifecycle_data = lifecycle_data
+      droplet_model.save
+    end
+
     it 'returns buildpack_lifecycle_data if it is on the model' do
       expect(droplet_model.lifecycle_data).to eq(lifecycle_data)
     end
@@ -127,14 +137,6 @@ module VCAP::CloudController
     it 'is a persistable hash' do
       expect(droplet_model.reload.lifecycle_data.buildpack).to eq(lifecycle_data.buildpack)
       expect(droplet_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
-    end
-
-    context 'lifecycle_data is nil' do
-      let(:non_buildpack_droplet_model) { DropletModel.make }
-
-      it 'returns nil if no lifecycle data types are present' do
-        expect(non_buildpack_droplet_model.lifecycle_data).to eq(nil)
-      end
     end
   end
 end

@@ -1,13 +1,21 @@
+require 'vcap_request_id'
+require 'cors'
+require 'request_metrics'
+require 'request_logs'
+
 module VCAP::CloudController
   class RackAppBuilder
     def build(config, request_metrics)
       token_decoder = VCAP::UaaTokenDecoder.new(config[:uaa])
 
       logger = access_log(config)
+
       Rack::Builder.new do
-        if logger
-          use Rack::CommonLogger, logger
-        end
+        use CloudFoundry::Middleware::RequestMetrics, request_metrics
+        use CloudFoundry::Middleware::Cors, config[:allowed_cors_domains]
+        use CloudFoundry::Middleware::VcapRequestId
+        use CloudFoundry::Middleware::RequestLogs, Steno.logger('cc.api')
+        use Rack::CommonLogger, logger if logger
 
         if config[:development_mode] && config[:newrelic_enabled]
           require 'new_relic/rack/developer_mode'
@@ -15,7 +23,11 @@ module VCAP::CloudController
         end
 
         map '/' do
-          run FrontController.new(config, token_decoder, request_metrics)
+          run FrontController.new(config, token_decoder)
+        end
+
+        map '/v3' do
+          run Rails.application.app
         end
       end
     end

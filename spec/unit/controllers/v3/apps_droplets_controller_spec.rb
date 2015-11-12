@@ -1,205 +1,115 @@
-require 'spec_helper'
+require 'rails_helper'
 
-module VCAP::CloudController
-  describe AppsDropletsController do
-    let(:logger) { instance_double(Steno::Logger) }
-    let(:params) { {} }
-    let(:droplet_presenter) { double(:droplet_presenter) }
-    let(:membership) { instance_double(Membership) }
-    let(:roles) { instance_double(Roles) }
-    let(:req_body) { '{}' }
-    let(:app) { AppModel.make }
-    let(:space) { app.space }
-    let(:org) { space.organization }
-    let(:app_fetcher) { double(:app_fetcher) }
-    let(:app_guid) { app.guid }
-    let(:space_guid) { space.guid }
-    let(:org_guid) { org.guid }
+describe AppsDropletsController, type: :controller do
+  let(:membership) { instance_double(VCAP::CloudController::Membership) }
+  let(:app_model) { VCAP::CloudController::AppModel.make }
+  let(:app_guid) { app_model.guid }
+  let(:space) { app_model.space }
+  let(:space_guid) { space.guid }
+  let(:org) { space.organization }
+  let(:org_guid) { org.guid }
 
-    let(:apps_droplets_controller) do
-      AppsDropletsController.new(
-        {},
-        logger,
-        {},
-        params.stringify_keys,
-        req_body,
-        nil,
-        {
-          droplet_presenter: droplet_presenter,
-        },
-      )
-    end
-
+  describe '#index' do
     before do
-      allow(logger).to receive(:debug)
-      allow(apps_droplets_controller).to receive(:membership).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(false)
-      allow(app_fetcher).to receive(:fetch).and_return([app, space, org])
-      allow(AppFetcher).to receive(:new).and_return(app_fetcher)
-      allow(Roles).to receive(:new).and_return(roles)
-      allow(roles).to receive(:admin?).and_return(false)
+      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
     end
 
-    describe '#list' do
-      let(:page) { 1 }
-      let(:per_page) { 2 }
-      let(:params) { { 'page' => page, 'per_page' => per_page } }
-      let(:non_presentational_params) { params.reject { |k| ['per_page', 'page'].include? k } }
-      let(:expected_response) { 'im a response' }
+    it 'returns droplets the user has roles to see' do
+      droplet_1 = VCAP::CloudController::DropletModel.make(app_guid: app_guid)
+      droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app_guid)
+      VCAP::CloudController::DropletModel.make
 
+      get :index, guid: app_model.guid
+
+      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      expect(response.status).to eq(200)
+      expect(response_guids).to match_array([droplet_1, droplet_2].map(&:guid))
+    end
+
+    context 'query params' do
+      context 'invalid param format' do
+        it 'returns 400' do
+          get :index, guid: app_model.guid, order_by: 'meow'
+
+          expect(response.status).to eq 400
+          expect(response.body).to include("Order by can only be 'created_at' or 'updated_at'")
+          expect(response.body).to include('BadQueryParameter')
+        end
+      end
+
+      context 'unknown query param' do
+        it 'returns 400' do
+          get :index, guid: app_model.guid, meow: 'bad-val', nyan: 'mow'
+
+          expect(response.status).to eq 400
+          expect(response.body).to include('BadQueryParameter')
+          expect(response.body).to include('Unknown query parameter(s)')
+          expect(response.body).to include('nyan')
+          expect(response.body).to include('meow')
+        end
+      end
+    end
+
+    context 'admin' do
       before do
-        allow(droplet_presenter).to receive(:present_json_list).and_return(expected_response)
-        allow(apps_droplets_controller).to receive(:check_read_permissions!)
+        @request.env.merge!(admin_headers)
       end
 
-      context 'query params' do
-        context 'invalid param format' do
-          let(:params) { { 'order_by' => 'up' } }
+      context 'the app exists' do
+        it 'returns a 200 and all droplets belonging to the app' do
+          droplet_1 = VCAP::CloudController::DropletModel.make(app_guid: app_guid)
+          droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app_guid)
+          VCAP::CloudController::DropletModel.make
 
-          it 'returns 400' do
-            expect {
-              apps_droplets_controller.list(app_guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'BadQueryParameter'
-              expect(error.response_code).to eq 400
-              expect(error.message).to match('Order by is invalid')
-            end
-          end
-        end
+          get :index, guid: app_model.guid
 
-        context 'unknown query param' do
-          let(:bad_param) { 'foo' }
-          let(:params) { { 'bad_param' => bad_param, 'lies' =>  bad_param } }
-
-          it 'returns 400' do
-            expect {
-              apps_droplets_controller.list(app_guid)
-            }.to raise_error do |error|
-              expect(error.name).to eq 'BadQueryParameter'
-              expect(error.response_code).to eq 400
-              expect(error.message).to include('Unknown query parameter(s)')
-              expect(error.message).to include('bad_param')
-              expect(error.message).to include('lies')
-            end
-          end
+          response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+          expect(response.status).to eq(200)
+          expect(response_guids).to match_array([droplet_1, droplet_2].map(&:guid))
         end
       end
 
-      context 'when the user is an admin' do
+      context 'the app does not exist' do
+        it 'returns a 404 Resource Not Found' do
+          get :index, guid: 'hello-i-do-not-exist'
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+        end
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user cannot read the app' do
         before do
-          allow(roles).to receive(:admin?).and_return(true)
+          allow(membership).to receive(:has_any_roles?).with(
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space_guid, org_guid).and_return(false)
         end
 
-        context 'the app exists' do
-          it 'returns all droplets' do
-            DropletModel.make(app_guid: app_guid)
-            DropletModel.make(app_guid: app_guid)
-            DropletModel.make(app_guid: app_guid)
+        it 'returns a 404 Resource Not Found error' do
+          get :index, guid: app_model.guid
 
-            response_code, response_body = apps_droplets_controller.list(app_guid)
-
-            expect(droplet_presenter).to have_received(:present_json_list).
-              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets", instance_of(AppsDropletsListMessage)) do |result|
-              expect(result.total).to eq(DropletModel.count)
-            end
-            expect(response_code).to eq(200)
-            expect(response_body).to eq(expected_response)
-          end
-        end
-
-        context 'the app does not exist' do
-          before do
-            allow(app_fetcher).to receive(:fetch).and_return([nil, nil, nil])
-          end
-
-          it 'returns a 404 Resource Not Found' do
-            expect { apps_droplets_controller.list(app_guid) }.to raise_error do |error|
-              expect(error.name).to eq 'ResourceNotFound'
-              expect(error.response_code).to eq 404
-            end
-          end
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 404
         end
       end
+    end
 
-      context 'when the user is not an admin' do
-        let(:viewable_droplet) { DropletModel.make }
-        context 'when the user has space privileges' do
-          before do
-            allow(roles).to receive(:admin?).and_return(false)
-            allow(membership).to receive(:has_any_roles?).and_return(true)
-          end
-
-          it 'returns droplets the user has roles to see' do
-            DropletModel.make(app_guid: app_guid)
-            DropletModel.make
-
-            response_code, response_body = apps_droplets_controller.list(app_guid)
-
-            expect(membership).to have_received(:has_any_roles?).
-              with([Membership::SPACE_DEVELOPER,
-                    Membership::SPACE_MANAGER,
-                    Membership::SPACE_AUDITOR,
-                    Membership::ORG_MANAGER], space_guid, org_guid)
-            expect(droplet_presenter).to have_received(:present_json_list).
-              with(an_instance_of(PaginatedResult), "/v3/apps/#{app_guid}/droplets", instance_of(AppsDropletsListMessage)) do |result|
-              expect(result.total).to eq(1)
-            end
-            expect(response_code).to eq(200)
-            expect(response_body).to eq(expected_response)
-          end
-        end
-
-        context 'when the user has no space privileges' do
-          before do
-            allow(roles).to receive(:admin?).and_return(false)
-            allow(membership).to receive(:has_any_roles?).and_return(false)
-          end
-
-          context 'when the app exists' do
-            it 'returns a 404 Resource Not Found error' do
-              expect { apps_droplets_controller.list(app_guid) }.to raise_error do |error|
-                expect(error.name).to eq 'ResourceNotFound'
-                expect(error.response_code).to eq 404
-              end
-              expect(membership).to have_received(:has_any_roles?).
-                with([Membership::SPACE_DEVELOPER,
-                      Membership::SPACE_MANAGER,
-                      Membership::SPACE_AUDITOR,
-                      Membership::ORG_MANAGER], space_guid, org_guid)
-            end
-          end
-
-          context 'when the app does not exist' do
-            before do
-              allow(app_fetcher).to receive(:fetch).and_return([nil, nil, nil])
-            end
-
-            it 'returns a 404 Resource Not Found error' do
-              expect { apps_droplets_controller.list(app_guid) }.to raise_error do |error|
-                expect(error.name).to eq 'ResourceNotFound'
-                expect(error.response_code).to eq 404
-              end
-            end
-          end
-        end
+    context 'when the user does not have read scope' do
+      before do
+        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
       end
 
-      context 'when the user has incorrect scope' do
-        before do
-          allow(apps_droplets_controller).to receive(:check_read_permissions!).
-              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
-        end
+      it 'raises an ApiError with a 403 code' do
+        get :index, guid: app_model.guid
 
-        it 'returns a 403 Not Authorized error' do
-          expect {
-            apps_droplets_controller.list(app_guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
-
-          expect(apps_droplets_controller).to have_received(:check_read_permissions!)
-        end
+        expect(response.status).to eq 403
+        expect(response.body).to include 'NotAuthorized'
       end
     end
   end

@@ -1,369 +1,276 @@
-require 'spec_helper'
+require 'rails_helper'
 
-module VCAP::CloudController
-  describe DropletsController do
-    let(:logger) { instance_double(Steno::Logger) }
-    let(:params) { {} }
-    let(:droplet_presenter) { double(:droplet_presenter) }
-    let(:membership) { instance_double(Membership) }
-    let(:roles) { instance_double(Roles) }
-    let(:req_body) { '{}' }
+describe DropletsController, type: :controller do
+  let(:membership) { instance_double(VCAP::CloudController::Membership) }
 
-    let(:droplets_controller) do
-      DropletsController.new(
-        {},
-        logger,
-        {},
-        params.stringify_keys,
-        req_body,
-        nil,
-        {
-          droplet_presenter: droplet_presenter,
-        },
-      )
-    end
+  describe '#show' do
+    let(:droplet) { VCAP::CloudController::DropletModel.make }
 
     before do
-      allow(logger).to receive(:debug)
-      allow(droplets_controller).to receive(:membership).and_return(membership)
+      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
       allow(membership).to receive(:has_any_roles?).and_return(true)
-      allow(Roles).to receive(:new).and_return(roles)
-      allow(roles).to receive(:admin?).and_return(false)
     end
 
-    describe '#show' do
-      let(:droplet) { DropletModel.make }
-      let(:space) { droplet.space }
-      let(:org) { space.organization }
-      let(:expected_response) { 'im a response' }
+    it 'returns a 200 OK and the droplet' do
+      get :show, guid: droplet.guid
 
+      expect(response.status).to eq(200)
+      expect(MultiJson.load(response.body)['guid']).to eq(droplet.guid)
+    end
+
+    context 'admin' do
       before do
-        allow(droplet_presenter).to receive(:present_json).and_return(expected_response)
-        allow(droplets_controller).to receive(:check_read_permissions!)
+        @request.env.merge!(admin_headers)
+        allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
       it 'returns a 200 OK and the droplet' do
-        response_code, response = droplets_controller.show(droplet.guid)
-        expect(response_code).to eq 200
-        expect(response).to eq(expected_response)
-        expect(droplet_presenter).to have_received(:present_json).with(droplet)
-      end
+        get :show, guid: droplet.guid
 
-      context 'admin' do
-        before do
-          allow(roles).to receive(:admin?).and_return(true)
-          allow(membership).to receive(:has_any_roles?).and_return(false)
-        end
-
-        it 'returns a 200 OK and the droplet' do
-          response_code, response = droplets_controller.show(droplet.guid)
-          expect(response_code).to eq 200
-          expect(response).to eq(expected_response)
-          expect(droplet_presenter).to have_received(:present_json).with(droplet)
-        end
-      end
-
-      context 'when the user has the incorrect scope' do
-        before do
-          allow(droplets_controller).to receive(:check_read_permissions!).
-              and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
-        end
-
-        it 'returns a 403 NotAuthorized error' do
-          expect {
-            droplets_controller.show(droplet.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
-
-          expect(droplets_controller).to have_received(:check_read_permissions!)
-        end
-      end
-
-      context 'when the user has incorrect roles' do
-        before do
-          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-          allow(membership).to receive(:has_any_roles?).with(
-              [Membership::SPACE_DEVELOPER,
-               Membership::SPACE_MANAGER,
-               Membership::SPACE_AUDITOR,
-               Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
-        end
-
-        it 'returns a 404 not found' do
-          expect {
-            droplets_controller.show(droplet.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-
-          expect(membership).to have_received(:has_any_roles?).with(
-              [Membership::SPACE_DEVELOPER,
-               Membership::SPACE_MANAGER,
-               Membership::SPACE_AUDITOR,
-               Membership::ORG_MANAGER], space.guid, org.guid)
-        end
-      end
-
-      context 'when the droplet does not exist' do
-        it 'returns a 404 Not Found' do
-          expect {
-            droplets_controller.show('shablam!')
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
+        expect(response.status).to eq(200)
+        expect(MultiJson.load(response.body)['guid']).to eq(droplet.guid)
       end
     end
 
-    describe '#delete' do
-      let(:space) { Space.make }
-      let(:org) { space.organization }
-      let(:app_model) { AppModel.make(space_guid: space.guid) }
-      let(:droplet) { DropletModel.make(app_guid: app_model.guid) }
+    context 'when the droplet does not exist' do
+      it 'returns a 404 Not Found' do
+        get :show, guid: 'shablam!'
 
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+
+    context 'when the user does not have the read scope' do
       before do
-        # stubbing the BaseController methods for now, this should probably be
-        # injected into the droplets controller
-        allow(droplets_controller).to receive(:check_write_permissions!)
+        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
       end
 
-      it 'checks for write permissions' do
-        droplets_controller.delete(droplet.guid)
-        expect(droplets_controller).to have_received(:check_write_permissions!)
+      it 'returns a 403 NotAuthorized error' do
+        get :show, guid: droplet.guid
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include('NotAuthorized')
+      end
+    end
+
+    context 'when the user has incorrect roles' do
+      let(:space) { droplet.space }
+      let(:org) { space.organization }
+
+      before do
+        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+        allow(membership).to receive(:has_any_roles?).with(
+            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+             VCAP::CloudController::Membership::SPACE_MANAGER,
+             VCAP::CloudController::Membership::SPACE_AUDITOR,
+             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+      end
+
+      it 'returns a 404 not found' do
+        get :show, guid: droplet.guid
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+  end
+
+  describe '#destroy' do
+    let(:droplet) { VCAP::CloudController::DropletModel.make }
+
+    before do
+      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+    end
+
+    it 'returns a 204 NO CONTENT' do
+      delete :destroy, guid: droplet.guid
+
+      expect(response.status).to eq(204)
+      expect(response.body).to be_empty
+      expect(droplet.exists?).to be_falsey
+    end
+
+    context 'admin' do
+      before do
+        @request.env.merge!(admin_headers)
+        allow(membership).to receive(:has_any_roles?).and_return(false)
       end
 
       it 'returns a 204 NO CONTENT' do
-        response_code, response = droplets_controller.delete(droplet.guid)
-        expect(response_code).to eq 204
-        expect(response).to be_nil
-      end
+        delete :destroy, guid: droplet.guid
 
-      context 'admin' do
-        before do
-          allow(roles).to receive(:admin?).and_return(true)
-          allow(membership).to receive(:has_any_roles?).and_return(false)
-        end
-
-        it 'returns a 204 NO CONTENT' do
-          response_code, response = droplets_controller.delete(droplet.guid)
-          expect(response_code).to eq 204
-          expect(response).to be_nil
-        end
-      end
-
-      it 'checks for the proper roles' do
-        droplets_controller.delete(droplet.guid)
-
-        expect(membership).to have_received(:has_any_roles?).at_least(1).times
-        expect(membership).to have_received(:has_any_roles?).exactly(1).times.
-          with([Membership::SPACE_DEVELOPER], space.guid)
-      end
-
-      context 'when the droplet does not exist' do
-        it 'returns a 404 Not Found' do
-          expect {
-            droplets_controller.delete('non-existant')
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the user cannot read the droplet' do
-        before do
-          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-          allow(membership).to receive(:has_any_roles?).with(
-            [Membership::SPACE_DEVELOPER,
-             Membership::SPACE_MANAGER,
-             Membership::SPACE_AUDITOR,
-             Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
-        end
-
-        it 'returns a 404 ResourceNotFound error' do
-          expect {
-            droplets_controller.delete(droplet.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'ResourceNotFound'
-            expect(error.response_code).to eq 404
-          end
-        end
-      end
-
-      context 'when the user can read but cannot write to the droplet' do
-        before do
-          allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-          allow(membership).to receive(:has_any_roles?).with(
-            [Membership::SPACE_DEVELOPER,
-             Membership::SPACE_MANAGER,
-             Membership::SPACE_AUDITOR,
-             Membership::ORG_MANAGER], space.guid, org.guid).
-            and_return(true)
-          allow(membership).to receive(:has_any_roles?).with([Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
-        end
-
-        it 'raises ApiError NotAuthorized' do
-          expect {
-            droplets_controller.delete(droplet.guid)
-          }.to raise_error do |error|
-            expect(error.name).to eq 'NotAuthorized'
-            expect(error.response_code).to eq 403
-          end
-        end
+        expect(response.status).to eq(204)
+        expect(response.body).to be_empty
+        expect(droplet.exists?).to be_falsey
       end
     end
 
-    describe '#list' do
-      let(:page) { 1 }
-      let(:per_page) { 2 }
-      let(:params) { { 'page' => page, 'per_page' => per_page } }
-      let(:non_presentational_params) { params.reject { |k| ['per_page', 'page'].include? k } }
+    context 'when the droplet does not exist' do
+      it 'returns a 404 Not Found' do
+        delete :destroy, guid: 'not-found'
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+
+    context 'when the user does not have write scope' do
+      before do
+        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
+      end
+
+      it 'returns 403' do
+        delete :destroy, guid: droplet.guid
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include('NotAuthorized')
+      end
+    end
+
+    context 'when the user cannot read the droplet due to roles' do
+      let(:space) { droplet.space }
+      let(:org) { space.organization }
 
       before do
-        allow(droplets_controller).to receive(:check_read_permissions!)
+        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
       end
 
-      context 'authorization and request validation' do
-        let(:expected_response) { 'im a response' }
+      it 'returns a 404 ResourceNotFound error' do
+        delete :destroy, guid: droplet.guid
 
-        before do
-          allow(droplet_presenter).to receive(:present_json_list).and_return(expected_response)
-        end
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
 
-        context 'query params' do
-          context 'invalid param format' do
-            let(:params) { { 'order_by' => '^%' } }
+    context 'when the user can read but cannot write to the droplet' do
+      let(:space) { droplet.space }
+      let(:org) { space.organization }
 
-            it 'returns 400' do
-              expect {
-                droplets_controller.list
-              }.to raise_error do |error|
-                expect(error.name).to eq 'BadQueryParameter'
-                expect(error.response_code).to eq 400
-                expect(error.message).to match('Order by is invalid')
-              end
-            end
-          end
+      before do
+        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
+          and_return(true)
+        allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+          and_return(false)
+      end
 
-          context 'unknown query param' do
-            let(:bad_param) { 'foo' }
-            let(:params) { { 'bad_param' => bad_param } }
+      it 'returns 403 NotAuthorized' do
+        delete :destroy, guid: droplet.guid
 
-            it 'returns 400' do
-              expect {
-                droplets_controller.list
-              }.to raise_error do |error|
-                expect(error.name).to eq 'BadQueryParameter'
-                expect(error.response_code).to eq 400
-                expect(error.message).to include('Unknown query parameter(s)')
-                expect(error.message).to include('bad_param')
-              end
-            end
-          end
+        expect(response.status).to eq(403)
+        expect(response.body).to include('NotAuthorized')
+      end
+    end
+  end
 
-          context 'invalid pagination' do
-            let(:params) { { 'per_page' => 9999999999999999 } }
+  describe '#index' do
+    let(:user) { VCAP::CloudController::User.make }
+    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:space) { app.space }
+    let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
+    let!(:user_droplet_2) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
+    let!(:admin_droplet) { VCAP::CloudController::DropletModel.make }
 
-            it 'returns 400' do
-              expect {
-                droplets_controller.list
-              }.to raise_error do |error|
-                expect(error.name).to eq 'BadQueryParameter'
-                expect(error.response_code).to eq 400
-                expect(error.message).to match('Per page must be between')
-              end
-            end
-          end
-        end
+    before do
+      @request.env.merge!(headers_for(user))
+      space.organization.add_user(user)
+      space.organization.save
+      space.add_developer(user)
+      space.save
+    end
 
-        context 'when the user is an admin' do
-          before do
-            allow(roles).to receive(:admin?).and_return(true)
-          end
+    it 'returns 200' do
+      get :index
+      expect(response.status).to eq(200)
+    end
 
-          it 'returns all droplets' do
-            DropletModel.make
-            DropletModel.make
-            DropletModel.make
+    it 'lists the droplets visible to the user' do
+      get :index
 
-            response_code, response_body = droplets_controller.list
+      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      expect(response_guids).to match_array([user_droplet_1, user_droplet_2].map(&:guid))
+    end
 
-            expect(droplet_presenter).to have_received(:present_json_list).
-                with(an_instance_of(PaginatedResult), '/v3/droplets', instance_of(DropletsListMessage)) do |result|
-              expect(result.total).to eq(DropletModel.count)
-            end
-            expect(response_code).to eq(200)
-            expect(response_body).to eq(expected_response)
-          end
-        end
+    it 'returns pagination links for /v3/droplets' do
+      get :index
+      expect(JSON.parse(response.body)['pagination']['first']['href']).to start_with('/v3/droplets')
+    end
 
-        context 'when the user is not an admin' do
-          let(:viewable_droplet) { DropletModel.make }
+    context 'when the user is an admin' do
+      before do
+        @request.env.merge!(admin_headers)
+      end
 
-          before do
-            allow(roles).to receive(:admin?).and_return(false)
-            allow(membership).to receive(:space_guids_for_roles).and_return([viewable_droplet.space.guid])
-          end
+      it 'returns all droplets' do
+        get :index
 
-          it 'returns packages the user has roles to see' do
-            DropletModel.make
-            DropletModel.make
+        response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array([user_droplet_1, user_droplet_2, admin_droplet].map(&:guid))
+      end
+    end
 
-            response_code, response_body = droplets_controller.list
+    context 'when the user does not have read scope' do
+      before do
+        @request.env.merge!(headers_for(user, scopes: ['cloud_controller.write']))
+      end
 
-            expect(droplet_presenter).to have_received(:present_json_list).
-                with(an_instance_of(PaginatedResult), '/v3/droplets', instance_of(DropletsListMessage)) do |result|
-              expect(result.total).to be < DropletModel.count
-              expect(result.total).to eq(1)
-            end
-            expect(response_code).to eq(200)
-            expect(response_body).to eq(expected_response)
-            expect(membership).to have_received(:space_guids_for_roles).
-                with([Membership::SPACE_DEVELOPER,
-                      Membership::SPACE_MANAGER,
-                      Membership::SPACE_AUDITOR,
-                      Membership::ORG_MANAGER])
-          end
-        end
+      it 'returns a 403 Not Authorized error' do
+        get :index
 
-        context 'when the user has incorrect scope' do
-          before do
-            allow(droplets_controller).to receive(:check_read_permissions!).
-                and_raise(VCAP::Errors::ApiError.new_from_details('NotAuthorized'))
-          end
+        expect(response.status).to eq(403)
+        expect(response.body).to include('NotAuthorized')
+      end
+    end
 
-          it 'returns a 403 Not Authorized error' do
-            expect {
-              droplets_controller.list
-            }.to raise_error do |error|
-              expect(error.name).to eq 'NotAuthorized'
-              expect(error.response_code).to eq 403
-            end
+    context 'query params' do
+      context 'invalid param format' do
+        let(:params) { { 'order_by' => '^%' } }
 
-            expect(droplets_controller).to have_received(:check_read_permissions!)
-          end
+        it 'returns 400' do
+          get :index, params
+
+          expect(response.status).to eq(400)
+          expect(response.body).to include('BadQueryParameter')
+          expect(response.body).to include('Order by is invalid')
         end
       end
 
-      context 'when a query param is provided' do
-        let(:params) { { order_by: 'created_at', states: 'FAILED' } }
-        let(:droplet_presenter) { DropletPresenter.new }
+      context 'unknown query param' do
+        let(:params) { { 'bad_param' => 'foo' } }
 
-        before do
-          allow(roles).to receive(:admin?).and_return(true)
+        it 'returns 400' do
+          get :index, params
+
+          expect(response.status).to eq(400)
+          expect(response.body).to include('BadQueryParameter')
+          expect(response.body).to include('Unknown query parameter(s)')
+          expect(response.body).to include('bad_param')
         end
+      end
 
-        it 'returns pagination links with that param' do
-          _, response_body = droplets_controller.list
+      context 'invalid pagination' do
+        let(:params) { { 'per_page' => 9999999999999999 } }
 
-          parsed_response = MultiJson.load(response_body)
-          query_params = CGI.parse(URI(parsed_response['pagination']['first']['href']).query)
-          expect(query_params['states']).to eq(['FAILED'])
+        it 'returns 400' do
+          get :index, params
+
+          expect(response.status).to eq(400)
+          expect(response.body).to include('BadQueryParameter')
+          expect(response.body).to include('Per page must be between')
         end
       end
     end

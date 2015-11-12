@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'rails_helper'
 require 'awesome_print'
 require 'rspec_api_documentation/dsl'
 
@@ -99,6 +99,8 @@ resource 'App Routes (Experimental)', type: :api do
       app_model.add_process(worker_process)
     end
 
+    header 'Content-Type', 'application/json'
+
     example 'Map a Route' do
       expect {
         do_request_with_error_handling
@@ -136,6 +138,8 @@ resource 'App Routes (Experimental)', type: :api do
       VCAP::CloudController::AddRouteToApp.new(nil, nil).add(app_model, route1, web_process)
       VCAP::CloudController::AddRouteToApp.new(nil, nil).add(app_model, route2, web_process)
     end
+
+    header 'Content-Type', 'application/json'
 
     example 'Unmap a Route' do
       do_request_with_error_handling

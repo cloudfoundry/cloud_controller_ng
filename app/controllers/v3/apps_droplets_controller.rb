@@ -1,54 +1,38 @@
 require 'queries/app_droplets_list_fetcher'
 require 'messages/apps_droplets_list_message'
 
-module VCAP::CloudController
-  class AppsDropletsController < RestController::BaseController
-    def self.dependencies
-      [:droplet_presenter]
-    end
+class AppsDropletsController < ApplicationController
+  def index
+    app_guid = params[:guid]
+    message = AppsDropletsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
 
-    def inject_dependencies(dependencies)
-      @droplet_presenter = dependencies[:droplet_presenter]
-    end
+    pagination_options = PaginationOptions.from_params(query_params)
+    invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
 
-    get '/v3/apps/:guid/droplets', :list
-    def list(app_guid)
-      check_read_permissions!
+    app, space, org = AppFetcher.new.fetch(app_guid)
+    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
 
-      message = AppsDropletsListMessage.from_params(params)
-      invalid_param!(message.errors.full_messages) unless message.valid?
+    paginated_result = AppDropletsListFetcher.new.fetch(app_guid, pagination_options, message)
 
-      pagination_options = PaginationOptions.from_params(params)
-      invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
+    render :ok, json: DropletPresenter.new.present_json_list(paginated_result, "/v3/apps/#{params[:guid]}/droplets", message)
+  end
 
-      app, space, org = AppFetcher.new.fetch(app_guid)
-      app_not_found! if app.nil?
+  private
 
-      if can_read?(space.guid, org.guid)
-        paginated_result = AppDropletsListFetcher.new.fetch(app_guid, pagination_options, message)
-      else
-        app_not_found!
-      end
+  def membership
+    @membership ||= Membership.new(current_user)
+  end
 
-      [HTTP::OK, @droplet_presenter.present_json_list(paginated_result, "/v3/apps/#{app_guid}/droplets", message)]
-    end
-
-    def membership
-      @membership ||= Membership.new(current_user)
-    end
-
-    private
-
-    def can_read?(space_guid, org_guid)
-      roles.admin? ||
+  def can_read?(space_guid, org_guid)
+    roles.admin? ||
       membership.has_any_roles?([Membership::SPACE_DEVELOPER,
                                  Membership::SPACE_MANAGER,
                                  Membership::SPACE_AUDITOR,
                                  Membership::ORG_MANAGER], space_guid, org_guid)
-    end
+  end
 
-    def app_not_found!
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
-    end
+  def app_not_found!
+    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
   end
 end
