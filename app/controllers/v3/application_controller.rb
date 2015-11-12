@@ -20,7 +20,7 @@ class ApplicationController < ActionController::Base
   include VCAP::CloudController
   include V3ErrorsHelper
 
-  wrap_parameters :body, format: [:json, :url_encoded_form]
+  wrap_parameters :body, format: [:json, :url_encoded_form, :multipart_form]
 
   before_action :set_locale
   around_action :manage_request_id
