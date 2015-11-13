@@ -263,9 +263,9 @@ module VCAP::CloudController
 
           context 'when custom ports are specified' do
             it 'sets the ports to as specified in the request' do
-              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: true, ports:[9090,5222])), json_headers(admin_headers)
+              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: true, ports: [9090, 5222])), json_headers(admin_headers)
               expect(last_response.status).to eq(201)
-              expect(decoded_response['entity']['ports']).to match([9090,5222])
+              expect(decoded_response['entity']['ports']).to match([9090, 5222])
               expect(decoded_response['entity']['diego']).to be true
             end
           end
@@ -283,7 +283,7 @@ module VCAP::CloudController
 
           context 'when custom ports are specified' do
             it 'returns an error' do
-              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: false, ports:[9090,5222])), json_headers(admin_headers)
+              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: false, ports: [9090, 5222])), json_headers(admin_headers)
               expect(last_response.status).to eq(400)
               expect(decoded_response['description']).to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.')
             end
@@ -405,7 +405,6 @@ module VCAP::CloudController
       end
 
       describe 'app_scaling feature flag' do
-
         context 'when the flag is enabled' do
           before { FeatureFlag.make(name: 'app_scaling', enabled: true) }
 
@@ -441,7 +440,7 @@ module VCAP::CloudController
           it 'sets ports to user specified values' do
             put "/v2/apps/#{app_obj.guid}", '{ "diego": true, "ports": [9090,5222] }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
-            expect(decoded_response['entity']['ports']).to match([9090,5222])
+            expect(decoded_response['entity']['ports']).to match([9090, 5222])
             expect(decoded_response['entity']['diego']).to be true
           end
         end
@@ -449,7 +448,7 @@ module VCAP::CloudController
 
       context 'switch from diego to dea' do
         context 'when there are custom ports' do
-          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports:[9090,5222]) }
+          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
           it 'returns error indicating custom ports need to be removed' do
             put "/v2/apps/#{app_obj.guid}", '{ "diego": false }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(400)
@@ -458,7 +457,7 @@ module VCAP::CloudController
         end
 
         context 'when there are no custom ports currently on the app' do
-          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports:[8080]) }
+          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports: [8080]) }
           it 'updates the backend of the app and returns 201' do
             put "/v2/apps/#{app_obj.guid}", '{ "diego": false}', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
@@ -492,17 +491,17 @@ module VCAP::CloudController
           it 'sets ports to user specified values' do
             put "/v2/apps/#{app_obj.guid}", '{ "ports": [9090,5222] }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
-            expect(decoded_response['entity']['ports']).to match([9090,5222])
+            expect(decoded_response['entity']['ports']).to match([9090, 5222])
             expect(decoded_response['entity']['diego']).to be true
           end
         end
 
         context 'when existing app had custom ports' do
-          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports:[9090,5222]) }
+          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
           it 'sets ports to user specified values' do
             put "/v2/apps/#{app_obj.guid}", '{ "ports": [1883,5222] }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
-            expect(decoded_response['entity']['ports']).to match([1883,5222])
+            expect(decoded_response['entity']['ports']).to match([1883, 5222])
             expect(decoded_response['entity']['diego']).to be true
           end
         end

@@ -59,7 +59,7 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :staging_failed_reason, 'Reason for application staging failures', default: nil
     field :staging_failed_description, 'Detailed description for the staging_failed_reason', default: nil
 
-    field :ports, 'Ports on which application may listen. Supported for applications pushed to Diego only.'
+    field :ports, 'Ports on which application may listen. Supported for applications pushed to Diego only.', experimental: true, example_values: [[5222, 8080], [1056]]
   end
 
   describe 'Standard endpoints' do
