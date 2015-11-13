@@ -25,7 +25,7 @@ resource 'Space Quota Definitions', type: [:api, :legacy_api] do
       example_values: [-1, 10_024]
     field :app_instance_limit,
       'How many app instances a space can create. (-1 represents an unlimited amount)',
-      example_values: [-1, 10, 23], default: -1, experimental: true
+      example_values: [-1, 10, 23], default: -1
     field :organization_guid, 'The owning organization of the space quota', required: opts[:required], example_values: [Sham.guid]
   end
 
