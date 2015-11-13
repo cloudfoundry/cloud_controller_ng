@@ -1,5 +1,6 @@
 require 'find'
 require 'open3'
+require 'shellwords'
 
 class SafeZipper
   def self.unzip(zip_path, zip_destination)
@@ -36,13 +37,13 @@ class SafeZipper
   private
 
   def unzip
-    @unzip ||= `unzip -qq -: -d #{@zip_destination} #{@zip_path}`
+    @unzip ||= `unzip -qq -: -d #{Shellwords.escape(@zip_destination)} #{Shellwords.escape(@zip_path)}`
   end
 
   def zip
     @zip ||= begin
       output, error, status = Open3.capture3(
-        %(zip -q -r --symlinks #{@zip_destination} .),
+        %(zip -q -r --symlinks #{Shellwords.escape(@zip_destination)} .),
         chdir: @zip_path
       )
 
@@ -57,7 +58,7 @@ class SafeZipper
 
   def zip_info
     @zip_info ||= begin
-      output, error, status = Open3.capture3(%(unzip -l #{@zip_path}))
+      output, error, status = Open3.capture3(%(unzip -l #{Shellwords.escape(@zip_path)}))
 
       unless status.success?
         raise VCAP::Errors::ApiError.new_from_details('AppBitsUploadInvalid',

@@ -1,5 +1,6 @@
 require 'cloud_controller/blobstore/local_app_bits'
 require 'cloud_controller/blobstore/fingerprints_collection'
+require 'shellwords'
 
 class AppBitsPackage
   class PackageNotFound < StandardError; end
@@ -70,7 +71,7 @@ class AppBitsPackage
   private
 
   def valid_zip?(package_path)
-    command = "unzip -l #{package_path}"
+    command = "unzip -l #{Shellwords.escape(package_path)}"
     r, w = IO.pipe
     pid = Process.spawn(command, out: w, err: [:child, :out])
     w.close
@@ -81,7 +82,7 @@ class AppBitsPackage
   end
 
   def package_size(package_path)
-    zip_info = `unzip -l #{package_path}`
+    zip_info = `unzip -l #{Shellwords.escape(package_path)}`
     zip_info.split("\n").last.match(/^\s*(\d+)/)[1].to_i
   end
 
