@@ -54,9 +54,7 @@ module VCAP::CloudController
 
         def delete_events_older_than(cutoff_age_in_days)
           old_app_usage_events = AppUsageEvent.dataset.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
-          count_to_delete = old_app_usage_events.count
           old_app_usage_events.delete
-          count_to_delete
         end
       end
     end

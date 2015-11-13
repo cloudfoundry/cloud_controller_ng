@@ -146,6 +146,34 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#delete_events_older_than' do
+        let!(:service_instance) { ManagedServiceInstance.make }
+        let(:cutoff_age_in_days) { 1 }
+        before do
+          ServiceUsageEvent.dataset.truncate
+
+          old = Time.now.utc - 999.days
+
+          3.times do
+            event = repository.create_from_service_instance(service_instance, 'SOME-STATE')
+            event.created_at = old
+            event.save
+          end
+        end
+
+        it 'will delete events created before the specified cutoff time' do
+          new_event = repository.create_from_service_instance(service_instance, 'SOME-STATE')
+
+          expect {
+            repository.delete_events_older_than(cutoff_age_in_days)
+          }.to change {
+            ServiceUsageEvent.count
+          }.to(1)
+
+          expect(ServiceUsageEvent.last).to eq(new_event.reload)
+        end
+      end
     end
   end
 end
