@@ -117,7 +117,7 @@ resource 'Droplets (Experimental)', type: :api do
 
   get '/v3/droplets' do
     parameter :app_guids, 'Apps to filter by', valid_values: 'app guids', example_values: 'app_guids=app_guid1,app_guid2'
-    parameter :states, 'Droplet state to filter by', valid_values: %w(PENDING STAGING STAGED FAILED), example_values: 'states=PENDING,STAGING'
+    parameter :states, 'Droplet state to filter by', valid_values: %w(PENDING STAGING STAGED FAILED EXPIRED), example_values: 'states=PENDING,STAGING'
     parameter :page, 'Page to display', valid_values: '>= 1'
     parameter :per_page, 'Number of results per page', valid_values: '1-5000'
     parameter :order_by, 'Value to sort by. Prepend with "+" or "-" to change sort direction to ascending or descending, respectively.', valid_values: %w(created_at updated_at)
