@@ -151,7 +151,7 @@ module VCAP::CloudController
         let!(:service_instance) { ManagedServiceInstance.make }
         let(:cutoff_age_in_days) { 1 }
         before do
-          ServiceUsageEvent.dataset.truncate
+          ServiceUsageEvent.dataset.delete
 
           old = Time.now.utc - 999.days
 
