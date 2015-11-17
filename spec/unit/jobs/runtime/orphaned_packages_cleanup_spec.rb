@@ -8,6 +8,9 @@ module VCAP::CloudController
       let(:package_blobstore) { blobstore('package') }
       let(:bits_cache) { blobstore('global_app_bits_cache') }
       let(:package_files) { package_blobstore.files }
+      let(:packager) do
+        AppBitsPackage.new(package_blobstore, bits_cache, 256, tmp_dir)
+      end
       let(:app_zip) do
         Tempfile.new('app_zip').path.tap do |dst|
           src = File.expand_path('../../../../fixtures/good.zip', __FILE__)
@@ -36,8 +39,7 @@ module VCAP::CloudController
         let!(:app) do
           VCAP::CloudController::AppFactory.make.tap do |app|
             c = CloudController::Blobstore::FingerprintsCollection.new([])
-            p = AppBitsPackage.new(package_blobstore, bits_cache, 256, tmp_dir)
-            p.create(app, app_zip, c)
+            packager.create(app, app_zip, c)
           end
         end
 
@@ -52,11 +54,55 @@ module VCAP::CloudController
 
           it 'skips recently orphaned blobs' do
             expect { job.perform }.to_not change { package_files.reload }
+            expect(package_files.reload.size).to eq 1
           end
         end
 
         it 'skips blobs which belong to an application' do
           expect { job.perform }.to_not change { package_files.reload }
+        end
+      end
+
+      context "given a v3 package" do
+        let!(:package) do
+          VCAP::CloudController::PackageModel.create(
+            state: VCAP::CloudController::PackageModel::CREATED_STATE
+          ).tap do |package|
+            packager.create_package_in_blobstore(package.guid, app_zip)
+          end
+        end
+
+        context "when package is destroyed" do
+          before { package.destroy }
+
+          it 'removes orphaned blobs which are older then cleanup_after_days' do
+            Timecop.freeze(Time.now + cleanup_after_days + 1.day) do
+              expect { job.perform }.to change { package_files.reload }.to([])
+            end
+          end
+
+          it 'skips recently orphaned blobs' do
+            expect { job.perform }.to_not change { package_files.reload }
+            expect(package_files.reload.size).to eq 1
+          end
+        end
+
+        it 'skips blobs which belong to an application' do
+          expect { job.perform }.to_not change { package_files.reload }
+          expect(package_files.reload.size).to eq 1
+        end
+      end
+
+      context "given an blob with an unexpected key" do
+        before do
+          package_blobstore.cp_to_blobstore(app_zip, 'foo_blob')
+        end
+
+        it 'skips blobs with unexpected keys' do
+          Timecop.freeze(Time.now + cleanup_after_days + 1.day) do
+            expect { job.perform }.to_not change { package_files.reload }
+            expect(package_files.reload.size).to eq 1
+          end
         end
       end
 

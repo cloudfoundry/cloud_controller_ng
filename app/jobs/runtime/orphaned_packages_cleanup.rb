@@ -1,3 +1,4 @@
+require 'pry'
 module VCAP::CloudController
   module Jobs
     module Runtime
@@ -20,7 +21,8 @@ module VCAP::CloudController
           blobstore = CloudController::DependencyLocator.instance.package_blobstore
           blobstore.files.each do |file|
             next unless file.last_modified < DateTime.now - @cleanup_after_days
-            guid = file.key.match(PACKAGE_GUID).captures.first
+            next unless match = file.key.match(PACKAGE_GUID)
+            guid = match.captures.first
             next if packages.include?(guid)
             next if apps.include?(guid)
 
