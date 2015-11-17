@@ -11,14 +11,6 @@ module VCAP::CloudController
       end
 
       def stage_app_request(app, config)
-        stage_app_message(app, config).to_json
-      end
-
-      def desire_app_request(app, default_health_check_timeout)
-        desire_app_message(app, default_health_check_timeout).to_json
-      end
-
-      def stage_app_message(app, config)
         env = Environment.new(app, EnvironmentVariableGroup.staging.environment_json).as_json
         logger.debug2("staging environment: #{env.map { |e| e['name'] }}")
 
@@ -38,6 +30,10 @@ module VCAP::CloudController
         staging_request.completion_callback = completion_callback(app, config)
 
         staging_request.message
+      end
+
+      def desire_app_request(app, default_health_check_timeout)
+        desire_app_message(app, default_health_check_timeout).to_json
       end
 
       def desire_app_message(app, default_health_check_timeout)

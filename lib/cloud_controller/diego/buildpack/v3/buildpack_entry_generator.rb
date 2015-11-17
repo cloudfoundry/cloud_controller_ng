@@ -8,13 +8,15 @@ module VCAP::CloudController
           end
 
           def buildpack_entries(buildpack_info)
-            return default_admin_buildpacks if buildpack_info.buildpack.nil?
-
-            return [admin_buildpack_entry(buildpack_info.buildpack_record).merge(skip_detect: true)] if buildpack_info.buildpack_exists_in_db?
-
-            return [{ name: 'custom', key: buildpack_info.buildpack_url, url: buildpack_info.buildpack_url }.merge(skip_detect: true)] if buildpack_info.buildpack_url
-
-            raise "Unsupported buildpack type: '#{buildpack_info.inspect}'"
+            if buildpack_info.buildpack.nil?
+              default_admin_buildpacks
+            elsif buildpack_info.buildpack_exists_in_db?
+              [admin_buildpack_entry(buildpack_info.buildpack_record).merge(skip_detect: true)]
+            elsif buildpack_info.buildpack_url
+              [{ name: 'custom', key: buildpack_info.buildpack_url, url: buildpack_info.buildpack_url, skip_detect: true }]
+            else
+              raise "Unsupported buildpack type: '#{buildpack_info.inspect}'"
+            end
           end
 
           private

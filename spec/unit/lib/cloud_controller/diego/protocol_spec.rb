@@ -54,14 +54,6 @@ module VCAP::CloudController
       end
 
       describe '#stage_app_request' do
-        let(:request) { protocol.stage_app_request(app, config) }
-
-        it 'returns the staging request message to be used by the stager client' do
-          expect(request).to eq(protocol.stage_app_message(app, config).to_json)
-        end
-      end
-
-      describe '#stage_app_message' do
         let(:staging_env) { { 'KEY' => 'staging_value' } }
 
         before do
@@ -93,7 +85,7 @@ module VCAP::CloudController
         let(:user) { 'user' }
         let(:password) { 'password' }
 
-        let(:message) { protocol.stage_app_message(app, config) }
+        let(:message) { protocol.stage_app_request(app, config) }
         let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id', diego: true) }
 
         it 'contains the correct payload for staging a buildpack app' do
@@ -116,7 +108,7 @@ module VCAP::CloudController
           let(:app) { AppFactory.make(memory: 127, diego: true) }
 
           subject(:message) do
-            protocol.stage_app_message(app, config)
+            protocol.stage_app_request(app, config)
           end
 
           it 'uses the minimum staging memory' do
@@ -128,7 +120,7 @@ module VCAP::CloudController
           let(:app) { AppFactory.make(disk_quota: 127, diego: true) }
 
           subject(:message) do
-            protocol.stage_app_message(app, config)
+            protocol.stage_app_request(app, config)
           end
 
           it 'includes the fields needed to stage a Docker app' do
@@ -140,7 +132,7 @@ module VCAP::CloudController
           let(:app) { AppFactory.make(file_descriptors: 127, diego: true) }
 
           subject(:message) do
-            protocol.stage_app_message(app, config)
+            protocol.stage_app_request(app, config)
           end
 
           it 'includes the fields needed to stage a Docker app' do

@@ -99,11 +99,7 @@ class PackagesController < ApplicationController
 
     unauthorized! unless can_stage?(package.space.guid)
 
-    buildpack_to_use = staging_message.requested_buildpack? ? staging_message.buildpack : package.app.lifecycle_data.buildpack
-    buildpack_info = BuildpackRequestValidator.new(buildpack: buildpack_to_use)
-    unprocessable!(buildpack_info.errors.full_messages) unless buildpack_info.valid?
-
-    droplet = PackageStageAction.new.stage(package, buildpack_info, staging_message, stagers)
+    droplet = PackageStageAction.new.stage(package, staging_message, stagers)
 
     render status: :created, json: droplet_presenter.present_json(droplet)
   rescue PackageStageAction::InvalidPackage => e

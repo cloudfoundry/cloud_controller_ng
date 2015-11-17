@@ -110,6 +110,11 @@ module VCAP::CloudController
       let(:droplet_model) { DropletModel.make }
       let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
 
+      before do
+        droplet_model.buildpack_lifecycle_data = lifecycle_data
+        droplet_model.save
+      end
+
       it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
         expect(droplet_model.lifecycle_type).to eq('buildpack')
       end
@@ -118,6 +123,11 @@ module VCAP::CloudController
     describe '#lifecycle_data' do
       let(:droplet_model) { DropletModel.make }
       let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
+
+      before do
+        droplet_model.buildpack_lifecycle_data = lifecycle_data
+        droplet_model.save
+      end
 
       it 'returns buildpack_lifecycle_data if it is on the model' do
         expect(droplet_model.lifecycle_data).to eq(lifecycle_data)

@@ -34,23 +34,23 @@ resource 'Apps (Experimental)', type: :api do
     end
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:              app_model.guid,
-        created_at: Time.at(1),
-        package_guid:          package.guid,
-        buildpack:             buildpack.name,
-        buildpack_guid:        buildpack.guid,
-        environment_variables: { 'yuu' => 'huuu' }
+        app_guid:                         app_model.guid,
+        created_at:                       Time.at(1),
+        package_guid:                     package.guid,
+        buildpack_receipt_buildpack:      buildpack.name,
+        buildpack_receipt_buildpack_guid: buildpack.guid,
+        environment_variables:            { 'yuu' => 'huuu' }
       )
     end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:     app_model.guid,
-        created_at: Time.at(2),
-        package_guid: package.guid,
-        droplet_hash: 'my-hash',
-        buildpack:    'https://github.com/cloudfoundry/my-buildpack.git',
-        process_types: { web: 'started' }.to_json,
-        state:        VCAP::CloudController::DropletModel::STAGED_STATE
+        app_guid:                    app_model.guid,
+        created_at:                  Time.at(2),
+        package_guid:                package.guid,
+        droplet_hash:                'my-hash',
+        buildpack_receipt_buildpack: 'https://github.com/cloudfoundry/my-buildpack.git',
+        process_types:               { web: 'started' }.to_json,
+        state:                       VCAP::CloudController::DropletModel::STAGED_STATE
       )
     end
     let!(:droplet3) { VCAP::CloudController::DropletModel.make(package_guid: VCAP::CloudController::PackageModel.make.guid) }
@@ -67,7 +67,7 @@ resource 'Apps (Experimental)', type: :api do
       VCAP::CloudController::BuildpackLifecycleDataModel.make(droplet: droplet2)
     end
 
-    example 'List associated droplets' do
+    it 'List associated droplets' do
       expected_response =
         {
           'pagination' => {
@@ -162,7 +162,7 @@ resource 'Apps (Experimental)', type: :api do
           created_at: Time.at(2),
           package_guid: package.guid,
           droplet_hash: 'my-hash',
-          buildpack:    'https://github.com/cloudfoundry/my-buildpack.git',
+          buildpack_receipt_buildpack:    'https://github.com/cloudfoundry/my-buildpack.git',
           state:        VCAP::CloudController::DropletModel::FAILED_STATE
         )
       end

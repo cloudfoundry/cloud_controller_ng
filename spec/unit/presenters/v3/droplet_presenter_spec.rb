@@ -1,20 +1,48 @@
 require 'spec_helper'
 require 'presenters/v3/droplet_presenter'
+require_relative 'lifecycle/droplet_lifecycle_receipt_presenter_shared'
 
 module VCAP::CloudController
+  class FakeDropletLifecycleReceiptPresenter
+    def result(droplet)
+      {
+        'fake-result' => "fake-result-value-#{droplet.guid}"
+      }
+    end
+
+    def links(droplet)
+      {
+        'fake-link' => "fake-link-value-#{droplet.guid}"
+      }
+    end
+
+    private
+
+    attr_reader :droplet
+  end
+
+  describe FakeDropletLifecycleReceiptPresenter do
+    subject(:presenter) { FakeDropletLifecycleReceiptPresenter.new }
+
+    it_behaves_like 'a droplet lifecycle receipt presenter'
+  end
+
+  describe DropletLifecycleReceiptPresenter do
+    subject(:presenter) { DropletLifecycleReceiptPresenter.new }
+
+    it_behaves_like 'a droplet lifecycle receipt presenter'
+  end
+
   describe DropletPresenter do
     let(:iso8601) { /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.freeze }
     let(:droplet) do
       DropletModel.make(
         state:                  DropletModel::STAGED_STATE,
-        buildpack_guid:         'buildpack-guid',
-        buildpack:              'actual-buildpack',
         error:         'example error',
         process_types: { 'web' => 'npm start', 'worker' => 'start worker' },
         environment_variables:  { 'elastic' => 'runtime' },
         memory_limit: 234,
         disk_limit: 934,
-        stack_name: Stack.default.name,
         execution_metadata: 'black-box-string'
       )
     end
@@ -40,8 +68,6 @@ module VCAP::CloudController
         expect(result['memory_limit']).to eq(234)
         expect(result['disk_limit']).to eq(934)
         expect(result['result']['hash']).to eq({ 'type' => 'sha1', 'value' => nil })
-        expect(result['result']['buildpack']).to eq('actual-buildpack')
-        expect(result['result']['stack']).to eq(Stack.default.name)
         expect(result['result']['process_types']).to eq({ 'web' => 'npm start', 'worker' => 'start worker' })
         expect(result['result']['execution_metadata']).to eq('black-box-string')
 
@@ -51,10 +77,19 @@ module VCAP::CloudController
         expect(result['links']['self']['href']).to eq("/v3/droplets/#{droplet.guid}")
         expect(result['links']).to include('package')
         expect(result['links']['package']['href']).to eq("/v3/packages/#{droplet.package_guid}")
-        expect(result['links']['buildpack']['href']).to eq("/v2/buildpacks/#{droplet.buildpack_guid}")
         expect(result['links']['app']['href']).to eq("/v3/apps/#{droplet.app_guid}")
         expect(result['links']['assign_current_droplet']['href']).to eq("/v3/apps/#{droplet.app_guid}/current_droplet")
         expect(result['links']['assign_current_droplet']['method']).to eq('PUT')
+      end
+
+      it 'includes result and link values from the lifecycle receipt presenter' do
+        droplet_presenter = DropletPresenter.new(droplet_lifecycle_receipt_presenter: FakeDropletLifecycleReceiptPresenter.new)
+
+        json_result = droplet_presenter.present_json(droplet)
+        result      = MultiJson.load(json_result)
+
+        expect(result['result']['fake-result']).to eq("fake-result-value-#{droplet.guid}")
+        expect(result['links']['fake-link']).to eq("fake-link-value-#{droplet.guid}")
       end
     end
 

@@ -1,7 +1,10 @@
+require_relative '../../../app/presenters/v3/lifecycle/droplet_lifecycle_receipt_presenter'
+
 module VCAP::CloudController
   class DropletPresenter
-    def initialize(pagination_presenter=PaginationPresenter.new)
+    def initialize(pagination_presenter=PaginationPresenter.new, droplet_lifecycle_receipt_presenter: DropletLifecycleReceiptPresenter.new)
       @pagination_presenter = pagination_presenter
+      @droplet_lifecycle_receipt_presenter = droplet_lifecycle_receipt_presenter
     end
 
     def present_json(droplet)
@@ -36,15 +39,13 @@ module VCAP::CloudController
         memory_limit:            droplet.memory_limit,
         disk_limit:              droplet.disk_limit,
         result: {
-          buildpack:             droplet.buildpack,
-          stack:                 droplet.stack_name,
           process_types:         droplet.process_types,
           hash: {
             type: DEFAULT_HASHING_ALGORITHM,
             value: droplet.droplet_hash
           },
           execution_metadata:   droplet.execution_metadata
-        },
+        }.merge(@droplet_lifecycle_receipt_presenter.result(droplet)),
         environment_variables:  droplet.environment_variables || {},
         created_at:             droplet.created_at,
         updated_at:             droplet.updated_at,
@@ -53,20 +54,12 @@ module VCAP::CloudController
     end
 
     def build_links(droplet)
-      buildpack_link = nil
-      if droplet.buildpack_guid
-        buildpack_link = {
-          href: "/v2/buildpacks/#{droplet.buildpack_guid}"
-        }
-      end
-
       links = {
         self:                   { href: "/v3/droplets/#{droplet.guid}" },
         package:                { href: "/v3/packages/#{droplet.package_guid}" },
         app:                    { href: "/v3/apps/#{droplet.app_guid}" },
         assign_current_droplet: { href: "/v3/apps/#{droplet.app_guid}/current_droplet", method: 'PUT' },
-        buildpack:              buildpack_link
-      }
+      }.merge(@droplet_lifecycle_receipt_presenter.links(droplet))
 
       links.delete_if { |_, v| v.nil? }
     end

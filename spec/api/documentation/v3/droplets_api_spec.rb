@@ -28,12 +28,12 @@ resource 'Droplets (Experimental)', type: :api do
 
     let!(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
-        state:                  VCAP::CloudController::DropletModel::STAGED_STATE,
-        app_guid:               app_model.guid,
-        package_guid:           package_model.guid,
-        buildpack:              buildpack_git_url,
-        error:                  'example error',
-        environment_variables:  { 'cloud' => 'foundry' },
+        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid:                    app_model.guid,
+        package_guid:                package_model.guid,
+        buildpack_receipt_buildpack: buildpack_git_url,
+        error:                       'example error',
+        environment_variables:       { 'cloud' => 'foundry' },
       )
     end
 
@@ -58,10 +58,10 @@ resource 'Droplets (Experimental)', type: :api do
         },
         'result' => {
           'hash'                 => { 'type' => 'sha1', 'value' => droplet_model.droplet_hash },
-          'stack'                => droplet_model.stack_name,
+          'stack'                => droplet_model.buildpack_receipt_stack_name,
           'process_types'        => droplet_model.process_types,
           'execution_metadata'   => droplet_model.execution_metadata,
-          'buildpack'            => droplet_model.buildpack
+          'buildpack'            => droplet_model.buildpack_receipt_buildpack
         },
         'memory_limit'           => droplet_model.memory_limit,
         'disk_limit'             => droplet_model.disk_limit,
@@ -134,27 +134,26 @@ resource 'Droplets (Experimental)', type: :api do
 
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:              app_model.guid,
-        created_at:            Time.at(1),
-        package_guid:          package.guid,
-        buildpack:             buildpack.name,
-        buildpack_guid:        buildpack.guid,
-        environment_variables: { 'yuu' => 'huuu' }
+        app_guid:                         app_model.guid,
+        created_at:                       Time.at(1),
+        package_guid:                     package.guid,
+        buildpack_receipt_buildpack:      buildpack.name,
+        buildpack_receipt_buildpack_guid: buildpack.guid,
+        environment_variables:            { 'yuu' => 'huuu' }
       )
     end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:     app_model.guid,
-        created_at: Time.at(2),
-        package_guid: package.guid,
-        droplet_hash: 'my-hash',
-        buildpack:    'https://github.com/cloudfoundry/detected-buildpack.git',
-        state:        VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types: { 'web' => 'started' },
-        memory_limit: 123,
-        disk_limit: 456,
-        execution_metadata: 'black-box-secrets'
-
+        app_guid:                    app_model.guid,
+        created_at:                  Time.at(2),
+        package_guid:                package.guid,
+        droplet_hash:                'my-hash',
+        buildpack_receipt_buildpack: 'https://github.com/cloudfoundry/detected-buildpack.git',
+        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
+        process_types:               { 'web' => 'started' },
+        memory_limit:                123,
+        disk_limit:                  456,
+        execution_metadata:          'black-box-secrets'
       )
     end
     let!(:droplet3) { VCAP::CloudController::DropletModel.make(package_guid: VCAP::CloudController::PackageModel.make.guid) }
@@ -229,7 +228,7 @@ resource 'Droplets (Experimental)', type: :api do
               'disk_limit'             => droplet1.disk_limit,
               'result'                 => {
                 'hash'                 => { 'type' => 'sha1', 'value' => nil },
-                'buildpack'            =>  droplet1.buildpack,
+                'buildpack'            => droplet1.buildpack_receipt_buildpack,
                 'stack'                => nil,
                 'process_types'        => nil,
                 'execution_metadata'   => nil,
@@ -261,12 +260,12 @@ resource 'Droplets (Experimental)', type: :api do
     context 'faceted search' do
       let!(:droplet4) do
         VCAP::CloudController::DropletModel.make(
-          app_guid:     app_model.guid,
-          created_at: Time.at(2),
-          package_guid: package.guid,
-          droplet_hash: 'my-hash',
-          buildpack:    'https://github.com/cloudfoundry/my-buildpack.git',
-          state:        VCAP::CloudController::DropletModel::FAILED_STATE
+          app_guid:                    app_model.guid,
+          created_at:                  Time.at(2),
+          package_guid:                package.guid,
+          droplet_hash:                'my-hash',
+          buildpack_receipt_buildpack: 'https://github.com/cloudfoundry/my-buildpack.git',
+          state:                       VCAP::CloudController::DropletModel::FAILED_STATE
         )
       end
       let(:per_page) { 2 }

@@ -20,7 +20,7 @@ module VCAP::CloudController
 
         begin
           tries ||= 3
-          response = http_client.put(path, staging_message, REQUEST_HEADERS)
+          response = http_client.put(path, staging_message.to_json, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED => e
           retry unless (tries -= 1).zero?
           raise Errors::ApiError.new_from_details('StagerUnavailable', e)

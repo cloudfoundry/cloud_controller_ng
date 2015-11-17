@@ -54,11 +54,11 @@ module VCAP::CloudController
     end
 
     def lifecycle_type
-      return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if self.buildpack_lifecycle_data
+      BuildpackLifecycleDataModel::LIFECYCLE_TYPE if self.buildpack_lifecycle_data
     end
 
     def lifecycle_data
-      return buildpack_lifecycle_data if self.buildpack_lifecycle_data
+      buildpack_lifecycle_data if self.buildpack_lifecycle_data
     end
   end
 end

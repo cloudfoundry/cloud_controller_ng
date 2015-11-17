@@ -19,20 +19,16 @@ module VCAP::CloudController
         end
 
         describe '#stage' do
-          let(:stack) { 'cflinuxfs2' }
           let(:memory_limit) { 1024 }
           let(:disk_limit) { 1024 }
-          let(:buildpack_info) { 'some-buildpack-info' }
           let(:droplet) { DropletModel.make(environment_variables: environment_variables, package_guid: package.guid) }
           let(:environment_variables) { { 'nightshade_vegetable' => 'potato' } }
           let(:staging_details) do
-            details                       = VCAP::CloudController::Diego::Buildpack::V3::StagingDetails.new
+            details                       = VCAP::CloudController::Diego::V3::StagingDetails.new
             details.droplet               = droplet
-            details.stack                 = stack
             details.environment_variables = environment_variables
             details.memory_limit          = memory_limit
             details.disk_limit            = disk_limit
-            details.buildpack_info        = buildpack_info
             details
           end
 

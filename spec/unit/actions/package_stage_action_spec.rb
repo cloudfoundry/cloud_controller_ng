@@ -19,12 +19,11 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:app) { AppModel.make(space_guid: space.guid) }
       let(:package) { PackageModel.make(app_guid: app.guid, state: PackageModel::READY_STATE) }
-      let(:buildpack) { Buildpack.make }
       let(:staging_message) { DropletCreateMessage.create_from_http_request(request) }
       let(:stack) { Stack.default.name }
       let(:memory_limit) { 12340 }
       let(:disk_limit) { 32100 }
-      let(:buildpack_git_url) { 'anything' }
+      let(:buildpack_git_url) { 'http://example.com/repo.git' }
       let(:stagers) { double(:stagers) }
       let(:droplet) { DropletModel.make(app: app) }
       let(:stager) { instance_double(Diego::V3::Stager) }
@@ -41,10 +40,8 @@ module VCAP::CloudController
           disk_limit: disk_limit
         }.deep_stringify_keys
       end
-      let(:buildpack_info) { BuildpackRequestValidator.new }
 
       before do
-        buildpack_info.buildpack_record = buildpack
         allow(stagers).to receive(:stager_for_package).and_return(stager)
         allow(stager).to receive(:stage)
         allow(memory_limit_calculator).to receive(:get_limit).with(memory_limit, space, org).and_return(calculated_mem_limit)
@@ -55,85 +52,52 @@ module VCAP::CloudController
       context 'creating a droplet' do
         it 'creates a droplet' do
           expect {
-            droplet = action.stage(package, buildpack_info, staging_message, stagers)
+            droplet = action.stage(package, staging_message, stagers)
             expect(droplet.state).to eq(DropletModel::PENDING_STATE)
             expect(droplet.lifecycle_data.to_hash).to eq(lifecycle_data)
             expect(droplet.package_guid).to eq(package.guid)
-            expect(droplet.buildpack_guid).to eq(buildpack.guid)
             expect(droplet.app_guid).to eq(app.guid)
             expect(droplet.memory_limit).to eq(calculated_mem_limit)
             expect(droplet.disk_limit).to eq(calculated_disk_limit)
             expect(droplet.environment_variables).to eq(environment_variables)
-            expect(droplet.stack_name).to eq(stack)
+            expect(droplet.lifecycle_data).to_not be_nil
           }.to change { DropletModel.count }.by(1)
         end
       end
 
       context 'creating a stage request' do
+        let(:fake_lifecycle) do
+          instance_double(
+            BuildpackLifecycle,
+            create_lifecycle_data_model:   nil,
+            pre_known_receipt_information: {}
+          )
+        end
+
         before do
-          allow(DropletModel).to receive(:create).and_return(droplet)
+          allow(DropletModel).to receive(:new).and_return(droplet)
+          allow(BuildpackLifecycle).to receive(:new).with(package, staging_message).and_return(fake_lifecycle)
         end
 
         it 'initiates a staging request' do
-          action.stage(package, buildpack_info, staging_message, stagers)
+          action.stage(package, staging_message, stagers)
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.droplet).to eq(droplet)
-            expect(staging_details.stack).to eq(stack)
             expect(staging_details.memory_limit).to eq(calculated_mem_limit)
             expect(staging_details.disk_limit).to eq(calculated_disk_limit)
-            expect(staging_details.buildpack_info).to eq(buildpack_info)
             expect(staging_details.environment_variables).to eq(environment_variables)
-          end
-        end
-
-        context 'when the user does not specify a stack' do
-          let(:stack) { nil }
-
-          it 'uses a default value for stack' do
-            action.stage(package, buildpack_info, staging_message, stagers)
-
-            expect(stager).to have_received(:stage) do |staging_details|
-              expect(staging_details.droplet).to eq(droplet)
-              expect(staging_details.stack).to eq(Stack.default.name)
-              expect(staging_details.memory_limit).to eq(calculated_mem_limit)
-              expect(staging_details.disk_limit).to eq(calculated_disk_limit)
-              expect(staging_details.buildpack_info).to eq(buildpack_info)
-              expect(staging_details.environment_variables).to eq(environment_variables)
-            end
+            expect(staging_details.lifecycle).to eq(fake_lifecycle)
           end
         end
       end
 
       context 'when staging is unsuccessful' do
-        context 'when the package is not type bits' do
-          let(:package) { PackageModel.make(app: app, type: PackageModel::DOCKER_TYPE) }
-          it 'raises an InvalidPackage exception' do
-            expect {
-              action.stage(package, buildpack_info, staging_message, stagers)
-            }.to raise_error(PackageStageAction::InvalidPackage)
-          end
-        end
-
         context 'when the package is not ready' do
           let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
           it 'raises an InvalidPackage exception' do
             expect {
-              action.stage(package, buildpack_info, staging_message, stagers)
-            }.to raise_error(PackageStageAction::InvalidPackage)
-          end
-        end
-
-        context 'when the buildpack is a url' do
-          before do
-            buildpack_info.buildpack_record = nil
-            buildpack_info.buildpack_url = buildpack_git_url
-          end
-
-          it 'does not include the buildpack guid in the droplet and staging message' do
-            droplet = action.stage(package, buildpack_info, staging_message, stagers)
-
-            expect(droplet.buildpack_guid).to be_nil
-            expect(stager).to have_received(:stage)
+              action.stage(package, staging_message, stagers)
+            }.to raise_error(PackageStageAction::InvalidPackage, /not ready/)
           end
         end
 
@@ -145,7 +109,7 @@ module VCAP::CloudController
 
             it 'raises PackageStageAction::DiskLimitExceeded' do
               expect {
-                action.stage(package, buildpack_info, staging_message, stagers)
+                action.stage(package, staging_message, stagers)
               }.to raise_error(PackageStageAction::DiskLimitExceeded)
             end
           end
@@ -159,7 +123,7 @@ module VCAP::CloudController
 
             it 'raises PackageStageAction::SpaceQuotaExceeded' do
               expect {
-                action.stage(package, buildpack_info, staging_message, stagers)
+                action.stage(package, staging_message, stagers)
               }.to raise_error(PackageStageAction::SpaceQuotaExceeded)
             end
           end
@@ -171,7 +135,7 @@ module VCAP::CloudController
 
             it 'raises PackageStageAction::OrgQuotaExceeded' do
               expect {
-                action.stage(package, buildpack_info, staging_message, stagers)
+                action.stage(package, staging_message, stagers)
               }.to raise_error(PackageStageAction::OrgQuotaExceeded)
             end
           end

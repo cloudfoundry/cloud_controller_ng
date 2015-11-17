@@ -11,6 +11,7 @@ module VCAP::CloudController
       let(:stack) { 'my-stack' }
       let(:memory_limit) { 12340 }
       let(:disk_limit) { 32100 }
+      let(:lifecycle) { instance_double(BuildpackLifecycle, staging_environment_variables: { 'CF_STACK' => stack }) }
 
       before do
         EnvironmentVariableGroup.make(name: :staging, environment_json: { 'another' => 'var', 'STAGING_ENV' => 'staging_value' })
@@ -19,7 +20,7 @@ module VCAP::CloudController
       end
 
       it 'records the environment variables used for staging' do
-        environment_variables = builder.build(app, space, stack, memory_limit, disk_limit)
+        environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
 
         expect(environment_variables).to match({
               'another'          => 'override',
@@ -56,7 +57,7 @@ module VCAP::CloudController
           add_route_to_app.add(app, route1, nil)
           add_route_to_app.add(app, route2, nil)
 
-          environment_variables = builder.build(app, space, stack, memory_limit, disk_limit)
+          environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
           expect(environment_variables['VCAP_APPLICATION']['uris']).to match([route1.fqdn, route2.fqdn])
           expect(environment_variables['VCAP_APPLICATION']['application_uris']).to match([route1.fqdn, route2.fqdn])
         end
@@ -64,7 +65,7 @@ module VCAP::CloudController
 
       describe 'file descriptor limits' do
         it 'defaults to 16384' do
-          environment_variables = builder.build(app, space, stack, memory_limit, disk_limit)
+          environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
           expect(environment_variables['VCAP_APPLICATION']['limits']['fds']).to eq(16384)
         end
 
@@ -74,7 +75,7 @@ module VCAP::CloudController
           end
 
           it 'uses the configured value' do
-            environment_variables = builder.build(app, space, stack, memory_limit, disk_limit)
+            environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit)
             expect(environment_variables['VCAP_APPLICATION']['limits']['fds']).to eq(100)
           end
         end

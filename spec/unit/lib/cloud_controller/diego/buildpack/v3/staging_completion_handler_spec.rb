@@ -86,7 +86,7 @@ module VCAP::CloudController
 
                   expect(droplet.execution_metadata).to eq('black-box-string')
                   expect(droplet.process_types).to eq(data)
-                  expect(droplet.buildpack).to eq('INTERCAL')
+                  expect(droplet.buildpack_receipt_buildpack).to eq('INTERCAL')
                 end
 
                 context 'when process_types is empty' do
@@ -111,7 +111,7 @@ module VCAP::CloudController
 
                   it 'uses the lifecycle data buildpack' do
                     handle_staging_result(success_response)
-                    expect(staged_droplet.reload.buildpack).to eq('OG BP')
+                    expect(staged_droplet.reload.buildpack_receipt_buildpack).to eq('OG BP')
                   end
                 end
               end

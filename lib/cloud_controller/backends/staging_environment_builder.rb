@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class StagingEnvironmentBuilder
-    def build(app, space, stack, memory_limit, disk_limit, vars_from_message=nil)
+    def build(app, space, lifecycle, memory_limit, disk_limit, vars_from_message=nil)
       app_env           = app.environment_variables || {}
       vars_from_message ||= {}
       staging_var_group = EnvironmentVariableGroup.staging.environment_json
@@ -8,10 +8,10 @@ module VCAP::CloudController
       staging_var_group.
         merge(app_env).
         merge(vars_from_message).
+        merge(lifecycle.staging_environment_variables).
         merge(
           {
             'VCAP_APPLICATION' => vcap_application(app, space, memory_limit, disk_limit),
-            'CF_STACK'         => stack,
             'MEMORY_LIMIT'     => memory_limit,
             'VCAP_SERVICES'    => {}
           })

@@ -10,7 +10,7 @@ module VCAP::CloudController::Diego
     subject(:client) { StagerClient.new(TestConfig.config) }
 
     describe 'making a staging request' do
-      let(:staging_message) { MultiJson.dump({ app_id: app.guid }) }
+      let(:staging_message) { { app_id: app.guid } }
 
       context 'when there is a stager url configured' do
         context 'when the stager endpoint is available' do

@@ -76,7 +76,7 @@ module VCAP::CloudController
             droplet.class.db.transaction do
               droplet.lock!
               droplet.process_types = payload[:result][:process_types]
-              droplet.buildpack = buildpack
+              droplet.buildpack_receipt_buildpack = buildpack
               droplet.mark_as_staged
               droplet.execution_metadata = payload[:result][:execution_metadata]
               droplet.save_changes(raise_on_save_failure: true)

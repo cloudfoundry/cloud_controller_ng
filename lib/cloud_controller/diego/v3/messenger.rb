@@ -2,9 +2,8 @@ module VCAP::CloudController
   module Diego
     module V3
       class Messenger
-        def initialize(stager_client, nsync_client, protocol)
+        def initialize(stager_client, protocol)
           @stager_client = stager_client
-          @nsync_client  = nsync_client
           @protocol      = protocol
         end
 

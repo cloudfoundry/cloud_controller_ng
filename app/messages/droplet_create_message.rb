@@ -29,10 +29,6 @@ module VCAP::CloudController
       allow_nil: false,
       if: lifecycle_requested?
 
-    def requested_buildpack?
-      requested?(:lifecycle) && lifecycle_type == BUILDPACK_LIFECYCLE
-    end
-
     def self.create_from_http_request(body)
       DropletCreateMessage.new(body.symbolize_keys)
     end
@@ -45,21 +41,15 @@ module VCAP::CloudController
       )
     end
 
-    delegate :buildpack, :stack, to: :buildpack_data
-
-    private
-
-    def buildpack_data
-      @buildpack_data ||= BuildpackLifecycleDataMessage.new(lifecycle_data.symbolize_keys)
+    def lifecycle_data
+      lifecycle['data'] || lifecycle[:data]
     end
 
     def lifecycle_type
       lifecycle['type'] || lifecycle[:type]
     end
 
-    def lifecycle_data
-      lifecycle['data'] || lifecycle[:data]
-    end
+    private
 
     def allowed_keys
       ALLOWED_KEYS
