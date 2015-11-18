@@ -31,9 +31,13 @@ module VCAP::CloudController
         Fog.unmock!
         allow(CloudController::DependencyLocator.instance).
           to receive(:package_blobstore).and_return(package_blobstore)
+        Timecop.freeze(Time.now + 2.day)
       end
 
-      after { Fog.mock! }
+      after do
+        Timecop.return
+        Fog.mock!
+      end
 
       context 'given a v2 app with uploaded app bits' do
         let!(:app) do
@@ -47,14 +51,16 @@ module VCAP::CloudController
           before { app.destroy }
 
           it 'removes orphaned blobs which are older then cutoff_age_in_days' do
-            Timecop.freeze(Time.now + cutoff_age_in_days + 1.day) do
-              expect { job.perform }.to change { package_files.reload }.to([])
-            end
+            expect { job.perform }.to change { package_files.reload }.to([])
           end
 
-          it 'skips recently orphaned blobs' do
-            expect { job.perform }.to_not change { package_files.reload }
-            expect(package_files.reload.size).to eq 1
+          context 'with cutoff_age greater then blob age' do
+            let(:cutoff_age_in_days) { 3 }
+
+            it 'skips recently orphaned blobs' do
+              expect { job.perform }.to_not change { package_files.reload }
+              expect(package_files.reload.size).to eq 1
+            end
           end
         end
 
@@ -76,14 +82,16 @@ module VCAP::CloudController
           before { package.destroy }
 
           it 'removes orphaned blobs which are older then cutoff_age_in_days' do
-            Timecop.freeze(Time.now + cutoff_age_in_days + 1.day) do
-              expect { job.perform }.to change { package_files.reload }.to([])
-            end
+            expect { job.perform }.to change { package_files.reload }.to([])
           end
 
-          it 'skips recently orphaned blobs' do
-            expect { job.perform }.to_not change { package_files.reload }
-            expect(package_files.reload.size).to eq 1
+          context 'with cutoff_age greater then blob age' do
+            let(:cutoff_age_in_days) { 3 }
+
+            it 'skips recently orphaned blobs' do
+              expect { job.perform }.to_not change { package_files.reload }
+              expect(package_files.reload.size).to eq 1
+            end
           end
         end
 
@@ -95,14 +103,15 @@ module VCAP::CloudController
 
       context 'given an blob with an unexpected key' do
         before do
-          package_blobstore.cp_to_blobstore(app_zip, 'foo_blob')
+          package_blobstore.cp_to_blobstore(
+            app_zip,
+            '719640e5-c951-4029-8ffe-a9c6eb17bf61additional'
+          )
         end
 
         it 'skips blobs with unexpected keys' do
-          Timecop.freeze(Time.now + cutoff_age_in_days + 1.day) do
-            expect { job.perform }.to_not change { package_files.reload }
-            expect(package_files.reload.size).to eq 1
-          end
+          expect { job.perform }.to_not change { package_files.reload }
+          expect(package_files.reload.size).to eq 1
         end
       end
 
