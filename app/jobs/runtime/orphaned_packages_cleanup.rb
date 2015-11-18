@@ -1,4 +1,3 @@
-require 'pry'
 module VCAP::CloudController
   module Jobs
     module Runtime
@@ -7,8 +6,8 @@ module VCAP::CloudController
 
         PACKAGE_GUID = /^[a-z0-9]{2}\/[a-z0-9]{2}\/([a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12})/
 
-        def initialize(cleanup_after_days)
-          @cleanup_after_days = cleanup_after_days.days
+        def initialize(cutoff_age_in_days)
+          @cutoff_age_in_days = cutoff_age_in_days
         end
 
         def perform
@@ -20,7 +19,7 @@ module VCAP::CloudController
 
           blobstore = CloudController::DependencyLocator.instance.package_blobstore
           blobstore.files.each do |file|
-            next unless file.last_modified < DateTime.now - @cleanup_after_days
+            next unless file.last_modified < DateTime.now - @cutoff_age_in_days
             next unless match = file.key.match(PACKAGE_GUID)
             guid = match.captures.first
             next if packages.include?(guid)

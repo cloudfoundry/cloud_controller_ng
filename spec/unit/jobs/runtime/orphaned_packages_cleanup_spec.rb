@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::Runtime
     describe OrphanedPackagesCleanup do
-      let(:cleanup_after_days) { 1 }
+      let(:cutoff_age_in_days) { 1 }
       let(:tmp_dir) { Dir.mktmpdir }
       let(:package_blobstore) { blobstore('package') }
       let(:bits_cache) { blobstore('global_app_bits_cache') }
@@ -23,7 +23,7 @@ module VCAP::CloudController
         CloudController::Blobstore::Client.new(opts, name)
       end
 
-      subject(:job) { OrphanedPackagesCleanup.new(cleanup_after_days) }
+      subject(:job) { OrphanedPackagesCleanup.new(cutoff_age_in_days) }
 
       it { is_expected.to be_a_valid_job }
 
@@ -46,8 +46,8 @@ module VCAP::CloudController
         context "when app is destroyed" do
           before { app.destroy }
 
-          it 'removes orphaned blobs which are older then cleanup_after_days' do
-            Timecop.freeze(Time.now + cleanup_after_days + 1.day) do
+          it 'removes orphaned blobs which are older then cutoff_age_in_days' do
+            Timecop.freeze(Time.now + cutoff_age_in_days + 1.day) do
               expect { job.perform }.to change { package_files.reload }.to([])
             end
           end
@@ -75,8 +75,8 @@ module VCAP::CloudController
         context "when package is destroyed" do
           before { package.destroy }
 
-          it 'removes orphaned blobs which are older then cleanup_after_days' do
-            Timecop.freeze(Time.now + cleanup_after_days + 1.day) do
+          it 'removes orphaned blobs which are older then cutoff_age_in_days' do
+            Timecop.freeze(Time.now + cutoff_age_in_days + 1.day) do
               expect { job.perform }.to change { package_files.reload }.to([])
             end
           end
@@ -99,7 +99,7 @@ module VCAP::CloudController
         end
 
         it 'skips blobs with unexpected keys' do
-          Timecop.freeze(Time.now + cleanup_after_days + 1.day) do
+          Timecop.freeze(Time.now + cutoff_age_in_days + 1.day) do
             expect { job.perform }.to_not change { package_files.reload }
             expect(package_files.reload.size).to eq 1
           end
