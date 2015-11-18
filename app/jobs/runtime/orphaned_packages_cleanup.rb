@@ -4,7 +4,7 @@ module VCAP::CloudController
       class OrphanedPackagesCleanup < VCAP::CloudController::Jobs::CCJob
         attr_accessor :expiration_in_seconds
 
-        PACKAGE_GUID = %r(^[a-z0-9]{2}/[a-z0-9]{2}/([a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}))
+        PACKAGE_GUID = %r(^[a-z0-9]{2}/[a-z0-9]{2}/([a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12})$)
 
         def initialize(cutoff_age_in_days)
           @cutoff_age_in_days = cutoff_age_in_days
@@ -14,10 +14,6 @@ module VCAP::CloudController
           logger = Steno.logger('cc.background')
           logger.info('Looking for orphaned packages in blobstore')
 
-          packages = PackageModel.select_map(:guid)
-          apps = App.select_map(:guid)
-
-          blobstore = CloudController::DependencyLocator.instance.package_blobstore
           blobstore.files.each do |file|
             next unless file.last_modified < DateTime.now - @cutoff_age_in_days
             match = file.key.match(PACKAGE_GUID)
@@ -37,6 +33,20 @@ module VCAP::CloudController
 
         def max_attempts
           1
+        end
+
+        private
+
+        def blobstore
+          CloudController::DependencyLocator.instance.package_blobstore
+        end
+
+        def packages
+          @packages ||= PackageModel.select_map(:guid)
+        end
+
+        def apps
+          @apps ||= App.select_map(:guid)
         end
       end
     end
