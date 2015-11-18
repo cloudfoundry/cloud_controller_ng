@@ -35,7 +35,7 @@ module VCAP::CloudController
 
       after { Fog.mock! }
 
-      context "given a v2 app with uploaded app bits" do
+      context 'given a v2 app with uploaded app bits' do
         let!(:app) do
           VCAP::CloudController::AppFactory.make.tap do |app|
             c = CloudController::Blobstore::FingerprintsCollection.new([])
@@ -43,7 +43,7 @@ module VCAP::CloudController
           end
         end
 
-        context "when app is destroyed" do
+        context 'when app is destroyed' do
           before { app.destroy }
 
           it 'removes orphaned blobs which are older then cutoff_age_in_days' do
@@ -63,7 +63,7 @@ module VCAP::CloudController
         end
       end
 
-      context "given a v3 package" do
+      context 'given a v3 package' do
         let!(:package) do
           VCAP::CloudController::PackageModel.create(
             state: VCAP::CloudController::PackageModel::CREATED_STATE
@@ -72,7 +72,7 @@ module VCAP::CloudController
           end
         end
 
-        context "when package is destroyed" do
+        context 'when package is destroyed' do
           before { package.destroy }
 
           it 'removes orphaned blobs which are older then cutoff_age_in_days' do
@@ -93,7 +93,7 @@ module VCAP::CloudController
         end
       end
 
-      context "given an blob with an unexpected key" do
+      context 'given an blob with an unexpected key' do
         before do
           package_blobstore.cp_to_blobstore(app_zip, 'foo_blob')
         end

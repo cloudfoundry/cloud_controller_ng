@@ -4,7 +4,7 @@ module VCAP::CloudController
       class OrphanedPackagesCleanup < VCAP::CloudController::Jobs::CCJob
         attr_accessor :expiration_in_seconds
 
-        PACKAGE_GUID = /^[a-z0-9]{2}\/[a-z0-9]{2}\/([a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12})/
+        PACKAGE_GUID = %r(^[a-z0-9]{2}/[a-z0-9]{2}/([a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}))
 
         def initialize(cutoff_age_in_days)
           @cutoff_age_in_days = cutoff_age_in_days
@@ -20,7 +20,8 @@ module VCAP::CloudController
           blobstore = CloudController::DependencyLocator.instance.package_blobstore
           blobstore.files.each do |file|
             next unless file.last_modified < DateTime.now - @cutoff_age_in_days
-            next unless match = file.key.match(PACKAGE_GUID)
+            match = file.key.match(PACKAGE_GUID)
+            next unless match
             guid = match.captures.first
             next if packages.include?(guid)
             next if apps.include?(guid)
