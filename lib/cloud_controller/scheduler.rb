@@ -10,6 +10,7 @@ module VCAP::CloudController
       { name: :failed_jobs, class: Jobs::Runtime::FailedJobsCleanup, time: '21:00' },
       { name: :service_usage_events, class: Jobs::Services::ServiceUsageEventsCleanup, time: '22:00' },
       { name: :orphaned_packages, class: Jobs::Runtime::OrphanedPackagesCleanup, time: '23:00' },
+      { name: :orphaned_droplets, class: Jobs::Runtime::OrphanedDropletsCleanup, time: '24:00' },
     ]
 
     def initialize(config)

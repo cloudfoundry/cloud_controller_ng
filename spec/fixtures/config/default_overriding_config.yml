@@ -29,6 +29,9 @@ audit_events:
 
 failed_jobs:
   cutoff_age_in_days: 31
+  
+orphaned_droplets:
+  cutoff_age_in_days: 31
 
 orphaned_packages:
   cutoff_age_in_days: 31
