@@ -88,8 +88,6 @@ EOF
         client.put "/v2/routes/#{guid}", body, headers
 
         expect(status).to eq 201
-        # expect(parsed_response['entity']['host']).to eq('')
-        # expect(parsed_response['entity']['path']).to eq('/bar/baz')
       end
     end
   end

@@ -12,7 +12,7 @@ module VCAP::CloudController
       to_many :apps
     end
 
-    query_parameters :host, :domain_guid, :organization_guid, :path, :port, :generate_port
+    query_parameters :host, :domain_guid, :organization_guid, :path, :port
 
     def self.dependencies
       [:routing_api_client]
