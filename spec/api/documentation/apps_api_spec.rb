@@ -63,10 +63,10 @@ resource 'Apps', type: [:api, :legacy_api] do
   end
 
   describe 'Standard endpoints' do
+    standard_model_delete_without_async :app
     include_context 'fields', required: false
     standard_model_list :app, VCAP::CloudController::AppsController
     standard_model_get :app, nested_associations: [:stack, :space]
-    standard_model_delete_without_async :app
 
     before do
       allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
