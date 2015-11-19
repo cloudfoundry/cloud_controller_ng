@@ -90,7 +90,6 @@ resource 'Packages (Experimental)', type: :api do
                 'image'    => 'http://location-of-image.com',
                 'store_image' => false,
                 'credentials' => {},
-                'hash'       => { 'type' => 'sha1', 'value' => nil },
                 'error'      => nil,
               },
               'state'      => VCAP::CloudController::PackageModel::READY_STATE,
@@ -183,11 +182,13 @@ resource 'Packages (Experimental)', type: :api do
 
       let(:raw_post) { body_parameters }
 
-      body_parameter :type, 'Package type', required: true, valid_values: ['bits', 'docker']
+      body_parameter :type, 'Package type', required: true, valid_values: ['bits', 'docker'], parameter_type: 'String'
       body_parameter :data, 'Data for docker packages.  Can be empty for bits packages.', required: false
-      body_parameter :data_image, 'Location of docker image.  Required for docker packages.'
-      body_parameter :data_credentials, 'Credentials for private docker image, available fields are user, password, email, login server. ', required: false
-      body_parameter :data_store_image, 'Whether or not the backend should cache the image. defaults to false', required: false
+      body_parameter :'data["image"]', 'Location of docker image.  Required for docker packages.', example_values: ['registry/image:latest'], parameter_type: 'String'
+      body_parameter :'data["credentials"]', 'Credentials for private docker image, available fields are user, password, email, login server.',
+        required: false, parameter_type: 'String'
+      body_parameter :'data["store_image"]', 'Whether or not the backend should cache the image. For docker packages only.',
+        default: false, required: false, valid_values: ['true', 'false'], parameter_type: 'Boolean'
       header 'Content-Type', 'application/json'
 
       example 'Create a Package' do
@@ -209,7 +210,6 @@ resource 'Packages (Experimental)', type: :api do
               'login_server' => 'https://index.docker.io/v1'
             },
             'store_image' => true,
-            'hash'       => { 'type' => 'sha1', 'value' => nil },
             'error'      => nil,
           },
           'state'      => 'READY',
@@ -267,7 +267,6 @@ resource 'Packages (Experimental)', type: :api do
             'image'    => 'http://awesome-sauce.com',
             'credentials' => {},
             'store_image' => false,
-            'hash'       => { 'type' => 'sha1', 'value' => nil },
             'error'      => nil,
           },
           'state'      => 'READY',

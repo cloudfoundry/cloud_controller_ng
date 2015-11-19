@@ -5,6 +5,13 @@ module RspecApiDocumentation
     def has_body_parameters?
       respond_to?(:body_parameters) && body_parameters.present?
     end
+
+    def has_parameter_type?
+      body_parameters.each do |parameter|
+        return true unless parameter[:parameter_type].nil?
+      end
+      false
+    end
   end
 end
 
@@ -18,6 +25,13 @@ module ApiDsl
     body_parameters.merge!(extra_params)
     MultiJson.dump(body_parameters, pretty: true)
   end
+
+  # def has_column?(column)
+  #   body_parameters.each do |parameter|
+  #     return true unless parameter[column].nil?
+  #   end
+  #   false
+  # end
 
   module ClassMethods
     def body_parameter(name, description='', options={})

@@ -64,6 +64,7 @@ module VCAP::CloudController
           expect(data['credentials']['password']).to eq data_model.password
           expect(data['credentials']['login_server']).to eq data_model.login_server
           expect(data['store_image']).to eq data_model.store_image
+          expect(data['hash']).to eq nil
         end
       end
 

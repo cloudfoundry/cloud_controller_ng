@@ -140,6 +140,9 @@
           <tr>
             <th>Name</th>
             <th>Description</th>
+            {{# has_parameter_type? }}
+            <th>Parameter Type</th>
+            {{/ has_parameter_type? }}
             <th>Default</th>
             <th>Valid Values</th>
             <th>Example Values</th>
@@ -154,6 +157,11 @@
               <td>
                 <span class="description">{{ description }}</span>
               </td>
+              {{# has_parameter_type? }}
+              <td>
+                <span class="parameter_type">{{ parameter_type }}</span>
+              </td>
+              {{/ has_parameter_type? }}
               <td>
                 <span class="default">{{ default }}</span>
               </td>
