@@ -32,14 +32,10 @@ module VCAP::CloudController
             }
           end
           let(:malformed_fail_response) do
-            fail_response.except('task_id')
+            { error: { id: 'stuff' } }
           end
-          let(:runner) do
-            instance_double(Diego::Runner, start: nil)
-          end
-          let(:runners) { instance_double(Runners, runner_for_app: runner) }
 
-          subject { StagingCompletionHandler.new(runners) }
+          subject { StagingCompletionHandler.new }
 
           describe '#staging_complete' do
             let(:app) { AppModel.make }
@@ -115,6 +111,25 @@ module VCAP::CloudController
                   end
                 end
               end
+
+              context 'when updating the droplet record with data from staging fails' do
+                let(:save_error) { StandardError.new('save-error') }
+
+                before do
+                  allow_any_instance_of(DropletModel).to receive(:save_changes).and_raise(save_error)
+                end
+
+                it 'logs an error for the CF operator' do
+                  handle_staging_result(success_response)
+
+                  expect(logger).to have_received(:error).with(
+                    'diego.staging.v3.saving-staging-result-failed',
+                    staging_guid: staged_droplet.guid,
+                    response:     success_response,
+                    error:        'save-error',
+                  )
+                end
+              end
             end
 
             describe 'failure case' do
@@ -144,7 +159,7 @@ module VCAP::CloudController
 
                 it 'logs an error for the CF operator' do
                   expect(logger).to have_received(:error).with(
-                      'diego.staging.success.invalid-message',
+                      'diego.staging.v3.success.invalid-message',
                       staging_guid: staged_droplet.guid,
                       payload:      malformed_success_response,
                       error:        '{ result => Missing key }'
@@ -154,12 +169,41 @@ module VCAP::CloudController
                 it 'logs an error for the CF user' do
                   expect(Loggregator).to have_received(:emit_error).with(staged_droplet.guid, /Malformed message from Diego stager/)
                 end
+
+                it 'should mark the droplet as failed' do
+                  expect(staged_droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+                end
               end
 
               context 'with a malformed error message' do
-                it 'should not emit any loggregator messages' do
-                  expect(Loggregator).not_to receive(:emit_error).with(staged_droplet.guid, /bad/)
-                  handle_staging_result(malformed_fail_response)
+                it 'should mark the droplet as failed' do
+                  expect {
+                    handle_staging_result(malformed_fail_response)
+                  }.to raise_error(VCAP::Errors::ApiError)
+
+                  expect(staged_droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+                  expect(staged_droplet.error).to eq('StagingError - Malformed message from Diego stager')
+                end
+
+                it 'logs an error for the CF user' do
+                  expect {
+                    handle_staging_result(malformed_fail_response)
+                  }.to raise_error(VCAP::Errors::ApiError)
+
+                  expect(Loggregator).to have_received(:emit_error).with(staged_droplet.guid, /Malformed message from Diego stager/)
+                end
+
+                it 'logs an error for the CF operator' do
+                  expect {
+                    handle_staging_result(malformed_fail_response)
+                  }.to raise_error(VCAP::Errors::ApiError)
+
+                  expect(logger).to have_received(:error).with(
+                    'diego.staging.v3.failure.invalid-message',
+                    staging_guid: staged_droplet.guid,
+                    payload:      malformed_fail_response,
+                    error:        '{ error => { message => Missing key } }'
+                  )
                 end
               end
 
@@ -171,12 +215,12 @@ module VCAP::CloudController
                 end
 
                 it 'logs an error for the CF operator' do
-                  handle_staging_result(success_response)
+                  handle_staging_result(fail_response)
 
                   expect(logger).to have_received(:error).with(
                       'diego.staging.v3.saving-staging-result-failed',
                       staging_guid: staged_droplet.guid,
-                      response:     success_response,
+                      response:     fail_response,
                       error:        'save-error',
                     )
                 end

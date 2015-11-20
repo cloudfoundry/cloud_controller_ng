@@ -528,18 +528,12 @@ resource 'Packages (Experimental)', type: :api do
             'users'               => nil
           }
         },
-        'memory_limit' => 1024,
-        'disk_limit' => 4096,
-        'result' => {
-          'buildpack' => nil,
-          'stack' => 'cflinuxfs2',
-          'process_types' => nil,
-          'hash' => { 'type' => 'sha1', 'value' => nil },
-          'execution_metadata' => nil
-        },
+        'memory_limit'          => 1024,
+        'disk_limit'            => 4096,
+        'result'                => nil,
         'created_at'            => iso8601,
         'updated_at'            => nil,
-        'links'                => {
+        'links'                 => {
           'self'                   => { 'href' => "/v3/droplets/#{droplet.guid}" },
           'package'                => { 'href' => "/v3/packages/#{guid}" },
           'app'                    => { 'href' => "/v3/apps/#{app_guid}" },

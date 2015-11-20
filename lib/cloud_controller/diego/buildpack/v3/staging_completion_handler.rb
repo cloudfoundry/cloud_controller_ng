@@ -5,8 +5,8 @@ module VCAP::CloudController
     module Buildpack
       module V3
         class StagingCompletionHandler < VCAP::CloudController::Diego::StagingCompletionHandlerBase
-          def initialize(runners)
-            super(runners, Steno.logger('cc.stager'), 'diego.staging.v3.')
+          def initialize
+            super(nil, Steno.logger('cc.stager'), 'diego.staging.v3.')
           end
 
           def self.success_parser
@@ -28,15 +28,27 @@ module VCAP::CloudController
           private
 
           def handle_failure(droplet, payload)
-            error   = payload[:error][:id] || 'StagingError'
-            message = payload[:error][:message]
+            begin
+              self.class.error_parser.validate(payload)
+            rescue Membrane::SchemaValidationError => e
+              logger.error(@logger_prefix + 'failure.invalid-message', staging_guid: droplet.guid, payload: payload, error: e.to_s)
 
-            droplet.class.db.transaction do
-              droplet.lock!
+              payload[:error] = { message: 'Malformed message from Diego stager', id: 'StagingError' }
+              handle_failure(droplet, payload)
 
-              droplet.state = DropletModel::FAILED_STATE
-              droplet.error = "#{error} - #{message}"
-              droplet.save
+              raise Errors::ApiError.new_from_details('InvalidRequest', payload)
+            end
+
+            begin
+              droplet.class.db.transaction do
+                droplet.lock!
+
+                droplet.state = DropletModel::FAILED_STATE
+                droplet.error = "#{payload[:error][:id]} - #{payload[:error][:message]}"
+                droplet.save_changes(raise_on_save_failure: true)
+              end
+            rescue => e
+              logger.error(@logger_prefix + 'saving-staging-result-failed', staging_guid: droplet.guid, response: payload, error: e.message)
             end
 
             Loggregator.emit_error(droplet.guid, "Failed to stage droplet: #{payload[:error][:message]}")
@@ -50,14 +62,16 @@ module VCAP::CloudController
 
               self.class.success_parser.validate(payload)
             rescue Membrane::SchemaValidationError => e
-              logger.error('diego.staging.success.invalid-message', staging_guid: droplet.guid, payload: payload, error: e.to_s)
-              Loggregator.emit_error(droplet.guid, 'Malformed message from Diego stager')
+              logger.error(@logger_prefix + 'success.invalid-message', staging_guid: droplet.guid, payload: payload, error: e.to_s)
+
+              payload[:error] = { message: 'Malformed message from Diego stager', id: DEFAULT_STAGING_ERROR }
+              handle_failure(droplet, payload)
 
               raise Errors::ApiError.new_from_details('InvalidRequest', payload)
             end
 
             if payload[:result][:process_types] == {}
-              payload[:error] = { message: 'No process types returned from stager' }
+              payload[:error] = { message: 'No process types returned from stager', id: DEFAULT_STAGING_ERROR }
               handle_failure(droplet, payload)
             else
               begin
@@ -70,15 +84,15 @@ module VCAP::CloudController
 
           def save_staging_result(droplet, payload)
             lifecycle_data = payload[:result][:lifecycle_metadata]
-            buildpack = lifecycle_data[:detected_buildpack]
-            buildpack = droplet.buildpack_lifecycle_data.buildpack if buildpack.blank?
+            buildpack      = lifecycle_data[:detected_buildpack]
+            buildpack      = droplet.buildpack_lifecycle_data.buildpack if buildpack.blank?
 
             droplet.class.db.transaction do
               droplet.lock!
-              droplet.process_types = payload[:result][:process_types]
+              droplet.process_types               = payload[:result][:process_types]
+              droplet.execution_metadata          = payload[:result][:execution_metadata]
               droplet.buildpack_receipt_buildpack = buildpack
               droplet.mark_as_staged
-              droplet.execution_metadata = payload[:result][:execution_metadata]
               droplet.save_changes(raise_on_save_failure: true)
             end
           end

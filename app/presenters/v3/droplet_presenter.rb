@@ -1,10 +1,7 @@
-require_relative '../../../app/presenters/v3/lifecycle/droplet_lifecycle_receipt_presenter'
-
 module VCAP::CloudController
   class DropletPresenter
-    def initialize(pagination_presenter=PaginationPresenter.new, droplet_lifecycle_receipt_presenter: DropletLifecycleReceiptPresenter.new)
-      @pagination_presenter = pagination_presenter
-      @droplet_lifecycle_receipt_presenter = droplet_lifecycle_receipt_presenter
+    def initialize(pagination_presenter=PaginationPresenter.new)
+      @pagination_presenter                = pagination_presenter
     end
 
     def present_json(droplet)
@@ -29,39 +26,66 @@ module VCAP::CloudController
 
     def droplet_hash(droplet)
       {
-        guid:                    droplet.guid,
-        state:                   droplet.state,
-        error:                   droplet.error,
-        lifecycle: {
+        guid:                  droplet.guid,
+        state:                 droplet.state,
+        error:                 droplet.error,
+        lifecycle:             {
           type: droplet.lifecycle_type,
-          data: droplet.lifecycle_data.to_hash
+          data: droplet.lifecycle_data.as_json
         },
-        memory_limit:            droplet.memory_limit,
-        disk_limit:              droplet.disk_limit,
-        result: {
-          process_types:         droplet.process_types,
-          hash: {
-            type: DEFAULT_HASHING_ALGORITHM,
-            value: droplet.droplet_hash
-          },
-          execution_metadata:   droplet.execution_metadata
-        }.merge(@droplet_lifecycle_receipt_presenter.result(droplet)),
-        environment_variables:  droplet.environment_variables || {},
-        created_at:             droplet.created_at,
-        updated_at:             droplet.updated_at,
-        links:                  build_links(droplet),
+        memory_limit:          droplet.memory_limit,
+        disk_limit:            droplet.disk_limit,
+        result:                result_for_lifecycle(droplet),
+        environment_variables: droplet.environment_variables || {},
+        created_at:            droplet.created_at,
+        updated_at:            droplet.updated_at,
+        links:                 build_links(droplet),
       }
     end
 
     def build_links(droplet)
-      links = {
+      {
         self:                   { href: "/v3/droplets/#{droplet.guid}" },
         package:                { href: "/v3/packages/#{droplet.package_guid}" },
         app:                    { href: "/v3/apps/#{droplet.app_guid}" },
         assign_current_droplet: { href: "/v3/apps/#{droplet.app_guid}/current_droplet", method: 'PUT' },
-      }.merge(@droplet_lifecycle_receipt_presenter.links(droplet))
+      }.merge(links_for_lifecyle(droplet))
+    end
 
-      links.delete_if { |_, v| v.nil? }
+    def result_for_lifecycle(droplet)
+      return nil unless DropletModel::COMPLETED_STATES.include?(droplet.state)
+
+      lifecycle_result = if droplet.lifecycle_type == 'buildpack'
+                           {
+                             hash:      {
+                               type:  DEFAULT_HASHING_ALGORITHM,
+                               value: droplet.droplet_hash,
+                             },
+                             buildpack: droplet.buildpack_receipt_buildpack,
+                             stack:     droplet.buildpack_receipt_stack_name,
+                           }
+                         elsif droplet.lifecycle_type == 'docker'
+                           {
+                             image: droplet.docker_receipt_image
+                           }
+                         end
+
+      {
+        execution_metadata: droplet.execution_metadata,
+        process_types:      droplet.process_types
+      }.merge(lifecycle_result)
+    end
+
+    def links_for_lifecyle(droplet)
+      links = {}
+
+      if droplet.lifecycle_type == 'buildpack'
+        if droplet.buildpack_receipt_buildpack_guid
+          links[:buildpack] = { href: "/v2/buildpacks/#{droplet.buildpack_receipt_buildpack_guid}" }
+        end
+      end
+
+      links
     end
   end
 end

@@ -118,6 +118,13 @@ module VCAP::CloudController
       it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
         expect(droplet_model.lifecycle_type).to eq('buildpack')
       end
+
+      it 'returns the string "docker" if there is no buildpack_lifecycle_data is on the model' do
+        droplet_model.buildpack_lifecycle_data = nil
+        droplet_model.save
+
+        expect(droplet_model.lifecycle_type).to eq('docker')
+      end
     end
 
     describe '#lifecycle_data' do
@@ -136,6 +143,13 @@ module VCAP::CloudController
       it 'is a persistable hash' do
         expect(droplet_model.reload.lifecycle_data.buildpack).to eq(lifecycle_data.buildpack)
         expect(droplet_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
+      end
+
+      it 'returns a docker lifecycle model if there is no buildpack_lifecycle_model' do
+        droplet_model.buildpack_lifecycle_data = nil
+        droplet_model.save
+
+        expect(droplet_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
       end
     end
   end

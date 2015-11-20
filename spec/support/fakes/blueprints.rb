@@ -42,6 +42,14 @@ module VCAP::CloudController
     app_guid { AppModel.make.guid }
   end
 
+  PackageModel.blueprint(:docker) do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::PackageModel::CREATED_STATE }
+    type     { 'docker' }
+    app_guid { AppModel.make.guid }
+    docker_data { PackageDockerDataModel.create(package: object.save, image: "org/image-#{Sham.guid}:latest") }
+  end
+
   DropletModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }

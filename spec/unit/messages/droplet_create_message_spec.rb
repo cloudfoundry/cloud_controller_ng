@@ -124,15 +124,6 @@ module VCAP::CloudController
           expect(message).to be_valid
         end
 
-        it 'must provide data' do
-          params = { lifecycle: { type: 'buildpack' } }
-
-          message = DropletCreateMessage.new(params)
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle]).to include('data must be present')
-          expect(message.errors[:lifecycle_data]).to include('must be a hash')
-        end
-
         it 'must provide type' do
           params = { lifecycle: { data: { buildpack: 'java', stack: 'cflinuxfs2' } } }
 
@@ -147,34 +138,44 @@ module VCAP::CloudController
           message = DropletCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:lifecycle_type]).to include('is not included in the list')
+          expect(message.errors[:lifecycle_type]).to include("is not included in the list: #{DropletCreateMessage::LIFECYCLE_TYPES.join(', ')}")
         end
 
-        it 'must provide a valid stack' do
-          params = { lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: { non: 'sense' } } } }
+        describe 'buildpack lifecycle' do
+          it 'must provide a valid stack' do
+            params = { lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: { non: 'sense' } } } }
 
-          message = DropletCreateMessage.new(params)
+            message = DropletCreateMessage.new(params)
 
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle]).to include('Stack must be a string')
+            expect(message).not_to be_valid
+            expect(message.errors[:lifecycle]).to include('Stack must be a string')
+          end
+
+          it 'must be in the database' do
+            params = { lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'redhat' } } }
+
+            message = DropletCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:lifecycle]).to include('Stack is invalid')
+          end
+
+          it 'must provide a valid buildpack' do
+            params = { lifecycle: { type: 'buildpack', data: { buildpack: { wh: 'at?' }, stack: 'onstacksonstacks' } } }
+
+            message = DropletCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors[:lifecycle]).to include('Buildpack must be a string')
+          end
         end
 
-        it 'must be in the database' do
-          params = { lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'redhat' } } }
-
-          message = DropletCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle]).to include('Stack is invalid')
-        end
-
-        it 'must provide a valid buildpack' do
-          params = { lifecycle: { type: 'buildpack', data: { buildpack: { wh: 'at?' }, stack: 'onstacksonstacks' } } }
-
-          message = DropletCreateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors[:lifecycle]).to include('Buildpack must be a string')
+        describe 'docker lifecycle' do
+          it 'works' do
+            params  = { lifecycle: { type: 'docker' } }
+            message = DropletCreateMessage.new(params)
+            expect(message).to be_valid
+          end
         end
       end
     end

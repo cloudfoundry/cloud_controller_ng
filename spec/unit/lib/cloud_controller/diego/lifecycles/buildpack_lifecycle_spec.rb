@@ -1,10 +1,13 @@
 require 'spec_helper'
+require_relative 'lifecycle_shared'
 
 module VCAP::CloudController
   describe BuildpackLifecycle do
     let(:package) { PackageModel.make(type: PackageModel::BITS_TYPE) }
     let(:staging_message) { DropletCreateMessage.new(lifecycle: { 'data' => {}, 'type' => 'buildpack' }) }
     subject(:buildpack_lifecycle) { BuildpackLifecycle.new(package, staging_message) }
+
+    it_behaves_like 'a lifecycle'
 
     context 'when the package is not type bits' do
       let(:package) { PackageModel.make(type: PackageModel::DOCKER_TYPE) }
@@ -18,8 +21,8 @@ module VCAP::CloudController
 
     it 'can create a BuildpackLifecycleDataModel' do
       staging_message.lifecycle['data']['buildpack'] = 'cool-buildpack'
-      staging_message.lifecycle['data']['stack'] = 'cool-stack'
-      droplet = DropletModel.make
+      staging_message.lifecycle['data']['stack']     = 'cool-stack'
+      droplet                                        = DropletModel.make
 
       expect {
         buildpack_lifecycle.create_lifecycle_data_model(droplet)

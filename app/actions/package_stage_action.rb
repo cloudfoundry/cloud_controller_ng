@@ -2,7 +2,7 @@ require 'cloud_controller/backends/staging_memory_calculator'
 require 'cloud_controller/backends/staging_disk_calculator'
 require 'cloud_controller/backends/staging_environment_builder'
 require 'cloud_controller/diego/v3/staging_details'
-require 'cloud_controller/diego/lifecycles/buildpack_lifecycle'
+require 'cloud_controller/diego/lifecycles/lifecycle_provider'
 
 module VCAP::CloudController
   class PackageStageAction
@@ -24,7 +24,7 @@ module VCAP::CloudController
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
       begin
-        lifecycle = BuildpackLifecycle.new(package, staging_message)
+        lifecycle = LifecycleProvider.provide(package, staging_message)
       rescue => e
         raise PackageStageAction::InvalidPackage.new(e.message)
       end
@@ -48,7 +48,7 @@ module VCAP::CloudController
       logger.info("droplet created: #{droplet.guid}")
 
       logger.info("staging package: #{package.inspect} for droplet #{droplet.guid}")
-      stagers.stager_for_package(package).stage(staging_details)
+      stagers.stager_for_package(package, staging_message.lifecycle_type).stage(staging_details)
       logger.info("package staging requested: #{package.inspect}")
 
       droplet

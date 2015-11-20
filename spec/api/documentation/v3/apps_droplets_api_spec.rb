@@ -125,13 +125,7 @@ resource 'Apps (Experimental)', type: :api do
               'memory_limit'           => nil,
               'disk_limit'            => nil,
               'environment_variables'  => droplet1.environment_variables,
-              'result' => {
-                'hash'                 => { 'type' => 'sha1', 'value' => nil },
-                'process_types'        => droplet1.process_types,
-                'buildpack'            => buildpack.name,
-                'execution_metadata'   => nil,
-                'stack'                => nil
-              },
+              'result' => nil,
               'created_at'             => iso8601,
               'updated_at'             => iso8601,
               'links'                 => {
