@@ -356,6 +356,19 @@ describe AppsV3Controller, type: :controller do
         end
       end
     end
+
+    context 'when the space does not exist' do
+      before do
+        req_body[:relationships][:space][:guid] = 'made-up'
+      end
+
+      it 'returns 404 space not found' do
+        post :create, body: req_body
+
+        expect(response).to have_status_code(404)
+        expect(response.body).to include('Space not found')
+      end
+    end
   end
 
   describe '#update' do

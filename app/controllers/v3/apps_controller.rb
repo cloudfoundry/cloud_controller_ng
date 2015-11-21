@@ -46,6 +46,7 @@ class AppsV3Controller < ApplicationController
     buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
     unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
 
+    space_not_found! unless Space.where(guid: message.space_guid).count > 0
     space_not_found! unless can_create?(message.space_guid)
 
     app = AppCreate.new(current_user, current_user_email).create(message)
