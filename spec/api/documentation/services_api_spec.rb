@@ -34,7 +34,7 @@ resource 'Services', type: [:api, :legacy_api] do
     field :bindable, 'A boolean describing that the service can be bound to applications', required: false, default: true
     field :extra, 'A JSON field with extra data pertaining to the service', required: false, default: nil, example_values: ['{"providerDisplayName": "MyServiceProvider"}']
     field :unique_id, 'A guid that identifies the service with the broker (not the same as the guid above)', required: false, default: nil
-    field :tags, 'A list of tags for the service', required: false, default: [], example_values: ['database', 'mysql']
+    field :tags, 'A list of tags for the service. Max characters: 2048', required: false, default: [], example_values: ['database', 'mysql']
     field :requires, 'A list of dependencies for services. The presence of "syslog_drain" indicates that on binding an instance of the service to an application,
                       logs for the app will be streamed to a url provided by the service. The presence of "route_forwarding" indicates that on binding an instance of the
                       service to a route, requests for the route may be processed by the service before being forwarded to an application mapped to the route.',
