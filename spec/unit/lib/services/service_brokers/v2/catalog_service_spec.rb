@@ -140,6 +140,14 @@ module VCAP::Services::ServiceBrokers::V2
         expect(service.errors.messages).to include 'Service tags must be an array of strings, but has value [123]'
       end
 
+      it 'validates that @tags is 2048 characters or less' do
+        attrs = build_valid_service_attrs(name: 'dummy-service', tags: ['a' * 2049])
+        service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        expect(service).not_to be_valid
+
+        expect(service.errors.messages).to include "Tags for the service #{service.name} must be 2048 characters or less."
+      end
+
       it 'validates that @requires is an array of strings' do
         attrs = build_valid_service_attrs(requires: 'a string')
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)

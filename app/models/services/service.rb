@@ -19,12 +19,13 @@ module VCAP::CloudController
     strip_attributes :label, :provider
 
     def validate
-      validates_presence :label,              message:  Sequel.lit('Service name is required')
-      validates_presence :description,        message: 'is required'
-      validates_presence :bindable,           message: 'is required'
-      validates_url :url,                message: 'must be a valid url'
-      validates_url :info_url,           message: 'must be a valid url'
-      validates_unique :unique_id,          message: Sequel.lit('Service ids must be unique')
+      validates_presence :label,                message:  Sequel.lit('Service name is required')
+      validates_presence :description,          message: 'is required'
+      validates_presence :bindable,             message: 'is required'
+      validates_url :url,                       message: 'must be a valid url'
+      validates_url :info_url,                  message: 'must be a valid url'
+      validates_unique :unique_id,              message: Sequel.lit('Service ids must be unique')
+      validates_max_length 2048, :tag_contents, message: Sequel.lit("Service tags for service #{label} must be 2048 characters or less.")
 
       if v2?
         validates_unique :label, message: Sequel.lit('Service name must be unique') do |ds|
@@ -88,6 +89,10 @@ module VCAP::CloudController
 
     def tags
       super || []
+    end
+
+    def tag_contents
+      tags.join
     end
 
     def requires

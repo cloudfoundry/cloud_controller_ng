@@ -1183,8 +1183,6 @@ module VCAP::CloudController
             }.to_json
           end
 
-          let(:max_tags) { build_max_tags }
-
           let(:update_body) do
             {
               tags: max_tags
@@ -1220,8 +1218,6 @@ module VCAP::CloudController
           end
 
           context 'when the tags passed in are too long' do
-            let(:max_tags) { build_max_tags }
-
             it 'returns service instance tags too long message correctly' do
               body = {
                 tags: max_tags + ['z'],
@@ -3176,7 +3172,7 @@ module VCAP::CloudController
       it 'returns service instance tags too long message correctly' do
         service_instance_params = {
           name: 'sweet name',
-          tags: ['a' * 256],
+          tags: ['a' * 2049],
           space_guid: space.guid,
           service_plan_guid: free_plan.guid
         }
@@ -3361,13 +3357,8 @@ module VCAP::CloudController
       ServiceInstance.last
     end
 
-    # Construct an array of unique tags with 255 characters total
-    def build_max_tags
-      tags = []
-      (10..94).each do |i|
-        tags.push('a' + i.to_s)
-      end
-      tags
+    def max_tags
+      ['a' * 1024, 'b' * 1024] # 2048 characters
     end
   end
 end

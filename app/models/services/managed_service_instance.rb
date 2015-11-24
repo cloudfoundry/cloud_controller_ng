@@ -241,7 +241,7 @@ module VCAP::CloudController
     end
 
     def validate_tags_length
-      if tags.join('').length > 255
+      if tags.join('').length > 2048
         @errors[:tags] = [:too_long]
       end
     end

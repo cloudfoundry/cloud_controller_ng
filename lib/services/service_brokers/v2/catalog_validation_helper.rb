@@ -32,6 +32,15 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    def validate_tags!(name, input)
+      if !validate_array_of_strings!(name, input) && !input.empty?
+        tags_length = input.join.length
+        unless tags_length <= 2048
+          errors.add("Tags for the service #{@name} must be 2048 characters or less.")
+        end
+      end
+    end
+
     def validate_array_of_hashes!(name, input)
       unless is_an_array_of(Hash, input)
         errors.add("#{human_readable_attr_name(name)} must be an array of hashes, but has value #{input.inspect}")

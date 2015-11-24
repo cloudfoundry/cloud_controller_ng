@@ -91,6 +91,15 @@ module VCAP::CloudController
           }.to raise_error('label and provider is taken')
         end
       end
+
+      context 'when the tags are longer than 2048 characters' do
+        it 'raises an error on save' do
+          super_long_tag = 'a' * 2049
+          expect {
+            Service.make(:v2, label: 'super-long-service', tags: [super_long_tag])
+          }.to raise_error('Service tags for service super-long-service must be 2048 characters or less.')
+        end
+      end
     end
 
     describe 'Serialization' do

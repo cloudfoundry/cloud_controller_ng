@@ -51,7 +51,7 @@ module VCAP::Services::ServiceBrokers::V2
       validate_bool!(:bindable, bindable, required: true)
       validate_bool!(:plan_updateable, plan_updateable, required: true)
 
-      validate_array_of_strings!(:tags, tags)
+      validate_tags!(:tags, tags)
       validate_array_of_strings!(:requires, requires)
 
       validate_hash!(:metadata, metadata) if metadata

@@ -48,7 +48,7 @@ module VCAP::CloudController
       elsif service_instance_name_errors.include?(:presence)
         return Errors::ApiError.new_from_details('ServiceInstanceNameEmpty', attributes['name'])
       elsif service_instance_tags_errors.include?(:too_long)
-        return Errors::ApiError.new_from_details('ServiceInstanceTagsTooLong')
+        return Errors::ApiError.new_from_details('ServiceInstanceTagsTooLong', attributes['name'])
       elsif service_instance_errors.include?(:route_binding_not_allowed)
         return Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
       elsif service_instance_errors.include?(:space_mismatch)

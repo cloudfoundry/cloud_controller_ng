@@ -87,7 +87,7 @@ module VCAP::CloudController
 
         context 'when there is a validation failure' do
           it 'unlocks the service instance' do
-            tags = ['a'] * 1000
+            tags = ['a'] * 2049
             expect {
               service_instance_update.update_service_instance(service_instance, { 'tags' => tags })
             }.to raise_error(Sequel::ValidationFailed, /too_long/)

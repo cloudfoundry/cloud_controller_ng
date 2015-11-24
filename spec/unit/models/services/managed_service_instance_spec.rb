@@ -34,29 +34,29 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :space }
       it { is_expected.to validate_uniqueness [:space_id, :name] }
       it { is_expected.to strip_whitespace :name }
-      let(:max_tags) { build_max_tags }
+      let(:max_tags) { ['a' * 1024, 'b' * 1024] }
 
-      it 'accepts user-provided tags where combined length of all tags is exactly 255 characters' do
+      it 'accepts user-provided tags where combined length of all tags is exactly 2048 characters' do
         expect {
           ManagedServiceInstance.make tags: max_tags
         }.not_to raise_error
       end
 
-      it 'accepts user-provided tags where combined length of all tags is less than 255 characters' do
+      it 'accepts user-provided tags where combined length of all tags is less than 2048 characters' do
         expect {
           ManagedServiceInstance.make tags: max_tags[0..50]
         }.not_to raise_error
       end
 
-      it 'does not accept user-provided tags with combined length of over 255 characters' do
+      it 'does not accept user-provided tags with combined length of over 2048 characters' do
         expect {
           ManagedServiceInstance.make tags: max_tags + ['z']
         }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
-      it 'does not accept a single user-provided tag of length greater than 255 characters' do
+      it 'does not accept a single user-provided tag of length greater than 2048 characters' do
         expect {
-          ManagedServiceInstance.make tags: ['a' * 256]
+          ManagedServiceInstance.make tags: ['a' * 2049]
         }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
@@ -768,15 +768,6 @@ module VCAP::CloudController
           expect(service_instance.to_hash['dashboard_url']).to eq('')
         end
       end
-    end
-
-    # Construct an array of unique tags with 255 characters total
-    def build_max_tags
-      tags = []
-      (10..94).each do |i|
-        tags.push('a' + i.to_s)
-      end
-      tags
     end
   end
 end

@@ -236,7 +236,7 @@
 60015:
   name: ServiceInstanceTagsTooLong
   http_code: 400
-  message: "Combined length of tags must be 255 characters or less."
+  message: "Combined length of tags for service %s must be 2048 characters or less."
 
 60016:
   name: AsyncServiceInstanceOperationInProgress
