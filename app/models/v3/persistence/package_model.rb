@@ -34,9 +34,5 @@ module VCAP::CloudController
         where(AppModel.user_visibility_filter(user)).
         select_all(PackageModel.table_name)
     end
-
-    def stage_with_diego?
-      false
-    end
   end
 end
