@@ -4,7 +4,7 @@ describe PortsPolicy do
   let!(:app) { VCAP::CloudController::AppFactory.make }
   let(:validator) { PortsPolicy.new(app) }
 
-  context 'invalid apps' do
+  context 'invalid apps request' do
     it 'registers error a provided port is not an integer' do
       app.diego = true
       app.ports = [1, 2, 'foo']
@@ -21,6 +21,12 @@ describe PortsPolicy do
 
       app.ports = [500, 70_000]
       expect(validator).to validate_with_error(app, :ports, 'must be in valid port range')
+    end
+
+    it 'registers an error if the ports limit is exceeded' do
+      app.diego = true
+      app.ports = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+      expect(validator).to validate_with_error(app, :ports, 'Maximum of 10 app ports allowed.')
     end
   end
 

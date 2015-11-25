@@ -7,6 +7,7 @@ class PortsPolicy
   def validate
     return if @app.ports.nil? || @app.ports.empty?
     return @errors.add(:ports, 'Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.') if !@app.diego
+    return @errors.add(:ports, 'Maximum of 10 app ports allowed.') if ports_limit_exceeded?
     return @errors.add(:ports, 'must be integers') unless all_ports_are_integers?
     @errors.add(:ports, 'must be in valid port range') unless all_ports_are_in_range?
   end
@@ -21,5 +22,9 @@ class PortsPolicy
     @app.ports.all? do |port|
       port > 0 && port <= 65535
     end
+  end
+
+  def ports_limit_exceeded?
+    @app.ports.length > 10
   end
 end
