@@ -91,9 +91,12 @@ class PackagesController < ApplicationController
   def stage
     package = PackageModel.where(guid: params[:guid]).eager(:app, :space, space: :organization).all.first
     package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+    if package.type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?
+      FeatureFlag.raise_unless_enabled!('diego_docker')
+    end
 
-    app_lifecycle = package.app.lifecycle_data
-    assembled_request  = DropletStageRequestBuilder.new.build(params[:body], app_lifecycle)
+    lifecycle = package.app.lifecycle_data
+    assembled_request  = DropletStageRequestBuilder.new.build(params[:body], lifecycle)
     staging_message = DropletCreateMessage.create_from_http_request(assembled_request)
     unprocessable!(staging_message.errors.full_messages) unless staging_message.valid?
 

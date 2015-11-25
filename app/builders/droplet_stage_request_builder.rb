@@ -1,30 +1,30 @@
 module VCAP::CloudController
   class DropletStageRequestBuilder
-    def build(request, app_data)
-      return build_data_defaults(request, app_data)      if request['lifecycle']
-      return build_lifecycle_defaults(request, app_data) if request['lifecycle'].nil?
+    def build(request_body, app_data)
+      return build_data_defaults(request_body, app_data)      if request_body['lifecycle']
+      return build_lifecycle_defaults(request_body, app_data) if request_body['lifecycle'].nil?
     end
 
     private
 
-    def build_data_defaults(request, app_data)
-      data = request['lifecycle']['data']
-      return request if data.nil?
+    def build_data_defaults(request_body, app_data)
+      request_data = request_body['lifecycle']['data']
+      return request_body if request_data.nil? || request_body['lifecycle']['type'] == VCAP::CloudController::PackageModel::DOCKER_TYPE
 
-      request['lifecycle']['data']['buildpack'] = default_buildpack(app_data, data)
-      request['lifecycle']['data']['stack'] = default_stack(app_data, data)
-      request
+      request_body['lifecycle']['data']['buildpack'] = default_buildpack(app_data, request_data)
+      request_body['lifecycle']['data']['stack'] = default_stack(app_data, request_data)
+      request_body
     end
 
-    def build_lifecycle_defaults(request, app_data)
-      request['lifecycle'] = {
+    def build_lifecycle_defaults(request_body, app_data)
+      request_body['lifecycle'] = {
         'type' => 'buildpack',
         'data' => {
           'buildpack' => default_buildpack(app_data),
           'stack' => default_stack(app_data)
         }
       }
-      request
+      request_body
     end
 
     def default_buildpack(app_data, incoming_data={})

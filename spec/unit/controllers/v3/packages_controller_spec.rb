@@ -609,11 +609,12 @@ describe PackagesController, type: :controller do
 
   describe '#stage' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
-                                                             type: VCAP::CloudController::PackageModel::BITS_TYPE,
-                                                             state: VCAP::CloudController::PackageModel::READY_STATE)
-    }
     let(:stagers) { double(:stagers) }
+    let(:package) do
+      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
+                                               type: VCAP::CloudController::PackageModel::BITS_TYPE,
+                                               state: VCAP::CloudController::PackageModel::READY_STATE)
+    end
 
     before do
       @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
@@ -621,7 +622,11 @@ describe PackagesController, type: :controller do
       allow(membership).to receive(:has_any_roles?).and_return(true)
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
       allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(
+        app: app_model,
+        buildpack: nil,
+        stack: VCAP::CloudController::Stack.default.name
+      )
     end
 
     it 'returns a 201 Created response' do
@@ -648,70 +653,6 @@ describe PackagesController, type: :controller do
           post :stage, guid: package.guid
         }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
         expect(response.status).to eq 201
-      end
-    end
-
-    describe 'buildpack request' do
-      let(:req_body) { { lifecycle: { type: 'buildpack', data: {  buildpack: buildpack_request } } } }
-      let(:buildpack) { VCAP::CloudController::Buildpack.make }
-
-      context 'when a git url is requested' do
-        let(:buildpack_request) { 'http://dan-and-zach-awesome-pack.com' }
-
-        it 'works with a valid url' do
-          post :stage, { guid: package.guid, body: req_body }
-
-          expect(response.status).to eq(201)
-          expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq('http://dan-and-zach-awesome-pack.com')
-        end
-
-        context 'when the url is invalid' do
-          let(:buildpack_request) { 'totally-broke!' }
-
-          it 'returns a 422' do
-            post :stage, { guid: package.guid, body: req_body }
-
-            expect(response.status).to eq(422)
-            expect(response.body).to include('UnprocessableEntity')
-          end
-        end
-      end
-
-      context 'when the buildpack is not a url' do
-        let(:buildpack_request) { buildpack.name }
-
-        it 'uses buildpack by name' do
-          post :stage, { guid: package.guid, body: req_body }
-
-          expect(response.status).to eq(201)
-          expect(VCAP::CloudController::DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(buildpack.name)
-        end
-
-        context 'when the buildpack does not exist' do
-          let(:buildpack_request) { 'notfound' }
-
-          it 'returns a 422' do
-            post :stage, { guid: package.guid, body: req_body }
-
-            expect(response.status).to eq(422)
-            expect(response.body).to include('UnprocessableEntity')
-          end
-        end
-      end
-
-      context 'when buildpack is not requsted and app has a buildpack' do
-        let(:req_body) { {} }
-
-        before do
-          VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: buildpack.name, stack: VCAP::CloudController::Stack.default.name)
-        end
-
-        it 'uses the apps buildpack' do
-          post :stage, { guid: package.guid, body: req_body }
-
-          expect(response.status).to eq(201)
-          expect(VCAP::CloudController::DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
-        end
       end
     end
 
@@ -779,6 +720,168 @@ describe PackagesController, type: :controller do
 
         expect(response.status).to eq(403)
         expect(response.body).to include('NotAuthorized')
+      end
+    end
+
+    describe 'buildpack lifecycle' do
+      describe 'buildpack request' do
+        let(:req_body) { { lifecycle: { type: 'buildpack', data: {  buildpack: buildpack_request } } } }
+        let(:buildpack) { VCAP::CloudController::Buildpack.make }
+
+        context 'when a git url is requested' do
+          let(:buildpack_request) { 'http://dan-and-zach-awesome-pack.com' }
+
+          it 'works with a valid url' do
+            post :stage, { guid: package.guid, body: req_body }
+
+            expect(response.status).to eq(201)
+            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq('http://dan-and-zach-awesome-pack.com')
+          end
+
+          context 'when the url is invalid' do
+            let(:buildpack_request) { 'totally-broke!' }
+
+            it 'returns a 422' do
+              post :stage, { guid: package.guid, body: req_body }
+
+              expect(response.status).to eq(422)
+              expect(response.body).to include('UnprocessableEntity')
+            end
+          end
+        end
+
+        context 'when the buildpack is not a url' do
+          let(:buildpack_request) { buildpack.name }
+
+          it 'uses buildpack by name' do
+            post :stage, { guid: package.guid, body: req_body }
+
+            expect(response.status).to eq(201)
+            expect(VCAP::CloudController::DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(buildpack.name)
+          end
+
+          context 'when the buildpack does not exist' do
+            let(:buildpack_request) { 'notfound' }
+
+            it 'returns a 422' do
+              post :stage, { guid: package.guid, body: req_body }
+
+              expect(response.status).to eq(422)
+              expect(response.body).to include('UnprocessableEntity')
+            end
+          end
+        end
+
+        context 'when buildpack is not requested and app has a buildpack' do
+          let(:req_body) { {} }
+
+          before do
+            VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: buildpack.name, stack: VCAP::CloudController::Stack.default.name)
+          end
+
+          it 'uses the apps buildpack' do
+            post :stage, { guid: package.guid, body: req_body }
+
+            expect(response.status).to eq(201)
+            expect(VCAP::CloudController::DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
+          end
+        end
+      end
+    end
+
+    describe 'docker lifecycle' do
+      let(:docker_app_model) { VCAP::CloudController::AppModel.make }
+      let(:req_body) { { lifecycle: { type: 'docker' } } }
+      let!(:package) do
+        VCAP::CloudController::PackageModel.make(:docker,
+                                                 app_guid: docker_app_model.guid,
+                                                 type: VCAP::CloudController::PackageModel::DOCKER_TYPE,
+                                                 state: VCAP::CloudController::PackageModel::READY_STATE
+                                                )
+      end
+
+      before do
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(
+          app: docker_app_model,
+          buildpack: nil,
+          stack: VCAP::CloudController::Stack.default.name
+        )
+      end
+
+      context 'when diego_docker is enabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+        end
+
+        it 'returns a 201 Created response' do
+          expect {
+            post :stage, guid: package.guid, body: req_body
+          }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
+          expect(response.status).to eq 201
+        end
+
+        context 'when the user does not provide lifecycle type in the request body' do
+          let(:req_body) { {} }
+
+          it 'raises 422 InvalidRequest' do
+            post :stage, guid: package.guid, body: req_body
+
+            expect(response.status).to eq(400)
+            expect(response.body).to include('InvalidRequest')
+          end
+        end
+
+        context 'when the user adds additional body parameters' do
+          let(:req_body) do
+            {
+              lifecycle:
+              {
+                type: 'docker',
+                data:
+                {
+                  foobar: 'iamverysmart'
+                }
+              }
+            }
+          end
+
+          it 'raises a 422' do
+            post :stage, guid: package.guid, body: req_body
+
+            expect(response.status).to eq(422)
+            expect(response.body).to include('UnprocessableEntity')
+          end
+        end
+      end
+
+      context 'when diego_docker is disabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+        end
+
+        context 'non-admin user' do
+          it 'raises 403' do
+            post :stage, guid: package.guid, body: req_body
+
+            expect(response.status).to eq(403)
+            expect(response.body).to include('FeatureDisabled')
+            expect(response.body).to include('diego_docker')
+          end
+        end
+
+        context 'admin user' do
+          before do
+            @request.env.merge!(json_headers(admin_headers))
+            allow(membership).to receive(:has_any_roles?).and_return(false)
+          end
+
+          it 'returns a 201 Created response and creates a droplet' do
+            expect {
+              post :stage, guid: package.guid, body: req_body
+            }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
+            expect(response.status).to eq 201
+          end
+        end
       end
     end
 

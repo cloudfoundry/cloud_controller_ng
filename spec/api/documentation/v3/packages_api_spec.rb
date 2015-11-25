@@ -442,7 +442,8 @@ resource 'Packages (Experimental)', type: :api do
               buildpack: 'http://github.com/myorg/awesome-buildpack',
               stack:     'cflinuxfs2'
             }
-          }, pretty: true)
+          }, pretty: true),
+        MultiJson.dump({ type: 'docker' }, pretty: true)
       ]
 
     let(:space) { VCAP::CloudController::Space.make }
