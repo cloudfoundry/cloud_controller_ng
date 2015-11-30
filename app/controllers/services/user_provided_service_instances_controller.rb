@@ -56,7 +56,7 @@ module VCAP::CloudController
     end
 
     def update(guid)
-      request_attrs = decode_update_request_attrs
+      @request_attrs = decode_update_request_attrs
 
       logger.debug 'cc.update', guid: guid, attributes: request_attrs
       raise Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs

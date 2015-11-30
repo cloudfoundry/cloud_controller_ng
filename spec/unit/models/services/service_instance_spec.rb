@@ -79,6 +79,24 @@ module VCAP::CloudController
         end
       end
 
+      describe 'when one service instance is renamed to an existing service instance name' do
+        let(:space) { VCAP::CloudController::Space.make }
+        let(:service_instance_attrs_foo) { { name: 'foo', space: space } }
+        let(:service_instance_attrs_bar) { { name: 'bar', space: space } }
+
+        describe 'when both service instances are user provided service instances' do
+          let!(:service_instance_foo) { UserProvidedServiceInstance.create(service_instance_attrs_foo) }
+          let!(:service_instance_bar) { UserProvidedServiceInstance.create(service_instance_attrs_bar) }
+
+          it 'raises an exception when renaming the service' do
+            expect {
+              service_instance_foo.set_all(name: 'bar')
+              service_instance_foo.save_changes
+            }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
+          end
+        end
+      end
+
       describe 'when two are created with the same name' do
         describe 'when a UserProvidedServiceInstance exists' do
           before { UserProvidedServiceInstance.create(service_instance_attrs) }

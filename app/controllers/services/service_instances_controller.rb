@@ -286,14 +286,14 @@ module VCAP::CloudController
     private
 
     def validate_create_request
-      request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
+      @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
       logger.debug('cc.create', model: self.class.model_class_name, attributes: request_attrs)
       invalid_request! unless request_attrs
       request_attrs
     end
 
     def validate_update_request(guid)
-      request_attrs = self.class::UpdateMessage.decode(body).extract(stringify_keys: true)
+      @request_attrs = self.class::UpdateMessage.decode(body).extract(stringify_keys: true)
       logger.debug('cc.update', guid: guid, attributes: request_attrs)
       invalid_request! unless request_attrs
       request_attrs

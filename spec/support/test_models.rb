@@ -55,7 +55,7 @@ module VCAP::CloudController
       do_delete(obj)
     end
 
-    def self.translate_validation_exception(e, attributes)
+    def self.translate_validation_exception(_, attributes)
       Errors::ApiError.new_from_details('TestModelValidation', attributes['unique_value'])
     end
   end

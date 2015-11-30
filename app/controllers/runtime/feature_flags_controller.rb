@@ -6,7 +6,7 @@ module VCAP::CloudController
       "#{V2_ROUTE_PREFIX}/config/feature_flags"
     end
 
-    def self.translate_validation_exception(e, attributes)
+    def self.translate_validation_exception(e, _)
       Errors::ApiError.new_from_details('FeatureFlagInvalid', e.errors.full_messages)
     end
 

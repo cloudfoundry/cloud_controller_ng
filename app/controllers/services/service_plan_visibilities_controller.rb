@@ -16,7 +16,7 @@ module VCAP::CloudController
       @services_event_repository = dependencies.fetch(:services_event_repository)
     end
 
-    def self.translate_validation_exception(e, attributes)
+    def self.translate_validation_exception(e, _)
       associations_errors = e.errors.on([:organization_id, :service_plan_id])
       if associations_errors && associations_errors.include?(:unique)
         Errors::ApiError.new_from_details('ServicePlanVisibilityAlreadyExists', e.errors.full_messages)

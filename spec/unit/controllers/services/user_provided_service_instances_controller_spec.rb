@@ -122,6 +122,26 @@ module VCAP::CloudController
         expect(service_instance.route_service_url).to eq 'https://route.url.com'
       end
 
+      context 'when the new service instance name is taken' do
+        let(:service_instance_attrs) { { name: 'foo', space: space } }
+        let(:service_instance)  { UserProvidedServiceInstance.make(service_instance_attrs) }
+
+        let(:req_dup) do
+          {
+          'name'              => service_instance.name,
+          'space_guid'        => service_instance.space.guid
+          }
+        end
+
+        it 'fails and returns service instance name is taken' do
+          post '/v2/user_provided_service_instances', req_dup.to_json, headers_for(developer)
+
+          expect(last_response).to have_status_code(400)
+          expect(decoded_response['code']).to eq(60002)
+          expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTaken')
+        end
+      end
+
       it 'records a create event' do
         post '/v2/user_provided_service_instances', req.to_json, headers_for(developer, email: email)
 
@@ -211,6 +231,22 @@ module VCAP::CloudController
                 'credentials' => '[REDACTED]'
               }
             })
+      end
+
+      context 'when the updated service instance name is taken' do
+        let(:service_instance_attrs_foo) { { name: 'foo', space: space } }
+        let(:service_instance_attrs_bar) { { name: 'bar', space: space } }
+        let(:service_instance_foo)  { UserProvidedServiceInstance.make(service_instance_attrs_foo) }
+        let(:service_instance_bar)  { UserProvidedServiceInstance.make(service_instance_attrs_bar) }
+
+        it 'fails and returns service instance name is taken' do
+          put "/v2/user_provided_service_instances/#{service_instance_foo.guid}",
+            MultiJson.dump(name: service_instance_bar.name), headers_for(developer)
+
+          expect(last_response).to have_status_code(400)
+          expect(decoded_response['code']).to eq(60002)
+          expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTaken')
+        end
       end
 
       describe 'the space_guid parameter' do
