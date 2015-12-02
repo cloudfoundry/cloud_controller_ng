@@ -480,32 +480,30 @@ module VCAP::CloudController
       end
 
       context 'when app is diego app' do
-        let(:app_obj) { AppFactory.make(instances: 1, diego: true) }
-        context 'when custom ports are specified' do
-          it 'sets ports to user specified values' do
-            put "/v2/apps/#{app_obj.guid}", '{ "ports": [9090,5222] }', json_headers(headers_for(developer))
+        let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
+
+        it 'sets ports to user specified values' do
+          put "/v2/apps/#{app_obj.guid}", '{ "ports": [1883,5222] }', json_headers(headers_for(developer))
+          expect(last_response.status).to eq(201)
+          expect(decoded_response['entity']['ports']).to match([1883, 5222])
+          expect(decoded_response['entity']['diego']).to be true
+        end
+
+        context 'when not updating ports' do
+          it 'should keep previously specified custom ports' do
+            put "/v2/apps/#{app_obj.guid}", '{ "instances":2 }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
             expect(decoded_response['entity']['ports']).to match([9090, 5222])
             expect(decoded_response['entity']['diego']).to be true
           end
         end
 
-        context 'when existing app had custom ports' do
-          let(:app_obj) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
-          it 'sets ports to user specified values' do
-            put "/v2/apps/#{app_obj.guid}", '{ "ports": [1883,5222] }', json_headers(headers_for(developer))
+        context 'when the user sets ports to an empty array' do
+          it 'should keep previously specified custom ports' do
+            put "/v2/apps/#{app_obj.guid}", '{ "ports":[] }', json_headers(headers_for(developer))
             expect(last_response.status).to eq(201)
-            expect(decoded_response['entity']['ports']).to match([1883, 5222])
+            expect(decoded_response['entity']['ports']).to match([9090, 5222])
             expect(decoded_response['entity']['diego']).to be true
-          end
-
-          context 'when not updating ports' do
-            it 'should keep previously specified custom ports' do
-              put "/v2/apps/#{app_obj.guid}", '{ "instances":2 }', json_headers(headers_for(developer))
-              expect(last_response.status).to eq(201)
-              expect(decoded_response['entity']['ports']).to match([9090, 5222])
-              expect(decoded_response['entity']['diego']).to be true
-            end
           end
         end
       end

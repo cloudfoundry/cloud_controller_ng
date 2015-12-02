@@ -147,7 +147,14 @@ module VCAP::CloudController
     def before_update(app)
       verify_enable_ssh(app.space)
       updated_diego_flag = request_attrs['diego']
+      ignore_empty_ports! if request_attrs['ports'] == []
       setup_default_ports(update: true) if updating_diego_flag?(app.diego, updated_diego_flag)
+    end
+
+    def ignore_empty_ports!
+      @request_attrs = @request_attrs.deep_dup
+      @request_attrs.delete 'ports'
+      @request_attrs.freeze
     end
 
     def setup_default_ports(opts={})

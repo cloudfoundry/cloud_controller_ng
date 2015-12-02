@@ -2435,6 +2435,29 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when updating app ports' do
+        let!(:app) { AppFactory.make(diego: true, state: 'STARTED') }
+
+        before do
+          allow(AppObserver).to receive(:updated).with(app)
+        end
+
+        it 'calls the app observer with the app', isolation: :truncation do
+          expect(AppObserver).not_to have_received(:updated).with(app)
+          app.ports = [1111, 2222]
+          app.save
+          expect(AppObserver).to have_received(:updated).with(app)
+        end
+
+        it 'updates the app version' do
+          expect {
+            app.ports = [1111, 2222]
+            app.memory = 2048
+            app.save
+          }.to change(app, :version)
+        end
+      end
     end
 
     describe '#needs_package_in_current_state?' do

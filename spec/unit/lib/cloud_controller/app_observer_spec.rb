@@ -278,6 +278,52 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the ports on the app has changed' do
+        let(:previous_changes) { { ports: [8001, 1212] } }
+
+        context 'if the desired state of the app is stopped' do
+          let(:app_started) { false }
+
+          it 'stops the app' do
+            expect(runner).to receive(:stop)
+            subject
+          end
+
+          it 'does not start the app' do
+            expect(runner).to_not receive(:start)
+            subject
+          end
+        end
+
+        context 'if the desired state of the app is started' do
+          let(:app_started) { true }
+
+          it 'does not stop the app' do
+            expect(runner).to_not receive(:stop)
+            subject
+          end
+
+          context 'when the app needs staging' do
+            let(:app_needs_staging) { true }
+
+            it 'validates and stages the app' do
+              expect(stagers).to receive(:validate_app).with(app)
+              expect(stager).to receive(:stage)
+              subject
+            end
+          end
+
+          context 'when the app does not need staging' do
+            let(:app_needs_staging) { false }
+
+            it 'starts the app' do
+              expect(runner).to receive(:start)
+              subject
+            end
+          end
+        end
+      end
     end
 
     describe '.routes_changed' do

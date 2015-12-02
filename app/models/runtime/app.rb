@@ -172,13 +172,17 @@ module VCAP::CloudController
       # * memory is changed
       # * health check type is changed
       # * enable_ssh is changed
+      # * ports are changed
       #
       # this is to indicate that the running state of an application has changed,
       # and that the system should converge on this new version.
+
       (column_changed?(:state) ||
        column_changed?(:memory) ||
        column_changed?(:health_check_type) ||
-       column_changed?(:enable_ssh)) && started?
+       column_changed?(:enable_ssh) ||
+       changed_columns.include?(:ports)
+      ) && started?
     end
 
     def set_new_version
