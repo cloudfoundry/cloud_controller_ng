@@ -269,6 +269,14 @@ module VCAP::CloudController
               expect(decoded_response['entity']['diego']).to be true
             end
           end
+
+          context 'when the custom port is not in the valid range 1024-65535' do
+            it 'return an error' do
+              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: true, ports: [9090, 500])), json_headers(admin_headers)
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['description']).to include('Ports must be in the 1024-65535.')
+            end
+          end
         end
 
         context 'when diego is set to false' do

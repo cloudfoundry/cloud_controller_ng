@@ -2473,14 +2473,14 @@ module VCAP::CloudController
 
     describe 'ports' do
       it 'serializes and deserializes arrays of integers' do
-        app = App.make(diego: true, ports: [1, 2, 3, 4])
-        expect(app.ports).to eq([1, 2, 3, 4])
+        app = App.make(diego: true, ports: [1025, 1026, 1027, 1028])
+        expect(app.ports).to eq([1025, 1026, 1027, 1028])
 
         app = App.make(diego: true, ports: [])
         expect(app.ports).to eq(nil)
 
-        app = App.make(diego: true, ports: [1])
-        expect(app.ports).to eq([1])
+        app = App.make(diego: true, ports: [1024])
+        expect(app.ports).to eq([1024])
       end
     end
   end

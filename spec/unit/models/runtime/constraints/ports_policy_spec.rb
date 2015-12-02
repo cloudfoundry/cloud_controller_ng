@@ -13,14 +13,17 @@ describe PortsPolicy do
 
     it 'registers error if an out of range port is requested' do
       app.diego = true
-      app.ports = [500, 0]
-      expect(validator).to validate_with_error(app, :ports, 'must be in valid port range')
+      app.ports = [1024, 0]
+      expect(validator).to validate_with_error(app, :ports, 'Ports must be in the 1024-65535.')
 
-      app.ports = [500, -1]
-      expect(validator).to validate_with_error(app, :ports, 'must be in valid port range')
+      app.ports = [1024, -1]
+      expect(validator).to validate_with_error(app, :ports, 'Ports must be in the 1024-65535.')
 
-      app.ports = [500, 70_000]
-      expect(validator).to validate_with_error(app, :ports, 'must be in valid port range')
+      app.ports = [1024, 70_000]
+      expect(validator).to validate_with_error(app, :ports, 'Ports must be in the 1024-65535.')
+
+      app.ports = [1024, 1023]
+      expect(validator).to validate_with_error(app, :ports, 'Ports must be in the 1024-65535.')
     end
 
     it 'registers an error if the ports limit is exceeded' do
@@ -54,7 +57,7 @@ describe PortsPolicy do
 
     it 'does not register error if valid ports are requested' do
       app.diego = true
-      app.ports = [500, 600, 65535]
+      app.ports = [2000, 3000, 65535]
       expect(validator).to validate_without_error(app)
     end
   end
