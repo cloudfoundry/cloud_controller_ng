@@ -96,7 +96,14 @@ module VCAP::CloudController
             context 'when image was cached' do
               let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id', docker_image: 'user_provided') }
 
-              before { app.current_droplet.cached_docker_image = 'cached' }
+              before do
+                app.add_droplet(Droplet.new(
+                                      app: app,
+                                      droplet_hash: 'the-droplet-hash',
+                                      cached_docker_image: 'cached',
+                                  ))
+                app.droplet_hash = 'the-droplet-hash'
+              end
 
               it 'clears the cached_docker_image' do
                 handler.staging_complete(staging_guid, payload)

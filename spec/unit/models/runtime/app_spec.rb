@@ -2472,15 +2472,111 @@ module VCAP::CloudController
     end
 
     describe 'ports' do
-      it 'serializes and deserializes arrays of integers' do
-        app = App.make(diego: true, ports: [1025, 1026, 1027, 1028])
-        expect(app.ports).to eq([1025, 1026, 1027, 1028])
+      context 'serialization' do
+        it 'serializes and deserializes arrays of integers' do
+          app = App.make(diego: true, ports: [1025, 1026, 1027, 1028])
+          expect(app.ports).to eq([1025, 1026, 1027, 1028])
 
-        app = App.make(diego: true, ports: [])
-        expect(app.ports).to eq(nil)
+          app = App.make(diego: true, ports: [])
+          expect(app.ports).to eq(nil)
 
-        app = App.make(diego: true, ports: [1024])
-        expect(app.ports).to eq([1024])
+          app = App.make(diego: true, ports: [1024])
+          expect(app.ports).to eq([1024])
+        end
+      end
+
+      context 'docker app' do
+        context 'when app is not staged' do
+          it 'returns the ports that were specified during creation' do
+            app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING')
+            expect(app.ports).to eq(nil)
+          end
+        end
+
+        context 'when app is staged' do
+          context 'when some tcp ports are exposed' do
+            it 'returns the ports that were specified during creation' do
+              app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
+              app.add_droplet(Droplet.new(
+                                   app: app,
+                                   droplet_hash: 'the-droplet-hash',
+                                   execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
+                               ))
+              app.droplet_hash = 'the-droplet-hash'
+              expect(app.ports).to eq([1024, 1025])
+            end
+          end
+
+          context 'when no tcp ports are exposed' do
+            it 'returns the ports that were specified during creation' do
+              app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
+              app.add_droplet(Droplet.new(
+                                  app: app,
+                                  droplet_hash: 'the-droplet-hash',
+                                  execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
+                              ))
+              app.droplet_hash = 'the-droplet-hash'
+              expect(app.ports).to eq([])
+            end
+          end
+
+          context 'when execution metadata is malformed' do
+            it 'returns the ports that were specified during creation' do
+              app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
+              app.add_droplet(Droplet.new(
+                                  app: app,
+                                  droplet_hash: 'the-droplet-hash',
+                                  execution_metadata: 'some-invalid-json',
+                              ))
+              app.droplet_hash = 'the-droplet-hash'
+              expect(app.ports).to eq([])
+            end
+          end
+
+          context 'when no ports are specified in the execution metadata' do
+            it 'returns the ports that were specified during creation' do
+              app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
+              app.add_droplet(Droplet.new(
+                                  app: app,
+                                  droplet_hash: 'the-droplet-hash',
+                                  execution_metadata: '{"cmd":"run.sh"}',
+                              ))
+              app.droplet_hash = 'the-droplet-hash'
+              expect(app.ports).to eq([])
+            end
+          end
+        end
+      end
+
+      context 'buildpack app' do
+        context 'when app is not staged' do
+          it 'returns the ports that were specified during creation' do
+            app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'PENDING')
+            expect(app.ports).to eq([1025, 1026, 1027, 1028])
+          end
+        end
+
+        context 'when app is staged' do
+          context 'with no execution_metadata' do
+            it 'returns the ports that were specified during creation' do
+              app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
+              expect(app.ports).to eq([1025, 1026, 1027, 1028])
+            end
+          end
+
+          context 'with execution_metadata' do
+            it 'returns the ports that were specified during creation' do
+              app = App.make(diego: true, ports: [1025, 1026, 1027, 1028], package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
+              app.add_droplet(Droplet.new(
+                                  app: app,
+                                  droplet_hash: 'the-droplet-hash',
+                                  execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
+                              ))
+              app.droplet_hash = 'the-droplet-hash'
+              expect(app.ports).to eq([1025, 1026, 1027, 1028])
+            end
+          end
+        end
       end
     end
   end

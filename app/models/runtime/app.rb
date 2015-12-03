@@ -617,7 +617,32 @@ module VCAP::CloudController
       mark_routes_changed(route)
     end
 
+    def ports
+      if self.docker_image.present? && diego?
+        return docker_ports
+      end
+      super
+    end
+
     private
+
+    def docker_ports
+      if !self.needs_staging? && !self.current_saved_droplet.nil? && self.execution_metadata.present?
+        exposed_ports = []
+        begin
+          metadata = JSON.parse(self.execution_metadata)
+          unless metadata['ports'].nil?
+            metadata['ports'].each { |port|
+              if port['Protocol'] == 'tcp'
+                exposed_ports << port['Port']
+              end
+            }
+          end
+        rescue JSON::ParserError
+        end
+        exposed_ports
+      end
+    end
 
     def mark_routes_changed(_=nil)
       routes_already_changed = @routes_changed
