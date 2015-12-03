@@ -70,6 +70,27 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class LifecycleValidator < ActiveModel::Validator
+    def validate(record)
+      data_message = {
+        'buildpack' => VCAP::CloudController::BuildpackLifecycleDataMessage
+      }
+
+      lifecycle_data_message_class = data_message[record.lifecycle_type]
+      if lifecycle_data_message_class.nil?
+        record.errors[:lifecycle_type].concat ['is invalid']
+        return
+      end
+
+      return unless record.lifecycle_data.is_a?(Hash)
+
+      lifecycle_data_message = lifecycle_data_message_class.new(record.lifecycle_data.symbolize_keys)
+      unless lifecycle_data_message.valid?
+        record.errors[:lifecycle].concat lifecycle_data_message.errors.full_messages
+      end
+    end
+  end
+
   class RelationshipValidator < ActiveModel::Validator
     def validate(record)
       return if !record.relationships.is_a?(Hash)

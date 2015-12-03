@@ -55,23 +55,10 @@ module VCAP::CloudController
         context 'when the stack is nil' do
           let(:params) { { stack: nil } }
 
-          it 'is not valid' do
+          it 'is valid' do
             message = BuildpackLifecycleDataMessage.new(params)
 
-            expect(message).not_to be_valid
-          end
-        end
-
-        describe '#stack_name_must_be_in_db' do
-          context 'when stack name is not in db' do
-            let(:params) { { stack: 'fake_stax' } }
-
-            it 'is not valid' do
-              message = BuildpackLifecycleDataMessage.new(params)
-
-              expect(message).not_to be_valid
-              expect(message.errors.full_messages[0]).to include('Stack is invalid')
-            end
+            expect(message).to be_valid
           end
         end
       end
@@ -99,7 +86,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the stack name exceeds 4096 characters' do
+        context 'when the buildpack name exceeds 4096 characters' do
           let(:long_string) { 'a' * 4097 }
           let(:params) { { buildpack: long_string } }
 
@@ -111,7 +98,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the stack is not requested' do
+        context 'when the buildpack is not requested' do
           let(:params) { { buildpack: nil } }
 
           it 'is valid' do

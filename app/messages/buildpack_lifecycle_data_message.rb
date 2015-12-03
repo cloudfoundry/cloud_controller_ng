@@ -14,6 +14,7 @@ module VCAP::CloudController
 
     validates :stack,
       string: true,
+      allow_nil: true,
       length: { in: 1..4096, message: 'must be between 1 and 4096 characters' },
       if: stack_requested?
 

@@ -351,7 +351,7 @@ describe AppsV3Controller, type: :controller do
 
             expect(response.status).to eq(422)
             expect(response.body).to include 'UnprocessableEntity'
-            expect(response.body).to include 'The request is semantically invalid: Lifecycle data must be present, Lifecycle data must be a hash'
+            expect(response.body).to include "The request is semantically invalid: Lifecycle data must be a hash, Lifecycle data can't be blank"
           end
         end
       end

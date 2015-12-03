@@ -252,6 +252,46 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'LifecycleValidator' do
+      class LifecycleMessage < VCAP::CloudController::BaseMessage
+        attr_accessor :lifecycle
+
+        validates_with LifecycleValidator
+
+        def allowed_keys
+          [:lifecycle]
+        end
+
+        def lifecycle_data
+          lifecycle[:data] || lifecycle['data']
+        end
+
+        def lifecycle_type
+          lifecycle[:type] || lifecycle['type']
+        end
+      end
+
+      context 'when the lifecycle type provided is invalid' do
+        it 'adds lifecycle_type error message to the base class' do
+          message = LifecycleMessage.new({ lifecycle: { type: 'not valid', data: {} } })
+
+          expect(message).not_to be_valid
+          expect(message.errors_on(:lifecycle_type)).to include('is invalid')
+        end
+      end
+
+      context 'when lifecycle type provided is buildpack' do
+        context 'when the buildpack lifecycle data is invalid' do
+          it 'correctly adds the buildpack data message validation errors' do
+            message = LifecycleMessage.new({ lifecycle: { type: 'buildpack', data: { buildpack: 123 } } })
+
+            expect(message).to_not be_valid
+            expect(message.errors_on(:lifecycle)).to include('Buildpack must be a string')
+          end
+        end
+      end
+    end
+
     describe 'RelationshipValidator' do
       class RelationshipMessage < VCAP::CloudController::BaseMessage
         attr_accessor :relationships

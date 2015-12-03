@@ -7,19 +7,22 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
-    validates_with NoAdditionalKeysValidator, RelationshipValidator, LifecycleDataValidator
-    BUILDPACK_LIFECYCLE = 'buildpack'
-    LIFECYCLE_TYPES = [BUILDPACK_LIFECYCLE].map(&:freeze).freeze
-
     def self.lifecycle_requested?
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
     end
+
+    validates_with NoAdditionalKeysValidator, RelationshipValidator
+    validates_with LifecycleValidator, if: lifecycle_requested?
+
+    BUILDPACK_LIFECYCLE = 'buildpack'
+    LIFECYCLE_TYPES = [BUILDPACK_LIFECYCLE].map(&:freeze).freeze
 
     validates :name, string: true
     validates :environment_variables, hash: true, allow_nil: true
     validates :relationships, hash: true, presence: true, allow_nil: false
 
     validates :lifecycle_type,
+      string: true,
       inclusion: { in: LIFECYCLE_TYPES, message: 'is invalid' },
       presence: true,
       if: lifecycle_requested?
@@ -27,6 +30,7 @@ module VCAP::CloudController
     validates :lifecycle_data,
       hash: true,
       allow_nil: false,
+      presence: true,
       if: lifecycle_requested?
 
     def requested_buildpack?
@@ -50,24 +54,10 @@ module VCAP::CloudController
       validates :space, presence: true, allow_nil: false, to_one_relationship: true
     end
 
-    def data_validation_config
-      OpenStruct.new(
-        data_class: 'BuildpackLifecycleDataMessage',
-        allow_nil: false,
-        data: lifecycle_data,
-      )
-    end
-
     delegate :buildpack, :stack, to: :buildpack_data
 
     def self.create_from_http_request(body)
       AppCreateMessage.new(body.symbolize_keys)
-    end
-
-    private
-
-    def buildpack_data
-      @buildpack_data ||= BuildpackLifecycleDataMessage.new(lifecycle_data.symbolize_keys)
     end
 
     def lifecycle_type
@@ -76,6 +66,12 @@ module VCAP::CloudController
 
     def lifecycle_data
       lifecycle['data'] || lifecycle[:data]
+    end
+
+    private
+
+    def buildpack_data
+      @buildpack_data ||= BuildpackLifecycleDataMessage.new(lifecycle_data.symbolize_keys)
     end
 
     def allowed_keys

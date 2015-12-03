@@ -262,54 +262,30 @@ module VCAP::CloudController
       end
 
       describe 'lifecycle' do
-        context 'when lifecycle data is provided' do
-          context 'both a valid stack and buildpack are provided' do
-            let(:valid_stack) { Stack.make(name: 'some-other-valid-stack') }
+        describe 'lifecycle data validations' do
+          context 'when lifecycle data is not provided' do
             let(:params) do
-              {
-                name: 'some_name',
-                relationships: { space: { guid: 'some-guid' } },
-                lifecycle: {
-                  type: 'buildpack',
-                  data: {
-                    buildpack: 'java',
-                    stack: valid_stack.name
-                  }
-                }
-              }
+              { lifecycle: { type: 'buildpack'  } }
             end
 
-            it 'uses the specified values' do
+            it 'is not valid' do
               message = AppCreateMessage.new(params)
-              expect(message).to be_valid
-              expect(message.buildpack).to eq('java')
-              expect(message.stack).to eq(valid_stack.name)
+
+              expect(message).not_to be_valid
+              expect(message.errors_on(:lifecycle_data)).to include('must be a hash')
             end
           end
 
-          context 'invalid stack and buildpack' do
+          context 'when lifecycle data is not a hash' do
             let(:params) do
-              {
-                lifecycle: {
-                  type: 'buildpack',
-                  data: {
-                    buildpack: 123,
-                    stack: 'fake-stack'
-                  }
-                }
-              }
+              { lifecycle: { type: 'buildpack', data: 'blah blah'  } }
             end
 
-            it 'must provide a valid buildpack value' do
+            it 'is not valid' do
               message = AppCreateMessage.new(params)
-              expect(message).not_to be_valid
-              expect(message.errors_on(:lifecycle)).to include('Buildpack must be a string')
-            end
 
-            it 'must provide a valid stack name' do
-              message = AppCreateMessage.new(params)
               expect(message).not_to be_valid
-              expect(message.errors_on(:lifecycle)).to include('Stack is invalid')
+              expect(message.errors_on(:lifecycle_data)).to include('must be a hash')
             end
           end
         end
@@ -317,7 +293,7 @@ module VCAP::CloudController
         describe 'lifecycle type validations' do
           context 'when lifecycle type is not a valid type' do
             let(:params) do
-              { lifecycle: { data: {}, type: { subhash: 'woah!' } } }
+              { lifecycle: { data: {}, type: 'woah!' } }
             end
 
             it 'is not valid' do
@@ -325,6 +301,19 @@ module VCAP::CloudController
 
               expect(message).not_to be_valid
               expect(message.errors_on(:lifecycle_type)).to include('is invalid')
+            end
+          end
+
+          context 'when lifecycle type is not a string' do
+            let(:params) do
+              { lifecycle: { data: {}, type: { subhash: 'woah!' } } }
+            end
+
+            it 'is not valid' do
+              message = AppCreateMessage.new(params)
+
+              expect(message).to_not be_valid
+              expect(message.errors_on(:lifecycle_type)).to include('must be a string')
             end
           end
 
