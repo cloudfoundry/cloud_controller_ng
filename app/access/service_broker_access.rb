@@ -18,6 +18,18 @@ module VCAP::CloudController
       false
     end
 
+    def delete?(service_broker, _=nil)
+      return true if admin_user?
+
+      if service_broker.is_a? Object
+        return validate_object_access(service_broker)
+      end
+
+      false
+    end
+
+    private
+
     def validate_object_access(service_broker)
       if service_broker.private?
         service_broker.space.has_developer?(context.user)

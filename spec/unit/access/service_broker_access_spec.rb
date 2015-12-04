@@ -41,6 +41,7 @@ module VCAP::CloudController
       it_behaves_like :no_access
       it { is_expected.to allow_op_on_object :create, broker_with_space }
       it { is_expected.to allow_op_on_object :update, broker_with_space }
+      it { is_expected.to allow_op_on_object :delete, broker_with_space }
       it { is_expected.to allow_op_on_object :index, VCAP::CloudController::ServiceBroker }
     end
 
@@ -50,6 +51,8 @@ module VCAP::CloudController
         space.add_manager user
       end
       it_behaves_like :no_access
+      it { is_expected.to_not allow_op_on_object :update, broker_with_space }
+      it { is_expected.to_not allow_op_on_object :delete, broker_with_space }
       it { is_expected.to allow_op_on_object :index, VCAP::CloudController::ServiceBroker }
     end
 
@@ -59,6 +62,8 @@ module VCAP::CloudController
         space.add_auditor user
       end
       it_behaves_like :no_access
+      it { is_expected.to_not allow_op_on_object :update, broker_with_space }
+      it { is_expected.to_not allow_op_on_object :delete, broker_with_space }
       it { is_expected.to allow_op_on_object :index, VCAP::CloudController::ServiceBroker }
     end
 
