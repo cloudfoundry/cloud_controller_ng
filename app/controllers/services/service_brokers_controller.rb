@@ -30,11 +30,13 @@ module VCAP::CloudController
     def create
       params = CreateMessage.decode(body).extract
 
+      route_services_enabled = @config['route_services_enabled']
       create_action = ServiceBrokerCreate.new(
         @service_manager,
         @services_event_repository,
         self,
-        self
+        self,
+        route_services_enabled
       )
 
       broker = create_action.create(params)
@@ -51,12 +53,13 @@ module VCAP::CloudController
       broker = ServiceBroker.find(guid: guid)
       return HTTP::NOT_FOUND unless broker
 
+      route_services_enabled = @config['route_services_enabled']
       validate_access(:update, broker)
       update_action = ServiceBrokerUpdate.new(
         @service_manager,
         @services_event_repository,
         self,
-
+        route_services_enabled
       )
       params = UpdateMessage.decode(body).extract
       broker = update_action.update(guid, params)

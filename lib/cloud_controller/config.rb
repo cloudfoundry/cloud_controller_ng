@@ -239,6 +239,8 @@ module VCAP::CloudController
           routing_client_name: String,
           routing_client_secret: String,
         },
+
+        optional(:route_services_enabled) => bool
       }
     end
 

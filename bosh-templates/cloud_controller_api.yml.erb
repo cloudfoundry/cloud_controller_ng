@@ -114,6 +114,7 @@ nginx:
 
 index: <%= spec.index %>
 name: <%= name %>
+route_services_enabled: <%= !p("router.route_services_secret").empty? %>
 
 info:
   name: <%= p("name") %>
