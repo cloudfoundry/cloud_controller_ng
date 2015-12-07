@@ -72,16 +72,17 @@ module VCAP::CloudController
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
 
       service_plan = ServicePlan.first(guid: request_attrs['service_plan_guid'])
+      service_plan_not_found! unless service_plan
+
       space = Space.filter(guid: request_attrs['space_guid']).first
+      space_not_found! unless space
       organization = space.organization if space
 
-      service_plan_not_found! unless service_plan
 
       service_instance = ManagedServiceInstance.new(request_attrs.except('parameters'))
       validate_access(:create, service_instance)
 
       invalid_service_instance!(service_instance) unless service_instance.valid?
-      space_not_found! unless space
 
       if service_plan.broker_private?
         space_not_authorized! unless (service_plan.service_broker.space == space)
@@ -91,6 +92,9 @@ module VCAP::CloudController
 
       service_instance = ServiceInstanceCreate.new(@services_event_repository, logger).
                              create(request_attrs, accepts_incomplete)
+
+      service = service_plan.service
+      route_service_warning(service) unless route_services_enabled?
 
       [status_from_operation_state(service_instance),
        { 'Location' => "#{self.class.path}/#{service_instance.guid}" },
@@ -284,6 +288,16 @@ module VCAP::CloudController
     end
 
     private
+
+    def route_services_enabled?
+      @config['route_services_enabled']
+    end
+
+    def route_service_warning(service)
+      if service.requires.include?('route_forwarding')
+        add_warning('Support for route services is disabled. This service instance cannot be bound to a route.')
+      end
+    end
 
     def validate_create_request
       @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
