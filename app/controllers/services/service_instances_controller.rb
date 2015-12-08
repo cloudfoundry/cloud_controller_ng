@@ -78,7 +78,6 @@ module VCAP::CloudController
       space_not_found! unless space
       organization = space.organization if space
 
-
       service_instance = ManagedServiceInstance.new(request_attrs.except('parameters'))
       validate_access(:create, service_instance)
 

@@ -47,6 +47,7 @@ module VCAP::CloudController
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
       service_instance = create_instance(request_attrs)
       @services_event_repository.record_user_provided_service_instance_event(:create, service_instance, request_attrs)
+      route_service_warning unless route_services_enabled?
 
       [
         HTTP::CREATED,
@@ -114,6 +115,14 @@ module VCAP::CloudController
     end
 
     private
+
+    def route_services_enabled?
+      @config['route_services_enabled']
+    end
+
+    def route_service_warning
+      add_warning('Support for route services is disabled. This service instance cannot be bound to a route.')
+    end
 
     def bind_route(route_guid, instance_guid)
       logger.debug 'cc.association.add', model: self.class.model_class_name, guid: instance_guid, assocation: :routes, other_guid: route_guid
