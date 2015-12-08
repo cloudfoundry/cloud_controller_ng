@@ -316,7 +316,7 @@ module VCAP::CloudController
 
           context 'when route service is disabled' do
             before do
-              TestConfig.config['route_services_enabled'] = false
+              TestConfig.config[:route_services_enabled] = false
             end
 
             it 'should succeed with a warning' do
@@ -2633,6 +2633,7 @@ module VCAP::CloudController
 
       before do
         stub_bind(service_instance, opts)
+        TestConfig.config['route_services_enabled'] = true
       end
 
       it 'associates the route and the service instance' do
@@ -2681,11 +2682,24 @@ module VCAP::CloudController
       context 'when the service instance is not a route service' do
         let(:service_instance) { ManagedServiceInstance.make(space: space) }
 
-        it 'raises an error' do
+        it 'raises a 400 error' do
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
           expect(last_response.status).to eq(400)
           expect(JSON.parse(last_response.body)['description']).
             to include('does not support route binding')
+        end
+      end
+
+      context 'when route service is disabled' do
+        before do
+          TestConfig.config[:route_services_enabled] = false
+        end
+
+        it 'should raise a 403 error' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+          expect(last_response).to have_status_code(403)
+          expect(decoded_response['description']).to eq 'Support for route services is disabled'
         end
       end
 

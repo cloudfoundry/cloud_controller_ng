@@ -263,6 +263,11 @@
   http_code: 400
   message: "Route services are only supported for apps on Diego. Unbind the service instance from the route or enable Diego for the app."
 
+60021:
+  name: ServiceInstanceRouteServiceDisabled
+  http_code: 403
+  message: "Support for route services is disabled"
+
 70001:
   name: RuntimeInvalid
   http_code: 400

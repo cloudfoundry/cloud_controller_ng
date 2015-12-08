@@ -9,6 +9,7 @@ module VCAP::CloudController
     class RouteServiceRequiresDiego < StandardError; end
     class RouteAlreadyBoundToServiceInstance < StandardError; end
     class AppNotFound < StandardError; end
+    class RouteServiceDisabled < StandardError; end
 
     include VCAP::CloudController::LockCheck
 
@@ -18,7 +19,7 @@ module VCAP::CloudController
       @logger = logger
     end
 
-    def create_route_service_instance_binding(route_guid, instance_guid)
+    def create_route_service_instance_binding(route_guid, instance_guid, route_services_enabled)
       route = Route.find(guid: route_guid)
       raise RouteNotFound unless route
 
@@ -28,6 +29,7 @@ module VCAP::CloudController
       raise ServiceInstanceNotBindable unless instance.bindable?
       raise RouteAlreadyBoundToServiceInstance if route.service_instance
       raise RouteServiceRequiresDiego if !route.all_apps_diego?
+      raise RouteServiceDisabled if instance.route_service? && !route_services_enabled
 
       route_binding = RouteBinding.new
       route_binding.route = route

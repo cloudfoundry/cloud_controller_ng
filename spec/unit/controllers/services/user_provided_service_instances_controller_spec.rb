@@ -188,13 +188,13 @@ module VCAP::CloudController
       context 'route service warnings' do
         context 'when route service is disabled' do
           before do
-            TestConfig.config['route_services_enabled'] = false
+            TestConfig.config[:route_services_enabled] = false
           end
 
           it 'should succeed with a warning' do
             post '/v2/user_provided_service_instances', req.to_json, headers_for(developer)
 
-            expect(last_response.status).to eq 201
+            expect(last_response).to have_status_code 201
 
             escaped_warning = last_response.headers['X-Cf-Warnings']
             expect(escaped_warning).to_not be_nil
@@ -205,7 +205,7 @@ module VCAP::CloudController
 
         context 'when route service is enabled' do
           before do
-            TestConfig.config['route_services_enabled'] = true
+            TestConfig.config[:route_services_enabled] = true
           end
 
           it 'should succeed without warnings' do
@@ -361,6 +361,8 @@ module VCAP::CloudController
       let(:route) { VCAP::CloudController::Route.make(space: space) }
       let(:opts) { {} }
       let(:service_instance) { UserProvidedServiceInstance.make(:routing, space: space) }
+
+      before { TestConfig.config[:route_services_enabled] = true }
 
       it 'associates the route and the service instance' do
         get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)

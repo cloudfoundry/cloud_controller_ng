@@ -396,7 +396,7 @@ module VCAP::CloudController
 
             context 'when route-services are enabled' do
               before do
-                TestConfig.config['route_services_enabled'] = true
+                TestConfig.config[:route_services_enabled] = true
               end
 
               it 'should succeed without warnings' do
@@ -410,7 +410,7 @@ module VCAP::CloudController
 
             context 'when route-services are not enabled' do
               before do
-                TestConfig.config['route_services_enabled'] = false
+                TestConfig.config[:route_services_enabled] = false
               end
               it 'should succeed with a warning' do
                 post '/v2/service_brokers', body, admin_headers
@@ -441,7 +441,7 @@ module VCAP::CloudController
 
             context 'when route-services are not enabled' do
               before do
-                TestConfig.config['route_services_enabled'] = false
+                TestConfig.config[:route_services_enabled] = false
               end
 
               context 'when all services require route forwarding' do
