@@ -823,7 +823,7 @@ describe PackagesController, type: :controller do
         context 'when the user does not provide lifecycle type in the request body' do
           let(:req_body) { {} }
 
-          it 'raises 422 InvalidRequest' do
+          it 'raises 400 InvalidRequest' do
             post :stage, guid: package.guid, body: req_body
 
             expect(response.status).to eq(400)
