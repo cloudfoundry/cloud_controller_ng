@@ -81,6 +81,16 @@ class ProcessesController < ApplicationController
     unprocessable!(e.message)
   end
 
+  def stats
+    guid = params[:guid]
+    process = ProcessModel.where(guid: guid).eager(:space).all.first
+    process_stats = instances_reporters.stats_for_app(process)
+
+    not_found! if process.nil? || !can_stats?(process.space.guid)
+
+    render status: :ok, json: process_presenter.present_json_stats(process, process_stats)
+  end
+
   private
 
   def process_presenter
@@ -108,6 +118,7 @@ class ProcessesController < ApplicationController
   end
   alias_method :can_terminate?, :can_update?
   alias_method :can_scale?, :can_update?
+  alias_method :can_stats?, :can_update?
 
   def instance_not_found!
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Instance not found')
@@ -115,5 +126,9 @@ class ProcessesController < ApplicationController
 
   def not_found!
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
+  end
+
+  def instances_reporters
+    CloudController::DependencyLocator.instance.instances_reporters
   end
 end

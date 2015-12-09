@@ -28,12 +28,14 @@ Rails.application.routes.draw do
   patch '/processes/:guid', to: 'processes#update'
   delete '/processes/:guid/instances/:index', to: 'processes#terminate'
   put '/processes/:guid/scale', to: 'processes#scale'
+  get '/processes/:guid/stats', to: 'processes#stats'
 
   get '/v3/processes', to: 'processes#index'
   get '/v3/processes/:guid', to: 'processes#show'
   patch '/v3/processes/:guid', to: 'processes#update'
   delete '/v3/processes/:guid/instances/:index', to: 'processes#terminate'
   put '/v3/processes/:guid/scale', to: 'processes#scale'
+  get '/v3/processes/:guid/stats', to: 'processes#stats'
 
   # packages
   get '/v3/packages', to: 'packages#index'

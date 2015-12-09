@@ -129,6 +129,7 @@ describe ProcessesController, type: :controller do
 
     context 'when the user does not have read permissions' do
       before { @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])) }
+
       it 'raises an ApiError with a 403 code' do
         get :show, { guid: process_type.guid }
 
@@ -550,6 +551,78 @@ describe ProcessesController, type: :controller do
 
         expect(membership).to have_received(:has_any_roles?).with(
           [VCAP::CloudController::Membership::SPACE_DEVELOPER], process_type.space.guid)
+      end
+    end
+  end
+
+  describe '#stats' do
+    let(:process_type) { VCAP::CloudController::AppFactory.make(diego: true) }
+    let(:space) { process_type.space }
+    let(:stats) { 'some stats' }
+    let(:instances_reporters) { double(:instances_reporters) }
+
+    before do
+      CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
+      allow(instances_reporters).to receive(:stats_for_app).and_return(stats)
+      allow(process_presenter).to receive(:present_json_stats).and_return(expected_response)
+      allow(membership).to receive(:has_any_roles?).and_return(true)
+      @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
+    end
+
+    it 'returns the stats for all instances for the process' do
+      put :stats, { guid: process_type.guid }
+
+      expect(response.status).to eq(200)
+      expect(response.body).to eq(expected_response)
+    end
+
+    context 'admin' do
+      before do
+        @request.env.merge!(json_headers(admin_headers))
+        allow(membership).to receive(:has_any_roles?).and_return(false)
+      end
+
+      it 'returns the stats for all instances for the process' do
+        put :stats, { guid: process_type.guid }
+
+        expect(response.status).to eq(200)
+        expect(response.body).to eq(expected_response)
+      end
+    end
+
+    context 'when the user does not have read scope' do
+      before { @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))) }
+
+      it 'raises an ApiError with a 403 code' do
+        put :stats, { guid: process_type.guid }
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include('NotAuthorized')
+      end
+    end
+
+    context 'when the process does not exist' do
+      it 'raises 404' do
+        get :stats, { guid: 'fake-guid' }
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+
+    context 'when the user cannot read the process' do
+      before do
+        allow(membership).to receive(:has_any_roles?).and_return(false)
+      end
+
+      it 'raises 404' do
+        put :stats, { guid: process_type.guid }
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+
+        expect(membership).to have_received(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid)
       end
     end
   end

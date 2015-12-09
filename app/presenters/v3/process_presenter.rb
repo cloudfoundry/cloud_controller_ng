@@ -10,6 +10,10 @@ module VCAP::CloudController
       MultiJson.dump(process_hash(process), pretty: true)
     end
 
+    def present_json_stats(process, stats)
+      MultiJson.dump(process_stats_hash(process, stats))
+    end
+
     def present_json_list(paginated_result, base_url)
       processes      = paginated_result.records
       process_hashes = processes.collect { |app| process_hash(app) }
@@ -44,6 +48,29 @@ module VCAP::CloudController
         created_at:   process.created_at,
         updated_at:   process.updated_at,
         links:        build_links(process),
+      }
+    end
+
+    def process_stats_hash(process, process_stats)
+      instance_stats = []
+      process_stats.each do |index, stats|
+        instance_stats << instance_stats_hash(process, index, stats)
+      end
+      instance_stats
+    end
+
+    def instance_stats_hash(process, index, stats)
+      {
+        type: process.type,
+        index: index,
+        state: stats['state'],
+        usage: stats['stats']['usage'],
+        host: stats['stats']['host'],
+        port: stats['stats']['port'],
+        uptime: stats['stats']['uptime'],
+        mem_quota: stats['stats']['mem_quota'],
+        disk_quota: stats['stats']['disk_quota'],
+        fds_quota: stats['stats']['fds_quota']
       }
     end
   end
