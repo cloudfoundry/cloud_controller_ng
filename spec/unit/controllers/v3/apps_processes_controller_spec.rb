@@ -403,6 +403,105 @@ describe AppsProcessesController, type: :controller do
     end
   end
 
+  describe '#stats' do
+    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:space) { app_model.space }
+    let!(:app_process) do
+      VCAP::CloudController::AppFactory.make(diego: true, app_guid: app_model.guid, space: space)
+    end
+    let(:desired_type) { 'web' }
+    let(:expected_response) { 'hi, you were expecting me?' }
+    let(:instances_reporters) { double(:instances_reporters) }
+    let(:process_presenter) { double(:process_presenter) }
+
+    before do
+      CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
+      allow(instances_reporters).to receive(:stats_for_app)
+      allow_any_instance_of(AppsProcessesController).to receive(:process_presenter).and_return(process_presenter)
+      allow(process_presenter).to receive(:present_json_stats).and_return(expected_response)
+      # allow(membership).to receive(:has_any_roles?).and_return(true)
+      @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
+    end
+
+    it 'returns the stats for all instances of specified type for all processes of an app' do
+      put :stats, { guid: app_model.guid, type: desired_type }
+
+      expect(response.status).to eq(200)
+      expect(response.body).to eq(expected_response)
+    end
+
+    context 'admin' do
+      before do
+        @request.env.merge!(json_headers(admin_headers))
+        allow(membership).to receive(:has_any_roles?).and_return(false)
+      end
+
+      it 'returns 200 OK with process' do
+        put :stats, { guid: app_model.guid, type: desired_type }
+
+        expect(response.status).to eq(200)
+        expect(response.body).to eq(expected_response)
+      end
+    end
+
+    context 'when the user does not have read scope' do
+      before { @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))) }
+
+      it 'raises an ApiError with a 403 code' do
+        put :stats, { guid: app_model.guid, type: desired_type }
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include('NotAuthorized')
+      end
+    end
+
+    context 'when the user cannot read the process' do
+      before do
+        allow(membership).to receive(:has_any_roles?).and_return(false)
+      end
+
+      it 'raises 404 error' do
+        put :stats, { guid: app_model.guid, type: desired_type }
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+
+        expect(membership).to have_received(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER],
+          space.guid)
+      end
+    end
+
+    context 'when the app does not exist' do
+      it 'raises a 404 error' do
+        put :stats, { guid: 'bogus-guid', type: desired_type }
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+
+    context 'when the app has no processes' do
+      let(:app_with_no_process) { VCAP::CloudController::AppModel.make }
+
+      it 'raises a 404 error' do
+        put :stats, { guid: app_with_no_process, type: desired_type }
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+
+    context 'when the specified type proces does not exist' do
+      it 'raises a 404 error' do
+        put :stats, { guid: app_model.guid, type: 1234 }
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+  end
+
   describe '#show' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }

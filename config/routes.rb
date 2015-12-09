@@ -75,11 +75,13 @@ Rails.application.routes.draw do
   get '/v3/apps/:guid/processes/:type', to: 'apps_processes#show'
   put '/v3/apps/:guid/processes/:type/scale', to: 'apps_processes#scale'
   delete '/v3/apps/:guid/processes/:type/instances/:index', to: 'apps_processes#terminate'
+  get '/v3/apps/:guid/processes/:type/stats', to: 'apps_processes#stats'
 
   get '/apps/:guid/processes', to: 'apps_processes#index'
   get '/apps/:guid/processes/:type', to: 'apps_processes#show'
   put '/apps/:guid/processes/:type/scale', to: 'apps_processes#scale'
   delete '/apps/:guid/processes/:type/instances/:index', to: 'apps_processes#terminate'
+  get '/apps/:guid/processes/:type/stats', to: 'apps_processes#stats'
 
   # apps_packages
   get '/v3/apps/:guid/packages', to: 'apps_packages#index'

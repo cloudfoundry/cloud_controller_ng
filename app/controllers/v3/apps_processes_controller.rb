@@ -11,7 +11,7 @@ class AppsProcessesController < ApplicationController
 
     paginated_result = SequelPaginator.new.get_page(app.processes_dataset, pagination_options)
 
-    render :ok, json: ProcessPresenter.new.present_json_list(paginated_result, "/v3/apps/#{params[:guid]}/processes")
+    render :ok, json: process_presenter.present_json_list(paginated_result, "/v3/apps/#{params[:guid]}/processes")
   end
 
   def show
@@ -21,7 +21,7 @@ class AppsProcessesController < ApplicationController
     process = app.processes_dataset.where(type: params[:type]).first
     process_not_found! if process.nil?
 
-    render :ok, json: ProcessPresenter.new.present_json(process)
+    render :ok, json: process_presenter.present_json(process)
   end
 
   def scale
@@ -43,7 +43,19 @@ class AppsProcessesController < ApplicationController
       unprocessable!(e.message)
     end
 
-    render :ok, json: ProcessPresenter.new.present_json(process)
+    render :ok, json: process_presenter.present_json(process)
+  end
+
+  def stats
+    app = AppModel.where(guid: params[:guid]).first
+    app_not_found! unless app && can_stats?(app.space.guid)
+
+    process = app.processes_dataset.where(type: params[:type]).first
+    process_not_found! if process.nil?
+
+    process_stats = instances_reporters.stats_for_app(process)
+
+    render status: :ok, json: process_presenter.present_json_stats(process, process_stats)
   end
 
   def terminate
@@ -67,6 +79,10 @@ class AppsProcessesController < ApplicationController
 
   private
 
+  def process_presenter
+    ProcessPresenter.new
+  end
+
   def membership
     @membership ||= Membership.new(current_user)
   end
@@ -84,6 +100,7 @@ class AppsProcessesController < ApplicationController
     membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
   end
   alias_method :can_terminate?, :can_scale?
+  alias_method :can_stats?, :can_scale?
 
   def app_not_found!
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
@@ -99,5 +116,9 @@ class AppsProcessesController < ApplicationController
 
   def runners
     CloudController::DependencyLocator.instance.runners
+  end
+
+  def instances_reporters
+    CloudController::DependencyLocator.instance.instances_reporters
   end
 end
