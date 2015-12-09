@@ -1,6 +1,6 @@
 require 'spec_helper'
-require_relative '../../../../../../../lib/cloud_controller/blobstore/url_generator'
-require_relative '../../../../../../../lib/cloud_controller/diego/buildpack/v3/lifecycle_protocol'
+require 'cloud_controller/blobstore/url_generator'
+require 'cloud_controller/diego/buildpack/v3/lifecycle_protocol'
 require_relative '../../lifecycle_protocol_shared'
 
 module VCAP
@@ -38,7 +38,7 @@ module VCAP
 
             let(:buildpack_generator) { V3::BuildpackEntryGenerator.new(blobstore_url_generator) }
             let(:buildpack) { nil }
-            let(:buildpack_info) { BuildpackRequestValidator.new({ buildpack: buildpack }) }
+            let(:buildpack_info) { BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack)) }
 
             let(:staging_details) do
               Diego::V3::StagingDetails.new.tap do |details|
@@ -51,7 +51,6 @@ module VCAP
             end
 
             before do
-              buildpack_info.valid?
               VCAP::CloudController::Buildpack.create(name: 'ruby', key: 'ruby-buildpack-key', position: 2)
               allow(blobstore_url_generator).to receive(:admin_buildpack_download_url).and_return('bp-download-url')
             end

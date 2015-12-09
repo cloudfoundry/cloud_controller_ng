@@ -35,6 +35,16 @@ module VCAP::CloudController
     space_guid { Space.make.guid }
   end
 
+  AppModel.blueprint(:buildpack) do
+    guid       { Sham.guid }
+    name       { Sham.name }
+    space_guid { Space.make.guid }
+    buildpack_lifecycle_data  { BuildpackLifecycleDataModel.make(app: object.save) }
+  end
+
+  AppModel.blueprint(:docker) do
+  end
+
   PackageModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }

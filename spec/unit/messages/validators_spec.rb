@@ -180,78 +180,6 @@ module VCAP::CloudController::Validators
       end
     end
 
-    describe 'LifecycleDataValidator' do
-      class VCAP::CloudController::DataMessage < VCAP::CloudController::BaseMessage
-        attr_accessor :type, :data, :allow_data_nil, :skip_validation
-        def allowed_keys
-          [:type, :data, :allow_data_nil, :skip_validation]
-        end
-
-        validates_with LifecycleDataValidator
-
-        def data_validation_config
-          OpenStruct.new(
-            skip_validation: skip_validation,
-            data_class: "#{type.capitalize}Data",
-            allow_nil: allow_data_nil,
-            data: data
-          )
-        end
-
-        class VCAP::CloudController::FooData < VCAP::CloudController::BaseMessage
-          attr_accessor :foo
-
-          def allowed_keys
-            [:foo]
-          end
-
-          validates :foo, numericality: true
-        end
-
-        class VCAP::CloudController::BarData < VCAP::CloudController::BaseMessage
-          attr_accessor :bar
-
-          def allowed_keys
-            [:bar]
-          end
-
-          validates :bar, numericality: true
-        end
-      end
-
-      it "adds data's error message to the base class" do
-        message = VCAP::CloudController::DataMessage.new({ allow_data_nil: true, type: 'foo', data: { foo: 'not a number' } })
-        expect(message).not_to be_valid
-        expect(message.errors_on(:lifecycle)).to include('Foo is not a number')
-      end
-
-      it 'handles polymorphic types of data' do
-        message = VCAP::CloudController::DataMessage.new({ allow_data_nil: true, type: 'bar', data: { bar: 'not a number' } })
-        expect(message).not_to be_valid
-        expect(message.errors_on(:lifecycle)).to include('Bar is not a number')
-      end
-
-      it "doesn't error if data is not provided and config specifies it to be so" do
-        message = VCAP::CloudController::DataMessage.new({ allow_data_nil: true, type: 'foo' })
-        expect(message).to be_valid
-      end
-
-      it 'adds error if data is not provided and config specifies it to be so' do
-        message = VCAP::CloudController::DataMessage.new({ allow_data_nil: false, type: 'foo' })
-        expect(message).not_to be_valid
-      end
-
-      it 'does not error if instructed to skip validations at runtime' do
-        message = VCAP::CloudController::DataMessage.new({ skip_validation: true, allow_data_nil: false, type: 'foo' })
-        expect(message).to be_valid
-      end
-
-      it 'does not add data errors if data is not a Hash' do
-        message = VCAP::CloudController::DataMessage.new({ allow_data_nil: true, type: 'foo', data: 33 })
-        expect(message).to be_valid
-      end
-    end
-
     describe 'LifecycleValidator' do
       class LifecycleMessage < VCAP::CloudController::BaseMessage
         attr_accessor :lifecycle
@@ -276,7 +204,7 @@ module VCAP::CloudController::Validators
           message = LifecycleMessage.new({ lifecycle: { type: 'not valid', data: {} } })
 
           expect(message).not_to be_valid
-          expect(message.errors_on(:lifecycle_type)).to include('is invalid')
+          expect(message.errors_on(:lifecycle_type)).to include('is not included in the list: buildpack, docker')
         end
       end
 

@@ -51,8 +51,8 @@ module VCAP::CloudController
 
       context 'when the app has a route associated with it' do
         it 'includes the uris as part of vcap_application' do
-          route1 = Route.make(space: space)
-          route2 = Route.make(space: space)
+          route1           = Route.make(space: space)
+          route2           = Route.make(space: space)
           add_route_to_app = AddRouteToApp.new(nil, nil)
           add_route_to_app.add(app, route1, nil)
           add_route_to_app.add(app, route2, nil)
@@ -79,6 +79,15 @@ module VCAP::CloudController
             expect(environment_variables['VCAP_APPLICATION']['limits']['fds']).to eq(100)
           end
         end
+      end
+
+      it 'merges vars_from_message' do
+        vars_from_message = { THEEKEEY: 'stuff', 'ZEEKEY' => 'yukyuk' }
+
+        environment_variables = builder.build(app, space, lifecycle, memory_limit, disk_limit, vars_from_message)
+
+        expect(environment_variables['THEEKEEY']).to eq('stuff')
+        expect(environment_variables['ZEEKEY']).to eq('yukyuk')
       end
     end
   end

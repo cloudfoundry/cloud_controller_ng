@@ -776,21 +776,22 @@ describe PackagesController, type: :controller do
           let(:req_body) { {} }
 
           before do
-            VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: buildpack.name, stack: VCAP::CloudController::Stack.default.name)
+            app_model.buildpack_lifecycle_data.buildpack = buildpack.name
+            app_model.buildpack_lifecycle_data.save
           end
 
           it 'uses the apps buildpack' do
             post :stage, { guid: package.guid, body: req_body }
 
             expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
+            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
           end
         end
       end
     end
 
     describe 'docker lifecycle' do
-      let(:docker_app_model) { VCAP::CloudController::AppModel.make }
+      let(:docker_app_model) { VCAP::CloudController::AppModel.make(:docker) }
       let(:req_body) { { lifecycle: { type: 'docker' } } }
       let!(:package) do
         VCAP::CloudController::PackageModel.make(:docker,
@@ -801,6 +802,7 @@ describe PackagesController, type: :controller do
       end
 
       before do
+        expect(docker_app_model.lifecycle_type).to eq('docker')
         VCAP::CloudController::BuildpackLifecycleDataModel.make(
           app: docker_app_model,
           buildpack: nil,
@@ -818,17 +820,6 @@ describe PackagesController, type: :controller do
             post :stage, guid: package.guid, body: req_body
           }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
           expect(response.status).to eq 201
-        end
-
-        context 'when the user does not provide lifecycle type in the request body' do
-          let(:req_body) { {} }
-
-          it 'raises 400 InvalidRequest' do
-            post :stage, guid: package.guid, body: req_body
-
-            expect(response.status).to eq(400)
-            expect(response.body).to include('InvalidRequest')
-          end
         end
 
         context 'when the user adds additional body parameters' do

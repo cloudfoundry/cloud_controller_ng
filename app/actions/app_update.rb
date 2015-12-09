@@ -9,8 +9,8 @@ module VCAP::CloudController
       @logger     = Steno.logger('cc.action.app_update')
     end
 
-    def update(app, message)
-      validate_not_changing_lifecycle_type!(app, message)
+    def update(app, message, lifecycle)
+      validate_not_changing_lifecycle_type!(app, lifecycle)
 
       app.db.transaction do
         app.lock!
@@ -20,7 +20,7 @@ module VCAP::CloudController
 
         app.save
 
-        update_lifecycle_data(app, message)
+        lifecycle.update_lifecycle_data_model(app)
 
         Repositories::Runtime::AppEventRepository.new.record_app_update(
           app,
@@ -38,24 +38,9 @@ module VCAP::CloudController
 
     private
 
-    def validate_not_changing_lifecycle_type!(app, message)
-      return unless message.requested?(:lifecycle)
-      return if app.lifecycle_type == message.lifecycle_type
-
+    def validate_not_changing_lifecycle_type!(app, lifecycle)
+      return if app.lifecycle_type == lifecycle.type
       raise InvalidApp.new('Lifecycle type cannot be changed')
-    end
-
-    def update_lifecycle_data(app, message)
-      should_save = false
-      if message.buildpack_data.requested?(:buildpack)
-        should_save = true
-        app.lifecycle_data.buildpack = message.buildpack_data.buildpack
-      end
-      if message.buildpack_data.requested?(:stack)
-        should_save = true
-        app.lifecycle_data.stack = message.buildpack_data.stack
-      end
-      app.lifecycle_data.save if should_save
     end
   end
 end

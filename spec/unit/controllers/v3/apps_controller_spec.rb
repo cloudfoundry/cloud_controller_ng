@@ -278,35 +278,18 @@ describe AppsV3Controller, type: :controller do
     end
 
     context 'lifecycle data' do
-      context 'when the requested buildpack is not a valid url and is not a known buildpack' do
+      context 'when the space developer does not request a lifecycle' do
         let(:req_body) do
           {
-            name: 'some-name',
-            relationships: { space: { guid: space.guid } },
-            lifecycle: { type: 'buildpack', data: { buildpack: 'blawgow', stack: nil } }
-          }
-        end
-
-        it 'returns an UnprocessableEntity error' do
-          get :create, body: req_body
-
-          expect(response.status).to eq 422
-          expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include 'must be an existing admin buildpack or a valid git URI'
-        end
-      end
-
-      context 'when the space developer does not request lifecycle data' do
-        let(:req_body) do
-          {
-            name: 'some-name',
+            name:          'some-name',
             relationships: { space: { guid: space.guid } }
           }
         end
+
         it 'uses the defaults and returns a 201 and the app' do
           get :create, body: req_body
 
-          response_body = MultiJson.load(response.body)
+          response_body  = MultiJson.load(response.body)
           lifecycle_data = response_body['lifecycle']['data']
 
           expect(response.status).to eq 201
@@ -315,34 +298,74 @@ describe AppsV3Controller, type: :controller do
         end
       end
 
-      context 'when the space developer requests lifecycle data' do
-        context 'and leaves part of the data blank' do
+      context 'buildpack' do
+        context 'when the requested buildpack is not a valid url and is not a known buildpack' do
           let(:req_body) do
             {
-              name: 'some-name',
+              name:          'some-name',
               relationships: { space: { guid: space.guid } },
-              lifecycle: { type: 'buildpack', data: { stack: 'cflinuxfs2' } }
+              lifecycle:     { type: 'buildpack', data: { buildpack: 'blawgow', stack: nil } }
             }
           end
 
-          it 'creates the app with the lifecycle data, filling in defaults' do
+          it 'returns an UnprocessableEntity error' do
             get :create, body: req_body
 
-            response_body = MultiJson.load(response.body)
-            lifecycle_data = response_body['lifecycle']['data']
-
-            expect(response.status).to eq 201
-            expect(lifecycle_data['stack']).to eq 'cflinuxfs2'
-            expect(lifecycle_data['buildpack']).to be_nil
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include 'must be an existing admin buildpack or a valid git URI'
           end
         end
 
-        context 'and they do not include the data section' do
+        context 'when the space developer requests lifecycle data' do
+          context 'and leaves part of the data blank' do
+            let(:req_body) do
+              {
+                name:          'some-name',
+                relationships: { space: { guid: space.guid } },
+                lifecycle:     { type: 'buildpack', data: { stack: 'cflinuxfs2' } }
+              }
+            end
+
+            it 'creates the app with the lifecycle data, filling in defaults' do
+              get :create, body: req_body
+
+              response_body  = MultiJson.load(response.body)
+              lifecycle_data = response_body['lifecycle']['data']
+
+              expect(response.status).to eq 201
+              expect(lifecycle_data['stack']).to eq 'cflinuxfs2'
+              expect(lifecycle_data['buildpack']).to be_nil
+            end
+          end
+
+          context 'and they do not include the data section' do
+            let(:req_body) do
+              {
+                name:          'some-name',
+                relationships: { space: { guid: space.guid } },
+                lifecycle:     { type: 'buildpack' }
+              }
+            end
+
+            it 'raises an UnprocessableEntity error' do
+              get :create, body: req_body
+
+              expect(response.status).to eq(422)
+              expect(response.body).to include 'UnprocessableEntity'
+              expect(response.body).to include 'The request is semantically invalid: Lifecycle data must be a hash'
+            end
+          end
+        end
+      end
+
+      context 'docker' do
+        context 'when lifecycle data is not empty' do
           let(:req_body) do
             {
-              name: 'some-name',
+              name:          'some-name',
               relationships: { space: { guid: space.guid } },
-              lifecycle: { type: 'buildpack' }
+              lifecycle:     { type: 'docker', data: { foo: 'bar' } }
             }
           end
 
@@ -351,7 +374,25 @@ describe AppsV3Controller, type: :controller do
 
             expect(response.status).to eq(422)
             expect(response.body).to include 'UnprocessableEntity'
-            expect(response.body).to include "The request is semantically invalid: Lifecycle data must be a hash, Lifecycle data can't be blank"
+            expect(response.body).to include "Lifecycle Unknown field(s): 'foo'"
+          end
+        end
+
+        context 'when lifecycle data is not a hash' do
+          let(:req_body) do
+            {
+              name:          'some-name',
+              relationships: { space: { guid: space.guid } },
+              lifecycle:     { type: 'docker', data: 'yay' }
+            }
+          end
+
+          it 'raises an UnprocessableEntity error' do
+            get :create, body: req_body
+
+            expect(response.status).to eq(422)
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include 'The request is semantically invalid: Lifecycle data must be a hash'
           end
         end
       end
@@ -417,124 +458,6 @@ describe AppsV3Controller, type: :controller do
     context 'when the request has invalid data' do
       let(:req_body) { { name: false } }
 
-      context 'lifecycle data' do
-        let(:new_name) { 'new freaking name' }
-
-        context 'when the user specifies the buildpack' do
-          let(:buildpack_url) { 'http://some.url' }
-          let(:req_body) do
-            { name: new_name,
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpack: buildpack_url
-                }
-              } }
-          end
-
-          it 'sets the buildpack to the provided buildpack' do
-            put :update, guid: app_model.guid, body: req_body
-            expect(app_model.reload.lifecycle_data.buildpack).to eq(buildpack_url)
-          end
-        end
-
-        context 'when the user does not provide a buildpack' do
-          let(:req_body) do
-            { name: new_name,
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpack: nil
-                }
-              } }
-          end
-
-          it 'sets the buildpack to nil' do
-            expect(app_model.lifecycle_data.buildpack).to_not be_nil
-            put :update, guid: app_model.guid, body: req_body
-            expect(app_model.reload.lifecycle_data.buildpack).to be_nil
-          end
-        end
-
-        context 'when the requested buildpack is not a valid url and is not a known buildpack' do
-          let(:req_body) do
-            {
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpack: 'blagow!'
-                }
-              } }
-          end
-
-          it 'returns a 422 and an UnprocessableEntity error' do
-            put :update, guid: app_model.guid, body: req_body
-
-            expect(response.status).to eq(422)
-            expect(response.body).to include 'UnprocessableEntity'
-            expect(response.body).to include('must be an existing admin buildpack or a valid git URI')
-          end
-        end
-
-        context 'when a user specifies a stack' do
-          context 'when the requested stack is valid' do
-            let(:req_body) do
-              { name: new_name,
-                lifecycle: {
-                  type: 'buildpack',
-                  data: {
-                    stack: 'redhat'
-                  }
-                } }
-            end
-
-            before(:each) { VCAP::CloudController::Stack.create(name: 'redhat') }
-
-            it 'sets the stack to the user provided stack' do
-              put :update, guid: app_model.guid, body: req_body
-              expect(app_model.lifecycle_data.stack).to eq('redhat')
-            end
-          end
-
-          context 'when the requested stack is invalid' do
-            let(:req_body) do
-              { name: new_name,
-                lifecycle: {
-                  type: 'buildpack',
-                  data: {
-                    stack: 'stacks on stacks lol'
-                  }
-                } }
-            end
-
-            it 'returns an UnprocessableEntity error' do
-              put :update, guid: app_model.guid, body: req_body
-
-              expect(response.body).to include 'UnprocessableEntity'
-              expect(response.status).to eq(422)
-              expect(response.body).to include('Stack')
-            end
-          end
-        end
-
-        context 'when a user does not provide any data' do
-          let(:req_body) do
-            { name: new_name,
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                }
-              } }
-          end
-
-          it 'does not modify the lifecycle data' do
-            expect(app_model.lifecycle_data.stack).to eq VCAP::CloudController::Stack.default.name
-            put :update, guid: app_model.guid, body: req_body
-            expect(app_model.reload.lifecycle_data.stack).to eq VCAP::CloudController::Stack.default.name
-          end
-        end
-      end
-
       context 'when the app is invalid' do
         it 'returns an UnprocessableEntity error' do
           put :update, guid: app_model.guid, body: req_body
@@ -562,20 +485,32 @@ describe AppsV3Controller, type: :controller do
           expect(response.body).to include 'The request is semantically invalid: environment_variables cannot start with CF_'
         end
       end
+    end
 
-      context 'lifecycle data' do
-        before do
-          allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
+    context 'lifecycle data' do
+      let(:new_name) { 'potato' }
+
+      context 'when the space developer does not request lifecycle' do
+        let(:req_body) do
+          {
+            name: 'some-name',
+          }
         end
 
+        it 'uses the data on app' do
+          put :update, guid: app_model.guid, body: req_body
+          expect(response.status).to eq 200
+
+          expect(app_model.lifecycle_data.stack).not_to be_nil
+          expect(app_model.lifecycle_data.buildpack).not_to be_nil
+        end
+      end
+
+      context 'buildpack' do
         context 'when the requested buildpack is not a valid url and is not a known buildpack' do
           let(:req_body) do
             {
-              name: 'some-name',
+              name:      'some-name',
               lifecycle: { type: 'buildpack', data: { buildpack: 'blawgow' } }
             }
           end
@@ -589,58 +524,192 @@ describe AppsV3Controller, type: :controller do
           end
         end
 
-        context 'when the space developer does not request lifecycle data' do
+        context 'when the user specifies the buildpack' do
+          let(:buildpack_url) { 'http://some.url' }
           let(:req_body) do
-            {
-              name: 'some-name',
-            }
+            { name:      new_name,
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: buildpack_url
+                }
+              } }
           end
 
-          it 'uses the data on app' do
+          it 'sets the buildpack to the provided buildpack' do
             put :update, guid: app_model.guid, body: req_body
-            expect(response.status).to eq 200
-
-            expect(app_model.lifecycle_data.stack).not_to be_nil
-            expect(app_model.lifecycle_data.buildpack).not_to be_nil
+            expect(app_model.reload.lifecycle_data.buildpack).to eq(buildpack_url)
           end
         end
 
-        context 'when the space developer requests lifecycle data' do
-          context 'and leaves part of the data blank' do
+        context 'when the user requests a nil buildpack' do
+          let(:req_body) do
+            { name:      new_name,
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpack: nil
+                }
+              } }
+          end
+
+          it 'sets the buildpack to nil' do
+            expect(app_model.lifecycle_data.buildpack).to_not be_nil
+            put :update, guid: app_model.guid, body: req_body
+            expect(app_model.reload.lifecycle_data.buildpack).to be_nil
+          end
+        end
+
+        context 'when a user specifies a stack' do
+          context 'when the requested stack is valid' do
             let(:req_body) do
               {
-                name: 'some-name',
-                lifecycle: { type: 'buildpack', data: { buildpack: nil } }
+                name:      new_name,
+                lifecycle: {
+                  type: 'buildpack',
+                  data: {
+                    stack: 'redhat'
+                  }
+                }
               }
             end
 
-            it 'updates the app with the lifecycle data provided' do
-              put :update, guid: app_model.guid, body: req_body
-              created_app = VCAP::CloudController::AppModel.last
+            before(:each) { VCAP::CloudController::Stack.create(name: 'redhat') }
 
-              expect(created_app.lifecycle_data.stack).not_to be_nil
-              expect(created_app.lifecycle_data.buildpack).to be_nil
-              expect(response.status).to eq 200
+            it 'sets the stack to the user provided stack' do
+              put :update, guid: app_model.guid, body: req_body
+              expect(app_model.lifecycle_data.stack).to eq('redhat')
             end
           end
 
-          context 'and they do not include the data section' do
+          context 'when the requested stack is invalid' do
             let(:req_body) do
               {
-                name: 'some-name',
-                lifecycle: { type: 'buildpack' }
+                name:      new_name,
+                lifecycle: {
+                  type: 'buildpack',
+                  data: {
+                    stack: 'stacks on stacks lol'
+                  }
+                }
               }
             end
 
-            it 'raises an error' do
+            it 'returns an UnprocessableEntity error' do
               put :update, guid: app_model.guid, body: req_body
 
-              expect(response.status).to eq 422
               expect(response.body).to include 'UnprocessableEntity'
-              expect(response.body).to include('Lifecycle data must be present')
-              expect(response.body).to include('Lifecycle data must be a hash')
+              expect(response.status).to eq(422)
+              expect(response.body).to include('Stack')
             end
           end
+        end
+
+        context 'when a user provides empty lifecycle data' do
+          let(:req_body) do
+            {
+              name:      new_name,
+              lifecycle: {
+                type: 'buildpack',
+                data: {}
+              }
+            }
+          end
+
+          it 'does not modify the lifecycle data' do
+            expect(app_model.lifecycle_data.stack).to eq VCAP::CloudController::Stack.default.name
+            put :update, guid: app_model.guid, body: req_body
+            expect(app_model.reload.lifecycle_data.stack).to eq VCAP::CloudController::Stack.default.name
+          end
+        end
+
+        context 'when the space developer requests a lifecycle without a data key' do
+          let(:req_body) do
+            {
+              name:      'some-name',
+              lifecycle: { type: 'buildpack' }
+            }
+          end
+
+          it 'raises an error' do
+            put :update, guid: app_model.guid, body: req_body
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include('Lifecycle data must be a hash')
+          end
+        end
+
+        context 'when attempting to change to another lifecycle type' do
+          let(:req_body) do
+            {
+              name:      'some-name',
+              lifecycle: { type: 'docker', data: {} }
+            }
+          end
+
+          it 'raises an error' do
+            put :update, guid: app_model.guid, body: req_body
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include('Lifecycle type cannot be changed')
+          end
+        end
+      end
+
+      context 'docker' do
+        let(:app_lifecycle_data) { nil }
+
+        context 'when attempting to change to another lifecycle type' do
+          let(:req_body) do
+            {
+              name:      'some-name',
+              lifecycle: { type: 'buildpack', data: {} }
+            }
+          end
+
+          it 'raises an error' do
+            put :update, guid: app_model.guid, body: req_body
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include('Lifecycle type cannot be changed')
+          end
+        end
+
+        context 'when a user provides empty lifecycle data' do
+          let(:req_body) do
+            {
+              name:      'some-name',
+              lifecycle: {
+                type: 'docker',
+                data: {}
+              }
+            }
+          end
+
+          it 'does not fail' do
+            put :update, guid: app_model.guid, body: req_body
+            expect(response).to have_status_code(200)
+          end
+        end
+      end
+
+      context 'when the space developer requests a lifecycle without a data key' do
+        let(:req_body) do
+          {
+            name:      'some-name',
+            lifecycle: { type: 'docker' }
+          }
+        end
+
+        it 'raises an error' do
+          put :update, guid: app_model.guid, body: req_body
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include('Lifecycle data must be a hash')
         end
       end
     end

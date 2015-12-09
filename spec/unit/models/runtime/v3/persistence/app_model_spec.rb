@@ -149,10 +149,23 @@ module VCAP::CloudController
     end
 
     describe '#lifecycle_type' do
-      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model) }
+      context 'the model contains buildpack_lifecycle_data' do
+        before { BuildpackLifecycleDataModel.make(app: app_model) }
 
-      it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
-        expect(app_model.lifecycle_type).to eq('buildpack')
+        it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
+          expect(app_model.lifecycle_type).to eq('buildpack')
+        end
+      end
+
+      context 'the model does not contain buildpack_lifecycle_data' do
+        before do
+          app_model.buildpack_lifecycle_data = nil
+          app_model.save
+        end
+
+        it 'returns the string "docker" if buildpack_lifecycle data is not on the model' do
+          expect(app_model.lifecycle_type).to eq('docker')
+        end
       end
     end
 
@@ -168,11 +181,11 @@ module VCAP::CloudController
         expect(app_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
       end
 
-      context 'lifecycle_data is nil' do
+      context 'buildpack_lifecycle_data is nil' do
         let(:non_buildpack_app_model) { AppModel.make }
 
-        it 'returns nil if no lifecycle data types are present' do
-          expect(non_buildpack_app_model.lifecycle_data).to eq(nil)
+        it 'returns a docker data model' do
+          expect(non_buildpack_app_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
         end
       end
     end

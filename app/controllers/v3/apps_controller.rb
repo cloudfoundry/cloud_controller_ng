@@ -5,7 +5,6 @@ require 'queries/app_fetcher'
 require 'messages/app_create_message'
 require 'actions/app_create'
 require 'cloud_controller/paging/pagination_options'
-require 'messages/buildpack_request_validator'
 require 'messages/app_update_message'
 require 'actions/app_update'
 require 'queries/app_delete_fetcher'
@@ -14,7 +13,7 @@ require 'actions/app_start'
 require 'actions/app_stop'
 require 'queries/assign_current_droplet_fetcher'
 require 'actions/set_current_droplet'
-require 'builders/app_create_request_builder'
+require 'cloud_controller/diego/lifecycles/app_lifecycle_provider'
 
 class AppsV3Controller < ApplicationController
   def index
@@ -39,17 +38,16 @@ class AppsV3Controller < ApplicationController
   end
 
   def create
-    assembled_request = AppCreateRequestBuilder.new.build(params[:body])
-    message = AppCreateMessage.create_from_http_request(assembled_request)
+    message = AppCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
-    unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
+    lifecycle = AppLifecycleProvider.provide(message)
+    unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     space_not_found! unless Space.where(guid: message.space_guid).count > 0
     space_not_found! unless can_create?(message.space_guid)
 
-    app = AppCreate.new(current_user, current_user_email).create(message)
+    app = AppCreate.new(current_user, current_user_email).create(message, lifecycle)
 
     render status: :created, json: AppPresenter.new.present_json(app)
   rescue AppCreate::InvalidApp => e
@@ -65,10 +63,10 @@ class AppsV3Controller < ApplicationController
     app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
     unauthorized! unless can_update?(space.guid)
 
-    buildpack_validator = BuildpackRequestValidator.new({ buildpack: message.buildpack })
-    unprocessable!(buildpack_validator.errors.full_messages) unless buildpack_validator.valid?
+    lifecycle = AppLifecycleProvider.provide(message)
+    unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    app = AppUpdate.new(current_user, current_user_email).update(app, message)
+    app = AppUpdate.new(current_user, current_user_email).update(app, message, lifecycle)
 
     render status: :ok, json: AppPresenter.new.present_json(app)
   rescue AppUpdate::DropletNotFound

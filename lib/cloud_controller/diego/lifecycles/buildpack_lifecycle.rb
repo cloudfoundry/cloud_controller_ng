@@ -1,17 +1,31 @@
+require 'cloud_controller/diego/lifecycles/buildpack_info'
+require 'cloud_controller/diego/lifecycles/buildpack_lifecycle_data_validator'
+require 'queries/buildpack_lifecycle_fetcher'
+
 module VCAP::CloudController
   class BuildpackLifecycle
+    attr_reader :staging_message, :buildpack_info
+
     def initialize(package, staging_message)
       @staging_message = staging_message
-      @package = package
+      @package         = package
 
-      raise 'Cannot stage package whose type is not bits.' if package.type != PackageModel::BITS_TYPE
+      db_result       = BuildpackLifecycleFetcher.new.fetch(buildpack_to_use, staging_stack)
+      @buildpack_info = BuildpackInfo.new(buildpack_to_use, db_result[:buildpack])
+      @validator      = BuildpackLifecycleDataValidator.new({ buildpack_info: buildpack_info, stack: db_result[:stack] })
+    end
+
+    delegate :valid?, :errors, to: :validator
+
+    def type
+      'buildpack'
     end
 
     def create_lifecycle_data_model(droplet)
       VCAP::CloudController::BuildpackLifecycleDataModel.create(
-        buildpack: @staging_message.lifecycle['data']['buildpack'],
-        stack: requested_stack,
-        droplet: droplet
+        buildpack: buildpack_to_use,
+        stack:     requested_stack,
+        droplet:   droplet
       )
     end
 
@@ -24,43 +38,32 @@ module VCAP::CloudController
     def pre_known_receipt_information
       {
         buildpack_receipt_buildpack_guid: buildpack_info.buildpack_record.try(:guid),
-        buildpack_receipt_stack_name: staging_stack
+        buildpack_receipt_stack_name:     staging_stack
       }
     end
 
     def staging_stack
-      requested_stack || VCAP::CloudController::Stack.default.name
-    end
-
-    def buildpack_info
-      @buildpack_info ||= VCAP::CloudController::BuildpackRequestValidator.new(buildpack: buildpack_to_use).tap do |buildpack_info|
-        unprocessable!(buildpack_info.errors.full_messages) unless buildpack_info.valid?
-      end
+      requested_stack || app_stack || VCAP::CloudController::Stack.default.name
     end
 
     private
 
     def buildpack_to_use
-      requested_buildpack? ? buildpack_data.buildpack : @package.app.lifecycle_data.buildpack
-    end
-
-    def requested_buildpack?
-      staging_message.requested?(:lifecycle)
-    end
-
-    def buildpack_data
-      @buildpack_data ||= VCAP::CloudController::BuildpackLifecycleDataMessage.new(staging_message.lifecycle_data.symbolize_keys)
+      if staging_message.buildpack_data.requested?(:buildpack)
+        staging_message.buildpack_data.buildpack
+      else
+        @package.app.lifecycle_data.try(:buildpack)
+      end
     end
 
     def requested_stack
-      @staging_message.lifecycle.try(:[], 'data').try(:[], 'stack')
+      @staging_message.buildpack_data.stack
     end
 
-    # TODO: should not throw api error this deep, move user input validation to controller
-    def unprocessable!(message)
-      raise VCAP::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+    def app_stack
+      @package.app.buildpack_lifecycle_data.try(:stack)
     end
 
-    attr_reader :staging_message
+    attr_reader :validator
   end
 end

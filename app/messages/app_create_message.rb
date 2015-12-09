@@ -14,28 +14,18 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator, RelationshipValidator
     validates_with LifecycleValidator, if: lifecycle_requested?
 
-    BUILDPACK_LIFECYCLE = 'buildpack'
-    LIFECYCLE_TYPES = [BUILDPACK_LIFECYCLE].map(&:freeze).freeze
-
     validates :name, string: true
     validates :environment_variables, hash: true, allow_nil: true
-    validates :relationships, hash: true, presence: true, allow_nil: false
+    validates :relationships, hash: true, allow_nil: false
 
     validates :lifecycle_type,
       string: true,
-      inclusion: { in: LIFECYCLE_TYPES, message: 'is invalid' },
-      presence: true,
       if: lifecycle_requested?
 
     validates :lifecycle_data,
       hash: true,
       allow_nil: false,
-      presence: true,
       if: lifecycle_requested?
-
-    def requested_buildpack?
-      requested?(:lifecycle) && lifecycle_type == BUILDPACK_LIFECYCLE
-    end
 
     def space_guid
       relationships.try(:[], 'space').try(:[], 'guid') ||
@@ -60,19 +50,19 @@ module VCAP::CloudController
       AppCreateMessage.new(body.symbolize_keys)
     end
 
+    def buildpack_data
+      @buildpack_data ||= BuildpackLifecycleDataMessage.new((lifecycle_data || {}).symbolize_keys)
+    end
+
     def lifecycle_type
-      lifecycle['type'] || lifecycle[:type]
+      lifecycle.try(:[], 'type') || lifecycle.try(:[], :type)
     end
 
     def lifecycle_data
-      lifecycle['data'] || lifecycle[:data]
+      lifecycle.try(:[], 'data') || lifecycle.try(:[], :data)
     end
 
     private
-
-    def buildpack_data
-      @buildpack_data ||= BuildpackLifecycleDataMessage.new(lifecycle_data.symbolize_keys)
-    end
 
     def allowed_keys
       ALLOWED_KEYS

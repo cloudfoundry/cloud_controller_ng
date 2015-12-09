@@ -318,6 +318,64 @@ resource 'Apps (Experimental)', type: :api do
         organization_guid: space.organization.guid,
       })
     end
+
+    describe 'docker app' do
+      let(:lifecycle) { { 'type' => 'docker', 'data' => {} } }
+
+      example 'Create a docker app' do
+        explanation <<-eos
+          Creates an app in v3 of the Cloud Controller API.
+          Apps must have a valid space guid for creation, which is namespaced under {"relationships": {"space": "your-space-guid"} }.
+          See the example below for more information.
+        eos
+
+        expect {
+          do_request_with_error_handling
+        }.to change { VCAP::CloudController::AppModel.count }.by(1)
+
+        created_app       = VCAP::CloudController::AppModel.last
+        expected_guid     = created_app.guid
+        expected_response = {
+          'name'   => name,
+          'guid'   => expected_guid,
+          'desired_state' => 'STOPPED',
+          'total_desired_instances' => 0,
+          'lifecycle'              => {
+            'type' => 'docker',
+            'data' => {}
+          },
+          'created_at' => iso8601,
+          'updated_at' => nil,
+          'environment_variables' => environment_variables,
+          'links' => {
+            'self'                   => { 'href' => "/v3/apps/#{expected_guid}" },
+            'processes'              => { 'href' => "/v3/apps/#{expected_guid}/processes" },
+            'packages'               => { 'href' => "/v3/apps/#{expected_guid}/packages" },
+            'space'                  => { 'href' => "/v2/spaces/#{space_guid}" },
+            'droplets'               => { 'href' => "/v3/apps/#{expected_guid}/droplets" },
+            'routes'                 => { 'href' => "/v3/apps/#{expected_guid}/routes" },
+            'start'                  => { 'href' => "/v3/apps/#{expected_guid}/start", 'method' => 'PUT' },
+            'stop'                   => { 'href' => "/v3/apps/#{expected_guid}/stop", 'method' => 'PUT' },
+            'assign_current_droplet' => { 'href' => "/v3/apps/#{expected_guid}/current_droplet", 'method' => 'PUT' }
+          }
+        }
+
+        parsed_response = MultiJson.load(response_body)
+        expect(response_status).to eq(201)
+        expect(parsed_response).to be_a_response_like(expected_response)
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+              type: 'audit.app.create',
+              actee: expected_guid,
+              actee_type: 'v3-app',
+              actee_name: name,
+              actor: user.guid,
+              actor_type: 'user',
+              space_guid: space_guid,
+              organization_guid: space.organization.guid,
+            })
+      end
+    end
   end
 
   patch '/v3/apps/:guid' do
@@ -338,11 +396,6 @@ resource 'Apps (Experimental)', type: :api do
 
     body_parameter :name, 'Name of the App'
     body_parameter :environment_variables, 'Environment variables to be used for the App when running'
-    # body_parameter :buildpack, 'Default buildpack to use when staging the application packages.
-    # Note: a null value will use autodetection',
-    #   example_values: ['ruby_buildpack', 'https://github.com/cloudfoundry/ruby-buildpack'],
-    #   valid_values: ['null', 'buildpack name', 'git url'],
-    #   required: false
     body_parameter :lifecycle, 'Lifecycle to be used when updating the app.
     Note: lifecycle type cannot be changed.
     Buildpack can be set to null to allow the backend to auto-detect the appropriate buildpack.

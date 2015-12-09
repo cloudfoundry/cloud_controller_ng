@@ -1,8 +1,14 @@
 module VCAP::CloudController
   class DockerLifecycle
+    attr_reader :staging_message
+
     def initialize(package, staging_message)
       @staging_message = staging_message
       @package = package
+    end
+
+    def type
+      'docker'
     end
 
     def create_lifecycle_data_model(_)
@@ -16,6 +22,14 @@ module VCAP::CloudController
       {
         docker_receipt_image: @package.docker_data.image
       }
+    end
+
+    def valid?
+      true
+    end
+
+    def errors
+      []
     end
   end
 end

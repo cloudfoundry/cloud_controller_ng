@@ -101,7 +101,7 @@ module VCAP::CloudController
                 type: 'buildpack',
                 data: {
                   buildpack: 123,
-                  stack: 'fake-stack'
+                  stack: 324
                 }
               }
             }
@@ -116,7 +116,7 @@ module VCAP::CloudController
           it 'must provide a valid stack name' do
             message = AppUpdateMessage.new(params)
             expect(message).not_to be_valid
-            expect(message.errors_on(:lifecycle)).to include('Stack is invalid')
+            expect(message.errors_on(:lifecycle)).to include('Stack must be a string')
           end
         end
 
@@ -127,7 +127,6 @@ module VCAP::CloudController
             message = AppUpdateMessage.new(params)
             expect(message).not_to be_valid
             expect(message.errors_on(:lifecycle_data)).to include('must be a hash')
-            expect(message.errors[:lifecycle]).to include('data must be present')
           end
         end
 
@@ -158,7 +157,7 @@ module VCAP::CloudController
             message = AppUpdateMessage.new(params)
             expect(message).to_not be_valid
 
-            expect(message.errors_on(:lifecycle_type)).to include("can't be blank")
+            expect(message.errors_on(:lifecycle_type)).to include('must be a string')
           end
         end
 

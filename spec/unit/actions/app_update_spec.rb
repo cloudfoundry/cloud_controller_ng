@@ -13,6 +13,7 @@ module VCAP::CloudController
     let(:environment_variables) { { 'original' => 'value' } }
 
     describe '#update' do
+      let(:lifecycle) { AppLifecycleProvider.provide(message) }
       let(:message) do
         AppUpdateMessage.new({
             name:                  'new name',
@@ -31,55 +32,67 @@ module VCAP::CloudController
               'environment_variables' => { 'MYVAL' => 'new-val' },
             })
 
-        app_update.update(app_model, message)
+        app_update.update(app_model, message, lifecycle)
       end
 
-      it 'updates the apps name' do
-        message = AppUpdateMessage.new({ name: 'new name' })
+      describe 'updating the name' do
+        let(:message) { AppUpdateMessage.new({ name: 'new name' }) }
 
-        expect(app_model.name).to eq('original name')
-        expect(app_model.environment_variables).to eq({ 'original' => 'value' })
-        expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
+        it 'updates the apps name' do
+          expect(app_model.name).to eq('original name')
+          expect(app_model.environment_variables).to eq({ 'original' => 'value' })
+          expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
 
-        app_update.update(app_model, message)
-        app_model.reload
+          app_update.update(app_model, message, lifecycle)
+          app_model.reload
 
-        expect(app_model.name).to eq('new name')
-        expect(app_model.environment_variables).to eq({ 'original' => 'value' })
-        expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
+          expect(app_model.name).to eq('new name')
+          expect(app_model.environment_variables).to eq({ 'original' => 'value' })
+          expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
+        end
       end
 
-      it 'updates the apps environment_variables' do
-        message = AppUpdateMessage.new({ environment_variables: { 'MYVAL' => 'new-val' } })
+      describe 'updating environment_variables' do
+        let(:message) { AppUpdateMessage.new({ environment_variables: { 'MYVAL' => 'new-val' } }) }
 
-        expect(app_model.name).to eq('original name')
-        expect(app_model.environment_variables).to eq({ 'original' => 'value' })
-        expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
+        it 'updates the apps environment_variables' do
+          expect(app_model.name).to eq('original name')
+          expect(app_model.environment_variables).to eq({ 'original' => 'value' })
+          expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
 
-        app_update.update(app_model, message)
-        app_model.reload
+          app_update.update(app_model, message, lifecycle)
+          app_model.reload
 
-        expect(app_model.name).to eq('original name')
-        expect(app_model.environment_variables).to eq({ 'MYVAL' => 'new-val' })
-        expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
+          expect(app_model.name).to eq('original name')
+          expect(app_model.environment_variables).to eq({ 'MYVAL' => 'new-val' })
+          expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
+        end
       end
 
-      it 'updates the apps lifecycle' do
-        message = AppUpdateMessage.new(
-          { lifecycle: { type: 'buildpack', data: { buildpack: 'http://new-buildpack.url', stack: 'redhat' } } })
+      describe 'updating lifecycle' do
+        let(:message) do
+          AppUpdateMessage.new({
+              lifecycle: {
+                type: 'buildpack',
+                data: { buildpack: 'http://new-buildpack.url', stack: 'redhat' }
+              }
+            })
+        end
 
-        expect(app_model.name).to eq('original name')
-        expect(app_model.environment_variables).to eq({ 'original' => 'value' })
-        expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
-        expect(app_model.lifecycle_data.stack).to eq(Stack.default.name)
+        it 'updates the apps lifecycle' do
+          expect(app_model.name).to eq('original name')
+          expect(app_model.environment_variables).to eq({ 'original' => 'value' })
+          expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
+          expect(app_model.lifecycle_data.stack).to eq(Stack.default.name)
 
-        app_update.update(app_model, message)
-        app_model.reload
+          app_update.update(app_model, message, lifecycle)
+          app_model.reload
 
-        expect(app_model.name).to eq('original name')
-        expect(app_model.environment_variables).to eq({ 'original' => 'value' })
-        expect(app_model.lifecycle_data.buildpack).to eq('http://new-buildpack.url')
-        expect(app_model.lifecycle_data.stack).to eq('redhat')
+          expect(app_model.name).to eq('original name')
+          expect(app_model.environment_variables).to eq({ 'original' => 'value' })
+          expect(app_model.lifecycle_data.buildpack).to eq('http://new-buildpack.url')
+          expect(app_model.lifecycle_data.stack).to eq('redhat')
+        end
       end
 
       context 'when the app is invalid' do
@@ -88,7 +101,7 @@ module VCAP::CloudController
         end
 
         it 'raises an invalid app error' do
-          expect { app_update.update(app_model, message) }.to raise_error(AppUpdate::InvalidApp)
+          expect { app_update.update(app_model, message, lifecycle) }.to raise_error(AppUpdate::InvalidApp)
         end
       end
 
@@ -106,7 +119,7 @@ module VCAP::CloudController
           expect(app_model.lifecycle_type).to eq('buildpack')
 
           expect {
-            app_update.update(app_model, message)
+            app_update.update(app_model, message, lifecycle)
           }.to raise_error(AppUpdate::InvalidApp, 'Lifecycle type cannot be changed')
         end
       end

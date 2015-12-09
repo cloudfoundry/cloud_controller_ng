@@ -3,50 +3,49 @@ require_relative 'lifecycle_shared'
 
 module VCAP::CloudController
   describe BuildpackLifecycle do
-    let(:package) { PackageModel.make(type: PackageModel::BITS_TYPE) }
-    let(:staging_message) { DropletCreateMessage.new(lifecycle: { 'data' => {}, 'type' => 'buildpack' }) }
+    let!(:package) { PackageModel.make(type: PackageModel::BITS_TYPE) }
+    let(:staging_message) { DropletCreateMessage.new(lifecycle: { data: request_data, type: 'buildpack' }) }
+    let(:request_data) { {} }
+
     subject(:buildpack_lifecycle) { BuildpackLifecycle.new(package, staging_message) }
 
     it_behaves_like 'a lifecycle'
 
-    context 'when the package is not type bits' do
-      let(:package) { PackageModel.make(type: PackageModel::DOCKER_TYPE) }
+    describe '#create_lifecycle_data_model' do
+      let(:request_data) do
+        {
+          buildpack: 'cool-buildpack',
+          stack:     'cool-stack'
+        }
+      end
 
-      it 'raises an exception' do
+      it 'can create a BuildpackLifecycleDataModel' do
+        droplet = DropletModel.make
+
         expect {
-          buildpack_lifecycle
-        }.to raise_error(/whose type/)
+          buildpack_lifecycle.create_lifecycle_data_model(droplet)
+        }.to change(VCAP::CloudController::BuildpackLifecycleDataModel, :count).by(1)
+
+        data_model = VCAP::CloudController::BuildpackLifecycleDataModel.last
+
+        expect(data_model.buildpack).to eq('cool-buildpack')
+        expect(data_model.stack).to eq('cool-stack')
+        expect(data_model.droplet).to eq(droplet)
       end
     end
 
-    it 'can create a BuildpackLifecycleDataModel' do
-      staging_message.lifecycle['data']['buildpack'] = 'cool-buildpack'
-      staging_message.lifecycle['data']['stack']     = 'cool-stack'
-      droplet                                        = DropletModel.make
-
-      expect {
-        buildpack_lifecycle.create_lifecycle_data_model(droplet)
-      }.to change(VCAP::CloudController::BuildpackLifecycleDataModel, :count).by(1)
-
-      data_model = VCAP::CloudController::BuildpackLifecycleDataModel.last
-
-      expect(data_model.buildpack).to eq('cool-buildpack')
-      expect(data_model.stack).to eq('cool-stack')
-      expect(data_model.droplet).to eq(droplet)
-    end
-
     it 'provides staging environment variables' do
-      staging_message.lifecycle['data']['stack'] = 'cool-stack'
+      staging_message.buildpack_data.stack = 'cool-stack'
 
       expect(buildpack_lifecycle.staging_environment_variables).to eq({
-        'CF_STACK' => 'cool-stack'
-      })
+            'CF_STACK' => 'cool-stack'
+          })
     end
 
     describe 'the staging stack' do
       context 'when the user specifies a stack' do
         before do
-          staging_message.lifecycle['data']['stack'] = 'cool-stack'
+          staging_message.buildpack_data.stack = 'cool-stack'
         end
 
         it 'is whatever has been requested in the staging message' do
@@ -55,8 +54,24 @@ module VCAP::CloudController
       end
 
       context 'when the user does not specify a stack' do
-        it 'uses a default value for stack' do
-          expect(buildpack_lifecycle.staging_stack).to eq(Stack.default.name)
+        context 'and the app has a stack' do
+          before do
+            BuildpackLifecycleDataModel.make(app: package.app)
+          end
+
+          it 'uses the value set on the app' do
+            expect(buildpack_lifecycle.staging_stack).to eq(package.app.buildpack_lifecycle_data.stack)
+          end
+        end
+
+        context 'and the app does not have a stack' do
+          before do
+            BuildpackLifecycleDataModel.make(app: package.app, stack: nil)
+          end
+
+          it 'uses the default value for stack' do
+            expect(buildpack_lifecycle.staging_stack).to eq(Stack.default.name)
+          end
         end
       end
     end
@@ -84,7 +99,7 @@ module VCAP::CloudController
 
           context 'and specified by the staging message even if specified by the app' do
             let(:staging_message) do
-              DropletCreateMessage.new(lifecycle: { 'data' => { 'buildpack' => staging_buildpack.name }, 'type' => 'buildpack' })
+              DropletCreateMessage.new(lifecycle: { data: { buildpack: staging_buildpack.name }, type: 'buildpack' })
             end
 
             before do
@@ -100,7 +115,7 @@ module VCAP::CloudController
 
         context 'when the buildpack is not in the system' do
           let(:staging_message) do
-            DropletCreateMessage.new(lifecycle: { 'data' => { 'buildpack' => 'git://cool-buildpack' }, 'type' => 'buildpack' })
+            DropletCreateMessage.new(lifecycle: { data: { buildpack: 'git://cool-buildpack' }, type: 'buildpack' })
           end
 
           it 'is nil' do
@@ -112,7 +127,7 @@ module VCAP::CloudController
 
       describe 'buildpack_receipt_stack_name' do
         let(:staging_message) do
-          DropletCreateMessage.new(lifecycle: { 'data' => { 'stack' => 'pancake' }, 'type' => 'buildpack' })
+          DropletCreateMessage.new(lifecycle: { data: { stack: 'pancake' }, type: 'buildpack' })
         end
 
         it 'is the requested stack' do
@@ -124,19 +139,28 @@ module VCAP::CloudController
 
     describe 'buildpack info' do
       it 'is provided' do
-        expect(buildpack_lifecycle.buildpack_info).to be_a(BuildpackRequestValidator)
+        expect(buildpack_lifecycle.buildpack_info).to be_a(BuildpackInfo)
+      end
+    end
+
+    describe 'validation' do
+      let(:validator) { instance_double(BuildpackLifecycleDataValidator) }
+      before do
+        allow(validator).to receive(:valid?)
+        allow(validator).to receive(:errors)
+        allow(BuildpackLifecycleDataValidator).to receive(:new).and_return(validator)
       end
 
-      context 'when it is not valid' do
-        let(:staging_message) do
-          DropletCreateMessage.new(lifecycle: { 'data' => { 'buildpack' => 'weird-buildpack' }, 'type' => 'buildpack' })
-        end
+      it 'delegates #valid? to a BuildpackLifecycleDataValidator' do
+        buildpack_lifecycle.valid?
 
-        it 'raises an UnprocessableEntity error' do
-          expect {
-            buildpack_lifecycle.buildpack_info
-          }.to raise_error(VCAP::Errors::ApiError, /semantically invalid/)
-        end
+        expect(validator).to have_received(:valid?)
+      end
+
+      it 'delegates #errors to a BuildpackLifecycleDataValidator' do
+        buildpack_lifecycle.errors
+
+        expect(validator).to have_received(:errors)
       end
     end
   end

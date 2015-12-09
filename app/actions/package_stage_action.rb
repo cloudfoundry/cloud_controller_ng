@@ -20,16 +20,10 @@ module VCAP::CloudController
       @environment_builder     = environment_presenter
     end
 
-    def stage(package, staging_message, stagers)
+    def stage(package, lifecycle, stagers)
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
-      begin
-        lifecycle = LifecycleProvider.provide(package, staging_message)
-      rescue => e
-        raise PackageStageAction::InvalidPackage.new(e.message)
-      end
-
-      staging_details = get_staging_details(package, lifecycle, staging_message)
+      staging_details = get_staging_details(package, lifecycle)
 
       droplet = DropletModel.new({
         app_guid:              package.app.guid,
@@ -48,7 +42,7 @@ module VCAP::CloudController
       logger.info("droplet created: #{droplet.guid}")
 
       logger.info("staging package: #{package.inspect} for droplet #{droplet.guid}")
-      stagers.stager_for_package(package, staging_message.lifecycle_type).stage(staging_details)
+      stagers.stager_for_package(package, lifecycle.type).stage(staging_details)
       logger.info("package staging requested: #{package.inspect}")
 
       droplet
@@ -56,7 +50,8 @@ module VCAP::CloudController
 
     private
 
-    def get_staging_details(package, lifecycle, staging_message)
+    def get_staging_details(package, lifecycle)
+      staging_message = lifecycle.staging_message
       app   = package.app
       space = package.space
       org   = space.organization

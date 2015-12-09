@@ -29,9 +29,7 @@ module VCAP::CloudController
           describe '#buildpack_entries' do
             let(:v3_app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: v3_app.guid) }
-            let(:buildpack_info) { BuildpackRequestValidator.new({ buildpack: buildpack }) }
-
-            before { buildpack_info.valid? }
+            let(:buildpack_info) { BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack)) }
 
             context 'when the user has specified a custom buildpack' do
               context 'when the buildpack_uri ends with .zip' do

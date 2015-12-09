@@ -9,6 +9,7 @@ module VCAP::CloudController
     attr_accessor :requested_keys, :extra_keys
 
     def initialize(params={})
+      params ||= {}
       @requested_keys   = params.keys
       disallowed_params = params.slice!(*allowed_keys)
       @extra_keys       = disallowed_params.keys

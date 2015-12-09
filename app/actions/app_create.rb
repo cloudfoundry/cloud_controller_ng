@@ -8,26 +8,25 @@ module VCAP::CloudController
       @logger     = Steno.logger('cc.action.app_create')
     end
 
-    def create(message)
-      app = AppModel.create(
-        name:                  message.name,
-        space_guid:            message.space_guid,
-        environment_variables: message.environment_variables,
-      )
+    def create(message, lifecycle)
+      app = nil
+      AppModel.db.transaction do
+        app = AppModel.create(
+          name:                  message.name,
+          space_guid:            message.space_guid,
+          environment_variables: message.environment_variables,
+        )
 
-      Repositories::Runtime::AppEventRepository.new.record_app_create(
-        app,
-        app.space,
-        @user.guid,
-        @user_email,
-        message.audit_hash
-      )
+        lifecycle.create_lifecycle_data_model(app)
 
-      BuildpackLifecycleDataModel.create(
-        buildpack: message.buildpack,
-        stack:     message.stack,
-        app: app
-      )
+        Repositories::Runtime::AppEventRepository.new.record_app_create(
+          app,
+          app.space,
+          @user.guid,
+          @user_email,
+          message.audit_hash
+        )
+      end
 
       app
     rescue Sequel::ValidationFailed => e

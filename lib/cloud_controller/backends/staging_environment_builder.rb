@@ -7,7 +7,7 @@ module VCAP::CloudController
 
       staging_var_group.
         merge(app_env).
-        merge(vars_from_message).
+        merge(vars_from_message.try(:stringify_keys)).
         merge(lifecycle.staging_environment_variables).
         merge(
           {

@@ -8,7 +8,6 @@ require 'actions/package_upload'
 require 'messages/package_upload_message'
 require 'messages/droplet_create_message'
 require 'messages/packages_list_message'
-require 'builders/droplet_stage_request_builder'
 
 class PackagesController < ApplicationController
   before_action :check_read_permissions!, only: [:index, :show, :download]
@@ -89,20 +88,22 @@ class PackagesController < ApplicationController
   end
 
   def stage
-    package = PackageModel.where(guid: params[:guid]).eager(:app, :space, space: :organization).all.first
+    staging_message = DropletCreateMessage.create_from_http_request(params[:body])
+    unprocessable!(staging_message.errors.full_messages) unless staging_message.valid?
+
+    package = PackageModel.where(guid: params[:guid]).eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).all.first
     package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+
     if package.type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?
       FeatureFlag.raise_unless_enabled!('diego_docker')
     end
 
-    lifecycle = package.app.lifecycle_data
-    assembled_request  = DropletStageRequestBuilder.new.build(params[:body], lifecycle)
-    staging_message = DropletCreateMessage.create_from_http_request(assembled_request)
-    unprocessable!(staging_message.errors.full_messages) unless staging_message.valid?
-
     unauthorized! unless can_stage?(package.space.guid)
 
-    droplet = PackageStageAction.new.stage(package, staging_message, stagers)
+    lifecycle = LifecycleProvider.provide(package, staging_message)
+    unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
+
+    droplet = PackageStageAction.new.stage(package, lifecycle, stagers)
 
     render status: :created, json: droplet_presenter.present_json(droplet)
   rescue PackageStageAction::InvalidPackage => e

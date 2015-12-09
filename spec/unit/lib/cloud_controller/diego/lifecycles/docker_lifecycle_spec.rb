@@ -5,7 +5,7 @@ module VCAP::CloudController
   describe DockerLifecycle do
     subject(:lifecycle) { DockerLifecycle.new(package, staging_message) }
     let(:package) { PackageModel.make(:docker) }
-    let(:staging_message) { instance_double(DropletCreateMessage) }
+    let(:staging_message) { DropletCreateMessage.new }
 
     it_behaves_like 'a lifecycle'
 
