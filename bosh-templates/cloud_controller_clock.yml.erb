@@ -151,7 +151,7 @@ db: &db
   pool_timeout: <%= p("ccdb.pool_timeout") %>
   log_level: <%= p("cc.db_logging_level") %>
 
-<% scheme = p("uaa.no_ssl") ? "http" : "https"
+<% scheme = p("login.protocol")
    domain = p("domain") %>
 
 <% if p("login.enabled") %>
