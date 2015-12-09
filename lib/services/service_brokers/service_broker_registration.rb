@@ -101,7 +101,7 @@ module VCAP::Services::ServiceBrokers
 
     def route_service_warning
       catalog.services.each { |service|
-        if service.requires.include?('route_forwarding')
+        if service.route_service?
           @warnings << "Service #{service.name} is declared to be a route service but support for route services is disabled." \
                        ' Users will be prevented from binding instances of this service with routes.'
         end

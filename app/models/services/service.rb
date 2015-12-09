@@ -139,5 +139,9 @@ module VCAP::CloudController
     def service_broker_guid
       service_broker ? service_broker.guid : nil
     end
+
+    def route_service?
+      requires.include?('route_forwarding')
+    end
   end
 end

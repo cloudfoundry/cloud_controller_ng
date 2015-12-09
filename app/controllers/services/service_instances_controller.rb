@@ -295,7 +295,7 @@ module VCAP::CloudController
 
     def route_service_warning(service_instance)
       if service_instance.route_service?
-        add_warning('Support for route services is disabled. This service instance cannot be bound to a route.')
+        add_warning(ServiceInstance::ROUTE_SERVICE_WARNING)
       end
     end
 

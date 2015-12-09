@@ -40,6 +40,10 @@ module VCAP::Services::ServiceBrokers::V2
       service_broker.services_dataset.where(unique_id: broker_provided_id).first
     end
 
+    def route_service?
+      requires.include?('route_forwarding')
+    end
+
     private
 
     attr_reader :plans_data

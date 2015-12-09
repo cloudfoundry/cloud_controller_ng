@@ -411,5 +411,25 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
     end
+
+    describe '#route_service?' do
+      let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+
+      context 'when requires include "route_forwarding"' do
+        let(:service) { CatalogService.new(service_broker, 'requires' => ['route_forwarding']) }
+
+        it 'returns true' do
+          expect(service.route_service?).to be_truthy
+        end
+      end
+
+      context 'when requires does not include "route_forwarding"' do
+        let(:service) { CatalogService.new(service_broker, 'requires' => []) }
+
+        it 'returns false' do
+          expect(service.route_service?).to be_falsey
+        end
+      end
+    end
   end
 end

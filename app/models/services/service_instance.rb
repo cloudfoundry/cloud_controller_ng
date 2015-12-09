@@ -4,6 +4,8 @@ module VCAP::CloudController
   class ServiceInstance < Sequel::Model
     class InvalidServiceBinding < StandardError; end
 
+    ROUTE_SERVICE_WARNING = 'Support for route services is disabled. This service instance cannot be bound to a route.'.freeze
+
     plugin :serialization
     plugin :single_table_inheritance, :is_gateway_service,
            model_map: lambda { |is_gateway_service|

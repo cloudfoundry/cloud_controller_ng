@@ -152,7 +152,7 @@ module VCAP::CloudController
     end
 
     def route_service?
-      service.requires.include? 'route_forwarding'
+      service.route_service?
     end
 
     def create_snapshot(name)

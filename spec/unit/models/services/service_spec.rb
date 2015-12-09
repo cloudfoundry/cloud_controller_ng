@@ -510,6 +510,24 @@ module VCAP::CloudController
       end
     end
 
+    describe '#route_service?' do
+      context 'when requires include "route_forwarding"' do
+        let(:service) { Service.make(requires: ['route_forwarding']) }
+
+        it 'returns true' do
+          expect(service.route_service?).to be_truthy
+        end
+      end
+
+      context 'when requires does not include "route_forwarding"' do
+        let(:service) { Service.make(requires: []) }
+
+        it 'returns false' do
+          expect(service.route_service?).to be_falsey
+        end
+      end
+    end
+
     describe '#client' do
       context 'when the purging field is true' do
         let(:service) { Service.make(purging: true) }
