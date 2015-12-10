@@ -55,7 +55,7 @@ module VCAP::CloudController
     def result_for_lifecycle(droplet)
       return nil unless DropletModel::COMPLETED_STATES.include?(droplet.state)
 
-      lifecycle_result = if droplet.lifecycle_type == 'buildpack'
+      lifecycle_result = if droplet.lifecycle_type == Lifecycles::BUILDPACK
                            {
                              hash:      {
                                type:  DEFAULT_HASHING_ALGORITHM,
@@ -64,7 +64,7 @@ module VCAP::CloudController
                              buildpack: droplet.buildpack_receipt_buildpack,
                              stack:     droplet.buildpack_receipt_stack_name,
                            }
-                         elsif droplet.lifecycle_type == 'docker'
+                         elsif droplet.lifecycle_type == Lifecycles::DOCKER
                            {
                              image: droplet.docker_receipt_image
                            }
@@ -79,7 +79,7 @@ module VCAP::CloudController
     def links_for_lifecyle(droplet)
       links = {}
 
-      if droplet.lifecycle_type == 'buildpack'
+      if droplet.lifecycle_type == Lifecycles::BUILDPACK
         if droplet.buildpack_receipt_buildpack_guid
           links[:buildpack] = { href: "/v2/buildpacks/#{droplet.buildpack_receipt_buildpack_guid}" }
         end

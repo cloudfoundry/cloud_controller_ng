@@ -1,6 +1,8 @@
+require 'cloud_controller/diego/lifecycles/lifecycles'
+
 module VCAP::CloudController
   class BuildpackLifecycleDataModel < Sequel::Model(:buildpack_lifecycle_data)
-    LIFECYCLE_TYPE = 'buildpack'.freeze
+    LIFECYCLE_TYPE = Lifecycles::BUILDPACK
 
     many_to_one :droplet,
       class: '::VCAP::CloudController::DropletModel',

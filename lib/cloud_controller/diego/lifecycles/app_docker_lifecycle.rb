@@ -15,7 +15,7 @@ module VCAP::CloudController
     end
 
     def type
-      'docker'
+      Lifecycles::DOCKER
     end
   end
 end

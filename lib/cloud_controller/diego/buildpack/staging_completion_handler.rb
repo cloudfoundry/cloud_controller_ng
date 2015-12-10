@@ -13,7 +13,7 @@ module VCAP::CloudController
             {
               result: {
                 execution_metadata: String,
-                lifecycle_type:     'buildpack',
+                lifecycle_type:     Lifecycles::BUILDPACK,
                 lifecycle_metadata: {
                   buildpack_key:      String,
                   detected_buildpack: String,

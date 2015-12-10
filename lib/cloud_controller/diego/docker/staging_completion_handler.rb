@@ -15,7 +15,7 @@ module VCAP::CloudController
               result: {
                 execution_metadata: String,
                 process_types:      dict(Symbol, String),
-                lifecycle_type:     'docker',
+                lifecycle_type:     Lifecycles::DOCKER,
                 lifecycle_metadata: {
                   docker_image: String
                 }

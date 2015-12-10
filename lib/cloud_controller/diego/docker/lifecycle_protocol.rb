@@ -15,7 +15,7 @@ module VCAP
               lifecycle_data.docker_password = docker_credentials['docker_password']
               lifecycle_data.docker_email = docker_credentials['docker_email']
             end
-            ['docker', lifecycle_data.message]
+            [Lifecycles::DOCKER, lifecycle_data.message]
           end
 
           def desired_app_message(app)

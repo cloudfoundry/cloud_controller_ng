@@ -8,7 +8,7 @@ module VCAP::CloudController
     end
 
     def type
-      'docker'
+      Lifecycles::DOCKER
     end
 
     def create_lifecycle_data_model(_)

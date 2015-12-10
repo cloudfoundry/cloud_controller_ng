@@ -19,7 +19,7 @@ module VCAP
             lifecycle_data.droplet_upload_uri = @blobstore_url_generator.droplet_upload_url(app)
             lifecycle_data.buildpacks = @buildpack_entry_generator.buildpack_entries(app)
             lifecycle_data.stack = app.stack.name
-            ['buildpack', lifecycle_data.message]
+            [Lifecycles::BUILDPACK, lifecycle_data.message]
           end
 
           def desired_app_message(app)

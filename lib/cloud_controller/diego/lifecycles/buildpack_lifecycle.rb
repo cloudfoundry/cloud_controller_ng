@@ -18,7 +18,7 @@ module VCAP::CloudController
     delegate :valid?, :errors, to: :validator
 
     def type
-      'buildpack'
+      Lifecycles::BUILDPACK
     end
 
     def create_lifecycle_data_model(droplet)

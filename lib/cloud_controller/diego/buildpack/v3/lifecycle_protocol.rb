@@ -19,7 +19,7 @@ module VCAP
               lifecycle_data.droplet_upload_uri                 = @blobstore_url_generator.package_droplet_upload_url(staging_details.droplet.guid)
               lifecycle_data.buildpacks                         = @buildpack_entry_generator.buildpack_entries(staging_details.lifecycle.buildpack_info)
               lifecycle_data.stack                              = staging_details.lifecycle.staging_stack
-              ['buildpack', lifecycle_data.message]
+              [Lifecycles::BUILDPACK, lifecycle_data.message]
             end
           end
         end

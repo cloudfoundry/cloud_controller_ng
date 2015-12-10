@@ -36,7 +36,7 @@ module VCAP::CloudController
     end
 
     def type
-      'buildpack'
+      Lifecycles::BUILDPACK
     end
 
     private

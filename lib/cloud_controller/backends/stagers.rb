@@ -88,9 +88,9 @@ module VCAP::CloudController
     end
 
     def diego_package_lifecycle_protocol(lifecycle_type)
-      if lifecycle_type == 'buildpack'
+      if lifecycle_type == Lifecycles::BUILDPACK
         Diego::Buildpack::V3::LifecycleProtocol.new(dependency_locator.blobstore_url_generator(true))
-      elsif lifecycle_type == 'docker'
+      elsif lifecycle_type == Lifecycles::DOCKER
         Diego::Docker::V3::LifecycleProtocol.new
       end
     end
@@ -104,9 +104,9 @@ module VCAP::CloudController
     end
 
     def diego_package_completion_handler(lifecycle_type)
-      if lifecycle_type == 'buildpack'
+      if lifecycle_type == Lifecycles::BUILDPACK
         Diego::Buildpack::V3::StagingCompletionHandler.new
-      elsif lifecycle_type == 'docker'
+      elsif lifecycle_type == Lifecycles::DOCKER
         Diego::Docker::V3::StagingCompletionHandler.new
       end
     end

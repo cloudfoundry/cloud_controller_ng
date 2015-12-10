@@ -53,8 +53,8 @@ module VCAP::CloudController::Validators
   class LifecycleValidator < ActiveModel::Validator
     def validate(record)
       data_message = {
-        'buildpack' => VCAP::CloudController::BuildpackLifecycleDataMessage,
-        'docker'    => VCAP::CloudController::DockerLifecycleDataMessage,
+        VCAP::CloudController::Lifecycles::BUILDPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
+        VCAP::CloudController::Lifecycles::DOCKER    => VCAP::CloudController::DockerLifecycleDataMessage,
       }
 
       lifecycle_data_message_class = data_message[record.lifecycle_type]
