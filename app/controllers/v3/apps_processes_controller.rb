@@ -55,7 +55,7 @@ class AppsProcessesController < ApplicationController
 
     process_stats = instances_reporters.stats_for_app(process)
 
-    render status: :ok, json: process_presenter.present_json_stats(process, process_stats)
+    render status: :ok, json: process_presenter.present_json_stats(process, process_stats, "/v3/apps/#{params[:guid]}/processes/#{params[:type]}/stats")
   end
 
   def terminate

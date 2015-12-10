@@ -28,5 +28,16 @@ module VCAP::CloudController
         previous:      previous_page > 0 ? { href: previous_uri } : nil
       }
     end
+
+    def present_unpagination_hash(result, base_url)
+      {
+        total_results: result.length,
+
+        first: { href: base_url },
+        last: { href: base_url },
+        next: nil,
+        previous: nil
+      }
+    end
   end
 end

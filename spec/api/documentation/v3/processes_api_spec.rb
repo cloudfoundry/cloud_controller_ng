@@ -229,6 +229,73 @@ resource 'Processes (Experimental)', type: :api do
     end
   end
 
+  get '/v3/processes/:guid/stats' do
+    header 'Content-Type', 'application/json'
+
+    let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED', diego: true) }
+    let(:guid) { process.guid }
+    let(:usage_time) { Time.now.utc.to_s }
+    let(:tps_response) do
+      [{
+        process_guid: guid,
+        instance_guid: 'instance-A',
+        index: 0,
+        state: 'RUNNING',
+        details: 'some-details',
+        uptime: 1,
+        since: 101,
+        host: 'toast',
+        port: 8080,
+        stats: { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
+      }].to_json
+    end
+
+    before do
+      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process)
+      stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
+      app = VCAP::CloudController::AppModel.make
+      process.app_guid = app.guid
+      process.save
+      process.space.organization.add_user user
+      process.space.add_developer user
+    end
+
+    example 'Get Detailed Stats for a Process' do
+      do_request_with_error_handling
+
+      expected_response = {
+        'pagination' => {
+          'total_results' => 1,
+          'first'         => { 'href' => "/v3/processes/#{process.guid}/stats" },
+          'last'          => { 'href' => "/v3/processes/#{process.guid}/stats" },
+          'next'          => nil,
+          'previous'      => nil,
+        },
+        'resources'  => [{
+          'type' => process.type,
+          'index' => 0,
+          'state' => 'RUNNING',
+          'usage' => {
+            'time' => usage_time,
+            'cpu' => 80,
+            'mem' => 128,
+            'disk' => 1024,
+          },
+          'host' => 'toast',
+          'port' => 8080,
+          'uptime' => 1,
+          'mem_quota' => 1073741824,
+          'disk_quota' => 1073741824,
+          'fds_quota' => 16384
+        }]
+      }
+
+      parsed_response = JSON.parse(response_body)
+      expect(response_status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
   delete '/v3/processes/:guid/instances/:index' do
     body_parameter :guid, 'Process guid'
     body_parameter :index, 'The index of the instance to terminate'

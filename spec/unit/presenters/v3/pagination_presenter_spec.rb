@@ -3,8 +3,17 @@ require 'presenters/v3/pagination_presenter'
 
 module VCAP::CloudController
   describe PaginationPresenter do
+    let(:presenter) { PaginationPresenter.new }
+
+    it 'has consistent presentation' do
+      paginated_result = PaginatedResult.new(double(:results), 2, PaginationOptions.new(page: 1, per_page: 2))
+      presented_pagination = presenter.present_pagination_hash(paginated_result, '/v3/pizza')
+      presented_unpagination = presenter.present_unpagination_hash([1, 2], '/v3/flan')
+
+      expect(presented_pagination.keys).to eq(presented_unpagination.keys)
+    end
+
     describe '#present_pagination_hash' do
-      let(:presenter) { PaginationPresenter.new }
       let(:page) { 1 }
       let(:per_page) { 1 }
       let(:total_results) { 2 }
@@ -147,6 +156,42 @@ module VCAP::CloudController
             end
           end
         end
+      end
+    end
+
+    describe '#present_unpagination_hash' do
+      let(:result) { ['thing_1', 'thing_2'] }
+      let(:base_url) { '/v3/cloudfoundry/is-da-bomb' }
+      let(:total_results) { 2 }
+
+      it 'includes total_results' do
+        unpaginated_result = presenter.present_unpagination_hash(result, base_url)
+
+        tr = unpaginated_result[:total_results]
+        expect(tr).to eq(total_results)
+      end
+
+      it 'includes the base_url as first_url' do
+        unpaginated_result = presenter.present_unpagination_hash(result, base_url)
+
+        first_url = unpaginated_result[:first][:href]
+        expect(first_url).to eq('/v3/cloudfoundry/is-da-bomb')
+      end
+
+      it 'includes the base_url as last_url' do
+        unpaginated_result = presenter.present_unpagination_hash(result, base_url)
+
+        last_url = unpaginated_result[:last][:href]
+        expect(last_url).to eq('/v3/cloudfoundry/is-da-bomb')
+      end
+
+      it 'does not include the next or previous page links' do
+        unpaginated_result = presenter.present_unpagination_hash(result, base_url)
+
+        next_page = unpaginated_result[:next]
+        previous_page = unpaginated_result[:next]
+        expect(next_page).to be_nil
+        expect(previous_page).to be_nil
       end
     end
   end

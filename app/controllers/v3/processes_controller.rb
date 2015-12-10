@@ -88,7 +88,7 @@ class ProcessesController < ApplicationController
 
     not_found! if process.nil? || !can_stats?(process.space.guid)
 
-    render status: :ok, json: process_presenter.present_json_stats(process, process_stats)
+    render status: :ok, json: process_presenter.present_json_stats(process, process_stats, "/v3/processes/#{guid}/stats")
   end
 
   private
