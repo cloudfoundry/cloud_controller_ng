@@ -1,4 +1,4 @@
-require_relative '../../../app/messages/nested_message_validator'
+require 'messages/nested_message_validator'
 
 module VCAP::CloudController
   class BitsDataValidator < NestedMessageValidator

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/buildpack_lifecycle_data_message'
+require 'messages/lifecycles/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   describe BuildpackLifecycleDataMessage do

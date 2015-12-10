@@ -65,7 +65,7 @@ module VCAP::CloudController::Validators
 
       return unless record.lifecycle_data.is_a?(Hash)
 
-      lifecycle_data_message = lifecycle_data_message_class.new(record.lifecycle_data.symbolize_keys)
+      lifecycle_data_message = lifecycle_data_message_class.create_from_http_request(record.lifecycle_data)
       unless lifecycle_data_message.valid?
         record.errors[:lifecycle].concat lifecycle_data_message.errors.full_messages
       end

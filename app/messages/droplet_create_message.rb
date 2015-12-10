@@ -1,6 +1,6 @@
 require 'messages/base_message'
 require 'messages/validators'
-require 'messages/docker_lifecycle_data_message'
+require 'messages/lifecycles/docker_lifecycle_data_message'
 
 module VCAP::CloudController
   class DropletCreateMessage < BaseMessage
@@ -30,11 +30,11 @@ module VCAP::CloudController
       if: lifecycle_requested?
 
     def self.create_from_http_request(body)
-      DropletCreateMessage.new(body.deep_symbolize_keys)
+      DropletCreateMessage.new(body.symbolize_keys)
     end
 
     def buildpack_data
-      @buildpack_data ||= VCAP::CloudController::BuildpackLifecycleDataMessage.new((lifecycle_data || {}).symbolize_keys)
+      @buildpack_data ||= VCAP::CloudController::BuildpackLifecycleDataMessage.create_from_http_request(lifecycle_data)
     end
 
     def lifecycle_data

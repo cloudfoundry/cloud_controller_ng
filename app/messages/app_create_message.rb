@@ -1,11 +1,15 @@
 require 'messages/base_message'
-require 'messages/buildpack_lifecycle_data_message'
+require 'messages/lifecycles/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class AppCreateMessage < BaseMessage
     ALLOWED_KEYS = [:name, :environment_variables, :relationships, :lifecycle]
 
     attr_accessor(*ALLOWED_KEYS)
+
+    def self.create_from_http_request(body)
+      AppCreateMessage.new(body.symbolize_keys)
+    end
 
     def self.lifecycle_requested?
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
@@ -32,6 +36,18 @@ module VCAP::CloudController
         relationships.try(:[], :space).try(:[], :guid)
     end
 
+    def lifecycle_type
+      lifecycle.try(:[], 'type') || lifecycle.try(:[], :type)
+    end
+
+    def lifecycle_data
+      lifecycle.try(:[], 'data') || lifecycle.try(:[], :data)
+    end
+
+    def buildpack_data
+      @buildpack_data ||= BuildpackLifecycleDataMessage.create_from_http_request(lifecycle_data)
+    end
+
     class Relationships < BaseMessage
       attr_accessor :space
 
@@ -42,24 +58,6 @@ module VCAP::CloudController
       validates_with NoAdditionalKeysValidator
 
       validates :space, presence: true, allow_nil: false, to_one_relationship: true
-    end
-
-    delegate :buildpack, :stack, to: :buildpack_data
-
-    def self.create_from_http_request(body)
-      AppCreateMessage.new(body.symbolize_keys)
-    end
-
-    def buildpack_data
-      @buildpack_data ||= BuildpackLifecycleDataMessage.new((lifecycle_data || {}).symbolize_keys)
-    end
-
-    def lifecycle_type
-      lifecycle.try(:[], 'type') || lifecycle.try(:[], :type)
-    end
-
-    def lifecycle_data
-      lifecycle.try(:[], 'data') || lifecycle.try(:[], :data)
     end
 
     private
