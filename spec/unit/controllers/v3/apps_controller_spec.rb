@@ -212,7 +212,7 @@ describe AppsV3Controller, type: :controller do
       end
 
       it 'raises an ApiError with a 403 code' do
-        get :create, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq 403
         expect(response.body).to include 'NotAuthorized'
@@ -226,7 +226,7 @@ describe AppsV3Controller, type: :controller do
       end
 
       it 'returns a 201 Created and the app' do
-        get :create, body: req_body
+        post :create, body: req_body
         app_model = space.app_models.last
 
         expect(response.status).to eq 201
@@ -238,7 +238,7 @@ describe AppsV3Controller, type: :controller do
       let(:req_body) { { name: 200000 } }
 
       it 'returns an UnprocessableEntity error' do
-        get :create, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -253,7 +253,7 @@ describe AppsV3Controller, type: :controller do
       end
 
       it 'returns an UnprocessableEntity error' do
-        get :create, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -269,7 +269,7 @@ describe AppsV3Controller, type: :controller do
       end
 
       it 'returns an NotFound error' do
-        get :create, body: req_body
+        post :create, body: req_body
 
         expect(response.status).to eq(404)
         expect(response.body).to include 'ResourceNotFound'
@@ -287,7 +287,7 @@ describe AppsV3Controller, type: :controller do
         end
 
         it 'uses the defaults and returns a 201 and the app' do
-          get :create, body: req_body
+          post :create, body: req_body
 
           response_body  = MultiJson.load(response.body)
           lifecycle_data = response_body['lifecycle']['data']
@@ -309,7 +309,7 @@ describe AppsV3Controller, type: :controller do
           end
 
           it 'returns an UnprocessableEntity error' do
-            get :create, body: req_body
+            post :create, body: req_body
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -328,7 +328,7 @@ describe AppsV3Controller, type: :controller do
             end
 
             it 'creates the app with the lifecycle data, filling in defaults' do
-              get :create, body: req_body
+              post :create, body: req_body
 
               response_body  = MultiJson.load(response.body)
               lifecycle_data = response_body['lifecycle']['data']
@@ -349,7 +349,7 @@ describe AppsV3Controller, type: :controller do
             end
 
             it 'raises an UnprocessableEntity error' do
-              get :create, body: req_body
+              post :create, body: req_body
 
               expect(response.status).to eq(422)
               expect(response.body).to include 'UnprocessableEntity'
@@ -370,7 +370,7 @@ describe AppsV3Controller, type: :controller do
           end
 
           it 'raises an UnprocessableEntity error' do
-            get :create, body: req_body
+            post :create, body: req_body
 
             expect(response.status).to eq(422)
             expect(response.body).to include 'UnprocessableEntity'
@@ -388,7 +388,7 @@ describe AppsV3Controller, type: :controller do
           end
 
           it 'raises an UnprocessableEntity error' do
-            get :create, body: req_body
+            post :create, body: req_body
 
             expect(response.status).to eq(422)
             expect(response.body).to include 'UnprocessableEntity'
@@ -408,6 +408,45 @@ describe AppsV3Controller, type: :controller do
 
         expect(response).to have_status_code(404)
         expect(response.body).to include('Space not found')
+      end
+    end
+
+    context 'when requesting docker lifecycle and diego_docker feature flag is disabled' do
+      let(:req_body) do
+        {
+          name:          'some-name',
+          relationships: { space: { guid: space.guid } },
+          lifecycle:     { type: 'docker', data: {} }
+        }
+      end
+
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+      end
+
+      context 'admin' do
+        before do
+          @request.env.merge!(json_headers(admin_headers))
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 201 Created and the app' do
+          post :create, body: req_body
+          app_model = space.app_models.last
+
+          expect(response.status).to eq 201
+          expect(MultiJson.load(response.body)['guid']).to eq(app_model.guid)
+        end
+      end
+
+      context 'non-admin' do
+        it 'raises 403' do
+          post :create, body: req_body
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('FeatureDisabled')
+          expect(response.body).to include('diego_docker')
+        end
       end
     end
   end

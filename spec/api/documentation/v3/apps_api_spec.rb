@@ -322,6 +322,10 @@ resource 'Apps (Experimental)', type: :api do
     describe 'docker app' do
       let(:lifecycle) { { 'type' => 'docker', 'data' => {} } }
 
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+      end
+
       example 'Create a docker app' do
         explanation <<-eos
           Creates an app in v3 of the Cloud Controller API.

@@ -41,11 +41,15 @@ class AppsV3Controller < ApplicationController
     message = AppCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    lifecycle = AppLifecycleProvider.provide(message)
-    unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
-
     space_not_found! unless Space.where(guid: message.space_guid).count > 0
     space_not_found! unless can_create?(message.space_guid)
+
+    if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?
+      FeatureFlag.raise_unless_enabled!('diego_docker')
+    end
+
+    lifecycle = AppLifecycleProvider.provide(message)
+    unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app = AppCreate.new(current_user, current_user_email).create(message, lifecycle)
 
