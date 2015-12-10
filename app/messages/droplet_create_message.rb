@@ -26,7 +26,7 @@ module VCAP::CloudController
 
     validates :lifecycle_data,
       hash: true,
-      allow_nil: true,
+      allow_nil: false,
       if: lifecycle_requested?
 
     def self.create_from_http_request(body)

@@ -792,7 +792,7 @@ describe PackagesController, type: :controller do
 
     describe 'docker lifecycle' do
       let(:docker_app_model) { VCAP::CloudController::AppModel.make(:docker) }
-      let(:req_body) { { lifecycle: { type: 'docker' } } }
+      let(:req_body) { { lifecycle: { type: 'docker', data: {} } } }
       let!(:package) do
         VCAP::CloudController::PackageModel.make(:docker,
                                                  app_guid: docker_app_model.guid,

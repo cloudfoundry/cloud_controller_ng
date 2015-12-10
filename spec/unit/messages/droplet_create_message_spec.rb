@@ -141,6 +141,15 @@ module VCAP::CloudController
           expect(message.errors[:lifecycle_type]).to include('must be a string')
         end
 
+        it 'must provide a data field' do
+          params = { lifecycle: { type: 'buildpack' } }
+
+          message = DropletCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:lifecycle_data]).to include('must be a hash')
+        end
+
         describe 'buildpack lifecycle' do
           it 'must provide a valid stack' do
             params = { lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: { non: 'sense' } } } }
@@ -163,7 +172,7 @@ module VCAP::CloudController
 
         describe 'docker lifecycle' do
           it 'works' do
-            params  = { lifecycle: { type: 'docker' } }
+            params  = { lifecycle: { type: 'docker', data: {} } }
             message = DropletCreateMessage.new(params)
             expect(message).to be_valid
           end
