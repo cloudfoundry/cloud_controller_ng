@@ -1,5 +1,8 @@
 module VCAP::CloudController
   class AppDockerLifecycle
+    def initialize(*_)
+    end
+
     def create_lifecycle_data_model(_)
     end
 
