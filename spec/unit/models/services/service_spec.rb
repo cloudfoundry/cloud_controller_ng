@@ -7,13 +7,6 @@ module VCAP::CloudController
     describe 'Associations' do
       it { is_expected.to have_associated :service_broker }
       it { is_expected.to have_associated :service_plans }
-
-      context 'for a v1 service' do
-        it 'has associated service_auth_token' do
-          service = Service.make(:v1)
-          expect(service.reload.service_auth_token).to be_a ServiceAuthToken
-        end
-      end
     end
 
     describe 'Validations' do
@@ -114,20 +107,6 @@ module VCAP::CloudController
     it 'ensures that blank provider values will be treated as nil' do
       service = Service.make_unsaved(provider: '', service_broker: nil).save
       expect(service.provider).to be_nil
-    end
-
-    describe '#destroy' do
-      let!(:service) { Service.make }
-      subject { service.destroy }
-
-      it "doesn't remove the associated ServiceAuthToken" do
-        # XXX services don't always have a token, unlike what the fixture implies
-        expect {
-          subject
-        }.to_not change {
-                   ServiceAuthToken.count(label: service.label, provider: service.provider)
-                 }
-      end
     end
 
     describe '#user_visibility_filter' do

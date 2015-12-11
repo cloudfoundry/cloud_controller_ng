@@ -124,12 +124,6 @@ module VCAP::CloudController
     organization      { Organization.make }
   end
 
-  ServiceAuthToken.blueprint do
-    label
-    provider
-    token
-  end
-
   Service.blueprint do
     label             { Sham.label }
     unique_id         { SecureRandom.uuid }

@@ -44,7 +44,6 @@ require 'models/runtime/user'
 require 'models/runtime/locking'
 
 require 'models/services/service'
-require 'models/services/service_auth_token'
 require 'models/services/service_binding'
 require 'models/services/route_binding'
 require 'models/services/service_dashboard_client'
