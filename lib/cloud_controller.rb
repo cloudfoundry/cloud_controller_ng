@@ -67,8 +67,6 @@ require 'cloud_controller/organization_instance_usage_calculator'
 
 require 'cloud_controller/legacy_api/legacy_api_base'
 require 'cloud_controller/legacy_api/legacy_info'
-require 'cloud_controller/legacy_api/legacy_services'
-require 'cloud_controller/legacy_api/legacy_service_gateway'
 require 'cloud_controller/legacy_api/legacy_bulk'
 
 require 'cloud_controller/resource_pool'
