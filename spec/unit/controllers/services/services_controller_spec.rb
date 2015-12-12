@@ -20,44 +20,12 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
-          label:              { type: 'string', required: true },
-          description:        { type: 'string', required: true },
-          long_description:   { type: 'string' },
-          info_url:           { type: 'string /url_regex/' },
-          documentation_url:  { type: 'string /url_regex/' },
-          acls:               { type: '{"users" => [string], "wildcards" => [string]}' },
-          timeout:            { type: 'integer' },
-          active:             { type: 'bool', default: false },
-          bindable:           { type: 'bool', default: true },
-          extra:              { type: 'string' },
-          unique_id:          { type: 'string' },
-          tags:               { type: '[string]', default: [] },
-          requires:           { type: '[string]', default: [] },
-          provider:           { type: 'string', required: true },
-          version:            { type: 'string', required: true },
-          url:                { type: 'string /url_regex/', required: true },
           service_plan_guids: { type: '[string]' }
         })
       end
 
       it do
         expect(described_class).to have_updatable_attributes({
-          label:              { type: 'string' },
-          description:        { type: 'string' },
-          long_description:   { type: 'string' },
-          info_url:           { type: 'string /url_regex/' },
-          documentation_url:  { type: 'string /url_regex/' },
-          acls:               { type: '{"users" => [string], "wildcards" => [string]}' },
-          timeout:            { type: 'integer' },
-          active:             { type: 'bool' },
-          bindable:           { type: 'bool' },
-          extra:              { type: 'string' },
-          unique_id:          { type: 'string' },
-          tags:               { type: '[string]' },
-          requires:           { type: '[string]' },
-          provider:           { type: 'string' },
-          version:            { type: 'string' },
-          url:                { type: 'string /url_regex/' },
           service_plan_guids: { type: '[string]' }
         })
       end

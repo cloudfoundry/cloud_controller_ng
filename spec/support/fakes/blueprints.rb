@@ -131,28 +131,6 @@ module VCAP::CloudController
     active            { true }
     service_broker    { ServiceBroker.make }
     description       { Sham.description } # remove hack
-    provider          { '' }
-    url               { nil }
-    version           { nil }
-  end
-
-  Service.blueprint(:v1) do
-    provider          { Sham.provider }
-    url               { Sham.url }
-    version           { Sham.version }
-    description do
-      # Hack since Sequel does not allow two foreign keys natively
-      # and putting this side effect outside memoizes the label and provider.
-      # This also creates a ServiceAuthToken for v2 services despite the fact
-      # that they do not use it.
-      ServiceAuthToken.make(label: label, provider: provider, token: Sham.token)
-      Sham.description
-    end
-
-    service_broker    { nil }
-  end
-
-  Service.blueprint(:v2) do
   end
 
   Service.blueprint(:routing) do
@@ -170,20 +148,8 @@ module VCAP::CloudController
     name                       { Sham.name }
     credentials                { Sham.service_credentials }
     space                      { Space.make }
-    service_plan               { ServicePlan.make(:v2) }
+    service_plan               { ServicePlan.make }
     gateway_name               { Sham.guid }
-  end
-
-  ManagedServiceInstance.blueprint(:v1) do
-    is_gateway_service { true }
-    name              { Sham.name }
-    credentials       { Sham.service_credentials }
-    space             { Space.make }
-    service_plan      { ServicePlan.make(:v1) }
-    gateway_name      { Sham.guid }
-  end
-
-  ManagedServiceInstance.blueprint(:v2) do
   end
 
   ManagedServiceInstance.blueprint(:routing) do
@@ -264,21 +230,9 @@ module VCAP::CloudController
     name              { Sham.name }
     free              { false }
     description       { Sham.description }
-    service           { Service.make(:v2) }
+    service           { Service.make }
     unique_id         { SecureRandom.uuid }
     active            { true }
-  end
-
-  ServicePlan.blueprint(:v1) do
-    name              { Sham.name }
-    free              { false }
-    description       { Sham.description }
-    service           { Service.make(:v1) }
-    unique_id         { SecureRandom.uuid }
-    active            { true }
-  end
-
-  ServicePlan.blueprint(:v2) do
   end
 
   ServicePlan.blueprint(:routing) do

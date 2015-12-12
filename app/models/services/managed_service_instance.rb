@@ -2,8 +2,6 @@ require 'vcap/request'
 
 module VCAP::CloudController
   class ManagedServiceInstance < ServiceInstance
-    class ServiceGatewayError < StandardError; end
-
     IN_PROGRESS_STRING = 'in progress'.freeze
 
     many_to_one :service_plan
@@ -20,9 +18,6 @@ module VCAP::CloudController
     plugin :after_initialize
 
     serialize_attributes :json, :tags
-
-    # This only applies to V1 services
-    alias_attribute :broker_provided_id, :gateway_name
 
     delegate :client, to: :service_plan
 

@@ -897,34 +897,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      context 'with a v1 service' do
-        let(:space) { Space.make }
-        let(:developer) { make_developer_for_space(space) }
-        let(:plan) { ServicePlan.make(:v1, service: service) }
-        let(:service) { Service.make(:v1, description: 'blah blah foobar') }
-
-        before do
-          allow(service).to receive(:v2?) { false }
-        end
-
-        context 'when provisioning without a service-auth-token' do
-          it 'should throw a 500 and give you an error message' do
-            req = MultiJson.dump(
-              name: 'foo',
-              space_guid: space.guid,
-              service_plan_guid: plan.guid
-            )
-            headers = headers_for(developer)
-
-            expect(plan.service.service_auth_token).to eq(nil)
-
-            post '/v2/service_instances', req, headers
-
-            expect(last_response.status).to eq(500)
-          end
-        end
-      end
     end
 
     describe 'GET', '/v2/service_instances' do

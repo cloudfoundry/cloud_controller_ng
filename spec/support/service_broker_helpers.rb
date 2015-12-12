@@ -149,28 +149,4 @@ module ServiceBrokerHelpers
     uri.query = query if query
     uri.to_s
   end
-
-  def stub_v1_broker(opts={})
-    fake = double('HttpClient')
-
-    allow(fake).to receive(:provision).and_return({
-      'service_id' => Sham.guid,
-      'configuration' => 'CONFIGURATION',
-      'credentials' => Sham.service_credentials,
-      'dashboard_url' => 'http://dashboard.example.com'
-    })
-
-    binding_response = {
-      'service_id' => Sham.guid,
-      'configuration' => 'CONFIGURATION',
-      'credentials' => Sham.service_credentials
-    }
-    binding_response.merge!('syslog_drain_url' => opts[:syslog_drain_url]) if opts[:syslog_drain_url]
-    allow(fake).to receive(:bind).and_return(binding_response)
-
-    allow(fake).to receive(:unbind)
-    allow(fake).to receive(:deprovision)
-
-    allow(VCAP::Services::ServiceBrokers::V1::HttpClient).to receive(:new).and_return(fake)
-  end
 end

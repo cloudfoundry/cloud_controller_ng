@@ -204,7 +204,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#private?' do
+    describe '#broker_private?' do
       it 'returns true if the plan belongs to a service that belongs to a private broker' do
         space = Space.make
         broker = ServiceBroker.make space: space
@@ -218,14 +218,6 @@ module VCAP::CloudController
         plan = ServicePlan.make
 
         expect(plan.broker_private?).to be_falsey
-      end
-
-      context 'for v1 services' do
-        it 'is false' do
-          plan = ServicePlan.make(:v1)
-
-          expect(plan.broker_private?).to be_falsey
-        end
       end
     end
   end

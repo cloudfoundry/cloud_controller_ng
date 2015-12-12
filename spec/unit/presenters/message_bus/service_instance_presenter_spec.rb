@@ -7,19 +7,18 @@ describe ServiceInstancePresenter do
 
     context 'for a managed service instance' do
       let(:service_instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(:v1, service_plan: service_plan, tags: ['meow'])
+        VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan, tags: ['meow'])
       end
 
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(:v1, service: service)
+        VCAP::CloudController::ServicePlan.make(service: service)
       end
 
-      let(:service) { VCAP::CloudController::Service.make(:v1, tags: ['relational', 'mysql']) }
+      let(:service) { VCAP::CloudController::Service.make(tags: ['relational', 'mysql']) }
 
       specify do
         expect(subject.keys).to include(:label)
         expect(subject.keys).to include(:provider)
-        expect(subject.keys).to include(:version)
         expect(subject.keys).to include(:vendor)
         expect(subject.keys).to include(:plan)
         expect(subject.keys).to include(:name)
@@ -27,21 +26,12 @@ describe ServiceInstancePresenter do
       end
 
       specify do
-        expect(subject.fetch(:label)).to eq([service_instance.service.label, service_instance.service.version].join('-'))
+        expect(subject.fetch(:label)).to eq(service_instance.service.label)
         expect(subject.fetch(:provider)).to eq(service_instance.service.provider)
-        expect(subject.fetch(:version)).to eq(service_instance.service.version)
         expect(subject.fetch(:vendor)).to eq(service_instance.service.label)
         expect(subject.fetch(:plan)).to eq(service_instance.service_plan.name)
         expect(subject.fetch(:name)).to eq(service_instance.name)
         expect(subject.fetch(:tags)).to eq(['relational', 'mysql', 'meow'])
-      end
-
-      context 'when the service does not have a version' do
-        let(:service) { VCAP::CloudController::Service.make(version: nil) }
-
-        specify { expect(subject).not_to have_key(:version) }
-
-        its([:label]) { should == service.label }
       end
     end
 

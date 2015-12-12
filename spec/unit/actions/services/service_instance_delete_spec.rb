@@ -75,15 +75,6 @@ module VCAP::CloudController
         expect(a_request(:delete, broker_url)).to have_been_made
       end
 
-      context 'when the service instance is a v1 service' do
-        it 'deletes the service instance' do
-          service_instance = ManagedServiceInstance.make(:v1)
-          errs = service_instance_delete.delete([service_instance])
-          expect(errs).to be_empty
-          expect { service_instance.reload }.to raise_error /Record not found/
-        end
-      end
-
       context 'when accepts_incomplete is true' do
         let(:service_instance) { ManagedServiceInstance.make }
         let(:event_repository) { Repositories::Services::EventRepository.new(user: user, user_email: user_email) }

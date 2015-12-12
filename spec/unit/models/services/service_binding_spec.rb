@@ -146,34 +146,6 @@ module VCAP::CloudController
             service_binding.save
           }.not_to raise_error
         end
-
-        context 'v1 service instance' do
-          let(:service) { Service.make(:v1, requires: []) }
-          let(:service_plan) { ServicePlan.make(:v1, service: service) }
-          let(:service_instance) do
-            ManagedServiceInstance.make(
-              :v1,
-              service_plan: service_plan,
-              name: 'not a syslog drain instance'
-            )
-          end
-
-          it 'should allow a non syslog_drain with a nil syslog drain url' do
-            expect {
-              service_binding = ServiceBinding.make(service_instance: service_instance)
-              service_binding.syslog_drain_url = nil
-              service_binding.save
-            }.not_to raise_error
-          end
-
-          it 'should allow a non syslog_drain with an empty syslog drain url' do
-            expect {
-              service_binding = ServiceBinding.make(service_instance: service_instance)
-              service_binding.syslog_drain_url = ''
-              service_binding.save
-            }.not_to raise_error
-          end
-        end
       end
 
       context 'service that does require a syslog_drain' do
@@ -185,26 +157,6 @@ module VCAP::CloudController
             service_binding.syslog_drain_url = 'http://syslogurl.com'
             service_binding.save
           }.not_to raise_error
-        end
-
-        context 'v1 service instance' do
-          let(:service) { Service.make(:v1, requires: ['syslog_drain']) }
-          let(:service_plan) { ServicePlan.make(:v1, service: service) }
-          let(:service_instance) do
-            ManagedServiceInstance.make(
-              :v1,
-              service_plan: service_plan,
-              name: 'a syslog drain instance'
-            )
-          end
-
-          it 'should allow a syslog_drain with a syslog drain url' do
-            expect {
-              service_binding = ServiceBinding.make(service_instance: service_instance)
-              service_binding.syslog_drain_url = 'http://syslogurl.com'
-              service_binding.save
-            }.not_to raise_error
-          end
         end
       end
     end

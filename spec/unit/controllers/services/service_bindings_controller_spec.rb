@@ -507,63 +507,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      context 'for v1 service instances' do
-        let(:fake_client) { double(:v1_client) }
-        let(:fake_bind_response) do
-          {
-            'service_id' => Sham.guid,
-            'configuration' => 'CONFIGURATION',
-            'credentials' => credentials,
-          }
-        end
-
-        before do
-          allow(fake_client).to receive(:bind).and_return(fake_bind_response)
-          allow(VCAP::Services::ServiceBrokers::V1::HttpClient).to receive(:new).and_return(fake_client)
-        end
-
-        let(:service_instance) { ManagedServiceInstance.make(:v1, space: space) }
-        let(:req) do
-          {
-            service_instance_guid: service_instance.guid,
-            app_guid: app_obj.guid
-          }
-        end
-
-        it 'binds a service instance to an app' do
-          post '/v2/service_bindings', req.to_json, headers_for(developer)
-          expect(last_response).to have_status_code(201)
-
-          binding = ServiceBinding.last
-          expect(binding.credentials).to eq(credentials)
-        end
-
-        context 'and the client provides arbitrary params' do
-          let(:req) do
-            {
-              service_instance_guid: service_instance.guid,
-              app_guid: app_obj.guid,
-              parameters: { 'key' => 'value' }
-            }
-          end
-
-          it 'ignores arbitrary params' do
-            post '/v2/service_bindings', req.to_json, headers_for(developer, email: 'email@example.com')
-            expect(last_response).to have_status_code(201)
-
-            label_with_version = "#{service_instance.service.label}-#{service_instance.service.version}"
-
-            expect(fake_client).to have_received(:bind).with(
-               service_instance.broker_provided_id,
-               app_obj.guid,
-               label_with_version,
-               'email@example.com',
-               ServiceBinding.last.binding_options
-             )
-          end
-        end
-      end
     end
 
     describe 'DELETE', '/v2/service_bindings/:service_binding_guid' do

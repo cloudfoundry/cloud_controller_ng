@@ -1177,13 +1177,13 @@ module VCAP::CloudController
       context 'when there are services' do
         let(:space) { Space.make }
         let(:app) { App.make(environment_json: { 'jesse' => 'awesome' }, space: space) }
-        let(:service) { Service.make(:v1, label: 'elephantsql-n/a') }
-        let(:service_alt) { Service.make(:v1, label: 'giraffesql-n/a') }
-        let(:service_plan) { ServicePlan.make(:v1, service: service) }
-        let(:service_plan_alt) { ServicePlan.make(:v1, service: service_alt) }
-        let(:service_instance) { ManagedServiceInstance.make(:v1, space: space, service_plan: service_plan, name: 'elephantsql-vip-uat') }
-        let(:service_instance_same_label) { ManagedServiceInstance.make(:v1, space: space, service_plan: service_plan, name: 'elephantsql-2') }
-        let(:service_instance_diff_label) { ManagedServiceInstance.make(:v1, space: space, service_plan: service_plan_alt, name: 'giraffesql-vip-uat') }
+        let(:service) { Service.make(label: 'elephantsql-n/a') }
+        let(:service_alt) { Service.make(label: 'giraffesql-n/a') }
+        let(:service_plan) { ServicePlan.make(service: service) }
+        let(:service_plan_alt) { ServicePlan.make(service: service_alt) }
+        let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat') }
+        let(:service_instance_same_label) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-2') }
+        let(:service_instance_diff_label) { ManagedServiceInstance.make(space: space, service_plan: service_plan_alt, name: 'giraffesql-vip-uat') }
 
         before do
           ServiceBinding.make(app: app, service_instance: service_instance)
@@ -1191,13 +1191,13 @@ module VCAP::CloudController
 
         it 'contains a populated vcap_services' do
           expect(app.system_env_json['VCAP_SERVICES']).not_to eq({})
-          expect(app.system_env_json['VCAP_SERVICES']).to have_key("#{service.label}-#{service.version}")
-          expect(app.system_env_json['VCAP_SERVICES']["#{service.label}-#{service.version}"]).to have(1).services
+          expect(app.system_env_json['VCAP_SERVICES']).to have_key("#{service.label}")
+          expect(app.system_env_json['VCAP_SERVICES']["#{service.label}"]).to have(1).services
         end
 
         describe 'service hash includes only white-listed keys' do
           subject(:service_hash_keys) do
-            app.system_env_json['VCAP_SERVICES']["#{service.label}-#{service.version}"].first.keys
+            app.system_env_json['VCAP_SERVICES']["#{service.label}"].first.keys
           end
 
           its(:count) { should eq(5) }
@@ -1216,8 +1216,8 @@ module VCAP::CloudController
 
           it 'should group services by label' do
             expect(app.system_env_json['VCAP_SERVICES']).to have(2).groups
-            expect(app.system_env_json['VCAP_SERVICES']["#{service.label}-#{service.version}"]).to have(2).services
-            expect(app.system_env_json['VCAP_SERVICES']["#{service_alt.label}-#{service_alt.version}"]).to have(1).service
+            expect(app.system_env_json['VCAP_SERVICES']["#{service.label}"]).to have(2).services
+            expect(app.system_env_json['VCAP_SERVICES']["#{service_alt.label}"]).to have(1).service
           end
         end
       end

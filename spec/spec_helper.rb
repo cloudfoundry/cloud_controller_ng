@@ -70,7 +70,6 @@ RSpec.configure do |rspec_config|
 
     TestConfig.reset
 
-    stub_v1_broker
     VCAP::CloudController::SecurityContext.clear
   end
 

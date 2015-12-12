@@ -5,7 +5,6 @@ module VCAP::CloudController
   class ServiceKeyManager
     class ServiceInstanceNotFound < StandardError; end
     class ServiceInstanceNotBindable < StandardError; end
-    class ServiceInstanceVersionMismatch < StandardError; end
     class ServiceInstanceUserProvided < StandardError; end
 
     def initialize(services_event_repository, access_validator, logger)
@@ -19,7 +18,6 @@ module VCAP::CloudController
       raise ServiceInstanceNotFound unless service_instance
       raise ServiceInstanceNotBindable unless service_instance.bindable?
       raise ServiceInstanceUserProvided if service_instance.user_provided_instance?
-      raise ServiceInstanceVersionMismatch unless service_instance.service.v2?
 
       validate_create_action(request_attrs)
 
