@@ -58,24 +58,6 @@ resource 'Services', type: [:api, :legacy_api] do
         expect(status).to eq 204
       end
     end
-
-    post '/v2/services', deprecated: true do
-      example 'Creating a Service (deprecated)' do
-        client.post '/v2/services', fields_json, headers
-        expect(status).to eq(201)
-
-        standard_entity_response parsed_response, :services
-      end
-    end
-
-    put '/v2/services' do
-      example 'Updating a Service (deprecated)' do
-        client.put "/v2/services/#{guid}", fields_json, headers
-        expect(status).to eq(201)
-
-        standard_entity_response parsed_response, :services
-      end
-    end
   end
 
   describe 'Nested endpoints' do

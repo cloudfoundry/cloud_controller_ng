@@ -12,6 +12,14 @@ module VCAP::CloudController
       [:services_event_repository]
     end
 
+    def create
+      404
+    end
+
+    def update(_)
+      404
+    end
+
     def inject_dependencies(dependencies)
       super
       @services_event_repository = dependencies.fetch(:services_event_repository)
