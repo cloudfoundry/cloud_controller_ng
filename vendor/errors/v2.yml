@@ -553,11 +553,6 @@
   http_code: 500
   message: "Runner error: %s"
 
-180001:
-  name: SnapshotNotFound
-  http_code: 404
-  message: "Snapshot could not be found: %s"
-
 180002:
   name: ServiceGatewayError
   http_code: 503
