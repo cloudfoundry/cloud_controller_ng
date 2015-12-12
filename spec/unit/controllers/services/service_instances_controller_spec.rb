@@ -2381,33 +2381,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'with a v1 service instance' do
-        let(:service) { Service.make(:v1) }
-        let(:service_plan) { ServicePlan.make(:v1, service: service) }
-        let!(:service_instance) { ManagedServiceInstance.make(:v1, service_plan: service_plan) }
-        let(:developer) { make_developer_for_space(service_instance.space) }
-
-        context 'when the service gateway returns a 409' do
-          before do
-            # Stub 409
-            allow(VCAP::Services::ServiceBrokers::V1::HttpClient).to receive(:new).and_call_original
-
-            guid = service_instance.broker_provided_id
-            path = "/gateway/v1/configurations/#{guid}"
-            uri = URI(service.url + path)
-
-            stub_request(:delete, uri.to_s).to_return(body: '{"description": "service gateway error"}', status: 409)
-          end
-
-          it 'forwards the error message from the service gateway' do
-            delete "/v2/service_instances/#{service_instance.guid}", {}, headers_for(developer)
-
-            expect(last_response.status).to eq 409
-            expect(JSON.parse(last_response.body)['description']).to include 'service gateway error'
-          end
-        end
-      end
-
       context 'with a user provided service instance' do
         let!(:service_instance) { UserProvidedServiceInstance.make }
         let(:developer) { make_developer_for_space(service_instance.space) }

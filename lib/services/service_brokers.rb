@@ -1,7 +1,6 @@
 module VCAP::Services::ServiceBrokers end
 
 require 'services/service_brokers/user_provided'
-require 'services/service_brokers/v1'
 require 'services/service_brokers/v2'
 
 require 'services/service_brokers/null_client'

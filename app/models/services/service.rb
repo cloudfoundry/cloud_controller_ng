@@ -105,16 +105,8 @@ module VCAP::CloudController
     def client
       if purging
         VCAP::Services::ServiceBrokers::NullClient.new
-      elsif v2?
-        service_broker.client
       else
-        raise VCAP::Errors::ApiError.new_from_details('MissingServiceAuthToken', label) if service_auth_token.nil?
-
-        @v1_client ||= VCAP::Services::ServiceBrokers::V1::Client.new(
-          url: url,
-          auth_token: service_auth_token.token,
-          timeout: timeout
-        )
+        service_broker.client
       end
     end
 
