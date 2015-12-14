@@ -257,6 +257,8 @@ module VCAP::CloudController
       raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceInstanceBindingManager::RouteNotFound
       raise VCAP::Errors::ApiError.new_from_details('RouteNotFound', route_guid)
+    rescue ServiceInstanceBindingManager::ServiceInstanceAlreadyBoundToSameRoute
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceAlreadyBoundToSameRoute')
     rescue ServiceInstanceBindingManager::RouteAlreadyBoundToServiceInstance
       raise VCAP::Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance')
     rescue ServiceInstanceBindingManager::ServiceInstanceNotFound

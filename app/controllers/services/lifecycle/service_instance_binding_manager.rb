@@ -8,6 +8,7 @@ module VCAP::CloudController
     class ServiceInstanceNotBindable < StandardError; end
     class RouteServiceRequiresDiego < StandardError; end
     class RouteAlreadyBoundToServiceInstance < StandardError; end
+    class ServiceInstanceAlreadyBoundToSameRoute < StandardError; end
     class AppNotFound < StandardError; end
     class RouteServiceDisabled < StandardError; end
 
@@ -27,6 +28,7 @@ module VCAP::CloudController
 
       raise ServiceInstanceNotFound unless instance
       raise ServiceInstanceNotBindable unless instance.bindable?
+      raise ServiceInstanceAlreadyBoundToSameRoute if route.service_instance == instance
       raise RouteAlreadyBoundToServiceInstance if route.service_instance
       raise RouteServiceRequiresDiego if !route.all_apps_diego?
       raise RouteServiceDisabled if instance.route_service? && !route_services_enabled

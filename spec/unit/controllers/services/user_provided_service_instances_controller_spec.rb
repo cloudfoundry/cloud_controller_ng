@@ -481,6 +481,27 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(JSON.parse(last_response.body)['total_results']).to eql(0)
         end
+
+        context 'and the associated is the same as the requested instance' do
+          before do
+            RouteBinding.make service_instance: service_instance, route: route
+          end
+
+          it 'raises ServiceInstanceAlreadyBoundToSameRoute' do
+            get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+            expect(last_response).to have_status_code(200)
+            expect(JSON.parse(last_response.body)['total_results']).to eql(1)
+
+            put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+            expect(last_response).to have_status_code(400)
+            expect(JSON.parse(last_response.body)['description']).
+              to eq('The route and service instance are already bound.')
+
+            get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+            expect(last_response).to have_status_code(200)
+            expect(JSON.parse(last_response.body)['total_results']).to eql(1)
+          end
+        end
       end
 
       context 'when attempting to bind to a service with no route_service_url' do

@@ -119,6 +119,20 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the route is already bound to the same service_instance' do
+          before do
+            RouteBinding.make(route: route, service_instance: service_instance)
+          end
+
+          it 'raises a service already bound to same route error' do
+            expect {
+              manager.create_route_service_instance_binding(route.guid, service_instance.guid, route_services_enabled)
+            }.to raise_error ServiceInstanceBindingManager::ServiceInstanceAlreadyBoundToSameRoute
+
+            expect(a_request(:put, service_binding_url_pattern)).to_not have_been_made
+          end
+        end
+
         context 'binding a service instance to a route' do
           context 'when the route has no apps' do
             it 'does not send request to diego' do
