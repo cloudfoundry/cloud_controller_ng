@@ -927,3 +927,8 @@
   name: RoutingApiUnavailable
   http_code: 503
   message: "The Routing API is currently unavailable"
+
+380001:
+  name: EnvironmentVariableGroupInvalid
+  http_code: 400
+  message: "The Environment Variable Group is invalid: %s"
