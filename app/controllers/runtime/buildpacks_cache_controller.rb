@@ -8,7 +8,7 @@ module VCAP::CloudController
     def delete
       raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') unless SecurityContext.roles.admin?
       job = Jobs::Enqueuer.new(Jobs::Runtime::BuildpackCacheCleanup.new, queue: 'cc-generic').enqueue
-      [HTTP::CREATED, JobPresenter.new(job).to_json]
+      [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
     end
   end
 end

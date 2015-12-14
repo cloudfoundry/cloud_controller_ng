@@ -12,7 +12,7 @@ module VCAP::CloudController
 
         job = Delayed::Job.last
 
-        expect(last_response.status).to eq(201)
+        expect(last_response.status).to eq(202)
         expect(decoded_response(symbolize_keys: true)).to eq(JobPresenter.new(job).to_hash)
       end
 
