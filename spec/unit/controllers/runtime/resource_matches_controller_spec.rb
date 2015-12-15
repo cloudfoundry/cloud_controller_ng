@@ -34,6 +34,25 @@ module VCAP::CloudController
         it 'should return many resources that match' do
           resource_match_request(:put, '/v2/resource_match', @descriptors, [@dummy_descriptor])
         end
+
+        context 'invalid json' do
+          it 'returns an error' do
+            put '/v2/resource_match', 'invalid json', json_headers(headers_for(User.make))
+
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to match(/MessageParseError/)
+          end
+        end
+
+        context 'non-array json' do
+          it 'returns an error' do
+            put '/v2/resource_match', 'null', json_headers(headers_for(User.make))
+
+            expect(last_response.status).to eq(422)
+            expect(last_response.body).to match(/UnprocessableEntity/)
+            expect(last_response.body).to match(/must be an array./)
+          end
+        end
       end
     end
 
