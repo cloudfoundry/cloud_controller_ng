@@ -44,7 +44,6 @@ namespace :spec do
     fast_suites = %w[
         access
         actions
-        builders
         collection_transformers
         jobs
         messages
