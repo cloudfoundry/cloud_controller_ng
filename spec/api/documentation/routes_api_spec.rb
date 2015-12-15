@@ -50,6 +50,11 @@ resource 'Routes', type: [:api, :legacy_api] do
       standard_model_list :route, VCAP::CloudController::RoutesController
       standard_model_get :route, nested_associations: [:domain, :space, :service_instance]
       standard_model_delete :route, query_string: 'recursive=true'
+
+      def after_standard_model_delete(guid)
+        event = VCAP::CloudController::Event.find(type: 'audit.route.delete-request', actee: guid)
+        audited_event event
+      end
     end
 
     post '/v2/routes/' do
@@ -73,6 +78,8 @@ EOF
 
         standard_entity_response parsed_response, :route
         expect(parsed_response['entity']['space_guid']).to eq(space.guid)
+        route_guid = parsed_response['metadata']['guid']
+        audited_event VCAP::CloudController::Event.find(type: 'audit.route.create', actee: route_guid)
       end
     end
 
@@ -88,6 +95,10 @@ EOF
         client.put "/v2/routes/#{guid}", body, headers
 
         expect(status).to eq 201
+
+        standard_entity_response parsed_response, :route
+        route_guid = parsed_response['metadata']['guid']
+        audited_event VCAP::CloudController::Event.find(type: 'audit.route.update', actee: route_guid)
       end
     end
   end
