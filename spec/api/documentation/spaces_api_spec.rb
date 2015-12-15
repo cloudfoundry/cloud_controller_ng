@@ -107,11 +107,14 @@ resource 'Spaces', type: [:api, :legacy_api] do
         let(:associated_developer_guid) { associated_developer.guid }
         let(:developer_guid) { developer.guid }
 
-        parameter :developer_guid, 'The guid of the developer'
-
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :developers
-        nested_model_associate :developer, :space
-        nested_model_remove :developer, :space
+
+        context 'has user guid param' do
+          parameter :developer_guid, 'The guid of the developer'
+
+          nested_model_associate :developer, :space
+          nested_model_remove :developer, :space
+        end
       end
 
       context 'by username' do
@@ -160,11 +163,14 @@ resource 'Spaces', type: [:api, :legacy_api] do
         let(:associated_manager_guid) { associated_manager.guid }
         let(:manager_guid) { manager.guid }
 
-        parameter :manager_guid, 'The guid of the manager'
-
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :managers
-        nested_model_associate :manager, :space
-        nested_model_remove :manager, :space
+
+        context 'has user guid param' do
+          parameter :manager_guid, 'The guid of the manager'
+
+          nested_model_associate :manager, :space
+          nested_model_remove :manager, :space
+        end
       end
 
       context 'by username' do
@@ -213,11 +219,14 @@ resource 'Spaces', type: [:api, :legacy_api] do
         let(:associated_auditor_guid) { associated_auditor.guid }
         let(:auditor_guid) { auditor.guid }
 
-        parameter :auditor_guid, 'The guid of the auditor'
-
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :space, path: :auditors
-        nested_model_associate :auditor, :space
-        nested_model_remove :auditor, :space
+
+        context 'has user guid param' do
+          parameter :auditor_guid, 'The guid of the auditor'
+
+          nested_model_associate :auditor, :space
+          nested_model_remove :auditor, :space
+        end
       end
 
       context 'by username' do
@@ -325,11 +334,14 @@ resource 'Spaces', type: [:api, :legacy_api] do
       let(:security_group) { VCAP::CloudController::SecurityGroup.make }
       let(:security_group_guid) { security_group.guid }
 
-      parameter :security_group_guid, 'The guid of the security group'
-
       standard_model_list :security_group, VCAP::CloudController::SecurityGroupsController, outer_model: :space
-      nested_model_associate :security_group, :space
-      nested_model_remove :security_group, :space
+
+      context 'has security group guid param' do
+        parameter :security_group_guid, 'The guid of the security group'
+
+        nested_model_associate :security_group, :space
+        nested_model_remove :security_group, :space
+      end
     end
   end
 end

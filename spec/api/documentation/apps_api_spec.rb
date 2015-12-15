@@ -31,7 +31,7 @@ resource 'Apps', type: [:api, :legacy_api] do
 
     field :buildpack,
       'Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.',
-      default: '',
+      default:        '',
       example_values: ['', 'https://github.com/virtualstaticvoid/heroku-buildpack-r.git', 'an_example_installed_buildpack']
 
     field :health_check_type, 'Type of health check to perform.', default: 'port', valid_values: ['port', 'none']
@@ -40,16 +40,16 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :diego, 'Use diego to stage and to run when available', default: false, experimental: true, valid_values: [true, false]
     field :docker_image,
       'Name of the Docker image containing the app',
-      default: nil,
-      experimental: true,
+      default:        nil,
+      experimental:   true,
       example_values: ['cloudfoundry/helloworld', 'registry.example.com:5000/user/repository/tag']
     field :docker_credentials_json, 'Docker credentials for pulling docker image.',
-      default: {},
-      experimental: true,
+      default:        {},
+      experimental:   true,
       example_values: [{ 'docker_user' => 'user name',
-                         'docker_password' => 's3cr3t',
-                         'docker_email' => 'email@example.com',
-                         'docker_login_server' => 'https://index.docker.io/v1/' }]
+                         'docker_password'              => 's3cr3t',
+                         'docker_email'                 => 'email@example.com',
+                         'docker_login_server'          => 'https://index.docker.io/v1/' }]
 
     field :environment_json, 'Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables.'
     field :production, 'Deprecated.', deprecated: true, default: true, valid_values: [true, false]
@@ -60,8 +60,8 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :staging_failed_description, 'Detailed description for the staging_failed_reason', default: nil
 
     field :ports, 'Ports on which application may listen. Overwrites previously configured ports. Ports must be in range 1024-65535. Supported for Diego only.',
-          experimental: true,
-          example_values: [[5222, 8080], [1056]]
+      experimental:   true,
+      example_values: [[5222, 8080], [1056]]
   end
 
   describe 'Standard endpoints' do
@@ -86,7 +86,7 @@ resource 'Apps', type: [:api, :legacy_api] do
       include_context 'fields', required: true
       example 'Creating an App' do
         space_guid = VCAP::CloudController::Space.make.guid
-        ports = [1024, 2000]
+        ports      = [1024, 2000]
         client.post '/v2/apps', MultiJson.dump(required_fields.merge(space_guid: space_guid, diego: true, ports: ports), pretty: true), headers
         expect(status).to eq(201)
 
@@ -137,15 +137,13 @@ resource 'Apps', type: [:api, :legacy_api] do
       let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: associated_service_instance) }
       let(:associated_service_binding_guid) { associated_service_binding.guid }
 
-      parameter :service_binding_guid, 'The guid of the service binding'
-
       before do
         service_broker = associated_service_binding.service.service_broker
-        instance_guid = associated_service_instance.guid
-        binding_guid = associated_service_binding.guid
-        uri = URI(service_broker.broker_url)
-        broker_url = uri.host + uri.path
-        broker_auth = "#{service_broker.auth_username}:#{service_broker.auth_password}"
+        instance_guid  = associated_service_instance.guid
+        binding_guid   = associated_service_binding.guid
+        uri            = URI(service_broker.broker_url)
+        broker_url     = uri.host + uri.path
+        broker_auth    = "#{service_broker.auth_username}:#{service_broker.auth_password}"
         stub_request(
           :delete,
           %r{https://#{broker_auth}@#{broker_url}/v2/service_instances/#{instance_guid}/service_bindings/#{binding_guid}}).
@@ -153,7 +151,11 @@ resource 'Apps', type: [:api, :legacy_api] do
       end
 
       standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :app
-      nested_model_remove :service_binding, :app
+
+      context 'has service binding guid param' do
+        parameter :service_binding_guid, 'The guid of the service binding'
+        nested_model_remove :service_binding, :app
+      end
     end
 
     describe 'Routes' do
@@ -165,11 +167,14 @@ resource 'Apps', type: [:api, :legacy_api] do
       let(:associated_route) { VCAP::CloudController::Route.make(space: app_obj.space) }
       let(:associated_route_guid) { associated_route.guid }
 
-      parameter :route_guid, 'The guid of the route'
-
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :app
-      nested_model_associate :route, :app
-      nested_model_remove :route, :app
+
+      context 'has route guid param' do
+        parameter :route_guid, 'The guid of the route'
+
+        nested_model_associate :route, :app
+        nested_model_remove :route, :app
+      end
     end
   end
 
@@ -214,11 +219,11 @@ resource 'Apps', type: [:api, :legacy_api] do
 
       instances = {
         0 => {
-          state: 'RUNNING',
-          since: 1403140717.984577,
-          debug_ip: nil,
-          debug_port: nil,
-          console_ip: nil,
+          state:        'RUNNING',
+          since:        1403140717.984577,
+          debug_ip:     nil,
+          debug_port:   nil,
+          console_ip:   nil,
           console_port: nil
         },
       }
@@ -259,22 +264,22 @@ resource 'Apps', type: [:api, :legacy_api] do
         0 => {
           state: 'RUNNING',
           stats: {
-            usage: {
+            usage:      {
               disk: 66392064,
-              mem: 29880320,
-              cpu: 0.13511219703079957,
+              mem:  29880320,
+              cpu:  0.13511219703079957,
               time: '2014-06-19 22:37:58 +0000'
             },
-            name: 'app_name',
-            uris: [
+            name:       'app_name',
+            uris:       [
               'app_name.example.com'
             ],
-            host: '10.0.0.1',
-            port: 61035,
-            uptime: 65007,
-            mem_quota: 536870912,
+            host:       '10.0.0.1',
+            port:       61035,
+            uptime:     65007,
+            mem_quota:  536870912,
             disk_quota: 1073741824,
-            fds_quota: 16384
+            fds_quota:  16384
           }
         }
       }

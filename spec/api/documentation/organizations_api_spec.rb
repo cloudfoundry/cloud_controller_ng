@@ -141,15 +141,18 @@ resource 'Organizations', type: [:api, :legacy_api] do
       let!(:associated_user) { VCAP::CloudController::User.make }
 
       context 'by user guid' do
-        parameter :user_guid, 'The guid of the user'
-
         let(:associated_user_guid) { associated_user.guid }
         let(:user) { VCAP::CloudController::User.make }
         let(:user_guid) { user.guid }
 
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization
-        nested_model_associate :user, :organization
-        nested_model_remove :user, :organization
+
+        context 'has user guid param' do
+          parameter :user_guid, 'The guid of the user'
+
+          nested_model_associate :user, :organization
+          nested_model_remove :user, :organization
+        end
       end
 
       context 'by username' do
@@ -194,14 +197,17 @@ resource 'Organizations', type: [:api, :legacy_api] do
       let(:associated_manager_guid) { associated_manager.guid }
 
       context 'by user guid' do
-        parameter :manager_guid, 'The guid of the user to associate as a manager'
-
         let(:manager) { VCAP::CloudController::User.make }
         let(:manager_guid) { manager.guid }
 
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :managers
-        nested_model_associate :manager, :organization
-        nested_model_remove :manager, :organization
+
+        context 'has user guid param' do
+          parameter :manager_guid, 'The guid of the user to associate as a manager'
+
+          nested_model_associate :manager, :organization
+          nested_model_remove :manager, :organization
+        end
       end
 
       context 'by username' do
@@ -245,14 +251,17 @@ resource 'Organizations', type: [:api, :legacy_api] do
       let(:associated_billing_manager_guid) { associated_billing_manager.guid }
 
       context 'by user guid' do
-        parameter :billing_manager_guid, 'The guid of the user'
-
         let(:billing_manager) { VCAP::CloudController::User.make }
         let(:billing_manager_guid) { billing_manager.guid }
 
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :billing_managers
-        nested_model_associate :billing_manager, :organization
-        nested_model_remove :billing_manager, :organization
+
+        context 'has user guid param' do
+          parameter :billing_manager_guid, 'The guid of the user'
+
+          nested_model_associate :billing_manager, :organization
+          nested_model_remove :billing_manager, :organization
+        end
       end
 
       context 'by username' do
@@ -296,14 +305,17 @@ resource 'Organizations', type: [:api, :legacy_api] do
       let(:associated_auditor_guid) { associated_auditor.guid }
 
       context 'by user guid' do
-        parameter :auditor_guid, 'The guid of the user'
-
         let(:auditor) { VCAP::CloudController::User.make }
         let(:auditor_guid) { auditor.guid }
 
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :auditors
-        nested_model_associate :auditor, :organization
-        nested_model_remove :auditor, :organization
+
+        context 'has user guid param' do
+          parameter :auditor_guid, 'The guid of the user'
+
+          nested_model_associate :auditor, :organization
+          nested_model_remove :auditor, :organization
+        end
       end
 
       context 'by username' do
