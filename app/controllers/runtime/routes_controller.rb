@@ -15,12 +15,13 @@ module VCAP::CloudController
     query_parameters :host, :domain_guid, :organization_guid, :path, :port
 
     def self.dependencies
-      [:routing_api_client]
+      [:routing_api_client, :route_event_repository]
     end
 
     def inject_dependencies(dependencies)
       super
       @routing_api_client = dependencies.fetch(:routing_api_client)
+      @route_event_repository = dependencies.fetch(:route_event_repository)
     end
 
     def self.translate_validation_exception(e, attributes)
@@ -71,6 +72,7 @@ module VCAP::CloudController
       route = model.create_from_hash(request_attrs)
       validate_access(:create, route, request_attrs)
 
+      after_create(route)
       [
         HTTP::CREATED,
         { 'Location' => "#{self.class.path}/#{route.guid}" },
@@ -83,6 +85,8 @@ module VCAP::CloudController
       if !recursive_delete? && route.service_instance.present?
         raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instance', route.class.table_name)
       end
+
+      @route_event_repository.record_route_delete_request(route, SecurityContext.current_user, SecurityContext.current_user_email, recursive_delete?)
 
       do_delete(route)
     end
@@ -144,12 +148,20 @@ module VCAP::CloudController
       validate_route(domain_guid)
     end
 
+    def after_create(route)
+      @route_event_repository.record_route_create(route, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+    end
+
     def before_update(route)
       super
 
       return if request_attrs['app']
 
       validate_route(route.domain.guid) if request_attrs['port'] != route.port
+    end
+
+    def after_update(route)
+      @route_event_repository.record_route_update(route, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
     end
 
     define_messages
