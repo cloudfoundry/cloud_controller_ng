@@ -167,21 +167,61 @@ module VCAP::CloudController
       end
 
       context 'when the route_service_url is invalid' do
-        let(:req) do
-          {
-            'name'              => 'my-upsi',
-            'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
-            'space_guid'        => space.guid,
-            'route_service_url' => 'http://route.url.com'
-          }
+        context 'when the route service url scheme is http' do
+          let(:req) do
+            {
+              'name'              => 'my-upsi',
+              'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
+              'space_guid'        => space.guid,
+              'route_service_url' => 'http://route.url.com'
+            }
+          end
+
+          it 'returns CF-ServiceInstanceInvalid' do
+            post '/v2/user_provided_service_instances', req.to_json, headers_for(developer)
+
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response['error_code']).to eq('CF-ServiceInstanceRouteServiceURLInvalid')
+            expect(decoded_response['description']).to include 'must be https'
+          end
         end
 
-        it 'returns CF-ServiceInstanceInvalid' do
-          post '/v2/user_provided_service_instances', req.to_json, headers_for(developer)
+        context 'when the route service url format is missing a /' do
+          let(:req) do
+            {
+              'name'              => 'my-upsi',
+              'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
+              'space_guid'        => space.guid,
+              'route_service_url' => 'https:/route.com'
+            }
+          end
 
-          expect(last_response).to have_status_code(400)
-          expect(decoded_response['error_code']).to eq('CF-ServiceInstanceRouteServiceURLInvalid')
-          expect(decoded_response['description']).to include 'must be https'
+          it 'returns CF-ServiceInstanceInvalid' do
+            post '/v2/user_provided_service_instances', req.to_json, headers_for(developer)
+
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response['error_code']).to eq('CF-ServiceInstanceRouteServiceURLInvalid')
+            expect(decoded_response['description']).to include 'route_service_url is invalid'
+          end
+        end
+
+        context 'when the route service url format is invalid' do
+          let(:req) do
+            {
+              'name'              => 'my-upsi',
+              'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
+              'space_guid'        => space.guid,
+              'route_service_url' => 'https://.com'
+            }
+          end
+
+          it 'returns CF-ServiceInstanceInvalid' do
+            post '/v2/user_provided_service_instances', req.to_json, headers_for(developer)
+
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response['error_code']).to eq('CF-ServiceInstanceRouteServiceURLInvalid')
+            expect(decoded_response['description']).to include 'route_service_url is invalid'
+          end
         end
       end
 

@@ -36,6 +36,9 @@ module VCAP::CloudController
       elsif service_instance_errors.include?(:route_service_url_not_https)
         raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
                                                       'Scheme for route_service_url must be https.')
+      elsif service_instance_errors.include?(:route_service_url_invalid)
+        raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
+                                                      'route_service_url is invalid.')
       else
         Errors::ApiError.new_from_details('ServiceInstanceInvalid', e.errors.full_messages)
       end

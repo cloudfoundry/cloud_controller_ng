@@ -31,9 +31,21 @@ module VCAP::CloudController
     def validate_route_service_url
       return if route_service_url == ''
 
-      if route_service_url && URI(route_service_url).scheme.to_s.downcase != 'https'
+      if not_https?
         errors.add(:service_instance, :route_service_url_not_https)
+      elsif not_valid_host?
+        errors.add(:service_instance, :route_service_url_invalid)
       end
     end
   end
+end
+
+private
+
+def not_https?
+  route_service_url && !URI(route_service_url).is_a?(URI::HTTPS)
+end
+
+def not_valid_host?
+  route_service_url && (!URI(route_service_url).host || URI(route_service_url).host.to_s[0] == '.')
 end
