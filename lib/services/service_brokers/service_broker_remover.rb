@@ -1,20 +1,18 @@
 module VCAP::Services::ServiceBrokers
   class ServiceBrokerRemover
-    attr_reader :broker, :client_manager
-
-    def initialize(broker, services_event_repository)
-      @broker = broker
+    def initialize(services_event_repository)
       @services_event_repository = services_event_repository
-      @client_manager = VCAP::Services::SSO::DashboardClientManager.new(broker, @services_event_repository)
     end
 
-    def execute!
+    def remove(broker)
       cache = cache_services_and_plans(broker)
 
+      client_manager = VCAP::Services::SSO::DashboardClientManager.new(broker, @services_event_repository)
       client_manager.remove_clients_for_broker
       broker.destroy
 
       record_service_and_plan_deletion_events(cache)
+      record_broker_deletion_event(broker)
     end
 
     private
@@ -40,6 +38,10 @@ module VCAP::Services::ServiceBrokers
         end
         @services_event_repository.record_service_event(:delete, service)
       end
+    end
+
+    def record_broker_deletion_event(broker)
+      @services_event_repository.record_broker_event(:delete, broker, {})
     end
   end
 end

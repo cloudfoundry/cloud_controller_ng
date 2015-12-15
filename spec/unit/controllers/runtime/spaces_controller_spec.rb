@@ -626,21 +626,43 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/spaces/:guid' do
       context 'when recursive is false' do
+        let(:space) { Space.make }
+
         it 'successfully deletes spaces with no associations' do
-          space_guid = Space.make.guid
-          delete "/v2/spaces/#{space_guid}", '', json_headers(admin_headers)
+          delete "/v2/spaces/#{space.guid}", '', json_headers(admin_headers)
 
           expect(last_response).to have_status_code(204)
-          expect(Space.find(guid: space_guid)).to be_nil
+          expect(Space.find(guid: space.guid)).to be_nil
         end
 
         it 'fails to delete spaces with v3 apps associated to it' do
-          space_guid = Space.make.guid
-          AppModel.make(space_guid: space_guid)
-          delete "/v2/spaces/#{space_guid}", '', json_headers(admin_headers)
+          AppModel.make(space_guid: space.guid)
+          delete "/v2/spaces/#{space.guid}", '', json_headers(admin_headers)
 
           expect(last_response).to have_status_code(400)
-          expect(Space.find(guid: space_guid)).not_to be_nil
+          expect(Space.find(guid: space.guid)).not_to be_nil
+        end
+
+        context 'when a service broker exists in the space' do
+          let!(:broker) { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
+
+          it 'fails to delete spaces with service brokers (private brokers) associated to it' do
+            delete "/v2/spaces/#{space.guid}", '', json_headers(admin_headers)
+
+            expect(last_response).to have_status_code(400)
+            expect(Space.find(guid: space.guid)).not_to be_nil
+          end
+
+          context 'when user is an Org Manager' do
+            let(:user)    { make_manager_for_org(space.organization) }
+
+            it 'fails to delete spaces with associated private service brokers' do
+              delete "/v2/spaces/#{space.guid}", '', headers_for(user)
+
+              expect(last_response).to have_status_code(400)
+              expect(Space.find(guid: space.guid)).not_to be_nil
+            end
+          end
         end
       end
 
@@ -795,6 +817,20 @@ module VCAP::CloudController
               expect {
                 delete "/v2/spaces/#{space_guid}?recursive=true", '', json_headers(admin_headers)
               }.to change { AppModel.count }.by(-1)
+            end
+          end
+
+          context 'when user is an Org Manager' do
+            let!(:space)  { Space.make }
+            let(:user)    { make_manager_for_org(space.organization) }
+            let!(:broker) { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
+
+            it 'successfully deletes spaces with associated private service brokers' do
+              delete "/v2/spaces/#{space.guid}?recursive=true", '', headers_for(user)
+
+              expect(last_response).to have_status_code(204)
+              expect(Space.find(guid: space.guid)).to be_nil
+              expect(ServiceBroker.find(guid: broker.guid)).to be_nil
             end
           end
 

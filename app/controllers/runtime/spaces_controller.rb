@@ -4,7 +4,7 @@ require 'queries/space_user_roles_fetcher'
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
-      [:space_event_repository, :username_and_roles_populating_collection_renderer, :username_lookup_uaa_client]
+      [:space_event_repository, :username_and_roles_populating_collection_renderer, :username_lookup_uaa_client, :services_event_repository]
     end
 
     define_attributes do
@@ -43,6 +43,7 @@ module VCAP::CloudController
       @space_event_repository = dependencies.fetch(:space_event_repository)
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
       @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
+      @services_event_repository = dependencies.fetch(:services_event_repository)
     end
 
     get '/v2/spaces/:guid/user_roles', :enumerate_user_roles
@@ -122,19 +123,13 @@ module VCAP::CloudController
 
     def delete(guid)
       space = find_guid_and_validate_access(:delete, guid)
-      raise_if_has_dependent_associations!(space) if v2_api? && !recursive_delete?
 
-      if !space.app_models.empty? && !recursive_delete?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'app_model', Space.table_name)
-      end
-
-      if !space.service_instances.empty? && !recursive_delete?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instances', Space.table_name)
-      end
+      raise_if_has_dependent_associations!(space) unless recursive_delete?
+      raise_if_dependency_present!(space) unless recursive_delete?
 
       @space_event_repository.record_space_delete_request(space, SecurityContext.current_user, SecurityContext.current_user_email, recursive_delete?)
 
-      delete_action = SpaceDelete.new(current_user.guid, current_user_email)
+      delete_action = SpaceDelete.new(current_user.guid, current_user_email, @services_event_repository)
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end
@@ -205,6 +200,12 @@ module VCAP::CloudController
 
     def after_update(space)
       @space_event_repository.record_space_update(space, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+    end
+
+    def raise_if_dependency_present!(space)
+      if space.service_instances.present? || space.app_models.present? || space.service_brokers.present?
+        raise VCAP::Errors::ApiError.new_from_details('NonrecursiveSpaceDeletionFailed', space.name)
+      end
     end
 
     define_messages

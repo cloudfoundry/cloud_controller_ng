@@ -711,7 +711,7 @@
 270010:
   name: ServiceBrokerNotRemovable
   http_code: 400
-  message: "Can not remove brokers that have associated service instances"
+  message: "Can not remove brokers that have associated service instances: %s"
 
 270011:
   name: ServiceBrokerUrlInvalid
@@ -787,6 +787,11 @@
   name: OrganizationDeletionFailed
   http_code: 502
   message: "Deletion of organization %s failed because one or more resources within could not be deleted.\n\n%s"
+
+290011:
+  name: NonrecursiveSpaceDeletionFailed
+  http_code: 400
+  message: "Resource inside space %s must first be deleted, or specify recursive delete."
 
 300001:
   name: SecurityGroupInvalid

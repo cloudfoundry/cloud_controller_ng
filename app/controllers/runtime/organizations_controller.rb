@@ -4,13 +4,14 @@ require 'queries/organization_user_roles_fetcher'
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
     def self.dependencies
-      [:username_and_roles_populating_collection_renderer, :username_lookup_uaa_client]
+      [:username_and_roles_populating_collection_renderer, :username_lookup_uaa_client, :services_event_repository]
     end
 
     def inject_dependencies(dependencies)
       super
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
       @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
+      @services_event_repository = dependencies.fetch(:services_event_repository)
     end
 
     define_attributes do
@@ -176,7 +177,7 @@ module VCAP::CloudController
         raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 
-      delete_action = OrganizationDelete.new(SpaceDelete.new(current_user.guid, current_user_email))
+      delete_action = OrganizationDelete.new(SpaceDelete.new(current_user.guid, current_user_email, @services_event_repository))
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end

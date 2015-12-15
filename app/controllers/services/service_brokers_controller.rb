@@ -71,12 +71,11 @@ module VCAP::CloudController
       return HTTP::NOT_FOUND unless broker
 
       validate_access(:delete, broker)
-      VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker, @services_event_repository).execute!
-      @services_event_repository.record_broker_event(:delete, broker, {})
+      VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(@services_event_repository).remove(broker)
 
       HTTP::NO_CONTENT
     rescue Sequel::ForeignKeyConstraintViolation
-      raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerNotRemovable')
+      raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerNotRemovable', broker.name)
     end
 
     def self.translate_validation_exception(e, _)
