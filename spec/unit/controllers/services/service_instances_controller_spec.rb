@@ -2744,7 +2744,7 @@ module VCAP::CloudController
             expect(JSON.parse(last_response.body)['total_results']).to eql(1)
 
             put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
-            expect(last_response).to have_status_code(500)
+            expect(last_response).to have_status_code(400)
             expect(JSON.parse(last_response.body)['description']).
               to eq('The route and service instance are already bound.')
 

@@ -463,30 +463,26 @@ module VCAP::CloudController
 
       context 'when the route has an associated service instance' do
         before do
-          service_instance = UserProvidedServiceInstance.make(:routing, space: space)
           RouteBinding.make service_instance: service_instance, route: route
         end
 
         it 'raises RouteAlreadyBoundToServiceInstance' do
-          get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+          new_service_instance = UserProvidedServiceInstance.make(:routing, space: space)
+          get "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes", {}, headers_for(developer)
           expect(last_response.status).to eq(200)
           expect(JSON.parse(last_response.body)['total_results']).to eql(0)
 
-          put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+          put "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
           expect(last_response.status).to eq(400)
           expect(JSON.parse(last_response.body)['description']).
             to eq('A route may only be bound to a single service instance')
 
-          get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
+          get "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes", {}, headers_for(developer)
           expect(last_response.status).to eq(200)
           expect(JSON.parse(last_response.body)['total_results']).to eql(0)
         end
 
         context 'and the associated is the same as the requested instance' do
-          before do
-            RouteBinding.make service_instance: service_instance, route: route
-          end
-
           it 'raises ServiceInstanceAlreadyBoundToSameRoute' do
             get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
             expect(last_response).to have_status_code(200)
