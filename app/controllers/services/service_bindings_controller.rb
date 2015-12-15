@@ -55,7 +55,7 @@ module VCAP::CloudController
     delete path_guid, :delete
     def delete(guid)
       service_binding = find_guid_and_validate_access(:delete, guid, ServiceBinding)
-      raise_if_has_associations!(service_binding) if v2_api? && !recursive?
+      raise_if_has_dependent_associations!(service_binding) if v2_api? && !recursive_delete?
 
       binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
       delete_job = binding_manager.delete_service_instance_binding(service_binding, params)

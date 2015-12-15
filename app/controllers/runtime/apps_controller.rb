@@ -105,7 +105,7 @@ module VCAP::CloudController
     def delete(guid)
       app = find_guid_and_validate_access(:delete, guid)
 
-      if !recursive? && app.service_bindings.present?
+      if !recursive_delete? && app.service_bindings.present?
         raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', app.class.table_name)
       end
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
           app.space,
           SecurityContext.current_user.guid,
           SecurityContext.current_user_email,
-          recursive?)
+          recursive_delete?)
 
       [HTTP::NO_CONTENT, nil]
     end

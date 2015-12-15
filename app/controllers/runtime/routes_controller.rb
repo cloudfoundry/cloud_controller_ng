@@ -80,7 +80,7 @@ module VCAP::CloudController
 
     def delete(guid)
       route = find_guid_and_validate_access(:delete, guid)
-      if !recursive? && route.service_instance.present?
+      if !recursive_delete? && route.service_instance.present?
         raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instance', route.class.table_name)
       end
 

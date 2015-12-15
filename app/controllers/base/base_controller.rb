@@ -146,7 +146,7 @@ module VCAP::CloudController::RestController
       !(env['PATH_INFO'] =~ /^\/v\d/)
     end
 
-    def recursive?
+    def recursive_delete?
       params['recursive'] == 'true'
     end
 

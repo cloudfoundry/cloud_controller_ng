@@ -75,7 +75,7 @@ module VCAP::CloudController::RestController
     end
 
     def do_delete(obj)
-      raise_if_has_associations!(obj) if v2_api? && !recursive?
+      raise_if_has_dependent_associations!(obj) if v2_api? && !recursive_delete?
       model_deletion_job = Jobs::Runtime::ModelDeletion.new(obj.class, obj.guid)
       enqueue_deletion_job(model_deletion_job)
     end
@@ -264,7 +264,7 @@ module VCAP::CloudController::RestController
       dataset
     end
 
-    def raise_if_has_associations!(obj)
+    def raise_if_has_dependent_associations!(obj)
       associations = obj.class.associations.select do |association|
         if obj.class.association_dependencies_hash[association]
           if obj.class.association_dependencies_hash[association] == :destroy

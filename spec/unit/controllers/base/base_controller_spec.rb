@@ -215,7 +215,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#recursive?' do
+    describe '#recursive_delete?' do
       subject(:base_controller) do
         VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil)
       end
@@ -223,17 +223,17 @@ module VCAP::CloudController
       context 'when the recursive flag is present' do
         context 'and the flag is true' do
           let(:params) { { 'recursive' => 'true' } }
-          it { is_expected.to be_recursive }
+          it { is_expected.to be_recursive_delete }
         end
 
         context 'and the flag is false' do
           let(:params) { { 'recursive' => 'false' } }
-          it { is_expected.not_to be_recursive }
+          it { is_expected.not_to be_recursive_delete }
         end
       end
 
       context 'when the recursive flag is not present' do
-        it { is_expected.not_to be_recursive }
+        it { is_expected.not_to be_recursive_delete }
       end
     end
 
