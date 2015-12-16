@@ -15,13 +15,13 @@
   ```
   cf curl /v3/apps -X POST -d '{"name":"app-name",
                                 "relationships": {"space": {"guid": "[your-space-guid]"} },
-                                "lifecycle": { "type": "buildpack", "data": { "stack": "cflinuxfs2", "buildpack": "ruby_buildpack"}}'`
+                                "lifecycle": { "type": "buildpack", "data": { "stack": "cflinuxfs2", "buildpack": "ruby_buildpack"} }'
   ```
   
   ```
   cf curl /v3/apps -X POST -d '{"name":"app-name",
                                 "relationships": {"space": {"guid": "[your-space-guid]"} },
-                                "lifecycle": { "type": "docker", "data": {} }'`
+                                "lifecycle": { "type": "docker", "data": {} }'
   ```
 
 1. Create an empty package for the app ([docs](http://apidocs.cloudfoundry.org/release-candidate/packages_(experimental)/create_a_package.html)):
