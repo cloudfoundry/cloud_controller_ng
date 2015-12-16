@@ -751,25 +751,65 @@ module VCAP::CloudController
         )
       end
 
-      context 'when the app has a current droplet' do
-        before do
-          subject.add_droplet(Droplet.new(
+      context 'v2' do
+        context 'when the app has a current droplet' do
+          before do
+            subject.add_droplet(Droplet.new(
               app: subject,
               droplet_hash: 'the-droplet-hash',
               execution_metadata: 'some-staging-metadata',
             ))
-          subject.droplet_hash = 'the-droplet-hash'
+            subject.droplet_hash = 'the-droplet-hash'
+          end
+
+          it "returns that droplet's staging metadata" do
+            expect(subject.execution_metadata).to eq('some-staging-metadata')
+          end
         end
 
-        it "returns that droplet's staging metadata" do
-          expect(subject.execution_metadata).to eq('some-staging-metadata')
+        context 'when the app does not have a current droplet' do
+          it 'returns the empty string' do
+            expect(subject.current_droplet).to be_nil
+            expect(subject.execution_metadata).to eq('')
+          end
         end
       end
 
-      context 'when the app does not have a current droplet' do
-        it 'returns the empty string' do
-          expect(subject.current_droplet).to be_nil
-          expect(subject.execution_metadata).to eq('')
+      context 'v3' do
+        let(:v3_app) { AppModel.make }
+        let(:v2_app) do
+          App.make(
+            package_hash: 'package-hash',
+            instances: 1,
+            package_state: 'STAGED',
+            app_guid: v3_app.guid
+          )
+        end
+
+        context 'when the app has a current droplet' do
+          let(:v3_droplet) do
+            DropletModel.make(
+              app_guid: v3_app.guid,
+              execution_metadata: 'some-other-metadata',
+              state: VCAP::CloudController::DropletModel::STAGED_STATE
+            )
+          end
+
+          before do
+            v3_app.droplet = v3_droplet
+            v3_app.save
+          end
+
+          it "returns that droplet's staging metadata" do
+            expect(v2_app.execution_metadata).to eq(v3_droplet.execution_metadata)
+          end
+        end
+
+        context 'when the app does not have a current droplet' do
+          it 'returns nil' do
+            expect(v2_app.current_droplet).to be_nil
+            expect(v2_app.execution_metadata).to be_nil
+          end
         end
       end
     end
@@ -786,10 +826,10 @@ module VCAP::CloudController
       context 'when the app has a current droplet' do
         before do
           subject.add_droplet(Droplet.new(
-              app: subject,
-              droplet_hash: 'the-droplet-hash',
-              detected_start_command: 'run-my-app',
-            ))
+            app: subject,
+            droplet_hash: 'the-droplet-hash',
+            detected_start_command: 'run-my-app',
+          ))
           subject.droplet_hash = 'the-droplet-hash'
         end
 

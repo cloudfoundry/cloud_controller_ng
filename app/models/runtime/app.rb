@@ -276,7 +276,11 @@ module VCAP::CloudController
     alias_method_chain :command, :fallback
 
     def execution_metadata
-      (current_droplet && current_droplet.execution_metadata) || ''
+      if is_v2?
+        (current_droplet && current_droplet.execution_metadata) || ''
+      else
+        app.droplet.try(:execution_metadata)
+      end
     end
 
     def detected_start_command
