@@ -870,25 +870,6 @@ module VCAP::CloudController
         end
       end
 
-      it 'should not associate an app with a route on a different space' do
-        app = AppFactory.make
-
-        domain = PrivateDomain.make(
-          owning_organization: app.space.organization
-        )
-
-        other_space = Space.make(organization: app.space.organization)
-
-        route = Route.make(
-          space: other_space,
-          domain: domain,
-        )
-
-        expect {
-          app.add_route(route)
-        }.to raise_error(Errors::InvalidRouteRelation, /The requested route relation is invalid/)
-      end
-
       it 'should not associate an app with a route created on another space with a shared domain' do
         shared_domain = SharedDomain.make
         app = AppFactory.make
@@ -1964,6 +1945,25 @@ module VCAP::CloudController
     end
 
     describe '#validate_route' do
+      it 'should not associate an app with a route on a different space' do
+        app = AppFactory.make
+
+        domain = PrivateDomain.make(
+          owning_organization: app.space.organization
+        )
+
+        other_space = Space.make(organization: app.space.organization)
+
+        route = Route.make(
+          space: other_space,
+          domain: domain,
+        )
+
+        expect {
+          app.add_route(route)
+        }.to raise_error(Errors::InvalidRouteRelation, /The requested route relation is invalid/)
+      end
+
       context 'adding routes to unsaved apps' do
         it 'should set a route by guid on a new but unsaved app' do
           app = App.new(name: Sham.name,
@@ -1983,9 +1983,7 @@ module VCAP::CloudController
           expect(app.routes).to be_empty
         end
       end
-      # context 'when the route is nil'
-      # context 'when the space is nil'
-      # context 'when the route is not in the same space as the app'
+
       context 'when the route is bound to a routing service' do
         let(:domain) { PrivateDomain.make(name: 'mydomain.com', owning_organization: org) }
         let(:app) { AppFactory.make(space: space, diego: diego?) }

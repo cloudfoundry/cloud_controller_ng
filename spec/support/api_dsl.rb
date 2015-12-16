@@ -26,13 +26,6 @@ module ApiDsl
     MultiJson.dump(body_parameters, pretty: true)
   end
 
-  # def has_column?(column)
-  #   body_parameters.each do |parameter|
-  #     return true unless parameter[column].nil?
-  #   end
-  #   false
-  # end
-
   module ClassMethods
     def body_parameter(name, description='', options={})
       metadata[:body_parameters] = metadata[:body_parameters] ? metadata[:body_parameters].dup : []
