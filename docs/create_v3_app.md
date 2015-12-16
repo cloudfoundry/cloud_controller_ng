@@ -26,8 +26,16 @@
 
 1. Create an empty package for the app ([docs](http://apidocs.cloudfoundry.org/release-candidate/packages_(experimental)/create_a_package.html)):
 
-  `cf curl /v3/apps/[your-app-guid]/packages -X POST -d '{"type":"bits"}'`
-  `cf curl /v3/apps/[your-app-guid]/packages -X POST -d '{"type":"docker"}'`
+  ```
+  cf curl /v3/apps/[your-app-guid]/packages -X POST -d '{"type":"bits"}'
+  ```
+  
+  ```
+  cf curl /v3/apps/[your-app-guid]/packages -X POST -d '{"type":"docker",
+                                                        "data": {
+                                                          "image": "registry/image:latest" 
+                                                        }}'
+  ```
 
   Note: The output of this command includes your new package's GUID  
   Note: Other package types are also supported. See documentation for Create a Package.
