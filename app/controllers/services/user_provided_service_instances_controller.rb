@@ -14,6 +14,8 @@ module VCAP::CloudController
       to_many :routes, route_for: [:get, :put, :delete]
     end
 
+    query_parameters :name, :space_guid, :organization_guid
+
     def self.dependencies
       [:services_event_repository]
     end
@@ -91,6 +93,23 @@ module VCAP::CloudController
       )
 
       enqueue_deletion_job(delete_and_audit_job)
+    end
+
+    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+      single_filter = opts[:q][0] if opts[:q]
+
+      if single_filter && single_filter.start_with?('organization_guid')
+        org_guid = single_filter.split(':')[1]
+
+        Query.
+          filtered_dataset_from_query_params(model, ds, qp, { q: '' }).
+          select_all(:service_instances).
+          left_join(:spaces, id: :service_instances__space_id).
+          left_join(:organizations, id: :spaces__organization_id).
+          where(organizations__guid: org_guid)
+      else
+        super(model, ds, qp, opts)
+      end
     end
 
     define_messages

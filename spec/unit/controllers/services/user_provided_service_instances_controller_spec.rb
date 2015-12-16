@@ -2,6 +2,12 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe UserProvidedServiceInstancesController, :services do
+    describe 'Query Parameters' do
+      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(described_class).to be_queryable_by(:space_guid) }
+      it { expect(described_class).to be_queryable_by(:organization_guid) }
+    end
+
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
@@ -94,6 +100,49 @@ module VCAP::CloudController
             service_bindings: [:get, :put, :delete],
             routes: [:get, :put, :delete]
           )
+      end
+    end
+
+    describe 'GET', '/v2/user_provided_service_instances/' do
+      let(:service_instance) { UserProvidedServiceInstance.make(gateway_name: Sham.name) }
+      let(:space) { service_instance.space }
+      let(:developer) { make_developer_for_space(space) }
+
+      it 'shows the syslog drain url when added' do
+        service_instance.update(syslog_drain_url: 'https://foo.example/url-98')
+        get "v2/user_provided_service_instances/#{service_instance.guid}", {}, headers_for(developer)
+        expect(decoded_response.fetch('entity').fetch('syslog_drain_url')).to eq('https://foo.example/url-98')
+      end
+
+      context 'filtering' do
+        let(:first_found_instance) { decoded_response.fetch('resources').first }
+        let(:service_instance) { UserProvidedServiceInstance.make(name: 'other') }
+
+        it 'allows filtering by service name' do
+          get "v2/user_provided_service_instances?q=name:#{service_instance.name}", {}, headers_for(developer)
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['resources'].length).to eq(1)
+          expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
+        end
+
+        it 'allows filtering by space_guid' do
+          space_guid = service_instance.space.guid
+          get "v2/user_provided_service_instances?q=space_guid:#{space_guid}", {}, headers_for(developer)
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['resources'].length).to eq(1)
+          expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
+        end
+
+        it 'allows filtering by organization_guid' do
+          org_guid = service_instance.space.organization.guid
+          get "v2/user_provided_service_instances?q=organization_guid:#{org_guid}", {}, headers_for(developer)
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['resources'].length).to eq(1)
+          expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
+        end
       end
     end
 
