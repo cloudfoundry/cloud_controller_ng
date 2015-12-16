@@ -17,21 +17,28 @@
                                 "relationships": {"space": {"guid": "[your-space-guid]"} },
                                 "lifecycle": { "type": "buildpack", "data": { "stack": "cflinuxfs2", "buildpack": "ruby_buildpack"}}'`
   ```
+  
+  ```
+  cf curl /v3/apps -X POST -d '{"name":"app-name",
+                                "relationships": {"space": {"guid": "[your-space-guid]"} },
+                                "lifecycle": { "type": "docker", "data": {} }'`
+  ```
 
 1. Create an empty package for the app ([docs](http://apidocs.cloudfoundry.org/release-candidate/packages_(experimental)/create_a_package.html)):
 
   `cf curl /v3/apps/[your-app-guid]/packages -X POST -d '{"type":"bits"}'`
+  `cf curl /v3/apps/[your-app-guid]/packages -X POST -d '{"type":"docker"}'`
 
   Note: The output of this command includes your new package's GUID  
   Note: Other package types are also supported. See documentation for Create a Package.
 
-1. Create a ZIP file of your application:
+1. If your package is type buildpack, create a ZIP file of your application:
 
   `zip -r my-app.zip *`
 
   Note: The zip file should not have a folder as the top-level item (e.g. create the zip file from within your app’s directory)
 
-1. Upload your bits to your new package ([docs](http://apidocs.cloudfoundry.org/release-candidate/packages_(experimental)/upload_bits_for_a_package_of_type_bits.html)):
+1. If your package is type buildpack, upload your bits to your new package ([docs](http://apidocs.cloudfoundry.org/release-candidate/packages_(experimental)/upload_bits_for_a_package_of_type_bits.html)):
 
   ``curl -s https://api.example.com/v3/packages/[your-package-guid]/upload -F bits=@"my-app.zip" -H "Authorization: `cf oauth-token | grep bearer`"``
 
