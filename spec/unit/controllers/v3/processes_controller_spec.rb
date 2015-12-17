@@ -591,7 +591,7 @@ describe ProcessesController, type: :controller do
     end
 
     context 'when the user does not have read scope' do
-      before { @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))) }
+      before { @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))) }
 
       it 'raises an ApiError with a 403 code' do
         put :stats, { guid: process_type.guid }

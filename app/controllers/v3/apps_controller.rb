@@ -1,4 +1,5 @@
 require 'presenters/v3/app_presenter'
+require 'presenters/v3/app_stats_presenter'
 require 'queries/app_list_fetcher'
 require 'messages/apps_list_message'
 require 'queries/app_fetcher'
@@ -142,6 +143,19 @@ class AppsV3Controller < ApplicationController
     unprocessable!(e.message)
   end
 
+  def stats
+    app_guid = params[:guid]
+    app, space, org = AppFetcher.new.fetch(app_guid)
+    app_not_found! if app.nil?
+    app_not_found! unless can_read?(space.guid, org.guid)
+
+    process_stats = app.processes.map do |process|
+      { type: process.type, stats: instances_reporters.stats_for_app(process) }
+    end
+
+    render status: :ok, json: AppStatsPresenter.new.present_json(process_stats)
+  end
+
   private
 
   def membership
@@ -183,5 +197,9 @@ class AppsV3Controller < ApplicationController
 
   def app_not_found!
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+  end
+
+  def instances_reporters
+    CloudController::DependencyLocator.instance.instances_reporters
   end
 end

@@ -36,10 +36,10 @@ resource 'Apps (Experimental)', type: :api do
     let!(:app_model1) { VCAP::CloudController::AppModel.make(name: name1, space_guid: space.guid, created_at: Time.at(1)) }
     let!(:app_model2) { VCAP::CloudController::AppModel.make(name: name2, space_guid: space.guid, created_at: Time.at(2)) }
     let!(:app_model3) { VCAP::CloudController::AppModel.make(
-      name: name3,
-      space_guid: space.guid,
+      name:                  name3,
+      space_guid:            space.guid,
       environment_variables: environment_variables,
-      created_at: Time.at(3),
+      created_at:            Time.at(3),
     )
     }
     let!(:app_model4) { VCAP::CloudController::AppModel.make(space_guid: VCAP::CloudController::Space.make.guid) }
@@ -71,21 +71,21 @@ resource 'Apps (Experimental)', type: :api do
         },
         'resources'  => [
           {
-            'name'   => name3,
-            'guid'   => app_model3.guid,
-            'desired_state' => app_model3.desired_state,
+            'name'                    => name3,
+            'guid'                    => app_model3.guid,
+            'desired_state'           => app_model3.desired_state,
             'total_desired_instances' => 0,
-            'lifecycle'              => {
+            'lifecycle'               => {
               'type' => 'buildpack',
               'data' => {
                 'buildpack' => app_model3.lifecycle_data.buildpack,
-                'stack' => app_model3.lifecycle_data.stack,
+                'stack'     => app_model3.lifecycle_data.stack,
               }
             },
-            'created_at' => iso8601,
-            'updated_at' => nil,
-            'environment_variables' => environment_variables,
-            'links' => {
+            'created_at'              => iso8601,
+            'updated_at'              => nil,
+            'environment_variables'   => environment_variables,
+            'links'                   => {
               'self'                   => { 'href' => "/v3/apps/#{app_model3.guid}" },
               'processes'              => { 'href' => "/v3/apps/#{app_model3.guid}/processes" },
               'packages'               => { 'href' => "/v3/apps/#{app_model3.guid}/packages" },
@@ -98,21 +98,21 @@ resource 'Apps (Experimental)', type: :api do
             }
           },
           {
-            'name'   => name2,
-            'guid'   => app_model2.guid,
-            'desired_state' => app_model2.desired_state,
+            'name'                    => name2,
+            'guid'                    => app_model2.guid,
+            'desired_state'           => app_model2.desired_state,
             'total_desired_instances' => 0,
-            'lifecycle'              => {
+            'lifecycle'               => {
               'type' => 'buildpack',
               'data' => {
                 'buildpack' => app_model2.lifecycle_data.buildpack,
-                'stack' => app_model2.lifecycle_data.stack,
+                'stack'     => app_model2.lifecycle_data.stack,
               }
             },
-            'created_at' => iso8601,
-            'updated_at' => nil,
-            'environment_variables' => {},
-            'links' => {
+            'created_at'              => iso8601,
+            'updated_at'              => nil,
+            'environment_variables'   => {},
+            'links'                   => {
               'self'                   => { 'href' => "/v3/apps/#{app_model2.guid}" },
               'processes'              => { 'href' => "/v3/apps/#{app_model2.guid}/processes" },
               'packages'               => { 'href' => "/v3/apps/#{app_model2.guid}/packages" },
@@ -170,8 +170,8 @@ resource 'Apps (Experimental)', type: :api do
     let(:environment_variables) { { 'unicorn' => 'horn' } }
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:app_model) { VCAP::CloudController::AppModel.make(
-      name: name,
-      droplet_guid: droplet_guid,
+      name:                  name,
+      droplet_guid:          droplet_guid,
       environment_variables: environment_variables
     )
     }
@@ -196,21 +196,21 @@ resource 'Apps (Experimental)', type: :api do
       do_request_with_error_handling
 
       expected_response = {
-        'name'   => name,
-        'guid'   => guid,
-        'desired_state' => app_model.desired_state,
+        'name'                    => name,
+        'guid'                    => guid,
+        'desired_state'           => app_model.desired_state,
         'total_desired_instances' => 3,
-        'created_at' => iso8601,
-        'updated_at' => nil,
-        'environment_variables' => environment_variables,
-        'lifecycle'              => {
+        'created_at'              => iso8601,
+        'updated_at'              => nil,
+        'environment_variables'   => environment_variables,
+        'lifecycle'               => {
           'type' => 'buildpack',
           'data' => {
             'buildpack' => app_model.lifecycle_data.buildpack,
-            'stack' => app_model.lifecycle_data.stack,
+            'stack'     => app_model.lifecycle_data.stack,
           }
         },
-        'links' => {
+        'links'                   => {
           'self'                   => { 'href' => "/v3/apps/#{guid}" },
           'processes'              => { 'href' => "/v3/apps/#{guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{guid}/packages" },
@@ -276,21 +276,21 @@ resource 'Apps (Experimental)', type: :api do
       created_app       = VCAP::CloudController::AppModel.last
       expected_guid     = created_app.guid
       expected_response = {
-        'name'   => name,
-        'guid'   => expected_guid,
-        'desired_state' => 'STOPPED',
+        'name'                    => name,
+        'guid'                    => expected_guid,
+        'desired_state'           => 'STOPPED',
         'total_desired_instances' => 0,
-        'lifecycle'              => {
+        'lifecycle'               => {
           'type' => 'buildpack',
           'data' => {
             'buildpack' => created_app.lifecycle_data.buildpack,
-            'stack' => created_app.lifecycle_data.stack,
+            'stack'     => created_app.lifecycle_data.stack,
           }
         },
-        'created_at' => iso8601,
-        'updated_at' => nil,
-        'environment_variables' => environment_variables,
-        'links' => {
+        'created_at'              => iso8601,
+        'updated_at'              => nil,
+        'environment_variables'   => environment_variables,
+        'links'                   => {
           'self'                   => { 'href' => "/v3/apps/#{expected_guid}" },
           'processes'              => { 'href' => "/v3/apps/#{expected_guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{expected_guid}/packages" },
@@ -308,13 +308,13 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type: 'audit.app.create',
-        actee: expected_guid,
-        actee_type: 'v3-app',
-        actee_name: name,
-        actor: user.guid,
-        actor_type: 'user',
-        space_guid: space_guid,
+        type:              'audit.app.create',
+        actee:             expected_guid,
+        actee_type:        'v3-app',
+        actee_name:        name,
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space_guid,
         organization_guid: space.organization.guid,
       })
     end
@@ -340,18 +340,18 @@ resource 'Apps (Experimental)', type: :api do
         created_app       = VCAP::CloudController::AppModel.last
         expected_guid     = created_app.guid
         expected_response = {
-          'name'   => name,
-          'guid'   => expected_guid,
-          'desired_state' => 'STOPPED',
+          'name'                    => name,
+          'guid'                    => expected_guid,
+          'desired_state'           => 'STOPPED',
           'total_desired_instances' => 0,
-          'lifecycle'              => {
+          'lifecycle'               => {
             'type' => 'docker',
             'data' => {}
           },
-          'created_at' => iso8601,
-          'updated_at' => nil,
-          'environment_variables' => environment_variables,
-          'links' => {
+          'created_at'              => iso8601,
+          'updated_at'              => nil,
+          'environment_variables'   => environment_variables,
+          'links'                   => {
             'self'                   => { 'href' => "/v3/apps/#{expected_guid}" },
             'processes'              => { 'href' => "/v3/apps/#{expected_guid}/processes" },
             'packages'               => { 'href' => "/v3/apps/#{expected_guid}/packages" },
@@ -369,15 +369,15 @@ resource 'Apps (Experimental)', type: :api do
         expect(parsed_response).to be_a_response_like(expected_response)
         event = VCAP::CloudController::Event.last
         expect(event.values).to include({
-              type: 'audit.app.create',
-              actee: expected_guid,
-              actee_type: 'v3-app',
-              actee_name: name,
-              actor: user.guid,
-              actor_type: 'user',
-              space_guid: space_guid,
-              organization_guid: space.organization.guid,
-            })
+          type:              'audit.app.create',
+          actee:             expected_guid,
+          actee_type:        'v3-app',
+          actee_name:        name,
+          actor:             user.guid,
+          actor_type:        'user',
+          space_guid:        space_guid,
+          organization_guid: space.organization.guid,
+        })
       end
     end
   end
@@ -411,7 +411,7 @@ resource 'Apps (Experimental)', type: :api do
     let(:environment_variables) do
       {
         'MY_ENV_VAR' => 'foobar',
-        'FOOBAR' => 'MY_ENV_VAR'
+        'FOOBAR'     => 'MY_ENV_VAR'
       }
     end
     let(:guid) { app_model.guid }
@@ -424,21 +424,21 @@ resource 'Apps (Experimental)', type: :api do
 
       app_model.reload
       expected_response = {
-        'name'   => name,
-        'guid'   => app_model.guid,
-        'desired_state' => app_model.desired_state,
+        'name'                    => name,
+        'guid'                    => app_model.guid,
+        'desired_state'           => app_model.desired_state,
         'total_desired_instances' => 0,
-        'lifecycle'              => {
+        'lifecycle'               => {
           'type' => 'buildpack',
           'data' => {
             'buildpack' => buildpack,
-            'stack' => stack.name,
+            'stack'     => stack.name,
           }
         },
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        'environment_variables' => environment_variables,
-        'links' => {
+        'created_at'              => iso8601,
+        'updated_at'              => iso8601,
+        'environment_variables'   => environment_variables,
+        'links'                   => {
           'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
@@ -456,18 +456,18 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type: 'audit.app.update',
-        actee: app_model.guid,
-        actee_type: 'v3-app',
-        actee_name: name,
-        actor: user.guid,
-        actor_type: 'user',
-        space_guid: space_guid,
+        type:              'audit.app.update',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        name,
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space_guid,
         organization_guid: space.organization.guid
       })
 
       metadata_request = { 'name' => 'new_name', 'environment_variables' => 'PRIVATE DATA HIDDEN',
-                           'lifecycle' => { 'type' => 'buildpack', 'data' => { 'buildpack' => buildpack, 'stack' => stack.name } } }
+                           'lifecycle'               => { 'type' => 'buildpack', 'data' => { 'buildpack' => buildpack, 'stack' => stack.name } } }
       expect(event.metadata['request']).to eq(metadata_request)
     end
   end
@@ -495,13 +495,13 @@ resource 'Apps (Experimental)', type: :api do
       expect { process.refresh }.to raise_error Sequel::Error, 'Record not found'
       event = VCAP::CloudController::Event.last(2).first
       expect(event.values).to include({
-        type: 'audit.app.delete-request',
-        actee: app_model.guid,
-        actee_type: 'v3-app',
-        actee_name: app_model.name,
-        actor: user.guid,
-        actor_type: 'user',
-        space_guid: space_guid,
+        type:              'audit.app.delete-request',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        app_model.name,
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space_guid,
         organization_guid: space.organization.guid
       })
     end
@@ -530,21 +530,21 @@ resource 'Apps (Experimental)', type: :api do
       do_request_with_error_handling
 
       expected_response = {
-        'name'   => app_model.name,
-        'guid'   => app_model.guid,
-        'desired_state'   => 'STARTED',
+        'name'                    => app_model.name,
+        'guid'                    => app_model.guid,
+        'desired_state'           => 'STARTED',
         'total_desired_instances' => 0,
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        'environment_variables' => {},
-        'lifecycle'              => {
+        'created_at'              => iso8601,
+        'updated_at'              => iso8601,
+        'environment_variables'   => {},
+        'lifecycle'               => {
           'type' => 'buildpack',
           'data' => {
             'buildpack' => app_model.lifecycle_data.buildpack,
-            'stack' => app_model.lifecycle_data.stack,
+            'stack'     => app_model.lifecycle_data.stack,
           }
         },
-        'links' => {
+        'links'                   => {
           'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
@@ -563,13 +563,13 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type: 'audit.app.start',
-        actee: guid,
-        actee_type: 'v3-app',
-        actee_name: app_model.name,
-        actor: user.guid,
-        actor_type: 'user',
-        space_guid: space_guid,
+        type:              'audit.app.start',
+        actee:             guid,
+        actee_type:        'v3-app',
+        actee_name:        app_model.name,
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space_guid,
         organization_guid: space.organization.guid,
       })
     end
@@ -598,21 +598,21 @@ resource 'Apps (Experimental)', type: :api do
       do_request_with_error_handling
 
       expected_response = {
-        'name'   => app_model.name,
-        'guid'   => app_model.guid,
-        'desired_state'   => 'STOPPED',
+        'name'                    => app_model.name,
+        'guid'                    => app_model.guid,
+        'desired_state'           => 'STOPPED',
         'total_desired_instances' => 0,
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        'environment_variables' => {},
-        'lifecycle'              => {
+        'created_at'              => iso8601,
+        'updated_at'              => iso8601,
+        'environment_variables'   => {},
+        'lifecycle'               => {
           'type' => 'buildpack',
           'data' => {
             'buildpack' => app_model.lifecycle_data.buildpack,
-            'stack' => app_model.lifecycle_data.stack,
+            'stack'     => app_model.lifecycle_data.stack,
           }
         },
-        'links' => {
+        'links'                   => {
           'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
@@ -631,13 +631,13 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to be_a_response_like(expected_response)
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type: 'audit.app.stop',
-        actee: guid,
-        actee_type: 'v3-app',
-        actee_name: app_model.name,
-        actor: user.guid,
-        actor_type: 'user',
-        space_guid: space_guid,
+        type:              'audit.app.stop',
+        actee:             guid,
+        actee_type:        'v3-app',
+        actee_name:        app_model.name,
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space_guid,
         organization_guid: space.organization.guid,
       })
     end
@@ -650,8 +650,8 @@ resource 'Apps (Experimental)', type: :api do
 
     let(:app_model) do
       VCAP::CloudController::AppModel.make(
-        name: 'app_name',
-        space_guid: space_guid,
+        name:                  'app_name',
+        space_guid:            space_guid,
         environment_variables: {
           'SOME_KEY' => 'some_val'
         }
@@ -671,10 +671,10 @@ resource 'Apps (Experimental)', type: :api do
       do_request_with_error_handling
 
       expected_response = {
-        'staging_env_json' => {
+        'staging_env_json'      => {
           'STAGING_ENV' => 'staging_value'
         },
-        'running_env_json' => {
+        'running_env_json'      => {
           'RUNNING_ENV' => 'running_value'
         },
         'environment_variables' => {
@@ -683,9 +683,9 @@ resource 'Apps (Experimental)', type: :api do
         # 'system_env_json' => {
         #   'VCAP_SERVICES' => "NOT YET IMPLEMENTED"
         # },
-        'application_env_json' =>   {
-          'VCAP_APPLICATION' =>     {
-            'limits' => {
+        'application_env_json'  => {
+          'VCAP_APPLICATION' => {
+            'limits'           => {
               # 'mem' => 1024,
               # 'disk' => 1024,
               'fds' => 16384
@@ -694,11 +694,11 @@ resource 'Apps (Experimental)', type: :api do
             'application_name' => 'app_name',
             'application_uris' => [],
             # 'version' => 'a4340b70-5fe6-425f-a319-f6af377ea26b',
-            'name' => 'app_name',
-            'space_name' => space_name,
-            'space_id' => space_guid,
-            'uris' => [],
-            'users' => nil
+            'name'             => 'app_name',
+            'space_name'       => space_name,
+            'space_id'         => space_guid,
+            'uris'             => [],
+            'users'            => nil
           }
         }
       }
@@ -734,21 +734,21 @@ resource 'Apps (Experimental)', type: :api do
       do_request_with_error_handling
 
       expected_response = {
-        'name'   => app_model.name,
-        'guid'   => app_model.guid,
-        'desired_state' => app_model.desired_state,
+        'name'                    => app_model.name,
+        'guid'                    => app_model.guid,
+        'desired_state'           => app_model.desired_state,
         'total_desired_instances' => 1,
-        'environment_variables' => {},
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        'lifecycle'              => {
+        'environment_variables'   => {},
+        'created_at'              => iso8601,
+        'updated_at'              => iso8601,
+        'lifecycle'               => {
           'type' => 'buildpack',
           'data' => {
             'buildpack' => app_model.lifecycle_data.buildpack,
-            'stack' => app_model.lifecycle_data.stack,
+            'stack'     => app_model.lifecycle_data.stack,
           }
         },
-        'links' => {
+        'links'                   => {
           'self'                   => { 'href' => "/v3/apps/#{app_model.guid}" },
           'processes'              => { 'href' => "/v3/apps/#{app_model.guid}/processes" },
           'packages'               => { 'href' => "/v3/apps/#{app_model.guid}/packages" },
@@ -767,17 +767,110 @@ resource 'Apps (Experimental)', type: :api do
       expect(parsed_response).to match(expected_response)
       event = VCAP::CloudController::Event.where(actor: user.guid).first
       expect(event.values).to include({
-        type: 'audit.app.droplet_mapped',
-        actee: app_model.guid,
-        actee_type: 'v3-app',
-        actee_name: app_model.name,
-        actor: user.guid,
-        actor_type: 'user',
-        space_guid: space_guid,
+        type:              'audit.app.droplet_mapped',
+        actee:             app_model.guid,
+        actee_type:        'v3-app',
+        actee_name:        app_model.name,
+        actor:             user.guid,
+        actor_type:        'user',
+        space_guid:        space_guid,
         organization_guid: space.organization.guid
       })
       expect(event.metadata).to eq({ 'request' => { 'droplet_guid' => droplet.guid } })
       expect(app_model.reload.processes).not_to be_empty
+    end
+  end
+
+  get '/v3/apps/:guid/stats' do
+    header 'Content-Type', 'application/json'
+
+    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:process1) { VCAP::CloudController::AppFactory.make(state: 'STARTED', diego: true, type: 'web', instances: 2, app_guid: app_model.guid) }
+    let(:guid) { app_model.guid }
+
+    let(:usage_time1) { Time.now.utc.to_s }
+    let(:tps_response1) do
+      [
+        {
+          process_guid:  process1.guid,
+          instance_guid: 'instance-1-A',
+          index:         0,
+          state:         'RUNNING',
+          details:       'some-details',
+          uptime:        1,
+          since:         101,
+          host:          'toast',
+          port:          8080,
+          stats:         { time: usage_time1, cpu: 80, mem: 128, disk: 1024 }
+        },
+        {
+          process_guid:  process1.guid,
+          instance_guid: 'instance-1-B',
+          index:         1,
+          state:         'RUNNING',
+          details:       'some-details',
+          uptime:        1,
+          since:         101,
+          host:          'toast',
+          port:          8080,
+          stats:         { time: usage_time1, cpu: 80, mem: 128, disk: 1024 }
+        }
+      ].to_json
+    end
+
+    before do
+      process1_guid = VCAP::CloudController::Diego::ProcessGuid.from_app(process1)
+      stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process1_guid}/stats").to_return(status: 200, body: tps_response1)
+
+      app_model.space.organization.add_user user
+      app_model.space.add_developer user
+    end
+
+    example 'Get Detailed Stats for an App' do
+      do_request_with_error_handling
+
+      expected_response = {
+        'processes' => [
+          {
+            'type'       => process1.type,
+            'index'      => 0,
+            'state'      => 'RUNNING',
+            'usage'      => {
+              'time' => usage_time1,
+              'cpu'  => 80,
+              'mem'  => 128,
+              'disk' => 1024,
+            },
+            'host'       => 'toast',
+            'port'       => 8080,
+            'uptime'     => 1,
+            'mem_quota'  => 1073741824,
+            'disk_quota' => 1073741824,
+            'fds_quota'  => 16384
+          },
+          {
+            'type'       => process1.type,
+            'index'      => 1,
+            'state'      => 'RUNNING',
+            'usage'      => {
+              'time' => usage_time1,
+              'cpu'  => 80,
+              'mem'  => 128,
+              'disk' => 1024,
+            },
+            'host'       => 'toast',
+            'port'       => 8080,
+            'uptime'     => 1,
+            'mem_quota'  => 1073741824,
+            'disk_quota' => 1073741824,
+            'fds_quota'  => 16384
+          }
+        ]
+      }
+
+      parsed_response = JSON.parse(response_body)
+      expect(response_status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 end

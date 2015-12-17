@@ -1,4 +1,5 @@
 require 'presenters/v3/pagination_presenter'
+require 'presenters/v3/process_stats_presenter'
 
 module VCAP::CloudController
   class ProcessPresenter
@@ -12,7 +13,7 @@ module VCAP::CloudController
 
     def present_json_stats(process, stats, base_url)
       response = {
-        resources: process_stats_hash(process, stats),
+        resources: ProcessStatsPresenter.new.present_stats_hash(process.type, stats),
         pagination: @pagination_presenter.present_unpagination_hash(stats, base_url)
       }
       MultiJson.dump(response, pretty: true)
@@ -52,29 +53,6 @@ module VCAP::CloudController
         created_at:   process.created_at,
         updated_at:   process.updated_at,
         links:        build_links(process),
-      }
-    end
-
-    def process_stats_hash(process, process_stats)
-      instance_stats = []
-      process_stats.each do |index, stats|
-        instance_stats << instance_stats_hash(process, index, stats)
-      end
-      instance_stats
-    end
-
-    def instance_stats_hash(process, index, stats)
-      {
-        type: process.type,
-        index: index,
-        state: stats['state'],
-        usage: stats['stats']['usage'],
-        host: stats['stats']['host'],
-        port: stats['stats']['port'],
-        uptime: stats['stats']['uptime'],
-        mem_quota: stats['stats']['mem_quota'],
-        disk_quota: stats['stats']['disk_quota'],
-        fds_quota: stats['stats']['fds_quota']
       }
     end
   end

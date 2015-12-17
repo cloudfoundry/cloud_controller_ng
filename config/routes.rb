@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   put '/v3/apps/:guid/stop', to: 'apps_v3#stop'
   get '/v3/apps/:guid/env', to: 'apps_v3#show_environment'
   put '/v3/apps/:guid/current_droplet', to: 'apps_v3#assign_current_droplet'
+  get '/v3/apps/:guid/stats', to: 'apps_v3#stats'
 
   get '/apps', to: 'apps_v3#index'
   post '/apps', to: 'apps_v3#create'
@@ -21,6 +22,7 @@ Rails.application.routes.draw do
   put '/apps/:guid/stop', to: 'apps_v3#stop'
   get '/apps/:guid/env', to: 'apps_v3#show_environment'
   put '/apps/:guid/current_droplet', to: 'apps_v3#assign_current_droplet'
+  get '/apps/:guid/stats', to: 'apps_v3#stats'
 
   # processes
   get '/processes', to: 'processes#index'
