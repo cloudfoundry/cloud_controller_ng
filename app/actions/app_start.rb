@@ -2,7 +2,6 @@ require 'actions/current_process_types'
 
 module VCAP::CloudController
   class AppStart
-    class DropletNotFound < StandardError; end
     class InvalidApp < StandardError; end
 
     def initialize(user, user_email)
@@ -12,8 +11,6 @@ module VCAP::CloudController
     end
 
     def start(app)
-      raise DropletNotFound if !app.droplet
-
       package = PackageModel.find(guid: app.droplet.package_guid)
 
       app.db.transaction do

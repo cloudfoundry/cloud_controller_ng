@@ -34,6 +34,7 @@ resource 'Apps (Experimental)', type: :api do
     end
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
+        :buildpack,
         app_guid:                         app_model.guid,
         created_at:                       Time.at(1),
         package_guid:                     package.guid,
@@ -44,6 +45,7 @@ resource 'Apps (Experimental)', type: :api do
     end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
+        :buildpack,
         app_guid:                    app_model.guid,
         created_at:                  Time.at(2),
         package_guid:                package.guid,
@@ -53,7 +55,7 @@ resource 'Apps (Experimental)', type: :api do
         state:                       VCAP::CloudController::DropletModel::STAGED_STATE
       )
     end
-    let!(:droplet3) { VCAP::CloudController::DropletModel.make(package_guid: VCAP::CloudController::PackageModel.make.guid) }
+    let!(:droplet3) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: VCAP::CloudController::PackageModel.make.guid) }
 
     let(:guid) { app_model.guid }
     let(:page) { 1 }
@@ -152,6 +154,7 @@ resource 'Apps (Experimental)', type: :api do
     context 'faceted search' do
       let!(:droplet4) do
         VCAP::CloudController::DropletModel.make(
+          :buildpack,
           app_guid:     app_model.guid,
           created_at: Time.at(2),
           package_guid: package.guid,

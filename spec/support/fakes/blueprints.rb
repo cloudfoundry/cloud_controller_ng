@@ -64,6 +64,18 @@ module VCAP::CloudController
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app_guid { AppModel.make.guid }
+  end
+
+  DropletModel.blueprint(:docker) do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+    app_guid { AppModel.make.guid }
+  end
+
+  DropletModel.blueprint(:buildpack) do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+    app_guid { AppModel.make.guid }
     buildpack_lifecycle_data  { BuildpackLifecycleDataModel.make(droplet: object.save) }
   end
 

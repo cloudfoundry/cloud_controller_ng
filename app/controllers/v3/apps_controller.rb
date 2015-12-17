@@ -94,13 +94,16 @@ class AppsV3Controller < ApplicationController
   def start
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    droplet_not_found! unless app.droplet
     unauthorized! unless can_start?(space.guid)
+
+    if app.droplet.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE && !roles.admin?
+      FeatureFlag.raise_unless_enabled!('diego_docker')
+    end
 
     AppStart.new(current_user, current_user_email).start(app)
 
     render status: :ok, json: AppPresenter.new.present_json(app)
-  rescue AppStart::DropletNotFound
-    droplet_not_found!
   rescue AppStart::InvalidApp => e
     unprocessable!(e.message)
   end

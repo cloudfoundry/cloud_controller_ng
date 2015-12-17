@@ -28,6 +28,7 @@ resource 'Droplets (Experimental)', type: :api do
 
     let!(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
+        :buildpack,
         state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
         app_guid:                    app_model.guid,
         package_guid:                package_model.guid,
@@ -98,7 +99,7 @@ resource 'Droplets (Experimental)', type: :api do
     end
 
     let!(:droplet_model) do
-      VCAP::CloudController::DropletModel.make(app_guid: app_model.guid)
+      VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid)
     end
 
     before do
@@ -134,6 +135,7 @@ resource 'Droplets (Experimental)', type: :api do
 
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
+        :buildpack,
         app_guid:                         app_model.guid,
         created_at:                       Time.at(1),
         package_guid:                     package.guid,
@@ -144,6 +146,7 @@ resource 'Droplets (Experimental)', type: :api do
     end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
+        :buildpack,
         app_guid:                    app_model.guid,
         created_at:                  Time.at(2),
         package_guid:                package.guid,
@@ -156,7 +159,7 @@ resource 'Droplets (Experimental)', type: :api do
         execution_metadata:          'black-box-secrets'
       )
     end
-    let!(:droplet3) { VCAP::CloudController::DropletModel.make(package_guid: VCAP::CloudController::PackageModel.make.guid) }
+    let!(:droplet3) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: VCAP::CloudController::PackageModel.make.guid) }
 
     let(:page) { 1 }
     let(:per_page) { 2 }
@@ -254,6 +257,7 @@ resource 'Droplets (Experimental)', type: :api do
     context 'faceted search' do
       let!(:droplet4) do
         VCAP::CloudController::DropletModel.make(
+          :buildpack,
           app_guid:                    app_model.guid,
           created_at:                  Time.at(2),
           package_guid:                package.guid,

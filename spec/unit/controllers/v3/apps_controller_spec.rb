@@ -891,7 +891,7 @@ describe AppsV3Controller, type: :controller do
 
   describe '#start' do
     let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
 
@@ -1020,6 +1020,41 @@ describe AppsV3Controller, type: :controller do
         response_body = MultiJson.load(response.body)
         expect(response_body['error_code']).to eq 'CF-UnprocessableEntity'
         expect(response.status).to eq 422
+      end
+    end
+
+    context 'when requesting docker lifecycle and diego_docker feature flag is disabled' do
+      let(:droplet) { VCAP::CloudController::DropletModel.make(:docker, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+      end
+
+      context 'admin' do
+        before do
+          @request.env.merge!(json_headers(admin_headers))
+          allow(membership).to receive(:has_any_roles?).and_return(false)
+        end
+
+        it 'returns a 200 and the app' do
+          put :start, guid: app_model.guid
+
+          response_body = MultiJson.load(response.body)
+
+          expect(response.status).to eq 200
+          expect(response_body['guid']).to eq(app_model.guid)
+          expect(response_body['desired_state']).to eq('STARTED')
+        end
+      end
+
+      context 'non-admin' do
+        it 'raises 403' do
+          put :start, guid: app_model.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('FeatureDisabled')
+          expect(response.body).to include('diego_docker')
+        end
       end
     end
   end

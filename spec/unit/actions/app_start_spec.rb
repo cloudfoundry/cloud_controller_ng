@@ -45,16 +45,6 @@ module VCAP::CloudController
       end
 
       context 'when the app has a buildpack lifecycle' do
-        context 'when the droplet does not exist' do
-          let(:droplet_guid) { nil }
-
-          it 'raises a DropletNotFound exception' do
-            expect {
-              app_start.start(app_model)
-            }.to raise_error(AppStart::DropletNotFound)
-          end
-        end
-
         context 'when the droplet exists' do
           let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, droplet_hash: 'the-hash') }
           let(:droplet_guid) { droplet.guid }

@@ -57,7 +57,8 @@ module VCAP::CloudController
 
       lifecycle_result = if droplet.lifecycle_type == Lifecycles::BUILDPACK
                            {
-                             hash:      {
+                             hash:
+                             {
                                type:  DEFAULT_HASHING_ALGORITHM,
                                value: droplet.droplet_hash,
                              },

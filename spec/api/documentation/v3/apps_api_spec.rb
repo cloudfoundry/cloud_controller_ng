@@ -510,7 +510,7 @@ resource 'Apps (Experimental)', type: :api do
   put '/v3/apps/:guid/start' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:space_guid) { space.guid }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, app_guid: guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:droplet_guid) { droplet.guid }
 
     let(:app_model) do
