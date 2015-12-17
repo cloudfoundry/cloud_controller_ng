@@ -39,6 +39,9 @@ resource 'Events', type: [:api, :legacy_api] do
     audit.service_binding.delete
     audit.service_key.create
     audit.service_key.delete
+    audit.route.create
+    audit.route.update
+    audit.route.delete-request
   )
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
@@ -75,6 +78,7 @@ resource 'Events', type: [:api, :legacy_api] do
     let(:test_user) { VCAP::CloudController::User.make }
     let(:test_user_email) { 'user@example.com' }
     let(:test_space) { VCAP::CloudController::Space.make }
+    let(:test_route) { VCAP::CloudController::Route.make }
     let(:test_organization) { VCAP::CloudController::Organization.make }
 
     let(:test_broker) { VCAP::CloudController::ServiceBroker.make }
@@ -103,6 +107,13 @@ resource 'Events', type: [:api, :legacy_api] do
         'name' => 'outer space'
       }
     end
+    let(:route_request) do
+      {
+        'host' => 'dora',
+        'domain_guid' => 'some-domain-guid',
+        'space_guid' => 'some-space-guid',
+      }
+    end
     let(:droplet_exited_payload) do
       {
         'instance' => 0,
@@ -125,6 +136,10 @@ resource 'Events', type: [:api, :legacy_api] do
 
     let(:space_event_repository) do
       VCAP::CloudController::Repositories::Runtime::SpaceEventRepository.new
+    end
+
+    let(:route_event_repository) do
+      VCAP::CloudController::Repositories::Runtime::RouteEventRepository.new
     end
 
     let(:service_event_repository) do
@@ -324,6 +339,54 @@ resource 'Events', type: [:api, :legacy_api] do
                                actee: test_space.guid,
                                actee_name: test_space.name,
                                space_guid: test_space.guid,
+                               metadata: { 'request' => { 'recursive' => true } }
+    end
+
+    example 'List Route Create Events' do
+      route_event_repository.record_route_create(test_route, test_user, test_user_email, route_request)
+
+      client.get '/v2/events?q=type:audit.route.create', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'route',
+                               actee: test_route.guid,
+                               actee_name: test_route.host,
+                               space_guid: test_route.space.guid,
+                               metadata: { 'request' => route_request }
+    end
+
+    example 'List Route Update Events' do
+      route_event_repository.record_route_update(test_route, test_user, test_user_email, route_request)
+
+      client.get '/v2/events?q=type:audit.route.update', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee: test_route.guid,
+                               actee_type: 'route',
+                               actee_name: test_route.host,
+                               space_guid: test_route.space.guid,
+                               metadata: { 'request' => route_request }
+    end
+
+    example 'List Route Delete Events' do
+      route_event_repository.record_route_delete_request(test_route, test_user, test_user_email, true)
+
+      client.get '/v2/events?q=type:audit.route.delete-request', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event,
+                               actor_type: 'user',
+                               actor: test_user.guid,
+                               actor_name: test_user_email,
+                               actee_type: 'route',
+                               actee: test_route.guid,
+                               actee_name: test_route.host,
+                               space_guid: test_route.space.guid,
                                metadata: { 'request' => { 'recursive' => true } }
     end
 

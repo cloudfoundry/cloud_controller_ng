@@ -1,5 +1,6 @@
 require 'repositories/runtime/app_event_repository'
 require 'repositories/runtime/space_event_repository'
+require 'repositories/runtime/route_event_repository'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
 require 'cloud_controller/upload_handler'
@@ -154,6 +155,10 @@ module CloudController
 
     def space_event_repository
       Repositories::Runtime::SpaceEventRepository.new
+    end
+
+    def route_event_repository
+      Repositories::Runtime::RouteEventRepository.new
     end
 
     def services_event_repository
