@@ -48,10 +48,11 @@ resource 'Space Quota Definitions', type: [:api, :legacy_api] do
     include_context 'guid_parameter'
     include_context 'updatable_fields', required: false
     example 'Updating a Space Quota Definition' do
-      client.put "/v2/space_quota_definitions/#{guid}", fields_json, headers
+      new_attributes = { name: 'new_name' }
+      client.put "/v2/space_quota_definitions/#{guid}", MultiJson.dump(new_attributes, pretty: true), headers
 
       expect(status).to eq(201)
-      standard_entity_response parsed_response, :space_quota_definition
+      standard_entity_response parsed_response, :space_quota_definition, name: 'new_name'
     end
   end
 
