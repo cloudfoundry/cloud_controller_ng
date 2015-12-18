@@ -40,7 +40,6 @@ module VCAP::CloudController
 
     def build_data(package)
       data = package.type == 'docker' && package.docker_data ? docker_data(package) : buildpack_data(package)
-      data[:error] = package.error
       data
     end
 
@@ -48,15 +47,14 @@ module VCAP::CloudController
       docker_data = package.docker_data
       {
         image: docker_data.image,
-        credentials: docker_data.credentials,
-        store_image: docker_data.store_image
       }
     end
 
     def buildpack_data(package)
       {
-        hash: {
-          type: DEFAULT_HASHING_ALGORITHM,
+        error: package.error,
+        hash:  {
+          type:  DEFAULT_HASHING_ALGORITHM,
           value: package.package_hash
         },
       }

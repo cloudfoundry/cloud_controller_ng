@@ -44,11 +44,6 @@ module VCAP::CloudController
         let!(:data_model) do
           PackageDockerDataModel.create({
               image: 'registry/image:latest',
-              user: 'user',
-              password: 'password',
-              email: 'email',
-              login_server: 'login_server',
-              store_image: true,
               package: package
             })
         end
@@ -59,12 +54,6 @@ module VCAP::CloudController
           data        = result['data']
 
           expect(data['image']).to eq data_model.image
-          expect(data['credentials']['user']).to eq data_model.user
-          expect(data['credentials']['email']).to eq data_model.email
-          expect(data['credentials']['password']).to eq data_model.password
-          expect(data['credentials']['login_server']).to eq data_model.login_server
-          expect(data['store_image']).to eq data_model.store_image
-          expect(data['hash']).to eq nil
         end
       end
 

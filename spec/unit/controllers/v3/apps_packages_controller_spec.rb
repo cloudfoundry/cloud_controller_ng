@@ -138,14 +138,7 @@ describe AppsPackagesController, type: :controller do
         {
           type: 'docker',
           data: {
-            image:       'registry/image:latest',
-            credentials: {
-              user:         'user name',
-              password:     's3cr3t',
-              email:        'email@example.com',
-              login_server: 'https://index.docker.io/v1/'
-            },
-            store_image: true
+            image: 'registry/image:latest'
           }
         }
       end
@@ -160,7 +153,6 @@ describe AppsPackagesController, type: :controller do
         package = app_model.packages.first
         expect(package.type).to eq('docker')
         expect(package.docker_data.image).to eq('registry/image:latest')
-        expect(package.docker_data.store_image).to eq(true)
       end
     end
   end

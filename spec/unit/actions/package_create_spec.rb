@@ -42,14 +42,7 @@ module VCAP::CloudController
             type: 'docker',
             app_guid: app_guid,
             data: {
-              image: 'registry/image:latest',
-              credentials: {
-                user: 'user name',
-                password: 'pw',
-                email: 'email',
-                login_server: 'login server'
-              },
-              store_image: true
+              image: 'registry/image:latest'
             }
           }
           PackageCreateMessage.new(data)
@@ -63,39 +56,6 @@ module VCAP::CloudController
 
           expect(created_package).to eq(result)
           expect(created_package.docker_data.image).to eq('registry/image:latest')
-          expect(created_package.docker_data.store_image).to eq(true)
-          expect(created_package.docker_data.user).to eq('user name')
-          expect(created_package.docker_data.password).to eq('pw')
-          expect(created_package.docker_data.login_server).to eq('login server')
-        end
-
-        context 'when store_image is not provided' do
-          let(:message) do
-            data = {
-              type: 'docker',
-              app_guid: app_guid,
-              data: {
-                image: 'registry/image:latest',
-                credentials: {
-                  user: 'user name',
-                  password: 'pw',
-                  email: 'email',
-                  login_server: 'login server'
-                },
-                store_image: ''
-              }
-            }
-            PackageCreateMessage.new(data)
-          end
-
-          it 'defaults to false' do
-            result = package_create.create(message)
-
-            expect(app.packages.first).to eq(result)
-            created_package = PackageModel.find(guid: result.guid)
-
-            expect(created_package.docker_data.store_image).to eq(false)
-          end
         end
       end
 

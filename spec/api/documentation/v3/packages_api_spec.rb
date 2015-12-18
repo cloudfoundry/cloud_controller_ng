@@ -87,10 +87,7 @@ resource 'Packages (Experimental)', type: :api do
               'guid'       => package2.guid,
               'type'       => 'docker',
               'data'       => {
-                'image'    => 'http://location-of-image.com',
-                'store_image' => false,
-                'credentials' => {},
-                'error'      => nil,
+                'image'    => 'http://location-of-image.com'
               },
               'state'      => VCAP::CloudController::PackageModel::READY_STATE,
               'created_at' => iso8601,
@@ -185,10 +182,7 @@ resource 'Packages (Experimental)', type: :api do
       body_parameter :type, 'Package type', required: true, valid_values: ['bits', 'docker'], parameter_type: 'String'
       body_parameter :data, 'Data for docker packages.  Can be empty for bits packages.', required: false
       body_parameter :'data["image"]', 'Location of docker image.  Required for docker packages.', example_values: ['registry/image:latest'], parameter_type: 'String'
-      body_parameter :'data["credentials"]', 'Credentials for private docker image, available fields are user, password, email, login server.',
-        required: false, parameter_type: 'String'
-      body_parameter :'data["store_image"]', 'Whether or not the backend should cache the image. For docker packages only.',
-        default: false, required: false, valid_values: ['true', 'false'], parameter_type: 'Boolean'
+
       header 'Content-Type', 'application/json'
 
       example 'Create a Package' do
@@ -203,14 +197,6 @@ resource 'Packages (Experimental)', type: :api do
           'type'       => type,
           'data'       => {
             'image'    => 'registry/image:latest',
-            'credentials' => {
-              'user' => 'user name',
-              'password' => 'very secret password',
-              'email' => 'root@admin.example.com',
-              'login_server' => 'https://index.docker.io/v1'
-            },
-            'store_image' => true,
-            'error'      => nil,
           },
           'state'      => 'READY',
           'created_at' => iso8601,
@@ -264,10 +250,7 @@ resource 'Packages (Experimental)', type: :api do
           'guid'       => package.guid,
           'type'       => 'docker',
           'data'       => {
-            'image'    => 'http://awesome-sauce.com',
-            'credentials' => {},
-            'store_image' => false,
-            'error'      => nil,
+            'image'    => 'http://awesome-sauce.com'
           },
           'state'      => 'READY',
           'created_at' => iso8601,

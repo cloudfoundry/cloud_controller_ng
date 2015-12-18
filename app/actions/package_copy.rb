@@ -34,8 +34,6 @@ module VCAP::CloudController
       source_data = source_package.docker_data
       data = PackageDockerDataModel.new
       data.image = source_data.image
-      data.store_image = source_data.store_image
-      data.credentials = source_data.credentials
       data.package = package
       data.save
       package.reload

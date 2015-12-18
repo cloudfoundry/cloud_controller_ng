@@ -45,9 +45,6 @@ module VCAP::CloudController
       data = PackageDockerDataModel.new
       data.package = package
       data.image = message.docker_data.image
-      data.store_image = message.docker_data.store_image.blank? ? false : message.docker_data.store_image
-      data.credentials = (message.docker_data.credentials || {})
-
       data.save
       package.docker_data = data
     end
