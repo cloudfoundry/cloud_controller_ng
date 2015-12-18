@@ -78,6 +78,16 @@ module VCAP::CloudController
       end
 
       context 'when a docker type is requested' do
+        context 'when data is not provided' do
+          let(:params) { { app_guid: 'guuid!', type: 'docker' } }
+
+          it 'is invalid' do
+            message = PackageCreateMessage.new(params)
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Data Image required')
+          end
+        end
+
         context 'when an image is not provided' do
           let(:params) { { app_guid: 'guuid!', type: 'docker', data: { store_image: false, credentials: {} } } }
 

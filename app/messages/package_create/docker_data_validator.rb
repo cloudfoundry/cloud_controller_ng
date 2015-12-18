@@ -7,11 +7,11 @@ module VCAP::CloudController
     delegate :type, :data, to: :record
 
     def image
-      record.data.fetch(:image, nil)
+      record.try(:data).try(:fetch, :image, nil)
     end
 
     def should_validate?
-      record.type == 'docker' && !data.nil?
+      record.type == 'docker'
     end
 
     def error_key
