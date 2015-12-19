@@ -230,23 +230,4 @@ EOF
       expect(parsed_response).to eql({ 'manage' => true })
     end
   end
-
-  put '/v2/service_plans/:service_plan_guid/service_instances' do
-    let(:new_plan) { VCAP::CloudController::ServicePlan.make }
-    let(:old_plan) { service_instance.service_plan }
-    let(:request_json) { { service_plan_guid: new_plan.guid }.to_json }
-
-    field :service_plan_guid, 'The guid of the plan to move the existing instances to', required: true, example_values: %w(6c4bd80f-4593-41d1-a2c9-b20cb65ec76e)
-
-    example 'Migrate Service Instances from one Service Plan to another Service Plan (experimental)' do
-      explanation <<-EOD
-          Move all Service Instances for the service plan from the URL to the service plan in the request body
-      EOD
-
-      client.put "/v2/service_plans/#{old_plan.guid}/service_instances", request_json, headers
-
-      expect(status).to eq(200)
-      expect(parsed_response['changed_count']).to eq(1)
-    end
-  end
 end
