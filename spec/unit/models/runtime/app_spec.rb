@@ -2117,6 +2117,72 @@ module VCAP::CloudController
           expect(app.file_descriptors).to eq(200)
         end
       end
+
+      describe 'default ports' do
+        context 'with a diego app' do
+          context 'and no ports are specified' do
+            it 'has a default port value' do
+              App.create_from_hash(name: 'test', space_guid: space.guid, diego: true)
+              expect(App.last.ports).to eq [8080]
+            end
+          end
+
+          context 'and ports are specified' do
+            it 'uses the ports provided' do
+              App.create_from_hash(name: 'test', space_guid: space.guid, diego: true, ports: [9999])
+              expect(App.last.ports).to eq [9999]
+            end
+          end
+        end
+      end
+    end
+
+    describe 'updating' do
+      context 'switching from diego to dea' do
+        let (:app) { App.create_from_hash(name: 'test', space_guid: space.guid, diego: true, ports: [2345]) }
+
+        context 'no ports are specified' do
+          before do
+            app.update_from_hash(diego: false)
+          end
+
+          it 'sets the ports to nil' do
+            expect(app.reload.ports).to be_nil
+          end
+        end
+
+        context 'and ports are specified' do
+          it 'fails validations' do
+            expect{
+              app.update_from_hash(diego: false, ports: [45453])
+            }.to raise_error Sequel::ValidationFailed
+          end
+        end
+      end
+
+      context 'switching from dea to diego' do
+        let (:app) { App.create_from_hash(name: 'test', space_guid: space.guid, diego: false) }
+
+        context 'and no ports specified' do
+          before do
+            app.update_from_hash(diego: true)
+          end
+
+          it 'defaults to 8080' do
+            expect(app.reload.ports).to eq [8080]
+          end
+        end
+
+        context 'and ports are specified' do
+          before do
+            app.update_from_hash(diego: true, ports: [2345, 1298])
+          end
+
+          it 'uses the ports provided' do
+            expect(app.reload.ports).to eq [2345, 1298]
+          end
+        end
+      end
     end
 
     describe 'saving' do
@@ -2520,7 +2586,7 @@ module VCAP::CloudController
           app = App.make(diego: true, ports: [1025, 1026, 1027, 1028])
           expect(app.ports).to eq([1025, 1026, 1027, 1028])
 
-          app = App.make(diego: true, ports: [])
+          app = App.make
           expect(app.ports).to eq(nil)
 
           app = App.make(diego: true, ports: [1024])

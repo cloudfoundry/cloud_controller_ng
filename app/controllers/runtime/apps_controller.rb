@@ -141,14 +141,16 @@ module VCAP::CloudController
     def before_create
       space = VCAP::CloudController::Space[guid: request_attrs['space_guid']]
       verify_enable_ssh(space)
-      setup_default_ports
     end
 
     def before_update(app)
       verify_enable_ssh(app.space)
       updated_diego_flag = request_attrs['diego']
-      ignore_empty_ports! if request_attrs['ports'] == []
-      setup_default_ports(update: true) if updating_diego_flag?(app.diego, updated_diego_flag)
+      ports = request_attrs['ports']
+      ignore_empty_ports! if ports == []
+      if should_warn_about_changed_ports?(app.diego, updated_diego_flag, ports)
+        add_warning('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT.')
+      end
     end
 
     def ignore_empty_ports!
@@ -157,23 +159,8 @@ module VCAP::CloudController
       @request_attrs.freeze
     end
 
-    def setup_default_ports(opts={})
-      enable_diego  = @request_attrs['diego']
-      ports = @request_attrs['ports']
-      if enable_diego && ports.nil?
-        @request_attrs = @request_attrs.deep_dup
-        @request_attrs['ports'] = [8080]
-        @request_attrs.freeze
-      elsif !enable_diego && ports.nil? && opts[:update]
-        add_warning('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT.')
-        @request_attrs = @request_attrs.deep_dup
-        @request_attrs['ports'] = []
-        @request_attrs.freeze
-      end
-    end
-
-    def updating_diego_flag?(original, updated)
-      !updated.nil? && original != updated
+    def should_warn_about_changed_ports?(old_diego, new_diego, ports)
+      !new_diego.nil? && old_diego && !new_diego && ports.nil?
     end
 
     def verify_enable_ssh(space)

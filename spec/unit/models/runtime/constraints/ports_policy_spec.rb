@@ -48,6 +48,14 @@ describe PortsPolicy do
         expect(app.valid?).to eq(true)
       end
     end
+
+    context 'when ports are empty' do
+      it 'does not register error' do
+        app.diego = false
+        app.ports = []
+        expect(app.valid?).to eq(true)
+      end
+    end
   end
 
   context 'valid apps' do

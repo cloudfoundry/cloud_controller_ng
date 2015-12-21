@@ -25,6 +25,7 @@ module VCAP::CloudController
       self.memory ||= VCAP::CloudController::Config.config[:default_app_memory]
     end
 
+    DEFAULT_PORTS = [8080].freeze
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
     one_to_many :droplets
@@ -142,6 +143,12 @@ module VCAP::CloudController
       create_app_usage_event
     end
 
+    def before_validation
+      # column_changed?(:ports) reports false here for reasons unknown
+      set_ports(nil) if changed_from_diego_to_dea && !changed_columns.include?(:ports)
+      super
+    end
+
     def before_save
       if needs_package_in_current_state? && !package_hash
         raise VCAP::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
@@ -151,6 +158,8 @@ module VCAP::CloudController
       self.memory ||= Config.config[:default_app_memory]
       self.disk_quota ||= Config.config[:default_app_disk_in_mb]
       self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh if enable_ssh.nil?
+
+      set_ports(DEFAULT_PORTS) if diego && (ports.nil? || ports.empty?)
 
       if Config.config[:instance_file_descriptor_limit]
         self.file_descriptors ||= Config.config[:instance_file_descriptor_limit]
@@ -629,6 +638,21 @@ module VCAP::CloudController
     end
 
     private
+
+    def changed_from_diego_to_dea
+      column_changed?(:diego) && initial_value(:diego) && !diego
+    end
+
+    # HACK: We manually call the Serializer here because the plugin uses the
+    # _before_validation method to serialize ports. This is called before
+    # validations and we want to set the default ports after validations.
+    #
+    # See:
+    # https://github.com/jeremyevans/sequel/blob/7d6753da53196884e218a59a7dcd9a7803881b68/lib/sequel/model/base.rb#L1772-L1779
+    def set_ports(new_ports)
+      self.ports = new_ports
+      self[:ports] = IntegerArraySerializer.serializer.call(self.ports)
+    end
 
     def docker_ports
       if !self.needs_staging? && !self.current_saved_droplet.nil? && self.execution_metadata.present?
