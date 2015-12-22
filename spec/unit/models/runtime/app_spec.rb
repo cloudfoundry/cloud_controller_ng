@@ -2139,7 +2139,7 @@ module VCAP::CloudController
 
     describe 'updating' do
       context 'switching from diego to dea' do
-        let (:app) { App.create_from_hash(name: 'test', space_guid: space.guid, diego: true, ports: [2345]) }
+        let(:app) { App.create_from_hash(name: 'test', space_guid: space.guid, diego: true, ports: [2345]) }
 
         context 'no ports are specified' do
           before do
@@ -2153,7 +2153,7 @@ module VCAP::CloudController
 
         context 'and ports are specified' do
           it 'fails validations' do
-            expect{
+            expect {
               app.update_from_hash(diego: false, ports: [45453])
             }.to raise_error Sequel::ValidationFailed
           end
@@ -2161,7 +2161,7 @@ module VCAP::CloudController
       end
 
       context 'switching from dea to diego' do
-        let (:app) { App.create_from_hash(name: 'test', space_guid: space.guid, diego: false) }
+        let(:app) { App.create_from_hash(name: 'test', space_guid: space.guid, diego: false) }
 
         context 'and no ports specified' do
           before do

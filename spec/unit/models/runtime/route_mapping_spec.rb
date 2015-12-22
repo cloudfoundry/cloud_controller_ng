@@ -6,6 +6,27 @@ module VCAP::CloudController
     let(:space) { Space.make }
     it { is_expected.to have_timestamp_columns }
 
+    describe 'Backwards Compatibility' do
+      let(:app) { AppFactory.make }
+      let(:route) { Route.make(space: app.space) }
+      let!(:mapping) { RouteMapping.make }
+
+      before do
+        app.add_route(route)
+      end
+
+      it 'the model reads from new route_mappings table and old apps_routes table' do
+        mappings = RouteMapping.all
+
+        old_mapping = RouteMapping.new
+        old_mapping.app = app
+        old_mapping.route = route
+
+        expect(mappings.size).to eq 2
+        expect(mappings).to include(mapping)
+        expect(mappings).to include(old_mapping)
+      end
+    end
 
     describe 'Associations' do
       let(:route) { Route.make(space: space) }
@@ -64,7 +85,7 @@ module VCAP::CloudController
           it 'uses the first port in the list of app ports' do
             mapping = RouteMapping.new(app: app_obj, route: route)
             mapping.save
-            expect(mapping.app_port).to eq (8080)
+            expect(mapping.app_port).to eq(8080)
           end
         end
 
@@ -82,7 +103,7 @@ module VCAP::CloudController
           it 'uses the app port specified' do
             mapping = RouteMapping.new(app: app_obj, route: route, app_port: 1111)
             mapping.save
-            expect(mapping.app_port).to eq (1111)
+            expect(mapping.app_port).to eq(1111)
           end
         end
       end

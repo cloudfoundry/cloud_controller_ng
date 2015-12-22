@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 resource 'Routes Mapping', type: [:api, :legacy_api] do
-  let!(:app_obj) { VCAP::CloudController::AppFactory.make }
+  let!(:app_obj) { VCAP::CloudController::AppFactory.make(diego: true, ports: [8888]) }
   let!(:route) { VCAP::CloudController::Route.make(space: app_obj.space) }
 
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
@@ -28,7 +28,7 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
 
       example 'Mapping an App and a Route' do
         body = MultiJson.dump(
-          { app_guid: app_obj.guid, route_guid: route.guid }, pretty: true
+          { app_guid: app_obj.guid, route_guid: route.guid, app_port: 8888 }, pretty: true
         )
 
         client.post '/v2/route_mappings', body, headers
@@ -37,7 +37,7 @@ resource 'Routes Mapping', type: [:api, :legacy_api] do
         standard_entity_response parsed_response, :route_mapping
         expect(parsed_response['entity']['app_guid']).to eq(app_obj.guid)
         expect(parsed_response['entity']['route_guid']).to eq(route.guid)
-        expect(parsed_response['entity']['app_port']).to eq(nil)
+        expect(parsed_response['entity']['app_port']).to eq(8888)
       end
     end
   end

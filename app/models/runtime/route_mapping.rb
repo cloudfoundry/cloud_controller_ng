@@ -7,6 +7,9 @@ module VCAP::CloudController
 
     import_attributes :app_port, :app_guid, :route_guid
 
+      # DATASET = App.dataset.join(:apps_routes, app_id: :id).select(:apps_routes__route_id, :apps_routes__app_id)
+      # set_dataset(DATASET)
+
     def validate
       if self.app_port && !app.diego
         errors.add(:app_port, :diego_only)
