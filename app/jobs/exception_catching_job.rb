@@ -14,6 +14,7 @@ module VCAP::CloudController
 
       def save_error(error_presenter, job)
         job.cf_api_error = YAML.dump(error_presenter.error_hash)
+        deprioritize_job(job)
         job.save
       end
 
@@ -22,6 +23,14 @@ module VCAP::CloudController
           logger.info(error_presenter.log_message)
         else
           logger.error(error_presenter.log_message)
+        end
+      end
+
+      def deprioritize_job(job)
+        if job.priority == 0
+          job.priority = 1
+        else
+          job.priority *= 2
         end
       end
 

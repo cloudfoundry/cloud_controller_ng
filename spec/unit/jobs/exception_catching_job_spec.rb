@@ -71,6 +71,34 @@ module VCAP::CloudController
           expect(background_logger).to receive(:info).with('log message')
           exception_catching_job.error(job, 'exception')
         end
+
+        describe 'job priority' do
+          context 'when the job priority starts at 0' do
+            before do
+              allow(job).to receive(:priority).and_return(0)
+            end
+
+            it 'deprioritizes the job to priority 1' do
+              exception_catching_job.error(job, 'exception')
+
+              expect(job).to have_received(:priority=).with(1).ordered
+              expect(job).to have_received(:save).ordered
+            end
+          end
+
+          context 'when the job priority is greater than 0' do
+            before do
+              allow(job).to receive(:priority).and_return(17)
+            end
+
+            it 'doubles the job priority' do
+              exception_catching_job.error(job, 'exception')
+
+              expect(job).to have_received(:priority=).with(34).ordered
+              expect(job).to have_received(:save).ordered
+            end
+          end
+        end
       end
 
       describe '#reschedule_at' do
