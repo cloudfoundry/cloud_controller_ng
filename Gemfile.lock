@@ -223,7 +223,7 @@ GEM
     machinist (1.0.6)
     membrane (1.1.0)
     method_source (0.8.2)
-    mime-types (2.6.1)
+    mime-types (2.6.2)
     mini_portile2 (2.0.0)
     minitest (5.8.3)
     msgpack (0.5.9)
@@ -408,6 +408,7 @@ DEPENDENCIES
   loggregator_emitter (~> 5.0)
   machinist (~> 1.0.6)
   membrane (~> 1.0)
+  mime-types (~> 2.6.2)
   multi_json
   mysql2 (= 0.3.20)
   netaddr
