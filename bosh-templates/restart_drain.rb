@@ -1,4 +1,4 @@
-#!/var/vcap/packages/ruby-2.2.3/bin/ruby --disable-all
+#!/var/vcap/packages/ruby-2.2.4/bin/ruby --disable-all
 
 $LOAD_PATH.unshift('/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/app')
 $LOAD_PATH.unshift('/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/lib')
