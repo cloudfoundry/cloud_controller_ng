@@ -51,10 +51,6 @@ module VCAP::CloudController
           it 'should associate with the docker app' do
             expect { RouteMapping.make(app: docker_app, route: route) }.not_to raise_error
           end
-
-          context 'when docker ports returns nil' do
-            it 'does something'
-          end
         end
       end
     end
@@ -73,15 +69,21 @@ module VCAP::CloudController
         end
 
         context 'and an app port is specified' do
+          let(:app_obj) { AppFactory.make(space: space, diego: true, ports: [1111]) }
+
+          context 'and the port is not bound to the app' do
+            it 'adds an error' do
+              mapping = RouteMapping.new(app: app_obj, route: route, app_port: 2222)
+              expect(mapping.valid?).to be_falsey
+              expect(mapping.errors.on(:app_port)).to include :not_bound_to_app
+            end
+          end
+
           it 'uses the app port specified' do
             mapping = RouteMapping.new(app: app_obj, route: route, app_port: 1111)
             mapping.save
             expect(mapping.app_port).to eq (1111)
           end
-        end
-
-        context 'and the app has no ports' do
-          it 'does something'
         end
       end
 
@@ -100,6 +102,7 @@ module VCAP::CloudController
           it 'adds an error' do
             mapping = RouteMapping.new(app: app_obj, route: route, app_port: 1111)
             expect(mapping.valid?).to be_falsey
+            expect(mapping.errors.on(:app_port)).to include :diego_only
           end
         end
       end
