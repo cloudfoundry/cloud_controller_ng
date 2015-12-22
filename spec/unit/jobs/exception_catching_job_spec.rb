@@ -23,8 +23,8 @@ module VCAP::CloudController
 
       context '#error(job, exception)' do
         let(:job) { double('Job').as_null_object }
-        let(:error_presenter) { double('ErrorPresenter', error_hash: 'sanitized exception hash').as_null_object }
-        let(:background_logger) { double('Steno').as_null_object }
+        let(:error_presenter) { instance_double(ErrorPresenter, error_hash: 'sanitized exception hash').as_null_object }
+        let(:background_logger) { instance_double(Steno::Logger).as_null_object }
 
         before do
           allow(Steno).to receive(:logger).and_return(background_logger)
@@ -58,8 +58,8 @@ module VCAP::CloudController
 
         it 'saves the exception on the job as cf_api_error' do
           expect(YAML).to receive(:dump).with('sanitized exception hash').and_return('marshaled hash')
-          expect(job).to receive('cf_api_error=').with('marshaled hash')
-          expect(job).to receive('save')
+          expect(job).to receive(:cf_api_error=).with('marshaled hash')
+          expect(job).to receive(:save)
 
           exception_catching_job.error(job, 'exception')
         end
