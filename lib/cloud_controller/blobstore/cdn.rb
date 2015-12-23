@@ -13,7 +13,9 @@ module CloudController
       end
 
       def get(path, &block)
-        HTTPClient.new.get(download_uri(path)) do |chunk|
+        client = HTTPClient.new
+        client.ssl_config.set_default_paths
+        client.get(download_uri(path)) do |chunk|
           block.yield chunk
         end
       end

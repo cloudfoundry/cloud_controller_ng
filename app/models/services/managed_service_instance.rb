@@ -31,6 +31,7 @@ module VCAP::CloudController
 
       def do_request(method, payload=nil)
         client = HTTPClient.new
+        client.ssl_config.set_default_paths
         u = URI.parse(service.url)
         u.path = "/gateway/v2/configurations/#{service_id}/snapshots"
 

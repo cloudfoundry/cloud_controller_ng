@@ -30,6 +30,7 @@ module VCAP::Services::SSO::UAA
       http.use_ssl = use_ssl
       if use_ssl
         http.verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
+        http.cert_store.set_default_paths
       end
 
       logger.info("POST UAA transaction: #{uri} - #{scrub(request_body).to_json}")

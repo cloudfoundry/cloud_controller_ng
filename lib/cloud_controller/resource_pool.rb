@@ -137,7 +137,9 @@ class VCAP::CloudController::ResourcePool
       for_real_uri = Aws::CF::Signer.is_configured? ? Aws::CF::Signer.sign_url(uri) : uri
 
       File.open(destination, 'w') do |file|
-        HTTPClient.new.get(for_real_uri) do |chunk|
+        client = HTTPClient.new
+        client.ssl_config.set_default_paths
+        client.get(for_real_uri) do |chunk|
           file.write(chunk)
         end
       end

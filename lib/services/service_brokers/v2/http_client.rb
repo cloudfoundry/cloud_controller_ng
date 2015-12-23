@@ -115,6 +115,7 @@ module VCAP::Services
       def make_request(method, uri, body, content_type)
         client = HTTPClient.new(force_basic_auth: true)
         client.set_auth(uri, auth_username, auth_password)
+        client.ssl_config.set_default_paths
 
         client.ssl_config.verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
         client.connect_timeout = broker_client_timeout
