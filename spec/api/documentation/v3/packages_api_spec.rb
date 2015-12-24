@@ -415,7 +415,8 @@ resource 'Packages (Experimental)', type: :api do
       required: false, valid_values: 'object'
     body_parameter :memory_limit, 'Memory limit used to stage package', valid_values: 'integer', required: false
     body_parameter :disk_limit, 'Disk limit used to stage package', valid_values: 'integer', required: false
-    body_parameter :lifecycle, 'Lifecycle information for a droplet.  If not provided, it will default to a buildpack',
+    body_parameter :lifecycle, 'Lifecycle information for a droplet.  If not provided, it will default to what is specified on the app.
+    If the app does not have lifecycle information, it will default to a buildpack',
       valid_values: 'object', required: false,
       example_values: [
         MultiJson.dump(
