@@ -106,6 +106,16 @@ module VCAP::CloudController
             expect(message.errors.full_messages).to include('Data Image must be a string')
           end
         end
+
+        context 'when unexpected data keys are provided' do
+          let(:params) { { app_guid: 'guuid!', type: 'docker', data: { image: 'path/to/image/', birthday: 'party' } } }
+
+          it 'is invalid' do
+            message = PackageCreateMessage.new(params)
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages[0]).to include("Unknown field(s): 'birthday'")
+          end
+        end
       end
     end
   end

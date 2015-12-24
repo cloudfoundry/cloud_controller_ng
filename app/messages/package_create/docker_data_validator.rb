@@ -2,7 +2,11 @@ require 'messages/nested_message_validator'
 
 module VCAP::CloudController
   class DockerDataValidator < NestedMessageValidator
+    ALLOWED_KEYS = [:image]
+
     validates :image, string: true, presence: { message: 'required' }
+
+    validates_with BaseMessage::NoAdditionalKeysValidator
 
     delegate :type, :data, to: :record
 
@@ -16,6 +20,15 @@ module VCAP::CloudController
 
     def error_key
       :data
+    end
+
+    def extra_keys
+      disallowed_params = (record.try(:data) || {}).reject { |key, _| allowed_keys.include? key }
+      disallowed_params.keys
+    end
+
+    def allowed_keys
+      ALLOWED_KEYS
     end
   end
 end
