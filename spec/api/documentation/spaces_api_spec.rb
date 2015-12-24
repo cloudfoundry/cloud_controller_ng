@@ -39,7 +39,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
     standard_model_list :space, VCAP::CloudController::SpacesController
     standard_model_get :space, nested_associations: [:organization]
     standard_model_delete :space do
-      parameter :recursive, 'Will delete all apps, services, and routes associated with the space', valid_values: [true, false]
+      parameter :recursive, 'Will delete all apps, services, routes, and service brokers associated with the space', valid_values: [true, false]
     end
 
     def after_standard_model_delete(guid)
