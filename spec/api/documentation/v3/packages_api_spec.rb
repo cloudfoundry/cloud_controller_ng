@@ -166,14 +166,7 @@ resource 'Packages (Experimental)', type: :api do
       let(:type) { 'docker' }
       let(:data) do  # 'docker://cloudfoundry/runtime-ci'
         {
-          image: 'registry/image:latest',
-          credentials: {
-            user: 'user name',
-            password: 'very secret password',
-            email: 'root@admin.example.com',
-            login_server: 'https://index.docker.io/v1'
-          },
-          store_image: true
+          image: 'registry/image:latest'
         }
       end
 
