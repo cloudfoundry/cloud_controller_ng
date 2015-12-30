@@ -30,6 +30,7 @@ module VCAP::Services::SSO::UAA
       http.use_ssl = use_ssl
       if use_ssl
         http.verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
+        http.cert_store = OpenSSL::X509::Store.new
         http.cert_store.set_default_paths
       end
 

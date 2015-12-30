@@ -205,13 +205,15 @@ module VCAP::Services::SSO::UAA
       end
 
       describe 'ssl options' do
-        let(:mock_http) { double(:http) }
-        let(:mock_cert_store) { double(:cert_store) }
+        let(:mock_http) { instance_double(Net::HTTP) }
+        let(:mock_cert_store) { instance_double(OpenSSL::X509::Store) }
 
         before do
           allow(Net::HTTP).to receive(:new).and_return(mock_http)
           allow(mock_http).to receive(:use_ssl=)
           allow(mock_http).to receive(:verify_mode=)
+          allow(OpenSSL::X509::Store).to receive(:new).and_return(mock_cert_store)
+          allow(mock_http).to receive(:cert_store=)
           allow(mock_http).to receive(:cert_store).and_return(mock_cert_store)
           allow(mock_http).to receive(:request).and_return(double(:response, code: '200'))
           allow(mock_cert_store).to receive(:set_default_paths)
@@ -261,6 +263,8 @@ module VCAP::Services::SSO::UAA
               client_manager.modify_transaction(changeset)
 
               expect(mock_http).to have_received(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER)
+
+              expect(mock_http).to have_received(:cert_store=).with(mock_cert_store)
               expect(mock_cert_store).to have_received(:set_default_paths)
             end
           end
