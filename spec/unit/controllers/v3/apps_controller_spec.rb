@@ -452,14 +452,7 @@ describe AppsV3Controller, type: :controller do
   end
 
   describe '#update' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
-    let!(:app_lifecycle_data) do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(
-        app: app_model,
-        buildpack: VCAP::CloudController::Buildpack.make,
-        stack: VCAP::CloudController::Stack.default.name
-      )
-    end
+    let(:app_model) { VCAP::CloudController::AppModel.make(:buildpack) }
 
     let(:space) { app_model.space }
     let(:org) { space.organization }
@@ -532,20 +525,46 @@ describe AppsV3Controller, type: :controller do
       context 'when the space developer does not request lifecycle' do
         let(:req_body) do
           {
-            name: 'some-name',
+            name: new_name,
           }
         end
 
-        it 'uses the data on app' do
-          put :update, guid: app_model.guid, body: req_body
-          expect(response.status).to eq 200
+        context 'buildpack app' do
+          before do
+            app_model.lifecycle_data.stack = 'some-stack-name'
+            app_model.lifecycle_data.buildpack = 'some-buildpack-name'
+            app_model.lifecycle_data.save
+          end
 
-          expect(app_model.lifecycle_data.stack).not_to be_nil
-          expect(app_model.lifecycle_data.buildpack).not_to be_nil
+          it 'uses the existing lifecycle on app' do
+            put :update, guid: app_model.guid, body: req_body
+            expect(response.status).to eq 200
+
+            app_model.reload
+            app_model.lifecycle_data.reload
+
+            expect(app_model.name).to eq(new_name)
+            expect(app_model.lifecycle_data.stack).to eq('some-stack-name')
+            expect(app_model.lifecycle_data.buildpack).to eq('some-buildpack-name')
+          end
+        end
+
+        context 'docker app' do
+          let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
+
+          it 'uses the existing lifecycle on app' do
+            put :update, guid: app_model.guid, body: req_body
+            expect(response.status).to eq 200
+
+            app_model.reload
+
+            expect(app_model.name).to eq(new_name)
+            expect(app_model.lifecycle_type).to eq('docker')
+          end
         end
       end
 
-      context 'buildpack' do
+      context 'buildpack request' do
         context 'when the requested buildpack is not a valid url and is not a known buildpack' do
           let(:req_body) do
             {
@@ -655,6 +674,11 @@ describe AppsV3Controller, type: :controller do
             }
           end
 
+          before do
+            app_model.lifecycle_data.stack = VCAP::CloudController::Stack.default.name
+            app_model.lifecycle_data.save
+          end
+
           it 'does not modify the lifecycle data' do
             expect(app_model.lifecycle_data.stack).to eq VCAP::CloudController::Stack.default.name
             put :update, guid: app_model.guid, body: req_body
@@ -697,8 +721,8 @@ describe AppsV3Controller, type: :controller do
         end
       end
 
-      context 'docker' do
-        let(:app_lifecycle_data) { nil }
+      context 'docker request' do
+        let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
 
         context 'when attempting to change to another lifecycle type' do
           let(:req_body) do
@@ -733,22 +757,22 @@ describe AppsV3Controller, type: :controller do
             expect(response).to have_status_code(200)
           end
         end
-      end
 
-      context 'when the space developer requests a lifecycle without a data key' do
-        let(:req_body) do
-          {
-            name:      'some-name',
-            lifecycle: { type: 'docker' }
-          }
-        end
+        context 'when the space developer requests a lifecycle without a data key' do
+          let(:req_body) do
+            {
+              name:      'some-name',
+              lifecycle: { type: 'docker' }
+            }
+          end
 
-        it 'raises an error' do
-          put :update, guid: app_model.guid, body: req_body
+          it 'raises an error' do
+            put :update, guid: app_model.guid, body: req_body
 
-          expect(response.status).to eq 422
-          expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include('Lifecycle data must be a hash')
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include('Lifecycle data must be a hash')
+          end
         end
       end
     end

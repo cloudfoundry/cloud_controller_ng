@@ -10,10 +10,18 @@ module VCAP::CloudController
     }
     DEFAULT_LIFECYCLE_TYPE = VCAP::CloudController::Lifecycles::BUILDPACK
 
-    def self.provide(message, app=nil)
+    def self.provide_for_create(message)
+      provide(message, nil)
+    end
+
+    def self.provide_for_update(message, app)
+      provide(message, app)
+    end
+
+    def self.provide(message, app)
       if message.requested?(:lifecycle)
         type = message.lifecycle_type
-      elsif app
+      elsif !app.nil?
         type = app.lifecycle_type
       else
         type = DEFAULT_LIFECYCLE_TYPE
@@ -21,5 +29,6 @@ module VCAP::CloudController
 
       TYPE_TO_LIFECYCLE_CLASS_MAP[type].new(message)
     end
+    private_class_method :provide
   end
 end

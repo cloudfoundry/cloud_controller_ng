@@ -49,7 +49,7 @@ class AppsV3Controller < ApplicationController
       FeatureFlag.raise_unless_enabled!('diego_docker')
     end
 
-    lifecycle = AppLifecycleProvider.provide(message)
+    lifecycle = AppLifecycleProvider.provide_for_create(message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app = AppCreate.new(current_user, current_user_email).create(message, lifecycle)
@@ -68,7 +68,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
     unauthorized! unless can_update?(space.guid)
 
-    lifecycle = AppLifecycleProvider.provide(message)
+    lifecycle = AppLifecycleProvider.provide_for_update(message, app)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app = AppUpdate.new(current_user, current_user_email).update(app, message, lifecycle)

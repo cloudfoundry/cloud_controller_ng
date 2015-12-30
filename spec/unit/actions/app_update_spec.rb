@@ -13,7 +13,7 @@ module VCAP::CloudController
     let(:environment_variables) { { 'original' => 'value' } }
 
     describe '#update' do
-      let(:lifecycle) { AppLifecycleProvider.provide(message) }
+      let(:lifecycle) { AppLifecycleProvider.provide_for_update(message, app_model) }
       let(:message) do
         AppUpdateMessage.new({
             name:                  'new name',
