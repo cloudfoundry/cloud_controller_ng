@@ -119,5 +119,32 @@ module VCAP::CloudController
         expect(last_response.status).to eq(404)
       end
     end
+
+    context 'with a v3 app' do
+      let(:v3_app) { AppModel.make(space_guid: diego_app.space.guid) }
+
+      before do
+        diego_app.app_guid = v3_app.guid
+        diego_app.save
+      end
+
+      it 'audits the app crashed event' do
+        post url, MultiJson.dump(crashed_request)
+        expect(last_response.status).to eq(200)
+
+        app_event = Event.find(actee: v3_app.guid)
+
+        expect(app_event).to be
+        expect(app_event.space).to eq(diego_app.space)
+        expect(app_event.type).to eq('app.crash')
+        expect(app_event.actor_type).to eq('app')
+        expect(app_event.actor).to eq(v3_app.guid)
+        expect(app_event.metadata['instance']).to eq(crashed_request['instance'])
+        expect(app_event.metadata['index']).to eq(crashed_request['index'])
+        expect(app_event.metadata['exit_status']).to eq(crashed_request['exit_status'])
+        expect(app_event.metadata['exit_description']).to eq(crashed_request['exit_description'])
+        expect(app_event.metadata['reason']).to eq(crashed_request['reason'])
+      end
+    end
   end
 end

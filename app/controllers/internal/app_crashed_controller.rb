@@ -27,7 +27,9 @@ module VCAP::CloudController
       raise Errors::ApiError.new_from_details('UnableToPerform', 'AppCrashed', 'not a diego app') unless app.diego?
 
       crash_payload['version'] = Diego::ProcessGuid.app_version(process_guid)
-      Repositories::Runtime::AppEventRepository.new.create_app_exit_event(app, crash_payload)
+
+      app_for_event = app.is_v3? ? app.app : app
+      Repositories::Runtime::AppEventRepository.new.create_app_exit_event(app_for_event, crash_payload)
     end
 
     private
