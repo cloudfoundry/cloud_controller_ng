@@ -65,7 +65,6 @@ module VCAP::CloudController
       if package.type == 'bits'
         upload_link = { href: "/v3/packages/#{package.guid}/upload", method: 'POST' }
         download_link = { href: "/v3/packages/#{package.guid}/download", method: 'GET' }
-        stage_link = { href: "/v3/packages/#{package.guid}/droplets", method: 'POST' }
       end
 
       links = {
@@ -74,7 +73,7 @@ module VCAP::CloudController
         },
         upload: upload_link,
         download: download_link,
-        stage: stage_link,
+        stage: { href: "/v3/packages/#{package.guid}/droplets", method: 'POST' },
         app:  {
           href: "/v3/apps/#{package.app_guid}",
         },

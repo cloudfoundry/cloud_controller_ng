@@ -95,6 +95,7 @@ resource 'Packages (Experimental)', type: :api do
               'links'     => {
                 'self' => { 'href' => "/v3/packages/#{package2.guid}" },
                 'app'  => { 'href' => "/v3/apps/#{package2.app_guid}" },
+                'stage' => { 'href' => "/v3/packages/#{package2.guid}/droplets", 'method' => 'POST' },
               }
             }
           ]
@@ -197,6 +198,7 @@ resource 'Packages (Experimental)', type: :api do
           'links'     => {
             'self' => { 'href' => "/v3/packages/#{package.guid}" },
             'app'  => { 'href' => "/v3/apps/#{guid}" },
+            'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
           }
         }
 
@@ -251,6 +253,7 @@ resource 'Packages (Experimental)', type: :api do
           'links'     => {
             'self' => { 'href' => "/v3/packages/#{package.guid}" },
             'app'  => { 'href' => "/v3/apps/#{guid}" },
+            'stage' => { 'href' => "/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
           }
         }
 
