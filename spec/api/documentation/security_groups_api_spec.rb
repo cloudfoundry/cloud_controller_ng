@@ -20,7 +20,7 @@ resource 'Security Groups', type: [:api, :legacy_api] do
 The egress rules for apps that belong to this security group.
 A rule consists of a protocol (tcp,icmp,udp,all), destination CIDR or destination range,
 port or port range (tcp,udp,all), type (control signal for icmp), code (control signal for icmp),
-log (enables logging for the egress rule)
+log (enables logging for the egress rule). This field is limited to 16MB.
 DESC
 
     field :name, 'The name of the security group.', required: opts[:required], example_values: ['my_super_sec_group']
