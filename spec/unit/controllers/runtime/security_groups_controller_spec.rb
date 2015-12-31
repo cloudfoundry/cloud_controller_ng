@@ -51,6 +51,33 @@ module VCAP::CloudController
         expect(decoded_response['description']).to match(/name is taken/)
         expect(decoded_response['error_code']).to match(/SecurityGroupNameTaken/)
       end
+
+      context 'when the max length for security groups is exceeded' do
+        let(:long_rule) do
+          {
+            'protocol' => 'all',
+            'destination' => '0.0.0.0/0'
+          }
+        end
+        let(:security_group) do
+          {
+            'name': 'foo',
+            'rules': [long_rule]
+          }
+        end
+
+        before do
+          stub_const('VCAP::CloudController::SecurityGroup::MAX_RULES_CHAR_LENGTH', 20)
+        end
+
+        it 'returns SecurityGroupInvalid' do
+          post '/v2/security_groups', MultiJson.dump(security_group), json_headers(admin_headers)
+
+          expect(last_response.status).to eq(400)
+          expect(decoded_response['description']).to match(/must not exceed #{SecurityGroup::MAX_RULES_CHAR_LENGTH} characters/)
+          expect(decoded_response['error_code']).to match(/SecurityGroupInvalid/)
+        end
+      end
     end
   end
 end

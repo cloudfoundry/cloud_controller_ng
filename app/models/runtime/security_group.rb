@@ -3,6 +3,7 @@ require 'netaddr'
 module VCAP::CloudController
   class SecurityGroup < Sequel::Model
     SECURITY_GROUP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    MAX_RULES_CHAR_LENGTH = 2048
 
     plugin :serialization
 
@@ -19,6 +20,7 @@ module VCAP::CloudController
       validates_presence :name
       validates_unique :name
       validates_format SECURITY_GROUP_NAME_REGEX, :name
+      validate_rules_length
       validate_rules
     end
 
@@ -36,6 +38,16 @@ module VCAP::CloudController
     end
 
     private
+
+    def validate_rules_length
+      return if self[:rules].nil?
+
+      # use this instead of validates_max_length b/c we care about the serialized
+      # value that is happening due to our use of the serialize_attributes on rules column
+      if self[:rules].length > MAX_RULES_CHAR_LENGTH
+        errors.add(:rules, "length must not exceed #{MAX_RULES_CHAR_LENGTH} characters")
+      end
+    end
 
     def validate_rules
       return true unless rules
