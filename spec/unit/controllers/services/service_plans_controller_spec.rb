@@ -304,16 +304,17 @@ module VCAP::CloudController
     end
 
     describe 'PUT', '/v2/service_plans/:guid' do
-      context 'when the given unique_id is already taken' do
-        it 'returns an error response' do
-          service_plan = ServicePlan.make
-          other_service_plan = ServicePlan.make
-          payload = MultiJson.dump({ 'unique_id' => other_service_plan.unique_id })
+      context 'when fields other than public are requested' do
+        it 'only updates the public field' do
+          service_plan = ServicePlan.make(name: 'old-name', public: true)
+          payload = MultiJson.dump({ 'name' => 'new-name', 'public' => false })
 
           put "/v2/service_plans/#{service_plan.guid}", payload, admin_headers
 
-          expect(last_response.status).to be == 400
-          expect(decoded_response.fetch('code')).to eql(110001)
+          expect(last_response.status).to eq(201)
+          service_plan.reload
+          expect(service_plan.name).to eq('old-name')
+          expect(service_plan.public).to eq(false)
         end
       end
     end

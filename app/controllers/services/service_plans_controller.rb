@@ -43,6 +43,32 @@ module VCAP::CloudController
       end
     end
 
+    def create
+      404
+    end
+
+    def update(guid)
+      json_msg = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(stringify_keys: true).select { |key, value| key == 'public' }
+      logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
+      raise InvalidRequest unless request_attrs
+
+      obj = find_guid(guid)
+
+      before_update(obj)
+
+      model.db.transaction do
+        obj.lock!
+        validate_access(:read_for_update, obj, request_attrs)
+        obj.update_from_hash(request_attrs)
+        validate_access(:update, obj, request_attrs)
+      end
+
+      after_update(obj)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
+    end
+
     def delete(guid)
       plan = find_guid_and_validate_access(:delete, guid)
 
