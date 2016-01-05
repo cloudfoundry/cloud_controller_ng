@@ -77,7 +77,7 @@
 1. Visit your app at the new route to confirm that it is up
 
 
-# V3 Service Bindings
+## V3 Service Bindings
 
 1. Create a service binding
 
