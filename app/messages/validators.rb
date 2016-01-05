@@ -84,6 +84,18 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class DataValidator < ActiveModel::Validator
+    def validate(record)
+      return if !record.data.is_a?(Hash)
+
+      data = record.class::Data.new(record.data.symbolize_keys)
+
+      if !data.valid?
+        record.errors[:data].concat data.errors.full_messages
+      end
+    end
+  end
+
   class ToOneRelationshipValidator < ActiveModel::EachValidator
     def error_message(attribute)
       "must be structured like this: \"#{attribute}: {\"guid\": \"valid-guid\"}\""

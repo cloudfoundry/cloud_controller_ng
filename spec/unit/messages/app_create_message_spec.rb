@@ -114,7 +114,7 @@ module VCAP::CloudController
           message = AppCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors_on(:environment_variables)[0]).to include('must be a hash')
+          expect(message.errors_on(:environment_variables)).to include('must be a hash')
         end
       end
 

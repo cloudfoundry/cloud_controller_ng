@@ -254,6 +254,40 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'DataValidator' do
+      class DataMessage < VCAP::CloudController::BaseMessage
+        attr_accessor :data
+
+        def allowed_keys
+          [:data]
+        end
+
+        validates_with DataValidator
+
+        class Data < VCAP::CloudController::BaseMessage
+          attr_accessor :foo
+
+          def allowed_keys
+            [:foo]
+          end
+
+          validates :foo, numericality: true
+        end
+      end
+
+      it "adds data's error message to the base class" do
+        message = DataMessage.new({ data: { foo: 'not a number' } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:data)).to include('Foo is not a number')
+      end
+
+      it 'returns early when base class data is not a hash' do
+        message = DataMessage.new({ data: 'not a hash' })
+        expect(message).to be_valid
+        expect(message.errors_on(:data)).to be_empty
+      end
+    end
+
     describe 'ToOneRelationshipValidator' do
       class FooMessage < VCAP::CloudController::BaseMessage
         attr_accessor :bar

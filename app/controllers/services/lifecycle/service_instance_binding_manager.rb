@@ -77,9 +77,10 @@ module VCAP::CloudController
       raise ServiceInstanceNotBindable unless service_instance.bindable?
       raise AppNotFound unless App.first(guid: app_guid)
 
-      validate_app_create_action(binding_attrs)
-
       service_binding = ServiceBinding.new(binding_attrs)
+      @access_validator.validate_access(:create, service_binding)
+      raise Sequel::ValidationFailed.new(service_binding) unless service_binding.valid?
+
       raw_attributes = bind(service_binding, arbitrary_parameters)
 
       attributes_to_update = raw_attributes.tap { |r| r.delete(:route_service_url) }
@@ -135,12 +136,6 @@ module VCAP::CloudController
         deletion_job.perform
         nil
       end
-    end
-
-    def validate_app_create_action(binding_attrs)
-      service_binding = ServiceBinding.new(binding_attrs)
-      @access_validator.validate_access(:create, service_binding)
-      raise Sequel::ValidationFailed.new(service_binding) unless service_binding.valid?
     end
 
     def mitigate_orphan(binding)
