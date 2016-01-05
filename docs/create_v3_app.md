@@ -81,4 +81,6 @@
 
 1. Create a service binding
 
-  `cf curl /v3/service_bindings -X POST -d '{"type":"app", "relationships":{"app":{"guid":"app-guid"}, "service_instance":{"guid":"instance-guid"}}, "data":{"parameters":{}}}'`
+  ```
+  cf curl /v3/service_bindings -X POST -d '{"type":"app", "relationships":{"app":{"guid":"app-guid"}, "service_instance":{"guid":"instance-guid"}}, "data":{"parameters":{}}}'
+  ```
