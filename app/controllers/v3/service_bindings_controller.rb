@@ -1,4 +1,5 @@
 require 'queries/service_binding_create_fetcher'
+require 'queries/service_binding_list_fetcher'
 require 'presenters/v3/service_binding_model_presenter'
 require 'messages/service_binding_create_message'
 require 'messages/service_bindings_list_message'
@@ -35,6 +36,22 @@ class ServiceBindingsController < ApplicationController
     render status: :ok, json: service_binding_presenter.present_json(service_binding)
   end
 
+  def index
+    message = ServiceBindingsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    pagination_options = PaginationOptions.from_params(query_params)
+    invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
+
+    if roles.admin?
+      paginated_result = ServiceBindingListFetcher.new.fetch_all(pagination_options)
+    else
+      paginated_result = ServiceBindingListFetcher.new.fetch(pagination_options, space_guids_for_user)
+    end
+
+    render status: :ok, json: service_binding_presenter.present_json_list(paginated_result, '/v3/service_bindings')
+  end
+
   private
 
   def service_binding_presenter
@@ -43,6 +60,10 @@ class ServiceBindingsController < ApplicationController
 
   def membership
     @membership ||= Membership.new(current_user)
+  end
+
+  def space_guids_for_user
+    membership.space_guids_for_roles([VCAP::CloudController::Membership::SPACE_DEVELOPER])
   end
 
   def can_create?(space_guid)

@@ -389,4 +389,98 @@ describe ServiceBindingsController, type: :controller do
       end
     end
   end
+
+  describe 'index' do
+    let!(:allowed_binding_1) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com') }
+    let!(:allowed_binding_2) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com', service_instance: service_instance) }
+    let!(:allowed_binding_3) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com', service_instance: service_instance) }
+    let!(:binding_in_unauthorized_space) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com') }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: allowed_space) }
+    let(:allowed_space) { allowed_binding_1.space }
+    let(:unauthorized_space) { binding_in_unauthorized_space.space }
+
+    before do
+      allow(membership).to receive(:space_guids_for_roles).
+        with([VCAP::CloudController::Membership::SPACE_DEVELOPER]).and_return(allowed_space.guid)
+    end
+
+    it 'returns a 200 and all service bindings the user is allowed to see' do
+      get :index
+
+      expect(response.status).to eq 200
+      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      expect(response_guids).to match_array([allowed_binding_1, allowed_binding_2, allowed_binding_3].map(&:guid))
+    end
+
+    context 'admin' do
+      let(:expected_service_binding_guids) do
+        [allowed_binding_1, allowed_binding_2, allowed_binding_3, binding_in_unauthorized_space].map(&:guid)
+      end
+      before do
+        @request.env.merge!(admin_headers)
+      end
+
+      it 'returns all service bindings' do
+        get :index
+
+        expect(response.status).to eq 200
+        response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array(expected_service_binding_guids)
+      end
+    end
+
+    context 'when pagination options are specified' do
+      let(:page) { 1 }
+      let(:per_page) { 1 }
+      let(:params) { { 'page' => page, 'per_page' => per_page } }
+
+      it 'paginates the response' do
+        get :index, params
+
+        parsed_response = JSON.parse(response.body)
+        response_guids = parsed_response['resources'].map { |r| r['guid'] }
+        expect(parsed_response['pagination']['total_results']).to eq(3)
+        expect(response_guids.length).to eq(per_page)
+      end
+    end
+
+    context 'when the user does not have the read scope' do
+      before do
+        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
+      end
+
+      it 'returns a 403 NotAuthorized error' do
+        get :index
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include('NotAuthorized')
+      end
+    end
+
+    context 'when parameters are invalid' do
+      context 'because there are unknown parameters' do
+        let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
+
+        it 'returns an 400 Bad Request' do
+          get :index, params
+
+          expect(response.status).to eq(400)
+          expect(response.body).to include('BadQueryParameter')
+          expect(response.body).to include("Unknown query parameter(s): 'invalid', 'bad'")
+        end
+      end
+
+      context 'because there are invalid values in parameters' do
+        let(:params) { { 'per_page' => 9999999999 } }
+
+        it 'returns an 400 Bad Request' do
+          get :index, params
+
+          expect(response.status).to eq(400)
+          expect(response.body).to include('BadQueryParameter')
+          expect(response.body).to include('Per page must be between')
+        end
+      end
+    end
+  end
 end
