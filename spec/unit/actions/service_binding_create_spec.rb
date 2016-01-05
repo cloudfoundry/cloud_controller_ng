@@ -34,10 +34,10 @@ module VCAP::CloudController
           body: credentials
         }
         stub_bind(service_instance, opts)
-        allow(SecurityContext).to receive(:current_user)
-          .and_return(current_user)
-        allow(SecurityContext).to receive(:current_user_email)
-          .and_return(current_user_email)
+        allow(SecurityContext).to receive(:current_user).
+          and_return(current_user)
+        allow(SecurityContext).to receive(:current_user_email).
+          and_return(current_user_email)
       end
 
       it 'creates a v3 Service Binding' do
@@ -50,9 +50,9 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        expect_any_instance_of(Repositories::Services::EventRepository)
-          .to receive(:record_service_binding_event)
-          .with(:create, instance_of(ServiceBindingModel))
+        expect_any_instance_of(Repositories::Services::EventRepository).
+          to receive(:record_service_binding_event).
+          with(:create, instance_of(ServiceBindingModel))
 
         service_binding_create.create(app_model, service_instance, message)
       end

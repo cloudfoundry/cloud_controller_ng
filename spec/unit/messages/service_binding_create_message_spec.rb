@@ -254,7 +254,7 @@ module VCAP::CloudController
             message = ServiceBindingCreateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:type)).to include("type must be app")
+            expect(message.errors_on(:type)).to include('type must be app')
           end
         end
       end

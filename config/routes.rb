@@ -104,4 +104,6 @@ Rails.application.routes.draw do
   # service_bindings
   post '/v3/service_bindings', to: 'service_bindings#create'
   post '/service_bindings', to: 'service_bindings#create'
+  get '/v3/service_bindings/:guid', to: 'service_bindings#show'
+  get '/service_bindings/:guid', to: 'service_bindings#show'
 end

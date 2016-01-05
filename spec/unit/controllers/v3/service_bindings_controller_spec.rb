@@ -1,8 +1,15 @@
 require 'rails_helper'
 
 describe ServiceBindingsController, type: :controller do
+  let(:membership) { instance_double(VCAP::CloudController::Membership) }
+
+  before do
+    @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+    allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
+    allow(membership).to receive(:has_any_roles?).and_return(true)
+  end
+
   describe '#create' do
-    let(:membership) { instance_double(VCAP::CloudController::Membership) }
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
     let(:org_guid) { space.organization.guid }
@@ -21,7 +28,7 @@ describe ServiceBindingsController, type: :controller do
     let(:current_user) { double(:current_user, guid: 'some-guid') }
     let(:current_user_email) { 'are@youreddy.com' }
     let(:body) do
-      { 'credentials' => {'super' => 'secret'},
+      { 'credentials' => { 'super' => 'secret' },
         'syslog_drain_url' => 'syslog://syslog-drain.com'
       }.to_json
     end
@@ -39,13 +46,10 @@ describe ServiceBindingsController, type: :controller do
       service_instance.service.requires = ['syslog_drain']
       service_instance.service.save
 
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
-      allow(VCAP::CloudController::SecurityContext).to receive(:current_user)
-        .and_return(current_user)
-      allow(VCAP::CloudController::SecurityContext).to receive(:current_user_email)
-        .and_return(current_user_email)
+      allow(VCAP::CloudController::SecurityContext).to receive(:current_user).
+        and_return(current_user)
+      allow(VCAP::CloudController::SecurityContext).to receive(:current_user_email).
+        and_return(current_user_email)
     end
 
     it 'returns a 201 Created and the service binding' do
@@ -57,7 +61,7 @@ describe ServiceBindingsController, type: :controller do
       expect(MultiJson.load(response.body)['guid']).to eq(service_binding.guid)
       expect(MultiJson.load(response.body)['type']).to eq(service_binding_type)
       expect(MultiJson.load(response.body)['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
-      expect(MultiJson.load(response.body)['data']['credentials']).to eq({'super'=>'secret'})
+      expect(MultiJson.load(response.body)['data']['credentials']).to eq({ 'super' => 'secret' })
     end
 
     context 'admin' do
@@ -80,9 +84,9 @@ describe ServiceBindingsController, type: :controller do
     context 'permissions' do
       context 'when the user is not a space developer of the requested space' do
         before do
-          allow(membership).to receive(:has_any_roles?)
-            .with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid)
-            .and_return(false)
+          allow(membership).to receive(:has_any_roles?).
+            with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+            and_return(false)
         end
 
         it 'returns a 403 Not Authorized' do
@@ -269,8 +273,8 @@ describe ServiceBindingsController, type: :controller do
 
       context 'when attempting to bind an unbindable service' do
         before do
-          allow_any_instance_of(VCAP::CloudController::ManagedServiceInstance)
-            .to receive(:bindable?).and_return(false)
+          allow_any_instance_of(VCAP::CloudController::ManagedServiceInstance).
+            to receive(:bindable?).and_return(false)
         end
 
         it 'raises an UnbindableService 400 error' do
@@ -309,6 +313,78 @@ describe ServiceBindingsController, type: :controller do
 
           expect(response.status).to eq(400)
           expect(response.body).to include 'ServiceBindingAppServiceTaken'
+        end
+      end
+    end
+  end
+
+  describe 'show' do
+    let(:service_binding) { VCAP::CloudController::ServiceBindingModel.make(syslog_drain_url: 'syslog://syslog-drain.com') }
+    let(:space) { service_binding.space }
+
+    it 'returns a 200 OK and the service binding' do
+      get :show, guid: service_binding.guid
+
+      expect(response.status).to eq 200
+      expect(MultiJson.load(response.body)['guid']).to eq(service_binding.guid)
+      expect(MultiJson.load(response.body)['type']).to eq(service_binding.type)
+      expect(MultiJson.load(response.body)['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
+      expect(MultiJson.load(response.body)['data']['credentials']).to eq(service_binding.credentials)
+    end
+
+    context 'admin' do
+      before do
+        @request.env.merge!(admin_headers)
+        allow(membership).to receive(:has_any_roles?).and_return(false)
+      end
+
+      it 'returns a 200 OK and the service binding' do
+        get :show, guid: service_binding.guid
+
+        expect(response.status).to eq 200
+        expect(MultiJson.load(response.body)['guid']).to eq(service_binding.guid)
+        expect(MultiJson.load(response.body)['type']).to eq(service_binding.type)
+        expect(MultiJson.load(response.body)['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
+        expect(MultiJson.load(response.body)['data']['credentials']).to eq(service_binding.credentials)
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user is not a space developer of the requested space' do
+        before do
+          allow(membership).to receive(:has_any_roles?).
+            with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+            and_return(false)
+        end
+
+        it 'returns a 403 Not Authorized' do
+          get :show, guid: service_binding.guid
+
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+
+      context 'when the user does not have read scope' do
+        before do
+          @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])))
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          get :show, guid: service_binding.guid
+
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+
+      context 'when the service binding does not exist' do
+        it 'raises an 404 ResourceNotFound error' do
+          get :show, guid: 'schmuid'
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Service binding not found'
         end
       end
     end

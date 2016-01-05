@@ -19,7 +19,7 @@ class ServiceBindingsController < ApplicationController
 
     begin
       service_binding = ServiceBindingCreate.new.create(app, service_instance, message)
-      render status: :created, json: ServiceBindingModelPresenter.new.present_json(service_binding)
+      render status: :created, json: service_binding_presenter.present_json(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise VCAP::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceBindingCreate::InvalidServiceBinding
@@ -27,7 +27,19 @@ class ServiceBindingsController < ApplicationController
     end
   end
 
+  def show
+    service_binding = VCAP::CloudController::ServiceBindingModel.find(guid: params[:guid])
+
+    service_binding_not_found! unless service_binding
+    unauthorized! unless can_read?(service_binding.space.guid)
+    render status: :ok, json: service_binding_presenter.present_json(service_binding)
+  end
+
   private
+
+  def service_binding_presenter
+    ServiceBindingModelPresenter.new
+  end
 
   def membership
     @membership ||= Membership.new(current_user)
@@ -36,6 +48,7 @@ class ServiceBindingsController < ApplicationController
   def can_create?(space_guid)
     roles.admin? || membership.has_any_roles?([VCAP::CloudController::Membership::SPACE_DEVELOPER], space_guid)
   end
+  alias_method :can_read?, :can_create?
 
   def app_not_found!
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
@@ -43,5 +56,9 @@ class ServiceBindingsController < ApplicationController
 
   def service_instance_not_found!
     raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Service instance not found')
+  end
+
+  def service_binding_not_found!
+    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Service binding not found')
   end
 end

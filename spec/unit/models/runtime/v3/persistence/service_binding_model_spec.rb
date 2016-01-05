@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   describe ServiceBindingModel do
-    let(:credentials) { {'secret' => 'password'}.to_json }
+    let(:credentials) { { 'secret' => 'password' }.to_json }
     let(:last_row) { ServiceBindingModel.dataset.naked.order_by(:id).last }
     let!(:service_binding) { ServiceBindingModel.make(credentials: credentials) }
 
