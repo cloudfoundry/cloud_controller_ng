@@ -1,3 +1,6 @@
+require 'actions/services/synchronous_orphan_mitigate'
+require 'actions/services/locks/lock_check'
+
 module VCAP::CloudController
   class ServiceBindingCreate
     class ServiceInstanceNotBindable < StandardError; end
