@@ -34,7 +34,7 @@ resource 'Apps', type: [:api, :legacy_api] do
       default:        '',
       example_values: ['', 'https://github.com/virtualstaticvoid/heroku-buildpack-r.git', 'an_example_installed_buildpack']
 
-    field :health_check_type, 'Type of health check to perform.', default: 'port', valid_values: ['port', 'none']
+    field :health_check_type, "Type of health check to perform. 'none' is deprecated and an alias to 'process'.", default: 'port', valid_values: ['port', 'process', 'none']
     field :health_check_timeout, 'Timeout for health checking of an staged app when starting up'
 
     field :diego, 'Use diego to stage and to run when available', default: false, experimental: true, valid_values: [true, false]

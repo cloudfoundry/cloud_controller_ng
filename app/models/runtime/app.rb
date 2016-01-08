@@ -70,7 +70,7 @@ module VCAP::CloudController
     PACKAGE_STATES = %w(PENDING STAGED FAILED).map(&:freeze).freeze
     STAGING_FAILED_REASONS = %w(StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed
                                 BuildpackReleaseFailed InsufficientResources NoCompatibleCell).map(&:freeze).freeze
-    HEALTH_CHECK_TYPES = %w(port none).map(&:freeze).freeze
+    HEALTH_CHECK_TYPES = %w(port none process).map(&:freeze).freeze
 
     # marked as true on changing the associated routes, and reset by
     # +Dea::Client.start+

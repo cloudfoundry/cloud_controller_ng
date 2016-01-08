@@ -271,6 +271,11 @@ module VCAP::CloudController
           expect(app).to be_valid
         end
 
+        it "can be set to 'process'" do
+          app.health_check_type = 'process'
+          expect(app).to be_valid
+        end
+
         it "can not be set to 'bogus'" do
           app.health_check_type = 'bogus'
           expect(app).to_not be_valid
