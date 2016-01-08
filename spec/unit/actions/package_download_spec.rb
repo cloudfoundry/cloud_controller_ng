@@ -12,15 +12,15 @@ module VCAP::CloudController
       )
       }
       let(:download_location) { 'http://package.download.url' }
-      let(:blob_double) { instance_double(CloudController::Blobstore::Blob) }
+      let(:blob_double) { instance_double(CloudController::Blobstore::FogBlob) }
 
       before do
-        allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob_double)
+        allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:blob).and_return(blob_double)
       end
 
       context 'the storage is S3' do
         before do
-          allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+          allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
           allow(blob_double).to receive(:download_url).and_return(download_location)
         end
 
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       context 'the storage is NFS' do
         before do
-          allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(true)
+          allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(true)
           allow(blob_double).to receive(:local_path).and_return(download_location)
         end
 

@@ -10,6 +10,7 @@ require 'cloud_controller/blob_sender/missing_blob_handler'
 require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/diego/messenger'
+require 'cloud_controller/blobstore/client_provider'
 
 module CloudController
   class DependencyLocator
@@ -74,63 +75,48 @@ module CloudController
     end
 
     def droplet_blobstore
-      droplets = @config.fetch(:droplets)
-      cdn_uri = droplets.fetch(:cdn, nil) && droplets.fetch(:cdn).fetch(:uri, nil)
-      droplet_cdn = CloudController::Blobstore::Cdn.make(cdn_uri)
+      options = @config.fetch(:droplets)
 
-      Blobstore::Client.new(
-        droplets.fetch(:fog_connection),
-        droplets.fetch(:droplet_directory_key),
-        droplet_cdn
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:droplet_directory_key)
       )
     end
 
     def buildpack_cache_blobstore
-      droplets = @config.fetch(:droplets)
-      cdn_uri = droplets.fetch(:cdn, nil) && droplets.fetch(:cdn).fetch(:uri, nil)
-      droplet_cdn = CloudController::Blobstore::Cdn.make(cdn_uri)
+      options = @config.fetch(:droplets)
 
-      Blobstore::Client.new(
-        droplets.fetch(:fog_connection),
-        droplets.fetch(:droplet_directory_key),
-        droplet_cdn,
-        'buildpack_cache'
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:droplet_directory_key),
+        root_dir: 'buildpack_cache'
       )
     end
 
     def package_blobstore
-      packages = @config.fetch(:packages)
-      cdn_uri = packages.fetch(:cdn, nil) && packages.fetch(:cdn).fetch(:uri, nil)
-      package_cdn = CloudController::Blobstore::Cdn.make(cdn_uri)
+      options = @config.fetch(:packages)
 
-      Blobstore::Client.new(
-        packages.fetch(:fog_connection),
-        packages.fetch(:app_package_directory_key),
-        package_cdn
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:app_package_directory_key)
       )
     end
 
     def global_app_bits_cache
-      resource_pool = @config.fetch(:resource_pool)
-      cdn_uri = resource_pool.fetch(:cdn, nil) && resource_pool.fetch(:cdn).fetch(:uri, nil)
-      min_file_size = resource_pool[:minimum_size]
-      max_file_size = resource_pool[:maximum_size]
-      app_bit_cdn = CloudController::Blobstore::Cdn.make(cdn_uri)
+      options = @config.fetch(:resource_pool)
 
-      Blobstore::Client.new(
-        resource_pool.fetch(:fog_connection),
-        resource_pool.fetch(:resource_directory_key),
-        app_bit_cdn,
-        nil,
-        min_file_size,
-        max_file_size
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:resource_directory_key)
       )
     end
 
     def buildpack_blobstore
-      Blobstore::Client.new(
-        @config[:buildpacks][:fog_connection],
-        @config[:buildpacks][:buildpack_directory_key] || 'cc-buildpacks'
+      options = @config.fetch(:buildpacks)
+
+      Blobstore::ClientProvider.provide(
+        options: options,
+        directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks')
       )
     end
 

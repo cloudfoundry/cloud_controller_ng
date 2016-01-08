@@ -17,11 +17,11 @@ describe AppBitsPackage do
   let(:local_tmp_dir) { Dir.mktmpdir }
 
   let(:global_app_bits_cache) do
-    CloudController::Blobstore::Client.new({ provider: 'Local', local_root: blobstore_dir }, 'global_app_bits_cache', nil, nil, 4, 8)
+    CloudController::Blobstore::FogClient.new({ provider: 'Local', local_root: blobstore_dir }, 'global_app_bits_cache', nil, nil, 4, 8)
   end
 
   let(:package_blobstore) do
-    CloudController::Blobstore::Client.new({ provider: 'Local', local_root: blobstore_dir }, 'package')
+    CloudController::Blobstore::FogClient.new({ provider: 'Local', local_root: blobstore_dir }, 'package')
   end
 
   let(:packer) { AppBitsPackage.new(package_blobstore, global_app_bits_cache, max_package_size, local_tmp_dir) }

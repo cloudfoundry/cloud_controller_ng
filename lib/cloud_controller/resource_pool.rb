@@ -19,12 +19,12 @@ class VCAP::CloudController::ResourcePool
   end
 
   def initialize(config={})
-    options = config[:resource_pool] || {}
+    options = config.fetch(:resource_pool, {})
     @cdn = options[:cdn]
 
-    @blobstore = CloudController::Blobstore::Client.new(
-      options[:fog_connection],
-      options[:resource_directory_key] || 'cc-resources'
+    @blobstore = CloudController::Blobstore::ClientProvider.provide(
+      options: options,
+      directory_key: options.fetch(:resource_directory_key, 'cc-resources')
     )
 
     @minimum_size = options[:minimum_size] || 0

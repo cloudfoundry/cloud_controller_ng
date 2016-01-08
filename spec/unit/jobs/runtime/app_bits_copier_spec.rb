@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:blobstore_dir) { Dir.mktmpdir }
       let(:app_event_repository) { double(:app_event_repository, record_src_copy_bits: nil, record_dest_copy_bits: nil) }
       let(:package_blobstore) do
-        CloudController::Blobstore::Client.new({ provider: 'Local', local_root: blobstore_dir }, 'package')
+        CloudController::Blobstore::FogClient.new({ provider: 'Local', local_root: blobstore_dir }, 'package')
       end
       let(:user) { User.make }
       let(:email) { 'some-user@example.com' }

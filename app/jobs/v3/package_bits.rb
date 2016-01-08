@@ -1,4 +1,4 @@
-require 'cloud_controller/blobstore/cdn'
+require 'cloud_controller/blobstore/client'
 require 'cloud_controller/dependency_locator'
 
 module VCAP::CloudController

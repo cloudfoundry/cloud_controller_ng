@@ -318,7 +318,7 @@ module VCAP::CloudController
       end
 
       it 'fails if blobstore is not local' do
-        allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+        allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
         get '/staging/packages/some-guid'
         expect(last_response.status).to eq(400)
       end
@@ -503,7 +503,7 @@ module VCAP::CloudController
 
       context 'when the blobstore is not local' do
         before do
-          allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+          allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
           authorize(staging_user, staging_password)
         end
 
@@ -877,7 +877,7 @@ module VCAP::CloudController
       end
 
       it 'fails if blobstore is not local' do
-        allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+        allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
         get '/staging/v3/droplets/some-guid/download'
         expect(last_response.status).to eq(400)
       end

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'cloud_controller/blobstore/cdn'
+require 'cloud_controller/blobstore/fog/cdn'
 require 'cloudfront-signer'
 
 module CloudController

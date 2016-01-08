@@ -1,9 +1,10 @@
 require 'spec_helper'
 require 'webrick'
+require_relative '../client_shared_spec'
 
 module CloudController
   module Blobstore
-    describe Client do
+    describe FogClient do
       let(:content) { 'Some Nonsense' }
       let(:sha_of_content) { Digester.new.digest(content) }
       let(:local_dir) { Dir.mktmpdir }
@@ -17,6 +18,18 @@ module CloudController
       end
       let(:min_size) { 20 }
       let(:max_size) { 50 }
+      subject(:client) do
+        described_class.new(connection_config, directory_key)
+      end
+
+      describe 'conforms to blobstore client interface' do
+        let(:deletable_blob) { instance_double(FogBlob, file: nil) }
+        before do
+          subject.cp_to_blobstore(tmpfile.path, key)
+        end
+
+        it_behaves_like 'a blobstore client'
+      end
 
       def upload_tmpfile(client, key='abcdef')
         Tempfile.open('') do |tmpfile|
@@ -32,7 +45,7 @@ module CloudController
 
       context 'for a remote blobstore backed by a CDN' do
         subject(:client) do
-          Client.new(connection_config, directory_key, cdn)
+          described_class.new(connection_config, directory_key, cdn)
         end
 
         let(:cdn) { double(:cdn) }
@@ -65,7 +78,7 @@ module CloudController
 
       context 'a local blobstore' do
         subject(:client) do
-          Client.new({ provider: 'Local' }, directory_key)
+          described_class.new({ provider: 'Local' }, directory_key)
         end
 
         it 'is true if the provider is local' do
@@ -75,7 +88,7 @@ module CloudController
 
       context 'common behaviors' do
         subject(:client) do
-          Client.new(connection_config, directory_key)
+          described_class.new(connection_config, directory_key)
         end
 
         context 'with existing files' do
@@ -147,7 +160,7 @@ module CloudController
 
           context 'limit the file size' do
             let(:client) do
-              Client.new(connection_config, directory_key, nil, nil, min_size, max_size)
+              described_class.new(connection_config, directory_key, nil, nil, min_size, max_size)
             end
 
             it 'does not copy files below the minimum size limit' do
@@ -173,7 +186,7 @@ module CloudController
         describe 'returns a download uri' do
           context 'when the blob store is a local' do
             subject(:client) do
-              Client.new({ provider: 'Local', local_root: '/tmp' }, directory_key)
+              described_class.new({ provider: 'Local', local_root: '/tmp' }, directory_key)
             end
 
             before do
@@ -310,7 +323,7 @@ module CloudController
 
           context 'limit the file size' do
             let(:client) do
-              Client.new(connection_config, directory_key, nil, nil, min_size, max_size)
+              described_class.new(connection_config, directory_key, nil, nil, min_size, max_size)
             end
 
             it 'does not copy files below the minimum size limit' do
@@ -356,18 +369,6 @@ module CloudController
                 key = 'gonnafailnotgonnafail2'
 
                 expect { client.cp_to_blobstore(path, key, 2) }.to raise_error Excon::Errors::SocketError
-              end
-            end
-
-            context 'when retries is 0' do
-              it 'fails if the underlying operation fails' do
-                expect(client.files).to receive(:create).once.and_raise(SystemCallError.new('o no'))
-
-                path = File.join(local_dir, 'some_file')
-                FileUtils.touch(path)
-                key = 'gonnafail'
-
-                expect { client.cp_to_blobstore(path, key, 0) }.to raise_error SystemCallError, /o no/
               end
             end
 
@@ -495,7 +496,7 @@ module CloudController
             it 'does not attempt to copy over to the destination key' do
               expect {
                 client.cp_file_between_keys(src_key, dest_key)
-              }.to raise_error(CloudController::Blobstore::Client::FileNotFound)
+              }.to raise_error(CloudController::Blobstore::FileNotFound)
 
               expect(client.files).to have(0).items
             end
@@ -579,7 +580,7 @@ module CloudController
 
           context 'when a root dir is provided' do
             let(:client_with_root) do
-              Client.new(connection_config, directory_key, nil, 'root-dir')
+              described_class.new(connection_config, directory_key, nil, 'root-dir')
             end
 
             it 'only deletes files at the root' do
@@ -664,7 +665,7 @@ module CloudController
 
           context 'when a root dir is provided' do
             let(:client_with_root) do
-              Client.new(connection_config, directory_key, nil, 'root-dir')
+              described_class.new(connection_config, directory_key, nil, 'root-dir')
             end
 
             it 'only deletes files at the root' do
@@ -729,7 +730,7 @@ module CloudController
           end
 
           it "should be ok if the file doesn't exist" do
-            blob = Blob.new(nil, nil)
+            blob = FogBlob.new(nil, nil)
             expect {
               client.delete_blob(blob)
             }.to_not raise_error
@@ -739,7 +740,7 @@ module CloudController
 
       context 'with root directory specified' do
         subject(:client) do
-          Client.new(connection_config, directory_key, nil, 'my-root')
+          described_class.new(connection_config, directory_key, nil, 'my-root')
         end
 
         it 'includes the directory in the partitioned key' do
@@ -777,9 +778,9 @@ module CloudController
           it 'correctly downloads byte streams' do
             uri    = "http://localhost:#{port}"
             cdn    = Cdn.make(uri)
-            client = Client.new(connection_config, directory_key, cdn)
+            client = described_class.new(connection_config, directory_key, cdn)
 
-            source_directory_path = File.expand_path('../../../../fixtures/', File.dirname(__FILE__))
+            source_directory_path = File.expand_path('../../../../../fixtures/', File.dirname(__FILE__))
             source_file_path = File.join(source_directory_path, 'pa/rt/partitioned_key')
             source_hexdigest = Digest::SHA2.file(source_file_path).hexdigest
 
@@ -812,10 +813,10 @@ module CloudController
 
           it 'correctly downloads byte streams' do
             Fog.unmock!
-            local_root = File.expand_path('../../../../', File.dirname(__FILE__))
+            local_root = File.expand_path('../../../../../', File.dirname(__FILE__))
             source_directory_path = File.join(local_root, 'fixtures')
 
-            client = Client.new({ provider: 'Local', local_root: local_root }, 'fixtures')
+            client = described_class.new({ provider: 'Local', local_root: local_root }, 'fixtures')
 
             source_file_path = File.join(source_directory_path, 'pa/rt/partitioned_key')
             source_hexdigest = Digest::SHA2.file(source_file_path).hexdigest

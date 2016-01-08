@@ -20,30 +20,13 @@ describe CloudController::DependencyLocator do
         droplets: {
           fog_connection: 'fog_connection',
           droplet_directory_key: 'key',
-          cdn: cdn_settings
         },
       }
     end
 
-    context 'when cdn is not configured' do
-      let(:cdn_settings) { nil }
-
-      it 'creates blob stores without the CDN' do
-        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil)
-        locator.droplet_blobstore
-      end
-    end
-
-    context 'when cdn is configured for package blog store' do
-      let(:cdn_host) { 'http://crazy_cdn.com' }
-      let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
-      let(:cdn) { double(:cdn) }
-
-      it 'creates the blob stores with CDNs if configured' do
-        expect(CloudController::Blobstore::Cdn).to receive(:new).with(cdn_host).and_return(cdn)
-        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', cdn)
-        locator.droplet_blobstore
-      end
+    it 'creates blob store' do
+      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(options: config[:droplets], directory_key: 'key')
+      locator.droplet_blobstore
     end
   end
 
@@ -53,30 +36,13 @@ describe CloudController::DependencyLocator do
         droplets: {
           fog_connection: 'fog_connection',
           droplet_directory_key: 'key',
-          cdn: cdn_settings
         }
       }
     end
 
-    context 'when cdn is not configured' do
-      let(:cdn_settings) { nil }
-
-      it 'creates blob stores without the CDN' do
-        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil, 'buildpack_cache')
-        locator.buildpack_cache_blobstore
-      end
-    end
-
-    context 'when cdn is configured for package blog store' do
-      let(:cdn_host) { 'http://crazy_cdn.com' }
-      let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
-      let(:cdn) { double(:cdn) }
-
-      it 'creates the blob stores with CDNs if configured' do
-        expect(CloudController::Blobstore::Cdn).to receive(:new).with(cdn_host).and_return(cdn)
-        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', cdn, 'buildpack_cache')
-        locator.buildpack_cache_blobstore
-      end
+    it 'creates blob store' do
+      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(options: config[:droplets], directory_key: 'key', root_dir: 'buildpack_cache')
+      locator.buildpack_cache_blobstore
     end
   end
 
@@ -86,30 +52,13 @@ describe CloudController::DependencyLocator do
         packages: {
           fog_connection: 'fog_connection',
           app_package_directory_key: 'key',
-          cdn: cdn_settings
         }
       }
     end
 
-    context 'when cdn is not configured' do
-      let(:cdn_settings) { nil }
-
-      it 'creates blob stores without the CDN' do
-        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil)
-        locator.package_blobstore
-      end
-    end
-
-    context 'when cdn is configured for package blog store' do
-      let(:cdn_host) { 'http://crazy_cdn.com' }
-      let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
-      let(:cdn) { double(:cdn) }
-
-      it 'creates the blob stores with CDNs if configured' do
-        expect(CloudController::Blobstore::Cdn).to receive(:new).with(cdn_host).and_return(cdn)
-        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', cdn)
-        locator.package_blobstore
-      end
+    it 'creates blob store' do
+      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(options: config[:packages], directory_key: 'key')
+      locator.package_blobstore
     end
   end
 
@@ -119,58 +68,13 @@ describe CloudController::DependencyLocator do
         resource_pool: {
           fog_connection: 'fog_connection',
           resource_directory_key: 'key',
-          cdn: cdn_settings,
-          minimum_size: min_file_size,
-          maximum_size: max_file_size
         }
       }
     end
 
-    context 'when cdn is not configured' do
-      let(:cdn_settings) { nil }
-      let(:min_file_size) { nil }
-      let(:max_file_size) { nil }
-
-      it 'creates blob stores without the CDN' do
-        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil, nil, nil, nil)
-        locator.global_app_bits_cache
-      end
-    end
-
-    context 'when file size limits are not configured' do
-      let(:cdn_settings) { nil }
-      let(:min_file_size) { nil }
-      let(:max_file_size) { nil }
-
-      it 'creates blob stores without file size limits' do
-        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil, nil, nil, nil)
-        locator.global_app_bits_cache
-      end
-    end
-
-    context 'when file size limits are configured for package blobstore' do
-      let(:cdn_settings) { nil }
-      let(:min_file_size) { 1024 }
-      let(:max_file_size) { 512 * 1024 * 1024 }
-
-      it 'creates the blob stores with file size limits if configured' do
-        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', nil, nil, min_file_size, max_file_size)
-        locator.global_app_bits_cache
-      end
-    end
-
-    context 'when cdn is configured for package blog store' do
-      let(:cdn_host) { 'http://crazy_cdn.com' }
-      let(:cdn_settings) { { uri: cdn_host, key_pair_id: 'key_pair' } }
-      let(:cdn) { double(:cdn) }
-      let(:min_file_size) { nil }
-      let(:max_file_size) { nil }
-
-      it 'creates the blob stores with CDNs if configured' do
-        expect(CloudController::Blobstore::Cdn).to receive(:new).with(cdn_host).and_return(cdn)
-        expect(CloudController::Blobstore::Client).to receive(:new).with('fog_connection', 'key', cdn, nil, nil, nil)
-        locator.global_app_bits_cache
-      end
+    it 'creates blob store' do
+      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(options: config[:resource_pool], directory_key: 'key')
+      locator.global_app_bits_cache
     end
   end
 
@@ -203,12 +107,12 @@ describe CloudController::DependencyLocator do
           password: 'password'
         }
         expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
-            with(hash_including(connection_options),
-              instance_of(CloudController::Blobstore::Client),
-              instance_of(CloudController::Blobstore::Client),
-              instance_of(CloudController::Blobstore::Client),
-              instance_of(CloudController::Blobstore::Client)
-            )
+          with(hash_including(connection_options),
+            kind_of(CloudController::Blobstore::Client),
+            kind_of(CloudController::Blobstore::Client),
+            kind_of(CloudController::Blobstore::Client),
+            kind_of(CloudController::Blobstore::Client)
+          )
         locator.blobstore_url_generator
       end
     end
@@ -225,10 +129,10 @@ describe CloudController::DependencyLocator do
         }
         expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
             with(hash_including(connection_options),
-              instance_of(CloudController::Blobstore::Client),
-              instance_of(CloudController::Blobstore::Client),
-              instance_of(CloudController::Blobstore::Client),
-              instance_of(CloudController::Blobstore::Client)
+              kind_of(CloudController::Blobstore::Client),
+              kind_of(CloudController::Blobstore::Client),
+              kind_of(CloudController::Blobstore::Client),
+              kind_of(CloudController::Blobstore::Client)
             ).twice
         locator.blobstore_url_generator(true)
         locator.blobstore_url_generator(false)
@@ -248,10 +152,10 @@ describe CloudController::DependencyLocator do
           }
           expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
               with(hash_including(connection_options),
-                instance_of(CloudController::Blobstore::Client),
-                instance_of(CloudController::Blobstore::Client),
-                instance_of(CloudController::Blobstore::Client),
-                instance_of(CloudController::Blobstore::Client)
+                kind_of(CloudController::Blobstore::Client),
+                kind_of(CloudController::Blobstore::Client),
+                kind_of(CloudController::Blobstore::Client),
+                kind_of(CloudController::Blobstore::Client)
               )
           locator.blobstore_url_generator(true)
         end
@@ -267,10 +171,10 @@ describe CloudController::DependencyLocator do
           }
           expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
               with(hash_including(connection_options),
-                instance_of(CloudController::Blobstore::Client),
-                instance_of(CloudController::Blobstore::Client),
-                instance_of(CloudController::Blobstore::Client),
-                instance_of(CloudController::Blobstore::Client)
+                kind_of(CloudController::Blobstore::Client),
+                kind_of(CloudController::Blobstore::Client),
+                kind_of(CloudController::Blobstore::Client),
+                kind_of(CloudController::Blobstore::Client)
               )
           locator.blobstore_url_generator(false)
         end

@@ -1,14 +1,17 @@
 require 'spec_helper'
+require_relative '../blob_shared_spec'
 
 module CloudController
   module Blobstore
-    describe Blob do
+    describe FogBlob do
       subject(:blob) do
-        Blob.new(file, cdn)
+        described_class.new(file, cdn)
       end
       let(:attrs) { { 'a' => 'b', 'c' => 'd' } }
       let(:file) { double('file', key: 'abcdef', attributes: attrs, destroy: nil) }
-      let(:cdn) { double(:cdn) }
+      let(:cdn) { double(:cdn, download_uri: 'http://localhost') }
+
+      it_behaves_like 'a blob'
 
       context 'it is backed by a CDN' do
         let(:url_from_cdn) { 'http://some_distribution.cloudfront.net/ab/cd/abcdef' }

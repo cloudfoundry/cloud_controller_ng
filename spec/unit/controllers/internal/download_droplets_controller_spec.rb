@@ -130,7 +130,7 @@ module VCAP::CloudController
 
       context 'when the blobstore is not local' do
         before do
-          allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+          allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
         end
 
         it 'should redirect to the url provided by the blobstore_url_generator' do
@@ -166,7 +166,7 @@ module VCAP::CloudController
 
         context 'when the blobstore is not local' do
           before do
-            allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+            allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
           end
 
           it 'should redirect to the url provided by the blobstore_url_generator' do
