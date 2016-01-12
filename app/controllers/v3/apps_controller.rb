@@ -42,7 +42,9 @@ class AppsV3Controller < ApplicationController
     message = AppCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    space_not_found! unless Space.where(guid: message.space_guid).count > 0
+    space = Space.where(guid: message.space_guid).first
+    space_not_found! unless space
+    space_not_found! unless can_read?(space.guid, space.organization_guid)
     unauthorized! unless can_create?(message.space_guid)
 
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?

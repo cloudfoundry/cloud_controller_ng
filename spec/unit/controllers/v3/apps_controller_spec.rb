@@ -264,8 +264,12 @@ describe AppsV3Controller, type: :controller do
     context 'when the user is not a member of the requested space' do
       before do
         allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-                               and_return(false)
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER],
+          space.guid, space.organization_guid).
+          and_return(false)
       end
 
       it 'returns an NotFound error' do
@@ -274,6 +278,29 @@ describe AppsV3Controller, type: :controller do
         expect(response.status).to eq(404)
         expect(response.body).to include 'ResourceNotFound'
         expect(response.body).to include 'Space not found'
+      end
+    end
+
+    context 'when the user is a space manager and thus can see the space but not create apps' do
+      before do
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
+           VCAP::CloudController::Membership::SPACE_MANAGER,
+           VCAP::CloudController::Membership::SPACE_AUDITOR,
+           VCAP::CloudController::Membership::ORG_MANAGER],
+          space.guid, space.organization_guid).
+          and_return(true)
+
+        allow(membership).to receive(:has_any_roles?).with(
+          [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
+          and_return(false)
+      end
+
+      it 'returns an Unauthorized error' do
+        post :create, body: req_body
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include 'NotAuthorized'
       end
     end
 
