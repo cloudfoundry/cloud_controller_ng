@@ -9,19 +9,12 @@ module VCAP::CloudController
 
     def validate
       if self.app_port && !app.diego
-        errors.add(:app_port, :diego_only)
-      elsif app.diego && self.app_port && !app.ports.include?(self.app_port)
-        errors.add(:app_port, :not_bound_to_app)
+        errors.add(:app_ports_for_diego_only, 'App ports are supported for Diego apps only.')
       end
-      super
-    end
-
-    def before_save
       if !self.app_port && app.diego
         self.app_port = app.ports.first
       end
       app.add_route(route)
-      super
     end
   end
 end
