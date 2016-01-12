@@ -43,7 +43,7 @@ class AppsV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space_not_found! unless Space.where(guid: message.space_guid).count > 0
-    space_not_found! unless can_create?(message.space_guid)
+    unauthorized! unless can_create?(message.space_guid)
 
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?
       FeatureFlag.raise_unless_enabled!('diego_docker')
