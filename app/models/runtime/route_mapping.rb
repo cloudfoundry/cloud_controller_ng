@@ -23,14 +23,5 @@ module VCAP::CloudController
       app.add_route(route)
       super
     end
-
-    def app_port
-      if :app_port.nil?
-        unless app.ports.blank?
-          return app.ports[0]
-        end
-      end
-      super
-    end
   end
 end
