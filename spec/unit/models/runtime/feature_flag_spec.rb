@@ -6,7 +6,8 @@ module VCAP::CloudController
     let(:valid_flags) do
       [:user_org_creation, :private_domain_creation, :app_bits_upload,
        :app_scaling, :route_creation, :service_instance_creation,
-       :diego_docker, :set_roles_by_username, :unset_roles_by_username]
+       :diego_docker, :set_roles_by_username, :unset_roles_by_username,
+       :task_creation]
     end
     let(:feature_flag) { FeatureFlag.make }
 

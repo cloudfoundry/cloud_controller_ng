@@ -15,6 +15,7 @@ module VCAP::CloudController
       diego_docker: false,
       set_roles_by_username: true,
       unset_roles_by_username: true,
+      task_creation: false
     }.freeze
 
     export_attributes :name, :enabled, :error_message

@@ -24,7 +24,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(9)
+      expect(parsed_response.length).to eq(10)
       expect(parsed_response).to include(
           {
             'name'          => 'user_org_creation',
@@ -84,6 +84,12 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
             'enabled' => false,
             'error_message' => nil,
             'url' => '/v2/config/feature_flags/diego_docker'
+          })
+      expect(parsed_response).to include({
+            'name' => 'task_creation',
+            'enabled' => false,
+            'error_message' => nil,
+            'url' => '/v2/config/feature_flags/task_creation'
           })
     end
   end
@@ -246,7 +252,24 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
     end
   end
 
-  put '/v2/config/feature_flags/:name' do
+  get '/v2/config/feature_flags/task_creation' do
+    example 'Get the Task Creation feature flag (experimental)' do
+      explanation '''When enabled, space developers can create tasks. When disabled, only admin users can create tasks
+.'''
+      client.get '/v2/config/feature_flags/task_creation', {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+          {
+            'name'          => 'task_creation',
+            'enabled'       => false,
+            'error_message' => nil,
+            'url'           => '/v2/config/feature_flags/task_creation'
+          })
+    end
+  end
+
+    put '/v2/config/feature_flags/:name' do
     include_context 'name_parameter'
     include_context 'updatable_fields'
 
