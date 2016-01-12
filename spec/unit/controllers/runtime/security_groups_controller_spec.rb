@@ -61,8 +61,8 @@ module VCAP::CloudController
         end
         let(:security_group) do
           {
-            'name': 'foo',
-            'rules': [long_rule]
+            'name' => 'foo',
+            'rules' => [long_rule]
           }
         end
 
