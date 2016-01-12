@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'webrick'
-require_relative '../client_shared_spec'
+require_relative '../client_shared'
 
 module CloudController
   module Blobstore

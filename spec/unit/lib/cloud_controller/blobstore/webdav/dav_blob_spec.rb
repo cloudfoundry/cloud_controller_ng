@@ -1,5 +1,5 @@
 require 'spec_helper'
-require_relative '../blob_shared_spec'
+require_relative '../blob_shared'
 
 module CloudController
   module Blobstore

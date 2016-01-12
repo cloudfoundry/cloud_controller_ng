@@ -3,7 +3,7 @@ require 'cloud_controller/blobstore/webdav/dav_blob'
 
 module CloudController
   module Blobstore
-    class DavClient
+    class DavClient < Client
       def initialize(options, directory_key, min_size=nil, max_size=nil)
         @options       = options
         @directory_key = directory_key
@@ -49,18 +49,6 @@ module CloudController
           raise BlobstoreError.new("Could not fetch object, #{response.status}/#{response.content}") if response.status != 200
 
           file.chmod(mode) if mode
-        end
-      end
-
-      def cp_r_to_blobstore(source_dir)
-        Find.find(source_dir).each do |path|
-          next unless File.file?(path)
-          next unless within_limits?(File.size(path))
-
-          sha1 = Digester.new.digest_path(path)
-          next if exists?(sha1)
-
-          cp_to_blobstore(path, sha1)
         end
       end
 
@@ -152,19 +140,6 @@ module CloudController
       def read_url(key)
         key = partitioned_key(key) unless key.blank?
         [@endpoint, 'read', @directory_key, key].compact.join('/')
-      end
-
-      def partitioned_key(key)
-        key = key.to_s.downcase
-        key = File.join(key[0..1], key[2..3], key)
-        if @root_dir
-          key = File.join(@root_dir, key)
-        end
-        key
-      end
-
-      def within_limits?(size)
-        size >= @min_size && (@max_size.nil? || size <= @max_size)
       end
 
       def logger
