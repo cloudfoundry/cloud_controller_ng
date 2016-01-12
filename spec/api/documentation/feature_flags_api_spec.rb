@@ -9,7 +9,9 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
 
   shared_context 'name_parameter' do
     parameter :name, 'The name of the feature flag',
-      valid_values: ['user_org_creation', 'app_bits_upload', 'private_domain_creation', 'app_scaling', 'route_creation']
+      valid_values: ['user_org_creation', 'app_bits_upload', 'private_domain_creation', 'app_scaling',
+                     'route_creation', 'service_instance_creation', 'diego_docker', 'set_roles_by_username',
+                     'unset_roles_by_username', 'task_creation (experimental)']
   end
 
   shared_context 'updatable_fields' do
@@ -269,7 +271,7 @@ resource 'Feature Flags', type: [:api, :legacy_api] do
     end
   end
 
-    put '/v2/config/feature_flags/:name' do
+  put '/v2/config/feature_flags/:name' do
     include_context 'name_parameter'
     include_context 'updatable_fields'
 
