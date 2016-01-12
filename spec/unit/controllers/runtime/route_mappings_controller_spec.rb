@@ -51,7 +51,6 @@ module VCAP::CloudController
           end
 
           context 'and no app port is specified' do
-
             it 'uses the first port in the list of app ports' do
               post '/v2/route_mappings', body, headers_for(developer)
 
@@ -193,7 +192,7 @@ module VCAP::CloudController
           end
 
           context 'and developer of different space is specified' do
-            let(:space1) {Space.make}
+            let(:space1) { Space.make }
             let(:developer) { make_developer_for_space(space1) }
             let(:body) do
               {

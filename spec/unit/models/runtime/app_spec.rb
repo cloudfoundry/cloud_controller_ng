@@ -1944,8 +1944,8 @@ module VCAP::CloudController
       end
 
       context 'with app port specified in route mapping' do
-        let(:app) { AppFactory.make(space: space, diego: true, ports:[9090]) }
-        let!(:route_mapping) {RouteMapping.make(app: app, route: route_with_service, app_port:9090)}
+        let(:app) { AppFactory.make(space: space, diego: true, ports: [9090]) }
+        let!(:route_mapping) { RouteMapping.make(app: app, route: route_with_service, app_port: 9090) }
 
         it 'returns the app port in routing info' do
           expected_hash = {

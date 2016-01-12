@@ -472,7 +472,7 @@ module VCAP::CloudController
       info = routes.map do |r|
         info = { 'hostname' => r.uri }
         info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
-        info['port'] = route_app_port_map[r.id] if route_app_port_map[r.id] != nil
+        info['port'] = route_app_port_map[r.id] if !route_app_port_map[r.id].nil?
         info
       end
       { 'http_routes' => info }

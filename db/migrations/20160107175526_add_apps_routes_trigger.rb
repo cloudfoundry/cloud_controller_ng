@@ -34,7 +34,7 @@ Sequel.migration do
               AFTER DELETE ON apps_routes
               FOR EACH ROW
                  EXECUTE PROCEDURE delete_route_mapping();'
-      end
+    end
   end
 
   down do

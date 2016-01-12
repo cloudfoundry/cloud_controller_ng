@@ -7,7 +7,6 @@ module VCAP::CloudController
 
     import_attributes :app_port, :app_guid, :route_guid
 
-
     def validate
       if self.app_port && !app.diego
         errors.add(:app_port, :diego_only)
