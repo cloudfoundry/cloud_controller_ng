@@ -157,14 +157,16 @@ module VCAP::CloudController
       [HTTP::CREATED, object_renderer.render_json(self.class, route_binding.service_instance, @opts)]
     rescue ServiceInstanceBindingManager::RouteNotFound
       raise VCAP::Errors::ApiError.new_from_details('RouteNotFound', route_guid)
-    rescue ServiceInstanceBindingManager::RouteAlreadyBoundToServiceInstance
-      raise VCAP::Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance')
     rescue ServiceInstanceBindingManager::ServiceInstanceAlreadyBoundToSameRoute
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceAlreadyBoundToSameRoute')
+    rescue ServiceInstanceBindingManager::RouteAlreadyBoundToServiceInstance
+      raise VCAP::Errors::ApiError.new_from_details('RouteAlreadyBoundToServiceInstance')
     rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
     rescue ServiceInstanceBindingManager::RouteServiceRequiresDiego
       raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceRequiresDiego')
+    rescue ServiceInstanceBindingManager::RouteServiceDisabled
+      raise VCAP::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceDisabled')
     end
 
     def unbind_route(route_guid, instance_guid)

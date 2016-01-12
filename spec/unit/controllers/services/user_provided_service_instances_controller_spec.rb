@@ -515,6 +515,20 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when route service is disabled' do
+        before do
+          TestConfig.config[:route_services_enabled] = false
+        end
+
+        it 'should raise a 403 error' do
+          put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
+
+          expect(last_response).to have_status_code(403)
+          expect(decoded_response['description']).to eq 'Support for route services is disabled'
+        end
+      end
+
       context 'binding permissions' do
         context 'admin' do
           it 'allows an admin to bind a space' do
