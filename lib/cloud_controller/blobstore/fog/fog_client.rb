@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'find'
 require 'fog'
+require 'cloud_controller/blobstore/base_client'
 require 'cloud_controller/blobstore/fog/directory'
 require 'cloud_controller/blobstore/fog/fog_blob'
 require 'cloud_controller/blobstore/fog/idempotent_directory'
@@ -9,7 +10,7 @@ require 'cloud_controller/blobstore/errors'
 
 module CloudController
   module Blobstore
-    class FogClient < Client
+    class FogClient < BaseClient
       DEFAULT_BATCH_SIZE = 1000
 
       def initialize(connection_config, directory_key, cdn=nil, root_dir=nil, min_size=nil, max_size=nil)

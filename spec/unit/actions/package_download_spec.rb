@@ -4,23 +4,31 @@ require 'actions/package_download'
 module VCAP::CloudController
   describe PackageDownload do
     subject(:package_download) { PackageDownload.new }
+    let(:blobstore_client) { instance_double(CloudController::Blobstore::Client) }
+
+    before do
+      allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(blobstore_client)
+    end
 
     describe '#download' do
-      let(:package) { PackageModel.make(
-        state: 'READY',
-        type: 'BITS',
-      )
-      }
+      let(:package) do
+        PackageModel.make(
+
+          state: 'READY',
+          type:  'BITS',
+        )
+      end
+
       let(:download_location) { 'http://package.download.url' }
       let(:blob_double) { instance_double(CloudController::Blobstore::FogBlob) }
 
       before do
-        allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:blob).and_return(blob_double)
+        allow(blobstore_client).to receive(:blob).and_return(blob_double)
       end
 
       context 'the storage is S3' do
         before do
-          allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
+          allow(blobstore_client).to receive(:local?).and_return(false)
           allow(blob_double).to receive(:download_url).and_return(download_location)
         end
 
@@ -33,7 +41,7 @@ module VCAP::CloudController
 
       context 'the storage is NFS' do
         before do
-          allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(true)
+          allow(blobstore_client).to receive(:local?).and_return(true)
           allow(blob_double).to receive(:local_path).and_return(download_location)
         end
 

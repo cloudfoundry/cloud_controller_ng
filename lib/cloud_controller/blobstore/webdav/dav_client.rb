@@ -1,9 +1,10 @@
+require 'cloud_controller/blobstore/base_client'
 require 'cloud_controller/blobstore/errors'
 require 'cloud_controller/blobstore/webdav/dav_blob'
 
 module CloudController
   module Blobstore
-    class DavClient < Client
+    class DavClient < BaseClient
       def initialize(options, directory_key, min_size=nil, max_size=nil)
         @options       = options
         @directory_key = directory_key
