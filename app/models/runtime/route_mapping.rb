@@ -20,7 +20,12 @@ module VCAP::CloudController
       if !self.app_port && app.diego
         self.app_port = app.ports.first
       end
-      app.add_route(route)
+      app.validate_route(route)
+      super
+    end
+
+    def after_save
+      app.handle_add_route(route)
       super
     end
 

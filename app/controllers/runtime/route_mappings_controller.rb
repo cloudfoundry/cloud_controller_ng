@@ -46,9 +46,9 @@ module VCAP::CloudController
       mappings = RouteMapping.dataset.select_all(RouteMapping.table_name).
         join(App.table_name, id: :app_id).
         join(Route.table_name, id: :route_mappings__route_id).
-        where(:"#{RouteMapping.table_name}__app_port" => request_attrs['app_port'],
-              :"#{App.table_name}__guid" => request_attrs['app_guid'],
-              :"#{Route.table_name}__guid" => request_attrs['route_guid'])
+        where(:"#{RouteMapping.table_name}__app_port" => app_port,
+              :"#{App.table_name}__guid" => app_guid,
+              :"#{Route.table_name}__guid" => route_guid)
       raise RouteMappingTaken.new("Route #{route_guid} mapped to app #{app_guid} with
                                    port #{app_port}") unless mappings.count == 0
     end

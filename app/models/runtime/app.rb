@@ -35,8 +35,13 @@ module VCAP::CloudController
     many_to_one :admin_buildpack, class: VCAP::CloudController::Buildpack
     many_to_one :space, after_set: :validate_space
     many_to_one :stack
-    many_to_many :routes, before_add: :validate_route, after_add: :handle_add_route, after_remove: :handle_remove_route
     one_through_one :organization, join_table: :spaces, left_key: :id, left_primary_key: :space_id, right_key: :organization_id
+
+    many_to_many :routes,
+                 join_table: 'route_mappings',
+                 before_add: :validate_route,
+                 after_add: :handle_add_route,
+                 after_remove: :handle_remove_route
 
     one_to_one :current_saved_droplet,
                class: '::VCAP::CloudController::Droplet',
@@ -461,9 +466,13 @@ module VCAP::CloudController
     end
 
     def routing_info
+      route_mappings = RouteMapping.select_all(RouteMapping.table_name).where(:"#{RouteMapping.table_name}__app_id" => self.id)
+      route_app_port_map = {}
+      route_mappings.each { |route_map| route_app_port_map[route_map.route_id] = route_map.app_port }
       info = routes.map do |r|
         info = { 'hostname' => r.uri }
         info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
+        info['port'] = route_app_port_map[r.id] if !route_app_port_map[r.id].nil?
         info
       end
       { 'http_routes' => info }
@@ -617,6 +626,10 @@ module VCAP::CloudController
       if is_v2?
         Repositories::Runtime::AppEventRepository.new.record_map_route(self, route, SecurityContext.current_user.try(:guid), SecurityContext.current_user_email)
       end
+    end
+
+    def _add_route(route, hash={})
+      model.db[:route_mappings].insert(hash.merge(app_id: id, route_id: route.id, guid: SecureRandom.uuid))
     end
 
     def handle_remove_route(route)

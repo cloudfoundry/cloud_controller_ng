@@ -1942,6 +1942,21 @@ module VCAP::CloudController
 
         expect(app.routing_info).to match expected_hash
       end
+
+      context 'with app port specified in route mapping' do
+        let(:app) { AppFactory.make(space: space, diego: true, ports: [9090]) }
+        let!(:route_mapping) { RouteMapping.make(app: app, route: route_with_service, app_port: 9090) }
+
+        it 'returns the app port in routing info' do
+          expected_hash = {
+            'http_routes' => [
+              { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
+            ]
+          }
+
+          expect(app.routing_info).to match expected_hash
+        end
+      end
     end
 
     describe '#validate_route' do
