@@ -23,6 +23,12 @@ module VCAP::CloudController
 
 
     def self.translate_validation_exception(e, attributes)
+      port_errors = e.errors.on(:app_port)
+      if port_errors && port_errors.include?(:diego_only)
+        Errors::ApiError.new_from_details('AppPortMappingRequiresDiego')
+      elsif port_errors && port_errors.include?(:not_bound_to_app)
+        Errors::ApiError.new_from_details('RoutePortNotEnabledOnApp')
+      end
     end
 
     # def delete(guid)
