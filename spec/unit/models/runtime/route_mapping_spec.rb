@@ -14,18 +14,6 @@ module VCAP::CloudController
       before do
         app.add_route(route)
       end
-
-      it 'the model reads from new route_mappings table and old apps_routes table' do
-        mappings = RouteMapping.all
-
-        old_mapping = RouteMapping.new
-        old_mapping.app = app
-        old_mapping.route = route
-
-        expect(mappings.size).to eq 2
-        expect(mappings).to include(mapping)
-        expect(mappings).to include(old_mapping)
-      end
     end
 
     describe 'Associations' do
@@ -194,6 +182,62 @@ module VCAP::CloudController
         it 'calls the app observer with the app' do
           expect(AppObserver).to receive(:routes_changed).with(app)
           RouteMapping.make(app: app, route: route)
+        end
+      end
+
+      context 'when the app port is null' do
+        context 'when the associated app has ports' do
+          let(:app) { AppFactory.make(space: space, diego: true, ports: [1111, 1112]) }
+          let(:route) { Route.make('myhost', space: app.space, path: '/my%20path') }
+          let(:route_mapping) { RouteMapping.make(app: app, route: route) }
+
+          it 'returns the first app port' do
+            expect(route_mapping.app_port).to equal 1111
+          end
+        end
+
+        context 'when the associated app has null ports' do
+          context 'when the app is a diego app' do
+            let(:app) { AppFactory.make(space: space, diego: true) }
+            let(:route) { Route.make('myhost', space: app.space, path: '/my%20path') }
+            let(:route_mapping) { RouteMapping.make(app: app, route: route) }
+
+            it 'returns the default port' do
+              expect(route_mapping.app_port).to equal 8080
+            end
+          end
+
+          context 'when the app is not a diego app' do
+            let(:app) { AppFactory.make(space: space, diego: false) }
+            let(:route) { Route.make('myhost', space: app.space, path: '/my%20path') }
+            let(:route_mapping) { RouteMapping.make(app: app, route: route) }
+
+            it 'returns nil' do
+              expect(route_mapping.app_port).to be nil
+            end
+          end
+        end
+
+        context 'when the associated app has no ports' do
+          context 'when the app is a diego app' do
+            let(:app) { AppFactory.make(space: space, diego: true, ports: []) }
+            let(:route) { Route.make('myhost', space: app.space, path: '/my%20path') }
+            let(:route_mapping) { RouteMapping.make(app: app, route: route) }
+
+            it 'returns the default port' do
+              expect(route_mapping.app_port).to equal 8080
+            end
+          end
+
+          context 'when the app is not a diego app' do
+            let(:app) { AppFactory.make(space: space, diego: false, ports: []) }
+            let(:route) { Route.make('myhost', space: app.space, path: '/my%20path') }
+            let(:route_mapping) { RouteMapping.make(app: app, route: route) }
+
+            it 'returns nil' do
+              expect(route_mapping.app_port).to be nil
+            end
+          end
         end
       end
     end
