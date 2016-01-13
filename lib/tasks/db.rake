@@ -94,6 +94,7 @@ end
       when "postgres"
         sh "psql -U postgres -c 'create database #{db_config.name};'"
         sh "psql -U postgres -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext'"
+        sh "psql -U postgres -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
           sh "mysql -e 'create database #{db_config.name};' -u root"
