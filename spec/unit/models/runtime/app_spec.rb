@@ -2598,13 +2598,13 @@ module VCAP::CloudController
         context 'when app is not staged' do
           it 'returns the ports that were specified during creation' do
             app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'PENDING')
-            expect(app.ports).to eq(nil)
+            expect(app.ports).to eq([8080])
           end
         end
 
         context 'when app is staged' do
           context 'when some tcp ports are exposed' do
-            it 'returns the ports that were specified during creation' do
+            it 'returns the ports that were specified in the execution_metadata' do
               app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
               app.add_droplet(Droplet.new(
                                    app: app,
@@ -2625,20 +2625,20 @@ module VCAP::CloudController
                                   execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
                               ))
               app.droplet_hash = 'the-droplet-hash'
-              expect(app.ports).to eq([])
+              expect(app.ports).to eq([8080])
             end
           end
 
           context 'when execution metadata is malformed' do
             it 'returns the ports that were specified during creation' do
-              app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1)
+              app = App.make(diego: true, docker_image: 'some-docker-image', package_state: 'STAGED', package_hash: 'package-hash', instances: 1, ports: [1111])
               app.add_droplet(Droplet.new(
                                   app: app,
                                   droplet_hash: 'the-droplet-hash',
                                   execution_metadata: 'some-invalid-json',
                               ))
               app.droplet_hash = 'the-droplet-hash'
-              expect(app.ports).to eq([])
+              expect(app.ports).to eq([1111])
             end
           end
 
@@ -2651,7 +2651,7 @@ module VCAP::CloudController
                                   execution_metadata: '{"cmd":"run.sh"}',
                               ))
               app.droplet_hash = 'the-droplet-hash'
-              expect(app.ports).to eq([])
+              expect(app.ports).to eq([8080])
             end
           end
         end

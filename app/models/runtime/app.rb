@@ -632,7 +632,8 @@ module VCAP::CloudController
 
     def ports
       if self.docker_image.present? && diego?
-        return docker_ports
+        ports = docker_ports
+        return ports unless ports.empty?
       end
       super
     end
@@ -655,8 +656,8 @@ module VCAP::CloudController
     end
 
     def docker_ports
+      exposed_ports = []
       if !self.needs_staging? && !self.current_saved_droplet.nil? && self.execution_metadata.present?
-        exposed_ports = []
         begin
           metadata = JSON.parse(self.execution_metadata)
           unless metadata['ports'].nil?
@@ -668,8 +669,8 @@ module VCAP::CloudController
           end
         rescue JSON::ParserError
         end
-        exposed_ports
       end
+      exposed_ports
     end
 
     def mark_routes_changed(_=nil)
