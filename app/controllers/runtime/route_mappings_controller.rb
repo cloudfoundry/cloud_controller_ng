@@ -7,20 +7,6 @@ module VCAP::CloudController
     end
 
     post path, :create
-    def before_create
-      # app_guid = @request_attrs['app_guid']
-      # app = App.find(guid: app_guid)
-      # raise Errors::ApiError.new_from_details('AppNotFound', app_guid) unless app
-      #
-      #
-      # if !request_attrs['app_port'] && app.diego
-      #   @request_attrs = @request_attrs.deep_dup
-      #   @request_attrs['app_port'] = app.ports.first
-      #   @request_attrs.freeze
-      # end
-      super
-    end
-
 
     def self.translate_validation_exception(e, attributes)
       port_errors = e.errors.on(:app_port)
@@ -30,10 +16,6 @@ module VCAP::CloudController
         Errors::ApiError.new_from_details('RoutePortNotEnabledOnApp')
       end
     end
-
-    # def delete(guid)
-    #   do_delete(find_guid_and_validate_access(:delete, guid))
-    # end
 
     define_messages
   end
