@@ -45,7 +45,7 @@ module VCAP::CloudController
     def validate_route_mapping(app_guid, app_port, route_guid)
       mappings = RouteMapping.dataset.select_all(RouteMapping.table_name).
         join(App.table_name, id: :app_id).
-        join(Route.table_name, id: :route_mappings__route_id).
+        join(Route.table_name, id: :"#{RouteMapping.table_name}__route_id").
         where(:"#{RouteMapping.table_name}__app_port" => app_port,
               :"#{App.table_name}__guid" => app_guid,
               :"#{Route.table_name}__guid" => route_guid)

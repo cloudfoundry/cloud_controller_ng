@@ -38,7 +38,6 @@ module VCAP::CloudController
     one_through_one :organization, join_table: :spaces, left_key: :id, left_primary_key: :space_id, right_key: :organization_id
 
     many_to_many :routes,
-                 join_table: 'route_mappings',
                  before_add: :validate_route,
                  after_add: :handle_add_route,
                  after_remove: :handle_remove_route
@@ -629,7 +628,7 @@ module VCAP::CloudController
     end
 
     def _add_route(route, hash={})
-      model.db[:route_mappings].insert(hash.merge(app_id: id, route_id: route.id, guid: SecureRandom.uuid))
+      model.db[:apps_routes].insert(hash.merge(app_id: id, route_id: route.id, guid: SecureRandom.uuid))
     end
 
     def handle_remove_route(route)

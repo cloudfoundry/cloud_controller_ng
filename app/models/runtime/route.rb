@@ -15,7 +15,6 @@ module VCAP::CloudController
     many_to_many :app_models, join_table: :apps_v3_routes
 
     many_to_many :apps,
-      join_table:   'route_mappings',
       before_add:   :validate_app,
       after_add:    :handle_add_app,
       after_remove: :handle_remove_app
@@ -139,7 +138,7 @@ module VCAP::CloudController
     end
 
     def _add_app(app, hash={})
-      model.db[:route_mappings].insert(hash.merge(app_id: app.id, route_id: id, guid: SecureRandom.uuid))
+      model.db[:apps_routes].insert(hash.merge(app_id: app.id, route_id: id, guid: SecureRandom.uuid))
     end
 
     def validate_changed_space(new_space)

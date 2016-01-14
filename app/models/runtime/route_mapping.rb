@@ -1,11 +1,18 @@
 module VCAP::CloudController
-  class RouteMapping < Sequel::Model
+  class RouteMapping < Sequel::Model(:apps_routes)
+    #set_dataset(:apps_routes)
     many_to_one :app
     many_to_one :route
 
     export_attributes :app_port, :app_guid, :route_guid
 
     import_attributes :app_port, :app_guid, :route_guid
+
+    #
+    #
+    # def table_name
+    #   :apps_routes
+    # end
 
     def validate
       if self.app_port && !app.diego
