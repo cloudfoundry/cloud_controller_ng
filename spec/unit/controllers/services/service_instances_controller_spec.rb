@@ -425,6 +425,7 @@ module VCAP::CloudController
               expect(a_request(:put, service_broker_url_regex).
                      with(body: hash_including(parameters: parameters))).
               to have_been_made.times(0)
+              expect(last_response.body).to include('Error: Expected instance of Hash')
             end
           end
         end
@@ -2580,6 +2581,51 @@ module VCAP::CloudController
         service_binding_uri = service_binding_url(binding)
         expected_body       = { service_id: service.broker_provided_id, plan_id: service_plan.broker_provided_id, bind_resource: { route: route.uri } }
         expect(a_request(:put, service_binding_uri).with(body: expected_body)).to have_been_made
+      end
+
+      context 'when the body is empty string' do
+        before do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", '', headers_for(developer)
+        end
+
+        it 'should ignore the body and do not raise error' do
+          expect(last_response).to have_status_code(201)
+        end
+      end
+
+      context 'when the client provides arbitrary parameters' do
+        before do
+          body = MultiJson.dump(parameters: parameters)
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", body, headers_for(developer)
+        end
+
+        context 'and the parameter is a JSON object' do
+          let(:parameters) do
+            { foo: 'bar', bar: 'baz' }
+          end
+
+          it 'should pass along the parameters to the service broker' do
+            binding             = RouteBinding.last
+            service_binding_uri = service_binding_url(binding)
+
+            expect(last_response).to have_status_code(201)
+            expect(a_request(:put, service_binding_uri).
+                       with(body: hash_including(parameters: parameters))).
+                to have_been_made.times(1)
+          end
+        end
+
+        context 'and the parameter is not a JSON object' do
+          let(:parameters) { 'foo' }
+
+          it 'should reject the request' do
+            expect(last_response).to have_status_code(400)
+            expect(last_response.body).to include('Expected instance of Hash, given an instance of String')
+            expect(a_request(:put, service_broker_url_regex).
+                       with(body: hash_including(parameters: parameters))).
+                to have_been_made.times(0)
+          end
+        end
       end
 
       context 'binding permissions' do

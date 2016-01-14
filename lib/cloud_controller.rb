@@ -107,4 +107,6 @@ require 'cloud_controller/route_validator'
 require 'cloud_controller/integer_array_serializer'
 require 'cloud_controller/port_generator'
 
+require 'cloud_controller/route_binding_message'
+
 require 'services'

@@ -20,7 +20,7 @@ module VCAP::CloudController
       @logger = logger
     end
 
-    def create_route_service_instance_binding(route_guid, instance_guid, route_services_enabled)
+    def create_route_service_instance_binding(route_guid, instance_guid, arbitrary_parameters, route_services_enabled)
       route = Route.find(guid: route_guid)
       raise RouteNotFound unless route
 
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
       raise Sequel::ValidationFailed.new(route_binding) unless route_binding.valid?
 
-      raw_attributes = bind(route_binding, {})
+      raw_attributes = bind(route_binding, arbitrary_parameters)
       attributes_to_update = {
         route_service_url: raw_attributes[:route_service_url]
       }
@@ -117,12 +117,12 @@ module VCAP::CloudController
 
     def bind(binding_obj, arbitrary_parameters)
       raise_if_locked(binding_obj.service_instance)
-      binding_obj.client.bind(binding_obj, arbitrary_parameters: arbitrary_parameters) # binding.bind(arbitrary_parameters)
+      binding_obj.client.bind(binding_obj, arbitrary_parameters: arbitrary_parameters)
     end
 
     def unbind(binding_obj)
       raise_if_locked(binding_obj.service_instance)
-      binding_obj.client.unbind(binding_obj) # binding.unbind
+      binding_obj.client.unbind(binding_obj)
     end
 
     def async?(params)

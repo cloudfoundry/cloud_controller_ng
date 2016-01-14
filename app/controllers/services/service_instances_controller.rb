@@ -25,6 +25,9 @@ module VCAP::CloudController
     # in the #get_filtered_dataset_for_enumeration method because ModelControl does not support
     # searching on parameters that are not directly associated with the model
 
+    define_messages
+    define_routes
+
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = errors_on(e, [:space_id, :name])
       quota_errors = errors_on(e, :quota)
@@ -227,19 +230,28 @@ module VCAP::CloudController
       end
     end
 
-    define_messages
-    define_routes
-
     def add_related(guid, name, other_guid)
       return super(guid, name, other_guid) if name != :routes
+
+      if body.string.blank?
+        req_body = '{}'
+      else
+        req_body = body
+      end
+
+      json_msg = VCAP::CloudController::RouteBindingMessage.decode(req_body)
+      @request_attrs = json_msg.extract(stringify_keys: true)
+
       bind_route(other_guid, guid)
     end
 
     def bind_route(route_guid, instance_guid)
       logger.debug 'cc.association.add', model: self.class.model_class_name, guid: instance_guid, assocation: :routes, other_guid: route_guid
 
+      arbitrary_parameters = @request_attrs['parameters']
+
       binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
-      route_binding = binding_manager.create_route_service_instance_binding(route_guid, instance_guid, route_services_enabled?)
+      route_binding = binding_manager.create_route_service_instance_binding(route_guid, instance_guid, arbitrary_parameters, route_services_enabled?)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, route_binding.service_instance, @opts)]
     rescue ServiceInstanceBindingManager::ServiceInstanceNotBindable

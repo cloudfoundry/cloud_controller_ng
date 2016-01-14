@@ -124,12 +124,6 @@ module VCAP::CloudController
       bind_route(other_guid, guid)
     end
 
-    def add_related(guid, name, other_guid)
-      return super(guid, name, other_guid) if name != :routes
-
-      bind_route(other_guid, guid)
-    end
-
     def remove_related(guid, name, other_guid)
       return super(guid, name, other_guid) if name != :routes
 
@@ -152,7 +146,7 @@ module VCAP::CloudController
       logger.debug 'cc.association.add', model: self.class.model_class_name, guid: instance_guid, assocation: :routes, other_guid: route_guid
 
       binding_manager = ServiceInstanceBindingManager.new(@services_event_repository, self, logger)
-      route_binding = binding_manager.create_route_service_instance_binding(route_guid, instance_guid, route_services_enabled?)
+      route_binding = binding_manager.create_route_service_instance_binding(route_guid, instance_guid, {}, route_services_enabled?)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, route_binding.service_instance, @opts)]
     rescue ServiceInstanceBindingManager::RouteNotFound

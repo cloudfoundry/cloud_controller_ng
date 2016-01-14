@@ -176,8 +176,6 @@ EOF
   end
 
   describe 'Nested endpoints' do
-    field :guid, 'The guid of the Service Instance.', required: true
-
     describe 'Service Bindings' do
       before do
         VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
@@ -191,13 +189,21 @@ EOF
       let(:route) { VCAP::CloudController::Route.make(space: service_instance.space) }
       let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance: service_instance) }
 
+      field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object.', required: false
+
       put '/v2/service_instances/:service_instance_guid/routes/:route_guid' do
         before do
           stub_bind(service_instance)
         end
 
-        example 'Binding a service instance to a route (experimental)' do
-          client.put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
+        example 'Binding a Service Instance to a Route (experimental)' do
+          request_hash = {
+              parameters: {
+                  the_service_broker: 'wants this object'
+              }
+          }
+
+          client.put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", MultiJson.dump(request_hash, pretty: true), headers
 
           expect(status).to eq(201)
           expect(parsed_response['metadata']['guid']).to eq(service_instance.guid)

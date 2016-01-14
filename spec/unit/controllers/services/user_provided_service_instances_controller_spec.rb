@@ -478,7 +478,7 @@ module VCAP::CloudController
         expect(JSON.parse(last_response.body)['total_results']).to eql(0)
 
         put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers_for(developer)
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_status_code(201)
 
         get "/v2/user_provided_service_instances/#{service_instance.guid}/routes", {}, headers_for(developer)
         expect(last_response.status).to eq(200)
